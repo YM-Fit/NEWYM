@@ -86,3 +86,73 @@ export interface DashboardStats {
   avgWeightLossPercentage: number;
   avgMuscleMassIncrease: number;
 }
+
+// Extended workout types for MainApp usage
+export interface WorkoutSummary {
+  id: string;
+  date: string;
+  exercises: {
+    name: string;
+    sets: number;
+  }[];
+  totalVolume: number;
+  duration: number;
+}
+
+export interface DetailedWorkout {
+  id: string;
+  exercises: WorkoutExerciseDetailed[];
+}
+
+export interface WorkoutExerciseDetailed {
+  tempId: string;
+  exercise: {
+    id: string;
+    name: string;
+    muscle_group_id: string;
+  };
+  sets: SetData[];
+}
+
+export interface SetData {
+  id: string;
+  set_number: number;
+  weight: number;
+  reps: number;
+  rpe: number | null;
+  set_type: 'regular' | 'superset' | 'dropset';
+  failure?: boolean;
+  superset_exercise_id?: string | null;
+  superset_exercise_name?: string | null;
+  superset_weight?: number | null;
+  superset_reps?: number | null;
+  superset_rpe?: number | null;
+  superset_equipment_id?: string | null;
+  superset_dropset_weight?: number | null;
+  superset_dropset_reps?: number | null;
+  dropset_weight?: number | null;
+  dropset_reps?: number | null;
+  equipment_id?: string | null;
+}
+
+// Measurement type for MainApp
+export interface MeasurementData {
+  id: string;
+  traineeId: string;
+  date: string;
+  weight: number;
+  bodyFat?: number;
+  muscleMass?: number;
+  waterPercentage?: number;
+  visceralFat?: number;
+  bmi?: number;
+  source: 'tanita' | 'manual';
+  pairMember?: 'member_1' | 'member_2' | null;
+  measurements?: {
+    chest?: number;
+    waist?: number;
+    hips?: number;
+    arms?: number;
+    thighs?: number;
+  };
+}

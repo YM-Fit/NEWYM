@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Home, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { supabase } from '../lib/supabase';
+import { WorkoutSummary, DetailedWorkout, MeasurementData } from '../types';
 import Header from './Layout/Header';
 import Sidebar from './Layout/Sidebar';
 import Dashboard from './Dashboard/Dashboard';
@@ -46,14 +48,15 @@ interface Trainee {
 
 export default function MainApp() {
   const { signOut, user } = useAuth();
+  const { showSuccess, showError } = useToast();
   const [activeView, setActiveView] = useState('dashboard');
   const [selectedTrainee, setSelectedTrainee] = useState<Trainee | null>(null);
-  const [selectedWorkout, setSelectedWorkout] = useState<any | null>(null);
-  const [editingMeasurement, setEditingMeasurement] = useState<any | null>(null);
+  const [selectedWorkout, setSelectedWorkout] = useState<WorkoutSummary | DetailedWorkout | null>(null);
+  const [editingMeasurement, setEditingMeasurement] = useState<MeasurementData | null>(null);
   const [selectedPairMember, setSelectedPairMember] = useState<'member_1' | 'member_2' | null>(null);
   const [trainees, setTrainees] = useState<Trainee[]>([]);
-  const [measurements, setMeasurements] = useState<any[]>([]);
-  const [workouts, setWorkouts] = useState<any[]>([]);
+  const [measurements, setMeasurements] = useState<MeasurementData[]>([]);
+  const [workouts, setWorkouts] = useState<WorkoutSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [trainerName, setTrainerName] = useState<string>('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -180,8 +183,9 @@ export default function MainApp() {
       setTrainees((prev) => prev.filter(t => t.id !== traineeId));
       setActiveView('trainees');
       setSelectedTrainee(null);
+      showSuccess('המתאמן נמחק בהצלחה');
     } else {
-      alert('שגיאה במחיקת המתאמן');
+      showError('שגיאה במחיקת המתאמן');
     }
   };
 
@@ -438,7 +442,7 @@ export default function MainApp() {
       .order('order_index', { ascending: true });
 
     if (!workoutExercises) {
-      alert('שגיאה בטעינת האימון');
+      showError('שגיאה בטעינת האימון');
       return;
     }
 
@@ -455,7 +459,7 @@ export default function MainApp() {
       .single();
 
     if (workoutError || !newWorkout) {
-      alert('שגיאה ביצירת אימון חדש');
+      showError('שגיאה ביצירת אימון חדש');
       return;
     }
 
@@ -491,7 +495,7 @@ export default function MainApp() {
       }
     }
 
-    alert('האימון שוכפל בהצלחה!');
+    showSuccess('האימון שוכפל בהצלחה!');
     await loadWorkouts(selectedTrainee.id);
   };
 
@@ -507,8 +511,9 @@ export default function MainApp() {
         await loadWorkouts(selectedTrainee.id);
       }
       setActiveView('workouts-list');
+      showSuccess('האימון נמחק בהצלחה');
     } else {
-      alert('שגיאה במחיקת האימון');
+      showError('שגיאה במחיקת האימון');
     }
   };
 
