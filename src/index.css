@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tablet and touch optimizations */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Better touch targets for tablets */
+  button, input, select, textarea {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  
+  /* Smooth scrolling */
+  * {
+    scroll-behavior: smooth;
+  }
+  
+  /* Custom scrollbar for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}
+
+@layer utilities {
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Mobile-first optimizations */
+  @media (max-width: 767px) {
+    .mobile-text-lg {
+      font-size: 1.125rem;
+    }
+
+    .mobile-button {
+      padding: 0.875rem 1.25rem;
+      font-size: 1rem;
+      min-height: 48px;
+    }
+
+    .mobile-input {
+      font-size: 16px;
+      min-height: 48px;
+    }
+
+    .mobile-card {
+      padding: 1rem;
+    }
+
+    .mobile-spacing {
+      gap: 0.75rem;
+    }
+  }
+
+  /* Tablet-specific styles */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .tablet-padding {
+      padding: 1.5rem;
+    }
+
+    .tablet-text {
+      font-size: 1.125rem;
+    }
+
+    .tablet-button {
+      padding: 1rem 1.5rem;
+      font-size: 1.125rem;
+    }
+  }
+
+  /* Portrait orientation optimizations */
+  @media (orientation: portrait) and (max-width: 767px) {
+    .portrait-full-width {
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      margin-right: calc(-50vw + 50%);
+    }
+
+    .portrait-bottom-safe {
+      padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+    }
+  }
+
+  /* Landscape orientation optimizations */
+  @media (orientation: landscape) and (max-height: 768px) {
+    .landscape-compact {
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+
+    .landscape-hide-header {
+      display: none;
+    }
+
+    .landscape-compact-spacing {
+      gap: 0.5rem;
+    }
+
+    .landscape-max-h {
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+  }
+}
