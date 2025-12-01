@@ -1,7 +1,8 @@
-import { ArrowRight, Save, Scale, User } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowRight, Save, Scale, User, CheckCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Trainee, BodyMeasurement } from '../../types';
 import { supabase } from '../../lib/supabase';
+import { useScaleListener } from '../../hooks/useScaleListener';
 
 interface MeasurementFormProps {
   trainee: Trainee;
@@ -38,6 +39,29 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       leftArm: sourceMeasurement?.measurements?.leftArm || 0,
     }
   });
+
+  const [showScaleDataToast, setShowScaleDataToast] = useState(false);
+  const { latestReading, isListening } = useScaleListener();
+
+  useEffect(() => {
+    if (latestReading && !isEditing) {
+      const fatFreeMass = latestReading.fat_free_mass_kg || 0;
+      const fatMass = latestReading.fat_mass_kg || 0;
+      const calculatedMuscleMass = fatFreeMass > 0 ? fatFreeMass : 0;
+
+      setFormData(prev => ({
+        ...prev,
+        weight: latestReading.weight_kg || prev.weight,
+        bodyFat: latestReading.body_fat_percent || prev.bodyFat,
+        muscleMass: calculatedMuscleMass || prev.muscleMass,
+        waterPercentage: latestReading.water_percent || prev.waterPercentage,
+        source: 'tanita',
+      }));
+
+      setShowScaleDataToast(true);
+      setTimeout(() => setShowScaleDataToast(false), 5000);
+    }
+  }, [latestReading, isEditing]);
 
   const calculateBMI = (weight: number, height: number) => {
     if (weight && height) {
@@ -157,6 +181,17 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 lg:p-6">
+      {/* Scale Data Received Toast */}
+      {showScaleDataToast && (
+        <div className="fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-96 bg-green-500 text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-slide-in-top flex items-center space-x-3 rtl:space-x-reverse">
+          <CheckCircle className="h-6 w-6 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="font-bold text-lg">התקבלו נתונים מהמשקל!</p>
+            <p className="text-sm opacity-90">השדות מולאו אוטומטית</p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10">
         <div className="flex items-center justify-between">
@@ -171,6 +206,12 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
             <div>
               <h1 className="text-xl lg:text-3xl font-bold text-gray-900">{trainee.name}</h1>
               <p className="text-base lg:text-lg text-gray-600">{isEditing ? 'עריכת מדידה' : 'מדידה חדשה'}</p>
+              {isListening && !isEditing && (
+                <div className="flex items-center space-x-1 rtl:space-x-reverse text-green-600 text-sm mt-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>מאזין למשקל Tanita</span>
+                </div>
+              )}
             </div>
           </div>
 
