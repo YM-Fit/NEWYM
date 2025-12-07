@@ -8,6 +8,7 @@ import QuickNumericPad from './QuickNumericPad';
 import EquipmentSelector from '../Equipment/EquipmentSelector';
 import WorkingWeightCalculator from '../Tools/WorkingWeightCalculator';
 import AutoSaveIndicator from '../common/AutoSaveIndicator';
+import DraftModal from '../common/DraftModal';
 
 interface Exercise {
   id: string;
@@ -120,6 +121,8 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     reps: number;
   } | null>(null);
   const [showCalculator, setShowCalculator] = useState(false);
+  const [showDraftModal, setShowDraftModal] = useState(false);
+  const [draftData, setDraftData] = useState<any>(null);
 
   const workoutData = {
     exercises,
@@ -138,18 +141,43 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     if (!workoutId) {
       const saved = loadSaved();
       if (saved && saved.exercises && saved.exercises.length > 0) {
-        const confirmRestore = window.confirm('נמצא אימון שמור. האם לשחזר?');
-        if (confirmRestore) {
-          setExercises(saved.exercises);
-          setNotes(saved.notes || '');
-          setWorkoutDate(new Date(saved.workoutDate));
-          setWorkoutType(saved.workoutType || 'personal');
-        } else {
-          clearSaved();
-        }
+        setDraftData(saved);
+        setShowDraftModal(true);
       }
     }
   }, []);
+
+  const handleRestoreDraft = () => {
+    if (draftData) {
+      setExercises(draftData.exercises);
+      setNotes(draftData.notes || '');
+      setWorkoutDate(new Date(draftData.workoutDate));
+      setWorkoutType(draftData.workoutType || 'personal');
+      setShowDraftModal(false);
+      setDraftData(null);
+    }
+  };
+
+  const handleDiscardDraft = () => {
+    clearSaved();
+    setShowDraftModal(false);
+    setDraftData(null);
+  };
+
+  useEffect(() => {
+    if (workoutId) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty && exercises.length > 0) {
+        e.preventDefault();
+        e.returnValue = 'יש שינויים שלא נשמרו. בטוח שברצונך לצאת?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty, exercises.length, workoutId]);
 
   const addExercise = (exercise: Exercise) => {
     const newExercise: WorkoutExercise = {
@@ -1063,6 +1091,15 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           initialWeight={calculatorData.weight}
           initialReps={calculatorData.reps}
           onClose={() => setCalculatorData(null)}
+        />
+      )}
+
+      {showDraftModal && (
+        <DraftModal
+          title="נמצאה טיוטה"
+          message="נמצאה טיוטת אימון שנשמרה מהפעם הקודמת. האם ברצונך לטעון אותה או להתחיל אימון חדש?"
+          onRestore={handleRestoreDraft}
+          onDiscard={handleDiscardDraft}
         />
       )}
     </div>

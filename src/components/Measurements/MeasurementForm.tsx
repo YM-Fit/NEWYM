@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { useScaleListener } from '../../hooks/useScaleListener';
 import { useAutoSave } from '../../hooks/useAutoSave';
 import AutoSaveIndicator from '../common/AutoSaveIndicator';
+import DraftModal from '../common/DraftModal';
 
 interface MeasurementFormProps {
   trainee: Trainee;
@@ -43,6 +44,8 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
   });
 
   const [showScaleDataToast, setShowScaleDataToast] = useState(false);
+  const [showDraftModal, setShowDraftModal] = useState(false);
+  const [draftData, setDraftData] = useState<any>(null);
   const { latestReading, isListening } = useScaleListener();
 
   const { lastSaved, isDirty, clearSaved, loadSaved } = useAutoSave({
@@ -54,19 +57,44 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
   useEffect(() => {
     if (!isEditing) {
       const saved = loadSaved();
-      if (saved && saved.formData) {
-        const confirmRestore = window.confirm('נמצאה מדידה שמורה. האם לשחזר?');
-        if (confirmRestore) {
-          setFormData(saved.formData);
-          if (saved.selectedMember) {
-            setSelectedMember(saved.selectedMember);
-          }
-        } else {
-          clearSaved();
-        }
+      if (saved && saved.formData && saved.formData.weight > 0) {
+        setDraftData(saved);
+        setShowDraftModal(true);
       }
     }
   }, []);
+
+  const handleRestoreDraft = () => {
+    if (draftData) {
+      setFormData(draftData.formData);
+      if (draftData.selectedMember) {
+        setSelectedMember(draftData.selectedMember);
+      }
+      setShowDraftModal(false);
+      setDraftData(null);
+    }
+  };
+
+  const handleDiscardDraft = () => {
+    clearSaved();
+    setShowDraftModal(false);
+    setDraftData(null);
+  };
+
+  useEffect(() => {
+    if (isEditing) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty && formData.weight > 0) {
+        e.preventDefault();
+        e.returnValue = 'יש שינויים שלא נשמרו. בטוח שברצונך לצאת?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty, formData.weight, isEditing]);
 
   useEffect(() => {
     if (latestReading && !isEditing) {
@@ -580,6 +608,15 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
           <span>שמור מדידה</span>
         </button>
       </div>
+
+      {showDraftModal && (
+        <DraftModal
+          title="נמצאה טיוטה"
+          message="נמצאה טיוטת מדידה שנשמרה מהפעם הקודמת. האם ברצונך לטעון אותה או להתחיל מדידה חדשה?"
+          onRestore={handleRestoreDraft}
+          onDiscard={handleDiscardDraft}
+        />
+      )}
     </div>
   );
 }
