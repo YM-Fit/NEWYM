@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { Trainee, BodyMeasurement } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { useScaleListener } from '../../hooks/useScaleListener';
+import { useAutoSave } from '../../hooks/useAutoSave';
+import AutoSaveIndicator from '../common/AutoSaveIndicator';
 
 interface MeasurementFormProps {
   trainee: Trainee;
@@ -42,6 +44,29 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
   const [showScaleDataToast, setShowScaleDataToast] = useState(false);
   const { latestReading, isListening } = useScaleListener();
+
+  const { lastSaved, isDirty, clearSaved, loadSaved } = useAutoSave({
+    data: { formData, selectedMember },
+    localStorageKey: `measurement_draft_${trainee.id}`,
+    enabled: !isEditing,
+  });
+
+  useEffect(() => {
+    if (!isEditing) {
+      const saved = loadSaved();
+      if (saved && saved.formData) {
+        const confirmRestore = window.confirm('נמצאה מדידה שמורה. האם לשחזר?');
+        if (confirmRestore) {
+          setFormData(saved.formData);
+          if (saved.selectedMember) {
+            setSelectedMember(saved.selectedMember);
+          }
+        } else {
+          clearSaved();
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (latestReading && !isEditing) {
@@ -165,6 +190,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
         }
       };
 
+      clearSaved();
       onSave(measurement);
     }
   };
@@ -214,6 +240,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                   <span>מאזין למשקל Tanita</span>
                 </div>
               )}
+              {!isEditing && <AutoSaveIndicator lastSaved={lastSaved} isDirty={isDirty} />}
             </div>
           </div>
 

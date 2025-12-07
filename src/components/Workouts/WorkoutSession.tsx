@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowRight, Plus, Save, Copy, Trash2, Calculator } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAutoSave } from '../../hooks/useAutoSave';
 import ExerciseSelector from './ExerciseSelector';
 import QuickNumericPad from './QuickNumericPad';
 import EquipmentSelector from '../Equipment/EquipmentSelector';
 import WorkingWeightCalculator from '../Tools/WorkingWeightCalculator';
+import AutoSaveIndicator from '../common/AutoSaveIndicator';
 
 interface Exercise {
   id: string;
@@ -117,6 +119,37 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     weight: number;
     reps: number;
   } | null>(null);
+  const [showCalculator, setShowCalculator] = useState(false);
+
+  const workoutData = {
+    exercises,
+    notes,
+    workoutDate: workoutDate.toISOString(),
+    workoutType,
+  };
+
+  const { lastSaved, isDirty, clearSaved, loadSaved } = useAutoSave({
+    data: workoutData,
+    localStorageKey: `workout_draft_${trainee.id}`,
+    enabled: !workoutId,
+  });
+
+  useEffect(() => {
+    if (!workoutId) {
+      const saved = loadSaved();
+      if (saved && saved.exercises && saved.exercises.length > 0) {
+        const confirmRestore = window.confirm('נמצא אימון שמור. האם לשחזר?');
+        if (confirmRestore) {
+          setExercises(saved.exercises);
+          setNotes(saved.notes || '');
+          setWorkoutDate(new Date(saved.workoutDate));
+          setWorkoutType(saved.workoutType || 'personal');
+        } else {
+          clearSaved();
+        }
+      }
+    }
+  }, []);
 
   const addExercise = (exercise: Exercise) => {
     const newExercise: WorkoutExercise = {
@@ -443,6 +476,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
         }
       }
 
+      clearSaved();
       onSave(workout);
     } catch (error) {
       console.error('Error saving workout:', error);
@@ -474,6 +508,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                   נפח כולל: {calculateTotalVolume().toLocaleString()} ק"ג
                 </p>
               )}
+              {!workoutId && <AutoSaveIndicator lastSaved={lastSaved} isDirty={isDirty} />}
             </div>
           </div>
 
