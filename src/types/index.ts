@@ -57,6 +57,26 @@ export interface Workout {
   notes?: string;
 }
 
+export interface WorkoutTemplateExercise {
+  exerciseId: string;
+  exerciseName: string;
+  setsCount: number;
+  targetReps?: number;
+  targetWeight?: number;
+  notes?: string;
+}
+
+export interface WorkoutTemplate {
+  id: string;
+  trainerId: string;
+  name: string;
+  description?: string;
+  exercises: WorkoutTemplateExercise[];
+  createdAt: string;
+  updatedAt: string;
+  usageCount: number;
+}
+
 export interface BodyMeasurement {
   id: string;
   traineeId: string;

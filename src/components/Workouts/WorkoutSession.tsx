@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowRight, Plus, Save, Copy, Trash2, Calculator } from 'lucide-react';
+import { ArrowRight, Plus, Save, Copy, Trash2, Calculator, BookMarked } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAutoSave } from '../../hooks/useAutoSave';
@@ -9,6 +9,8 @@ import EquipmentSelector from '../Equipment/EquipmentSelector';
 import WorkingWeightCalculator from '../Tools/WorkingWeightCalculator';
 import AutoSaveIndicator from '../common/AutoSaveIndicator';
 import DraftModal from '../common/DraftModal';
+import WorkoutTemplates from './WorkoutTemplates';
+import { WorkoutTemplate, WorkoutTemplateExercise } from '../../types';
 
 interface Exercise {
   id: string;
@@ -123,6 +125,11 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
   const [showCalculator, setShowCalculator] = useState(false);
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [draftData, setDraftData] = useState<any>(null);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+  const [templateDescription, setTemplateDescription] = useState('');
+  const [savingTemplate, setSavingTemplate] = useState(false);
 
   const workoutData = {
     exercises,
@@ -364,6 +371,70 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     }, 0);
   };
 
+  const handleLoadTemplate = (template: WorkoutTemplate) => {
+    const loadedExercises: WorkoutExercise[] = template.exercises.map(te => ({
+      tempId: Date.now().toString() + Math.random(),
+      exercise: {
+        id: te.exerciseId,
+        name: te.exerciseName,
+        muscle_group_id: '',
+      },
+      sets: Array.from({ length: te.setsCount }, (_, i) => ({
+        id: `temp-${Date.now()}-${i}`,
+        set_number: i + 1,
+        weight: te.targetWeight || 0,
+        reps: te.targetReps || 0,
+        rpe: null,
+        set_type: 'regular' as const,
+        failure: false,
+        equipment_id: null,
+      })),
+    }));
+
+    setExercises(loadedExercises);
+    setShowTemplateModal(false);
+  };
+
+  const handleSaveAsTemplate = async () => {
+    if (!user || !templateName.trim() || exercises.length === 0) return;
+
+    setSavingTemplate(true);
+
+    try {
+      const templateExercises: WorkoutTemplateExercise[] = exercises.map(ex => ({
+        exerciseId: ex.exercise.id,
+        exerciseName: ex.exercise.name,
+        setsCount: ex.sets.length,
+        targetReps: ex.sets[0]?.reps || undefined,
+        targetWeight: ex.sets[0]?.weight || undefined,
+      }));
+
+      const { error } = await supabase
+        .from('workout_templates')
+        .insert({
+          trainer_id: user.id,
+          name: templateName.trim(),
+          description: templateDescription.trim() || null,
+          exercises: templateExercises,
+        });
+
+      if (error) {
+        console.error('Error saving template:', error);
+        alert('שגיאה בשמירת התבנית');
+      } else {
+        alert('התבנית נשמרה בהצלחה!');
+        setShowSaveTemplateModal(false);
+        setTemplateName('');
+        setTemplateDescription('');
+      }
+    } catch (error) {
+      console.error('Error saving template:', error);
+      alert('שגיאה בשמירת התבנית');
+    } finally {
+      setSavingTemplate(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!user || exercises.length === 0) return;
 
@@ -549,6 +620,16 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
               <Calculator className="h-5 w-5 lg:h-6 lg:w-6" />
               <span className="font-semibold text-base lg:text-lg">מחשבון</span>
             </button>
+            {exercises.length > 0 && !workoutId && (
+              <button
+                type="button"
+                onClick={() => setShowSaveTemplateModal(true)}
+                className="bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white px-4 lg:px-6 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all shadow-lg hover:shadow-xl touch-manipulation"
+              >
+                <BookMarked className="h-5 w-5 lg:h-6 lg:w-6" />
+                <span className="font-semibold text-base lg:text-lg">שמור תבנית</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={handleSave}
@@ -1001,13 +1082,29 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
         </div>
       ))}
 
+      {exercises.length === 0 && !workoutId && (
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-4">
+          <h3 className="text-lg font-bold text-blue-900 mb-2">התחל אימון חדש</h3>
+          <p className="text-blue-700 mb-4">בחר תבנית קיימת או התחל אימון ריק</p>
+          <button
+            type="button"
+            onClick={() => setShowTemplateModal(true)}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-lg flex items-center justify-center space-x-2 rtl:space-x-reverse transition-colors font-semibold mb-3"
+          >
+            <BookMarked className="h-5 w-5" />
+            <span>טען תבנית קיימת</span>
+          </button>
+          <p className="text-center text-sm text-blue-600">או</p>
+        </div>
+      )}
+
       <button
         type="button"
         onClick={() => setShowExerciseSelector(true)}
         className="w-full bg-green-500 hover:bg-green-600 active:bg-green-700 text-white py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all shadow-lg hover:shadow-xl touch-manipulation"
       >
         <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
-        <span className="font-semibold text-lg lg:text-xl">הוסף תרגיל</span>
+        <span className="font-semibold text-lg lg:text-xl">{exercises.length === 0 ? 'התחל אימון ריק' : 'הוסף תרגיל'}</span>
       </button>
 
       {showExerciseSelector && (
@@ -1101,6 +1198,77 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           onRestore={handleRestoreDraft}
           onDiscard={handleDiscardDraft}
         />
+      )}
+
+      {showTemplateModal && (
+        <WorkoutTemplates
+          onSelectTemplate={handleLoadTemplate}
+          onClose={() => setShowTemplateModal(false)}
+        />
+      )}
+
+      {showSaveTemplateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">שמור כתבנית</h3>
+            <p className="text-gray-600 mb-6">שמור את האימון הזה כתבנית לשימוש עתידי מהיר</p>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  שם התבנית *
+                </label>
+                <input
+                  type="text"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  placeholder="למשל: אימון רגליים מלא"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  תיאור (אופציונלי)
+                </label>
+                <textarea
+                  value={templateDescription}
+                  onChange={(e) => setTemplateDescription(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  placeholder="הוסף תיאור לתבנית..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                <p className="text-sm text-orange-800">
+                  <strong>{exercises.length}</strong> תרגילים יישמרו בתבנית
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleSaveAsTemplate}
+                disabled={savingTemplate || !templateName.trim()}
+                className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              >
+                {savingTemplate ? 'שומר...' : 'שמור תבנית'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowSaveTemplateModal(false);
+                  setTemplateName('');
+                  setTemplateDescription('');
+                }}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-colors"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
