@@ -128,6 +128,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
           .update(measurementData)
           .eq('id', editingMeasurement.id)
           .select()
+          .single()
       : await supabase
           .from('measurements')
           .insert([measurementData])
@@ -141,7 +142,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
     }
 
     if (data) {
-      const responseData = isEditing ? data[0] : data;
+      const responseData = data;
       const measurement: BodyMeasurement = {
         id: responseData.id,
         traineeId: trainee.id,
