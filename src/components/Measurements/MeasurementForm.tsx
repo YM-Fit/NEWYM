@@ -1,4 +1,4 @@
-import { ArrowRight, Save, Scale, User, CheckCircle, TrendingDown, TrendingUp, Minus } from 'lucide-react';
+import { ArrowRight, Save, Scale, User, CheckCircle, TrendingDown, TrendingUp, Minus, RefreshCw, AlertTriangle, X, Check } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Trainee, BodyMeasurement } from '../../types';
 import { supabase } from '../../lib/supabase';
@@ -47,7 +47,10 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
   const [showScaleDataToast, setShowScaleDataToast] = useState(false);
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [draftData, setDraftData] = useState<any>(null);
-  const { latestReading, isListening } = useScaleListener();
+  const [pendingScaleData, setPendingScaleData] = useState<any>(null);
+  const [showValidationWarning, setShowValidationWarning] = useState(false);
+  const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
+  const { latestReading, isListening, connectionStatus, lastDataReceived, refreshConnection } = useScaleListener();
 
   const { lastSaved, isDirty, clearSaved, loadSaved } = useAutoSave({
     data: { formData, selectedMember },
@@ -103,19 +106,46 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       const fatMass = latestReading.fat_mass_kg || 0;
       const calculatedMuscleMass = fatFreeMass > 0 ? fatFreeMass : 0;
 
-      setFormData(prev => ({
-        ...prev,
-        weight: latestReading.weight_kg || prev.weight,
-        bodyFat: latestReading.body_fat_percent || prev.bodyFat,
-        muscleMass: calculatedMuscleMass || prev.muscleMass,
-        waterPercentage: latestReading.water_percent || prev.waterPercentage,
-        source: 'tanita',
-      }));
+      const warnings: string[] = [];
+      if (latestReading.weight_kg && (latestReading.weight_kg < 20 || latestReading.weight_kg > 300)) {
+        warnings.push(`משקל חריג: ${latestReading.weight_kg} ק"ג`);
+      }
+      if (latestReading.body_fat_percent && (latestReading.body_fat_percent < 3 || latestReading.body_fat_percent > 60)) {
+        warnings.push(`אחוז שומן חריג: ${latestReading.body_fat_percent}%`);
+      }
 
+      const newData = {
+        weight: latestReading.weight_kg || 0,
+        bodyFat: latestReading.body_fat_percent || 0,
+        muscleMass: calculatedMuscleMass || 0,
+        waterPercentage: latestReading.water_percent || 0,
+      };
+
+      setPendingScaleData(newData);
+      setValidationWarnings(warnings);
+      setShowValidationWarning(warnings.length > 0);
       setShowScaleDataToast(true);
-      setTimeout(() => setShowScaleDataToast(false), 5000);
     }
   }, [latestReading, isEditing]);
+
+  const acceptScaleData = () => {
+    if (pendingScaleData) {
+      setFormData(prev => ({
+        ...prev,
+        ...pendingScaleData,
+        source: 'tanita',
+      }));
+      setPendingScaleData(null);
+      setShowScaleDataToast(false);
+      setShowValidationWarning(false);
+    }
+  };
+
+  const rejectScaleData = () => {
+    setPendingScaleData(null);
+    setShowScaleDataToast(false);
+    setShowValidationWarning(false);
+  };
 
   const calculateBMI = (weight: number, height: number) => {
     if (weight && height) {
@@ -242,12 +272,48 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
   return (
     <div className="min-h-screen bg-gray-50 p-4 lg:p-6">
       {/* Scale Data Received Toast */}
-      {showScaleDataToast && (
-        <div className="fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-96 bg-green-500 text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-slide-in-top flex items-center space-x-3 rtl:space-x-reverse">
-          <CheckCircle className="h-6 w-6 flex-shrink-0" />
-          <div className="flex-1">
-            <p className="font-bold text-lg">התקבלו נתונים מהמשקל!</p>
-            <p className="text-sm opacity-90">השדות מולאו אוטומטית</p>
+      {showScaleDataToast && pendingScaleData && (
+        <div className={`fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-96 ${
+          showValidationWarning ? 'bg-orange-500' : 'bg-green-500'
+        } text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-slide-in-top`}>
+          <div className="flex items-start space-x-3 rtl:space-x-reverse mb-3">
+            {showValidationWarning ? (
+              <AlertTriangle className="h-6 w-6 flex-shrink-0" />
+            ) : (
+              <CheckCircle className="h-6 w-6 flex-shrink-0" />
+            )}
+            <div className="flex-1">
+              <p className="font-bold text-lg">
+                {showValidationWarning ? 'התקבלו נתונים חריגים!' : 'נתונים התקבלו מהמשקל'}
+              </p>
+              <p className="text-sm opacity-90 mt-1">
+                {pendingScaleData.weight > 0 && `${pendingScaleData.weight.toFixed(1)} ק״ג`}
+                {pendingScaleData.bodyFat > 0 && `, ${pendingScaleData.bodyFat.toFixed(1)}% שומן`}
+              </p>
+              {showValidationWarning && validationWarnings.length > 0 && (
+                <div className="mt-2 text-xs opacity-90">
+                  {validationWarnings.map((warning, idx) => (
+                    <p key={idx}>• {warning}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex space-x-2 rtl:space-x-reverse">
+            <button
+              onClick={acceptScaleData}
+              className="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-1 rtl:space-x-reverse"
+            >
+              <Check className="h-4 w-4" />
+              <span>אשר</span>
+            </button>
+            <button
+              onClick={rejectScaleData}
+              className="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-1 rtl:space-x-reverse"
+            >
+              <X className="h-4 w-4" />
+              <span>דחה</span>
+            </button>
           </div>
         </div>
       )}
@@ -266,10 +332,31 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
             <div>
               <h1 className="text-xl lg:text-3xl font-bold text-gray-900">{trainee.name}</h1>
               <p className="text-base lg:text-lg text-gray-600">{isEditing ? 'עריכת מדידה' : 'מדידה חדשה'}</p>
-              {isListening && !isEditing && (
-                <div className="flex items-center space-x-1 rtl:space-x-reverse text-green-600 text-sm mt-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span>מאזין למשקל Tanita</span>
+              {!isEditing && (
+                <div className="flex items-center space-x-3 rtl:space-x-reverse mt-2">
+                  <div className={`flex items-center space-x-1 rtl:space-x-reverse text-sm ${
+                    connectionStatus === 'connected' ? 'text-green-600' :
+                    connectionStatus === 'stale' ? 'text-orange-600' :
+                    'text-red-600'
+                  }`}>
+                    <div className={`w-2 h-2 rounded-full ${
+                      connectionStatus === 'connected' ? 'bg-green-500 animate-pulse' :
+                      connectionStatus === 'stale' ? 'bg-orange-500' :
+                      'bg-red-500'
+                    }`}></div>
+                    <span>
+                      {connectionStatus === 'connected' && 'מחובר למשקל'}
+                      {connectionStatus === 'stale' && 'לא התקבלו נתונים'}
+                      {connectionStatus === 'disconnected' && 'לא מחובר'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={refreshConnection}
+                    className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="רענן חיבור"
+                  >
+                    <RefreshCw className="h-4 w-4 text-gray-600" />
+                  </button>
                 </div>
               )}
               {!isEditing && <AutoSaveIndicator lastSaved={lastSaved} isDirty={isDirty} />}
