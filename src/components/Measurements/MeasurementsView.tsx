@@ -1,4 +1,4 @@
-import { Plus, TrendingDown, TrendingUp, Scale, BarChart3, Trash2, Edit, User } from 'lucide-react';
+import { Plus, TrendingDown, TrendingUp, Scale, BarChart3, Trash2, Edit, User, Activity } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Trainee, BodyMeasurement } from '../../types';
 import MeasurementsChart from './MeasurementsChart';
@@ -13,7 +13,7 @@ interface MeasurementsViewProps {
 }
 
 export default function MeasurementsView({ trainee, measurements, onNewMeasurement, onEditMeasurement, onMeasurementDeleted }: MeasurementsViewProps) {
-  const [selectedMetric, setSelectedMetric] = useState<'weight' | 'bodyFat' | 'muscleMass' | 'waterPercentage'>('weight');
+  const [selectedMetric, setSelectedMetric] = useState<'weight' | 'bodyFat' | 'muscleMass' | 'waterPercentage' | 'metabolicAge'>('weight');
   const [selectedMember, setSelectedMember] = useState<'member_1' | 'member_2' | 'all'>('all');
 
   const filteredMeasurements = useMemo(() => {
@@ -63,6 +63,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
     { key: 'bodyFat' as const, label: 'אחוז שומן', unit: '%', icon: TrendingDown, color: 'red' },
     { key: 'muscleMass' as const, label: 'מסת שריר', unit: 'ק״ג', icon: TrendingUp, color: 'green' },
     { key: 'waterPercentage' as const, label: 'אחוז מים', unit: '%', icon: BarChart3, color: 'purple' },
+    { key: 'metabolicAge' as const, label: 'גיל מטבולי', unit: 'שנים', icon: Activity, color: 'orange' },
   ];
 
   return (
@@ -151,6 +152,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
               red: 'bg-red-50 text-red-600 border-red-200',
               green: 'bg-green-50 text-green-600 border-green-200',
               purple: 'bg-purple-50 text-purple-600 border-purple-200',
+              orange: 'bg-orange-50 text-orange-600 border-orange-200',
             };
 
             return (
@@ -163,15 +165,15 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                     </p>
                     {change && (
                       <div className={`flex items-center mt-2 text-sm ${
-                        (key === 'bodyFat' ? change < 0 : change > 0) ? 'text-green-600' : 'text-red-600'
+                        (['bodyFat', 'metabolicAge'].includes(key) ? change < 0 : change > 0) ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {(key === 'bodyFat' ? change < 0 : change > 0) ? (
+                        {(['bodyFat', 'metabolicAge'].includes(key) ? change < 0 : change > 0) ? (
                           <TrendingUp className="h-4 w-4 ml-1" />
                         ) : (
                           <TrendingDown className="h-4 w-4 ml-1" />
                         )}
                         {change > 0 ? '+' : ''}{change.toFixed(1)} {unit}
-                        {changePercentage && (
+                        {changePercentage && key !== 'metabolicAge' && (
                           <span className="mr-1">
                             ({changePercentage > 0 ? '+' : ''}{changePercentage.toFixed(1)}%)
                           </span>

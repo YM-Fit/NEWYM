@@ -1,4 +1,4 @@
-import { ArrowRight, Save, Scale, User, CheckCircle } from 'lucide-react';
+import { ArrowRight, Save, Scale, User, CheckCircle, TrendingDown, TrendingUp, Minus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Trainee, BodyMeasurement } from '../../types';
 import { supabase } from '../../lib/supabase';
@@ -6,6 +6,7 @@ import { useScaleListener } from '../../hooks/useScaleListener';
 import { useAutoSave } from '../../hooks/useAutoSave';
 import AutoSaveIndicator from '../common/AutoSaveIndicator';
 import DraftModal from '../common/DraftModal';
+import { calculateMetabolicAge, getMetabolicAgeMessage } from '../../utils/metabolicAge';
 
 interface MeasurementFormProps {
   trainee: Trainee;
@@ -156,6 +157,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
     const bmi = calculateBMI(formData.weight, height || 0);
     const bmr = calculateBMR(formData.weight, height || 0, age || 0, gender as 'male' | 'female');
+    const metabolicAge = bmr > 0 ? calculateMetabolicAge(age || 0, bmr, gender as string, formData.weight, height || 0) : null;
 
     const measurementData = {
       trainee_id: trainee.id,
@@ -165,6 +167,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       water_percentage: formData.waterPercentage || null,
       bmr: bmr || null,
       bmi: bmi || null,
+      metabolic_age: metabolicAge,
       source: formData.source,
       chest_back: formData.measurements.chestBack || null,
       belly: formData.measurements.belly || null,
@@ -206,6 +209,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
         waterPercentage: responseData.water_percentage || undefined,
         bmr: responseData.bmr || undefined,
         bmi: responseData.bmi || undefined,
+        metabolicAge: responseData.metabolic_age || undefined,
         source: responseData.source as 'tanita' | 'manual',
         pairMember: responseData.pair_member || undefined,
         measurements: {
@@ -456,6 +460,65 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                 return calculateBMR(formData.weight, height || 0, age || 0, gender as 'male' | 'female') || '0';
               })()}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
+              גיל מטבולי
+              <span className="text-sm text-gray-500 mr-2">(מחושב אוטומטית)</span>
+            </label>
+            {(() => {
+              const height = trainee.isPair
+                ? (selectedMember === 'member_1' ? trainee.pairHeight1 : selectedMember === 'member_2' ? trainee.pairHeight2 : trainee.pairHeight1)
+                : trainee.height;
+              const age = trainee.isPair
+                ? (selectedMember === 'member_1' ? trainee.pairAge1 : selectedMember === 'member_2' ? trainee.pairAge2 : trainee.pairAge1)
+                : trainee.age;
+              const gender = trainee.isPair
+                ? (selectedMember === 'member_1' ? trainee.pairGender1 : selectedMember === 'member_2' ? trainee.pairGender2 : trainee.pairGender1)
+                : trainee.gender;
+
+              const bmr = calculateBMR(formData.weight, height || 0, age || 0, gender as 'male' | 'female');
+
+              if (bmr > 0 && age && formData.weight && height) {
+                const metabolicAge = calculateMetabolicAge(age, bmr, gender as string, formData.weight, height);
+                const message = getMetabolicAgeMessage(metabolicAge, age);
+
+                const statusColors = {
+                  excellent: 'bg-green-50 border-green-300 text-green-700',
+                  good: 'bg-blue-50 border-blue-300 text-blue-700',
+                  'needs-improvement': 'bg-orange-50 border-orange-300 text-orange-700'
+                };
+
+                const statusIcons = {
+                  excellent: <TrendingDown className="h-6 w-6 inline ml-2" />,
+                  good: <Minus className="h-6 w-6 inline ml-2" />,
+                  'needs-improvement': <TrendingUp className="h-6 w-6 inline ml-2" />
+                };
+
+                return (
+                  <div>
+                    <div className={`w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 rounded-lg font-bold ${statusColors[message.status]}`}>
+                      {metabolicAge} שנים
+                      {statusIcons[message.status]}
+                    </div>
+                    <p className={`mt-2 text-sm lg:text-base font-medium ${
+                      message.status === 'excellent' ? 'text-green-600' :
+                      message.status === 'good' ? 'text-blue-600' :
+                      'text-orange-600'
+                    }`}>
+                      {message.text}
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="w-full p-4 lg:p-5 text-xl lg:text-2xl bg-gray-50 border-2 border-gray-300 rounded-lg text-gray-400 font-semibold">
+                  נדרש משקל וגובה לחישוב
+                </div>
+              );
+            })()}
           </div>
 
           <div>

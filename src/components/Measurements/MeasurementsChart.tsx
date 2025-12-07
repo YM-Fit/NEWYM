@@ -3,7 +3,7 @@ import { BodyMeasurement } from '../../types';
 
 interface MeasurementsChartProps {
   measurements: BodyMeasurement[];
-  metric: 'weight' | 'bodyFat' | 'muscleMass' | 'waterPercentage';
+  metric: 'weight' | 'bodyFat' | 'muscleMass' | 'waterPercentage' | 'metabolicAge';
 }
 
 export default function MeasurementsChart({ measurements, metric }: MeasurementsChartProps) {
@@ -13,6 +13,7 @@ export default function MeasurementsChart({ measurements, metric }: Measurements
       case 'bodyFat': return 'אחוז שומן (%)';
       case 'muscleMass': return 'מסת שריר (ק״ג)';
       case 'waterPercentage': return 'אחוז מים (%)';
+      case 'metabolicAge': return 'גיל מטבולי';
       default: return metric;
     }
   };
@@ -23,6 +24,7 @@ export default function MeasurementsChart({ measurements, metric }: Measurements
       case 'bodyFat': return '#EF4444';
       case 'muscleMass': return '#10B981';
       case 'waterPercentage': return '#8B5CF6';
+      case 'metabolicAge': return '#F59E0B';
       default: return '#6B7280';
     }
   };

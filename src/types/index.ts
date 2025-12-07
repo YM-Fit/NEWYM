@@ -67,6 +67,7 @@ export interface BodyMeasurement {
   waterPercentage?: number;
   bmr?: number;
   bmi?: number;
+  metabolicAge?: number;
   source: 'tanita' | 'manual';
   pairMember?: 'member_1' | 'member_2' | null;
   measurements?: {
