@@ -3,11 +3,13 @@ import { X, Calculator } from 'lucide-react';
 
 interface WorkingWeightCalculatorProps {
   onClose: () => void;
+  initialWeight?: number;
+  initialReps?: number;
 }
 
-export default function WorkingWeightCalculator({ onClose }: WorkingWeightCalculatorProps) {
-  const [weight, setWeight] = useState<number>(100);
-  const [reps, setReps] = useState<number>(10);
+export default function WorkingWeightCalculator({ onClose, initialWeight = 100, initialReps = 10 }: WorkingWeightCalculatorProps) {
+  const [weight, setWeight] = useState<number>(initialWeight);
+  const [reps, setReps] = useState<number>(initialReps);
 
   const calculateOneRM = (weight: number, reps: number): number => {
     if (reps === 1) return weight;

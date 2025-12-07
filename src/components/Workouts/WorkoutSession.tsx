@@ -113,7 +113,10 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     exerciseIndex: number;
     setIndex: number;
   } | null>(null);
-  const [showCalculator, setShowCalculator] = useState(false);
+  const [calculatorData, setCalculatorData] = useState<{
+    weight: number;
+    reps: number;
+  } | null>(null);
 
   const addExercise = (exercise: Exercise) => {
     const newExercise: WorkoutExercise = {
@@ -615,7 +618,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                   </div>
                 </div>
 
-                <div className="mb-3 grid grid-cols-2 gap-2">
+                <div className="mb-3 grid grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => setEquipmentSelector({ exerciseIndex, setIndex })}
@@ -665,6 +668,19 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                       </span>
                       <span className="font-medium text-sm lg:text-base">
                         כשל
+                      </span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCalculatorData({ weight: set.weight, reps: set.reps })}
+                    className="py-3 lg:py-4 px-3 rounded-xl border-2 border-gray-300 hover:border-orange-300 bg-white hover:bg-orange-50 transition-all"
+                  >
+                    <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse">
+                      <Calculator className="h-5 w-5 lg:h-6 lg:w-6 text-orange-600" />
+                      <span className="font-medium text-sm lg:text-base text-gray-700">
+                        1RM
                       </span>
                     </div>
                   </button>
@@ -1007,8 +1023,12 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
         />
       )}
 
-      {showCalculator && (
-        <WorkingWeightCalculator onClose={() => setShowCalculator(false)} />
+      {calculatorData && (
+        <WorkingWeightCalculator
+          initialWeight={calculatorData.weight}
+          initialReps={calculatorData.reps}
+          onClose={() => setCalculatorData(null)}
+        />
       )}
     </div>
   );
