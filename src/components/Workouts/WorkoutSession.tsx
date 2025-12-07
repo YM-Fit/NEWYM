@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { ArrowRight, Plus, Save, Copy, Trash2 } from 'lucide-react';
+import { ArrowRight, Plus, Save, Copy, Trash2, Calculator } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import ExerciseSelector from './ExerciseSelector';
 import QuickNumericPad from './QuickNumericPad';
 import EquipmentSelector from '../Equipment/EquipmentSelector';
+import WorkingWeightCalculator from '../Tools/WorkingWeightCalculator';
 
 interface Exercise {
   id: string;
@@ -112,6 +113,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     exerciseIndex: number;
     setIndex: number;
   } | null>(null);
+  const [showCalculator, setShowCalculator] = useState(false);
 
   const addExercise = (exercise: Exercise) => {
     const newExercise: WorkoutExercise = {
@@ -472,15 +474,25 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving || exercises.length === 0}
-            className="bg-green-500 hover:bg-green-600 active:bg-green-700 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl touch-manipulation"
-          >
-            <Save className="h-5 w-5 lg:h-6 lg:w-6" />
-            <span className="font-semibold text-base lg:text-lg">{saving ? 'שומר...' : (workoutId ? 'עדכן אימון' : 'שמור אימון')}</span>
-          </button>
+          <div className="flex space-x-3 rtl:space-x-reverse">
+            <button
+              type="button"
+              onClick={() => setShowCalculator(true)}
+              className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white px-4 lg:px-6 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all shadow-lg hover:shadow-xl touch-manipulation"
+            >
+              <Calculator className="h-5 w-5 lg:h-6 lg:w-6" />
+              <span className="font-semibold text-base lg:text-lg">מחשבון</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving || exercises.length === 0}
+              className="bg-green-500 hover:bg-green-600 active:bg-green-700 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl touch-manipulation"
+            >
+              <Save className="h-5 w-5 lg:h-6 lg:w-6" />
+              <span className="font-semibold text-base lg:text-lg">{saving ? 'שומר...' : (workoutId ? 'עדכן אימון' : 'שמור אימון')}</span>
+            </button>
+          </div>
         </div>
 
         <div className="mt-4">
@@ -993,6 +1005,10 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           onClose={() => setSupersetDropsetNumericPad(null)}
           allowDecimal={supersetDropsetNumericPad.field === 'superset_dropset_weight'}
         />
+      )}
+
+      {showCalculator && (
+        <WorkingWeightCalculator onClose={() => setShowCalculator(false)} />
       )}
     </div>
   );
