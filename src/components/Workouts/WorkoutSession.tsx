@@ -130,6 +130,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
   const [templateName, setTemplateName] = useState('');
   const [templateDescription, setTemplateDescription] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
+  const [minimizedExercises, setMinimizedExercises] = useState<string[]>([]);
 
   const workoutData = {
     exercises,
@@ -187,12 +188,42 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
   }, [isDirty, exercises.length, workoutId]);
 
   const addExercise = (exercise: Exercise) => {
+    if (exercises.length > 0) {
+      const lastExercise = exercises[exercises.length - 1];
+      if (!minimizedExercises.includes(lastExercise.tempId)) {
+        setMinimizedExercises(prev => [...prev, lastExercise.tempId]);
+      }
+    }
+
     const newExercise: WorkoutExercise = {
       tempId: Date.now().toString(),
       exercise,
       sets: [createEmptySet(1)],
     };
     setExercises([...exercises, newExercise]);
+  };
+
+  const toggleMinimizeExercise = (exerciseId: string) => {
+    setMinimizedExercises(prev => {
+      if (prev.includes(exerciseId)) {
+        return prev.filter(id => id !== exerciseId);
+      } else {
+        return [...prev, exerciseId];
+      }
+    });
+  };
+
+  const completeExercise = (exerciseId: string) => {
+    if (!minimizedExercises.includes(exerciseId)) {
+      setMinimizedExercises(prev => [...prev, exerciseId]);
+    }
+  };
+
+  const getExerciseSummary = (exercise: WorkoutExercise) => {
+    const totalSets = exercise.sets.length;
+    const maxWeight = Math.max(...exercise.sets.map(s => s.weight), 0);
+    const totalVolume = exercise.sets.reduce((sum, set) => sum + (set.weight * set.reps), 0);
+    return { totalSets, maxWeight, totalVolume };
   };
 
   const createEmptySet = (setNumber: number): SetData => ({
@@ -678,25 +709,79 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
         </div>
       </div>
 
-      {exercises.map((workoutExercise, exerciseIndex) => (
-        <div key={workoutExercise.tempId} className="bg-white rounded-xl shadow-sm p-4 lg:p-6 mb-4 lg:mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-lg lg:text-2xl font-bold text-gray-900">{workoutExercise.exercise.name}</h3>
-              {workoutExercise.sets.length > 0 && (
-                <p className="text-sm text-gray-600 mt-1">
-                  נפח: {calculateExerciseVolume(workoutExercise).toLocaleString()} ק"ג
-                </p>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => removeExercise(exerciseIndex)}
-              className="p-2 lg:p-3 hover:bg-red-50 active:bg-red-100 text-red-600 rounded-lg transition-colors touch-manipulation"
-            >
-              <Trash2 className="h-5 w-5 lg:h-6 lg:w-6" />
-            </button>
-          </div>
+      {exercises.map((workoutExercise, exerciseIndex) => {
+        const isMinimized = minimizedExercises.includes(workoutExercise.tempId);
+        const summary = getExerciseSummary(workoutExercise);
+
+        return (
+          <div
+            key={workoutExercise.tempId}
+            className={`bg-white rounded-xl shadow-sm mb-4 lg:mb-6 transition-all duration-300 ease-in-out ${
+              isMinimized
+                ? 'bg-green-50 border-r-4 border-green-500'
+                : ''
+            }`}
+            style={{
+              height: isMinimized ? '64px' : 'auto',
+              overflow: isMinimized ? 'hidden' : 'visible',
+            }}
+          >
+            {isMinimized ? (
+              <div
+                className="h-full flex items-center justify-between px-4 lg:px-6 cursor-pointer hover:bg-green-100 transition-colors"
+                onClick={() => toggleMinimizeExercise(workoutExercise.tempId)}
+              >
+                <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                  <span className="text-2xl">✓</span>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">{workoutExercise.exercise.name}</h3>
+                    <p className="text-sm text-gray-600">
+                      {summary.totalSets} סטים • {summary.maxWeight} ק״ג מקס • נפח: {summary.totalVolume.toLocaleString()} ק״ג
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <span className="text-sm text-green-600 font-semibold">לחץ לעריכה</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeExercise(exerciseIndex);
+                    }}
+                    className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 lg:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg lg:text-2xl font-bold text-gray-900">{workoutExercise.exercise.name}</h3>
+                    {workoutExercise.sets.length > 0 && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        נפח: {calculateExerciseVolume(workoutExercise).toLocaleString()} ק"ג
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <button
+                      type="button"
+                      onClick={() => completeExercise(workoutExercise.tempId)}
+                      className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm font-semibold"
+                    >
+                      סיים תרגיל
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeExercise(exerciseIndex)}
+                      className="p-2 lg:p-3 hover:bg-red-50 active:bg-red-100 text-red-600 rounded-lg transition-colors touch-manipulation"
+                    >
+                      <Trash2 className="h-5 w-5 lg:h-6 lg:w-6" />
+                    </button>
+                  </div>
+                </div>
 
           <div className="space-y-3">
             {workoutExercise.sets.map((set, setIndex) => (
@@ -1079,8 +1164,11 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           >
             + הוסף סט
           </button>
-        </div>
-      ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
 
       {exercises.length === 0 && !workoutId && (
         <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-4">
