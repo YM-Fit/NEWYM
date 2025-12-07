@@ -71,6 +71,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [workoutId] = useState(editingWorkout?.id || null);
+  const [workoutDate, setWorkoutDate] = useState(new Date());
   const [numericPad, setNumericPad] = useState<{
     exerciseIndex: number;
     setIndex: number;
@@ -328,6 +329,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           .update({
             notes: notes || null,
             updated_at: new Date().toISOString(),
+            workout_date: workoutDate.toISOString(),
           })
           .eq('id', workoutId)
           .select()
@@ -342,6 +344,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
               trainer_id: user.id,
               workout_type: workoutType,
               notes,
+              workout_date: workoutDate.toISOString(),
             },
           ])
           .select()
@@ -480,7 +483,17 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 lg:gap-4">
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">תאריך האימון</label>
+          <input
+            type="date"
+            value={workoutDate.toISOString().split('T')[0]}
+            onChange={(e) => setWorkoutDate(new Date(e.target.value))}
+            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 lg:gap-4 mt-4">
           <button
             type="button"
             onClick={() => setWorkoutType('personal')}
