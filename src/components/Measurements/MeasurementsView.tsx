@@ -292,24 +292,27 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                     </div>
                   </div>
 
-                  {measurement.measurements && (
+                  {measurement.measurements && (measurement.measurements.chestBack || measurement.measurements.belly || measurement.measurements.glutes || measurement.measurements.thigh || measurement.measurements.rightArm || measurement.measurements.leftArm) && (
                     <div className="mt-3 pt-3 border-t border-gray-100">
                       <p className="text-sm text-gray-500 mb-2">היקפים (ס״מ):</p>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm">
-                        {measurement.measurements.chest && (
-                          <span>חזה: {measurement.measurements.chest}</span>
+                      <div className="grid grid-cols-2 md:grid-cols-6 gap-2 text-sm">
+                        {measurement.measurements.chestBack > 0 && (
+                          <span>חזה/גב: {measurement.measurements.chestBack}</span>
                         )}
-                        {measurement.measurements.waist && (
-                          <span>מותניים: {measurement.measurements.waist}</span>
+                        {measurement.measurements.belly > 0 && (
+                          <span>פופיק: {measurement.measurements.belly}</span>
                         )}
-                        {measurement.measurements.hips && (
-                          <span>ירכיים: {measurement.measurements.hips}</span>
+                        {measurement.measurements.glutes > 0 && (
+                          <span>ישבן: {measurement.measurements.glutes}</span>
                         )}
-                        {measurement.measurements.arms && (
-                          <span>זרועות: {measurement.measurements.arms}</span>
+                        {measurement.measurements.thigh > 0 && (
+                          <span>ירך: {measurement.measurements.thigh}</span>
                         )}
-                        {measurement.measurements.thighs && (
-                          <span>ירכיים: {measurement.measurements.thighs}</span>
+                        {measurement.measurements.rightArm > 0 && (
+                          <span>יד ימין: {measurement.measurements.rightArm}</span>
+                        )}
+                        {measurement.measurements.leftArm > 0 && (
+                          <span>יד שמאל: {measurement.measurements.leftArm}</span>
                         )}
                       </div>
                     </div>

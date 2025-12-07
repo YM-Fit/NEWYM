@@ -241,16 +241,17 @@ export default function MainApp() {
         bodyFat: m.body_fat_percentage || undefined,
         muscleMass: m.muscle_mass || undefined,
         waterPercentage: m.water_percentage || undefined,
-        visceralFat: m.visceral_fat || undefined,
+        bmr: m.bmr || undefined,
         bmi: m.bmi || undefined,
         source: m.source as 'tanita' | 'manual',
         pairMember: m.pair_member as 'member_1' | 'member_2' | null,
         measurements: {
-          chest: m.chest || 0,
-          waist: m.waist || 0,
-          hips: m.hips || 0,
-          arms: m.right_arm || 0,
-          thighs: m.right_thigh || 0,
+          chestBack: m.chest_back || 0,
+          belly: m.belly || 0,
+          glutes: m.glutes || 0,
+          thigh: m.thigh || 0,
+          rightArm: m.right_arm || 0,
+          leftArm: m.left_arm || 0,
         }
       }));
       setMeasurements(formattedMeasurements);
