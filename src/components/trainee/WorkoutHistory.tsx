@@ -44,10 +44,23 @@ interface ExerciseSet {
   rpe: number | null;
   failure: boolean;
   set_type: string;
+  equipment_id: string | null;
   superset_weight: number | null;
   superset_reps: number | null;
+  superset_equipment_id: string | null;
+  superset_rpe: number | null;
   dropset_weight: number | null;
   dropset_reps: number | null;
+  equipment?: {
+    id: string;
+    name: string;
+    emoji: string | null;
+  };
+  superset_equipment?: {
+    id: string;
+    name: string;
+    emoji: string | null;
+  };
 }
 
 interface Workout {
@@ -110,10 +123,15 @@ export default function WorkoutHistory({ traineeId }: WorkoutHistoryProps) {
               rpe,
               failure,
               set_type,
+              equipment_id,
               superset_weight,
               superset_reps,
+              superset_equipment_id,
+              superset_rpe,
               dropset_weight,
-              dropset_reps
+              dropset_reps,
+              equipment:equipment!exercise_sets_equipment_id_fkey(id, name, emoji),
+              superset_equipment:equipment!exercise_sets_superset_equipment_id_fkey(id, name, emoji)
             )
           )
         )
@@ -627,33 +645,52 @@ function WorkoutDetail({
                         ?.sort((a, b) => a.set_number - b.set_number)
                         .map((set, index) => (
                           <div key={set.id} className="space-y-1">
-                            <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
-                              <div className="flex items-center gap-3">
-                                <span className="w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-xs font-medium">
-                                  {index + 1}
-                                </span>
-                                <span className="font-medium">
-                                  {set.weight || 0} ק״ג × {set.reps || 0}
-                                </span>
-                                {set.failure && (
-                                  <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
-                                    כשל
+                            <div className="bg-gray-50 rounded-lg p-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-3">
+                                  <span className="w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-xs font-medium">
+                                    {index + 1}
                                   </span>
+                                  <span className="font-medium">
+                                    {set.weight || 0} ק״ג × {set.reps || 0}
+                                  </span>
+                                  {set.failure && (
+                                    <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                                      כשל
+                                    </span>
+                                  )}
+                                </div>
+                                {set.rpe && (
+                                  <span className="text-sm text-gray-500">RPE {set.rpe}</span>
                                 )}
                               </div>
-                              {set.rpe && (
-                                <span className="text-sm text-gray-500">RPE {set.rpe}</span>
+                              {set.equipment && (
+                                <div className="flex items-center gap-2 text-sm text-gray-600 mr-9">
+                                  {set.equipment.emoji && <span>{set.equipment.emoji}</span>}
+                                  <span>{set.equipment.name}</span>
+                                </div>
                               )}
                             </div>
 
                             {set.superset_weight && set.superset_reps && (
-                              <div className="flex items-center justify-between bg-blue-50 rounded-lg p-3 mr-4">
-                                <div className="flex items-center gap-3">
-                                  <span className="text-xs text-blue-600 font-medium">סופרסט</span>
-                                  <span className="font-medium text-blue-800">
-                                    {set.superset_weight} ק״ג × {set.superset_reps}
-                                  </span>
+                              <div className="bg-blue-50 rounded-lg p-3 mr-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-xs text-blue-600 font-medium">סופרסט</span>
+                                    <span className="font-medium text-blue-800">
+                                      {set.superset_weight} ק״ג × {set.superset_reps}
+                                    </span>
+                                  </div>
+                                  {set.superset_rpe && (
+                                    <span className="text-sm text-blue-600">RPE {set.superset_rpe}</span>
+                                  )}
                                 </div>
+                                {set.superset_equipment && (
+                                  <div className="flex items-center gap-2 text-sm text-blue-700">
+                                    {set.superset_equipment.emoji && <span>{set.superset_equipment.emoji}</span>}
+                                    <span>{set.superset_equipment.name}</span>
+                                  </div>
+                                )}
                               </div>
                             )}
 

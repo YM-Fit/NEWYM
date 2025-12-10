@@ -50,6 +50,20 @@ interface DayExercise {
   rest_seconds: number;
   notes: string | null;
   order_index: number;
+  target_weight: number | null;
+  target_rpe: number | null;
+  equipment_id: string | null;
+  set_type: string;
+  failure: boolean;
+  superset_exercise_id: string | null;
+  superset_weight: number | null;
+  superset_reps: number | null;
+  superset_rpe: number | null;
+  superset_equipment_id: string | null;
+  superset_dropset_weight: number | null;
+  superset_dropset_reps: number | null;
+  dropset_weight: number | null;
+  dropset_reps: number | null;
   exercise?: {
     id: string;
     name: string;
@@ -57,6 +71,20 @@ interface DayExercise {
     muscle_group?: {
       name: string;
     };
+  };
+  equipment?: {
+    id: string;
+    name: string;
+    emoji: string | null;
+  };
+  superset_exercise?: {
+    id: string;
+    name: string;
+  };
+  superset_equipment?: {
+    id: string;
+    name: string;
+    emoji: string | null;
   };
 }
 
@@ -134,6 +162,20 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
               name,
               muscle_group_id,
               muscle_group:muscle_groups(name)
+            ),
+            equipment:equipment!workout_plan_day_exercises_equipment_id_fkey(
+              id,
+              name,
+              emoji
+            ),
+            superset_exercise:exercises!workout_plan_day_exercises_superset_exercise_id_fkey(
+              id,
+              name
+            ),
+            superset_equipment:equipment!workout_plan_day_exercises_superset_equipment_id_fkey(
+              id,
+              name,
+              emoji
             )
           `)
           .eq('day_id', day.id)
@@ -293,7 +335,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                         <p className="text-sm text-gray-500 mt-0.5">{exercise.exercise.muscle_group.name}</p>
                       )}
 
-                      <div className="bg-gray-50 rounded-xl p-4 mt-3 border-2 border-gray-200">
+                      <div className="bg-gray-50 rounded-xl p-4 mt-3 border-2 border-gray-200 space-y-3">
                         <div className="grid grid-cols-3 gap-3">
                           <div className={`${color.light} ${color.border} border-2 rounded-lg p-3 text-center`}>
                             <div className={`flex items-center justify-center gap-1 mb-1 ${color.text}`}>
@@ -325,6 +367,86 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                             </div>
                           </div>
                         </div>
+
+                        {exercise.target_weight && (
+                          <div className="bg-white border-2 border-gray-200 rounded-lg p-3 flex items-center justify-between">
+                            <span className="text-sm font-medium text-gray-600">משקל יעד</span>
+                            <span className="text-lg font-bold text-gray-900">{exercise.target_weight} ק״ג</span>
+                          </div>
+                        )}
+
+                        {exercise.target_rpe && (
+                          <div className="bg-white border-2 border-gray-200 rounded-lg p-3 flex items-center justify-between">
+                            <span className="text-sm font-medium text-gray-600">RPE יעד</span>
+                            <span className="text-lg font-bold text-gray-900">{exercise.target_rpe}/10</span>
+                          </div>
+                        )}
+
+                        {exercise.equipment && (
+                          <div className="bg-white border-2 border-gray-200 rounded-lg p-3 flex items-center justify-between">
+                            <span className="text-sm font-medium text-gray-600">ציוד</span>
+                            <div className="flex items-center gap-2">
+                              {exercise.equipment.emoji && <span className="text-lg">{exercise.equipment.emoji}</span>}
+                              <span className="font-medium text-gray-900">{exercise.equipment.name}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {exercise.failure && (
+                          <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3 flex items-center justify-center gap-2">
+                            <span className="text-sm font-bold text-red-700">💪 לכשל</span>
+                          </div>
+                        )}
+
+                        {exercise.set_type === 'superset' && exercise.superset_exercise && (
+                          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-blue-700 bg-blue-200 px-2 py-1 rounded-full">סופרסט</span>
+                              <span className="font-medium text-blue-900">{exercise.superset_exercise.name}</span>
+                            </div>
+                            {exercise.superset_weight && exercise.superset_reps && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-blue-600">משקל וחזרות</span>
+                                <span className="text-sm font-bold text-blue-900">
+                                  {exercise.superset_weight} ק״ג × {exercise.superset_reps}
+                                </span>
+                              </div>
+                            )}
+                            {exercise.superset_rpe && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-blue-600">RPE</span>
+                                <span className="text-sm font-bold text-blue-900">{exercise.superset_rpe}/10</span>
+                              </div>
+                            )}
+                            {exercise.superset_equipment && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-blue-600">ציוד</span>
+                                <div className="flex items-center gap-1">
+                                  {exercise.superset_equipment.emoji && (
+                                    <span>{exercise.superset_equipment.emoji}</span>
+                                  )}
+                                  <span className="text-sm font-medium text-blue-900">
+                                    {exercise.superset_equipment.name}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {exercise.set_type === 'dropset' && (exercise.dropset_weight || exercise.dropset_reps) && (
+                          <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs font-bold text-orange-700 bg-orange-200 px-2 py-1 rounded-full">דרופסט</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-orange-600">משקל וחזרות</span>
+                              <span className="text-sm font-bold text-orange-900">
+                                {exercise.dropset_weight} ק״ג × {exercise.dropset_reps}
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {exercise.notes && (
