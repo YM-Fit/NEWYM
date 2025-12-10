@@ -1,0 +1,707 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
+import {
+  ChevronRight,
+  ChevronLeft,
+  Plus,
+  X,
+  Trash2,
+  Coffee,
+  Sun,
+  Moon,
+  Cookie,
+  Droplets,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Check,
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+
+interface FoodDiaryProps {
+  traineeId: string | null;
+}
+
+interface Meal {
+  id: string;
+  trainee_id: string;
+  meal_date: string;
+  meal_type: string;
+  meal_time: string | null;
+  description: string | null;
+}
+
+interface DailyLog {
+  id: string;
+  trainee_id: string;
+  log_date: string;
+  water_ml: number;
+}
+
+interface FoodDiaryEntry {
+  id: string;
+  trainee_id: string;
+  diary_date: string;
+  completed: boolean;
+  completed_at: string | null;
+}
+
+const MEAL_TYPES = [
+  { value: 'breakfast', label: 'ארוחת בוקר', icon: Coffee, color: 'bg-amber-100 text-amber-700' },
+  { value: 'lunch', label: 'ארוחת צהריים', icon: Sun, color: 'bg-orange-100 text-orange-700' },
+  { value: 'dinner', label: 'ארוחת ערב', icon: Moon, color: 'bg-blue-100 text-blue-700' },
+  { value: 'snack', label: 'ארוחת ביניים', icon: Cookie, color: 'bg-green-100 text-green-700' },
+];
+
+const WATER_GOAL = 2000;
+
+export default function FoodDiary({ traineeId }: FoodDiaryProps) {
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
+    const today = new Date();
+    const day = today.getDay();
+    const diff = today.getDate() - day;
+    return new Date(today.setDate(diff));
+  });
+  const [meals, setMeals] = useState<Map<string, Meal[]>>(new Map());
+  const [waterLogs, setWaterLogs] = useState<Map<string, DailyLog>>(new Map());
+  const [diaryEntries, setDiaryEntries] = useState<Map<string, FoodDiaryEntry>>(new Map());
+  const [showModal, setShowModal] = useState(false);
+  const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [expandedMeals, setExpandedMeals] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+
+  const [mealForm, setMealForm] = useState({
+    meal_time: '08:00',
+    meal_type: 'breakfast',
+    description: '',
+  });
+
+  useEffect(() => {
+    if (traineeId) {
+      loadWeekData();
+    }
+  }, [traineeId, currentWeekStart]);
+
+  const loadWeekData = async () => {
+    if (!traineeId) return;
+    setLoading(true);
+
+    const weekDates = getWeekDates();
+    const startDate = weekDates[0].toISOString().split('T')[0];
+    const endDate = weekDates[6].toISOString().split('T')[0];
+
+    const { data: mealsData } = await supabase
+      .from('meals')
+      .select('*')
+      .eq('trainee_id', traineeId)
+      .gte('meal_date', startDate)
+      .lte('meal_date', endDate)
+      .order('meal_time', { ascending: true });
+
+    const { data: waterData } = await supabase
+      .from('daily_log')
+      .select('*')
+      .eq('trainee_id', traineeId)
+      .gte('log_date', startDate)
+      .lte('log_date', endDate);
+
+    const { data: diaryData } = await supabase
+      .from('food_diary')
+      .select('*')
+      .eq('trainee_id', traineeId)
+      .gte('diary_date', startDate)
+      .lte('diary_date', endDate);
+
+    const mealsMap = new Map<string, Meal[]>();
+    mealsData?.forEach((meal) => {
+      const dateKey = meal.meal_date;
+      if (!mealsMap.has(dateKey)) {
+        mealsMap.set(dateKey, []);
+      }
+      mealsMap.get(dateKey)!.push(meal);
+    });
+
+    const waterMap = new Map<string, DailyLog>();
+    waterData?.forEach((log) => {
+      waterMap.set(log.log_date, log);
+    });
+
+    const diaryMap = new Map<string, FoodDiaryEntry>();
+    diaryData?.forEach((entry) => {
+      diaryMap.set(entry.diary_date, entry);
+    });
+
+    setMeals(mealsMap);
+    setWaterLogs(waterMap);
+    setDiaryEntries(diaryMap);
+    setLoading(false);
+  };
+
+  const getWeekDates = (): Date[] => {
+    const dates: Date[] = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(currentWeekStart);
+      date.setDate(currentWeekStart.getDate() + i);
+      dates.push(date);
+    }
+    return dates;
+  };
+
+  const navigateWeek = (direction: 'prev' | 'next') => {
+    const newStart = new Date(currentWeekStart);
+    newStart.setDate(currentWeekStart.getDate() + (direction === 'next' ? 7 : -7));
+    setCurrentWeekStart(newStart);
+  };
+
+  const getHebrewDayName = (date: Date): string => {
+    const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+    return days[date.getDay()];
+  };
+
+  const formatDate = (date: Date): string => {
+    return `${date.getDate()}/${date.getMonth() + 1}`;
+  };
+
+  const isToday = (date: Date): boolean => {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  };
+
+  const openAddMeal = (dateStr: string) => {
+    setSelectedDate(dateStr);
+    setEditingMeal(null);
+    setMealForm({
+      meal_time: '08:00',
+      meal_type: 'breakfast',
+      description: '',
+    });
+    setShowModal(true);
+  };
+
+  const openEditMeal = (meal: Meal) => {
+    setSelectedDate(meal.meal_date);
+    setEditingMeal(meal);
+    setMealForm({
+      meal_time: meal.meal_time || '08:00',
+      meal_type: meal.meal_type,
+      description: meal.description || '',
+    });
+    setShowModal(true);
+  };
+
+  const saveMeal = async () => {
+    if (!traineeId || !mealForm.description.trim()) {
+      toast.error('נא להזין תיאור לארוחה');
+      return;
+    }
+
+    if (editingMeal) {
+      const { error } = await supabase
+        .from('meals')
+        .update({
+          meal_time: mealForm.meal_time,
+          meal_type: mealForm.meal_type,
+          description: mealForm.description,
+        })
+        .eq('id', editingMeal.id);
+
+      if (error) {
+        toast.error('שגיאה בעדכון הארוחה');
+        return;
+      }
+      toast.success('הארוחה עודכנה');
+    } else {
+      const { error } = await supabase.from('meals').insert({
+        trainee_id: traineeId,
+        meal_date: selectedDate,
+        meal_time: mealForm.meal_time,
+        meal_type: mealForm.meal_type,
+        description: mealForm.description,
+      });
+
+      if (error) {
+        toast.error('שגיאה בהוספת הארוחה');
+        return;
+      }
+      toast.success('הארוחה נוספה');
+    }
+
+    setShowModal(false);
+    loadWeekData();
+  };
+
+  const deleteMeal = async (mealId: string) => {
+    if (!confirm('האם למחוק את הארוחה?')) return;
+
+    const { error } = await supabase.from('meals').delete().eq('id', mealId);
+
+    if (error) {
+      toast.error('שגיאה במחיקת הארוחה');
+      return;
+    }
+
+    toast.success('הארוחה נמחקה');
+    loadWeekData();
+  };
+
+  const addWater = async (dateStr: string, amount: number) => {
+    if (!traineeId) return;
+
+    const existingLog = waterLogs.get(dateStr);
+
+    if (existingLog) {
+      const newAmount = existingLog.water_ml + amount;
+      const { error } = await supabase
+        .from('daily_log')
+        .update({ water_ml: newAmount })
+        .eq('id', existingLog.id);
+
+      if (error) {
+        toast.error('שגיאה בעדכון כמות המים');
+        return;
+      }
+
+      setWaterLogs((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(dateStr, { ...existingLog, water_ml: newAmount });
+        return newMap;
+      });
+    } else {
+      const { data, error } = await supabase
+        .from('daily_log')
+        .insert({
+          trainee_id: traineeId,
+          log_date: dateStr,
+          water_ml: amount,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        toast.error('שגיאה בהוספת מים');
+        return;
+      }
+
+      setWaterLogs((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(dateStr, data);
+        return newMap;
+      });
+    }
+  };
+
+  const toggleMealExpand = (mealId: string) => {
+    setExpandedMeals((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(mealId)) {
+        newSet.delete(mealId);
+      } else {
+        newSet.add(mealId);
+      }
+      return newSet;
+    });
+  };
+
+  const getMealTypeInfo = (type: string) => {
+    return MEAL_TYPES.find((mt) => mt.value === type) || MEAL_TYPES[0];
+  };
+
+  const getWeekRangeText = (): string => {
+    const weekDates = getWeekDates();
+    const start = weekDates[0];
+    const end = weekDates[6];
+    return `${formatDate(start)} - ${formatDate(end)}`;
+  };
+
+  const completeDay = async (dateStr: string) => {
+    if (!traineeId) return;
+
+    const dayMeals = meals.get(dateStr) || [];
+    if (dayMeals.length === 0) {
+      toast.error('נא להוסיף לפחות ארוחה אחת לפני סיום היום');
+      return;
+    }
+
+    let diaryEntry = diaryEntries.get(dateStr);
+
+    if (!diaryEntry) {
+      const { data, error } = await supabase
+        .from('food_diary')
+        .insert({
+          trainee_id: traineeId,
+          diary_date: dateStr,
+          completed: true,
+          completed_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (error) {
+        toast.error('שגיאה בסיום היום');
+        return;
+      }
+
+      diaryEntry = data;
+    } else {
+      const { data, error } = await supabase
+        .from('food_diary')
+        .update({
+          completed: true,
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', diaryEntry.id)
+        .select()
+        .single();
+
+      if (error) {
+        toast.error('שגיאה בסיום היום');
+        return;
+      }
+
+      diaryEntry = data;
+    }
+
+    setDiaryEntries((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(dateStr, diaryEntry!);
+      return newMap;
+    });
+
+    toast.success('יום האכילה הושלם! המאמן שלך יכול כעת לצפות בו');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-green-600 border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  const weekDates = getWeekDates();
+
+  return (
+    <div className="space-y-4 pb-4">
+      <div className="bg-white rounded-xl p-4 shadow-md sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigateWeek('next')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ChevronRight className="w-5 h-5 text-gray-600" />
+          </button>
+          <div className="text-center">
+            <h2 className="font-bold text-gray-800">יומן אכילה</h2>
+            <p className="text-sm text-gray-500">{getWeekRangeText()}</p>
+          </div>
+          <button
+            onClick={() => navigateWeek('prev')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5 text-gray-600" />
+          </button>
+        </div>
+      </div>
+
+      {weekDates.map((date) => {
+        const dateStr = date.toISOString().split('T')[0];
+        const dayMeals = meals.get(dateStr) || [];
+        const dayWater = waterLogs.get(dateStr);
+        const waterAmount = dayWater?.water_ml || 0;
+        const waterProgress = Math.min((waterAmount / WATER_GOAL) * 100, 100);
+        const diaryEntry = diaryEntries.get(dateStr);
+        const isCompleted = diaryEntry?.completed || false;
+
+        return (
+          <div
+            key={dateStr}
+            className={`bg-white rounded-xl shadow-md overflow-hidden ${
+              isToday(date) ? 'ring-2 ring-green-500' : ''
+            } ${isCompleted ? 'opacity-75' : ''}`}
+          >
+            <div
+              className={`px-4 py-3 ${
+                isToday(date) ? 'bg-green-500 text-white' : isCompleted ? 'bg-green-50' : 'bg-gray-50'
+              }`}
+            >
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  {isCompleted && (
+                    <div className="bg-green-500 text-white rounded-full p-1">
+                      <Check className="w-4 h-4" />
+                    </div>
+                  )}
+                  <div>
+                    <span className="font-bold">יום {getHebrewDayName(date)}</span>
+                    <span className="text-sm mr-2 opacity-80">{formatDate(date)}</span>
+                    {isToday(date) && (
+                      <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full mr-2">
+                        היום
+                      </span>
+                    )}
+                    {isCompleted && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full mr-2 ${
+                        isToday(date) ? 'bg-white/20' : 'bg-green-500 text-white'
+                      }`}>
+                        הושלם
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  {!isCompleted && dayMeals.length > 0 && (
+                    <button
+                      onClick={() => completeDay(dateStr)}
+                      className={`px-3 py-1.5 rounded-lg transition-colors text-sm font-medium flex items-center gap-1 ${
+                        isToday(date)
+                          ? 'bg-white/20 hover:bg-white/30 text-white'
+                          : 'bg-green-500 hover:bg-green-600 text-white'
+                      }`}
+                    >
+                      <Check className="w-4 h-4" />
+                      סיים יום
+                    </button>
+                  )}
+                  <button
+                    onClick={() => openAddMeal(dateStr)}
+                    disabled={isCompleted}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      isCompleted
+                        ? 'opacity-50 cursor-not-allowed bg-gray-200 text-gray-400'
+                        : isToday(date)
+                        ? 'bg-white/20 hover:bg-white/30 text-white'
+                        : 'bg-green-100 hover:bg-green-200 text-green-700'
+                    }`}
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-b bg-blue-50/50">
+              <div className="flex items-center gap-3 mb-2">
+                <Droplets className="w-5 h-5 text-blue-500" />
+                <span className="text-sm font-medium text-gray-700">מעקב מים</span>
+                <span className="text-sm text-gray-500">
+                  {waterAmount} / {WATER_GOAL} מ"ל
+                </span>
+              </div>
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-3">
+                <div
+                  className="h-full bg-blue-500 transition-all duration-300"
+                  style={{ width: `${waterProgress}%` }}
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => addWater(dateStr, 250)}
+                  className="flex-1 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                >
+                  +250 מ"ל
+                </button>
+                <button
+                  onClick={() => addWater(dateStr, 500)}
+                  className="flex-1 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                >
+                  +500 מ"ל
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4">
+              {dayMeals.length === 0 ? (
+                <p className="text-center text-gray-400 text-sm py-4">
+                  לא נרשמו ארוחות
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {dayMeals.map((meal) => {
+                    const typeInfo = getMealTypeInfo(meal.meal_type);
+                    const Icon = typeInfo.icon;
+                    const isExpanded = expandedMeals.has(meal.id);
+                    const description = meal.description || '';
+                    const shouldTruncate = description.length > 60;
+
+                    return (
+                      <div
+                        key={meal.id}
+                        className="border rounded-lg p-3 hover:border-gray-300 transition-colors"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`p-2 rounded-lg ${typeInfo.color}`}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium text-sm">
+                                {typeInfo.label}
+                              </span>
+                              {meal.meal_time && (
+                                <span className="text-xs text-gray-400 flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {meal.meal_time.slice(0, 5)}
+                                </span>
+                              )}
+                            </div>
+                            <p
+                              className={`text-sm text-gray-600 ${
+                                !isExpanded && shouldTruncate ? 'line-clamp-2' : ''
+                              }`}
+                            >
+                              {description}
+                            </p>
+                            {shouldTruncate && (
+                              <button
+                                onClick={() => toggleMealExpand(meal.id)}
+                                className="text-xs text-green-600 flex items-center gap-1 mt-1"
+                              >
+                                {isExpanded ? (
+                                  <>
+                                    <ChevronUp className="w-3 h-3" />
+                                    הצג פחות
+                                  </>
+                                ) : (
+                                  <>
+                                    <ChevronDown className="w-3 h-3" />
+                                    הצג עוד
+                                  </>
+                                )}
+                              </button>
+                            )}
+                          </div>
+                          {!isCompleted && (
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => openEditMeal(meal)}
+                                className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+                              >
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                  />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => deleteMeal(meal.id)}
+                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between">
+              <h3 className="text-lg font-bold">
+                {editingMeal ? 'עריכת ארוחה' : 'הוספת ארוחה'}
+              </h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  שעה
+                </label>
+                <input
+                  type="time"
+                  value={mealForm.meal_time}
+                  onChange={(e) =>
+                    setMealForm({ ...mealForm, meal_time: e.target.value })
+                  }
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  סוג ארוחה
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {MEAL_TYPES.map((type) => {
+                    const Icon = type.icon;
+                    return (
+                      <button
+                        key={type.value}
+                        onClick={() =>
+                          setMealForm({ ...mealForm, meal_type: type.value })
+                        }
+                        className={`p-3 rounded-lg border-2 flex items-center gap-2 transition-all ${
+                          mealForm.meal_type === type.value
+                            ? 'border-green-500 bg-green-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className={`p-1.5 rounded ${type.color}`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <span className="text-sm font-medium">{type.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  תיאור האוכל
+                </label>
+                <textarea
+                  value={mealForm.description}
+                  onChange={(e) =>
+                    setMealForm({ ...mealForm, description: e.target.value })
+                  }
+                  rows={4}
+                  placeholder="מה אכלת? (לדוגמה: 2 ביצים, לחם מלא, גבינה צהובה)"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 bg-white p-4 border-t flex gap-3">
+              <button
+                onClick={() => setShowModal(false)}
+                className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={saveMeal}
+                className="flex-1 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+              >
+                {editingMeal ? 'עדכן' : 'הוסף'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

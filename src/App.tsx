@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import LoginForm from './components/Auth/LoginForm';
-import RegisterForm from './components/Auth/RegisterForm';
-import MainApp from './components/MainApp';
+import LoginForm from './components/auth/LoginForm';
+import RegisterForm from './components/auth/RegisterForm';
+import TrainerApp from './components/trainer/TrainerApp';
+import TraineeApp from './components/trainee/TraineeApp';
 
 function AppContent() {
-  const { user, loading } = useAuth();
+  const { user, loading, userType } = useAuth();
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
   if (loading) {
@@ -27,12 +29,17 @@ function AppContent() {
     );
   }
 
-  return <MainApp />;
+  if (userType === 'trainee') {
+    return <TraineeApp />;
+  }
+
+  return <TrainerApp />;
 }
 
 export default function App() {
   return (
     <AuthProvider>
+      <Toaster position="top-center" />
       <AppContent />
     </AuthProvider>
   );

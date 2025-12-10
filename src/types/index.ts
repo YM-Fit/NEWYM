@@ -1,28 +1,31 @@
 export interface Trainee {
   id: string;
-  name: string;
-  email: string;
-  phone: string;
-  age: number;
-  gender: 'male' | 'female';
-  height: number;
-  startDate: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  age?: number;
+  gender: 'male' | 'female' | null;
+  height: number | null;
+  birth_date?: string | null;
+  start_date: string;
   status: 'active' | 'inactive' | 'vacation' | 'new';
   notes: string;
+  created_at: string;
+  trainer_id: string;
   lastWorkout?: string;
-  isPair?: boolean;
-  pairName1?: string;
-  pairName2?: string;
-  pairPhone1?: string;
-  pairPhone2?: string;
-  pairEmail1?: string;
-  pairEmail2?: string;
-  pairGender1?: 'male' | 'female';
-  pairGender2?: 'male' | 'female';
-  pairBirthDate1?: string;
-  pairBirthDate2?: string;
-  pairHeight1?: number;
-  pairHeight2?: number;
+  is_pair?: boolean;
+  pair_name_1?: string;
+  pair_name_2?: string;
+  pair_phone_1?: string;
+  pair_phone_2?: string;
+  pair_email_1?: string;
+  pair_email_2?: string;
+  pair_gender_1?: 'male' | 'female';
+  pair_gender_2?: 'male' | 'female';
+  pair_birth_date_1?: string;
+  pair_birth_date_2?: string;
+  pair_height_1?: number;
+  pair_height_2?: number;
 }
 
 export interface Exercise {

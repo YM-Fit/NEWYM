@@ -66,7 +66,6 @@ export function useScaleListener(): UseScaleListenerResult {
 
   const cleanup = useCallback(() => {
     if (channelRef.current) {
-      console.log('🔌 Unsubscribing from scale readings channel');
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
@@ -90,8 +89,6 @@ export function useScaleListener(): UseScaleListenerResult {
       setError(null);
       setConnectionStatus('disconnected');
 
-      console.log(`🔄 Setting up Tanita scale listener (attempt ${attempt}/${MAX_RETRY_ATTEMPTS})...`);
-
       const channel = supabase
         .channel('scale-readings-channel')
         .on(
@@ -104,8 +101,6 @@ export function useScaleListener(): UseScaleListenerResult {
           (payload) => {
             const newReading = payload.new as ScaleReading;
             const now = new Date();
-
-            console.log('📊 Tanita data received:', newReading, 'at:', now);
 
             const readingTime = new Date(newReading.created_at).getTime();
             const currentTime = now.getTime();
@@ -125,23 +120,11 @@ export function useScaleListener(): UseScaleListenerResult {
               setLastDataReceived(now);
               setConnectionStatus('connected');
               setRetryCount(0);
-
-              console.log('✅ Scale data accepted:', {
-                weight: newReading.weight_kg,
-                bodyFat: newReading.body_fat_percent,
-                age: ageInSeconds.toFixed(1) + 's',
-                valid: validation.valid,
-              });
-            } else {
-              console.log('⏰ Scale reading too old, ignoring:', ageInSeconds.toFixed(1), 'seconds');
             }
           }
         )
         .subscribe((status) => {
-          console.log('📡 Subscription status:', status);
-
           if (status === 'SUBSCRIBED') {
-            console.log('✅ Subscribed to Tanita scale readings channel');
             setConnectionStatus('connected');
             setRetryCount(0);
           } else if (status === 'CHANNEL_ERROR') {
@@ -150,7 +133,6 @@ export function useScaleListener(): UseScaleListenerResult {
             setConnectionStatus('disconnected');
 
             if (attempt < MAX_RETRY_ATTEMPTS) {
-              console.log(`🔄 Retrying in ${RETRY_DELAY_MS / 1000}s...`);
               setTimeout(() => {
                 setRetryCount(attempt);
                 setupRealtimeListener(attempt + 1);
@@ -165,7 +147,6 @@ export function useScaleListener(): UseScaleListenerResult {
             setConnectionStatus('disconnected');
 
             if (attempt < MAX_RETRY_ATTEMPTS) {
-              console.log(`🔄 Retrying in ${RETRY_DELAY_MS / 1000}s...`);
               setTimeout(() => {
                 setRetryCount(attempt);
                 setupRealtimeListener(attempt + 1);
@@ -179,9 +160,7 @@ export function useScaleListener(): UseScaleListenerResult {
       channelRef.current = channel;
 
       heartbeatIntervalRef.current = setInterval(() => {
-        if (channelRef.current) {
-          console.log('💓 Heartbeat check - channel active');
-        }
+        // Heartbeat check - channel active
       }, HEARTBEAT_INTERVAL_MS);
 
       statusCheckIntervalRef.current = setInterval(() => {
@@ -202,7 +181,6 @@ export function useScaleListener(): UseScaleListenerResult {
       setConnectionStatus('disconnected');
 
       if (attempt < MAX_RETRY_ATTEMPTS) {
-        console.log(`🔄 Retrying in ${RETRY_DELAY_MS / 1000}s...`);
         setTimeout(() => {
           setRetryCount(attempt);
           setupRealtimeListener(attempt + 1);
@@ -212,7 +190,6 @@ export function useScaleListener(): UseScaleListenerResult {
   }, [cleanup, lastDataReceived]);
 
   const refreshConnection = useCallback(() => {
-    console.log('🔄 Manual refresh requested');
     setRetryCount(0);
     setupRealtimeListener(1);
   }, [setupRealtimeListener]);

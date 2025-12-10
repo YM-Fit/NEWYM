@@ -2,35 +2,99 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
+interface TraineeSession {
+  trainee_id: string;
+  trainee_name: string;
+  trainer_id: string;
+  phone: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  userType: 'trainer' | 'trainee' | null;
+  traineeId: string | null;
+  traineeSession: TraineeSession | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInTrainee: (phone: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const TRAINEE_SESSION_KEY = 'trainee_session';
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userType, setUserType] = useState<'trainer' | 'trainee' | null>(null);
+  const [traineeId, setTraineeId] = useState<string | null>(null);
+  const [traineeSession, setTraineeSession] = useState<TraineeSession | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+
+      if (session?.user) {
+        const isTrainee = session.user.user_metadata?.is_trainee === true;
+
+        if (isTrainee) {
+          const traineeId = session.user.user_metadata.trainee_id;
+          setTraineeId(traineeId);
+          setUserType('trainee');
+
+          const traineeSession: TraineeSession = {
+            trainee_id: traineeId,
+            trainee_name: session.user.user_metadata.full_name || '',
+            trainer_id: '',
+            phone: session.user.user_metadata.phone || '',
+          };
+          setTraineeSession(traineeSession);
+          localStorage.setItem(TRAINEE_SESSION_KEY, JSON.stringify(traineeSession));
+        } else {
+          setUserType('trainer');
+        }
+      }
       setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      (async () => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      })();
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        const isTrainee = session.user.user_metadata?.is_trainee === true;
+
+        if (isTrainee) {
+          const traineeId = session.user.user_metadata.trainee_id;
+          setTraineeId(traineeId);
+          setUserType('trainee');
+
+          const traineeSession: TraineeSession = {
+            trainee_id: traineeId,
+            trainee_name: session.user.user_metadata.full_name || '',
+            trainer_id: '',
+            phone: session.user.user_metadata.phone || '',
+          };
+          setTraineeSession(traineeSession);
+          localStorage.setItem(TRAINEE_SESSION_KEY, JSON.stringify(traineeSession));
+        } else {
+          setUserType('trainer');
+          setTraineeId(null);
+          setTraineeSession(null);
+          localStorage.removeItem(TRAINEE_SESSION_KEY);
+        }
+      } else {
+        setUserType(null);
+        setTraineeId(null);
+        setTraineeSession(null);
+        localStorage.removeItem(TRAINEE_SESSION_KEY);
+      }
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -42,6 +106,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
     });
     return { error };
+  };
+
+  const signInTrainee = async (phone: string, password: string) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/trainee-login`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ phone, password }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        return { error: { message: data.error || 'מספר טלפון או סיסמה שגויים' } };
+      }
+
+      if (data.session && data.trainee) {
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+
+        setSession(data.session);
+        setUser(data.session.user);
+        setTraineeId(data.trainee.id);
+        setUserType('trainee');
+
+        const newTraineeSession: TraineeSession = {
+          trainee_id: data.trainee.id,
+          trainee_name: data.trainee.full_name,
+          trainer_id: data.trainee.trainer_id || '',
+          phone: data.trainee.phone,
+        };
+
+        localStorage.setItem(TRAINEE_SESSION_KEY, JSON.stringify(newTraineeSession));
+        setTraineeSession(newTraineeSession);
+      }
+
+      return { error: null };
+    } catch (err) {
+      return { error: { message: 'שגיאה בהתחברות' } };
+    }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
@@ -65,53 +177,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('Error creating trainer profile:', profileError);
         return { error: profileError };
       }
-
-      await createDefaultExercises(data.user.id);
     }
 
     return { error };
   };
 
-  const createDefaultExercises = async (trainerId: string) => {
-    const muscleGroups = [
-      { name: 'חזה', exercises: ['פרפר במכשיר', 'דחיפת חזה במכשיר', 'מתח כבלים עליון', 'מתח כבלים תחתון', 'לחיצת חזה עם משקולות', 'Push-ups', 'דחיפות חזה בכבלים'] },
-      { name: 'גב', exercises: ['משיכת גב עליון', 'משיכת גב תחתון', 'משיכה צרה', 'משיכת פולי רחבה', 'חתירה במכשיר', 'חתירה בכבל ישיבה', 'Pull-ups'] },
-      { name: 'כתפיים', exercises: ['כתפיים מכשיר לחיצה', 'עפיפון מכשיר', 'עפיפון צד במשקולות', 'כתף אחורית במכשיר', 'כתף קדמית במכשיר', 'שראגס טרפז', 'כתפיים לחיצה עם משקולות'] },
-      { name: 'ביצפס', exercises: ['כיפוף זרועות ישיבה', 'כיפוף זרועות במכשיר', 'כיפוף זרועות בכבל תחתון', 'כיפוף זרועות בכבל עליון', 'פטיש במשקולות', 'ביצפס במשקולות סגנון'] },
-      { name: 'טריצפס', exercises: ['דחיפת טריצפס בכבל', 'פשיטת זרועות מעל הראש', 'טריצפס מכשיר דיפס', 'טריצפס קיקבק', 'דחיפות יהלום'] },
-      { name: 'רגליים', exercises: ['כפיפת ברכיים שכיבה', 'פישוק רגליים במכשיר', 'קירוב רגליים במכשיר', 'כפיפת ברכיים ישיבה', 'לחיצת רגליים', 'הרמת עקבים', 'פשיטת רגליים'] },
-      { name: 'בטן', exercises: ['בטן עליונה במכשיר', 'בטן תחתונה במכשיר', 'פלאנק', 'רוטציות בטן רוסית', 'Bicycle Crunches', 'הרמת רגליים תלויה'] }
-    ];
-
-    for (const group of muscleGroups) {
-      const { data: muscleGroupData } = await supabase
-        .from('muscle_groups')
-        .insert([{ trainer_id: trainerId, name: group.name }])
-        .select()
-        .single();
-
-      if (muscleGroupData) {
-        const exercisesToInsert = group.exercises.map(exerciseName => ({
-          muscle_group_id: muscleGroupData.id,
-          name: exerciseName
-        }));
-
-        await supabase.from('exercises').insert(exercisesToInsert);
-      }
-    }
-  };
-
   const signOut = async () => {
+    // Always sign out from Supabase to clear the session completely
     await supabase.auth.signOut();
+
+    // Clear trainee session data
+    localStorage.removeItem(TRAINEE_SESSION_KEY);
+    setTraineeSession(null);
+    setTraineeId(null);
+
+    // Clear auth state
+    setUser(null);
+    setSession(null);
+    setUserType(null);
   };
+
+  const isAuthenticated = user !== null || traineeSession !== null;
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user: isAuthenticated ? (user || { id: traineeSession?.trainee_id } as User) : null,
         session,
         loading,
+        userType,
+        traineeId,
+        traineeSession,
         signIn,
+        signInTrainee,
         signUp,
         signOut,
       }}
