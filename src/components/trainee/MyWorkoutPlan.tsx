@@ -157,22 +157,22 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           .from('workout_plan_day_exercises')
           .select(`
             *,
-            exercise:exercises!workout_plan_day_exercises_exercise_id_fkey(
+            exercise:exercise_id(
               id,
               name,
               muscle_group_id,
               muscle_group:muscle_groups(name)
             ),
-            equipment:equipment!workout_plan_day_exercises_equipment_id_fkey(
+            equipment:equipment_id(
               id,
               name,
               emoji
             ),
-            superset_exercise:exercises!workout_plan_day_exercises_superset_exercise_id_fkey(
+            superset_exercise:superset_exercise_id(
               id,
               name
             ),
-            superset_equipment:equipment!workout_plan_day_exercises_superset_equipment_id_fkey(
+            superset_equipment:superset_equipment_id(
               id,
               name,
               emoji

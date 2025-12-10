@@ -130,8 +130,8 @@ export default function WorkoutHistory({ traineeId }: WorkoutHistoryProps) {
               superset_rpe,
               dropset_weight,
               dropset_reps,
-              equipment:equipment!exercise_sets_equipment_id_fkey(id, name, emoji),
-              superset_equipment:equipment!exercise_sets_superset_equipment_id_fkey(id, name, emoji)
+              equipment:equipment_id(id, name, emoji),
+              superset_equipment:superset_equipment_id(id, name, emoji)
             )
           )
         )
