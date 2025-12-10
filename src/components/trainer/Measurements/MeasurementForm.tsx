@@ -1,9 +1,10 @@
-import { ArrowRight, Save, Scale, User, CheckCircle, TrendingDown, TrendingUp, Minus, RefreshCw, AlertTriangle, X, Check } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { ArrowRight, Save, Scale, User, CheckCircle, TrendingDown, TrendingUp, Minus, RefreshCw, AlertTriangle, X, Check, Volume2, VolumeX, Wifi, WifiOff, Loader2, Server } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { Trainee, BodyMeasurement } from '../../../types';
 import { supabase } from '../../../lib/supabase';
-import { useScaleListener } from '../../../hooks/useScaleListener';
+import { useScaleListener, findTraineeByWeight, TraineeMatch } from '../../../hooks/useScaleListener';
 import { useAutoSave } from '../../../hooks/useAutoSave';
+import { useScaleSound } from '../../../hooks/useScaleSound';
 import AutoSaveIndicator from '../../common/AutoSaveIndicator';
 import DraftModal from '../../common/DraftModal';
 import { calculateMetabolicAge, getMetabolicAgeMessage } from '../../../utils/metabolicAge';
@@ -50,7 +51,17 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
   const [pendingScaleData, setPendingScaleData] = useState<any>(null);
   const [showValidationWarning, setShowValidationWarning] = useState(false);
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
-  const { latestReading, isListening, connectionStatus, lastDataReceived, refreshConnection } = useScaleListener();
+  const [highlightedFields, setHighlightedFields] = useState<string[]>([]);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [traineeMatches, setTraineeMatches] = useState<TraineeMatch[]>([]);
+  const [showTraineeMatchPopup, setShowTraineeMatchPopup] = useState(false);
+  const [waitingForScale, setWaitingForScale] = useState(true);
+  const [waitingStartTime] = useState(new Date());
+  const [elapsedWaitingTime, setElapsedWaitingTime] = useState(0);
+
+  const { latestReading, isListening, connectionStatus, scriptStatus, lastDataReceived, refreshConnection, isStabilizing, retryAttempt, maxRetries } = useScaleListener();
+  const { playDataReceived, playWarning, setEnabled: setSoundEnabledHook, isEnabled: isSoundEnabled } = useScaleSound();
+  const hasReceivedDataRef = useRef(false);
 
   const { lastSaved, isDirty, clearSaved, loadSaved } = useAutoSave({
     data: { formData, selectedMember },
@@ -101,9 +112,22 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
   }, [isDirty, formData.weight, isEditing]);
 
   useEffect(() => {
+    if (isEditing) return;
+    const interval = setInterval(() => {
+      if (waitingForScale) {
+        setElapsedWaitingTime(Math.floor((Date.now() - waitingStartTime.getTime()) / 1000));
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [waitingForScale, waitingStartTime, isEditing]);
+
+  useEffect(() => {
+    setSoundEnabled(isSoundEnabled());
+  }, [isSoundEnabled]);
+
+  useEffect(() => {
     if (latestReading && !isEditing) {
       const fatFreeMass = latestReading.fat_free_mass_kg || 0;
-      const fatMass = latestReading.fat_mass_kg || 0;
       const calculatedMuscleMass = fatFreeMass > 0 ? fatFreeMass : 0;
 
       const warnings: string[] = [];
@@ -121,24 +145,75 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
         waterPercentage: latestReading.water_percent || 0,
       };
 
+      if (warnings.length > 0) {
+        playWarning();
+      } else {
+        playDataReceived();
+      }
+
       setPendingScaleData(newData);
       setValidationWarnings(warnings);
       setShowValidationWarning(warnings.length > 0);
       setShowScaleDataToast(true);
+      setWaitingForScale(false);
+      hasReceivedDataRef.current = true;
     }
-  }, [latestReading, isEditing]);
+  }, [latestReading, isEditing, playDataReceived, playWarning]);
 
   const acceptScaleData = () => {
     if (pendingScaleData) {
+      const fieldsToHighlight: string[] = [];
+      if (pendingScaleData.weight) fieldsToHighlight.push('weight');
+      if (pendingScaleData.bodyFat) fieldsToHighlight.push('bodyFat');
+      if (pendingScaleData.muscleMass) fieldsToHighlight.push('muscleMass');
+      if (pendingScaleData.waterPercentage) fieldsToHighlight.push('waterPercentage');
+
       setFormData(prev => ({
         ...prev,
         ...pendingScaleData,
         source: 'tanita',
       }));
+
+      setHighlightedFields(fieldsToHighlight);
+      setTimeout(() => setHighlightedFields([]), 2500);
+
       setPendingScaleData(null);
       setShowScaleDataToast(false);
       setShowValidationWarning(false);
     }
+  };
+
+  const toggleSound = () => {
+    const newValue = !soundEnabled;
+    setSoundEnabled(newValue);
+    setSoundEnabledHook(newValue);
+  };
+
+  const formatWaitingTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins > 0) {
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${secs} שניות`;
+  };
+
+  const getWeightChangeDisplay = (current: number, previous?: number): { text: string; color: string } | null => {
+    if (!previous || !current) return null;
+    const change = current - previous;
+    if (Math.abs(change) < 0.1) return null;
+    const text = `${change > 0 ? '+' : ''}${change.toFixed(1)} ק"ג`;
+    const color = change > 0 ? 'text-red-300' : 'text-green-300';
+    return { text, color };
+  };
+
+  const getBodyFatChangeDisplay = (current: number, previous?: number): { text: string; color: string } | null => {
+    if (!previous || !current) return null;
+    const change = current - previous;
+    if (Math.abs(change) < 0.1) return null;
+    const text = `${change > 0 ? '+' : ''}${change.toFixed(1)}%`;
+    const color = change > 0 ? 'text-red-300' : 'text-green-300';
+    return { text, color };
   };
 
   const rejectScaleData = () => {
@@ -281,6 +356,19 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 lg:p-6">
+      {/* Stabilizing Indicator */}
+      {isStabilizing && !showScaleDataToast && (
+        <div className="fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-80 bg-blue-500 text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-pulse">
+          <div className="flex items-center space-x-3 rtl:space-x-reverse">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <div>
+              <p className="font-bold">המשקל מתייצב...</p>
+              <p className="text-sm opacity-90">אנא המתן</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Scale Data Received Toast */}
       {showScaleDataToast && pendingScaleData && (
         <div className={`fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-96 ${
@@ -296,10 +384,26 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               <p className="font-bold text-lg">
                 {showValidationWarning ? 'התקבלו נתונים חריגים!' : 'נתונים התקבלו מהמשקל'}
               </p>
-              <p className="text-sm opacity-90 mt-1">
-                {pendingScaleData.weight > 0 && `${pendingScaleData.weight.toFixed(1)} ק״ג`}
-                {pendingScaleData.bodyFat > 0 && `, ${pendingScaleData.bodyFat.toFixed(1)}% שומן`}
-              </p>
+              <div className="text-sm mt-1 space-y-1">
+                {pendingScaleData.weight > 0 && (
+                  <p className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <span>{pendingScaleData.weight.toFixed(1)} ק״ג</span>
+                    {previousMeasurement?.weight && (() => {
+                      const change = getWeightChangeDisplay(pendingScaleData.weight, previousMeasurement.weight);
+                      return change ? <span className={change.color}>({change.text})</span> : null;
+                    })()}
+                  </p>
+                )}
+                {pendingScaleData.bodyFat > 0 && (
+                  <p className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <span>{pendingScaleData.bodyFat.toFixed(1)}% שומן</span>
+                    {previousMeasurement?.bodyFat && (() => {
+                      const change = getBodyFatChangeDisplay(pendingScaleData.bodyFat, previousMeasurement.bodyFat);
+                      return change ? <span className={change.color}>({change.text})</span> : null;
+                    })()}
+                  </p>
+                )}
+              </div>
               {showValidationWarning && validationWarnings.length > 0 && (
                 <div className="mt-2 text-xs opacity-90">
                   {validationWarnings.map((warning, idx) => (
@@ -343,30 +447,76 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               <h1 className="text-xl lg:text-3xl font-bold text-gray-900">{trainee.name}</h1>
               <p className="text-base lg:text-lg text-gray-600">{isEditing ? 'עריכת מדידה' : 'מדידה חדשה'}</p>
               {!isEditing && (
-                <div className="flex items-center space-x-3 rtl:space-x-reverse mt-2">
-                  <div className={`flex items-center space-x-1 rtl:space-x-reverse text-sm ${
-                    connectionStatus === 'connected' ? 'text-green-600' :
-                    connectionStatus === 'stale' ? 'text-orange-600' :
-                    'text-red-600'
-                  }`}>
-                    <div className={`w-2 h-2 rounded-full ${
-                      connectionStatus === 'connected' ? 'bg-green-500 animate-pulse' :
-                      connectionStatus === 'stale' ? 'bg-orange-500' :
-                      'bg-red-500'
-                    }`}></div>
-                    <span>
-                      {connectionStatus === 'connected' && 'מחובר למשקל'}
-                      {connectionStatus === 'stale' && 'לא התקבלו נתונים'}
-                      {connectionStatus === 'disconnected' && 'לא מחובר'}
-                    </span>
+                <div className="flex flex-col space-y-2 mt-2">
+                  <div className="flex items-center space-x-3 rtl:space-x-reverse flex-wrap gap-2">
+                    {/* Realtime Connection Status */}
+                    <div className={`flex items-center space-x-1 rtl:space-x-reverse text-sm ${
+                      connectionStatus === 'connected' ? 'text-green-600' :
+                      connectionStatus === 'stale' ? 'text-orange-600' :
+                      'text-red-600'
+                    }`}>
+                      {connectionStatus === 'connected' ? (
+                        <Wifi className="h-4 w-4" />
+                      ) : (
+                        <WifiOff className="h-4 w-4" />
+                      )}
+                      <span>
+                        {connectionStatus === 'connected' && 'Realtime מחובר'}
+                        {connectionStatus === 'stale' && 'לא התקבלו נתונים'}
+                        {connectionStatus === 'disconnected' && 'לא מחובר'}
+                      </span>
+                    </div>
+
+                    {/* Script Status */}
+                    <div className={`flex items-center space-x-1 rtl:space-x-reverse text-sm ${
+                      scriptStatus.isOnline ? 'text-green-600' : 'text-gray-400'
+                    }`}>
+                      <Server className="h-4 w-4" />
+                      <span>
+                        {scriptStatus.isOnline ? `${scriptStatus.deviceName} פעיל` : 'סקריפט לא פעיל'}
+                      </span>
+                    </div>
+
+                    {/* Retry indicator */}
+                    {retryAttempt > 0 && connectionStatus === 'disconnected' && (
+                      <div className="flex items-center space-x-1 rtl:space-x-reverse text-sm text-orange-600">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>ניסיון {retryAttempt + 1}/{maxRetries}</span>
+                      </div>
+                    )}
+
+                    {/* Refresh & Sound Controls */}
+                    <div className="flex items-center space-x-1 rtl:space-x-reverse">
+                      <button
+                        onClick={refreshConnection}
+                        className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="רענן חיבור"
+                      >
+                        <RefreshCw className="h-4 w-4 text-gray-600" />
+                      </button>
+                      <button
+                        onClick={toggleSound}
+                        className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                        title={soundEnabled ? 'השתק צלילים' : 'הפעל צלילים'}
+                      >
+                        {soundEnabled ? (
+                          <Volume2 className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <VolumeX className="h-4 w-4 text-gray-400" />
+                        )}
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    onClick={refreshConnection}
-                    className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
-                    title="רענן חיבור"
-                  >
-                    <RefreshCw className="h-4 w-4 text-gray-600" />
-                  </button>
+
+                  {/* Waiting for scale indicator */}
+                  {waitingForScale && !hasReceivedDataRef.current && formData.weight === 0 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 flex items-center space-x-2 rtl:space-x-reverse">
+                      <Scale className="h-5 w-5 text-blue-500 animate-bounce" />
+                      <span className="text-sm text-blue-700">
+                        ממתין לשקילה... ({formatWaitingTime(elapsedWaitingTime)})
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
               {!isEditing && <AutoSaveIndicator lastSaved={lastSaved} isDirty={isDirty} />}
@@ -473,7 +623,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
         <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4 lg:mb-6">מדידות בסיסיות</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div>
+          <div className={`${highlightedFields.includes('weight') ? 'animate-highlight-pulse' : ''}`}>
             <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
               משקל (ק״ג) *
               {getChangeIndicator(formData.weight, previousMeasurement?.weight)}
@@ -484,7 +634,9 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               step="0.1"
               value={formData.weight || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, weight: Number(e.target.value) }))}
-              className="w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation"
+              className={`w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation ${
+                highlightedFields.includes('weight') ? 'border-green-500 bg-green-50 ring-2 ring-green-300' : 'border-gray-300'
+              }`}
               placeholder="0.0"
               required
             />
@@ -505,7 +657,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
             <p className="text-sm text-gray-500 mt-1">הגובה נשמר בפרופיל המתאמן</p>
           </div>
 
-          <div>
+          <div className={`${highlightedFields.includes('bodyFat') ? 'animate-highlight-pulse' : ''}`}>
             <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
               אחוז שומן (%)
               {getChangeIndicator(formData.bodyFat, previousMeasurement?.bodyFat)}
@@ -516,12 +668,14 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               step="0.1"
               value={formData.bodyFat || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, bodyFat: Number(e.target.value) }))}
-              className="w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation"
+              className={`w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation ${
+                highlightedFields.includes('bodyFat') ? 'border-green-500 bg-green-50 ring-2 ring-green-300' : 'border-gray-300'
+              }`}
               placeholder="0.0"
             />
           </div>
 
-          <div>
+          <div className={`${highlightedFields.includes('muscleMass') ? 'animate-highlight-pulse' : ''}`}>
             <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
               מסת שריר (ק״ג)
               {getChangeIndicator(formData.muscleMass, previousMeasurement?.muscleMass)}
@@ -532,12 +686,14 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               step="0.1"
               value={formData.muscleMass || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, muscleMass: Number(e.target.value) }))}
-              className="w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation"
+              className={`w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation ${
+                highlightedFields.includes('muscleMass') ? 'border-green-500 bg-green-50 ring-2 ring-green-300' : 'border-gray-300'
+              }`}
               placeholder="0.0"
             />
           </div>
 
-          <div>
+          <div className={`${highlightedFields.includes('waterPercentage') ? 'animate-highlight-pulse' : ''}`}>
             <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
               אחוז מים (%)
               {getChangeIndicator(formData.waterPercentage, previousMeasurement?.waterPercentage)}
@@ -548,7 +704,9 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               step="0.1"
               value={formData.waterPercentage || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, waterPercentage: Number(e.target.value) }))}
-              className="w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation"
+              className={`w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation ${
+                highlightedFields.includes('waterPercentage') ? 'border-green-500 bg-green-50 ring-2 ring-green-300' : 'border-gray-300'
+              }`}
               placeholder="0.0"
             />
           </div>
