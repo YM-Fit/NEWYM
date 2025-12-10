@@ -1,21 +1,25 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import toast from 'react-hot-toast';
 import {
   ArrowRight,
   Calendar,
-  ChevronDown,
-  ChevronUp,
   Clock,
   Dumbbell,
   Target,
   Check,
-  Circle,
   Repeat,
   ClipboardList,
   Flame,
   Zap,
   Heart,
   Shield,
+  Edit3,
+  Save,
+  X,
+  History,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 interface MyWorkoutPlanProps {
@@ -28,6 +32,8 @@ interface WorkoutPlan {
   description: string | null;
   days_per_week: number;
   is_active: boolean;
+  updated_at: string | null;
+  last_modified_by: string | null;
 }
 
 interface WorkoutDay {
@@ -64,6 +70,9 @@ interface DayExercise {
   superset_dropset_reps: number | null;
   dropset_weight: number | null;
   dropset_reps: number | null;
+  trainee_notes: string | null;
+  trainee_target_weight: number | null;
+  trainee_modified_at: string | null;
   exercise?: {
     id: string;
     name: string;
@@ -86,6 +95,14 @@ interface DayExercise {
     name: string;
     emoji: string | null;
   };
+}
+
+interface PlanHistory {
+  id: string;
+  change_type: string;
+  change_description: string;
+  changed_by_type: string;
+  created_at: string;
 }
 
 const muscleGroupIcons: Record<string, typeof Dumbbell> = {
@@ -115,6 +132,14 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<WorkoutDay | null>(null);
   const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
+  const [editingExercise, setEditingExercise] = useState<string | null>(null);
+  const [editData, setEditData] = useState<{ trainee_notes: string; trainee_target_weight: number | null }>({
+    trainee_notes: '',
+    trainee_target_weight: null,
+  });
+  const [saving, setSaving] = useState(false);
+  const [history, setHistory] = useState<PlanHistory[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     if (traineeId) {
@@ -131,11 +156,14 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
       .select('*')
       .eq('trainee_id', traineeId)
       .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (planData) {
       setPlan(planData);
       await loadPlanDays(planData.id);
+      await loadHistory(planData.id);
     }
 
     setLoading(false);
@@ -187,6 +215,84 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     }
   };
 
+  const loadHistory = async (planId: string) => {
+    const { data } = await supabase
+      .from('workout_plan_history')
+      .select('*')
+      .eq('plan_id', planId)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (data) {
+      setHistory(data);
+    }
+  };
+
+  const startEditing = (exercise: DayExercise) => {
+    setEditingExercise(exercise.id);
+    setEditData({
+      trainee_notes: exercise.trainee_notes || '',
+      trainee_target_weight: exercise.trainee_target_weight,
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingExercise(null);
+    setEditData({ trainee_notes: '', trainee_target_weight: null });
+  };
+
+  const saveExerciseChanges = async (exercise: DayExercise) => {
+    if (!plan) return;
+    setSaving(true);
+
+    const { error } = await supabase
+      .from('workout_plan_day_exercises')
+      .update({
+        trainee_notes: editData.trainee_notes || null,
+        trainee_target_weight: editData.trainee_target_weight,
+        trainee_modified_at: new Date().toISOString(),
+      })
+      .eq('id', exercise.id);
+
+    if (error) {
+      toast.error('שגיאה בשמירת השינויים');
+      console.error(error);
+    } else {
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user) {
+        await supabase.from('workout_plan_history').insert({
+          plan_id: plan.id,
+          changed_by_user_id: userData.user.id,
+          changed_by_type: 'trainee',
+          change_type: 'exercise_updated',
+          change_description: `עדכון תרגיל: ${exercise.exercise?.name || 'תרגיל'}`,
+          previous_data: {
+            trainee_notes: exercise.trainee_notes,
+            trainee_target_weight: exercise.trainee_target_weight,
+          },
+          new_data: {
+            trainee_notes: editData.trainee_notes,
+            trainee_target_weight: editData.trainee_target_weight,
+          },
+        });
+      }
+
+      await supabase
+        .from('trainee_workout_plans')
+        .update({
+          updated_at: new Date().toISOString(),
+          last_modified_by: 'trainee',
+        })
+        .eq('id', plan.id);
+
+      toast.success('השינויים נשמרו');
+      setEditingExercise(null);
+      await loadActivePlan();
+    }
+
+    setSaving(false);
+  };
+
   const toggleExerciseComplete = (exerciseId: string) => {
     setCompletedExercises((prev) => {
       const newSet = new Set(prev);
@@ -219,6 +325,18 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
       if (focus.includes(key)) return icon;
     }
     return Dumbbell;
+  };
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('he-IL', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   if (loading) {
@@ -301,6 +419,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
         <div className="space-y-3">
           {exercises.map((exercise, index) => {
             const isCompleted = completedExercises.has(exercise.id);
+            const isEditing = editingExercise === exercise.id;
             const exerciseName = exercise.exercise?.name || exercise.exercise_name || 'תרגיל';
 
             return (
@@ -328,12 +447,24 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                     </button>
 
                     <div className="flex-1">
-                      <h3 className={`text-lg lg:text-xl font-bold ${isCompleted ? 'text-green-700' : 'text-gray-900'}`}>
-                        {exerciseName}
-                      </h3>
-                      {exercise.exercise?.muscle_group?.name && (
-                        <p className="text-sm text-gray-500 mt-0.5">{exercise.exercise.muscle_group.name}</p>
-                      )}
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className={`text-lg lg:text-xl font-bold ${isCompleted ? 'text-green-700' : 'text-gray-900'}`}>
+                            {exerciseName}
+                          </h3>
+                          {exercise.exercise?.muscle_group?.name && (
+                            <p className="text-sm text-gray-500 mt-0.5">{exercise.exercise.muscle_group.name}</p>
+                          )}
+                        </div>
+                        {!isEditing && (
+                          <button
+                            onClick={() => startEditing(exercise)}
+                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <Edit3 className="w-5 h-5" />
+                          </button>
+                        )}
+                      </div>
 
                       <div className="bg-gray-50 rounded-xl p-4 mt-3 border-2 border-gray-200 space-y-3">
                         <div className="grid grid-cols-3 gap-3">
@@ -370,8 +501,15 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
                         {exercise.target_weight && (
                           <div className="bg-white border-2 border-gray-200 rounded-lg p-3 flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-600">משקל יעד</span>
+                            <span className="text-sm font-medium text-gray-600">משקל יעד (מאמן)</span>
                             <span className="text-lg font-bold text-gray-900">{exercise.target_weight} ק״ג</span>
+                          </div>
+                        )}
+
+                        {exercise.trainee_target_weight && !isEditing && (
+                          <div className="bg-green-50 border-2 border-green-200 rounded-lg p-3 flex items-center justify-between">
+                            <span className="text-sm font-medium text-green-600">משקל יעד שלי</span>
+                            <span className="text-lg font-bold text-green-700">{exercise.trainee_target_weight} ק״ג</span>
                           </div>
                         )}
 
@@ -394,7 +532,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
                         {exercise.failure && (
                           <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3 flex items-center justify-center gap-2">
-                            <span className="text-sm font-bold text-red-700">💪 לכשל</span>
+                            <span className="text-sm font-bold text-red-700">לכשל</span>
                           </div>
                         )}
 
@@ -408,7 +546,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                               <div className="flex items-center justify-between">
                                 <span className="text-sm text-blue-600">משקל וחזרות</span>
                                 <span className="text-sm font-bold text-blue-900">
-                                  {exercise.superset_weight} ק״ג × {exercise.superset_reps}
+                                  {exercise.superset_weight} ק״ג x {exercise.superset_reps}
                                 </span>
                               </div>
                             )}
@@ -442,7 +580,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-orange-600">משקל וחזרות</span>
                               <span className="text-sm font-bold text-orange-900">
-                                {exercise.dropset_weight} ק״ג × {exercise.dropset_reps}
+                                {exercise.dropset_weight} ק״ג x {exercise.dropset_reps}
                               </span>
                             </div>
                           </div>
@@ -452,10 +590,82 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                       {exercise.notes && (
                         <div className="mt-3 p-3 bg-amber-50 rounded-lg border-2 border-amber-200">
                           <div className="flex items-start gap-2">
-                            <span className="text-lg">💡</span>
-                            <p className="text-sm text-amber-800 font-medium">{exercise.notes}</p>
+                            <span className="text-lg">&#128161;</span>
+                            <div>
+                              <p className="text-xs font-medium text-amber-600 mb-1">הערות המאמן</p>
+                              <p className="text-sm text-amber-800 font-medium">{exercise.notes}</p>
+                            </div>
                           </div>
                         </div>
+                      )}
+
+                      {exercise.trainee_notes && !isEditing && (
+                        <div className="mt-3 p-3 bg-green-50 rounded-lg border-2 border-green-200">
+                          <div className="flex items-start gap-2">
+                            <span className="text-lg">&#128221;</span>
+                            <div>
+                              <p className="text-xs font-medium text-green-600 mb-1">ההערות שלי</p>
+                              <p className="text-sm text-green-800 font-medium">{exercise.trainee_notes}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {isEditing && (
+                        <div className="mt-4 p-4 bg-blue-50 rounded-xl border-2 border-blue-200 space-y-4">
+                          <h4 className="font-bold text-blue-900">עריכה אישית</h4>
+
+                          <div>
+                            <label className="block text-sm font-medium text-blue-700 mb-1">
+                              משקל יעד שלי (ק״ג)
+                            </label>
+                            <input
+                              type="number"
+                              value={editData.trainee_target_weight || ''}
+                              onChange={(e) =>
+                                setEditData({ ...editData, trainee_target_weight: e.target.value ? Number(e.target.value) : null })
+                              }
+                              placeholder={exercise.target_weight ? `המאמן המליץ: ${exercise.target_weight}` : 'הזן משקל יעד'}
+                              className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-blue-700 mb-1">
+                              הערות שלי
+                            </label>
+                            <textarea
+                              value={editData.trainee_notes}
+                              onChange={(e) => setEditData({ ...editData, trainee_notes: e.target.value })}
+                              placeholder="הוסף הערות אישיות לתרגיל..."
+                              rows={3}
+                              className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:outline-none resize-none"
+                            />
+                          </div>
+
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => saveExerciseChanges(exercise)}
+                              disabled={saving}
+                              className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                              <Save className="w-5 h-5" />
+                              {saving ? 'שומר...' : 'שמור'}
+                            </button>
+                            <button
+                              onClick={cancelEditing}
+                              className="py-3 px-4 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 flex items-center justify-center"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {exercise.trainee_modified_at && !isEditing && (
+                        <p className="text-xs text-gray-400 mt-2">
+                          עודכן על ידך: {formatDate(exercise.trainee_modified_at)}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -497,7 +707,62 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           <Calendar className="w-4 h-4" />
           <span>{plan.days_per_week} ימי אימון בשבוע</span>
         </div>
+
+        {plan.updated_at && (
+          <div className="flex items-center gap-2 mt-2 text-green-100 text-sm">
+            <Clock className="w-4 h-4" />
+            <span>
+              עדכון אחרון: {formatDate(plan.updated_at)}
+              {plan.last_modified_by && (
+                <span className="mr-1">
+                  ({plan.last_modified_by === 'trainer' ? 'מאמן' : 'מתאמן'})
+                </span>
+              )}
+            </span>
+          </div>
+        )}
       </div>
+
+      {history.length > 0 && (
+        <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 overflow-hidden">
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="w-full p-4 flex items-center justify-between text-right hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                <History className="w-5 h-5 text-gray-600" />
+              </div>
+              <span className="font-medium text-gray-900">היסטוריית שינויים</span>
+            </div>
+            {showHistory ? (
+              <ChevronUp className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+
+          {showHistory && (
+            <div className="border-t border-gray-200 p-4 space-y-3 max-h-64 overflow-y-auto">
+              {history.map((item) => (
+                <div key={item.id} className="flex items-start gap-3 text-sm">
+                  <div
+                    className={`w-2 h-2 rounded-full mt-2 ${
+                      item.changed_by_type === 'trainer' ? 'bg-blue-500' : 'bg-green-500'
+                    }`}
+                  />
+                  <div className="flex-1">
+                    <p className="text-gray-900">{item.change_description}</p>
+                    <p className="text-gray-500 text-xs mt-1">
+                      {formatDate(item.created_at)} | {item.changed_by_type === 'trainer' ? 'מאמן' : 'מתאמן'}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-4">
         {days.map((day) => {
