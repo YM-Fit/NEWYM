@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Home, Users } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { useGlobalScaleListener, IdentifiedReading } from '../../hooks/useGlobalScaleListener';
 import Header from '../layout/Header';
 import Sidebar from '../layout/Sidebar';
 import Dashboard from './Dashboard/Dashboard';
@@ -66,6 +68,110 @@ export default function TrainerApp() {
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const [selfWeights, setSelfWeights] = useState<any[]>([]);
   const [unseenWeightsCounts, setUnseenWeightsCounts] = useState<Map<string, number>>(new Map());
+
+  const handleScaleReading = useCallback((reading: IdentifiedReading) => {
+    const weight = reading.reading.weight_kg?.toFixed(1);
+    const bodyFat = reading.reading.body_fat_percent?.toFixed(1);
+
+    if (reading.bestMatch) {
+      toast.custom(
+        (t) => (
+          <div
+            className={`${
+              t.visible ? 'animate-enter' : 'animate-leave'
+            } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+            dir="rtl"
+          >
+            <div className="flex-1 w-0 p-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0 pt-0.5">
+                  <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <span className="text-green-600 font-bold text-lg">
+                      {reading.bestMatch!.traineeName.charAt(0)}
+                    </span>
+                  </div>
+                </div>
+                <div className="mr-3 flex-1">
+                  <p className="text-sm font-medium text-gray-900">
+                    שקילה חדשה - {reading.bestMatch!.traineeName}
+                  </p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {weight} ק"ג
+                    {bodyFat && ` | ${bodyFat}% שומן`}
+                  </p>
+                  <p className="mt-1 text-xs text-green-600">
+                    דיוק: {reading.bestMatch!.confidenceScore}%
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex border-r border-gray-200">
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  const trainee = trainees.find(tr => tr.id === reading.bestMatch!.traineeId);
+                  if (trainee) {
+                    handleTraineeClick(trainee);
+                  }
+                }}
+                className="w-full border border-transparent rounded-none rounded-l-lg p-4 flex items-center justify-center text-sm font-medium text-green-600 hover:text-green-500 focus:outline-none"
+              >
+                פתח
+              </button>
+            </div>
+          </div>
+        ),
+        { duration: 8000 }
+      );
+    } else {
+      toast.custom(
+        (t) => (
+          <div
+            className={`${
+              t.visible ? 'animate-enter' : 'animate-leave'
+            } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+            dir="rtl"
+          >
+            <div className="flex-1 w-0 p-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0 pt-0.5">
+                  <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
+                    <span className="text-amber-600 font-bold text-lg">?</span>
+                  </div>
+                </div>
+                <div className="mr-3 flex-1">
+                  <p className="text-sm font-medium text-gray-900">
+                    שקילה חדשה - לא זוהה
+                  </p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {weight} ק"ג
+                    {bodyFat && ` | ${bodyFat}% שומן`}
+                  </p>
+                  <p className="mt-1 text-xs text-amber-600">
+                    לא נמצאה התאמה למתאמן
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex border-r border-gray-200">
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className="w-full border border-transparent rounded-none rounded-l-lg p-4 flex items-center justify-center text-sm font-medium text-gray-600 hover:text-gray-500 focus:outline-none"
+              >
+                סגור
+              </button>
+            </div>
+          </div>
+        ),
+        { duration: 6000 }
+      );
+    }
+  }, [trainees]);
+
+  const { recentReadings, isListening: isScaleListening } = useGlobalScaleListener(
+    user?.id || null,
+    handleScaleReading
+  );
 
   useEffect(() => {
     loadTrainees();
@@ -607,6 +713,14 @@ export default function TrainerApp() {
             trainerName={trainerName}
             onToggleSidebar={toggleSidebar}
             onToggleHeader={toggleHeader}
+            scaleReadings={recentReadings}
+            isScaleListening={isScaleListening}
+            onTraineeClick={(traineeId) => {
+              const trainee = trainees.find(t => t.id === traineeId);
+              if (trainee) {
+                handleTraineeClick(trainee);
+              }
+            }}
           />
         );
 

@@ -1,7 +1,9 @@
-import { Users, Calendar, TrendingUp, Target } from 'lucide-react';
+import { Users, Target } from 'lucide-react';
 import StatsCard from './StatsCard';
 import RecentActivity from './RecentActivity';
 import QuickActions from './QuickActions';
+import RecentScaleReadings from './RecentScaleReadings';
+import { IdentifiedReading } from '../../../hooks/useGlobalScaleListener';
 
 interface DashboardProps {
   onViewChange: (view: string) => void;
@@ -9,9 +11,21 @@ interface DashboardProps {
   trainerName?: string;
   onToggleSidebar?: () => void;
   onToggleHeader?: () => void;
+  scaleReadings?: IdentifiedReading[];
+  isScaleListening?: boolean;
+  onTraineeClick?: (traineeId: string) => void;
 }
 
-export default function Dashboard({ onViewChange, trainees, trainerName, onToggleSidebar, onToggleHeader }: DashboardProps) {
+export default function Dashboard({
+  onViewChange,
+  trainees,
+  trainerName,
+  onToggleSidebar,
+  onToggleHeader,
+  scaleReadings = [],
+  isScaleListening = false,
+  onTraineeClick
+}: DashboardProps) {
   const handleQuickAction = (action: string) => {
     switch (action) {
       case 'add-trainee':
@@ -74,6 +88,13 @@ export default function Dashboard({ onViewChange, trainees, trainerName, onToggl
           color="blue"
         />
       </div>
+
+      {/* Scale Readings */}
+      <RecentScaleReadings
+        readings={scaleReadings}
+        isListening={isScaleListening}
+        onTraineeClick={onTraineeClick}
+      />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
