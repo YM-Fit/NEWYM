@@ -15,6 +15,7 @@ export interface UseGlobalScaleListenerResult {
   latestReading: IdentifiedReading | null;
   isListening: boolean;
   clearReadings: () => void;
+  loadingInitial: boolean;
 }
 
 const MAX_READINGS_TO_KEEP = 20;
@@ -27,17 +28,25 @@ export function useGlobalScaleListener(
   const [recentReadings, setRecentReadings] = useState<IdentifiedReading[]>([]);
   const [latestReading, setLatestReading] = useState<IdentifiedReading | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const [loadingInitial, setLoadingInitial] = useState(true);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const onNewReadingRef = useRef(onNewReading);
+  const processedIdsRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     onNewReadingRef.current = onNewReading;
   }, [onNewReading]);
 
-  const processNewReading = useCallback(async (reading: ScaleReading) => {
-    if (!reading.weight_kg || reading.weight_kg <= 0) return;
-    if (!reading.is_stable) return;
+  const processReading = useCallback(async (
+    reading: ScaleReading,
+    isNew: boolean = false
+  ): Promise<IdentifiedReading | null> => {
+    if (!reading.weight_kg || reading.weight_kg <= 0) return null;
+    if (reading.is_stable === false) return null;
+
+    if (processedIdsRef.current.has(reading.id)) return null;
+    processedIdsRef.current.add(reading.id);
 
     const matches = await findTraineeByWeight(
       reading.weight_kg,
@@ -56,30 +65,75 @@ export function useGlobalScaleListener(
       timestamp: new Date(reading.created_at),
     };
 
-    setLatestReading(identifiedReading);
-    setRecentReadings(prev => {
-      const updated = [identifiedReading, ...prev];
-      const filtered = updated
-        .filter(r => Date.now() - r.timestamp.getTime() < READING_TTL_MS)
-        .slice(0, MAX_READINGS_TO_KEEP);
-      return filtered;
-    });
+    if (isNew) {
+      setLatestReading(identifiedReading);
+      setRecentReadings(prev => {
+        const updated = [identifiedReading, ...prev];
+        const filtered = updated
+          .filter(r => Date.now() - r.timestamp.getTime() < READING_TTL_MS)
+          .slice(0, MAX_READINGS_TO_KEEP);
+        return filtered;
+      });
 
-    if (onNewReadingRef.current) {
-      onNewReadingRef.current(identifiedReading);
+      if (onNewReadingRef.current) {
+        onNewReadingRef.current(identifiedReading);
+      }
     }
+
+    return identifiedReading;
   }, [trainerId]);
+
+  const loadRecentReadings = useCallback(async () => {
+    if (!trainerId) return;
+
+    setLoadingInitial(true);
+    try {
+      const oneDayAgo = new Date(Date.now() - READING_TTL_MS).toISOString();
+      const { data, error } = await supabase
+        .from('scale_readings')
+        .select('*')
+        .gte('created_at', oneDayAgo)
+        .order('created_at', { ascending: false })
+        .limit(MAX_READINGS_TO_KEEP);
+
+      if (error) {
+        console.error('Error loading scale readings:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const identifiedReadings: IdentifiedReading[] = [];
+
+        for (const reading of data) {
+          const identified = await processReading(reading as ScaleReading, false);
+          if (identified) {
+            identifiedReadings.push(identified);
+          }
+        }
+
+        setRecentReadings(identifiedReadings);
+        if (identifiedReadings.length > 0) {
+          setLatestReading(identifiedReadings[0]);
+        }
+      }
+    } finally {
+      setLoadingInitial(false);
+    }
+  }, [trainerId, processReading]);
 
   const clearReadings = useCallback(() => {
     setRecentReadings([]);
     setLatestReading(null);
+    processedIdsRef.current.clear();
   }, []);
 
   useEffect(() => {
     if (!trainerId) return;
 
+    loadRecentReadings();
+
     const channel = supabase
-      .channel('global-scale-readings')
+      .channel(`global-scale-readings-${trainerId}`)
       .on(
         'postgres_changes',
         {
@@ -88,11 +142,13 @@ export function useGlobalScaleListener(
           table: 'scale_readings',
         },
         (payload) => {
+          console.log('New scale reading received:', payload.new);
           const newReading = payload.new as ScaleReading;
-          processNewReading(newReading);
+          processReading(newReading, true);
         }
       )
       .subscribe((status) => {
+        console.log('Scale listener status:', status);
         if (status === 'SUBSCRIBED') {
           setIsListening(true);
         }
@@ -107,12 +163,13 @@ export function useGlobalScaleListener(
       }
       setIsListening(false);
     };
-  }, [trainerId, processNewReading]);
+  }, [trainerId, loadRecentReadings, processReading]);
 
   return {
     recentReadings,
     latestReading,
     isListening,
     clearReadings,
+    loadingInitial,
   };
 }
