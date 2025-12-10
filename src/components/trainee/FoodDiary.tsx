@@ -261,34 +261,22 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
         toast.error('שגיאה בעדכון כמות המים');
         return;
       }
-
-      setWaterLogs((prev) => {
-        const newMap = new Map(prev);
-        newMap.set(dateStr, { ...existingLog, water_ml: newAmount });
-        return newMap;
-      });
     } else {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('daily_log')
         .insert({
           trainee_id: traineeId,
           log_date: dateStr,
           water_ml: amount,
-        })
-        .select()
-        .single();
+        });
 
       if (error) {
         toast.error('שגיאה בהוספת מים');
         return;
       }
-
-      setWaterLogs((prev) => {
-        const newMap = new Map(prev);
-        newMap.set(dateStr, data);
-        return newMap;
-      });
     }
+
+    loadWeekData();
   };
 
   const toggleMealExpand = (mealId: string) => {
@@ -379,13 +367,8 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       });
     }
 
-    setDiaryEntries((prev) => {
-      const newMap = new Map(prev);
-      newMap.set(dateStr, diaryEntry!);
-      return newMap;
-    });
-
     toast.success('היום הושלם! המאמן שלך קיבל התראה');
+    loadWeekData();
   };
 
   if (loading) {
