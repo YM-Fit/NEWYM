@@ -351,23 +351,35 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
     }
 
     // שליחת התראה למאמן
-    const { data: traineeData } = await supabase
+    const { data: traineeData, error: traineeError } = await supabase
       .from('trainees')
       .select('trainer_id, full_name')
       .eq('id', traineeId)
       .single();
 
+    if (traineeError) {
+      console.error('Error fetching trainee data:', traineeError);
+    }
+
     if (traineeData) {
-      await supabase.from('trainer_notifications').insert({
+      const { error: notificationError } = await supabase.from('trainer_notifications').insert({
         trainer_id: traineeData.trainer_id,
         trainee_id: traineeId,
         notification_type: 'food_diary_completed',
         title: 'יומן אכילה הושלם',
         message: `${traineeData.full_name} סיים/ה לדווח את יומן האכילה ליום ${new Date(dateStr).toLocaleDateString('he-IL')}`,
       });
+
+      if (notificationError) {
+        console.error('Error creating notification:', notificationError);
+        toast.error('היום הושלם אבל לא הצלחנו לשלוח התראה למאמן');
+      } else {
+        toast.success('היום הושלם! המאמן שלך קיבל התראה');
+      }
+    } else {
+      toast.success('היום הושלם!');
     }
 
-    toast.success('היום הושלם! המאמן שלך קיבל התראה');
     loadWeekData();
   };
 
