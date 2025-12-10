@@ -362,13 +362,30 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       diaryEntry = data;
     }
 
+    // שליחת התראה למאמן
+    const { data: traineeData } = await supabase
+      .from('trainees')
+      .select('trainer_id, full_name')
+      .eq('id', traineeId)
+      .single();
+
+    if (traineeData) {
+      await supabase.from('trainer_notifications').insert({
+        trainer_id: traineeData.trainer_id,
+        trainee_id: traineeId,
+        notification_type: 'food_diary_completed',
+        title: 'יומן אכילה הושלם',
+        message: `${traineeData.full_name} סיים/ה לדווח את יומן האכילה ליום ${new Date(dateStr).toLocaleDateString('he-IL')}`,
+      });
+    }
+
     setDiaryEntries((prev) => {
       const newMap = new Map(prev);
       newMap.set(dateStr, diaryEntry!);
       return newMap;
     });
 
-    toast.success('יום האכילה הושלם! המאמן שלך יכול כעת לצפות בו');
+    toast.success('היום הושלם! המאמן שלך קיבל התראה');
   };
 
   if (loading) {
