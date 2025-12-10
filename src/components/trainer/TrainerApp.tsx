@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { useGlobalScaleListener, IdentifiedReading } from '../../hooks/useGlobalScaleListener';
+import { ScaleReading } from '../../hooks/useScaleListener';
 import Header from '../layout/Header';
 import Sidebar from '../layout/Sidebar';
 import Dashboard from './Dashboard/Dashboard';
@@ -167,6 +168,49 @@ export default function TrainerApp() {
       );
     }
   }, [trainees]);
+
+  const handleSaveScaleMeasurement = useCallback(async (
+    traineeId: string,
+    traineeName: string,
+    reading: ScaleReading
+  ): Promise<boolean> => {
+    try {
+      const measurementDate = new Date(reading.created_at).toISOString().split('T')[0];
+
+      const { error: measurementError } = await supabase
+        .from('measurements')
+        .insert({
+          trainee_id: traineeId,
+          measurement_date: measurementDate,
+          weight: reading.weight_kg,
+          body_fat_percentage: reading.body_fat_percent,
+          water_percentage: reading.water_percent,
+          bmi: reading.bmi,
+          source: 'tanita',
+        });
+
+      if (measurementError) {
+        console.error('Error saving measurement:', measurementError);
+        toast.error('שגיאה בשמירת המדידה');
+        return false;
+      }
+
+      await supabase
+        .from('trainees')
+        .update({
+          last_known_weight: reading.weight_kg,
+          last_known_body_fat: reading.body_fat_percent,
+        })
+        .eq('id', traineeId);
+
+      toast.success(`המדידה נשמרה עבור ${traineeName}`);
+      return true;
+    } catch (err) {
+      console.error('Error in handleSaveScaleMeasurement:', err);
+      toast.error('שגיאה בשמירת המדידה');
+      return false;
+    }
+  }, []);
 
   const { recentReadings, isListening: isScaleListening } = useGlobalScaleListener(
     user?.id || null,
@@ -721,6 +765,7 @@ export default function TrainerApp() {
                 handleTraineeClick(trainee);
               }
             }}
+            onSaveMeasurement={handleSaveScaleMeasurement}
           />
         );
 

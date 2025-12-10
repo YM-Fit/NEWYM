@@ -4,6 +4,7 @@ import RecentActivity from './RecentActivity';
 import QuickActions from './QuickActions';
 import RecentScaleReadings from './RecentScaleReadings';
 import { IdentifiedReading } from '../../../hooks/useGlobalScaleListener';
+import { ScaleReading } from '../../../hooks/useScaleListener';
 
 interface DashboardProps {
   onViewChange: (view: string) => void;
@@ -14,6 +15,7 @@ interface DashboardProps {
   scaleReadings?: IdentifiedReading[];
   isScaleListening?: boolean;
   onTraineeClick?: (traineeId: string) => void;
+  onSaveMeasurement?: (traineeId: string, traineeName: string, reading: ScaleReading) => Promise<boolean>;
 }
 
 export default function Dashboard({
@@ -24,7 +26,8 @@ export default function Dashboard({
   onToggleHeader,
   scaleReadings = [],
   isScaleListening = false,
-  onTraineeClick
+  onTraineeClick,
+  onSaveMeasurement
 }: DashboardProps) {
   const handleQuickAction = (action: string) => {
     switch (action) {
@@ -94,6 +97,7 @@ export default function Dashboard({
         readings={scaleReadings}
         isListening={isScaleListening}
         onTraineeClick={onTraineeClick}
+        onSaveMeasurement={onSaveMeasurement}
       />
 
       {/* Main Content Grid */}
