@@ -184,6 +184,7 @@ export default function TrainerApp() {
           measurement_date: measurementDate,
           weight: reading.weight_kg,
           body_fat_percentage: reading.body_fat_percent,
+          muscle_mass: reading.fat_free_mass_kg,
           water_percentage: reading.water_percent,
           bmi: reading.bmi,
           source: 'tanita',
