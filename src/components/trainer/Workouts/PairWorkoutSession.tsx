@@ -184,7 +184,7 @@ export default function PairWorkoutSession({
             set_number: idx + 1,
             weight: set.weight || 0,
             reps: set.reps || 0,
-            rpe: set.rpe || null,
+            rpe: set.rpe >= 1 && set.rpe <= 10 ? set.rpe : null,
             set_type: 'regular',
           }));
 

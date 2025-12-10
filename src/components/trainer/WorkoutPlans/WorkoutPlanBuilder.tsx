@@ -255,7 +255,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
       set_number: exercise.sets.length + 1,
       weight: lastSet?.weight || 0,
       reps: lastSet?.reps || 0,
-      rpe: lastSet?.rpe || null,
+      rpe: lastSet?.rpe >= 1 && lastSet?.rpe <= 10 ? lastSet.rpe : null,
       set_type: 'regular',
       failure: false,
       equipment_id: lastSet?.equipment_id || null,
