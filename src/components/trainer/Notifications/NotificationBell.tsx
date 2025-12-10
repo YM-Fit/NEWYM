@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, X } from 'lucide-react';
+import { Bell, X, Calendar, ClipboardCheck } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -13,7 +13,11 @@ interface Notification {
   created_at: string;
 }
 
-export default function NotificationBell() {
+interface NotificationBellProps {
+  onNavigateToTrainee?: (traineeId: string, tab?: string) => void;
+}
+
+export default function NotificationBell({ onNavigateToTrainee }: NotificationBellProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -123,6 +127,39 @@ export default function NotificationBell() {
     }
   };
 
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.is_read) {
+      await handleMarkAsRead(notification.id);
+    }
+
+    if (notification.notification_type === 'food_diary_completed' && onNavigateToTrainee) {
+      onNavigateToTrainee(notification.trainee_id, 'food_diary');
+      setShowDropdown(false);
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'food_diary_completed':
+        return ClipboardCheck;
+      case 'workout_completed':
+        return Calendar;
+      default:
+        return Bell;
+    }
+  };
+
+  const getNotificationColor = (type: string) => {
+    switch (type) {
+      case 'food_diary_completed':
+        return 'text-green-600';
+      case 'workout_completed':
+        return 'text-blue-600';
+      default:
+        return 'text-gray-600';
+    }
+  };
+
   const getTimeAgo = (date: string) => {
     const now = new Date();
     const notificationDate = new Date(date);
@@ -171,38 +208,49 @@ export default function NotificationBell() {
               </div>
             ) : (
               <div className="divide-y">
-                {notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`p-4 hover:bg-gray-50 transition-colors ${
-                      !notification.is_read ? 'bg-blue-50' : ''
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div
-                        className="flex-1 cursor-pointer"
-                        onClick={() => !notification.is_read && handleMarkAsRead(notification.id)}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-sm">{notification.title}</h4>
-                          {!notification.is_read && (
-                            <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
-                          )}
+                {notifications.map((notification) => {
+                  const NotificationIcon = getNotificationIcon(notification.notification_type);
+                  const iconColor = getNotificationColor(notification.notification_type);
+
+                  return (
+                    <div
+                      key={notification.id}
+                      className={`p-4 hover:bg-gray-50 transition-colors ${
+                        !notification.is_read ? 'bg-blue-50' : ''
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-1 ${iconColor}`}>
+                          <NotificationIcon className="w-5 h-5" />
                         </div>
-                        {notification.message && (
-                          <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
-                        )}
-                        <p className="text-xs text-gray-400">{getTimeAgo(notification.created_at)}</p>
+                        <div
+                          className="flex-1 cursor-pointer"
+                          onClick={() => handleNotificationClick(notification)}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-sm">{notification.title}</h4>
+                            {!notification.is_read && (
+                              <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                            )}
+                          </div>
+                          {notification.message && (
+                            <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
+                          )}
+                          <p className="text-xs text-gray-400">{getTimeAgo(notification.created_at)}</p>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteNotification(notification.id);
+                          }}
+                          className="text-gray-400 hover:text-red-600 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleDeleteNotification(notification.id)}
-                        className="text-gray-400 hover:text-red-600 transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

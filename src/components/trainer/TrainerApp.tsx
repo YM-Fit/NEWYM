@@ -197,6 +197,22 @@ export default function TrainerApp() {
     await loadSelfWeights(trainee.id);
   };
 
+  const handleNavigateToTrainee = async (traineeId: string, tab?: string) => {
+    const trainee = trainees.find(t => t.id === traineeId);
+    if (!trainee) return;
+
+    setSelectedTrainee(trainee);
+    await loadMeasurements(trainee.id);
+    await loadWorkouts(trainee.id);
+    await loadSelfWeights(trainee.id);
+
+    if (tab === 'food_diary') {
+      setActiveView('food-diary');
+    } else {
+      setActiveView('trainee-profile');
+    }
+  };
+
   const handleAddTrainee = () => {
     setActiveView('add-trainee');
   };
@@ -850,6 +866,7 @@ export default function TrainerApp() {
             onLogout={signOut}
             trainerName={trainerName}
             collapsed={headerCollapsed}
+            onNavigateToTrainee={handleNavigateToTrainee}
           />
         )}
 
