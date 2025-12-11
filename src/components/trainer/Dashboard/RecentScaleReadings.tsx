@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Scale, User, AlertCircle, CheckCircle, HelpCircle, ChevronLeft, Save, Loader2 } from 'lucide-react';
+import { Scale, User, AlertCircle, CheckCircle, HelpCircle, ChevronLeft, Save, Loader2, Calendar, X } from 'lucide-react';
 import { IdentifiedReading } from '../../../hooks/useGlobalScaleListener';
 import { ScaleReading, TraineeMatch } from '../../../hooks/useScaleListener';
 
@@ -7,7 +7,7 @@ interface RecentScaleReadingsProps {
   readings: IdentifiedReading[];
   isListening: boolean;
   onTraineeClick?: (traineeId: string) => void;
-  onSaveMeasurement?: (traineeId: string, traineeName: string, reading: ScaleReading) => Promise<boolean>;
+  onSaveMeasurement?: (traineeId: string, traineeName: string, reading: ScaleReading, customDate?: string) => Promise<boolean>;
 }
 
 export default function RecentScaleReadings({
@@ -18,17 +18,40 @@ export default function RecentScaleReadings({
 }: RecentScaleReadingsProps) {
   const [savedReadings, setSavedReadings] = useState<Set<string>>(new Set());
   const [savingReadings, setSavingReadings] = useState<Set<string>>(new Set());
+  const [editingDateReadingId, setEditingDateReadingId] = useState<number | null>(null);
+  const [editingDateTraineeId, setEditingDateTraineeId] = useState<string | null>(null);
+  const [editingDateTraineeName, setEditingDateTraineeName] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>('');
 
   const handleSave = async (e: React.MouseEvent, traineeId: string, traineeName: string, reading: ScaleReading) => {
     e.stopPropagation();
     if (!onSaveMeasurement) return;
 
-    const readingKey = `${reading.id}-${traineeId}`;
-    if (savedReadings.has(readingKey) || savingReadings.has(readingKey)) return;
+    const readingDate = new Date(reading.created_at).toISOString().split('T')[0];
+    setEditingDateReadingId(reading.id);
+    setEditingDateTraineeId(traineeId);
+    setEditingDateTraineeName(traineeName);
+    setSelectedDate(readingDate);
+  };
+
+  const handleConfirmSave = async () => {
+    if (!onSaveMeasurement || !editingDateReadingId || !editingDateTraineeId || !editingDateTraineeName) return;
+
+    const reading = readings
+      .find(r => r.reading.id === editingDateReadingId)
+      ?.reading;
+
+    if (!reading) return;
+
+    const readingKey = `${reading.id}-${editingDateTraineeId}`;
+    if (savedReadings.has(readingKey) || savingReadings.has(readingKey)) {
+      setEditingDateReadingId(null);
+      return;
+    }
 
     setSavingReadings(prev => new Set(prev).add(readingKey));
 
-    const success = await onSaveMeasurement(traineeId, traineeName, reading);
+    const success = await onSaveMeasurement(editingDateTraineeId, editingDateTraineeName, reading, selectedDate);
 
     setSavingReadings(prev => {
       const next = new Set(prev);
@@ -39,6 +62,11 @@ export default function RecentScaleReadings({
     if (success) {
       setSavedReadings(prev => new Set(prev).add(readingKey));
     }
+
+    setEditingDateReadingId(null);
+    setEditingDateTraineeId(null);
+    setEditingDateTraineeName(null);
+    setSelectedDate('');
   };
 
   const getReadingKey = (readingId: number, traineeId: string) => `${readingId}-${traineeId}`;
@@ -132,7 +160,78 @@ export default function RecentScaleReadings({
     );
   }
 
+  const dateEditorModal = editingDateReadingId !== null && (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 max-w-sm mx-4 shadow-xl">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-blue-600" />
+            <h3 className="text-lg font-semibold text-gray-900">בחירת תאריך</h3>
+          </div>
+          <button
+            onClick={() => {
+              setEditingDateReadingId(null);
+              setEditingDateTraineeId(null);
+              setEditingDateTraineeName(null);
+              setSelectedDate('');
+            }}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {editingDateTraineeName && (
+          <p className="text-sm text-gray-600 mb-4">שמירה למתאמן: <span className="font-medium">{editingDateTraineeName}</span></p>
+        )}
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">תאריך המדידה</label>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              setEditingDateReadingId(null);
+              setEditingDateTraineeId(null);
+              setEditingDateTraineeName(null);
+              setSelectedDate('');
+            }}
+            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+          >
+            ביטול
+          </button>
+          <button
+            onClick={handleConfirmSave}
+            disabled={savingReadings.has(`${editingDateReadingId}-${editingDateTraineeId}`)}
+            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {savingReadings.has(`${editingDateReadingId}-${editingDateTraineeId}`) ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                שומר...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                שמור
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
+    <>
+      {dateEditorModal}
     <div className="bg-white rounded-xl border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -250,5 +349,6 @@ export default function RecentScaleReadings({
         ))}
       </div>
     </div>
+    </>
   );
 }

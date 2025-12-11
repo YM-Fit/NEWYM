@@ -172,10 +172,11 @@ export default function TrainerApp() {
   const handleSaveScaleMeasurement = useCallback(async (
     traineeId: string,
     traineeName: string,
-    reading: ScaleReading
+    reading: ScaleReading,
+    customDate?: string
   ): Promise<boolean> => {
     try {
-      const measurementDate = new Date(reading.created_at).toISOString().split('T')[0];
+      const measurementDate = customDate || new Date(reading.created_at).toISOString().split('T')[0];
 
       const { error: measurementError } = await supabase
         .from('measurements')
