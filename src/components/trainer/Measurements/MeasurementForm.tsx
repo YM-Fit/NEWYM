@@ -28,6 +28,9 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
           : sourceMeasurement?.pairMember || 'both')
       : null
   );
+  const [measurementDate, setMeasurementDate] = useState<string>(
+    sourceMeasurement?.date || new Date().toISOString().split('T')[0]
+  );
   const [formData, setFormData] = useState({
     weight: sourceMeasurement?.weight || 0,
     bodyFat: sourceMeasurement?.bodyFat || 0,
@@ -64,7 +67,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
   const hasReceivedDataRef = useRef(false);
 
   const { lastSaved, isDirty, clearSaved, loadSaved } = useAutoSave({
-    data: { formData, selectedMember },
+    data: { formData, selectedMember, measurementDate },
     localStorageKey: `measurement_draft_${trainee.id}`,
     enabled: !isEditing,
   });
@@ -84,6 +87,9 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       setFormData(draftData.formData);
       if (draftData.selectedMember) {
         setSelectedMember(draftData.selectedMember);
+      }
+      if (draftData.measurementDate) {
+        setMeasurementDate(draftData.measurementDate);
       }
       setShowDraftModal(false);
       setDraftData(null);
@@ -276,6 +282,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
     const measurementData = {
       trainee_id: trainee.id,
+      measurement_date: measurementDate,
       weight: formData.weight || null,
       body_fat_percentage: formData.bodyFat || null,
       muscle_mass: formData.muscleMass || null,
@@ -525,7 +532,12 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
           <div className="flex items-center space-x-2 rtl:space-x-reverse">
             <Scale className="h-6 w-6 lg:h-7 lg:w-7 text-green-600" />
-            <span className="text-base lg:text-xl font-medium text-gray-900">{new Date().toLocaleDateString('he-IL')}</span>
+            <input
+              type="date"
+              value={measurementDate}
+              onChange={(e) => setMeasurementDate(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base lg:text-lg font-medium"
+            />
           </div>
         </div>
       </div>

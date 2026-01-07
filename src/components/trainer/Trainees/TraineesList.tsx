@@ -1,4 +1,4 @@
-import { Search, Plus, Filter } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import TraineeCard from './TraineeCard';
 
 interface TraineesListProps {
@@ -26,23 +26,6 @@ export default function TraineesList({ trainees, onTraineeClick, onAddTrainee, u
         </button>
       </div>
 
-      {/* Search and Filters */}
-      <div className="bg-white rounded-xl border border-gray-100 p-3 sm:p-4">
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="חפש מתאמן..."
-              className="w-full pl-4 pr-11 py-3 sm:py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
-            />
-          </div>
-          <button className="flex items-center justify-center space-x-2 rtl:space-x-reverse px-4 py-3 sm:py-2 border border-gray-200 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors min-h-[48px] sm:min-h-0">
-            <Filter className="h-5 w-5" />
-            <span>מסנן</span>
-          </button>
-        </div>
-      </div>
 
       {/* Trainees Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
