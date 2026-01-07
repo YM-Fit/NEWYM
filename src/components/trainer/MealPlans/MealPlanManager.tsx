@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Power, PowerOff } from 'lucide-react';
+import { Plus, Edit2, Trash2, Power, PowerOff, ArrowRight, Sparkles, UtensilsCrossed, X } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -62,7 +62,7 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('meal_plans')
         .insert({
           trainer_id: user.id,
@@ -128,54 +128,82 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="text-xl">טוען תפריטים...</div>
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-emerald-500 border-t-transparent"></div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
+    <div className="space-y-6 animate-fade-in">
+      <div className="premium-card-static p-6 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onBack}
+              className="p-3 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
+            >
+              <ArrowRight className="h-5 w-5" />
+            </button>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">תפריטים</span>
+              </div>
+              <h1 className="text-2xl font-bold text-white">{traineeName}</h1>
+              <p className="text-zinc-500">ניהול תפריטי תזונה</p>
+            </div>
+          </div>
+
           <button
-            onClick={onBack}
-            className="text-blue-600 hover:text-blue-800 mb-2"
+            onClick={() => setShowCreateForm(true)}
+            className="btn-primary px-6 py-3 rounded-xl flex items-center gap-2"
           >
-            ← חזרה לפרופיל
+            <Plus className="w-5 h-5" />
+            תפריט חדש
           </button>
-          <h1 className="text-3xl font-bold">תפריטים - {traineeName}</h1>
         </div>
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 flex items-center gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          תפריט חדש
-        </button>
       </div>
 
       {showCreateForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-2xl font-bold mb-4">תפריט חדש</h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="premium-card-static p-6 max-w-md w-full animate-slide-up">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30">
+                  <UtensilsCrossed className="h-5 w-5 text-amber-400" />
+                </div>
+                <h2 className="text-xl font-bold text-white">תפריט חדש</h2>
+              </div>
+              <button
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setNewPlanName('');
+                }}
+                className="p-2 hover:bg-zinc-800/50 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-zinc-400" />
+              </button>
+            </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">שם התפריט</label>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">שם התפריט</label>
                 <input
                   type="text"
                   value={newPlanName}
                   onChange={(e) => setNewPlanName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all"
                   placeholder="לדוגמה: תפריט שבועי - שלב הורדה"
+                  autoFocus
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-3 pt-2">
                 <button
                   onClick={handleCreatePlan}
                   disabled={saving}
-                  className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                  className="flex-1 btn-primary py-3 rounded-xl font-medium disabled:opacity-50"
                 >
                   {saving ? 'שומר...' : 'צור תפריט'}
                 </button>
@@ -185,7 +213,7 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
                     setNewPlanName('');
                   }}
                   disabled={saving}
-                  className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+                  className="flex-1 py-3 rounded-xl border border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all disabled:opacity-50"
                 >
                   ביטול
                 </button>
@@ -195,68 +223,84 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
         </div>
       )}
 
-      <div className="grid gap-4">
+      <div className="space-y-3">
         {plans.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-lg">
-            <p className="text-gray-600">אין עדיין תפריטים</p>
-            <p className="text-sm text-gray-500 mt-2">לחץ על "תפריט חדש" כדי ליצור תפריט ראשון</p>
+          <div className="text-center py-12 premium-card-static">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-zinc-800/50 flex items-center justify-center">
+              <UtensilsCrossed className="h-8 w-8 text-zinc-500" />
+            </div>
+            <h3 className="text-lg font-medium text-white mb-2">אין תפריטים עדיין</h3>
+            <p className="text-zinc-500 mb-6">לחץ על "תפריט חדש" כדי ליצור תפריט ראשון</p>
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="btn-primary px-6 py-3 rounded-xl font-medium"
+            >
+              צור תפריט ראשון
+            </button>
           </div>
         ) : (
           plans.map((plan) => (
             <div
               key={plan.id}
-              className={`bg-white rounded-lg shadow-md p-6 ${
+              className={`premium-card-static p-5 hover:border-zinc-600/50 transition-all ${
                 !plan.is_active ? 'opacity-60' : ''
               }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-xl font-bold">{plan.name || 'תפריט ללא שם'}</h3>
-                    {plan.is_active ? (
-                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                        פעיל
-                      </span>
-                    ) : (
-                      <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
-                        לא פעיל
-                      </span>
-                    )}
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30">
+                      <UtensilsCrossed className="h-5 w-5 text-amber-400" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-white">{plan.name || 'תפריט ללא שם'}</h3>
+                        {plan.is_active ? (
+                          <span className="bg-emerald-500/15 text-emerald-400 text-xs px-2 py-0.5 rounded-full border border-emerald-500/30">
+                            פעיל
+                          </span>
+                        ) : (
+                          <span className="bg-zinc-800/50 text-zinc-500 text-xs px-2 py-0.5 rounded-full border border-zinc-700/50">
+                            לא פעיל
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-zinc-500 mt-1">
+                        נוצר: {new Date(plan.created_at).toLocaleDateString('he-IL')}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-500 mt-2">
-                    נוצר: {new Date(plan.created_at).toLocaleDateString('he-IL')}
-                  </p>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-1">
                   <button
                     onClick={() => onEditPlan(plan.id)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                    className="p-2 text-cyan-400 hover:bg-cyan-500/15 rounded-lg transition-all"
                     title="ערוך תפריט"
                   >
-                    <Edit2 className="w-5 h-5" />
+                    <Edit2 className="w-4 w-4" />
                   </button>
                   <button
                     onClick={() => handleToggleActive(plan.id, plan.is_active)}
-                    className={`p-2 rounded ${
+                    className={`p-2 rounded-lg transition-all ${
                       plan.is_active
-                        ? 'text-orange-600 hover:bg-orange-50'
-                        : 'text-green-600 hover:bg-green-50'
+                        ? 'text-amber-400 hover:bg-amber-500/15'
+                        : 'text-emerald-400 hover:bg-emerald-500/15'
                     }`}
                     title={plan.is_active ? 'השבת' : 'הפעל'}
                   >
                     {plan.is_active ? (
-                      <PowerOff className="w-5 h-5" />
+                      <PowerOff className="w-4 h-4" />
                     ) : (
-                      <Power className="w-5 h-5" />
+                      <Power className="w-4 h-4" />
                     )}
                   </button>
                   <button
                     onClick={() => handleDeletePlan(plan.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded"
+                    className="p-2 text-red-400 hover:bg-red-500/15 rounded-lg transition-all"
                     title="מחק תפריט"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>

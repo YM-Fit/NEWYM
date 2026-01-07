@@ -20,12 +20,12 @@ export default function MeasurementsChart({ measurements, metric }: Measurements
 
   const getMetricColor = (metric: string) => {
     switch (metric) {
-      case 'weight': return '#3B82F6';
-      case 'bodyFat': return '#EF4444';
-      case 'muscleMass': return '#10B981';
-      case 'waterPercentage': return '#8B5CF6';
-      case 'metabolicAge': return '#F59E0B';
-      default: return '#6B7280';
+      case 'weight': return '#10b981';
+      case 'bodyFat': return '#f59e0b';
+      case 'muscleMass': return '#06b6d4';
+      case 'waterPercentage': return '#3b82f6';
+      case 'metabolicAge': return '#ef4444';
+      default: return '#71717a';
     }
   };
 
@@ -39,43 +39,49 @@ export default function MeasurementsChart({ measurements, metric }: Measurements
 
   if (chartData.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
+      <div className="flex items-center justify-center h-64 text-zinc-500">
         אין נתונים להצגה עבור {getMetricLabel(metric)}
       </div>
     );
   }
 
   return (
-    <div className="h-64 w-full">
+    <div className="h-72 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis 
-            dataKey="date" 
-            stroke="#6B7280"
+          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+          <XAxis
+            dataKey="date"
+            stroke="#71717a"
             fontSize={12}
+            tickLine={false}
           />
-          <YAxis 
-            stroke="#6B7280"
+          <YAxis
+            stroke="#71717a"
             fontSize={12}
+            tickLine={false}
+            axisLine={false}
           />
-          <Tooltip 
+          <Tooltip
             contentStyle={{
-              backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              backgroundColor: '#18181b',
+              border: '1px solid #27272a',
+              borderRadius: '12px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
             }}
-            labelStyle={{ color: '#374151' }}
+            labelStyle={{ color: '#a1a1aa' }}
+            itemStyle={{ color: '#ffffff' }}
           />
-          <Legend />
-          <Line 
-            type="monotone" 
-            dataKey="value" 
+          <Legend
+            wrapperStyle={{ color: '#a1a1aa' }}
+          />
+          <Line
+            type="monotone"
+            dataKey="value"
             stroke={getMetricColor(metric)}
             strokeWidth={3}
-            dot={{ fill: getMetricColor(metric), strokeWidth: 2, r: 4 }}
-            activeDot={{ r: 6, stroke: getMetricColor(metric), strokeWidth: 2 }}
+            dot={{ fill: getMetricColor(metric), strokeWidth: 2, r: 5, stroke: '#18181b' }}
+            activeDot={{ r: 7, stroke: getMetricColor(metric), strokeWidth: 2, fill: '#18181b' }}
             name={getMetricLabel(metric)}
           />
         </LineChart>

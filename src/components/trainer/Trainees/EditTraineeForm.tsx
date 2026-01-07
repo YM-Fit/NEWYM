@@ -1,4 +1,4 @@
-import { ArrowRight, Save } from 'lucide-react';
+import { ArrowRight, Save, Sparkles, User } from 'lucide-react';
 import { useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 
@@ -67,146 +67,189 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
     }
   };
 
+  const inputClass = (hasError: boolean) =>
+    `w-full p-4 text-base bg-zinc-800/50 border rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 transition-all ${
+      hasError
+        ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
+        : 'border-zinc-700/50 focus:border-emerald-500/50 focus:ring-emerald-500/20'
+    }`;
+
+  const labelClass = "block text-sm font-medium text-zinc-400 mb-2";
+
+  const statusConfig = {
+    active: { bg: 'bg-emerald-500/15 border-emerald-500/30', text: 'text-emerald-400' },
+    inactive: { bg: 'bg-red-500/15 border-red-500/30', text: 'text-red-400' },
+    vacation: { bg: 'bg-amber-500/15 border-amber-500/30', text: 'text-amber-400' },
+    new: { bg: 'bg-cyan-500/15 border-cyan-500/30', text: 'text-cyan-400' },
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-4 rtl:space-x-reverse">
-        <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-          <ArrowRight className="h-5 w-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">עריכת פרופיל</h1>
-          <p className="text-gray-600">{trainee.name}</p>
+    <div className="space-y-6 animate-fade-in">
+      <div className="premium-card-static p-6 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="relative flex items-center gap-4">
+          <button
+            onClick={onBack}
+            className="p-3 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
+          >
+            <ArrowRight className="h-5 w-5" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">עריכה</span>
+            </div>
+            <h1 className="text-2xl font-bold text-white">עריכת פרופיל</h1>
+            <p className="text-zinc-500">{trainee.name}</p>
+          </div>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="premium-card-static p-6 space-y-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 rounded-xl bg-emerald-500/15">
+            <User className="h-5 w-5 text-emerald-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-white">פרטים אישיים</h3>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              שם מלא <span className="text-red-500">*</span>
-            </label>
+            <label className={labelClass}>שם מלא *</label>
             <input
               type="text"
               value={formData.full_name}
               onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-              className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                errors.full_name ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={inputClass(!!errors.full_name)}
               placeholder="שם מלא"
             />
-            {errors.full_name && (
-              <p className="text-red-500 text-sm mt-1">{errors.full_name}</p>
-            )}
+            {errors.full_name && <p className="text-red-400 text-sm mt-1">{errors.full_name}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              טלפון <span className="text-red-500">*</span>
-            </label>
+            <label className={labelClass}>טלפון *</label>
             <input
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                errors.phone ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={inputClass(!!errors.phone)}
               placeholder="050-1234567"
             />
-            {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+            {errors.phone && <p className="text-red-400 text-sm mt-1">{errors.phone}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">אימייל</label>
+            <label className={labelClass}>אימייל</label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                errors.email ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={inputClass(!!errors.email)}
               placeholder="example@email.com"
             />
-            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              גובה (ס״מ) <span className="text-red-500">*</span>
-            </label>
+            <label className={labelClass}>גובה (ס״מ) *</label>
             <input
               type="number"
               value={formData.height}
               onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-              className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                errors.height ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={inputClass(!!errors.height)}
               placeholder="175"
             />
-            {errors.height && <p className="text-red-500 text-sm mt-1">{errors.height}</p>}
+            {errors.height && <p className="text-red-400 text-sm mt-1">{errors.height}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">תאריך לידה</label>
+            <label className={labelClass}>תאריך לידה</label>
             <input
               type="date"
               value={formData.birth_date}
               onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className={inputClass(false)}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">מגדר</label>
-            <select
-              value={formData.gender}
-              onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            >
-              <option value="male">זכר</option>
-              <option value="female">נקבה</option>
-            </select>
+            <label className={labelClass}>מגדר</label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, gender: 'male' })}
+                className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+                  formData.gender === 'male'
+                    ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                    : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                }`}
+              >
+                זכר
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, gender: 'female' })}
+                className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+                  formData.gender === 'female'
+                    ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                    : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                }`}
+              >
+                נקבה
+              </button>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">סטטוס</label>
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            >
-              <option value="active">פעיל</option>
-              <option value="inactive">לא פעיל</option>
-              <option value="vacation">חופשה</option>
-              <option value="new">חדש</option>
-            </select>
+          <div className="md:col-span-2">
+            <label className={labelClass}>סטטוס</label>
+            <div className="flex flex-wrap gap-3">
+              {(['active', 'inactive', 'vacation', 'new'] as const).map((status) => {
+                const config = statusConfig[status];
+                const labels = { active: 'פעיל', inactive: 'לא פעיל', vacation: 'חופשה', new: 'חדש' };
+                return (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, status })}
+                    className={`px-4 py-3 rounded-xl border-2 transition-all ${
+                      formData.status === status
+                        ? `${config.bg} ${config.text} border-current`
+                        : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                    }`}
+                  >
+                    {labels[status]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">הערות</label>
+          <label className={labelClass}>הערות</label>
           <textarea
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
             rows={4}
             placeholder="הערות על המתאמן..."
           />
         </div>
 
-        <div className="flex items-center justify-end space-x-3 rtl:space-x-reverse pt-4 border-t">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800/50">
           <button
             type="button"
             onClick={onBack}
-            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+            className="px-6 py-3 rounded-xl border border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg flex items-center space-x-2 rtl:space-x-reverse transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary px-6 py-3 rounded-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save className="h-4 w-4" />
+            <Save className="h-5 w-5" />
             <span>{saving ? 'שומר...' : 'שמור שינויים'}</span>
           </button>
         </div>

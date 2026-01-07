@@ -1,8 +1,8 @@
-import { ArrowRight, Save, Scale, User, CheckCircle, TrendingDown, TrendingUp, Minus, RefreshCw, AlertTriangle, X, Check, Volume2, VolumeX, Wifi, WifiOff, Loader2, Server } from 'lucide-react';
+import { ArrowRight, Save, Scale, User, CheckCircle, TrendingDown, TrendingUp, Minus, RefreshCw, AlertTriangle, X, Check, Volume2, VolumeX, Wifi, WifiOff, Loader2, Server, Sparkles } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Trainee, BodyMeasurement } from '../../../types';
 import { supabase } from '../../../lib/supabase';
-import { useScaleListener, findTraineeByWeight, TraineeMatch } from '../../../hooks/useScaleListener';
+import { useScaleListener } from '../../../hooks/useScaleListener';
 import { useAutoSave } from '../../../hooks/useAutoSave';
 import { useScaleSound } from '../../../hooks/useScaleSound';
 import AutoSaveIndicator from '../../common/AutoSaveIndicator';
@@ -56,13 +56,11 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const [highlightedFields, setHighlightedFields] = useState<string[]>([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [traineeMatches, setTraineeMatches] = useState<TraineeMatch[]>([]);
-  const [showTraineeMatchPopup, setShowTraineeMatchPopup] = useState(false);
   const [waitingForScale, setWaitingForScale] = useState(true);
   const [waitingStartTime] = useState(new Date());
   const [elapsedWaitingTime, setElapsedWaitingTime] = useState(0);
 
-  const { latestReading, isListening, connectionStatus, scriptStatus, lastDataReceived, refreshConnection, isStabilizing, retryAttempt, maxRetries } = useScaleListener();
+  const { latestReading, connectionStatus, scriptStatus, refreshConnection, isStabilizing, retryAttempt, maxRetries } = useScaleListener();
   const { playDataReceived, playWarning, setEnabled: setSoundEnabledHook, isEnabled: isSoundEnabled } = useScaleSound();
   const hasReceivedDataRef = useRef(false);
 
@@ -209,7 +207,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
     const change = current - previous;
     if (Math.abs(change) < 0.1) return null;
     const text = `${change > 0 ? '+' : ''}${change.toFixed(1)} ק"ג`;
-    const color = change > 0 ? 'text-red-300' : 'text-green-300';
+    const color = change > 0 ? 'text-red-300' : 'text-emerald-300';
     return { text, color };
   };
 
@@ -218,7 +216,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
     const change = current - previous;
     if (Math.abs(change) < 0.1) return null;
     const text = `${change > 0 ? '+' : ''}${change.toFixed(1)}%`;
-    const color = change > 0 ? 'text-red-300' : 'text-green-300';
+    const color = change > 0 ? 'text-red-300' : 'text-emerald-300';
     return { text, color };
   };
 
@@ -237,14 +235,8 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
   const calculateBMR = (weight: number, height: number, age: number, gender: 'male' | 'female') => {
     if (!weight || !height || !age) return 0;
-
-    // Mifflin-St Jeor Equation
-    // Men: BMR = 10 × weight(kg) + 6.25 × height(cm) - 5 × age(years) + 5
-    // Women: BMR = 10 × weight(kg) + 6.25 × height(cm) - 5 × age(years) - 161
-
     const baseBMR = (10 * weight) + (6.25 * height) - (5 * age);
     const bmr = gender === 'male' ? baseBMR + 5 : baseBMR - 161;
-
     return Number(bmr.toFixed(1));
   };
 
@@ -353,20 +345,28 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
     if (!previous || !current) return null;
     const change = current - previous;
     if (Math.abs(change) < 0.1) return null;
-    
+
     return (
-      <span className={`text-sm font-medium ${change > 0 ? 'text-red-600' : 'text-green-600'}`}>
+      <span className={`text-sm font-medium ${change > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
         ({change > 0 ? '+' : ''}{change.toFixed(1)})
       </span>
     );
   };
 
+  const inputClass = (hasHighlight: boolean) =>
+    `w-full p-4 text-xl bg-zinc-800/50 border rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 transition-all ${
+      hasHighlight
+        ? 'border-emerald-500/50 bg-emerald-500/10 ring-2 ring-emerald-500/30'
+        : 'border-zinc-700/50 focus:border-emerald-500/50 focus:ring-emerald-500/20'
+    }`;
+
+  const labelClass = "block text-sm font-medium text-zinc-400 mb-2";
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4 lg:p-6">
-      {/* Stabilizing Indicator */}
+    <div className="space-y-6 animate-fade-in">
       {isStabilizing && !showScaleDataToast && (
-        <div className="fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-80 bg-blue-500 text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-pulse">
-          <div className="flex items-center space-x-3 rtl:space-x-reverse">
+        <div className="fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-80 bg-cyan-500/90 backdrop-blur-sm text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-pulse border border-cyan-400/50">
+          <div className="flex items-center gap-3">
             <Loader2 className="h-6 w-6 animate-spin" />
             <div>
               <p className="font-bold">המשקל מתייצב...</p>
@@ -376,12 +376,13 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
         </div>
       )}
 
-      {/* Scale Data Received Toast */}
       {showScaleDataToast && pendingScaleData && (
         <div className={`fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-96 ${
-          showValidationWarning ? 'bg-orange-500' : 'bg-green-500'
-        } text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-slide-in-top`}>
-          <div className="flex items-start space-x-3 rtl:space-x-reverse mb-3">
+          showValidationWarning ? 'bg-amber-500/90' : 'bg-emerald-500/90'
+        } backdrop-blur-sm text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-slide-in-top border ${
+          showValidationWarning ? 'border-amber-400/50' : 'border-emerald-400/50'
+        }`}>
+          <div className="flex items-start gap-3 mb-3">
             {showValidationWarning ? (
               <AlertTriangle className="h-6 w-6 flex-shrink-0" />
             ) : (
@@ -393,7 +394,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               </p>
               <div className="text-sm mt-1 space-y-1">
                 {pendingScaleData.weight > 0 && (
-                  <p className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <p className="flex items-center gap-2">
                     <span>{pendingScaleData.weight.toFixed(1)} ק״ג</span>
                     {previousMeasurement?.weight && (() => {
                       const change = getWeightChangeDisplay(pendingScaleData.weight, previousMeasurement.weight);
@@ -402,7 +403,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                   </p>
                 )}
                 {pendingScaleData.bodyFat > 0 && (
-                  <p className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <p className="flex items-center gap-2">
                     <span>{pendingScaleData.bodyFat.toFixed(1)}% שומן</span>
                     {previousMeasurement?.bodyFat && (() => {
                       const change = getBodyFatChangeDisplay(pendingScaleData.bodyFat, previousMeasurement.bodyFat);
@@ -414,23 +415,23 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               {showValidationWarning && validationWarnings.length > 0 && (
                 <div className="mt-2 text-xs opacity-90">
                   {validationWarnings.map((warning, idx) => (
-                    <p key={idx}>• {warning}</p>
+                    <p key={idx}>* {warning}</p>
                   ))}
                 </div>
               )}
             </div>
           </div>
-          <div className="flex space-x-2 rtl:space-x-reverse">
+          <div className="flex gap-2">
             <button
               onClick={acceptScaleData}
-              className="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-1 rtl:space-x-reverse"
+              className="flex-1 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center gap-1"
             >
               <Check className="h-4 w-4" />
               <span>אשר</span>
             </button>
             <button
               onClick={rejectScaleData}
-              className="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-1 rtl:space-x-reverse"
+              className="flex-1 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center gap-1"
             >
               <X className="h-4 w-4" />
               <span>דחה</span>
@@ -439,33 +440,37 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
         </div>
       )}
 
-      {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3 lg:space-x-4 rtl:space-x-reverse">
+      <div className="premium-card-static p-6 sticky top-0 z-10 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <button
               type="button"
               onClick={onBack}
-              className="p-3 lg:p-4 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors touch-manipulation"
+              className="p-3 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
             >
-              <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7" />
+              <ArrowRight className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="text-xl lg:text-3xl font-bold text-gray-900">{trainee.name}</h1>
-              <p className="text-base lg:text-lg text-gray-600">{isEditing ? 'עריכת מדידה' : 'מדידה חדשה'}</p>
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                  {isEditing ? 'עריכת מדידה' : 'מדידה חדשה'}
+                </span>
+              </div>
+              <h1 className="text-2xl font-bold text-white">{trainee.name}</h1>
               {!isEditing && (
-                <div className="flex flex-col space-y-2 mt-2">
-                  <div className="flex items-center space-x-3 rtl:space-x-reverse flex-wrap gap-2">
-                    {/* Realtime Connection Status */}
-                    <div className={`flex items-center space-x-1 rtl:space-x-reverse text-sm ${
-                      connectionStatus === 'connected' ? 'text-green-600' :
-                      connectionStatus === 'stale' ? 'text-orange-600' :
-                      'text-red-600'
+                <div className="flex flex-col gap-2 mt-2">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className={`flex items-center gap-1 text-xs ${
+                      connectionStatus === 'connected' ? 'text-emerald-400' :
+                      connectionStatus === 'stale' ? 'text-amber-400' :
+                      'text-red-400'
                     }`}>
                       {connectionStatus === 'connected' ? (
-                        <Wifi className="h-4 w-4" />
+                        <Wifi className="h-3.5 w-3.5" />
                       ) : (
-                        <WifiOff className="h-4 w-4" />
+                        <WifiOff className="h-3.5 w-3.5" />
                       )}
                       <span>
                         {connectionStatus === 'connected' && 'Realtime מחובר'}
@@ -474,52 +479,48 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                       </span>
                     </div>
 
-                    {/* Script Status */}
-                    <div className={`flex items-center space-x-1 rtl:space-x-reverse text-sm ${
-                      scriptStatus.isOnline ? 'text-green-600' : 'text-gray-400'
+                    <div className={`flex items-center gap-1 text-xs ${
+                      scriptStatus.isOnline ? 'text-emerald-400' : 'text-zinc-500'
                     }`}>
-                      <Server className="h-4 w-4" />
+                      <Server className="h-3.5 w-3.5" />
                       <span>
                         {scriptStatus.isOnline ? `${scriptStatus.deviceName} פעיל` : 'סקריפט לא פעיל'}
                       </span>
                     </div>
 
-                    {/* Retry indicator */}
                     {retryAttempt > 0 && connectionStatus === 'disconnected' && (
-                      <div className="flex items-center space-x-1 rtl:space-x-reverse text-sm text-orange-600">
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                      <div className="flex items-center gap-1 text-xs text-amber-400">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         <span>ניסיון {retryAttempt + 1}/{maxRetries}</span>
                       </div>
                     )}
 
-                    {/* Refresh & Sound Controls */}
-                    <div className="flex items-center space-x-1 rtl:space-x-reverse">
+                    <div className="flex items-center gap-1">
                       <button
                         onClick={refreshConnection}
-                        className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-zinc-800/50 rounded-lg transition-colors"
                         title="רענן חיבור"
                       >
-                        <RefreshCw className="h-4 w-4 text-gray-600" />
+                        <RefreshCw className="h-3.5 w-3.5 text-zinc-500 hover:text-white" />
                       </button>
                       <button
                         onClick={toggleSound}
-                        className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-zinc-800/50 rounded-lg transition-colors"
                         title={soundEnabled ? 'השתק צלילים' : 'הפעל צלילים'}
                       >
                         {soundEnabled ? (
-                          <Volume2 className="h-4 w-4 text-green-600" />
+                          <Volume2 className="h-3.5 w-3.5 text-emerald-400" />
                         ) : (
-                          <VolumeX className="h-4 w-4 text-gray-400" />
+                          <VolumeX className="h-3.5 w-3.5 text-zinc-500" />
                         )}
                       </button>
                     </div>
                   </div>
 
-                  {/* Waiting for scale indicator */}
                   {waitingForScale && !hasReceivedDataRef.current && formData.weight === 0 && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 flex items-center space-x-2 rtl:space-x-reverse">
-                      <Scale className="h-5 w-5 text-blue-500 animate-bounce" />
-                      <span className="text-sm text-blue-700">
+                    <div className="bg-cyan-500/15 border border-cyan-500/30 rounded-lg px-3 py-2 flex items-center gap-2">
+                      <Scale className="h-4 w-4 text-cyan-400 animate-bounce" />
+                      <span className="text-sm text-cyan-400">
                         ממתין לשקילה... ({formatWaitingTime(elapsedWaitingTime)})
                       </span>
                     </div>
@@ -530,113 +531,110 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 rtl:space-x-reverse">
-            <Scale className="h-6 w-6 lg:h-7 lg:w-7 text-green-600" />
+          <div className="flex items-center gap-2">
+            <Scale className="h-5 w-5 text-emerald-400" />
             <input
               type="date"
               value={measurementDate}
               onChange={(e) => setMeasurementDate(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base lg:text-lg font-medium"
+              className="px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 text-white text-sm transition-all"
             />
           </div>
         </div>
       </div>
 
-      {/* Pair Member Selection */}
       {trainee.isPair && (
-        <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 mb-4 lg:mb-6">
-          <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">מי מתשקל/ת?</h3>
-          <div className="grid grid-cols-3 gap-3 lg:gap-4">
+        <div className="premium-card-static p-5">
+          <h3 className="text-sm font-medium text-zinc-400 mb-4">מי מתשקל/ת?</h3>
+          <div className="grid grid-cols-3 gap-3">
             <button
               type="button"
               onClick={() => setSelectedMember('both')}
-              className={`p-4 lg:p-6 rounded-xl border-2 transition-all touch-manipulation ${
+              className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'both'
-                  ? 'border-green-500 bg-green-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300 active:bg-gray-50'
+                  ? 'border-emerald-500/50 bg-emerald-500/10'
+                  : 'border-zinc-700/50 bg-zinc-800/30 hover:border-zinc-600/50'
               }`}
             >
-              <User className={`h-10 w-10 lg:h-12 lg:w-12 mx-auto mb-2 lg:mb-3 ${
-                selectedMember === 'both' ? 'text-green-600' : 'text-gray-400'
+              <User className={`h-8 w-8 mx-auto mb-2 ${
+                selectedMember === 'both' ? 'text-emerald-400' : 'text-zinc-500'
               }`} />
-              <p className={`font-semibold text-sm lg:text-base text-center ${
-                selectedMember === 'both' ? 'text-green-700' : 'text-gray-600'
+              <p className={`font-semibold text-sm text-center ${
+                selectedMember === 'both' ? 'text-emerald-400' : 'text-zinc-400'
               }`}>{trainee.pairName1} + {trainee.pairName2}</p>
             </button>
             <button
               type="button"
               onClick={() => setSelectedMember('member_1')}
-              className={`p-4 lg:p-6 rounded-xl border-2 transition-all touch-manipulation ${
+              className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'member_1'
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300 active:bg-gray-50'
+                  ? 'border-cyan-500/50 bg-cyan-500/10'
+                  : 'border-zinc-700/50 bg-zinc-800/30 hover:border-zinc-600/50'
               }`}
             >
-              <User className={`h-10 w-10 lg:h-12 lg:w-12 mx-auto mb-2 lg:mb-3 ${
-                selectedMember === 'member_1' ? 'text-blue-600' : 'text-gray-400'
+              <User className={`h-8 w-8 mx-auto mb-2 ${
+                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-zinc-500'
               }`} />
-              <p className={`font-semibold text-sm lg:text-base ${
-                selectedMember === 'member_1' ? 'text-blue-700' : 'text-gray-600'
+              <p className={`font-semibold text-sm ${
+                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-zinc-400'
               }`}>{trainee.pairName1}</p>
             </button>
             <button
               type="button"
               onClick={() => setSelectedMember('member_2')}
-              className={`p-4 lg:p-6 rounded-xl border-2 transition-all touch-manipulation ${
+              className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'member_2'
-                  ? 'border-purple-500 bg-purple-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300 active:bg-gray-50'
+                  ? 'border-amber-500/50 bg-amber-500/10'
+                  : 'border-zinc-700/50 bg-zinc-800/30 hover:border-zinc-600/50'
               }`}
             >
-              <User className={`h-10 w-10 lg:h-12 lg:w-12 mx-auto mb-2 lg:mb-3 ${
-                selectedMember === 'member_2' ? 'text-purple-600' : 'text-gray-400'
+              <User className={`h-8 w-8 mx-auto mb-2 ${
+                selectedMember === 'member_2' ? 'text-amber-400' : 'text-zinc-500'
               }`} />
-              <p className={`font-semibold text-sm lg:text-base ${
-                selectedMember === 'member_2' ? 'text-purple-700' : 'text-gray-600'
+              <p className={`font-semibold text-sm ${
+                selectedMember === 'member_2' ? 'text-amber-400' : 'text-zinc-400'
               }`}>{trainee.pairName2}</p>
             </button>
           </div>
         </div>
       )}
 
-      {/* Source Selection */}
-      <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 mb-4 lg:mb-6">
-        <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">מקור המדידה</h3>
-        <div className="grid grid-cols-2 gap-3 lg:gap-4">
+      <div className="premium-card-static p-5">
+        <h3 className="text-lg font-semibold text-white mb-4">מקור המדידה</h3>
+        <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => setFormData(prev => ({ ...prev, source: 'tanita' }))}
-            className={`flex items-center justify-center space-x-2 rtl:space-x-reverse px-6 py-4 lg:py-5 rounded-lg transition-colors touch-manipulation ${
+            className={`flex items-center justify-center gap-2 px-6 py-4 rounded-xl transition-all ${
               formData.source === 'tanita'
-                ? 'bg-green-100 text-green-700 border-2 border-green-300'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 active:bg-gray-300'
+                ? 'bg-emerald-500/15 text-emerald-400 border-2 border-emerald-500/50'
+                : 'bg-zinc-800/30 text-zinc-400 border-2 border-zinc-700/50 hover:border-zinc-600/50'
             }`}
           >
-            <Scale className="h-6 w-6 lg:h-7 lg:w-7" />
-            <span className="text-base lg:text-lg font-medium">Tanita</span>
+            <Scale className="h-5 w-5" />
+            <span className="font-medium">Tanita</span>
           </button>
           <button
             type="button"
             onClick={() => setFormData(prev => ({ ...prev, source: 'manual' }))}
-            className={`flex items-center justify-center space-x-2 rtl:space-x-reverse px-6 py-4 lg:py-5 rounded-lg transition-colors touch-manipulation ${
+            className={`flex items-center justify-center gap-2 px-6 py-4 rounded-xl transition-all ${
               formData.source === 'manual'
-                ? 'bg-green-100 text-green-700 border-2 border-green-300'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 active:bg-gray-300'
+                ? 'bg-emerald-500/15 text-emerald-400 border-2 border-emerald-500/50'
+                : 'bg-zinc-800/30 text-zinc-400 border-2 border-zinc-700/50 hover:border-zinc-600/50'
             }`}
           >
-            <User className="h-6 w-6 lg:h-7 lg:w-7" />
-            <span className="text-base lg:text-lg font-medium">מדידה ידנית</span>
+            <User className="h-5 w-5" />
+            <span className="font-medium">מדידה ידנית</span>
           </button>
         </div>
       </div>
 
-      {/* Basic Measurements */}
-      <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 mb-4 lg:mb-6">
-        <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4 lg:mb-6">מדידות בסיסיות</h3>
+      <div className="premium-card-static p-5">
+        <h3 className="text-lg font-semibold text-white mb-6">מדידות בסיסיות</h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className={`${highlightedFields.includes('weight') ? 'animate-highlight-pulse' : ''}`}>
-            <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className={highlightedFields.includes('weight') ? 'animate-highlight-pulse' : ''}>
+            <label className={labelClass}>
               משקל (ק״ג) *
               {getChangeIndicator(formData.weight, previousMeasurement?.weight)}
             </label>
@@ -646,19 +644,15 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               step="0.1"
               value={formData.weight || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, weight: Number(e.target.value) }))}
-              className={`w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation ${
-                highlightedFields.includes('weight') ? 'border-green-500 bg-green-50 ring-2 ring-green-300' : 'border-gray-300'
-              }`}
+              className={inputClass(highlightedFields.includes('weight'))}
               placeholder="0.0"
               required
             />
           </div>
 
           <div>
-            <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
-              גובה (ס״מ)
-            </label>
-            <div className="w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 border-gray-200 bg-gray-50 rounded-lg text-gray-700">
+            <label className={labelClass}>גובה (ס״מ)</label>
+            <div className="w-full p-4 text-xl bg-zinc-800/30 border border-zinc-700/50 rounded-xl text-zinc-400">
               {(() => {
                 const height = trainee.isPair
                   ? (selectedMember === 'member_1' ? trainee.pairHeight1 : selectedMember === 'member_2' ? trainee.pairHeight2 : trainee.pairHeight1)
@@ -666,11 +660,11 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                 return height || 'לא הוגדר';
               })()}
             </div>
-            <p className="text-sm text-gray-500 mt-1">הגובה נשמר בפרופיל המתאמן</p>
+            <p className="text-xs text-zinc-500 mt-1">הגובה נשמר בפרופיל המתאמן</p>
           </div>
 
-          <div className={`${highlightedFields.includes('bodyFat') ? 'animate-highlight-pulse' : ''}`}>
-            <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
+          <div className={highlightedFields.includes('bodyFat') ? 'animate-highlight-pulse' : ''}>
+            <label className={labelClass}>
               אחוז שומן (%)
               {getChangeIndicator(formData.bodyFat, previousMeasurement?.bodyFat)}
             </label>
@@ -680,15 +674,13 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               step="0.1"
               value={formData.bodyFat || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, bodyFat: Number(e.target.value) }))}
-              className={`w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation ${
-                highlightedFields.includes('bodyFat') ? 'border-green-500 bg-green-50 ring-2 ring-green-300' : 'border-gray-300'
-              }`}
+              className={inputClass(highlightedFields.includes('bodyFat'))}
               placeholder="0.0"
             />
           </div>
 
-          <div className={`${highlightedFields.includes('muscleMass') ? 'animate-highlight-pulse' : ''}`}>
-            <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
+          <div className={highlightedFields.includes('muscleMass') ? 'animate-highlight-pulse' : ''}>
+            <label className={labelClass}>
               מסת שריר (ק״ג)
               {getChangeIndicator(formData.muscleMass, previousMeasurement?.muscleMass)}
             </label>
@@ -698,15 +690,13 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               step="0.1"
               value={formData.muscleMass || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, muscleMass: Number(e.target.value) }))}
-              className={`w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation ${
-                highlightedFields.includes('muscleMass') ? 'border-green-500 bg-green-50 ring-2 ring-green-300' : 'border-gray-300'
-              }`}
+              className={inputClass(highlightedFields.includes('muscleMass'))}
               placeholder="0.0"
             />
           </div>
 
-          <div className={`${highlightedFields.includes('waterPercentage') ? 'animate-highlight-pulse' : ''}`}>
-            <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
+          <div className={highlightedFields.includes('waterPercentage') ? 'animate-highlight-pulse' : ''}>
+            <label className={labelClass}>
               אחוז מים (%)
               {getChangeIndicator(formData.waterPercentage, previousMeasurement?.waterPercentage)}
             </label>
@@ -716,19 +706,17 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               step="0.1"
               value={formData.waterPercentage || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, waterPercentage: Number(e.target.value) }))}
-              className={`w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation ${
-                highlightedFields.includes('waterPercentage') ? 'border-green-500 bg-green-50 ring-2 ring-green-300' : 'border-gray-300'
-              }`}
+              className={inputClass(highlightedFields.includes('waterPercentage'))}
               placeholder="0.0"
             />
           </div>
 
           <div>
-            <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
+            <label className={labelClass}>
               BMR (קלוריות בסיסיות)
-              <span className="text-sm text-gray-500 mr-2">(מחושב אוטומטית)</span>
+              <span className="text-xs text-zinc-500 mr-2">(מחושב אוטומטית)</span>
             </label>
-            <div className="w-full p-4 lg:p-5 text-xl lg:text-2xl bg-blue-50 border-2 border-blue-200 rounded-lg text-blue-700 font-semibold">
+            <div className="w-full p-4 text-xl bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400 font-semibold">
               {(() => {
                 const height = trainee.isPair
                   ? (selectedMember === 'member_1' ? trainee.pairHeight1 : selectedMember === 'member_2' ? trainee.pairHeight2 : trainee.pairHeight1)
@@ -745,9 +733,9 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
           </div>
 
           <div>
-            <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
+            <label className={labelClass}>
               גיל מטבולי
-              <span className="text-sm text-gray-500 mr-2">(מחושב אוטומטית)</span>
+              <span className="text-xs text-zinc-500 mr-2">(מחושב אוטומטית)</span>
             </label>
             {(() => {
               const height = trainee.isPair
@@ -778,35 +766,35 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                 const message = getMetabolicAgeMessage(metabolicAge, age, inputs);
 
                 const statusColors = {
-                  excellent: 'bg-green-50 border-green-300 text-green-700',
-                  good: 'bg-blue-50 border-blue-300 text-blue-700',
-                  'needs-improvement': 'bg-orange-50 border-orange-300 text-orange-700'
+                  excellent: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
+                  good: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400',
+                  'needs-improvement': 'bg-amber-500/10 border-amber-500/30 text-amber-400'
                 };
 
                 const statusIcons = {
-                  excellent: <TrendingDown className="h-6 w-6 inline ml-2" />,
-                  good: <Minus className="h-6 w-6 inline ml-2" />,
-                  'needs-improvement': <TrendingUp className="h-6 w-6 inline ml-2" />
+                  excellent: <TrendingDown className="h-5 w-5 inline mr-2" />,
+                  good: <Minus className="h-5 w-5 inline mr-2" />,
+                  'needs-improvement': <TrendingUp className="h-5 w-5 inline mr-2" />
                 };
 
                 return (
                   <div>
-                    <div className={`w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 rounded-lg font-bold ${statusColors[message.status]}`}>
+                    <div className={`w-full p-4 text-xl border rounded-xl font-bold ${statusColors[message.status]}`}>
                       {metabolicAge} שנים
                       {statusIcons[message.status]}
                     </div>
-                    <p className={`mt-2 text-sm lg:text-base font-medium ${
-                      message.status === 'excellent' ? 'text-green-600' :
-                      message.status === 'good' ? 'text-blue-600' :
-                      'text-orange-600'
+                    <p className={`mt-2 text-sm font-medium ${
+                      message.status === 'excellent' ? 'text-emerald-400' :
+                      message.status === 'good' ? 'text-cyan-400' :
+                      'text-amber-400'
                     }`}>
                       {message.text}
                     </p>
                     {message.recommendations && message.recommendations.length > 0 && (
                       <div className="mt-3 space-y-1">
                         {message.recommendations.map((rec, idx) => (
-                          <p key={idx} className="text-xs lg:text-sm text-gray-600 flex items-start">
-                            <span className="mr-1">•</span>
+                          <p key={idx} className="text-xs text-zinc-500 flex items-start">
+                            <span className="mr-1">*</span>
                             <span>{rec}</span>
                           </p>
                         ))}
@@ -817,7 +805,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               }
 
               return (
-                <div className="w-full p-4 lg:p-5 text-xl lg:text-2xl bg-gray-50 border-2 border-gray-300 rounded-lg text-gray-400 font-semibold">
+                <div className="w-full p-4 text-xl bg-zinc-800/30 border border-zinc-700/50 rounded-xl text-zinc-500 font-semibold">
                   נדרש משקל וגובה לחישוב
                 </div>
               );
@@ -825,11 +813,11 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
           </div>
 
           <div>
-            <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
+            <label className={labelClass}>
               BMI
-              <span className="text-sm text-gray-500 mr-2">(מחושב אוטומטית)</span>
+              <span className="text-xs text-zinc-500 mr-2">(מחושב אוטומטית)</span>
             </label>
-            <div className="w-full p-4 lg:p-5 text-xl lg:text-2xl bg-gray-50 border-2 border-gray-300 rounded-lg text-gray-600 font-semibold">
+            <div className="w-full p-4 text-xl bg-zinc-800/30 border border-zinc-700/50 rounded-xl text-zinc-300 font-semibold">
               {(() => {
                 const height = trainee.isPair
                   ? (selectedMember === 'member_1' ? trainee.pairHeight1 : selectedMember === 'member_2' ? trainee.pairHeight2 : trainee.pairHeight1)
@@ -841,13 +829,12 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
         </div>
       </div>
 
-      {/* Body Measurements */}
-      <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 mb-4 lg:mb-6">
-        <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4 lg:mb-6">מדידות היקפים (ס״מ)</h3>
+      <div className="premium-card-static p-5">
+        <h3 className="text-lg font-semibold text-white mb-6">מדידות היקפים (ס״מ)</h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div>
-            <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
+            <label className={labelClass}>
               חזה/גב
               {getChangeIndicator(formData.measurements.chestBack, previousMeasurement?.measurements?.chestBack)}
             </label>
@@ -860,13 +847,13 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                 ...prev,
                 measurements: { ...prev.measurements, chestBack: Number(e.target.value) }
               }))}
-              className="w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation"
+              className={inputClass(false)}
               placeholder="0"
             />
           </div>
 
           <div>
-            <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
+            <label className={labelClass}>
               פופיק
               {getChangeIndicator(formData.measurements.belly, previousMeasurement?.measurements?.belly)}
             </label>
@@ -879,13 +866,13 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                 ...prev,
                 measurements: { ...prev.measurements, belly: Number(e.target.value) }
               }))}
-              className="w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation"
+              className={inputClass(false)}
               placeholder="0"
             />
           </div>
 
           <div>
-            <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
+            <label className={labelClass}>
               ישבן
               {getChangeIndicator(formData.measurements.glutes, previousMeasurement?.measurements?.glutes)}
             </label>
@@ -898,13 +885,13 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                 ...prev,
                 measurements: { ...prev.measurements, glutes: Number(e.target.value) }
               }))}
-              className="w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation"
+              className={inputClass(false)}
               placeholder="0"
             />
           </div>
 
           <div>
-            <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
+            <label className={labelClass}>
               ירך
               {getChangeIndicator(formData.measurements.thigh, previousMeasurement?.measurements?.thigh)}
             </label>
@@ -917,13 +904,13 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                 ...prev,
                 measurements: { ...prev.measurements, thigh: Number(e.target.value) }
               }))}
-              className="w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation"
+              className={inputClass(false)}
               placeholder="0"
             />
           </div>
 
           <div>
-            <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
+            <label className={labelClass}>
               יד ימין
               {getChangeIndicator(formData.measurements.rightArm, previousMeasurement?.measurements?.rightArm)}
             </label>
@@ -936,13 +923,13 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                 ...prev,
                 measurements: { ...prev.measurements, rightArm: Number(e.target.value) }
               }))}
-              className="w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation"
+              className={inputClass(false)}
               placeholder="0"
             />
           </div>
 
           <div>
-            <label className="block text-base lg:text-lg font-medium text-gray-700 mb-2">
+            <label className={labelClass}>
               יד שמאל
               {getChangeIndicator(formData.measurements.leftArm, previousMeasurement?.measurements?.leftArm)}
             </label>
@@ -955,22 +942,21 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                 ...prev,
                 measurements: { ...prev.measurements, leftArm: Number(e.target.value) }
               }))}
-              className="w-full p-4 lg:p-5 text-xl lg:text-2xl border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all touch-manipulation"
+              className={inputClass(false)}
               placeholder="0"
             />
           </div>
         </div>
       </div>
 
-      {/* Save Button */}
       <div className="pb-8">
         <button
           type="button"
           onClick={handleSubmit}
           disabled={!formData.weight}
-          className="w-full bg-green-500 hover:bg-green-600 active:bg-green-700 disabled:bg-gray-300 text-white py-5 lg:py-6 px-6 rounded-xl text-xl lg:text-2xl font-semibold flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all shadow-lg hover:shadow-xl touch-manipulation"
+          className="w-full btn-primary py-5 rounded-xl text-xl font-semibold flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Save className="h-7 w-7 lg:h-8 lg:w-8" />
+          <Save className="h-6 w-6" />
           <span>שמור מדידה</span>
         </button>
       </div>
