@@ -15,10 +15,14 @@ import {
   Clock,
   CheckCircle,
   XCircle,
+  Plus,
 } from 'lucide-react';
+import SelfWorkoutSession from './SelfWorkoutSession';
 
 interface WorkoutHistoryProps {
   traineeId: string | null;
+  traineeName?: string;
+  trainerId?: string;
 }
 
 interface WorkoutExercise {
@@ -76,7 +80,7 @@ interface MuscleGroup {
   name: string;
 }
 
-export default function WorkoutHistory({ traineeId }: WorkoutHistoryProps) {
+export default function WorkoutHistory({ traineeId, traineeName, trainerId }: WorkoutHistoryProps) {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [muscleGroups, setMuscleGroups] = useState<MuscleGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,6 +89,7 @@ export default function WorkoutHistory({ traineeId }: WorkoutHistoryProps) {
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [previousExerciseData, setPreviousExerciseData] = useState<Map<string, { weight: number; reps: number }>>(new Map());
+  const [showSelfWorkout, setShowSelfWorkout] = useState(false);
 
   useEffect(() => {
     if (traineeId) {
@@ -338,6 +343,21 @@ export default function WorkoutHistory({ traineeId }: WorkoutHistoryProps) {
     );
   }
 
+  if (showSelfWorkout) {
+    return (
+      <SelfWorkoutSession
+        traineeId={traineeId!}
+        traineeName={traineeName || ''}
+        trainerId={trainerId}
+        onBack={() => setShowSelfWorkout(false)}
+        onSave={() => {
+          setShowSelfWorkout(false);
+          loadWorkouts();
+        }}
+      />
+    );
+  }
+
   if (selectedWorkout) {
     return (
       <WorkoutDetail
@@ -351,6 +371,14 @@ export default function WorkoutHistory({ traineeId }: WorkoutHistoryProps) {
 
   return (
     <div className="space-y-4 pb-4">
+      <button
+        onClick={() => setShowSelfWorkout(true)}
+        className="w-full bg-gradient-to-l from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white py-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all shadow-lg"
+      >
+        <Plus className="w-6 h-6" />
+        <span className="font-bold text-lg">אימון עצמאי</span>
+      </button>
+
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white">
           <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mb-2">

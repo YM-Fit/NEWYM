@@ -87,7 +87,7 @@ export default function TraineeApp() {
       <main className="pb-20 p-4">
         {activeTab === 'dashboard' && <TraineeDashboard traineeId={traineeId} traineeName={trainee?.full_name || ''} />}
         {activeTab === 'workout-plan' && <MyWorkoutPlan traineeId={traineeId} />}
-        {activeTab === 'workouts' && <WorkoutHistory traineeId={traineeId} />}
+        {activeTab === 'workouts' && <WorkoutHistory traineeId={traineeId} traineeName={trainee?.full_name} trainerId={trainee?.trainer_id} />}
         {activeTab === 'measurements' && <MyMeasurements traineeId={traineeId} trainerId={trainee?.trainer_id} traineeName={trainee?.full_name} />}
         {activeTab === 'menu' && <MyMealPlan traineeId={traineeId} />}
         {activeTab === 'mental' && <MyMentalTools traineeId={traineeId} />}
