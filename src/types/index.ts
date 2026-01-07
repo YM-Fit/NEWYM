@@ -92,6 +92,7 @@ export interface BodyMeasurement {
   bmi?: number;
   metabolicAge?: number;
   source: 'tanita' | 'manual';
+  notes?: string;
   pairMember?: 'member_1' | 'member_2' | null;
   measurements?: {
     chestBack?: number;

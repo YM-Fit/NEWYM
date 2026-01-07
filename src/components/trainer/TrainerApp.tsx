@@ -476,7 +476,9 @@ export default function TrainerApp() {
         waterPercentage: m.water_percentage || undefined,
         bmr: m.bmr || undefined,
         bmi: m.bmi || undefined,
+        metabolicAge: m.metabolic_age || undefined,
         source: m.source as 'tanita' | 'manual',
+        notes: m.notes || undefined,
         pairMember: m.pair_member as 'member_1' | 'member_2' | null,
         measurements: {
           chestBack: m.chest_back || 0,

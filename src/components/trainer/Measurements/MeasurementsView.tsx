@@ -332,6 +332,13 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                       </div>
                     </div>
                   )}
+
+                  {measurement.notes && (
+                    <div className="mt-3 pt-3 border-t border-zinc-700/50">
+                      <p className="text-sm text-zinc-500 mb-1">הערות:</p>
+                      <p className="text-sm text-zinc-300">{measurement.notes}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

@@ -38,6 +38,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
     waterPercentage: sourceMeasurement?.waterPercentage || 0,
     bmr: sourceMeasurement?.bmr || 0,
     source: (sourceMeasurement?.source || 'manual') as 'tanita' | 'manual',
+    notes: sourceMeasurement?.notes || '',
     measurements: {
       chestBack: sourceMeasurement?.measurements?.chestBack || 0,
       belly: sourceMeasurement?.measurements?.belly || 0,
@@ -283,6 +284,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       bmi: bmi || null,
       metabolic_age: metabolicAge,
       source: formData.source,
+      notes: formData.notes || null,
       chest_back: formData.measurements.chestBack || null,
       belly: formData.measurements.belly || null,
       glutes: formData.measurements.glutes || null,
@@ -325,6 +327,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
         bmi: responseData.bmi || undefined,
         metabolicAge: responseData.metabolic_age || undefined,
         source: responseData.source as 'tanita' | 'manual',
+        notes: responseData.notes || undefined,
         pairMember: responseData.pair_member || undefined,
         measurements: {
           chestBack: responseData.chest_back || 0,
@@ -827,6 +830,17 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="premium-card-static p-5">
+        <h3 className="text-lg font-semibold text-white mb-4">הערות למדידה</h3>
+        <textarea
+          value={formData.notes}
+          onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+          className="w-full p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-all resize-none"
+          rows={3}
+          placeholder="הערות על השקילה, התקדמות, מצב כללי..."
+        />
       </div>
 
       <div className="premium-card-static p-5">
