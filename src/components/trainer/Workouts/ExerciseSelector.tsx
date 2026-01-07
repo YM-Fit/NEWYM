@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Search, X, Plus, Clock } from 'lucide-react';
+import { Search, X, Plus, Clock, PlusCircle } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
+import toast from 'react-hot-toast';
 import ExerciseHistory from './ExerciseHistory';
 
 interface Exercise {
@@ -28,6 +29,9 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [historyExercise, setHistoryExercise] = useState<Exercise | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newExerciseName, setNewExerciseName] = useState('');
+  const [savingExercise, setSavingExercise] = useState(false);
 
   useEffect(() => {
     loadMuscleGroupsAndExercises();
@@ -61,6 +65,45 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
 
     setMuscleGroups(groupsWithExercises);
     setLoading(false);
+  };
+
+  const handleAddExercise = async () => {
+    if (!newExerciseName.trim() || !selectedGroup) return;
+
+    setSavingExercise(true);
+    try {
+      const { data, error } = await supabase
+        .from('exercises')
+        .insert({
+          name: newExerciseName.trim(),
+          muscle_group_id: selectedGroup,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        toast.error('שגיאה בהוספת התרגיל');
+        console.error('Error adding exercise:', error);
+      } else if (data) {
+        toast.success('התרגיל נוסף בהצלחה');
+        setMuscleGroups(prev => prev.map(group => {
+          if (group.id === selectedGroup) {
+            return {
+              ...group,
+              exercises: [...group.exercises, data].sort((a, b) => a.name.localeCompare(b.name)),
+            };
+          }
+          return group;
+        }));
+        setNewExerciseName('');
+        setShowAddForm(false);
+      }
+    } catch (error) {
+      toast.error('שגיאה בהוספת התרגיל');
+      console.error('Error adding exercise:', error);
+    } finally {
+      setSavingExercise(false);
+    }
   };
 
   const filteredGroups = muscleGroups.map((group) => ({
@@ -133,7 +176,54 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
               <div className="lg:col-span-2">
                 {selectedGroup ? (
                   <div className="space-y-2">
-                    <h3 className="font-semibold text-gray-700 mb-3">Exercises</h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-gray-700">תרגילים</h3>
+                      <button
+                        onClick={() => setShowAddForm(!showAddForm)}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl transition-all duration-300 shadow-md hover:shadow-lg text-sm font-medium"
+                      >
+                        <PlusCircle className="h-4 w-4" />
+                        <span>תרגיל חדש</span>
+                      </button>
+                    </div>
+
+                    {showAddForm && (
+                      <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl p-4 mb-4">
+                        <label className="block text-sm font-medium text-emerald-800 mb-2">
+                          שם התרגיל החדש
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={newExerciseName}
+                            onChange={(e) => setNewExerciseName(e.target.value)}
+                            className="flex-1 px-4 py-3 border-2 border-emerald-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                            placeholder="הזן שם תרגיל..."
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleAddExercise();
+                            }}
+                          />
+                          <button
+                            onClick={handleAddExercise}
+                            disabled={savingExercise || !newExerciseName.trim()}
+                            className="px-6 py-3 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:from-gray-300 disabled:to-gray-400 text-white rounded-xl font-medium transition-all duration-300 shadow-md hover:shadow-lg disabled:cursor-not-allowed"
+                          >
+                            {savingExercise ? 'שומר...' : 'הוסף'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowAddForm(false);
+                              setNewExerciseName('');
+                            }}
+                            className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-all duration-300"
+                          >
+                            ביטול
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {filteredGroups
                       .find((g) => g.id === selectedGroup)
                       ?.exercises.map((exercise) => (
@@ -145,7 +235,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                               title="History"
                             >
                               <Clock className="h-5 w-5 text-blue-600" />
-                              <span className="text-sm font-medium text-blue-700">History</span>
+                              <span className="text-sm font-medium text-blue-700">היסטוריה</span>
                             </button>
                           )}
 
@@ -174,7 +264,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                       <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
                         <Search className="h-8 w-8 text-gray-400" />
                       </div>
-                      <p className="text-gray-500 font-medium">Select a muscle group from the list</p>
+                      <p className="text-gray-500 font-medium">בחר קבוצת שרירים מהרשימה</p>
                     </div>
                   </div>
                 )}

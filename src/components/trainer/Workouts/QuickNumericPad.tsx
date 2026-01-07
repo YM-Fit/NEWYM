@@ -8,6 +8,8 @@ interface QuickNumericPadProps {
   onClose: () => void;
   step?: number;
   allowDecimal?: boolean;
+  minValue?: number;
+  maxValue?: number;
 }
 
 export default function QuickNumericPad({
@@ -15,7 +17,9 @@ export default function QuickNumericPad({
   label,
   onConfirm,
   onClose,
-  allowDecimal = false
+  allowDecimal = false,
+  minValue,
+  maxValue
 }: QuickNumericPadProps) {
   const [currentValue, setCurrentValue] = useState(value);
 
@@ -29,27 +33,44 @@ export default function QuickNumericPad({
     return () => window.removeEventListener('keydown', handleEscape);
   }, [onClose]);
 
-  const buttons = allowDecimal
+  const isRpeMode = maxValue === 10 && minValue === 1;
+
+  const buttons = isRpeMode
     ? [
-        { label: '+0.5', value: 0.5 },
-        { label: '+1', value: 1 },
-        { label: '+2.5', value: 2.5 },
-        { label: '+5', value: 5 },
-        { label: '+10', value: 10 },
-        { label: '+20', value: 20 },
+        { label: '1', value: 1, isAbsolute: true },
+        { label: '2', value: 2, isAbsolute: true },
+        { label: '3', value: 3, isAbsolute: true },
+        { label: '4', value: 4, isAbsolute: true },
+        { label: '5', value: 5, isAbsolute: true },
+        { label: '6', value: 6, isAbsolute: true },
+        { label: '7', value: 7, isAbsolute: true },
+        { label: '8', value: 8, isAbsolute: true },
+        { label: '9', value: 9, isAbsolute: true },
+        { label: '10', value: 10, isAbsolute: true },
+      ]
+    : allowDecimal
+    ? [
+        { label: '+0.5', value: 0.5, isAbsolute: false },
+        { label: '+1', value: 1, isAbsolute: false },
+        { label: '+2.5', value: 2.5, isAbsolute: false },
+        { label: '+5', value: 5, isAbsolute: false },
+        { label: '+10', value: 10, isAbsolute: false },
+        { label: '+20', value: 20, isAbsolute: false },
       ]
     : [
-        { label: '+1', value: 1 },
-        { label: '+2', value: 2 },
-        { label: '+3', value: 3 },
-        { label: '+5', value: 5 },
-        { label: '+10', value: 10 },
-        { label: '+20', value: 20 },
+        { label: '+1', value: 1, isAbsolute: false },
+        { label: '+2', value: 2, isAbsolute: false },
+        { label: '+3', value: 3, isAbsolute: false },
+        { label: '+5', value: 5, isAbsolute: false },
+        { label: '+10', value: 10, isAbsolute: false },
+        { label: '+20', value: 20, isAbsolute: false },
       ];
 
-  const handleAdd = (amount: number) => {
+  const handleAdd = (amount: number, isAbsolute: boolean = false) => {
     setCurrentValue(prev => {
-      const newValue = prev + amount;
+      let newValue = isAbsolute ? amount : prev + amount;
+      if (minValue !== undefined && newValue < minValue) newValue = minValue;
+      if (maxValue !== undefined && newValue > maxValue) newValue = maxValue;
       return allowDecimal ? Math.round(newValue * 10) / 10 : Math.round(newValue);
     });
   };
@@ -98,13 +119,17 @@ export default function QuickNumericPad({
         </div>
 
         {/* Premium Number Buttons */}
-        <div className="grid grid-cols-3 gap-3 lg:gap-4 mb-6">
+        <div className={`grid gap-3 lg:gap-4 mb-6 ${isRpeMode ? 'grid-cols-5' : 'grid-cols-3'}`}>
           {buttons.map((btn) => (
             <button
               key={btn.label}
               type="button"
-              onClick={() => handleAdd(btn.value)}
-              className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 active:from-blue-700 active:to-blue-800 text-white py-8 lg:py-12 px-4 rounded-xl text-3xl lg:text-4xl font-bold transition-all duration-300 shadow-lg hover:shadow-2xl active:scale-95 touch-manipulation"
+              onClick={() => handleAdd(btn.value, btn.isAbsolute)}
+              className={`${
+                isRpeMode && currentValue === btn.value
+                  ? 'bg-gradient-to-br from-emerald-500 to-teal-600 ring-4 ring-emerald-300'
+                  : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 active:from-blue-700 active:to-blue-800'
+              } text-white ${isRpeMode ? 'py-6 lg:py-8' : 'py-8 lg:py-12'} px-4 rounded-xl text-3xl lg:text-4xl font-bold transition-all duration-300 shadow-lg hover:shadow-2xl active:scale-95 touch-manipulation`}
             >
               {btn.label}
             </button>

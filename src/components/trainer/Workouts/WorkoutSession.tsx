@@ -73,6 +73,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     exercises,
     setExercises,
     minimizedExercises,
+    collapsedSets,
     addExercise,
     removeExercise,
     addSet,
@@ -84,6 +85,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     toggleMinimizeExercise,
     completeExercise,
     getExerciseSummary,
+    toggleCollapseSet,
   } = useWorkoutSession({ initialExercises: editingWorkout?.exercises });
 
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
@@ -677,7 +679,38 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                 </div>
 
           <div className="space-y-3">
-            {workoutExercise.sets.map((set, setIndex) => (
+            {workoutExercise.sets.map((set, setIndex) => {
+              const isCollapsed = collapsedSets.includes(set.id);
+
+              if (isCollapsed) {
+                return (
+                  <div
+                    key={set.id}
+                    onClick={() => toggleCollapseSet(set.id)}
+                    className="bg-gradient-to-br from-gray-100 to-gray-50 rounded-xl p-3 border border-gray-200 cursor-pointer hover:border-emerald-300 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-teal-50 transition-all duration-300"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-sm text-white bg-gradient-to-br from-emerald-500 to-teal-600 px-3 py-1.5 rounded-lg">סט {set.set_number}</span>
+                        <span className="text-gray-700 font-medium">{set.weight} ק״ג</span>
+                        <span className="text-gray-500">x</span>
+                        <span className="text-gray-700 font-medium">{set.reps} חזרות</span>
+                        {set.rpe && <span className="text-amber-600 text-sm">RPE {set.rpe}</span>}
+                        {set.set_type !== 'regular' && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            set.set_type === 'superset' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {set.set_type === 'superset' ? 'סופר-סט' : 'דרופ-סט'}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-emerald-600 font-medium">לחץ לעריכה</span>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
               <div
                 key={set.id}
                 className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300"
@@ -1052,7 +1085,8 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
 
           <button
@@ -1109,6 +1143,8 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           onConfirm={handleNumericPadConfirm}
           onClose={() => setNumericPad(null)}
           allowDecimal={numericPad.field === 'weight'}
+          minValue={numericPad.field === 'rpe' ? 1 : undefined}
+          maxValue={numericPad.field === 'rpe' ? 10 : undefined}
         />
       )}
 
@@ -1136,6 +1172,8 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           onConfirm={handleSupersetNumericPadConfirm}
           onClose={() => setSupersetNumericPad(null)}
           allowDecimal={supersetNumericPad.field === 'superset_weight'}
+          minValue={supersetNumericPad.field === 'superset_rpe' ? 1 : undefined}
+          maxValue={supersetNumericPad.field === 'superset_rpe' ? 10 : undefined}
         />
       )}
 

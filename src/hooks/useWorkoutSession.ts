@@ -48,6 +48,7 @@ interface UseWorkoutSessionOptions {
 export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
   const [exercises, setExercises] = useState<WorkoutExercise[]>(options.initialExercises || []);
   const [minimizedExercises, setMinimizedExercises] = useState<string[]>([]);
+  const [collapsedSets, setCollapsedSets] = useState<string[]>([]);
 
   const createEmptySet = (setNumber: number): SetData => ({
     id: `temp-${Date.now()}-${setNumber}`,
@@ -85,9 +86,23 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
   const addSet = (exerciseIndex: number) => {
     const updatedExercises = [...exercises];
     const exercise = updatedExercises[exerciseIndex];
+    const existingSetIds = exercise.sets.map(s => s.id);
+    setCollapsedSets(prev => [...prev, ...existingSetIds.filter(id => !prev.includes(id))]);
     const newSetNumber = exercise.sets.length + 1;
     exercise.sets.push(createEmptySet(newSetNumber));
     setExercises(updatedExercises);
+  };
+
+  const toggleCollapseSet = (setId: string) => {
+    setCollapsedSets(prev =>
+      prev.includes(setId) ? prev.filter(id => id !== setId) : [...prev, setId]
+    );
+  };
+
+  const expandAllSets = (exerciseIndex: number) => {
+    const exercise = exercises[exerciseIndex];
+    const setIds = exercise.sets.map(s => s.id);
+    setCollapsedSets(prev => prev.filter(id => !setIds.includes(id)));
   };
 
   const removeSet = (exerciseIndex: number, setIndex: number) => {
@@ -188,6 +203,7 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     exercises,
     setExercises,
     minimizedExercises,
+    collapsedSets,
     addExercise,
     removeExercise,
     addSet,
@@ -199,5 +215,7 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     toggleMinimizeExercise,
     completeExercise,
     getExerciseSummary,
+    toggleCollapseSet,
+    expandAllSets,
   };
 }
