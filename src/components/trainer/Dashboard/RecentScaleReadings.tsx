@@ -68,7 +68,7 @@ export default function RecentScaleReadings({
           body_fat_percentage,
           notes,
           trainees!inner (
-            name,
+            full_name,
             trainer_id
           )
         `)
@@ -80,7 +80,7 @@ export default function RecentScaleReadings({
       const notes: SavedNote[] = (measurements || []).map(m => ({
         id: m.id,
         trainee_id: m.trainee_id,
-        trainee_name: (m.trainees as any)?.name || 'לא ידוע',
+        trainee_name: (m.trainees as any)?.full_name || 'לא ידוע',
         date: m.measurement_date,
         notes: m.notes || '',
         weight_kg: m.weight,
