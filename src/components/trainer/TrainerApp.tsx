@@ -834,7 +834,7 @@ export default function TrainerApp() {
             trainee={convertTraineeToDisplayFormat(selectedTrainee)}
             onSelectPersonal={handleSelectPersonalWorkout}
             onSelectPair={handleSelectPairWorkout}
-            onBack={handleBack}
+            onBack={() => setActiveView('trainee-profile')}
           />
         ) : null;
 
@@ -842,7 +842,7 @@ export default function TrainerApp() {
         return selectedTrainee && selectedTrainee.is_pair ? (
           <PairWorkoutSession
             trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            onBack={handleBack}
+            onBack={() => setActiveView('trainee-profile')}
             onComplete={async (workoutData) => {
               await loadWorkouts(selectedTrainee.id);
               setActiveView('trainee-profile');
@@ -859,7 +859,7 @@ export default function TrainerApp() {
               if (selectedWorkout) {
                 setActiveView('workouts-list');
               } else {
-                handleBack();
+                setActiveView('trainee-profile');
               }
               setSelectedPairMember(null);
             }}
@@ -889,7 +889,7 @@ export default function TrainerApp() {
         return selectedTrainee ? (
           <MeasurementForm
             trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            onBack={handleBack}
+            onBack={() => setActiveView('trainee-profile')}
             onSave={async (measurement) => {
               await loadMeasurements(selectedTrainee.id);
               setEditingMeasurement(null);
