@@ -50,29 +50,23 @@ export default function RecentScaleReadings({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: trainer } = await supabase
-        .from('trainers')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
+      const { data: myTrainees } = await supabase
+        .from('trainees')
+        .select('id, full_name')
+        .eq('trainer_id', user.id);
 
-      if (!trainer) return;
+      if (!myTrainees || myTrainees.length === 0) {
+        setSavedNotes([]);
+        return;
+      }
+
+      const traineeIds = myTrainees.map(t => t.id);
+      const traineeNameMap = new Map(myTrainees.map(t => [t.id, t.full_name]));
 
       const { data: measurements } = await supabase
         .from('measurements')
-        .select(`
-          id,
-          trainee_id,
-          measurement_date,
-          weight,
-          body_fat_percentage,
-          notes,
-          trainees!inner (
-            full_name,
-            trainer_id
-          )
-        `)
-        .eq('trainees.trainer_id', trainer.id)
+        .select('id, trainee_id, measurement_date, weight, body_fat_percentage, notes')
+        .in('trainee_id', traineeIds)
         .not('notes', 'is', null)
         .neq('notes', '')
         .order('measurement_date', { ascending: false });
@@ -80,7 +74,7 @@ export default function RecentScaleReadings({
       const notes: SavedNote[] = (measurements || []).map(m => ({
         id: m.id,
         trainee_id: m.trainee_id,
-        trainee_name: (m.trainees as any)?.full_name || 'לא ידוע',
+        trainee_name: traineeNameMap.get(m.trainee_id) || 'לא ידוע',
         date: m.measurement_date,
         notes: m.notes || '',
         weight_kg: m.weight,
