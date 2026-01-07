@@ -1,7 +1,18 @@
-import { useState } from 'react';
-import { Scale, User, AlertCircle, CheckCircle, HelpCircle, ChevronLeft, Save, Loader2, Calendar, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Scale, User, AlertCircle, CheckCircle, HelpCircle, ChevronLeft, Save, Loader2, Calendar, X, FileText } from 'lucide-react';
 import { IdentifiedReading } from '../../../hooks/useGlobalScaleListener';
 import { ScaleReading, TraineeMatch } from '../../../hooks/useScaleListener';
+import { supabase } from '../../../lib/supabase';
+
+interface SavedNote {
+  id: string;
+  trainee_id: string;
+  trainee_name: string;
+  date: string;
+  notes: string;
+  weight_kg?: number;
+  body_fat_percent?: number;
+}
 
 interface RecentScaleReadingsProps {
   readings: IdentifiedReading[];
@@ -16,6 +27,7 @@ export default function RecentScaleReadings({
   onTraineeClick,
   onSaveMeasurement
 }: RecentScaleReadingsProps) {
+  const [activeTab, setActiveTab] = useState<'readings' | 'notes'>('readings');
   const [savedReadings, setSavedReadings] = useState<Set<string>>(new Set());
   const [savingReadings, setSavingReadings] = useState<Set<string>>(new Set());
   const [editingDateReadingId, setEditingDateReadingId] = useState<number | null>(null);
@@ -23,6 +35,62 @@ export default function RecentScaleReadings({
   const [editingDateTraineeName, setEditingDateTraineeName] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [notesInput, setNotesInput] = useState<string>('');
+  const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
+  const [loadingNotes, setLoadingNotes] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'notes') {
+      fetchSavedNotes();
+    }
+  }, [activeTab]);
+
+  const fetchSavedNotes = async () => {
+    setLoadingNotes(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: trainer } = await supabase
+        .from('trainers')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!trainer) return;
+
+      const { data: measurements } = await supabase
+        .from('measurements')
+        .select(`
+          id,
+          trainee_id,
+          date,
+          weight,
+          body_fat_percentage,
+          notes,
+          trainees (name)
+        `)
+        .eq('trainer_id', trainer.id)
+        .not('notes', 'is', null)
+        .neq('notes', '')
+        .order('date', { ascending: false });
+
+      const notes: SavedNote[] = (measurements || []).map(m => ({
+        id: m.id,
+        trainee_id: m.trainee_id,
+        trainee_name: (m.trainees as any)?.name || 'לא ידוע',
+        date: m.date,
+        notes: m.notes || '',
+        weight_kg: m.weight,
+        body_fat_percent: m.body_fat_percentage
+      }));
+
+      setSavedNotes(notes);
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+    } finally {
+      setLoadingNotes(false);
+    }
+  };
 
   const handleSave = async (e: React.MouseEvent, traineeId: string, traineeName: string, reading: ScaleReading) => {
     e.stopPropagation();
@@ -261,7 +329,7 @@ export default function RecentScaleReadings({
               <Scale className="h-6 w-6 text-teal-400" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-white">שקילויות אחרונות</h3>
+              <h3 className="font-bold text-lg text-white">שקילויות והערות</h3>
               <div className="flex items-center gap-2 text-sm mt-1">
                 <span className={`inline-flex items-center gap-1.5 ${isListening ? 'text-emerald-400' : 'text-gray-500'}`}>
                   <span className={`h-2.5 w-2.5 rounded-full ${isListening ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50' : 'bg-gray-500'}`}></span>
@@ -270,11 +338,39 @@ export default function RecentScaleReadings({
               </div>
             </div>
           </div>
-          <span className="text-sm text-gray-500 bg-gray-800/50 px-3 py-1.5 rounded-xl font-medium">{readings.length} קריאות</span>
+          <span className="text-sm text-gray-500 bg-gray-800/50 px-3 py-1.5 rounded-xl font-medium">
+            {activeTab === 'readings' ? `${readings.length} קריאות` : `${savedNotes.length} הערות`}
+          </span>
         </div>
 
-        <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
-          {readings.map((item, index) => (
+        <div className="flex gap-2 mb-6 bg-gray-800/50 p-1.5 rounded-xl">
+          <button
+            onClick={() => setActiveTab('readings')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
+              activeTab === 'readings'
+                ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+            }`}
+          >
+            <Scale className="h-4 w-4" />
+            שקילויות אחרונות
+          </button>
+          <button
+            onClick={() => setActiveTab('notes')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
+              activeTab === 'notes'
+                ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+            }`}
+          >
+            <FileText className="h-4 w-4" />
+            הערות שמורות
+          </button>
+        </div>
+
+        {activeTab === 'readings' ? (
+          <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
+            {readings.map((item, index) => (
             <div
               key={`${item.reading.id}-${index}`}
               className={`p-5 rounded-2xl border transition-all duration-300 hover:shadow-xl ${
@@ -369,7 +465,68 @@ export default function RecentScaleReadings({
               )}
             </div>
           ))}
-        </div>
+          </div>
+        ) : (
+          <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
+            {loadingNotes ? (
+              <div className="text-center py-12">
+                <Loader2 className="h-12 w-12 mx-auto text-teal-400 animate-spin mb-4" />
+                <p className="text-gray-400 font-medium">טוען הערות...</p>
+              </div>
+            ) : savedNotes.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="p-4 bg-gray-800/50 rounded-2xl inline-block mb-4">
+                  <FileText className="h-14 w-14 mx-auto text-gray-600" />
+                </div>
+                <p className="text-gray-400 font-medium">אין הערות שמורות</p>
+                <p className="text-sm text-gray-500 mt-2">הערות ששמרת על שקילות יופיעו כאן</p>
+              </div>
+            ) : (
+              savedNotes.map((note) => (
+                <div
+                  key={note.id}
+                  className="p-5 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer hover:scale-[1.01] hover:shadow-xl"
+                  onClick={() => onTraineeClick?.(note.trainee_id)}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-teal-500/30 shadow-lg">
+                        <User className="h-5 w-5 text-emerald-400" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white text-lg">{note.trainee_name}</p>
+                        <div className="flex items-center gap-3 text-sm text-gray-400 mt-1">
+                          <span className="font-medium">{note.weight_kg?.toFixed(1)} ק״ג</span>
+                          {note.body_fat_percent && (
+                            <>
+                              <span className="text-gray-600">|</span>
+                              <span>{note.body_fat_percent?.toFixed(1)}% שומן</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm text-gray-400 font-medium">
+                        {new Date(note.date).toLocaleDateString('he-IL', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-white/10">
+                    <div className="flex items-start gap-2">
+                      <FileText className="h-4 w-4 text-teal-400 mt-1 flex-shrink-0" />
+                      <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{note.notes}</p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
     </>
   );
