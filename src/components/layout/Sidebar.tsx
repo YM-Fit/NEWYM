@@ -25,23 +25,23 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
 
   return (
     <aside
-      className={`hidden md:block bg-white border-r border-gray-200 py-6 transition-all duration-300 ease-in-out ${
+      className={`hidden md:block glass-card rounded-none border-y-0 border-r-0 py-6 transition-all duration-300 ease-in-out ${
         isMinimized ? 'w-16' : 'w-64'
       }`}
     >
       <div className="flex items-center justify-between px-3 mb-4">
         {!isMinimized && (
-          <h2 className="text-xl font-bold text-gray-800">תפריט</h2>
+          <h2 className="text-xl font-bold text-white">תפריט</h2>
         )}
         <button
           onClick={() => setIsMinimized(!isMinimized)}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-xl text-gray-400 hover:text-lime-500 hover:bg-white/5 transition-all"
           title={isMinimized ? 'הרחב' : 'מזער'}
         >
           {isMinimized ? (
-            <ChevronLeft className="h-5 w-5 text-gray-600" />
+            <ChevronLeft className="h-5 w-5" />
           ) : (
-            <ChevronRight className="h-5 w-5 text-gray-600" />
+            <ChevronRight className="h-5 w-5" />
           )}
         </button>
       </div>
@@ -51,14 +51,14 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
           <button
             key={id}
             onClick={() => onViewChange(id)}
-            className={`w-full flex items-center ${isMinimized ? 'justify-center px-2' : 'px-3'} py-3 text-sm font-medium rounded-lg transition-all ${
+            className={`w-full flex items-center ${isMinimized ? 'justify-center px-2' : 'px-3'} py-3 text-sm font-medium rounded-xl transition-all ${
               activeView === id
-                ? 'bg-green-50 text-green-700 border-r-2 border-green-500'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                ? 'bg-lime-500/20 text-lime-500 border-r-2 border-lime-500 shadow-glow-sm'
+                : 'text-gray-400 hover:bg-white/5 hover:text-white'
             }`}
             title={isMinimized ? label : ''}
           >
-            <Icon className={`h-5 w-5 ${!isMinimized && 'ml-3'}`} />
+            <Icon className={`h-5 w-5 ${!isMinimized && 'ml-3'} ${activeView === id ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} />
             {!isMinimized && <span>{label}</span>}
           </button>
         ))}

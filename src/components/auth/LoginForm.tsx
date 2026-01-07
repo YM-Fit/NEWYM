@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogIn, User, Dumbbell } from 'lucide-react';
+import { Activity, User, Dumbbell } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface LoginFormProps {
@@ -41,14 +41,14 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="glass-card p-8 w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 rounded-full mb-4">
-            <LogIn className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-lime-500 to-lime-600 mb-4 shadow-glow">
+            <Activity className="w-10 h-10 text-dark-500" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">YM Coach</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-white mb-2 glow-text">YM Coach</h1>
+          <p className="text-gray-400">
             {userType === 'trainer' ? 'התחבר למערכת ניהול המתאמנים' : 'התחבר לאזור האישי'}
           </p>
         </div>
@@ -61,10 +61,10 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
               setIdentifier('');
               setError('');
             }}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium transition-all ${
               userType === 'trainer'
-                ? 'bg-green-600 text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'btn-lime'
+                : 'btn-glass'
             }`}
           >
             <User className="w-5 h-5" />
@@ -77,10 +77,10 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
               setIdentifier('');
               setError('');
             }}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium transition-all ${
               userType === 'trainee'
-                ? 'bg-green-600 text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'btn-lime'
+                : 'btn-glass'
             }`}
           >
             <Dumbbell className="w-5 h-5" />
@@ -89,14 +89,14 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-right">
+          <div className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-4 text-right">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-right text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-right text-sm font-medium text-gray-300 mb-2">
               {userType === 'trainer' ? 'אימייל' : 'מספר טלפון'}
             </label>
             <input
@@ -104,14 +104,14 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-right"
+              className="w-full px-4 py-3 rounded-xl glass-input text-right"
               placeholder={userType === 'trainer' ? 'your@email.com' : '0526492728'}
               dir="ltr"
             />
           </div>
 
           <div>
-            <label className="block text-right text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-right text-sm font-medium text-gray-300 mb-2">
               סיסמה
             </label>
             <input
@@ -119,7 +119,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-right"
+              className="w-full px-4 py-3 rounded-xl glass-input text-right"
               placeholder="********"
             />
           </div>
@@ -127,9 +127,16 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full btn-lime py-3 px-4 rounded-xl text-lg"
           >
-            {loading ? 'מתחבר...' : 'התחבר'}
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-5 h-5 border-2 border-dark-500 border-t-transparent rounded-full animate-spin" />
+                מתחבר...
+              </span>
+            ) : (
+              'התחבר'
+            )}
           </button>
         </form>
 
@@ -137,7 +144,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
           <div className="mt-6 text-center">
             <button
               onClick={onToggleMode}
-              className="text-green-600 hover:text-green-700 font-medium"
+              className="text-lime-500 hover:text-lime-400 font-medium transition-colors"
             >
               אין לך חשבון? הירשם כאן
             </button>

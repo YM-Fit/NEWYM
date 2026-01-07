@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Dumbbell, Scale, Target, Flame, TrendingUp } from 'lucide-react';
+import { Dumbbell, Scale, Target, Flame, TrendingUp, Sparkles } from 'lucide-react';
 
 const MOTIVATIONAL_QUOTES = [
   'הצלחה היא סכום של מאמצים קטנים, יום אחרי יום',
@@ -221,62 +221,74 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-green-600 border-t-transparent"></div>
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center shadow-glow animate-pulse">
+          <Dumbbell className="w-6 h-6 text-dark-500" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 pb-4">
-      <div className="bg-gradient-to-l from-green-600 to-green-500 rounded-2xl p-6 text-white shadow-lg">
-        <h1 className="text-2xl font-bold mb-1">
-          שלום, {getFirstName(traineeName)}!
-        </h1>
-        <p className="text-green-100 text-sm">{getHebrewDate()}</p>
+    <div className="space-y-5 pb-4 animate-fade-in">
+      <div className="glass-card p-5 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-32 h-32 bg-lime-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="relative">
+          <h1 className="text-2xl font-bold text-white mb-1">
+            שלום, {getFirstName(traineeName)}!
+          </h1>
+          <p className="text-gray-400 text-sm">{getHebrewDate()}</p>
+        </div>
       </div>
 
       <div
-        className={`bg-white rounded-xl p-5 shadow-md border-r-4 border-green-500 transition-opacity duration-500 ${
+        className={`glass-card p-5 border-r-2 border-lime-500 transition-opacity duration-500 ${
           quoteVisible ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        <p className="text-gray-700 text-lg leading-relaxed text-center font-medium">
-          "{currentQuote}"
-        </p>
+        <div className="flex items-start gap-3">
+          <div className="p-2 rounded-lg bg-lime-500/20">
+            <Sparkles className="w-5 h-5 text-lime-500" />
+          </div>
+          <p className="text-gray-200 text-base leading-relaxed font-medium flex-1">
+            "{currentQuote}"
+          </p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         <StatCard
-          icon={<Dumbbell className="w-6 h-6" />}
+          icon={<Dumbbell className="w-5 h-5" />}
           label="אימונים החודש"
           value={stats.workoutsThisMonth.toString()}
-          color="green"
+          color="lime"
         />
         <StatCard
-          icon={<Scale className="w-6 h-6" />}
+          icon={<Scale className="w-5 h-5" />}
           label="משקל אחרון"
           value={stats.lastWeight ? `${stats.lastWeight} ק"ג` : '-'}
-          color="blue"
+          color="cyan"
         />
         <StatCard
-          icon={<Flame className="w-6 h-6" />}
+          icon={<Flame className="w-5 h-5" />}
           label="ימים רצופים"
           value={stats.consecutiveDays.toString()}
           color="orange"
         />
         <StatCard
-          icon={<Target className="w-6 h-6" />}
+          icon={<Target className="w-5 h-5" />}
           label="יעד אישי"
           value={stats.personalGoal ? truncateGoal(stats.personalGoal) : 'לא הוגדר'}
-          color="emerald"
+          color="lime"
           isSmallText={!!stats.personalGoal}
         />
       </div>
 
-      <div className="bg-white rounded-xl p-5 shadow-md">
+      <div className="glass-card p-5">
         <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="w-5 h-5 text-green-600" />
-          <h3 className="font-bold text-gray-800">ימי אימון השבוע</h3>
+          <div className="p-2 rounded-lg bg-lime-500/20">
+            <TrendingUp className="w-5 h-5 text-lime-500" />
+          </div>
+          <h3 className="font-bold text-white">ימי אימון השבוע</h3>
         </div>
         <div className="flex justify-between">
           {weekDays.map((day, index) => (
@@ -285,29 +297,25 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
                 {getHebrewDayName(day.date)}
               </span>
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
-                  day.isToday
-                    ? 'ring-2 ring-green-500 ring-offset-2'
-                    : ''
+                className={`calendar-day text-sm ${
+                  day.isToday ? 'today' : ''
                 } ${
-                  day.hasWorkout
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-100 text-gray-400'
+                  day.hasWorkout ? 'has-workout' : 'empty'
                 }`}
               >
                 {day.date.getDate()}
               </div>
               {day.hasWorkout && (
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2" />
+                <div className="w-1.5 h-1.5 rounded-full bg-lime-500 mt-2 shadow-glow-sm" />
               )}
             </div>
           ))}
         </div>
       </div>
 
-      <div className="bg-gradient-to-l from-green-50 to-emerald-50 rounded-xl p-5 border border-green-100">
-        <h3 className="font-bold text-gray-800 mb-2">טיפ היום</h3>
-        <p className="text-gray-600 text-sm leading-relaxed">
+      <div className="glass-card p-5 border border-lime-500/20">
+        <h3 className="font-bold text-white mb-2">טיפ היום</h3>
+        <p className="text-gray-400 text-sm leading-relaxed">
           שתיית מים לפני ואחרי האימון משפרת את הביצועים ומסייעת להתאוששות מהירה יותר.
           מומלץ לשתות לפחות 2 ליטר מים ביום.
         </p>
@@ -320,28 +328,26 @@ interface StatCardProps {
   icon: React.ReactNode;
   label: string;
   value: string;
-  color: 'green' | 'blue' | 'orange' | 'emerald';
+  color: 'lime' | 'cyan' | 'orange';
   isSmallText?: boolean;
 }
 
 function StatCard({ icon, label, value, color, isSmallText }: StatCardProps) {
   const colorClasses = {
-    green: 'bg-green-50 text-green-600',
-    blue: 'bg-blue-50 text-blue-600',
-    orange: 'bg-orange-50 text-orange-600',
-    emerald: 'bg-emerald-50 text-emerald-600',
+    lime: 'bg-lime-500/20 text-lime-500',
+    cyan: 'bg-cyan-500/20 text-cyan-400',
+    orange: 'bg-orange-500/20 text-orange-400',
   };
 
   const valueColorClasses = {
-    green: 'text-green-600',
-    blue: 'text-blue-600',
-    orange: 'text-orange-600',
-    emerald: 'text-emerald-600',
+    lime: 'text-lime-500',
+    cyan: 'text-cyan-400',
+    orange: 'text-orange-400',
   };
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-md">
-      <div className={`w-10 h-10 rounded-lg ${colorClasses[color]} flex items-center justify-center mb-3`}>
+    <div className="stat-card p-4">
+      <div className={`w-10 h-10 rounded-xl ${colorClasses[color]} flex items-center justify-center mb-3`}>
         {icon}
       </div>
       <p className="text-gray-500 text-xs mb-1">{label}</p>

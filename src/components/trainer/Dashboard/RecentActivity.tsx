@@ -1,4 +1,4 @@
-import { Clock, TrendingUp, Users, Dumbbell, Scale } from 'lucide-react';
+import { Clock, Dumbbell, Scale } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 
@@ -52,7 +52,6 @@ export default function RecentActivity() {
       workouts.forEach(w => {
         const trainee = w.workout_trainees?.[0]?.trainees?.full_name || 'מתאמן';
 
-        // Calculate total volume
         let totalVolume = 0;
         if (w.workout_exercises) {
           w.workout_exercises.forEach((ex: any) => {
@@ -134,6 +133,7 @@ export default function RecentActivity() {
     setActivities(activityList.slice(0, 10));
     setLoading(false);
   };
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'workout':
@@ -148,42 +148,42 @@ export default function RecentActivity() {
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'workout':
-        return 'bg-blue-50 text-blue-600';
+        return 'bg-cyan-500/20 text-cyan-400';
       case 'measurement':
-        return 'bg-purple-50 text-purple-600';
+        return 'bg-lime-500/20 text-lime-500';
       default:
-        return 'bg-gray-50 text-gray-600';
+        return 'bg-gray-500/20 text-gray-400';
     }
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
-      <div className="p-6 border-b border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900">פעילות אחרונה</h3>
+    <div className="glass-card">
+      <div className="p-5 border-b border-white/10">
+        <h3 className="text-lg font-semibold text-white">פעילות אחרונה</h3>
       </div>
-      <div className="p-6">
+      <div className="p-5">
         {loading ? (
           <div className="text-center py-8">
-            <Clock className="h-12 w-12 text-gray-300 mx-auto mb-3 animate-pulse" />
-            <p className="text-gray-500">טוען פעילות...</p>
+            <Clock className="h-12 w-12 text-gray-600 mx-auto mb-3 animate-pulse" />
+            <p className="text-gray-400">טוען פעילות...</p>
           </div>
         ) : activities.length === 0 ? (
           <div className="text-center py-8">
-            <Clock className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">עדיין אין פעילות</p>
-            <p className="text-sm text-gray-400 mt-1">פעילות אחרונה תופיע כאן</p>
+            <Clock className="h-12 w-12 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-400">עדיין אין פעילות</p>
+            <p className="text-sm text-gray-500 mt-1">פעילות אחרונה תופיע כאן</p>
           </div>
         ) : (
           <div className="space-y-4">
             {activities.map((activity) => (
-              <div key={activity.id} className="flex items-start space-x-3 rtl:space-x-reverse">
+              <div key={activity.id} className="flex items-start gap-3">
                 <div className={`p-2 rounded-lg ${getTypeColor(activity.type)}`}>
                   {getIcon(activity.type)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">{activity.trainee}</p>
-                  <p className="text-sm text-gray-600">{activity.description}</p>
-                  <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
+                  <p className="text-sm font-medium text-white">{activity.trainee}</p>
+                  <p className="text-sm text-gray-400">{activity.description}</p>
+                  <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
                 </div>
               </div>
             ))}

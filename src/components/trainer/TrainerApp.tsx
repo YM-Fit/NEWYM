@@ -80,33 +80,33 @@ export default function TrainerApp() {
           <div
             className={`${
               t.visible ? 'animate-enter' : 'animate-leave'
-            } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+            } max-w-md w-full glass-card shadow-dark-lg pointer-events-auto flex`}
             dir="rtl"
           >
             <div className="flex-1 w-0 p-4">
               <div className="flex items-start">
                 <div className="flex-shrink-0 pt-0.5">
-                  <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <span className="text-green-600 font-bold text-lg">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center shadow-glow-sm">
+                    <span className="text-dark-500 font-bold text-lg">
                       {reading.bestMatch!.traineeName.charAt(0)}
                     </span>
                   </div>
                 </div>
                 <div className="mr-3 flex-1">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-white">
                     שקילה חדשה - {reading.bestMatch!.traineeName}
                   </p>
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-sm text-gray-400">
                     {weight} ק"ג
                     {bodyFat && ` | ${bodyFat}% שומן`}
                   </p>
-                  <p className="mt-1 text-xs text-green-600">
+                  <p className="mt-1 text-xs text-lime-500">
                     דיוק: {reading.bestMatch!.confidenceScore}%
                   </p>
                 </div>
               </div>
             </div>
-            <div className="flex border-r border-gray-200">
+            <div className="flex border-r border-white/10">
               <button
                 onClick={() => {
                   toast.dismiss(t.id);
@@ -115,7 +115,7 @@ export default function TrainerApp() {
                     handleTraineeClick(trainee);
                   }
                 }}
-                className="w-full border border-transparent rounded-none rounded-l-lg p-4 flex items-center justify-center text-sm font-medium text-green-600 hover:text-green-500 focus:outline-none"
+                className="w-full border border-transparent rounded-none rounded-l-2xl p-4 flex items-center justify-center text-sm font-medium text-lime-500 hover:text-lime-400 hover:bg-white/5 focus:outline-none transition-colors"
               >
                 פתח
               </button>
@@ -130,34 +130,34 @@ export default function TrainerApp() {
           <div
             className={`${
               t.visible ? 'animate-enter' : 'animate-leave'
-            } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+            } max-w-md w-full glass-card shadow-dark-lg pointer-events-auto flex`}
             dir="rtl"
           >
             <div className="flex-1 w-0 p-4">
               <div className="flex items-start">
                 <div className="flex-shrink-0 pt-0.5">
-                  <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                    <span className="text-amber-600 font-bold text-lg">?</span>
+                  <div className="h-10 w-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                    <span className="text-amber-400 font-bold text-lg">?</span>
                   </div>
                 </div>
                 <div className="mr-3 flex-1">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-white">
                     שקילה חדשה - לא זוהה
                   </p>
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-sm text-gray-400">
                     {weight} ק"ג
                     {bodyFat && ` | ${bodyFat}% שומן`}
                   </p>
-                  <p className="mt-1 text-xs text-amber-600">
+                  <p className="mt-1 text-xs text-amber-400">
                     לא נמצאה התאמה למתאמן
                   </p>
                 </div>
               </div>
             </div>
-            <div className="flex border-r border-gray-200">
+            <div className="flex border-r border-white/10">
               <button
                 onClick={() => toast.dismiss(t.id)}
-                className="w-full border border-transparent rounded-none rounded-l-lg p-4 flex items-center justify-center text-sm font-medium text-gray-600 hover:text-gray-500 focus:outline-none"
+                className="w-full border border-transparent rounded-none rounded-l-2xl p-4 flex items-center justify-center text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 focus:outline-none transition-colors"
               >
                 סגור
               </button>
@@ -745,8 +745,10 @@ export default function TrainerApp() {
       return (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent"></div>
-            <p className="mt-4 text-gray-600">טוען נתונים...</p>
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center shadow-glow animate-pulse">
+              <Users className="w-7 h-7 text-dark-500" />
+            </div>
+            <p className="mt-4 text-gray-400">טוען נתונים...</p>
           </div>
         </div>
       );
@@ -1002,9 +1004,9 @@ export default function TrainerApp() {
       default:
         return (
           <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">בפיתוח</h3>
-              <p className="text-gray-500">תכונה זו תהיה זמינה בקרוב</p>
+            <div className="text-center glass-card p-8 rounded-2xl">
+              <h3 className="text-lg font-medium text-white mb-2">בפיתוח</h3>
+              <p className="text-gray-400">תכונה זו תהיה זמינה בקרוב</p>
             </div>
           </div>
         );
@@ -1015,7 +1017,7 @@ export default function TrainerApp() {
   const showCollapseControls = isWorkoutSession;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex touch-manipulation" dir="rtl">
+    <div className="min-h-screen flex touch-manipulation" dir="rtl">
       {!sidebarCollapsed && (
         <Sidebar
           activeView={activeView}
@@ -1024,7 +1026,7 @@ export default function TrainerApp() {
         />
       )}
 
-      <div className="flex-1 flex flex-col pb-16 md:pb-0">
+      <div className="flex-1 flex flex-col pb-20 md:pb-0">
         {!headerCollapsed && (
           <Header
             onLogout={signOut}
@@ -1040,14 +1042,14 @@ export default function TrainerApp() {
               <button
                 type="button"
                 onClick={() => setHeaderCollapsed(!headerCollapsed)}
-                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                className="btn-glass px-4 py-2 rounded-xl text-sm font-medium"
               >
                 {headerCollapsed ? 'הצג כותרת' : 'הסתר כותרת'}
               </button>
               <button
                 type="button"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                className="btn-glass px-4 py-2 rounded-xl text-sm font-medium"
               >
                 {sidebarCollapsed ? 'הצג תפריט' : 'הסתר תפריט'}
               </button>
@@ -1056,30 +1058,32 @@ export default function TrainerApp() {
           {renderMainContent()}
         </main>
 
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 z-40">
-          <div className="flex justify-around items-center max-w-lg mx-auto">
-            <button
-              onClick={() => handleViewChange('dashboard')}
-              className={`flex flex-col items-center px-3 py-2 rounded-lg transition-colors ${
-                activeView === 'dashboard'
-                  ? 'text-green-600'
-                  : 'text-gray-500'
-              }`}
-            >
-              <Home className="h-6 w-6 mb-1" />
-              <span className="text-xs font-medium">בית</span>
-            </button>
-            <button
-              onClick={() => handleViewChange('trainees')}
-              className={`flex flex-col items-center px-3 py-2 rounded-lg transition-colors ${
-                activeView.includes('trainee')
-                  ? 'text-green-600'
-                  : 'text-gray-500'
-              }`}
-            >
-              <Users className="h-6 w-6 mb-1" />
-              <span className="text-xs font-medium">מתאמנים</span>
-            </button>
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 px-4 pb-4">
+          <div className="glass-card px-2 py-2 rounded-2xl shadow-dark-lg">
+            <div className="flex justify-around items-center max-w-lg mx-auto">
+              <button
+                onClick={() => handleViewChange('dashboard')}
+                className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${
+                  activeView === 'dashboard'
+                    ? 'text-lime-500'
+                    : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                <Home className={`h-6 w-6 mb-1 ${activeView === 'dashboard' ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} />
+                <span className="text-xs font-medium">בית</span>
+              </button>
+              <button
+                onClick={() => handleViewChange('trainees')}
+                className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${
+                  activeView.includes('trainee')
+                    ? 'text-lime-500'
+                    : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                <Users className={`h-6 w-6 mb-1 ${activeView.includes('trainee') ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} />
+                <span className="text-xs font-medium">מתאמנים</span>
+              </button>
+            </div>
           </div>
         </nav>
       </div>
