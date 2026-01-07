@@ -908,6 +908,7 @@ export default function TrainerApp() {
             onNewMeasurement={() => handleNewMeasurement(selectedTrainee)}
             onEditMeasurement={handleEditMeasurement}
             onMeasurementDeleted={() => loadMeasurements(selectedTrainee.id)}
+            onBack={() => setActiveView('trainee-profile')}
           />
         ) : null;
 

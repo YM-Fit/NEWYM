@@ -1,4 +1,4 @@
-import { Plus, TrendingDown, TrendingUp, Scale, BarChart3, Trash2, Edit, User, Activity } from 'lucide-react';
+import { Plus, TrendingDown, TrendingUp, Scale, BarChart3, Trash2, Edit, User, Activity, ArrowRight } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Trainee, BodyMeasurement } from '../../../types';
 import MeasurementsChart from './MeasurementsChart';
@@ -10,9 +10,10 @@ interface MeasurementsViewProps {
   onNewMeasurement: () => void;
   onEditMeasurement?: (measurement: BodyMeasurement) => void;
   onMeasurementDeleted?: () => void;
+  onBack?: () => void;
 }
 
-export default function MeasurementsView({ trainee, measurements, onNewMeasurement, onEditMeasurement, onMeasurementDeleted }: MeasurementsViewProps) {
+export default function MeasurementsView({ trainee, measurements, onNewMeasurement, onEditMeasurement, onMeasurementDeleted, onBack }: MeasurementsViewProps) {
   const [selectedMetric, setSelectedMetric] = useState<'weight' | 'bodyFat' | 'muscleMass' | 'waterPercentage' | 'metabolicAge'>('weight');
   const [selectedMember, setSelectedMember] = useState<'member_1' | 'member_2' | 'all'>('all');
 
@@ -70,9 +71,20 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">מדידות - {trainee.name}</h1>
-          <p className="text-gray-600">מעקב אחר התקדמות ושינויים בהרכב הגוף</p>
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="חזור"
+            >
+              <ArrowRight className="h-6 w-6 text-gray-600" />
+            </button>
+          )}
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">מדידות - {trainee.name}</h1>
+            <p className="text-gray-600">מעקב אחר התקדמות ושינויים בהרכב הגוף</p>
+          </div>
         </div>
 
         <button
