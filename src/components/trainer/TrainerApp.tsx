@@ -189,12 +189,22 @@ export default function TrainerApp() {
           water_percentage: reading.water_percent,
           bmi: reading.bmi,
           source: 'tanita',
+          notes: reading.notes || '',
         });
 
       if (measurementError) {
         console.error('Error saving measurement:', measurementError);
         toast.error('שגיאה בשמירת המדידה');
         return false;
+      }
+
+      if (reading.notes) {
+        await supabase
+          .from('scale_readings')
+          .update({
+            notes: reading.notes,
+          })
+          .eq('id', reading.id);
       }
 
       await supabase

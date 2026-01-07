@@ -22,6 +22,7 @@ export default function RecentScaleReadings({
   const [editingDateTraineeId, setEditingDateTraineeId] = useState<string | null>(null);
   const [editingDateTraineeName, setEditingDateTraineeName] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
+  const [notesInput, setNotesInput] = useState<string>('');
 
   const handleSave = async (e: React.MouseEvent, traineeId: string, traineeName: string, reading: ScaleReading) => {
     e.stopPropagation();
@@ -32,6 +33,7 @@ export default function RecentScaleReadings({
     setEditingDateTraineeId(traineeId);
     setEditingDateTraineeName(traineeName);
     setSelectedDate(readingDate);
+    setNotesInput(reading.notes || '');
   };
 
   const handleConfirmSave = async () => {
@@ -51,7 +53,8 @@ export default function RecentScaleReadings({
 
     setSavingReadings(prev => new Set(prev).add(readingKey));
 
-    const success = await onSaveMeasurement(editingDateTraineeId, editingDateTraineeName, reading, selectedDate);
+    const readingWithNotes = { ...reading, notes: notesInput };
+    const success = await onSaveMeasurement(editingDateTraineeId, editingDateTraineeName, readingWithNotes, selectedDate);
 
     setSavingReadings(prev => {
       const next = new Set(prev);
@@ -67,6 +70,7 @@ export default function RecentScaleReadings({
     setEditingDateTraineeId(null);
     setEditingDateTraineeName(null);
     setSelectedDate('');
+    setNotesInput('');
   };
 
   const getReadingKey = (readingId: number, traineeId: string) => `${readingId}-${traineeId}`;
@@ -80,7 +84,7 @@ export default function RecentScaleReadings({
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-400 rounded-xl text-xs font-semibold shadow-sm">
           <CheckCircle className="h-3.5 w-3.5" />
-          Saved
+          נשמר
         </span>
       );
     }
@@ -97,7 +101,7 @@ export default function RecentScaleReadings({
         ) : (
           <Save className="h-3.5 w-3.5" />
         )}
-        {isSaving ? 'Saving...' : 'Save'}
+        {isSaving ? 'שומר...' : 'שמור'}
       </button>
     );
   };
@@ -143,11 +147,11 @@ export default function RecentScaleReadings({
             <Scale className="h-6 w-6 text-teal-400" />
           </div>
           <div>
-            <h3 className="font-bold text-lg text-white">Recent Scale Readings</h3>
+            <h3 className="font-bold text-lg text-white">שקילויות אחרונות</h3>
             <div className="flex items-center gap-2 text-sm mt-1">
               <span className={`inline-flex items-center gap-1.5 ${isListening ? 'text-emerald-400' : 'text-gray-500'}`}>
                 <span className={`h-2.5 w-2.5 rounded-full ${isListening ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50' : 'bg-gray-500'}`}></span>
-                {isListening ? 'Listening' : 'Not connected'}
+                {isListening ? 'מוקשר' : 'לא מחובר'}
               </span>
             </div>
           </div>
@@ -156,8 +160,8 @@ export default function RecentScaleReadings({
           <div className="p-4 bg-gray-800/50 rounded-2xl inline-block mb-4">
             <Scale className="h-14 w-14 mx-auto text-gray-600" />
           </div>
-          <p className="text-gray-400 font-medium">No recent readings</p>
-          <p className="text-sm text-gray-500 mt-2">New readings will appear here automatically</p>
+          <p className="text-gray-400 font-medium">אין קריאות אחרונות</p>
+          <p className="text-sm text-gray-500 mt-2">קריאות חדשות יופיעו כאן באופן אוטומטי</p>
         </div>
       </div>
     );
@@ -171,7 +175,7 @@ export default function RecentScaleReadings({
             <div className="p-3 rounded-2xl bg-gradient-to-br from-teal-500/30 to-emerald-500/30 shadow-lg">
               <Calendar className="h-6 w-6 text-teal-400" />
             </div>
-            <h3 className="text-xl font-bold text-white">Select Date</h3>
+            <h3 className="text-xl font-bold text-white">בחר תאריך</h3>
           </div>
           <button
             onClick={() => {
@@ -179,6 +183,7 @@ export default function RecentScaleReadings({
               setEditingDateTraineeId(null);
               setEditingDateTraineeName(null);
               setSelectedDate('');
+              setNotesInput('');
             }}
             className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
           >
@@ -187,16 +192,27 @@ export default function RecentScaleReadings({
         </div>
 
         {editingDateTraineeName && (
-          <p className="text-sm text-gray-400 mb-6">Saving for trainee: <span className="font-semibold text-white">{editingDateTraineeName}</span></p>
+          <p className="text-sm text-gray-400 mb-6">שמירה עבור מתאמן: <span className="font-semibold text-white">{editingDateTraineeName}</span></p>
         )}
 
         <div className="mb-8">
-          <label className="block text-sm font-semibold text-gray-300 mb-3">Measurement Date</label>
+          <label className="block text-sm font-semibold text-gray-300 mb-3">תאריך המדידה</label>
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
             className="w-full px-4 py-3 rounded-xl bg-gray-800/80 border border-white/10 text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 transition-all duration-300"
+          />
+        </div>
+
+        <div className="mb-8">
+          <label className="block text-sm font-semibold text-gray-300 mb-3">הערות (אופציונלי)</label>
+          <textarea
+            value={notesInput}
+            onChange={(e) => setNotesInput(e.target.value)}
+            placeholder="הוסף הערות על השקילה..."
+            rows={3}
+            className="w-full px-4 py-3 rounded-xl bg-gray-800/80 border border-white/10 text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 transition-all duration-300 resize-none"
           />
         </div>
 
@@ -207,10 +223,11 @@ export default function RecentScaleReadings({
               setEditingDateTraineeId(null);
               setEditingDateTraineeName(null);
               setSelectedDate('');
+              setNotesInput('');
             }}
             className="flex-1 px-4 py-3 rounded-xl font-semibold bg-gray-700/50 hover:bg-gray-700 text-gray-300 transition-all duration-300"
           >
-            Cancel
+            ביטול
           </button>
           <button
             onClick={handleConfirmSave}
@@ -220,12 +237,12 @@ export default function RecentScaleReadings({
             {savingReadings.has(`${editingDateReadingId}-${editingDateTraineeId}`) ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Saving...
+                שומר...
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                Save
+                שמור
               </>
             )}
           </button>
@@ -244,16 +261,16 @@ export default function RecentScaleReadings({
               <Scale className="h-6 w-6 text-teal-400" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-white">Recent Scale Readings</h3>
+              <h3 className="font-bold text-lg text-white">שקילויות אחרונות</h3>
               <div className="flex items-center gap-2 text-sm mt-1">
                 <span className={`inline-flex items-center gap-1.5 ${isListening ? 'text-emerald-400' : 'text-gray-500'}`}>
                   <span className={`h-2.5 w-2.5 rounded-full ${isListening ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50' : 'bg-gray-500'}`}></span>
-                  {isListening ? 'Listening' : 'Not connected'}
+                  {isListening ? 'מוקשר' : 'לא מחובר'}
                 </span>
               </div>
             </div>
           </div>
-          <span className="text-sm text-gray-500 bg-gray-800/50 px-3 py-1.5 rounded-xl font-medium">{readings.length} readings</span>
+          <span className="text-sm text-gray-500 bg-gray-800/50 px-3 py-1.5 rounded-xl font-medium">{readings.length} קריאות</span>
         </div>
 
         <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
@@ -281,24 +298,24 @@ export default function RecentScaleReadings({
                       <>
                         <p className="font-semibold text-white text-lg">{item.bestMatch.traineeName}</p>
                         <div className="flex items-center gap-3 text-sm text-gray-400 mt-1">
-                          <span className="font-medium">{item.reading.weight_kg?.toFixed(1)} kg</span>
+                          <span className="font-medium">{item.reading.weight_kg?.toFixed(1)} ק״ג</span>
                           {item.reading.body_fat_percent && (
                             <>
                               <span className="text-gray-600">|</span>
-                              <span>{item.reading.body_fat_percent?.toFixed(1)}% body fat</span>
+                              <span>{item.reading.body_fat_percent?.toFixed(1)}% שומן</span>
                             </>
                           )}
                         </div>
                       </>
                     ) : (
                       <>
-                        <p className="font-semibold text-gray-300">Not identified</p>
+                        <p className="font-semibold text-gray-300">לא זוהה</p>
                         <div className="flex items-center gap-3 text-sm text-gray-400 mt-1">
-                          <span className="font-medium">{item.reading.weight_kg?.toFixed(1)} kg</span>
+                          <span className="font-medium">{item.reading.weight_kg?.toFixed(1)} ק״ג</span>
                           {item.reading.body_fat_percent && (
                             <>
                               <span className="text-gray-600">|</span>
-                              <span>{item.reading.body_fat_percent?.toFixed(1)}% body fat</span>
+                              <span>{item.reading.body_fat_percent?.toFixed(1)}% שומן</span>
                             </>
                           )}
                         </div>
@@ -329,7 +346,7 @@ export default function RecentScaleReadings({
 
               {item.matches.length > 1 && (
                 <div className="mt-4 pt-4 border-t border-white/10">
-                  <p className="text-xs text-gray-500 mb-3 font-medium">Other matches:</p>
+                  <p className="text-xs text-gray-500 mb-3 font-medium">התאמות נוספות:</p>
                   <div className="flex flex-wrap gap-2">
                     {item.matches.slice(1, 4).map((match) => (
                       <div key={match.traineeId} className="inline-flex items-center gap-2">

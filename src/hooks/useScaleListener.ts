@@ -14,6 +14,7 @@ export interface ScaleReading {
   bmi: number | null;
   device_id?: string;
   is_stable?: boolean;
+  notes?: string;
 }
 
 export interface ScriptStatus {
