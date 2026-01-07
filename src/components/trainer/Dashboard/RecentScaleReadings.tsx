@@ -63,22 +63,25 @@ export default function RecentScaleReadings({
         .select(`
           id,
           trainee_id,
-          date,
+          measurement_date,
           weight,
           body_fat_percentage,
           notes,
-          trainees (name)
+          trainees!inner (
+            name,
+            trainer_id
+          )
         `)
-        .eq('trainer_id', trainer.id)
+        .eq('trainees.trainer_id', trainer.id)
         .not('notes', 'is', null)
         .neq('notes', '')
-        .order('date', { ascending: false });
+        .order('measurement_date', { ascending: false });
 
       const notes: SavedNote[] = (measurements || []).map(m => ({
         id: m.id,
         trainee_id: m.trainee_id,
         trainee_name: (m.trainees as any)?.name || 'לא ידוע',
-        date: m.date,
+        date: m.measurement_date,
         notes: m.notes || '',
         weight_kg: m.weight,
         body_fat_percent: m.body_fat_percentage
@@ -132,6 +135,9 @@ export default function RecentScaleReadings({
 
     if (success) {
       setSavedReadings(prev => new Set(prev).add(readingKey));
+      if (activeTab === 'notes') {
+        fetchSavedNotes();
+      }
     }
 
     setEditingDateReadingId(null);
