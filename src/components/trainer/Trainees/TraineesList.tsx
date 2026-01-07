@@ -1,4 +1,5 @@
-import { Plus } from 'lucide-react';
+import { Plus, Users, Search, Sparkles } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import TraineeCard from './TraineeCard';
 
 interface TraineesListProps {
@@ -9,51 +10,145 @@ interface TraineesListProps {
 }
 
 export default function TraineesList({ trainees, onTraineeClick, onAddTrainee, unseenWeightsCounts }: TraineesListProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  const filteredTrainees = useMemo(() => {
+    return trainees.filter(trainee => {
+      const matchesSearch = trainee.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        trainee.phone?.includes(searchQuery);
+      const matchesStatus = statusFilter === 'all' || trainee.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [trainees, searchQuery, statusFilter]);
+
+  const statusCounts = useMemo(() => {
+    return {
+      all: trainees.length,
+      active: trainees.filter(t => t.status === 'active').length,
+      vacation: trainees.filter(t => t.status === 'vacation').length,
+      inactive: trainees.filter(t => t.status === 'inactive').length,
+      new: trainees.filter(t => t.status === 'new').length,
+    };
+  }, [trainees]);
+
+  const statusOptions = [
+    { value: 'all', label: 'הכל', color: 'zinc' },
+    { value: 'active', label: 'פעילים', color: 'emerald' },
+    { value: 'vacation', label: 'חופשה', color: 'amber' },
+    { value: 'inactive', label: 'לא פעילים', color: 'red' },
+    { value: 'new', label: 'חדשים', color: 'cyan' },
+  ];
+
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">מתאמנים</h1>
-          <p className="text-sm sm:text-base text-gray-600">נהל את כל המתאמנים שלך במקום אחד</p>
-        </div>
+    <div className="space-y-6 animate-fade-in">
+      <div className="premium-card-static p-6 md:p-8 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
-        <button
-          onClick={onAddTrainee}
-          className="bg-green-500 hover:bg-green-600 active:bg-green-700 text-white px-4 py-3 sm:py-2 rounded-lg flex items-center justify-center space-x-2 rtl:space-x-reverse transition-colors min-h-[48px] sm:min-h-0 font-medium"
-        >
-          <Plus className="h-5 w-5" />
-          <span>הוסף מתאמן</span>
-        </button>
-      </div>
-
-
-      {/* Trainees Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {trainees.map((trainee) => (
-          <TraineeCard
-            key={trainee.id}
-            trainee={trainee}
-            onClick={() => onTraineeClick(trainee)}
-            unseenWeightsCount={unseenWeightsCounts?.get(trainee.id) || 0}
-          />
-        ))}
-      </div>
-
-      {trainees.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-            </svg>
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">ניהול</span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">מתאמנים</h1>
+            <p className="text-zinc-400">נהל את כל המתאמנים שלך במקום אחד</p>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">אין מתאמנים עדיין</h3>
-          <p className="text-gray-500 mb-6">התחל בהוספת המתאמן הראשון שלך</p>
+
           <button
             onClick={onAddTrainee}
-            className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            className="btn-primary px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 font-semibold"
+          >
+            <Plus className="h-5 w-5" />
+            <span>הוסף מתאמן</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="premium-card-static p-4">
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500" />
+            <input
+              type="text"
+              placeholder="חיפוש מתאמן..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pr-12 pl-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {statusOptions.map(option => (
+              <button
+                key={option.value}
+                onClick={() => setStatusFilter(option.value)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  statusFilter === option.value
+                    ? option.color === 'emerald'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      : option.color === 'amber'
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                      : option.color === 'red'
+                      ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                      : option.color === 'cyan'
+                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                      : 'bg-zinc-700/50 text-white border border-zinc-600/50'
+                    : 'bg-zinc-800/30 text-zinc-400 border border-zinc-700/30 hover:bg-zinc-700/30 hover:text-zinc-300'
+                }`}
+              >
+                {option.label}
+                <span className="mr-2 text-xs opacity-70">
+                  ({statusCounts[option.value as keyof typeof statusCounts]})
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {filteredTrainees.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filteredTrainees.map((trainee, index) => (
+            <div
+              key={trainee.id}
+              className="animate-fade-in"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <TraineeCard
+                trainee={trainee}
+                onClick={() => onTraineeClick(trainee)}
+                unseenWeightsCount={unseenWeightsCounts?.get(trainee.id) || 0}
+              />
+            </div>
+          ))}
+        </div>
+      ) : trainees.length === 0 ? (
+        <div className="premium-card-static p-12 text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 flex items-center justify-center">
+            <Users className="w-10 h-10 text-emerald-400" />
+          </div>
+          <h3 className="text-xl font-bold text-white mb-3">אין מתאמנים עדיין</h3>
+          <p className="text-zinc-400 mb-6 max-w-md mx-auto">
+            התחל בהוספת המתאמן הראשון שלך כדי להתחיל לעקוב אחר ההתקדמות שלהם
+          </p>
+          <button
+            onClick={onAddTrainee}
+            className="btn-primary px-8 py-3.5 rounded-xl font-semibold"
           >
             הוסף מתאמן ראשון
           </button>
+        </div>
+      ) : (
+        <div className="premium-card-static p-12 text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-zinc-800/50 flex items-center justify-center">
+            <Search className="w-10 h-10 text-zinc-600" />
+          </div>
+          <h3 className="text-xl font-bold text-white mb-3">לא נמצאו תוצאות</h3>
+          <p className="text-zinc-400 max-w-md mx-auto">
+            נסה לשנות את מילות החיפוש או את הסינון
+          </p>
         </div>
       )}
     </div>

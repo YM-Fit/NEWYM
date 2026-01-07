@@ -221,8 +221,8 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center shadow-glow animate-pulse">
-          <Dumbbell className="w-6 h-6 text-dark-500" />
+        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-glow animate-pulse">
+          <Dumbbell className="w-7 h-7 text-white" />
         </div>
       </div>
     );
@@ -230,26 +230,31 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
 
   return (
     <div className="space-y-5 pb-4 animate-fade-in">
-      <div className="glass-card p-5 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-32 h-32 bg-lime-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+      <div className="premium-card-static p-6 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
         <div className="relative">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">דשבורד</span>
+          </div>
           <h1 className="text-2xl font-bold text-white mb-1">
             שלום, {getFirstName(traineeName)}!
           </h1>
-          <p className="text-gray-400 text-sm">{getHebrewDate()}</p>
+          <p className="text-zinc-500 text-sm">{getHebrewDate()}</p>
         </div>
       </div>
 
       <div
-        className={`glass-card p-5 border-r-2 border-lime-500 transition-opacity duration-500 ${
+        className={`premium-card-static p-5 border-r-2 border-emerald-500 transition-opacity duration-500 ${
           quoteVisible ? 'opacity-100' : 'opacity-0'
         }`}
       >
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-lime-500/20">
-            <Sparkles className="w-5 h-5 text-lime-500" />
+          <div className="p-2.5 rounded-xl bg-emerald-500/15">
+            <Sparkles className="w-5 h-5 text-emerald-400" />
           </div>
-          <p className="text-gray-200 text-base leading-relaxed font-medium flex-1">
+          <p className="text-zinc-300 text-base leading-relaxed font-medium flex-1">
             "{currentQuote}"
           </p>
         </div>
@@ -260,7 +265,7 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
           icon={<Dumbbell className="w-5 h-5" />}
           label="אימונים החודש"
           value={stats.workoutsThisMonth.toString()}
-          color="lime"
+          color="emerald"
         />
         <StatCard
           icon={<Scale className="w-5 h-5" />}
@@ -272,50 +277,55 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
           icon={<Flame className="w-5 h-5" />}
           label="ימים רצופים"
           value={stats.consecutiveDays.toString()}
-          color="orange"
+          color="amber"
         />
         <StatCard
           icon={<Target className="w-5 h-5" />}
           label="יעד אישי"
           value={stats.personalGoal ? truncateGoal(stats.personalGoal) : 'לא הוגדר'}
-          color="lime"
+          color="teal"
           isSmallText={!!stats.personalGoal}
         />
       </div>
 
-      <div className="glass-card p-5">
+      <div className="premium-card-static p-5">
         <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 rounded-lg bg-lime-500/20">
-            <TrendingUp className="w-5 h-5 text-lime-500" />
+          <div className="p-2.5 rounded-xl bg-emerald-500/15">
+            <TrendingUp className="w-5 h-5 text-emerald-400" />
           </div>
           <h3 className="font-bold text-white">ימי אימון השבוע</h3>
         </div>
         <div className="flex justify-between">
           {weekDays.map((day, index) => (
             <div key={index} className="flex flex-col items-center">
-              <span className="text-xs text-gray-500 mb-2">
+              <span className="text-xs text-zinc-500 mb-2 font-medium">
                 {getHebrewDayName(day.date)}
               </span>
               <div
-                className={`calendar-day text-sm ${
-                  day.isToday ? 'today' : ''
-                } ${
-                  day.hasWorkout ? 'has-workout' : 'empty'
+                className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-semibold transition-all ${
+                  day.isToday
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-glow-sm'
+                    : day.hasWorkout
+                    ? 'bg-emerald-500/15 text-emerald-400'
+                    : 'bg-zinc-800/50 text-zinc-500 border border-zinc-700/30'
                 }`}
               >
                 {day.date.getDate()}
               </div>
               {day.hasWorkout && (
-                <div className="w-1.5 h-1.5 rounded-full bg-lime-500 mt-2 shadow-glow-sm" />
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 shadow-glow-sm" />
               )}
             </div>
           ))}
         </div>
       </div>
 
-      <div className="glass-card p-5 border border-lime-500/20">
-        <h3 className="font-bold text-white mb-2">טיפ היום</h3>
-        <p className="text-gray-400 text-sm leading-relaxed">
+      <div className="premium-card-static p-5 border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5">
+        <div className="flex items-center gap-2 mb-2">
+          <Sparkles className="w-4 h-4 text-emerald-400" />
+          <h3 className="font-bold text-white">טיפ היום</h3>
+        </div>
+        <p className="text-zinc-400 text-sm leading-relaxed">
           שתיית מים לפני ואחרי האימון משפרת את הביצועים ומסייעת להתאוששות מהירה יותר.
           מומלץ לשתות לפחות 2 ליטר מים ביום.
         </p>
@@ -328,30 +338,43 @@ interface StatCardProps {
   icon: React.ReactNode;
   label: string;
   value: string;
-  color: 'lime' | 'cyan' | 'orange';
+  color: 'emerald' | 'cyan' | 'amber' | 'teal';
   isSmallText?: boolean;
 }
 
 function StatCard({ icon, label, value, color, isSmallText }: StatCardProps) {
-  const colorClasses = {
-    lime: 'bg-lime-500/20 text-lime-500',
-    cyan: 'bg-cyan-500/20 text-cyan-400',
-    orange: 'bg-orange-500/20 text-orange-400',
+  const colorConfig = {
+    emerald: {
+      bg: 'bg-emerald-500/15',
+      text: 'text-emerald-400',
+      glow: 'shadow-[0_0_15px_rgba(16,185,129,0.15)]',
+    },
+    cyan: {
+      bg: 'bg-cyan-500/15',
+      text: 'text-cyan-400',
+      glow: 'shadow-[0_0_15px_rgba(6,182,212,0.15)]',
+    },
+    amber: {
+      bg: 'bg-amber-500/15',
+      text: 'text-amber-400',
+      glow: 'shadow-[0_0_15px_rgba(245,158,11,0.15)]',
+    },
+    teal: {
+      bg: 'bg-teal-500/15',
+      text: 'text-teal-400',
+      glow: 'shadow-[0_0_15px_rgba(20,184,166,0.15)]',
+    },
   };
 
-  const valueColorClasses = {
-    lime: 'text-lime-500',
-    cyan: 'text-cyan-400',
-    orange: 'text-orange-400',
-  };
+  const config = colorConfig[color];
 
   return (
-    <div className="stat-card p-4">
-      <div className={`w-10 h-10 rounded-xl ${colorClasses[color]} flex items-center justify-center mb-3`}>
+    <div className={`stat-card p-4 ${config.glow}`}>
+      <div className={`w-11 h-11 rounded-xl ${config.bg} ${config.text} flex items-center justify-center mb-3`}>
         {icon}
       </div>
-      <p className="text-gray-500 text-xs mb-1">{label}</p>
-      <p className={`font-bold ${valueColorClasses[color]} ${isSmallText ? 'text-sm' : 'text-xl'}`}>
+      <p className="text-zinc-500 text-xs mb-1 font-medium">{label}</p>
+      <p className={`font-bold ${config.text} ${isSmallText ? 'text-sm' : 'text-xl'}`}>
         {value}
       </p>
     </div>

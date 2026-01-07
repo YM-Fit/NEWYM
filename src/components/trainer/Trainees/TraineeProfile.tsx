@@ -1,4 +1,4 @@
-import { ArrowRight, CreditCard as Edit, Share, Calendar, Scale, BarChart3, User, Phone, Mail, Trash2, TrendingUp, ClipboardList, UtensilsCrossed, Key, Home, CheckCircle, Brain, BookOpen, Calculator } from 'lucide-react';
+import { ArrowRight, CreditCard as Edit, Calendar, Scale, BarChart3, User, Phone, Mail, Trash2, TrendingUp, ClipboardList, UtensilsCrossed, Key, Home, CheckCircle, Brain, BookOpen, Calculator, Sparkles, Users } from 'lucide-react';
 import { Trainee, BodyMeasurement, Workout } from '../../../types';
 import { useState } from 'react';
 import TDEECalculator from '../Tools/TDEECalculator';
@@ -49,8 +49,6 @@ export default function TraineeProfile({
   onViewWorkouts,
   onViewProgress,
   onDelete,
-  onToggleSidebar,
-  onToggleHeader,
   onViewWorkoutPlans,
   onViewMealPlans,
   onViewFoodDiary,
@@ -67,227 +65,288 @@ export default function TraineeProfile({
     ? latestMeasurement.weight - previousMeasurement.weight
     : 0;
 
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case 'active':
+        return { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30', label: 'פעיל' };
+      case 'vacation':
+        return { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30', label: 'חופשה' };
+      case 'inactive':
+        return { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30', label: 'לא פעיל' };
+      case 'new':
+        return { bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/30', label: 'חדש' };
+      default:
+        return { bg: 'bg-zinc-500/15', text: 'text-zinc-400', border: 'border-zinc-500/30', label: status };
+    }
+  };
+
+  const statusConfig = getStatusConfig(trainee.status || 'active');
+
   return (
-    <div className="space-y-4 lg:space-y-6 pb-20 lg:pb-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center space-x-4 rtl:space-x-reverse">
-          <button
-            onClick={onBack}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowRight className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{trainee.name}</h1>
-            <p className="text-gray-600">פרופיל מתאמן</p>
-          </div>
-        </div>
+    <div className="space-y-6 pb-20 lg:pb-6 animate-fade-in">
+      <div className="premium-card-static p-6 md:p-8 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
-        <div className="flex space-x-3 rtl:space-x-reverse flex-wrap">
-          {onToggleSidebar && (
-            <button
-              type="button"
-              onClick={onToggleSidebar}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
-            >
-              הסתר תפריט
-            </button>
-          )}
-          {onToggleHeader && (
-            <button
-              type="button"
-              onClick={onToggleHeader}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
-            >
-              הסתר כותרת
-            </button>
-          )}
-          <button
-            onClick={onEdit}
-            className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-lg flex items-center space-x-2 rtl:space-x-reverse transition-colors"
-          >
-            <Edit className="h-4 w-4" />
-            <span>ערוך פרופיל</span>
-          </button>
-          {onDelete && (
-            <button
-              onClick={onDelete}
-              className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg flex items-center space-x-2 rtl:space-x-reverse transition-colors"
-            >
-              <Trash2 className="h-4 w-4" />
-              <span>מחק מתאמן</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Basic Info */}
-      <div className="bg-white rounded-xl border border-gray-100 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="flex items-center space-x-3 rtl:space-x-reverse">
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <User className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">גיל</p>
-              <p className="font-semibold">{trainee.age} שנים</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3 rtl:space-x-reverse">
-            <div className="bg-green-50 p-3 rounded-lg">
-              <Phone className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">טלפון</p>
-              <p className="font-semibold">{trainee.phone}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3 rtl:space-x-reverse">
-            <div className="bg-purple-50 p-3 rounded-lg">
-              <Mail className="h-5 w-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">אימייל</p>
-              <p className="font-semibold">{trainee.email}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3 rtl:space-x-reverse">
-            <div className="bg-orange-50 p-3 rounded-lg">
-              <Calendar className="h-5 w-5 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">התחיל</p>
-              <p className="font-semibold">{new Date(trainee.startDate).toLocaleDateString('he-IL')}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Stats */}
-      {latestMeasurement && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-xl border border-gray-100 p-6 text-center">
-            <Scale className="h-8 w-8 text-blue-500 mx-auto mb-3" />
-            <p className="text-2xl font-bold text-gray-900">{latestMeasurement.weight} ק״ג</p>
-            <p className="text-sm text-gray-500">משקל נוכחי</p>
-            {weightChange !== 0 && (
-              <div className={`text-sm mt-2 ${weightChange > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} ק״ג
+        <div className="relative">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={onBack}
+                className="p-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
+              >
+                <ArrowRight className="h-5 w-5" />
+              </button>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 flex items-center justify-center">
+                  {trainee.is_pair ? (
+                    <Users className="h-8 w-8 text-emerald-400" />
+                  ) : (
+                    <span className="text-2xl font-bold text-emerald-400">
+                      {trainee.name.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className="w-4 h-4 text-emerald-400" />
+                    <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">פרופיל מתאמן</span>
+                  </div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">{trainee.name}</h1>
+                </div>
               </div>
-            )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <span className={`px-4 py-2 rounded-xl text-sm font-semibold ${statusConfig.bg} ${statusConfig.text} border ${statusConfig.border}`}>
+                {statusConfig.label}
+              </span>
+              <button
+                onClick={onEdit}
+                className="px-4 py-2.5 rounded-xl bg-cyan-500/15 text-cyan-400 hover:bg-cyan-500/25 border border-cyan-500/30 flex items-center gap-2 transition-all font-medium"
+              >
+                <Edit className="h-4 w-4" />
+                <span>ערוך</span>
+              </button>
+              {onDelete && (
+                <button
+                  onClick={onDelete}
+                  className="px-4 py-2.5 rounded-xl bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/30 flex items-center gap-2 transition-all font-medium"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>מחק</span>
+                </button>
+              )}
+            </div>
           </div>
-          
-          <div className="bg-white rounded-xl border border-gray-100 p-6 text-center">
-            <BarChart3 className="h-8 w-8 text-green-500 mx-auto mb-3" />
-            <p className="text-2xl font-bold text-gray-900">{latestMeasurement.bodyFat?.toFixed(1)}%</p>
-            <p className="text-sm text-gray-500">אחוז שומן</p>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30">
+              <div className="p-2.5 rounded-xl bg-cyan-500/15">
+                <User className="h-5 w-5 text-cyan-400" />
+              </div>
+              <div>
+                <p className="text-xs text-zinc-500">גיל</p>
+                <p className="font-semibold text-white">{trainee.age} שנים</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30">
+              <div className="p-2.5 rounded-xl bg-emerald-500/15">
+                <Phone className="h-5 w-5 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-xs text-zinc-500">טלפון</p>
+                <p className="font-semibold text-white" dir="ltr">{trainee.phone}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30">
+              <div className="p-2.5 rounded-xl bg-amber-500/15">
+                <Mail className="h-5 w-5 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-xs text-zinc-500">אימייל</p>
+                <p className="font-semibold text-white text-sm truncate">{trainee.email || '-'}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30">
+              <div className="p-2.5 rounded-xl bg-teal-500/15">
+                <Calendar className="h-5 w-5 text-teal-400" />
+              </div>
+              <div>
+                <p className="text-xs text-zinc-500">התחיל</p>
+                <p className="font-semibold text-white">{new Date(trainee.startDate).toLocaleDateString('he-IL')}</p>
+              </div>
+            </div>
           </div>
-          
-          <div className="bg-white rounded-xl border border-gray-100 p-6 text-center">
-            <User className="h-8 w-8 text-purple-500 mx-auto mb-3" />
-            <p className="text-2xl font-bold text-gray-900">{latestMeasurement.muscleMass?.toFixed(1)} ק״ג</p>
-            <p className="text-sm text-gray-500">מסת שריר</p>
+        </div>
+      </div>
+
+      {latestMeasurement && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="stat-card p-6 bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-zinc-400 mb-2">משקל נוכחי</p>
+                <p className="text-3xl font-bold text-cyan-400 tracking-tight">{latestMeasurement.weight} ק״ג</p>
+                {weightChange !== 0 && (
+                  <p className={`text-sm mt-2 font-medium ${weightChange > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                    {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} ק״ג
+                  </p>
+                )}
+              </div>
+              <div className="p-3.5 rounded-xl bg-cyan-500/20">
+                <Scale className="h-6 w-6 text-cyan-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="stat-card p-6 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-zinc-400 mb-2">אחוז שומן</p>
+                <p className="text-3xl font-bold text-emerald-400 tracking-tight">{latestMeasurement.bodyFat?.toFixed(1) || '-'}%</p>
+              </div>
+              <div className="p-3.5 rounded-xl bg-emerald-500/20">
+                <BarChart3 className="h-6 w-6 text-emerald-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="stat-card p-6 bg-gradient-to-br from-amber-500/20 to-amber-500/5 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-zinc-400 mb-2">מסת שריר</p>
+                <p className="text-3xl font-bold text-amber-400 tracking-tight">{latestMeasurement.muscleMass?.toFixed(1) || '-'} ק״ג</p>
+              </div>
+              <div className="p-3.5 rounded-xl bg-amber-500/20">
+                <User className="h-6 w-6 text-amber-400" />
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <button
-          onClick={onNewWorkout}
-          className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-colors touch-manipulation"
-        >
-          <Calendar className="h-5 w-5" />
-          <span className="font-medium">אימון חדש</span>
-        </button>
-
-        <button
-          onClick={onNewMeasurement}
-          className="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-colors touch-manipulation"
-        >
-          <Scale className="h-5 w-5" />
-          <span className="font-medium">שקילה חדשה</span>
-        </button>
-
-        <button
-          onClick={onViewMeasurements}
-          className="bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-colors touch-manipulation"
-        >
-          <BarChart3 className="h-5 w-5" />
-          <span className="font-medium">גרף משקל</span>
-        </button>
-
-        {onViewProgress && (
+      <div className="premium-card-static p-6">
+        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-emerald-400" />
+          פעולות מהירות
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           <button
-            onClick={onViewProgress}
-            className="bg-teal-500 hover:bg-teal-600 text-white p-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-colors touch-manipulation"
+            onClick={onNewWorkout}
+            className="action-btn group"
           >
-            <TrendingUp className="h-5 w-5" />
-            <span className="font-medium">גרף אימונים</span>
+            <div className="icon-box-primary mb-2 group-hover:shadow-glow transition-all">
+              <Calendar className="h-5 w-5" />
+            </div>
+            <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">אימון חדש</span>
           </button>
-        )}
 
-        {onViewWorkoutPlans && (
           <button
-            onClick={onViewWorkoutPlans}
-            className="bg-purple-500 hover:bg-purple-600 text-white p-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-colors touch-manipulation"
+            onClick={onNewMeasurement}
+            className="action-btn group"
           >
-            <ClipboardList className="h-5 w-5" />
-            <span className="font-medium">תוכניות אימון</span>
+            <div className="p-3 rounded-xl bg-cyan-500/15 text-cyan-400 mb-2 group-hover:bg-cyan-500/25 transition-all">
+              <Scale className="h-5 w-5" />
+            </div>
+            <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">שקילה חדשה</span>
           </button>
-        )}
 
-        {onViewMealPlans && (
           <button
-            onClick={onViewMealPlans}
-            className="bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-colors touch-manipulation"
+            onClick={onViewMeasurements}
+            className="action-btn group"
           >
-            <UtensilsCrossed className="h-5 w-5" />
-            <span className="font-medium">תפריט</span>
+            <div className="p-3 rounded-xl bg-amber-500/15 text-amber-400 mb-2 group-hover:bg-amber-500/25 transition-all">
+              <BarChart3 className="h-5 w-5" />
+            </div>
+            <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">גרף משקל</span>
           </button>
-        )}
 
-        {onViewFoodDiary && (
+          {onViewProgress && (
+            <button
+              onClick={onViewProgress}
+              className="action-btn group"
+            >
+              <div className="p-3 rounded-xl bg-teal-500/15 text-teal-400 mb-2 group-hover:bg-teal-500/25 transition-all">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">גרף אימונים</span>
+            </button>
+          )}
+
+          {onViewWorkoutPlans && (
+            <button
+              onClick={onViewWorkoutPlans}
+              className="action-btn group"
+            >
+              <div className="p-3 rounded-xl bg-rose-500/15 text-rose-400 mb-2 group-hover:bg-rose-500/25 transition-all">
+                <ClipboardList className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">תוכניות אימון</span>
+            </button>
+          )}
+
+          {onViewMealPlans && (
+            <button
+              onClick={onViewMealPlans}
+              className="action-btn group"
+            >
+              <div className="p-3 rounded-xl bg-orange-500/15 text-orange-400 mb-2 group-hover:bg-orange-500/25 transition-all">
+                <UtensilsCrossed className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">תפריט</span>
+            </button>
+          )}
+
+          {onViewFoodDiary && (
+            <button
+              onClick={onViewFoodDiary}
+              className="action-btn group"
+            >
+              <div className="p-3 rounded-xl bg-amber-500/15 text-amber-400 mb-2 group-hover:bg-amber-500/25 transition-all">
+                <BookOpen className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">יומן אכילה</span>
+            </button>
+          )}
+
+          {onViewTraineeAccess && (
+            <button
+              onClick={onViewTraineeAccess}
+              className="action-btn group"
+            >
+              <div className="p-3 rounded-xl bg-sky-500/15 text-sky-400 mb-2 group-hover:bg-sky-500/25 transition-all">
+                <Key className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">גישה לאפליקציה</span>
+            </button>
+          )}
+
+          {onViewMentalTools && (
+            <button
+              onClick={onViewMentalTools}
+              className="action-btn group"
+            >
+              <div className="p-3 rounded-xl bg-pink-500/15 text-pink-400 mb-2 group-hover:bg-pink-500/25 transition-all">
+                <Brain className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">כלים מנטליים</span>
+            </button>
+          )}
+
           <button
-            onClick={onViewFoodDiary}
-            className="bg-amber-500 hover:bg-amber-600 text-white p-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-colors touch-manipulation"
+            onClick={() => setShowTDEE(true)}
+            className="action-btn group"
           >
-            <BookOpen className="h-5 w-5" />
-            <span className="font-medium">יומן אכילה</span>
+            <div className="p-3 rounded-xl bg-emerald-500/15 text-emerald-400 mb-2 group-hover:bg-emerald-500/25 transition-all">
+              <Calculator className="h-5 w-5" />
+            </div>
+            <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">מחשבון TDEE</span>
           </button>
-        )}
-
-        {onViewTraineeAccess && (
-          <button
-            onClick={onViewTraineeAccess}
-            className="bg-indigo-500 hover:bg-indigo-600 text-white p-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-colors touch-manipulation"
-          >
-            <Key className="h-5 w-5" />
-            <span className="font-medium">גישה לאפליקציה</span>
-          </button>
-        )}
-
-        {onViewMentalTools && (
-          <button
-            onClick={onViewMentalTools}
-            className="bg-rose-500 hover:bg-rose-600 text-white p-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-colors touch-manipulation"
-          >
-            <Brain className="h-5 w-5" />
-            <span className="font-medium">כלים מנטליים</span>
-          </button>
-        )}
-
-        <button
-          onClick={() => setShowTDEE(true)}
-          className="bg-emerald-500 hover:bg-emerald-600 text-white p-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-colors touch-manipulation"
-        >
-          <Calculator className="h-5 w-5" />
-          <span className="font-medium">מחשבון TDEE</span>
-        </button>
+        </div>
       </div>
 
       {showTDEE && (
@@ -300,120 +359,143 @@ export default function TraineeProfile({
         />
       )}
 
-      {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Workouts */}
-        <div className="bg-white rounded-xl border border-gray-100">
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">אימונים אחרונים</h3>
+        <div className="premium-card-static h-full">
+          <div className="p-5 border-b border-zinc-800/50 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-emerald-400" />
+              <h3 className="text-base font-semibold text-white">אימונים אחרונים</h3>
+            </div>
             {onViewWorkouts && workouts.length > 0 && (
               <button
                 onClick={onViewWorkouts}
-                className="text-sm text-green-600 hover:text-green-700 font-medium"
+                className="text-sm text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
               >
-                כל האימונים ←
+                כל האימונים
               </button>
             )}
           </div>
-          <div className="p-6">
+          <div className="p-5">
             {workouts.length > 0 ? (
-              <div className="space-y-4">
-                {workouts.slice(0, 3).map((workout) => (
-                  <div key={workout.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="space-y-3">
+                {workouts.slice(0, 3).map((workout, index) => (
+                  <div
+                    key={workout.id}
+                    className="flex items-center justify-between p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all animate-fade-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
                     <div>
-                      <p className="font-medium text-gray-900">{new Date(workout.date).toLocaleDateString('he-IL')}</p>
-                      <p className="text-sm text-gray-500">{workout.exercises.length} תרגילים</p>
+                      <p className="font-medium text-white">{new Date(workout.date).toLocaleDateString('he-IL')}</p>
+                      <p className="text-sm text-zinc-500">{workout.exercises.length} תרגילים</p>
                     </div>
                     <div className="text-left">
-                      <p className="text-sm font-medium text-gray-900">{workout.totalVolume.toLocaleString()} ק״ג</p>
-                      <p className="text-xs text-gray-500">נפח כולל</p>
+                      <p className="text-lg font-bold text-emerald-400">{workout.totalVolume.toLocaleString()}</p>
+                      <p className="text-xs text-zinc-500">ק״ג נפח</p>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-4">אין אימונים עדיין</p>
+              <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-3">
+                  <Calendar className="h-6 w-6 text-zinc-600" />
+                </div>
+                <p className="text-zinc-500">אין אימונים עדיין</p>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Recent Measurements */}
-        <div className="bg-white rounded-xl border border-gray-100">
-          <div className="p-6 border-b border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900">מדידות אחרונות</h3>
+        <div className="premium-card-static h-full">
+          <div className="p-5 border-b border-zinc-800/50">
+            <div className="flex items-center gap-2">
+              <Scale className="h-4 w-4 text-cyan-400" />
+              <h3 className="text-base font-semibold text-white">מדידות אחרונות</h3>
+            </div>
           </div>
-          <div className="p-6">
+          <div className="p-5">
             {measurements.length > 0 ? (
-              <div className="space-y-4">
-                {measurements.slice(0, 3).map((measurement) => (
-                  <div key={measurement.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="space-y-3">
+                {measurements.slice(0, 3).map((measurement, index) => (
+                  <div
+                    key={measurement.id}
+                    className="flex items-center justify-between p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all animate-fade-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
                     <div>
-                      <p className="font-medium text-gray-900">{new Date(measurement.date).toLocaleDateString('he-IL')}</p>
-                      <p className="text-sm text-gray-500">{measurement.source === 'tanita' ? 'Tanita' : 'ידני'}</p>
+                      <p className="font-medium text-white">{new Date(measurement.date).toLocaleDateString('he-IL')}</p>
+                      <p className="text-sm text-zinc-500">{measurement.source === 'tanita' ? 'Tanita' : 'ידני'}</p>
                     </div>
-                    <div className="text-left space-y-1">
-                      <p className="text-sm font-medium text-gray-900">{measurement.weight} ק״ג</p>
+                    <div className="text-left">
+                      <p className="text-lg font-bold text-cyan-400">{measurement.weight} ק״ג</p>
                       {measurement.bodyFat && (
-                        <p className="text-xs text-gray-500">{measurement.bodyFat.toFixed(1)}% שומן</p>
+                        <p className="text-xs text-zinc-500">{measurement.bodyFat.toFixed(1)}% שומן</p>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-4">אין מדידות עדיין</p>
+              <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-3">
+                  <Scale className="h-6 w-6 text-zinc-600" />
+                </div>
+                <p className="text-zinc-500">אין מדידות עדיין</p>
+              </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Self Weights from Trainee */}
       {selfWeights.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-100">
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+        <div className="premium-card-static">
+          <div className="p-5 border-b border-zinc-800/50 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-50 p-2 rounded-lg">
-                <Home className="h-5 w-5 text-blue-600" />
+              <div className="p-2.5 rounded-xl bg-cyan-500/15">
+                <Home className="h-5 w-5 text-cyan-400" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">שקילות מהבית</h3>
-                <p className="text-sm text-gray-500">משקלים שהמתאמן דיווח</p>
+                <h3 className="text-base font-semibold text-white">שקילות מהבית</h3>
+                <p className="text-sm text-zinc-500">משקלים שהמתאמן דיווח</p>
               </div>
             </div>
             {selfWeights.some(sw => !sw.is_seen_by_trainer) && onMarkSelfWeightsSeen && (
               <button
                 onClick={onMarkSelfWeightsSeen}
-                className="flex items-center gap-2 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 rounded-xl text-sm font-medium transition-all border border-cyan-500/30"
               >
                 <CheckCircle className="h-4 w-4" />
                 סמן כנראה
               </button>
             )}
           </div>
-          <div className="p-6">
+          <div className="p-5">
             <div className="space-y-3">
-              {selfWeights.slice(0, 5).map((sw) => (
+              {selfWeights.slice(0, 5).map((sw, index) => (
                 <div
                   key={sw.id}
-                  className={`flex items-center justify-between p-3 rounded-lg ${
-                    sw.is_seen_by_trainer ? 'bg-gray-50' : 'bg-blue-50 border border-blue-200'
+                  className={`flex items-center justify-between p-4 rounded-xl transition-all animate-fade-in ${
+                    sw.is_seen_by_trainer
+                      ? 'bg-zinc-800/30 border border-zinc-700/30'
+                      : 'bg-cyan-500/10 border border-cyan-500/30'
                   }`}
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="flex items-center gap-3">
                     {!sw.is_seen_by_trainer && (
-                      <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                      <span className="w-2.5 h-2.5 bg-cyan-400 rounded-full animate-pulse"></span>
                     )}
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-white">
                         {new Date(sw.weight_date).toLocaleDateString('he-IL')}
                       </p>
                       {sw.notes && (
-                        <p className="text-sm text-gray-500">{sw.notes}</p>
+                        <p className="text-sm text-zinc-500">{sw.notes}</p>
                       )}
                     </div>
                   </div>
                   <div className="text-left">
-                    <p className="text-lg font-bold text-gray-900">{sw.weight_kg} ק״ג</p>
+                    <p className="text-xl font-bold text-cyan-400">{sw.weight_kg} ק״ג</p>
                   </div>
                 </div>
               ))}
@@ -422,11 +504,13 @@ export default function TraineeProfile({
         </div>
       )}
 
-      {/* Notes */}
       {trainee.notes && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-yellow-800 mb-2">הערות מאמן</h3>
-          <p className="text-yellow-700">{trainee.notes}</p>
+        <div className="premium-card-static p-6 border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-amber-500/5">
+          <h3 className="text-lg font-semibold text-amber-400 mb-3 flex items-center gap-2">
+            <Sparkles className="h-4 w-4" />
+            הערות מאמן
+          </h3>
+          <p className="text-zinc-300 leading-relaxed">{trainee.notes}</p>
         </div>
       )}
     </div>

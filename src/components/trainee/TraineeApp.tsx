@@ -51,9 +51,9 @@ export default function TraineeApp() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center shadow-glow animate-pulse">
-          <Activity className="w-8 h-8 text-dark-500" />
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-glow animate-pulse">
+          <Activity className="w-8 h-8 text-white" />
         </div>
       </div>
     );
@@ -62,12 +62,12 @@ export default function TraineeApp() {
   const getFirstName = (fullName: string) => fullName.split(' ')[0];
 
   return (
-    <div className="min-h-screen" dir="rtl">
-      <header className="glass-card rounded-none border-x-0 border-t-0 px-4 py-3">
+    <div className="min-h-screen bg-zinc-950" dir="rtl">
+      <header className="sticky top-0 z-30 glass-card rounded-none border-x-0 border-t-0 px-4 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center shadow-glow-sm">
-              <span className="text-dark-500 font-bold text-lg">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-glow">
+              <span className="text-white font-bold text-lg">
                 {trainee?.full_name?.charAt(0) || 'U'}
               </span>
             </div>
@@ -75,12 +75,12 @@ export default function TraineeApp() {
               <h1 className="text-lg font-bold text-white">
                 שלום, {getFirstName(trainee?.full_name || '')}
               </h1>
-              <p className="text-xs text-gray-400">בואו נתחיל לאמן!</p>
+              <p className="text-xs text-zinc-500">בואו נתחיל לאמן!</p>
             </div>
           </div>
           <button
             onClick={signOut}
-            className="p-2 text-gray-400 hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all"
+            className="p-2.5 text-zinc-400 hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all border border-zinc-800 hover:border-red-500/30"
             title="התנתק"
           >
             <LogOut className="w-5 h-5" />
@@ -89,7 +89,7 @@ export default function TraineeApp() {
       </header>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
-        <div className="glass-card px-2 py-2 rounded-2xl shadow-dark-lg">
+        <div className="glass-card px-2 py-3 rounded-2xl shadow-dark-lg border border-zinc-800/80">
           <div className="flex items-center justify-around relative">
             <TabButton
               icon={Home}
@@ -104,12 +104,12 @@ export default function TraineeApp() {
               onClick={() => { setActiveTab('workout-plan'); setShowMoreMenu(false); }}
             />
 
-            <div className="relative -mt-8">
+            <div className="relative -mt-10">
               <button
                 onClick={() => setActiveTab('self-workout')}
-                className="w-14 h-14 rounded-full bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center shadow-glow transition-transform hover:scale-105 active:scale-95"
+                className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-glow transition-transform hover:scale-105 active:scale-95 border-4 border-zinc-900"
               >
-                <Plus className="w-7 h-7 text-dark-500" />
+                <Plus className="w-7 h-7 text-white" />
               </button>
             </div>
 
@@ -129,8 +129,8 @@ export default function TraineeApp() {
         </div>
 
         {showMoreMenu && (
-          <div className="absolute bottom-full mb-2 left-4 right-4 glass-card p-3 rounded-2xl animate-fade-in">
-            <div className="grid grid-cols-4 gap-2">
+          <div className="absolute bottom-full mb-2 left-4 right-4 glass-card p-4 rounded-2xl animate-fade-in border border-zinc-700/50">
+            <div className="grid grid-cols-3 gap-3">
               <MoreMenuItem
                 icon={ClipboardList}
                 label="תפריט"
@@ -157,15 +157,15 @@ export default function TraineeApp() {
       <div className="fixed bottom-24 left-4 z-40">
         <button
           onClick={() => setShowMoreMenu(!showMoreMenu)}
-          className={`glass-card px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-            showMoreMenu ? 'text-lime-500 border-lime-500/30' : 'text-gray-400'
+          className={`glass-card px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${
+            showMoreMenu ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' : 'text-zinc-400 border-zinc-700/50 hover:border-zinc-600'
           }`}
         >
           עוד...
         </button>
       </div>
 
-      <main className="pb-28 p-4">
+      <main className="pb-32 p-4">
         {activeTab === 'dashboard' && <TraineeDashboard traineeId={traineeId} traineeName={trainee?.full_name || ''} />}
         {activeTab === 'workout-plan' && <MyWorkoutPlan traineeId={traineeId} />}
         {activeTab === 'workouts' && <WorkoutHistory traineeId={traineeId} traineeName={trainee?.full_name} trainerId={trainee?.trainer_id} />}
@@ -198,14 +198,14 @@ function TabButton({ icon: Icon, label, active, onClick }: TabButtonProps) {
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all ${
+      className={`flex flex-col items-center py-2 px-4 rounded-xl transition-all ${
         active
-          ? 'text-lime-500'
-          : 'text-gray-500 hover:text-gray-300'
+          ? 'text-emerald-400'
+          : 'text-zinc-500 hover:text-zinc-300'
       }`}
     >
-      <Icon className={`w-5 h-5 ${active ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} />
-      <span className="text-[10px] mt-1 font-medium">{label}</span>
+      <Icon className={`w-5 h-5 ${active ? 'drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]' : ''}`} />
+      <span className="text-[10px] mt-1.5 font-medium">{label}</span>
     </button>
   );
 }
@@ -221,14 +221,14 @@ function MoreMenuItem({ icon: Icon, label, active, onClick }: MoreMenuItemProps)
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center p-3 rounded-xl transition-all ${
+      className={`flex flex-col items-center p-4 rounded-xl transition-all ${
         active
-          ? 'bg-lime-500/20 text-lime-500'
-          : 'text-gray-400 hover:bg-white/5 hover:text-white'
+          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+          : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border border-transparent'
       }`}
     >
-      <Icon className="w-5 h-5 mb-1" />
-      <span className="text-xs">{label}</span>
+      <Icon className="w-5 h-5 mb-1.5" />
+      <span className="text-xs font-medium">{label}</span>
     </button>
   );
 }

@@ -1,4 +1,4 @@
-import { Clock, Dumbbell, Scale } from 'lucide-react';
+import { Clock, Dumbbell, Scale, Activity } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 
@@ -54,9 +54,9 @@ export default function RecentActivity() {
 
         let totalVolume = 0;
         if (w.workout_exercises) {
-          w.workout_exercises.forEach((ex: any) => {
+          w.workout_exercises.forEach((ex: { exercise_sets?: { weight?: number; reps?: number; superset_weight?: number; superset_reps?: number; dropset_weight?: number; dropset_reps?: number; superset_dropset_weight?: number; superset_dropset_reps?: number }[] }) => {
             if (ex.exercise_sets) {
-              ex.exercise_sets.forEach((set: any) => {
+              ex.exercise_sets.forEach((set) => {
                 let setVolume = (set.weight || 0) * (set.reps || 0);
 
                 if (set.superset_weight && set.superset_reps) {
@@ -108,7 +108,7 @@ export default function RecentActivity() {
 
     if (measurements) {
       measurements.forEach(m => {
-        const trainee = m.trainees?.full_name || 'מתאמן';
+        const trainee = (m.trainees as { full_name?: string } | null)?.full_name || 'מתאמן';
         activityList.push({
           id: m.id,
           type: 'measurement',
@@ -145,48 +145,74 @@ export default function RecentActivity() {
     }
   };
 
-  const getTypeColor = (type: string) => {
+  const getTypeConfig = (type: string) => {
     switch (type) {
       case 'workout':
-        return 'bg-cyan-500/20 text-cyan-400';
+        return {
+          bg: 'bg-cyan-500/15',
+          text: 'text-cyan-400',
+          border: 'border-cyan-500/20',
+        };
       case 'measurement':
-        return 'bg-lime-500/20 text-lime-500';
+        return {
+          bg: 'bg-emerald-500/15',
+          text: 'text-emerald-400',
+          border: 'border-emerald-500/20',
+        };
       default:
-        return 'bg-gray-500/20 text-gray-400';
+        return {
+          bg: 'bg-zinc-500/15',
+          text: 'text-zinc-400',
+          border: 'border-zinc-500/20',
+        };
     }
   };
 
   return (
-    <div className="glass-card">
-      <div className="p-5 border-b border-white/10">
-        <h3 className="text-lg font-semibold text-white">פעילות אחרונה</h3>
+    <div className="premium-card-static h-full">
+      <div className="p-5 border-b border-zinc-800/50">
+        <div className="flex items-center gap-2">
+          <Activity className="h-4 w-4 text-emerald-400" />
+          <h3 className="text-base font-semibold text-white">פעילות אחרונה</h3>
+        </div>
       </div>
       <div className="p-5">
         {loading ? (
-          <div className="text-center py-8">
-            <Clock className="h-12 w-12 text-gray-600 mx-auto mb-3 animate-pulse" />
-            <p className="text-gray-400">טוען פעילות...</p>
+          <div className="text-center py-12">
+            <div className="w-12 h-12 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <Clock className="h-6 w-6 text-zinc-600" />
+            </div>
+            <p className="text-zinc-500 text-sm">טוען פעילות...</p>
           </div>
         ) : activities.length === 0 ? (
-          <div className="text-center py-8">
-            <Clock className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400">עדיין אין פעילות</p>
-            <p className="text-sm text-gray-500 mt-1">פעילות אחרונה תופיע כאן</p>
+          <div className="text-center py-12">
+            <div className="w-12 h-12 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
+              <Clock className="h-6 w-6 text-zinc-600" />
+            </div>
+            <p className="text-zinc-400 font-medium">עדיין אין פעילות</p>
+            <p className="text-sm text-zinc-600 mt-1">פעילות אחרונה תופיע כאן</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {activities.map((activity) => (
-              <div key={activity.id} className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg ${getTypeColor(activity.type)}`}>
-                  {getIcon(activity.type)}
+          <div className="space-y-3">
+            {activities.map((activity, index) => {
+              const config = getTypeConfig(activity.type);
+              return (
+                <div
+                  key={activity.id}
+                  className="flex items-start gap-3 p-3 rounded-xl bg-zinc-800/30 border border-zinc-800/50 hover:border-zinc-700/50 transition-all animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className={`p-2.5 rounded-xl ${config.bg} ${config.text}`}>
+                    {getIcon(activity.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white">{activity.trainee}</p>
+                    <p className="text-sm text-zinc-400 mt-0.5">{activity.description}</p>
+                  </div>
+                  <span className="text-xs text-zinc-600 whitespace-nowrap">{activity.time}</span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white">{activity.trainee}</p>
-                  <p className="text-sm text-gray-400">{activity.description}</p>
-                  <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
