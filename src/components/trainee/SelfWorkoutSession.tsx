@@ -54,7 +54,7 @@ interface WorkoutExercise {
 interface SelfWorkoutSessionProps {
   traineeId: string;
   traineeName: string;
-  trainerId: string | undefined;
+  trainerId: string;
   onBack: () => void;
   onSave: () => void;
 }
@@ -253,6 +253,12 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
   const handleSave = async (isAutoSave = false) => {
     if (exercises.length === 0) return;
 
+    if (!trainerId) {
+      toast.error('לא ניתן לשמור אימון ללא מאמן');
+      setSaving(false);
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -260,7 +266,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
         .from('workouts')
         .insert([
           {
-            trainer_id: null,
+            trainer_id: trainerId,
             workout_type: 'personal',
             notes,
             workout_date: workoutDate.toISOString(),

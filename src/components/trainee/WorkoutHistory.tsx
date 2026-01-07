@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import toast from 'react-hot-toast';
 import {
   Dumbbell,
   Calendar,
@@ -344,6 +345,12 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
   }
 
   if (showSelfWorkout) {
+    if (!trainerId) {
+      toast.error('לא ניתן לבצע אימון עצמאי ללא מאמן');
+      setShowSelfWorkout(false);
+      return null;
+    }
+
     return (
       <SelfWorkoutSession
         traineeId={traineeId!}
