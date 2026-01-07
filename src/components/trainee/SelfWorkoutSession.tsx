@@ -274,26 +274,23 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
         return;
       }
 
-      const { data: newWorkout, error: workoutError } = await supabase
-        .from('workouts')
-        .insert([
-          {
-            trainer_id: trainerId,
-            workout_type: 'personal',
-            notes,
-            workout_date: workoutDate.toISOString(),
-            is_completed: true,
-          },
-        ])
-        .select()
-        .single();
+      const { data: workoutId, error: workoutError } = await supabase
+        .rpc('create_trainee_workout', {
+          p_trainer_id: trainerId,
+          p_workout_type: 'personal',
+          p_notes: notes,
+          p_workout_date: workoutDate.toISOString().split('T')[0],
+          p_is_completed: true,
+        });
 
-      if (workoutError || !newWorkout) {
+      if (workoutError || !workoutId) {
         console.error('Workout error:', workoutError);
         toast.error('שגיאה בשמירת האימון');
         setSaving(false);
         return;
       }
+
+      const newWorkout = { id: workoutId };
 
       const { error: traineeError } = await supabase
         .from('workout_trainees')
