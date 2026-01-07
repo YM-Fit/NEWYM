@@ -145,7 +145,7 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-16">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
       </div>
     );
   }
@@ -153,11 +153,11 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
   if (!mealPlan) {
     return (
       <div className="text-center py-16">
-        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <UtensilsCrossed className="w-10 h-10 text-gray-400" />
+        <div className="w-20 h-20 bg-zinc-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <UtensilsCrossed className="w-10 h-10 text-zinc-500" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-700 mb-2">אין תפריט פעיל</h3>
-        <p className="text-gray-500">המאמן עדיין לא הגדיר תפריט תזונה</p>
+        <h3 className="text-lg font-semibold text-white mb-2">אין תפריט פעיל</h3>
+        <p className="text-zinc-500">המאמן עדיין לא הגדיר תפריט תזונה</p>
       </div>
     );
   }
@@ -167,7 +167,7 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="bg-gradient-to-l from-green-600 to-green-500 rounded-2xl p-5 text-white shadow-lg">
+      <div className="bg-gradient-to-l from-emerald-600 to-emerald-500 rounded-2xl p-5 text-white shadow-lg">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xl font-bold">{mealPlan.name}</h2>
           <button
@@ -178,7 +178,7 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
           </button>
         </div>
         {mealPlan.description && (
-          <p className="text-green-100 text-sm mb-4">{mealPlan.description}</p>
+          <p className="text-emerald-100 text-sm mb-4">{mealPlan.description}</p>
         )}
 
         <div className="grid grid-cols-2 gap-3">
@@ -186,14 +186,14 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
             <div className="bg-white/15 rounded-xl p-3 text-center">
               <Flame className="w-5 h-5 mx-auto mb-1" />
               <p className="text-lg font-bold">{mealPlan.daily_calories.toLocaleString()}</p>
-              <p className="text-xs text-green-200">קלוריות יומי</p>
+              <p className="text-xs text-emerald-200">קלוריות יומי</p>
             </div>
           )}
           {mealPlan.daily_water_ml && (
             <div className="bg-white/15 rounded-xl p-3 text-center">
               <Droplets className="w-5 h-5 mx-auto mb-1" />
               <p className="text-lg font-bold">{(mealPlan.daily_water_ml / 1000).toFixed(1)}L</p>
-              <p className="text-xs text-green-200">מים יומי</p>
+              <p className="text-xs text-emerald-200">מים יומי</p>
             </div>
           )}
         </div>
@@ -203,52 +203,52 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
             {mealPlan.protein_grams && (
               <div className="bg-white/10 rounded-lg p-2 text-center">
                 <p className="text-sm font-bold">{mealPlan.protein_grams}g</p>
-                <p className="text-xs text-green-200">חלבון</p>
+                <p className="text-xs text-emerald-200">חלבון</p>
               </div>
             )}
             {mealPlan.carbs_grams && (
               <div className="bg-white/10 rounded-lg p-2 text-center">
                 <p className="text-sm font-bold">{mealPlan.carbs_grams}g</p>
-                <p className="text-xs text-green-200">פחמימות</p>
+                <p className="text-xs text-emerald-200">פחמימות</p>
               </div>
             )}
             {mealPlan.fat_grams && (
               <div className="bg-white/10 rounded-lg p-2 text-center">
                 <p className="text-sm font-bold">{mealPlan.fat_grams}g</p>
-                <p className="text-xs text-green-200">שומן</p>
+                <p className="text-xs text-emerald-200">שומן</p>
               </div>
             )}
           </div>
         )}
 
         {mealPlan.updated_at && (
-          <p className="text-xs text-green-200 mt-3 text-center">
+          <p className="text-xs text-emerald-200 mt-3 text-center">
             עודכן: {formatDate(mealPlan.updated_at)}
           </p>
         )}
       </div>
 
       {mealPlan.notes && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl overflow-hidden">
+        <div className="premium-card-static overflow-hidden">
           <button
             onClick={() => setShowNotes(!showNotes)}
             className="w-full p-4 flex items-center justify-between"
           >
             <div className="flex items-center gap-3">
-              <div className="bg-amber-100 p-2 rounded-lg">
-                <MessageSquare className="w-5 h-5 text-amber-700" />
+              <div className="bg-amber-500/15 border border-amber-500/30 p-2 rounded-lg">
+                <MessageSquare className="w-5 h-5 text-amber-400" />
               </div>
-              <span className="font-semibold text-amber-800">הערות המאמן</span>
+              <span className="font-semibold text-white">הערות המאמן</span>
             </div>
             {showNotes ? (
-              <ChevronUp className="w-5 h-5 text-amber-600" />
+              <ChevronUp className="w-5 h-5 text-zinc-400" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-amber-600" />
+              <ChevronDown className="w-5 h-5 text-zinc-400" />
             )}
           </button>
           {showNotes && (
             <div className="px-4 pb-4">
-              <div className="bg-white rounded-lg p-3 text-amber-900 whitespace-pre-wrap text-sm leading-relaxed">
+              <div className="bg-zinc-800/30 border border-zinc-700/50 rounded-lg p-3 text-zinc-300 whitespace-pre-wrap text-sm leading-relaxed">
                 {mealPlan.notes}
               </div>
             </div>
@@ -257,15 +257,15 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
       )}
 
       <div className="space-y-3">
-        <h3 className="font-bold text-gray-800 flex items-center gap-2">
-          <UtensilsCrossed className="w-5 h-5 text-green-600" />
+        <h3 className="font-bold text-white flex items-center gap-2">
+          <UtensilsCrossed className="w-5 h-5 text-emerald-400" />
           ארוחות יומיות ({meals.length})
         </h3>
 
         {meals.length === 0 ? (
-          <div className="bg-white rounded-xl p-8 text-center border">
-            <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">אין ארוחות בתפריט</p>
+          <div className="premium-card-static p-8 text-center">
+            <AlertCircle className="w-12 h-12 text-zinc-500 mx-auto mb-3" />
+            <p className="text-zinc-400">אין ארוחות בתפריט</p>
           </div>
         ) : (
           meals.map((meal) => {
@@ -275,7 +275,7 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
             return (
               <div
                 key={meal.id}
-                className={`rounded-xl border overflow-hidden ${config.bgColor}`}
+                className="premium-card-static overflow-hidden"
               >
                 <button
                   onClick={() => toggleMeal(meal.id)}
@@ -285,57 +285,57 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
                     <span className="text-2xl">{config.icon}</span>
                     <div className="text-right">
                       <div className="flex items-center gap-2">
-                        <span className={`font-bold ${config.color}`}>{config.label}</span>
-                        <span className="text-gray-500 text-sm flex items-center gap-1">
+                        <span className="font-bold text-white">{config.label}</span>
+                        <span className="text-zinc-400 text-sm flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {formatTime(meal.meal_time)}
                         </span>
                       </div>
                       {meal.calories && (
-                        <span className="text-xs text-gray-500">{meal.calories} קלוריות</span>
+                        <span className="text-xs text-zinc-500">{meal.calories} קלוריות</span>
                       )}
                     </div>
                   </div>
                   {isExpanded ? (
-                    <ChevronUp className="w-5 h-5 text-gray-400" />
+                    <ChevronUp className="w-5 h-5 text-zinc-400" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                    <ChevronDown className="w-5 h-5 text-zinc-400" />
                   )}
                 </button>
 
                 {isExpanded && (
-                  <div className="px-4 pb-4 space-y-3">
+                  <div className="px-4 pb-4 space-y-3 border-t border-zinc-700/50 pt-3">
                     {meal.description && (
-                      <div className="bg-white rounded-lg p-3">
-                        <p className="text-sm font-medium text-gray-600 mb-1">מה לאכול:</p>
-                        <p className="text-gray-800 whitespace-pre-wrap">{meal.description}</p>
+                      <div className="bg-zinc-800/30 border border-zinc-700/50 rounded-lg p-3">
+                        <p className="text-sm font-medium text-zinc-400 mb-1">מה לאכול:</p>
+                        <p className="text-white whitespace-pre-wrap">{meal.description}</p>
                       </div>
                     )}
 
                     {meal.alternatives && (
-                      <div className="bg-white/80 rounded-lg p-3 border border-dashed border-gray-300">
-                        <p className="text-sm font-medium text-gray-600 mb-1">חלופות:</p>
-                        <p className="text-gray-700 text-sm whitespace-pre-wrap">{meal.alternatives}</p>
+                      <div className="bg-zinc-800/50 rounded-lg p-3 border border-dashed border-zinc-700/50">
+                        <p className="text-sm font-medium text-zinc-400 mb-1">חלופות:</p>
+                        <p className="text-zinc-300 text-sm whitespace-pre-wrap">{meal.alternatives}</p>
                       </div>
                     )}
 
                     {(meal.protein || meal.carbs || meal.fat) && (
                       <div className="flex gap-2 flex-wrap">
                         {meal.protein && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-xs">
-                            <Beef className="w-3 h-3 text-red-500" />
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-500/15 border border-red-500/30 rounded-full text-xs text-red-400">
+                            <Beef className="w-3 h-3" />
                             {meal.protein}g חלבון
                           </span>
                         )}
                         {meal.carbs && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-xs">
-                            <Wheat className="w-3 h-3 text-amber-500" />
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-500/15 border border-amber-500/30 rounded-full text-xs text-amber-400">
+                            <Wheat className="w-3 h-3" />
                             {meal.carbs}g פחמימות
                           </span>
                         )}
                         {meal.fat && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-xs">
-                            <Droplet className="w-3 h-3 text-blue-500" />
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-500/15 border border-blue-500/30 rounded-full text-xs text-blue-400">
+                            <Droplet className="w-3 h-3" />
                             {meal.fat}g שומן
                           </span>
                         )}
@@ -343,7 +343,7 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
                     )}
 
                     {meal.notes && (
-                      <p className="text-xs text-gray-500 italic">{meal.notes}</p>
+                      <p className="text-xs text-zinc-500 italic">{meal.notes}</p>
                     )}
                   </div>
                 )}
@@ -354,62 +354,62 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
       </div>
 
       {totals.calories > 0 && (
-        <div className="bg-white rounded-xl border p-4">
-          <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-            <BarChartIcon className="w-5 h-5 text-green-600" />
+        <div className="premium-card-static p-4">
+          <h3 className="font-bold text-white mb-3 flex items-center gap-2">
+            <BarChartIcon className="w-5 h-5 text-emerald-400" />
             סיכום יומי (מהארוחות)
           </h3>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-red-50 rounded-lg p-3 text-center">
-              <Flame className="w-5 h-5 text-red-500 mx-auto mb-1" />
-              <p className="text-xl font-bold text-gray-800">{totals.calories.toLocaleString()}</p>
-              <p className="text-xs text-gray-500">קלוריות</p>
+            <div className="bg-red-500/15 border border-red-500/30 rounded-lg p-3 text-center">
+              <Flame className="w-5 h-5 text-red-400 mx-auto mb-1" />
+              <p className="text-xl font-bold text-white">{totals.calories.toLocaleString()}</p>
+              <p className="text-xs text-zinc-400">קלוריות</p>
               {mealPlan.daily_calories && (
-                <p className={`text-xs mt-1 ${totals.calories <= mealPlan.daily_calories ? 'text-green-600' : 'text-red-600'}`}>
+                <p className={`text-xs mt-1 ${totals.calories <= mealPlan.daily_calories ? 'text-emerald-400' : 'text-red-400'}`}>
                   מתוך {mealPlan.daily_calories.toLocaleString()}
                 </p>
               )}
             </div>
-            <div className="bg-blue-50 rounded-lg p-3 text-center">
-              <Beef className="w-5 h-5 text-blue-500 mx-auto mb-1" />
-              <p className="text-xl font-bold text-gray-800">{totals.protein}g</p>
-              <p className="text-xs text-gray-500">חלבון</p>
+            <div className="bg-cyan-500/15 border border-cyan-500/30 rounded-lg p-3 text-center">
+              <Beef className="w-5 h-5 text-cyan-400 mx-auto mb-1" />
+              <p className="text-xl font-bold text-white">{totals.protein}g</p>
+              <p className="text-xs text-zinc-400">חלבון</p>
               {mealPlan.protein_grams && (
-                <p className={`text-xs mt-1 ${totals.protein >= mealPlan.protein_grams ? 'text-green-600' : 'text-orange-600'}`}>
+                <p className={`text-xs mt-1 ${totals.protein >= mealPlan.protein_grams ? 'text-emerald-400' : 'text-orange-400'}`}>
                   מתוך {mealPlan.protein_grams}g
                 </p>
               )}
             </div>
-            <div className="bg-amber-50 rounded-lg p-3 text-center">
-              <Wheat className="w-5 h-5 text-amber-500 mx-auto mb-1" />
-              <p className="text-xl font-bold text-gray-800">{totals.carbs}g</p>
-              <p className="text-xs text-gray-500">פחמימות</p>
+            <div className="bg-amber-500/15 border border-amber-500/30 rounded-lg p-3 text-center">
+              <Wheat className="w-5 h-5 text-amber-400 mx-auto mb-1" />
+              <p className="text-xl font-bold text-white">{totals.carbs}g</p>
+              <p className="text-xs text-zinc-400">פחמימות</p>
               {mealPlan.carbs_grams && (
-                <p className="text-xs text-gray-400 mt-1">מתוך {mealPlan.carbs_grams}g</p>
+                <p className="text-xs text-zinc-500 mt-1">מתוך {mealPlan.carbs_grams}g</p>
               )}
             </div>
-            <div className="bg-green-50 rounded-lg p-3 text-center">
-              <Droplet className="w-5 h-5 text-green-500 mx-auto mb-1" />
-              <p className="text-xl font-bold text-gray-800">{totals.fat}g</p>
-              <p className="text-xs text-gray-500">שומן</p>
+            <div className="bg-emerald-500/15 border border-emerald-500/30 rounded-lg p-3 text-center">
+              <Droplet className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
+              <p className="text-xl font-bold text-white">{totals.fat}g</p>
+              <p className="text-xs text-zinc-400">שומן</p>
               {mealPlan.fat_grams && (
-                <p className="text-xs text-gray-400 mt-1">מתוך {mealPlan.fat_grams}g</p>
+                <p className="text-xs text-zinc-500 mt-1">מתוך {mealPlan.fat_grams}g</p>
               )}
             </div>
           </div>
 
           {mealPlan.daily_water_ml && (
-            <div className="mt-3 bg-cyan-50 rounded-lg p-3">
+            <div className="mt-3 bg-cyan-500/15 border border-cyan-500/30 rounded-lg p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Droplets className="w-5 h-5 text-cyan-600" />
-                  <span className="font-medium text-cyan-800">יעד מים יומי</span>
+                  <Droplets className="w-5 h-5 text-cyan-400" />
+                  <span className="font-medium text-cyan-300">יעד מים יומי</span>
                 </div>
-                <span className="text-lg font-bold text-cyan-700">
+                <span className="text-lg font-bold text-cyan-300">
                   {(mealPlan.daily_water_ml / 1000).toFixed(1)} ליטר
                 </span>
               </div>
-              <p className="text-xs text-cyan-600 mt-1">
+              <p className="text-xs text-cyan-400 mt-1">
                 ({mealPlan.daily_water_ml.toLocaleString()} מ"ל = כ-{Math.round(mealPlan.daily_water_ml / 250)} כוסות)
               </p>
             </div>

@@ -339,7 +339,7 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-green-600 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-emerald-500 border-t-transparent"></div>
       </div>
     );
   }
@@ -380,27 +380,27 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
     <div className="space-y-4 pb-4">
       <button
         onClick={() => setShowSelfWorkout(true)}
-        className="w-full bg-gradient-to-l from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white py-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all shadow-lg"
+        className="w-full btn-primary py-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all shadow-lg"
       >
         <Plus className="w-6 h-6" />
         <span className="font-bold text-lg">אימון עצמאי</span>
       </button>
 
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-white">
           <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mb-2">
             <Calendar className="w-5 h-5" />
           </div>
           <p className="text-2xl font-bold">{stats.totalWorkouts}</p>
-          <p className="text-xs text-green-100">אימונים החודש</p>
+          <p className="text-xs text-emerald-100">אימונים החודש</p>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl p-4 text-white">
           <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mb-2">
             <Activity className="w-5 h-5" />
           </div>
           <p className="text-2xl font-bold">{stats.avgVolume.toLocaleString()}</p>
-          <p className="text-xs text-blue-100">נפח ממוצע</p>
+          <p className="text-xs text-cyan-100">נפח ממוצע</p>
         </div>
 
         <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-4 text-white">
@@ -421,30 +421,30 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+      <div className="premium-card-static overflow-hidden">
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 border-b"
+          className="w-full px-4 py-3 flex items-center justify-between bg-zinc-800/50 border-b border-zinc-700/50"
         >
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-600" />
-            <span className="font-medium text-gray-700">סינון</span>
+            <Filter className="w-4 h-4 text-emerald-400" />
+            <span className="font-medium text-white">סינון</span>
           </div>
           {showFilters ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
+            <ChevronUp className="w-5 h-5 text-zinc-400" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
+            <ChevronDown className="w-5 h-5 text-zinc-400" />
           )}
         </button>
 
         {showFilters && (
           <div className="p-4 space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">חודש</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">חודש</label>
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full p-2 bg-zinc-800/50 border border-zinc-700/50 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
               >
                 <option value="all">כל החודשים</option>
                 {getAvailableMonths().map((month) => (
@@ -456,11 +456,11 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">קבוצת שריר</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">קבוצת שריר</label>
               <select
                 value={selectedMuscleGroup}
                 onChange={(e) => setSelectedMuscleGroup(e.target.value)}
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full p-2 bg-zinc-800/50 border border-zinc-700/50 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
               >
                 <option value="all">כל קבוצות השריר</option>
                 {muscleGroups.map((mg) => (
@@ -474,54 +474,54 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
         )}
       </div>
 
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="bg-gray-50 px-4 py-3 border-b">
-          <h3 className="font-bold text-gray-800">היסטוריית אימונים</h3>
+      <div className="premium-card-static overflow-hidden">
+        <div className="bg-zinc-800/50 px-4 py-3 border-b border-zinc-700/50">
+          <h3 className="font-bold text-white">היסטוריית אימונים</h3>
         </div>
 
         {filteredWorkouts.length === 0 ? (
           <div className="p-8 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Dumbbell className="w-8 h-8 text-gray-400" />
+            <div className="w-16 h-16 bg-zinc-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Dumbbell className="w-8 h-8 text-zinc-500" />
             </div>
-            <h3 className="font-medium text-gray-700 mb-2">אין אימונים</h3>
-            <p className="text-sm text-gray-500">לא נמצאו אימונים בתקופה שנבחרה</p>
+            <h3 className="font-medium text-white mb-2">אין אימונים</h3>
+            <p className="text-sm text-zinc-500">לא נמצאו אימונים בתקופה שנבחרה</p>
           </div>
         ) : (
-          <div className="divide-y">
+          <div className="divide-y divide-zinc-700/50">
             {filteredWorkouts.map((workout) => (
               <button
                 key={workout.id}
                 onClick={() => setSelectedWorkout(workout)}
-                className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors text-right"
+                className="w-full p-4 flex items-center justify-between hover:bg-zinc-800/30 transition-colors text-right"
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                      workout.is_completed ? 'bg-green-100' : 'bg-gray-100'
+                      workout.is_completed ? 'bg-emerald-500/15 border border-emerald-500/30' : 'bg-zinc-800/50 border border-zinc-700/50'
                     }`}
                   >
                     {workout.is_completed ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-emerald-400" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-gray-400" />
+                      <XCircle className="w-5 h-5 text-zinc-500" />
                     )}
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-white">
                       {new Date(workout.workout_date).toLocaleDateString('he-IL', {
                         weekday: 'long',
                         day: 'numeric',
                         month: 'long',
                       })}
                     </p>
-                    <div className="flex items-center gap-3 text-sm text-gray-500">
+                    <div className="flex items-center gap-3 text-sm text-zinc-400">
                       <span>{workout.workout_exercises?.length || 0} תרגילים</span>
                       <span>{calculateWorkoutVolume(workout).toLocaleString()} ק״ג נפח</span>
                     </div>
                   </div>
                 </div>
-                <ArrowRight className="w-5 h-5 text-gray-400 rotate-180" />
+                <ArrowRight className="w-5 h-5 text-zinc-400 rotate-180" />
               </button>
             ))}
           </div>
@@ -576,13 +576,13 @@ function WorkoutDetail({
     <div className="space-y-4 pb-4">
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+        className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
       >
         <ArrowRight className="w-5 h-5" />
         <span>חזרה לרשימה</span>
       </button>
 
-      <div className="bg-gradient-to-l from-green-600 to-green-500 rounded-xl p-4 text-white">
+      <div className="bg-gradient-to-l from-emerald-600 to-emerald-500 rounded-xl p-4 text-white shadow-lg">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-lg font-bold">
@@ -593,7 +593,7 @@ function WorkoutDetail({
                 year: 'numeric',
               })}
             </p>
-            <p className="text-sm text-green-100 mt-1">
+            <p className="text-sm text-emerald-100 mt-1">
               {workout.workout_exercises?.length || 0} תרגילים
             </p>
           </div>
@@ -606,9 +606,9 @@ function WorkoutDetail({
       </div>
 
       {workout.notes && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <p className="text-sm font-medium text-amber-800 mb-1">הערות המאמן</p>
-          <p className="text-amber-700">{workout.notes}</p>
+        <div className="bg-amber-500/15 border border-amber-500/30 rounded-xl p-4">
+          <p className="text-sm font-medium text-amber-400 mb-1">הערות המאמן</p>
+          <p className="text-amber-300">{workout.notes}</p>
         </div>
       )}
 
@@ -627,19 +627,19 @@ function WorkoutDetail({
             return (
               <div
                 key={we.id}
-                className="bg-white rounded-xl shadow-md overflow-hidden"
+                className="premium-card-static overflow-hidden"
               >
                 <button
                   onClick={() => toggleExercise(we.id)}
                   className="w-full p-4 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <Dumbbell className="w-5 h-5 text-gray-600" />
+                    <div className="w-10 h-10 bg-emerald-500/15 border border-emerald-500/30 rounded-lg flex items-center justify-center">
+                      <Dumbbell className="w-5 h-5 text-emerald-400" />
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-gray-900">{we.exercises?.name}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-medium text-white">{we.exercises?.name}</p>
+                      <p className="text-sm text-zinc-400">
                         {we.exercises?.muscle_groups?.name || 'כללי'}
                       </p>
                     </div>
@@ -649,10 +649,10 @@ function WorkoutDetail({
                       <div
                         className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
                           comparison.direction === 'up'
-                            ? 'bg-green-100 text-green-700'
+                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                             : comparison.direction === 'down'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-gray-100 text-gray-600'
+                            ? 'bg-red-500/15 text-red-400 border border-red-500/30'
+                            : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/50'
                         }`}
                       >
                         {comparison.direction === 'up' ? (
@@ -666,41 +666,41 @@ function WorkoutDetail({
                       </div>
                     )}
                     {isExpanded ? (
-                      <ChevronUp className="w-5 h-5 text-gray-400" />
+                      <ChevronUp className="w-5 h-5 text-zinc-400" />
                     ) : (
-                      <ChevronDown className="w-5 h-5 text-gray-400" />
+                      <ChevronDown className="w-5 h-5 text-zinc-400" />
                     )}
                   </div>
                 </button>
 
                 {isExpanded && (
-                  <div className="px-4 pb-4 border-t">
+                  <div className="px-4 pb-4 border-t border-zinc-700/50">
                     <div className="mt-3 space-y-2">
                       {we.exercise_sets
                         ?.sort((a, b) => a.set_number - b.set_number)
                         .map((set, index) => (
                           <div key={set.id} className="space-y-1">
-                            <div className="bg-gray-50 rounded-lg p-3">
+                            <div className="bg-zinc-800/30 rounded-lg p-3 border border-zinc-700/50">
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-3">
-                                  <span className="w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-xs font-medium">
+                                  <span className="w-6 h-6 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center justify-center text-xs font-medium">
                                     {index + 1}
                                   </span>
-                                  <span className="font-medium">
+                                  <span className="font-medium text-white">
                                     {set.weight || 0} ק״ג × {set.reps || 0}
                                   </span>
                                   {set.failure && (
-                                    <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                                    <span className="text-xs bg-red-500/15 text-red-400 px-2 py-0.5 rounded-full border border-red-500/30">
                                       כשל
                                     </span>
                                   )}
                                 </div>
                                 {set.rpe && (
-                                  <span className="text-sm text-gray-500">RPE {set.rpe}</span>
+                                  <span className="text-sm text-zinc-400">RPE {set.rpe}</span>
                                 )}
                               </div>
                               {set.equipment && (
-                                <div className="flex items-center gap-2 text-sm text-gray-600 mr-9">
+                                <div className="flex items-center gap-2 text-sm text-zinc-400 mr-9">
                                   {set.equipment.emoji && <span>{set.equipment.emoji}</span>}
                                   <span>{set.equipment.name}</span>
                                 </div>
@@ -708,20 +708,20 @@ function WorkoutDetail({
                             </div>
 
                             {set.superset_weight && set.superset_reps && (
-                              <div className="bg-blue-50 rounded-lg p-3 mr-4">
+                              <div className="bg-cyan-500/15 border border-cyan-500/30 rounded-lg p-3 mr-4">
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center gap-3">
-                                    <span className="text-xs text-blue-600 font-medium">סופרסט</span>
-                                    <span className="font-medium text-blue-800">
+                                    <span className="text-xs text-cyan-400 font-medium">סופרסט</span>
+                                    <span className="font-medium text-cyan-300">
                                       {set.superset_weight} ק״ג × {set.superset_reps}
                                     </span>
                                   </div>
                                   {set.superset_rpe && (
-                                    <span className="text-sm text-blue-600">RPE {set.superset_rpe}</span>
+                                    <span className="text-sm text-cyan-400">RPE {set.superset_rpe}</span>
                                   )}
                                 </div>
                                 {set.superset_equipment && (
-                                  <div className="flex items-center gap-2 text-sm text-blue-700">
+                                  <div className="flex items-center gap-2 text-sm text-cyan-400">
                                     {set.superset_equipment.emoji && <span>{set.superset_equipment.emoji}</span>}
                                     <span>{set.superset_equipment.name}</span>
                                   </div>
@@ -730,10 +730,10 @@ function WorkoutDetail({
                             )}
 
                             {set.dropset_weight && set.dropset_reps && (
-                              <div className="flex items-center justify-between bg-orange-50 rounded-lg p-3 mr-4">
+                              <div className="flex items-center justify-between bg-orange-500/15 border border-orange-500/30 rounded-lg p-3 mr-4">
                                 <div className="flex items-center gap-3">
-                                  <span className="text-xs text-orange-600 font-medium">דרופסט</span>
-                                  <span className="font-medium text-orange-800">
+                                  <span className="text-xs text-orange-400 font-medium">דרופסט</span>
+                                  <span className="font-medium text-orange-300">
                                     {set.dropset_weight} ק״ג × {set.dropset_reps}
                                   </span>
                                 </div>

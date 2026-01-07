@@ -212,7 +212,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-green-600 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-emerald-500 border-t-transparent"></div>
       </div>
     );
   }
@@ -221,7 +221,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
     <div className="space-y-4 pb-4">
       <button
         onClick={() => setShowAddModal(true)}
-        className="w-full bg-gradient-to-l from-green-600 to-green-500 text-white rounded-xl p-4 flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-transform"
+        className="w-full btn-primary rounded-xl p-4 flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-transform"
       >
         <Scale className="w-6 h-6" />
         <span className="font-bold text-lg">עדכן משקל מהבית</span>
@@ -230,10 +230,10 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
 
       {latestMeasurement ? (
         <>
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="bg-gray-50 px-4 py-3 border-b flex items-center justify-between">
-              <h3 className="font-bold text-gray-800">המדידה האחרונה</h3>
-              <span className="text-sm text-gray-500">
+          <div className="premium-card-static overflow-hidden">
+            <div className="bg-zinc-800/50 px-4 py-3 border-b border-zinc-700/50 flex items-center justify-between">
+              <h3 className="font-bold text-white">המדידה האחרונה</h3>
+              <span className="text-sm text-zinc-400">
                 {new Date(latestMeasurement.measurement_date).toLocaleDateString('he-IL')}
               </span>
             </div>
@@ -292,10 +292,10 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
             latestMeasurement.thigh ||
             latestMeasurement.right_arm ||
             latestMeasurement.left_arm) && (
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="bg-gray-50 px-4 py-3 border-b flex items-center gap-2">
-                <Ruler className="w-5 h-5 text-gray-600" />
-                <h3 className="font-bold text-gray-800">היקפים</h3>
+            <div className="premium-card-static overflow-hidden">
+              <div className="bg-zinc-800/50 px-4 py-3 border-b border-zinc-700/50 flex items-center gap-2">
+                <Ruler className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-bold text-white">היקפים</h3>
               </div>
               <div className="p-4 grid grid-cols-2 gap-3">
                 {latestMeasurement.chest_back && (
@@ -321,20 +321,20 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
           )}
         </>
       ) : (
-        <div className="bg-white rounded-xl shadow-md p-8 text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Scale className="w-8 h-8 text-gray-400" />
+        <div className="premium-card-static p-8 text-center">
+          <div className="w-16 h-16 bg-zinc-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Scale className="w-8 h-8 text-zinc-500" />
           </div>
-          <h3 className="font-medium text-gray-700 mb-2">אין מדידות עדיין</h3>
-          <p className="text-sm text-gray-500">המאמן עדיין לא ביצע מדידות</p>
+          <h3 className="font-medium text-white mb-2">אין מדידות עדיין</h3>
+          <p className="text-sm text-zinc-500">המאמן עדיין לא ביצע מדידות</p>
         </div>
       )}
 
       {(measurements.length > 0 || selfWeights.length > 0) && (
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="bg-gray-50 px-4 py-3 border-b">
+        <div className="premium-card-static overflow-hidden">
+          <div className="bg-zinc-800/50 px-4 py-3 border-b border-zinc-700/50">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-gray-800">גרף התקדמות</h3>
+              <h3 className="font-bold text-white">גרף התקדמות</h3>
               <div className="flex gap-1">
                 {(['1m', '3m', '1y'] as ChartPeriod[]).map((period) => (
                   <button
@@ -342,8 +342,8 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
                     onClick={() => setChartPeriod(period)}
                     className={`px-3 py-1 text-xs rounded-lg transition-colors ${
                       chartPeriod === period
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50'
                     }`}
                   >
                     {period === '1m' ? 'חודש' : period === '3m' ? '3 חודשים' : 'שנה'}
@@ -356,12 +356,18 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
             <div className="h-64" dir="ltr">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={getChartData()} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="displayDate" tick={{ fontSize: 11 }} />
-                  <YAxis yAxisId="weight" orientation="left" tick={{ fontSize: 11 }} domain={['auto', 'auto']} />
-                  <YAxis yAxisId="fat" orientation="right" tick={{ fontSize: 11 }} domain={['auto', 'auto']} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
+                  <XAxis dataKey="displayDate" tick={{ fontSize: 11, fill: '#a1a1aa' }} />
+                  <YAxis yAxisId="weight" orientation="left" tick={{ fontSize: 11, fill: '#a1a1aa' }} domain={['auto', 'auto']} />
+                  <YAxis yAxisId="fat" orientation="right" tick={{ fontSize: 11, fill: '#a1a1aa' }} domain={['auto', 'auto']} />
                   <Tooltip
-                    contentStyle={{ direction: 'rtl', textAlign: 'right' }}
+                    contentStyle={{
+                      direction: 'rtl',
+                      textAlign: 'right',
+                      backgroundColor: '#18181b',
+                      border: '1px solid #27272a',
+                      borderRadius: '12px'
+                    }}
                     formatter={(value: number, name: string) => [
                       value?.toFixed(1),
                       name === 'weight' ? 'משקל (ק"ג)' : 'אחוז שומן (%)',
@@ -374,9 +380,9 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
                     yAxisId="weight"
                     type="monotone"
                     dataKey="weight"
-                    stroke="#16a34a"
+                    stroke="#10b981"
                     strokeWidth={2}
-                    dot={{ fill: '#16a34a', strokeWidth: 2 }}
+                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4, stroke: '#18181b' }}
                     connectNulls
                   />
                   <Line
@@ -385,15 +391,15 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
                     dataKey="bodyFat"
                     stroke="#f97316"
                     strokeWidth={2}
-                    dot={{ fill: '#f97316', strokeWidth: 2 }}
+                    dot={{ fill: '#f97316', strokeWidth: 2, r: 4, stroke: '#18181b' }}
                     connectNulls
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex items-center justify-center gap-4 mt-2 text-xs text-gray-500">
+            <div className="flex items-center justify-center gap-4 mt-2 text-xs text-zinc-400">
               <span className="flex items-center gap-1">
-                <span className="w-3 h-3 bg-green-600 rounded-full"></span>
+                <span className="w-3 h-3 bg-emerald-500 rounded-full"></span>
                 משקל
               </span>
               <span className="flex items-center gap-1">
@@ -406,11 +412,11 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
       )}
 
       {measurements.length > 0 && (
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="bg-gray-50 px-4 py-3 border-b">
-            <h3 className="font-bold text-gray-800">היסטוריית מדידות</h3>
+        <div className="premium-card-static overflow-hidden">
+          <div className="bg-zinc-800/50 px-4 py-3 border-b border-zinc-700/50">
+            <h3 className="font-bold text-white">היסטוריית מדידות</h3>
           </div>
-          <div className="divide-y">
+          <div className="divide-y divide-zinc-700/50">
             {measurements.map((m) => (
               <div key={m.id} className="p-4">
                 <button
@@ -420,101 +426,101 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
                   className="w-full flex items-center justify-between"
                 >
                   <div className="flex items-center gap-4">
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-zinc-400">
                       {new Date(m.measurement_date).toLocaleDateString('he-IL')}
                     </span>
-                    <span className="font-medium">{m.weight} ק״ג</span>
+                    <span className="font-medium text-white">{m.weight} ק״ג</span>
                     {m.body_fat_percentage && (
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-zinc-400">
                         {m.body_fat_percentage}% שומן
                       </span>
                     )}
                   </div>
                   {expandedMeasurement === m.id ? (
-                    <ChevronUp className="w-5 h-5 text-gray-400" />
+                    <ChevronUp className="w-5 h-5 text-zinc-400" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                    <ChevronDown className="w-5 h-5 text-zinc-400" />
                   )}
                 </button>
 
                 {expandedMeasurement === m.id && (
-                  <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-3 text-sm">
+                  <div className="mt-4 pt-4 border-t border-zinc-700/50 grid grid-cols-2 gap-3 text-sm">
                     {m.weight && (
                       <div>
-                        <span className="text-gray-500">משקל:</span>{' '}
-                        <span className="font-medium">{m.weight} ק״ג</span>
+                        <span className="text-zinc-400">משקל:</span>{' '}
+                        <span className="font-medium text-white">{m.weight} ק״ג</span>
                       </div>
                     )}
                     {m.body_fat_percentage && (
                       <div>
-                        <span className="text-gray-500">אחוז שומן:</span>{' '}
-                        <span className="font-medium">{m.body_fat_percentage}%</span>
+                        <span className="text-zinc-400">אחוז שומן:</span>{' '}
+                        <span className="font-medium text-white">{m.body_fat_percentage}%</span>
                       </div>
                     )}
                     {m.water_percentage && (
                       <div>
-                        <span className="text-gray-500">אחוז מים:</span>{' '}
-                        <span className="font-medium">{m.water_percentage}%</span>
+                        <span className="text-zinc-400">אחוז מים:</span>{' '}
+                        <span className="font-medium text-white">{m.water_percentage}%</span>
                       </div>
                     )}
                     {m.muscle_mass && (
                       <div>
-                        <span className="text-gray-500">מסת שריר:</span>{' '}
-                        <span className="font-medium">{m.muscle_mass} ק״ג</span>
+                        <span className="text-zinc-400">מסת שריר:</span>{' '}
+                        <span className="font-medium text-white">{m.muscle_mass} ק״ג</span>
                       </div>
                     )}
                     {m.bmi && (
                       <div>
-                        <span className="text-gray-500">BMI:</span>{' '}
-                        <span className="font-medium">{m.bmi}</span>
+                        <span className="text-zinc-400">BMI:</span>{' '}
+                        <span className="font-medium text-white">{m.bmi}</span>
                       </div>
                     )}
                     {m.metabolic_age && (
                       <div>
-                        <span className="text-gray-500">גיל מטבולי:</span>{' '}
-                        <span className="font-medium">{m.metabolic_age}</span>
+                        <span className="text-zinc-400">גיל מטבולי:</span>{' '}
+                        <span className="font-medium text-white">{m.metabolic_age}</span>
                       </div>
                     )}
                     {m.chest_back && (
                       <div>
-                        <span className="text-gray-500">חזה/גב:</span>{' '}
-                        <span className="font-medium">{m.chest_back} ס״מ</span>
+                        <span className="text-zinc-400">חזה/גב:</span>{' '}
+                        <span className="font-medium text-white">{m.chest_back} ס״מ</span>
                       </div>
                     )}
                     {m.belly && (
                       <div>
-                        <span className="text-gray-500">בטן:</span>{' '}
-                        <span className="font-medium">{m.belly} ס״מ</span>
+                        <span className="text-zinc-400">בטן:</span>{' '}
+                        <span className="font-medium text-white">{m.belly} ס״מ</span>
                       </div>
                     )}
                     {m.glutes && (
                       <div>
-                        <span className="text-gray-500">ישבן:</span>{' '}
-                        <span className="font-medium">{m.glutes} ס״מ</span>
+                        <span className="text-zinc-400">ישבן:</span>{' '}
+                        <span className="font-medium text-white">{m.glutes} ס״מ</span>
                       </div>
                     )}
                     {m.thigh && (
                       <div>
-                        <span className="text-gray-500">ירך:</span>{' '}
-                        <span className="font-medium">{m.thigh} ס״מ</span>
+                        <span className="text-zinc-400">ירך:</span>{' '}
+                        <span className="font-medium text-white">{m.thigh} ס״מ</span>
                       </div>
                     )}
                     {m.right_arm && (
                       <div>
-                        <span className="text-gray-500">זרוע ימין:</span>{' '}
-                        <span className="font-medium">{m.right_arm} ס״מ</span>
+                        <span className="text-zinc-400">זרוע ימין:</span>{' '}
+                        <span className="font-medium text-white">{m.right_arm} ס״מ</span>
                       </div>
                     )}
                     {m.left_arm && (
                       <div>
-                        <span className="text-gray-500">זרוע שמאל:</span>{' '}
-                        <span className="font-medium">{m.left_arm} ס״מ</span>
+                        <span className="text-zinc-400">זרוע שמאל:</span>{' '}
+                        <span className="font-medium text-white">{m.left_arm} ס״מ</span>
                       </div>
                     )}
                     {m.notes && (
                       <div className="col-span-2">
-                        <span className="text-gray-500">הערות:</span>{' '}
-                        <span className="font-medium">{m.notes}</span>
+                        <span className="text-zinc-400">הערות:</span>{' '}
+                        <span className="font-medium text-white">{m.notes}</span>
                       </div>
                     )}
                   </div>
@@ -526,20 +532,20 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
       )}
 
       {selfWeights.length > 0 && (
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="bg-gray-50 px-4 py-3 border-b">
-            <h3 className="font-bold text-gray-800">שקילות עצמיות</h3>
+        <div className="premium-card-static overflow-hidden">
+          <div className="bg-zinc-800/50 px-4 py-3 border-b border-zinc-700/50">
+            <h3 className="font-bold text-white">שקילות עצמיות</h3>
           </div>
-          <div className="divide-y">
+          <div className="divide-y divide-zinc-700/50">
             {selfWeights.map((sw) => (
               <div key={sw.id} className="p-4 flex items-center justify-between">
                 <div>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-zinc-400">
                     {new Date(sw.weight_date).toLocaleDateString('he-IL')}
                   </span>
-                  <span className="font-medium mr-3">{sw.weight_kg} ק״ג</span>
+                  <span className="font-medium text-white mr-3">{sw.weight_kg} ק״ג</span>
                 </div>
-                {sw.notes && <span className="text-xs text-gray-400">{sw.notes}</span>}
+                {sw.notes && <span className="text-xs text-zinc-500">{sw.notes}</span>}
               </div>
             ))}
           </div>
@@ -547,21 +553,21 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
       )}
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="text-lg font-bold">עדכון משקל מהבית</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="premium-card-static w-full max-w-md animate-slide-up">
+            <div className="p-4 border-b border-zinc-700/50 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-white">עדכון משקל מהבית</h3>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2 hover:bg-zinc-800/50 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-zinc-400" />
               </button>
             </div>
 
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
                   משקל (ק״ג) *
                 </label>
                 <input
@@ -570,22 +576,22 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
                   value={newWeight.weight_kg}
                   onChange={(e) => setNewWeight({ ...newWeight, weight_kg: e.target.value })}
                   placeholder="לדוגמה: 72.5"
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-lg"
+                  className="w-full p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all text-lg"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">תאריך</label>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">תאריך</label>
                 <input
                   type="date"
                   value={newWeight.weight_date}
                   onChange={(e) => setNewWeight({ ...newWeight, weight_date: e.target.value })}
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
                   הערות (אופציונלי)
                 </label>
                 <textarea
@@ -593,22 +599,22 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
                   onChange={(e) => setNewWeight({ ...newWeight, notes: e.target.value })}
                   rows={2}
                   placeholder="לדוגמה: אחרי ארוחת בוקר..."
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
+                  className="w-full p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all resize-none"
                 />
               </div>
             </div>
 
-            <div className="p-4 border-t flex gap-3">
+            <div className="p-4 border-t border-zinc-700/50 flex gap-3">
               <button
                 onClick={() => setShowAddModal(false)}
-                className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                className="flex-1 py-3 bg-zinc-800/50 text-zinc-300 rounded-lg font-medium hover:bg-zinc-700/50 transition-colors"
               >
                 ביטול
               </button>
               <button
                 onClick={handleAddWeight}
                 disabled={submitting}
-                className="flex-1 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+                className="flex-1 py-3 btn-primary rounded-lg font-medium disabled:opacity-50"
               >
                 {submitting ? 'שומר...' : 'שלח למאמן'}
               </button>
@@ -631,12 +637,12 @@ interface StatCardProps {
 
 function StatCard({ icon: Icon, label, value, unit, color, trend }: StatCardProps) {
   const colorClasses: Record<string, { bg: string; text: string; icon: string }> = {
-    green: { bg: 'bg-green-50', text: 'text-green-700', icon: 'text-green-600' },
-    orange: { bg: 'bg-orange-50', text: 'text-orange-700', icon: 'text-orange-600' },
-    blue: { bg: 'bg-blue-50', text: 'text-blue-700', icon: 'text-blue-600' },
-    rose: { bg: 'bg-rose-50', text: 'text-rose-700', icon: 'text-rose-600' },
-    amber: { bg: 'bg-amber-50', text: 'text-amber-700', icon: 'text-amber-600' },
-    cyan: { bg: 'bg-cyan-50', text: 'text-cyan-700', icon: 'text-cyan-600' },
+    green: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', icon: 'text-emerald-400' },
+    orange: { bg: 'bg-orange-500/15', text: 'text-orange-400', icon: 'text-orange-400' },
+    blue: { bg: 'bg-blue-500/15', text: 'text-blue-400', icon: 'text-blue-400' },
+    rose: { bg: 'bg-rose-500/15', text: 'text-rose-400', icon: 'text-rose-400' },
+    amber: { bg: 'bg-amber-500/15', text: 'text-amber-400', icon: 'text-amber-400' },
+    cyan: { bg: 'bg-cyan-500/15', text: 'text-cyan-400', icon: 'text-cyan-400' },
   };
 
   const colors = colorClasses[color] || colorClasses.green;
@@ -644,22 +650,22 @@ function StatCard({ icon: Icon, label, value, unit, color, trend }: StatCardProp
   if (value === null || value === undefined) return null;
 
   return (
-    <div className={`${colors.bg} rounded-lg p-3`}>
+    <div className={`${colors.bg} rounded-lg p-3 border border-${color}-500/30`}>
       <div className="flex items-center gap-2 mb-1">
         <Icon className={`w-4 h-4 ${colors.icon}`} />
-        <span className="text-xs text-gray-600">{label}</span>
+        <span className="text-xs text-zinc-400">{label}</span>
       </div>
       <div className="flex items-baseline gap-1">
         <span className={`text-xl font-bold ${colors.text}`}>{value}</span>
-        {unit && <span className="text-xs text-gray-500">{unit}</span>}
+        {unit && <span className="text-xs text-zinc-500">{unit}</span>}
         {trend && (
           <span
             className={`text-xs mr-1 flex items-center ${
               trend.direction === 'down'
-                ? 'text-green-600'
+                ? 'text-emerald-400'
                 : trend.direction === 'up'
-                ? 'text-red-500'
-                : 'text-gray-400'
+                ? 'text-red-400'
+                : 'text-zinc-500'
             }`}
           >
             {trend.direction === 'down' ? (
@@ -684,10 +690,10 @@ interface CircumferenceItemProps {
 
 function CircumferenceItem({ label, value }: CircumferenceItemProps) {
   return (
-    <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
-      <span className="text-sm text-gray-600">{label}</span>
-      <span className="font-medium">
-        {value} <span className="text-xs text-gray-400">ס״מ</span>
+    <div className="flex items-center justify-between bg-zinc-800/30 rounded-lg p-3 border border-zinc-700/50">
+      <span className="text-sm text-zinc-400">{label}</span>
+      <span className="font-medium text-white">
+        {value} <span className="text-xs text-zinc-500">ס״מ</span>
       </span>
     </div>
   );
