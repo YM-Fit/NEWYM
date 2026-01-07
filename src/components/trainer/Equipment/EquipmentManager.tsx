@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, ArrowRight } from 'lucide-react';
+import { Plus, Edit2, Trash2, ArrowRight, Package, Dumbbell } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 
@@ -41,27 +41,27 @@ export default function EquipmentManager() {
 
   const getCategoryLabel = (category: string) => {
     const labels: Record<string, string> = {
-      resistance_band: 'גומיות התנגדות',
-      leg_band: 'גומיות לרגליים/ישבן',
-      bar: 'מוטות',
-      pulley_attachment: 'אביזרים לפולי',
-      suspension: 'TRX/תלייה',
-      balance: 'איזון',
-      ball: 'כדורים',
-      other: 'אחר',
+      resistance_band: 'Resistance Bands',
+      leg_band: 'Leg/Glute Bands',
+      bar: 'Bars',
+      pulley_attachment: 'Pulley Attachments',
+      suspension: 'TRX/Suspension',
+      balance: 'Balance',
+      ball: 'Balls',
+      other: 'Other',
     };
     return labels[category] || category;
   };
 
   const categories = [
-    { id: 'all', label: 'הכל' },
-    { id: 'resistance_band', label: 'גומיות התנגדות' },
-    { id: 'leg_band', label: 'גומיות רגליים' },
-    { id: 'bar', label: 'מוטות' },
-    { id: 'pulley_attachment', label: 'פולי' },
+    { id: 'all', label: 'All' },
+    { id: 'resistance_band', label: 'Resistance Bands' },
+    { id: 'leg_band', label: 'Leg Bands' },
+    { id: 'bar', label: 'Bars' },
+    { id: 'pulley_attachment', label: 'Pulley' },
     { id: 'suspension', label: 'TRX' },
-    { id: 'balance', label: 'איזון' },
-    { id: 'ball', label: 'כדורים' },
+    { id: 'balance', label: 'Balance' },
+    { id: 'ball', label: 'Balls' },
   ];
 
   const filteredEquipment = filter === 'all'
@@ -81,30 +81,40 @@ export default function EquipmentManager() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600">טוען ציוד...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+          <p className="mt-4 text-gray-400 font-medium">Loading equipment...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 lg:p-6">
-      <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">ניהול ציוד</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 p-4 lg:p-8">
+      {/* Premium Header Card */}
+      <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl shadow-xl border border-white/10 p-6 lg:p-8 mb-8 backdrop-blur-sm">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="p-4 bg-gradient-to-br from-emerald-500/30 to-teal-500/30 rounded-2xl shadow-lg">
+              <Dumbbell className="h-8 w-8 text-emerald-400" />
+            </div>
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold text-white">Equipment Manager</h1>
+              <p className="text-gray-400 mt-1">Manage your training equipment inventory</p>
+            </div>
+          </div>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
+        {/* Category Filter Pills */}
+        <div className="flex gap-2 overflow-x-auto pb-2">
           {categories.map(cat => (
             <button
               key={cat.id}
               type="button"
               onClick={() => setFilter(cat.id)}
-              className={`px-4 py-2 rounded-lg whitespace-nowrap text-sm font-medium transition-colors ${
+              className={`px-5 py-2.5 rounded-xl whitespace-nowrap text-sm font-semibold transition-all duration-300 ${
                 filter === cat.id
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 scale-105'
+                  : 'bg-gray-800/60 text-gray-400 hover:bg-gray-700/60 hover:text-white'
               }`}
             >
               {cat.label}
@@ -113,35 +123,50 @@ export default function EquipmentManager() {
         </div>
       </div>
 
-      <div className="space-y-6">
+      {/* Equipment Groups */}
+      <div className="space-y-8">
         {Object.entries(groupedEquipment).map(([category, items]) => (
-          <div key={category} className="bg-white rounded-xl shadow-sm p-4 lg:p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              {getCategoryLabel(category)}
-            </h2>
+          <div key={category} className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl shadow-xl border border-white/10 p-6 lg:p-8 backdrop-blur-sm transition-all duration-300 hover:shadow-2xl">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-gradient-to-br from-teal-500/20 to-emerald-500/20 rounded-xl">
+                <Package className="h-5 w-5 text-teal-400" />
+              </div>
+              <h2 className="text-xl font-bold text-white">
+                {getCategoryLabel(category)}
+              </h2>
+              <span className="text-sm text-gray-500 bg-gray-800/50 px-3 py-1 rounded-lg">
+                {items.length} items
+              </span>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {items.map(item => (
                 <div
                   key={item.id}
-                  className="border-2 border-gray-200 rounded-xl p-4 hover:border-green-500 transition-colors"
+                  className="group border-2 border-gray-700/50 rounded-2xl p-5 bg-gray-800/30 hover:border-emerald-500/50 hover:bg-gradient-to-br hover:from-emerald-500/5 hover:to-teal-500/5 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10 hover:scale-[1.02]"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                      <span className="text-2xl">{item.emoji}</span>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                      <span className="text-3xl filter drop-shadow-lg">{item.emoji}</span>
                       <div>
-                        <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                        {item.weight_kg && (
-                          <p className="text-sm text-gray-600">{item.weight_kg} ק״ג</p>
-                        )}
-                        {item.resistance_level && (
-                          <p className="text-sm text-gray-600">
-                            רמת התנגדות: {item.resistance_level}/5
-                          </p>
-                        )}
-                        {item.is_bodyweight && (
-                          <p className="text-sm text-green-600">משקל גוף</p>
-                        )}
+                        <h3 className="font-semibold text-white group-hover:text-emerald-300 transition-colors duration-300">{item.name}</h3>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {item.weight_kg && (
+                            <span className="text-xs text-gray-400 bg-gray-700/50 px-2.5 py-1 rounded-lg font-medium">
+                              {item.weight_kg} kg
+                            </span>
+                          )}
+                          {item.resistance_level && (
+                            <span className="text-xs text-gray-400 bg-gray-700/50 px-2.5 py-1 rounded-lg font-medium">
+                              Level {item.resistance_level}/5
+                            </span>
+                          )}
+                          {item.is_bodyweight && (
+                            <span className="text-xs text-emerald-400 bg-emerald-500/20 px-2.5 py-1 rounded-lg font-medium">
+                              Bodyweight
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -153,8 +178,12 @@ export default function EquipmentManager() {
       </div>
 
       {filteredEquipment.length === 0 && (
-        <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-          <p className="text-gray-500 text-lg">לא נמצא ציוד בקטגוריה זו</p>
+        <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl shadow-xl border border-white/10 p-16 text-center backdrop-blur-sm">
+          <div className="p-4 bg-gray-800/50 rounded-2xl inline-block mb-4">
+            <Package className="h-12 w-12 text-gray-600" />
+          </div>
+          <p className="text-gray-400 text-lg font-medium">No equipment found in this category</p>
+          <p className="text-gray-500 text-sm mt-2">Try selecting a different category or add new equipment</p>
         </div>
       )}
     </div>

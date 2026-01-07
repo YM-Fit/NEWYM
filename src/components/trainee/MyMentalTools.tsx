@@ -122,7 +122,7 @@ export default function MyMentalTools({ traineeId }: MyMentalToolsProps) {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-green-600 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-emerald-600 border-t-transparent"></div>
       </div>
     );
   }
@@ -130,35 +130,37 @@ export default function MyMentalTools({ traineeId }: MyMentalToolsProps) {
   if (tools.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
           <Brain className="w-10 h-10 text-gray-400" />
         </div>
-        <h3 className="text-xl font-bold text-gray-700 mb-2">אין כלים מנטליים</h3>
-        <p className="text-gray-500">המאמן שלך עדיין לא הגדיר כלים מנטליים</p>
+        <h3 className="text-2xl font-bold text-gray-700 mb-2">אין כלים מנטליים</h3>
+        <p className="text-sm text-gray-500">המאמן שלך עדיין לא הגדיר כלים מנטליים</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 bg-gradient-to-br from-rose-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg">
-          <Sparkles className="w-6 h-6 text-white" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">כלים מנטליים</h2>
-          <p className="text-gray-500">המשימות שלי להצלחה</p>
+      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 shadow-xl">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center shadow-lg">
+            <Sparkles className="w-7 h-7 text-white" />
+          </div>
+          <div className="text-white">
+            <h2 className="text-2xl font-bold">כלים מנטליים</h2>
+            <p className="text-emerald-100">המשימות שלי להצלחה</p>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-green-50 rounded-xl p-4 border border-green-200">
-          <div className="text-3xl font-bold text-green-600">{activeTools.length}</div>
-          <div className="text-sm text-green-700">פעילים</div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4 border-2 border-emerald-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+          <div className="text-3xl font-bold text-emerald-600">{activeTools.length}</div>
+          <div className="text-sm text-emerald-700 font-medium">פעילים</div>
         </div>
-        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
           <div className="text-3xl font-bold text-gray-600">{completedTools.length}</div>
-          <div className="text-sm text-gray-500">הושלמו</div>
+          <div className="text-sm text-gray-500 font-medium">הושלמו</div>
         </div>
       </div>
 
@@ -174,7 +176,9 @@ export default function MyMentalTools({ traineeId }: MyMentalToolsProps) {
       {completedTools.length > 0 && (
         <div className="space-y-4">
           <h3 className="font-bold text-gray-500 text-lg flex items-center gap-2">
-            <CheckCircle className="w-5 h-5" />
+            <div className="w-6 h-6 bg-gray-200 rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-4 h-4" />
+            </div>
             הושלמו
           </h3>
           {completedTools.map((tool) => (
@@ -196,22 +200,22 @@ function ToolCard({ tool }: ToolCardProps) {
 
   return (
     <div
-      className={`rounded-2xl border-2 p-4 transition-all ${
+      className={`rounded-2xl border-2 p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${
         tool.is_completed
           ? 'bg-gray-50 border-gray-200 opacity-70'
-          : `${style.bg} ${style.border}`
+          : `${style.bg} ${style.border} shadow-lg`
       }`}
     >
       <div className="flex gap-4">
         <div
-          className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${
+          className={`flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
             tool.is_completed ? 'bg-gray-300' : style.icon
           }`}
         >
           {tool.is_completed ? (
-            <CheckCircle className="w-6 h-6 text-white" />
+            <CheckCircle className="w-7 h-7 text-white" />
           ) : (
-            <Icon className="w-6 h-6 text-white" />
+            <Icon className="w-7 h-7 text-white" />
           )}
         </div>
 
@@ -226,7 +230,7 @@ function ToolCard({ tool }: ToolCardProps) {
 
           {tool.description && (
             <p
-              className={`text-sm mt-1 ${
+              className={`text-sm mt-1 leading-relaxed ${
                 tool.is_completed ? 'text-gray-400' : 'text-gray-600'
               }`}
             >
@@ -234,9 +238,9 @@ function ToolCard({ tool }: ToolCardProps) {
             </p>
           )}
 
-          <div className="flex items-center gap-3 mt-3 flex-wrap">
+          <div className="flex items-center gap-3 mt-4 flex-wrap">
             <div
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-sm ${
                 tool.is_completed ? 'bg-gray-200 text-gray-500' : `${style.badge} ${style.text}`
               }`}
             >
@@ -248,7 +252,7 @@ function ToolCard({ tool }: ToolCardProps) {
               {[1, 2, 3, 4, 5].map((num) => (
                 <Star
                   key={num}
-                  className={`w-4 h-4 ${
+                  className={`w-4 h-4 transition-all duration-300 ${
                     num <= tool.priority
                       ? tool.is_completed
                         ? 'text-gray-400 fill-current'
@@ -261,7 +265,7 @@ function ToolCard({ tool }: ToolCardProps) {
           </div>
 
           {tool.is_completed && tool.completed_at && (
-            <div className="mt-2 text-xs text-gray-400 flex items-center gap-1">
+            <div className="mt-3 text-xs text-gray-400 flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-lg w-fit">
               <CheckCircle className="w-3 h-3" />
               הושלם: {new Date(tool.completed_at).toLocaleDateString('he-IL')}
             </div>

@@ -64,62 +64,68 @@ export default function QuickNumericPad({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 lg:p-10"
+        className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 lg:p-10 transition-all duration-300"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Premium Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl lg:text-4xl font-bold text-gray-900">{label}</h2>
+          <h2 className="text-2xl lg:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+            {label}
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-3 hover:bg-gray-100 rounded-xl transition-colors"
+            className="p-3 hover:bg-gray-100 rounded-xl transition-all duration-300"
           >
-            <X className="h-7 w-7 lg:h-9 lg:w-9" />
+            <X className="h-7 w-7 lg:h-9 lg:w-9 text-gray-500" />
           </button>
         </div>
 
+        {/* Premium Display Area */}
         <div className="mb-8">
-          <div className="bg-green-50 border-4 border-green-500 rounded-2xl p-8 text-center">
-            <div className="text-6xl lg:text-8xl font-bold text-green-600 tabular-nums">
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-100 border-4 border-emerald-400 rounded-2xl p-8 text-center shadow-xl">
+            <div className="text-6xl lg:text-8xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent tabular-nums">
               {currentValue}
             </div>
-            <div className="text-xl lg:text-2xl text-gray-600 mt-2">
-              {allowDecimal ? 'ק"ג' : ''}
+            <div className="text-xl lg:text-2xl text-emerald-700 mt-2 font-medium">
+              {allowDecimal ? 'kg' : ''}
             </div>
           </div>
         </div>
 
+        {/* Premium Number Buttons */}
         <div className="grid grid-cols-3 gap-3 lg:gap-4 mb-6">
           {buttons.map((btn) => (
             <button
               key={btn.label}
               type="button"
               onClick={() => handleAdd(btn.value)}
-              className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white py-8 lg:py-12 px-4 rounded-2xl text-3xl lg:text-4xl font-bold transition-all shadow-lg hover:shadow-xl active:scale-95 touch-manipulation"
+              className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 active:from-blue-700 active:to-blue-800 text-white py-8 lg:py-12 px-4 rounded-xl text-3xl lg:text-4xl font-bold transition-all duration-300 shadow-lg hover:shadow-2xl active:scale-95 touch-manipulation"
             >
               {btn.label}
             </button>
           ))}
         </div>
 
+        {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-4">
           <button
             type="button"
             onClick={handleReset}
-            className="bg-red-500 hover:bg-red-600 active:bg-red-700 text-white py-6 lg:py-8 px-6 rounded-2xl text-2xl lg:text-3xl font-bold transition-all shadow-lg hover:shadow-xl active:scale-95 touch-manipulation"
+            className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:from-amber-700 active:to-amber-800 text-white py-6 lg:py-8 px-6 rounded-xl text-2xl lg:text-3xl font-bold transition-all duration-300 shadow-lg hover:shadow-2xl active:scale-95 touch-manipulation"
           >
-            איפוס
+            Reset
           </button>
           <button
             type="button"
             onClick={handleConfirm}
-            className="bg-green-500 hover:bg-green-600 active:bg-green-700 text-white py-6 lg:py-8 px-6 rounded-2xl text-2xl lg:text-3xl font-bold transition-all shadow-lg hover:shadow-xl active:scale-95 touch-manipulation"
+            className="bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:from-emerald-700 active:to-teal-800 text-white py-6 lg:py-8 px-6 rounded-xl text-2xl lg:text-3xl font-bold transition-all duration-300 shadow-lg hover:shadow-2xl active:scale-95 touch-manipulation"
           >
-            אישור ✓
+            Confirm
           </button>
         </div>
       </div>

@@ -386,7 +386,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-green-600 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-emerald-600 border-t-transparent"></div>
       </div>
     );
   }
@@ -395,23 +395,23 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="bg-white rounded-xl p-4 shadow-md sticky top-0 z-10">
+      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 shadow-xl sticky top-0 z-10">
         <div className="flex items-center justify-between">
           <button
             onClick={() => navigateWeek('next')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-white"
           >
-            <ChevronRight className="w-5 h-5 text-gray-600" />
+            <ChevronRight className="w-6 h-6" />
           </button>
-          <div className="text-center">
-            <h2 className="font-bold text-gray-800">יומן אכילה</h2>
-            <p className="text-sm text-gray-500">{getWeekRangeText()}</p>
+          <div className="text-center text-white">
+            <h2 className="text-2xl font-bold">יומן אכילה</h2>
+            <p className="text-sm text-emerald-100 mt-1">{getWeekRangeText()}</p>
           </div>
           <button
             onClick={() => navigateWeek('prev')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-white"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
+            <ChevronLeft className="w-6 h-6" />
           </button>
         </div>
       </div>
@@ -428,33 +428,33 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
         return (
           <div
             key={dateStr}
-            className={`bg-white rounded-xl shadow-md overflow-hidden ${
-              isToday(date) ? 'ring-2 ring-green-500' : ''
+            className={`bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] ${
+              isToday(date) ? 'ring-2 ring-emerald-500' : ''
             } ${isCompleted ? 'opacity-75' : ''}`}
           >
             <div
-              className={`px-4 py-3 ${
-                isToday(date) ? 'bg-green-500 text-white' : isCompleted ? 'bg-green-50' : 'bg-gray-50'
+              className={`px-4 py-4 ${
+                isToday(date) ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white' : isCompleted ? 'bg-emerald-50' : 'bg-gray-50'
               }`}
             >
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   {isCompleted && (
-                    <div className="bg-green-500 text-white rounded-full p-1">
+                    <div className="bg-emerald-500 text-white rounded-full p-1 shadow-md">
                       <Check className="w-4 h-4" />
                     </div>
                   )}
                   <div>
-                    <span className="font-bold">יום {getHebrewDayName(date)}</span>
+                    <span className="font-bold text-lg">יום {getHebrewDayName(date)}</span>
                     <span className="text-sm mr-2 opacity-80">{formatDate(date)}</span>
                     {isToday(date) && (
-                      <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full mr-2">
+                      <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full mr-2 font-medium">
                         היום
                       </span>
                     )}
                     {isCompleted && (
-                      <span className={`text-xs px-2 py-0.5 rounded-full mr-2 ${
-                        isToday(date) ? 'bg-white/20' : 'bg-green-500 text-white'
+                      <span className={`text-xs px-2 py-0.5 rounded-full mr-2 font-medium ${
+                        isToday(date) ? 'bg-white/20' : 'bg-emerald-500 text-white'
                       }`}>
                         הושלם
                       </span>
@@ -465,10 +465,10 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                   {!isCompleted && dayMeals.length > 0 && (
                     <button
                       onClick={() => completeDay(dateStr)}
-                      className={`px-3 py-1.5 rounded-lg transition-colors text-sm font-medium flex items-center gap-1 ${
+                      className={`px-4 py-2 rounded-xl transition-all duration-300 text-sm font-medium flex items-center gap-1 shadow-md hover:shadow-lg ${
                         isToday(date)
                           ? 'bg-white/20 hover:bg-white/30 text-white'
-                          : 'bg-green-500 hover:bg-green-600 text-white'
+                          : 'bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white'
                       }`}
                     >
                       <Check className="w-4 h-4" />
@@ -478,12 +478,12 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                   <button
                     onClick={() => openAddMeal(dateStr)}
                     disabled={isCompleted}
-                    className={`p-1.5 rounded-lg transition-colors ${
+                    className={`p-2 rounded-xl transition-all duration-300 ${
                       isCompleted
                         ? 'opacity-50 cursor-not-allowed bg-gray-200 text-gray-400'
                         : isToday(date)
                         ? 'bg-white/20 hover:bg-white/30 text-white'
-                        : 'bg-green-100 hover:bg-green-200 text-green-700'
+                        : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700 shadow-md hover:shadow-lg'
                     }`}
                   >
                     <Plus className="w-5 h-5" />
@@ -492,30 +492,34 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               </div>
             </div>
 
-            <div className="p-4 border-b bg-blue-50/50">
-              <div className="flex items-center gap-3 mb-2">
-                <Droplets className="w-5 h-5 text-blue-500" />
-                <span className="text-sm font-medium text-gray-700">מעקב מים</span>
-                <span className="text-sm text-gray-500">
-                  {waterAmount} / {WATER_GOAL} מ"ל
-                </span>
+            <div className="p-4 border-b bg-gradient-to-br from-blue-50 to-cyan-50">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-md">
+                  <Droplets className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <span className="text-sm font-bold text-gray-700">מעקב מים</span>
+                  <p className="text-sm text-gray-500">
+                    {waterAmount} / {WATER_GOAL} מ"ל
+                  </p>
+                </div>
               </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-3">
+              <div className="h-3 bg-gray-200 rounded-full overflow-hidden mb-4 shadow-inner">
                 <div
-                  className="h-full bg-blue-500 transition-all duration-300"
+                  className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-500 ease-out rounded-full"
                   style={{ width: `${waterProgress}%` }}
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <button
                   onClick={() => addWater(dateStr, 250)}
-                  className="flex-1 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                  className="flex-1 py-3 text-sm bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-all duration-300 font-medium shadow-md hover:shadow-lg hover:scale-[1.02]"
                 >
                   +250 מ"ל
                 </button>
                 <button
                   onClick={() => addWater(dateStr, 500)}
-                  className="flex-1 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                  className="flex-1 py-3 text-sm bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-all duration-300 font-medium shadow-md hover:shadow-lg hover:scale-[1.02]"
                 >
                   +500 מ"ל
                 </button>
@@ -524,7 +528,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
 
             <div className="p-4">
               {dayMeals.length === 0 ? (
-                <p className="text-center text-gray-400 text-sm py-4">
+                <p className="text-center text-gray-400 text-sm py-6">
                   לא נרשמו ארוחות
                 </p>
               ) : (
@@ -539,26 +543,26 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                     return (
                       <div
                         key={meal.id}
-                        className="border rounded-lg p-3 hover:border-gray-300 transition-colors"
+                        className="border-2 rounded-xl p-4 hover:border-emerald-300 transition-all duration-300 hover:shadow-lg bg-white"
                       >
                         <div className="flex items-start gap-3">
-                          <div className={`p-2 rounded-lg ${typeInfo.color}`}>
-                            <Icon className="w-4 h-4" />
+                          <div className={`p-2.5 rounded-xl ${typeInfo.color} shadow-md`}>
+                            <Icon className="w-5 h-5" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-sm">
+                              <span className="font-bold text-sm text-gray-800">
                                 {typeInfo.label}
                               </span>
                               {meal.meal_time && (
-                                <span className="text-xs text-gray-400 flex items-center gap-1">
+                                <span className="text-xs text-gray-500 flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-full">
                                   <Clock className="w-3 h-3" />
                                   {meal.meal_time.slice(0, 5)}
                                 </span>
                               )}
                             </div>
                             <p
-                              className={`text-sm text-gray-600 ${
+                              className={`text-sm text-gray-600 leading-relaxed ${
                                 !isExpanded && shouldTruncate ? 'line-clamp-2' : ''
                               }`}
                             >
@@ -567,7 +571,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                             {shouldTruncate && (
                               <button
                                 onClick={() => toggleMealExpand(meal.id)}
-                                className="text-xs text-green-600 flex items-center gap-1 mt-1"
+                                className="text-xs text-emerald-600 flex items-center gap-1 mt-2 font-medium hover:text-emerald-700 transition-colors"
                               >
                                 {isExpanded ? (
                                   <>
@@ -587,7 +591,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                             <div className="flex gap-1">
                               <button
                                 onClick={() => openEditMeal(meal)}
-                                className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+                                className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-300"
                               >
                                 <svg
                                   className="w-4 h-4"
@@ -605,7 +609,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                               </button>
                               <button
                                 onClick={() => deleteMeal(meal.id)}
-                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -623,23 +627,23 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       })}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between">
-              <h3 className="text-lg font-bold">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 bg-gradient-to-br from-emerald-500 to-teal-600 p-4 flex items-center justify-between rounded-t-2xl">
+              <h3 className="text-lg font-bold text-white">
                 {editingMeal ? 'עריכת ארוחה' : 'הוספת ארוחה'}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="p-6 space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-gray-700 mb-2">
                   שעה
                 </label>
                 <input
@@ -648,15 +652,15 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                   onChange={(e) =>
                     setMealForm({ ...mealForm, meal_time: e.target.value })
                   }
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full p-4 border-2 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-gray-700 mb-2">
                   סוג ארוחה
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   {MEAL_TYPES.map((type) => {
                     const Icon = type.icon;
                     return (
@@ -665,16 +669,16 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                         onClick={() =>
                           setMealForm({ ...mealForm, meal_type: type.value })
                         }
-                        className={`p-3 rounded-lg border-2 flex items-center gap-2 transition-all ${
+                        className={`p-4 rounded-xl border-2 flex items-center gap-2 transition-all duration-300 ${
                           mealForm.meal_type === type.value
-                            ? 'border-green-500 bg-green-50'
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-emerald-500 bg-emerald-50 shadow-md'
+                            : 'border-gray-200 hover:border-emerald-300 hover:shadow-md'
                         }`}
                       >
-                        <div className={`p-1.5 rounded ${type.color}`}>
+                        <div className={`p-2 rounded-xl ${type.color} shadow-sm`}>
                           <Icon className="w-4 h-4" />
                         </div>
-                        <span className="text-sm font-medium">{type.label}</span>
+                        <span className="text-sm font-bold">{type.label}</span>
                       </button>
                     );
                   })}
@@ -682,7 +686,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-gray-700 mb-2">
                   תיאור האוכל
                 </label>
                 <textarea
@@ -692,7 +696,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                   }
                   rows={4}
                   placeholder="מה אכלת? (לדוגמה: 2 ביצים, לחם מלא, גבינה צהובה)"
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
+                  className="w-full p-4 border-2 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none transition-all duration-300"
                 />
               </div>
             </div>
@@ -700,13 +704,13 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
             <div className="sticky bottom-0 bg-white p-4 border-t flex gap-3">
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                className="flex-1 py-4 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-all duration-300"
               >
                 ביטול
               </button>
               <button
                 onClick={saveMeal}
-                className="flex-1 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                className="flex-1 py-4 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-xl"
               >
                 {editingMeal ? 'עדכן' : 'הוסף'}
               </button>

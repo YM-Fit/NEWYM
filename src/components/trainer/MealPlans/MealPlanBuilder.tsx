@@ -23,6 +23,7 @@ import {
   Copy,
   Check,
   AlertCircle,
+  UtensilsCrossed,
 } from 'lucide-react';
 
 interface MealPlanBuilderProps {
@@ -89,19 +90,19 @@ interface HistoryEntry {
 }
 
 const MEAL_NAMES = [
-  { value: 'breakfast', label: 'ארוחת בוקר' },
-  { value: 'morning_snack', label: 'ביניים בוקר' },
-  { value: 'lunch', label: 'ארוחת צהריים' },
-  { value: 'afternoon_snack', label: 'ביניים אחה"צ' },
-  { value: 'dinner', label: 'ארוחת ערב' },
-  { value: 'evening_snack', label: 'ביניים ערב' },
+  { value: 'breakfast', label: 'Breakfast' },
+  { value: 'morning_snack', label: 'Morning Snack' },
+  { value: 'lunch', label: 'Lunch' },
+  { value: 'afternoon_snack', label: 'Afternoon Snack' },
+  { value: 'dinner', label: 'Dinner' },
+  { value: 'evening_snack', label: 'Evening Snack' },
 ];
 
 const DEFAULT_NOTE_TEMPLATES = [
-  { title: 'שתיית מים', content: 'שתה כוס מים לפני כל ארוחה' },
-  { title: 'הפסקת אכילה', content: 'לא לאכול 3 שעות לפני השינה' },
-  { title: 'ארוחה איטית', content: 'לאכול לאט ולעסוק כל נשיכה היטב' },
-  { title: 'חלבון בכל ארוחה', content: 'לשלב מקור חלבון בכל ארוחה' },
+  { title: 'Drink Water', content: 'Drink a glass of water before each meal' },
+  { title: 'Stop Eating', content: 'No eating 3 hours before sleep' },
+  { title: 'Slow Eating', content: 'Eat slowly and chew each bite thoroughly' },
+  { title: 'Protein in Every Meal', content: 'Include a protein source in every meal' },
 ];
 
 export default function MealPlanBuilder({
@@ -162,7 +163,7 @@ export default function MealPlanBuilder({
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast.error('שגיאה בטעינת תפריטים');
+      toast.error('Error loading meal plans');
       return;
     }
 
@@ -182,7 +183,7 @@ export default function MealPlanBuilder({
       .order('order_index', { ascending: true });
 
     if (error) {
-      toast.error('שגיאה בטעינת ארוחות');
+      toast.error('Error loading meals');
       return;
     }
 
@@ -225,7 +226,7 @@ export default function MealPlanBuilder({
 
   const handleCreatePlan = async () => {
     if (!newPlanData.name.trim()) {
-      toast.error('נא להזין שם לתפריט');
+      toast.error('Please enter a plan name');
       return;
     }
 
@@ -250,7 +251,7 @@ export default function MealPlanBuilder({
       .single();
 
     if (error) {
-      toast.error('שגיאה ביצירת תפריט');
+      toast.error('Error creating meal plan');
       setSaving(false);
       return;
     }
@@ -262,7 +263,7 @@ export default function MealPlanBuilder({
       .eq('trainer_id', trainerId)
       .neq('id', data.id);
 
-    toast.success('תפריט נוצר בהצלחה');
+    toast.success('Meal plan created successfully');
     setShowCreateForm(false);
     setNewPlanData({
       name: '',
@@ -290,7 +291,7 @@ export default function MealPlanBuilder({
       .eq('id', activePlan.id);
 
     if (error) {
-      toast.error('שגיאה בעדכון תפריט');
+      toast.error('Error updating meal plan');
       return;
     }
 
@@ -309,21 +310,21 @@ export default function MealPlanBuilder({
       .update({ is_active: true })
       .eq('id', planId);
 
-    toast.success('התפריט הופעל');
+    toast.success('Plan activated');
     await loadPlans();
   };
 
   const handleDeletePlan = async (planId: string) => {
-    if (!confirm('האם למחוק את התפריט? פעולה זו לא ניתנת לביטול.')) return;
+    if (!confirm('Delete this meal plan? This action cannot be undone.')) return;
 
     const { error } = await supabase.from('meal_plans').delete().eq('id', planId);
 
     if (error) {
-      toast.error('שגיאה במחיקת תפריט');
+      toast.error('Error deleting meal plan');
       return;
     }
 
-    toast.success('תפריט נמחק');
+    toast.success('Meal plan deleted');
     if (activePlan?.id === planId) {
       setActivePlan(null);
       setMeals([]);
@@ -407,16 +408,16 @@ export default function MealPlanBuilder({
       const { error } = await supabase.from('meal_plan_meals').insert(mealsToInsert);
 
       if (error) {
-        toast.error('שגיאה בשמירת ארוחות');
+        toast.error('Error saving meals');
         setSaving(false);
         return;
       }
     }
 
-    await saveToHistory('עדכון ארוחות');
+    await saveToHistory('Updated meals');
     await handleUpdatePlan({ updated_at: new Date().toISOString() } as any);
 
-    toast.success('הארוחות נשמרו בהצלחה');
+    toast.success('Meals saved successfully');
     await loadMeals(activePlan.id);
     setSaving(false);
   };
@@ -439,7 +440,7 @@ export default function MealPlanBuilder({
 
   const handleSaveAsTemplate = async () => {
     if (!templateName.trim()) {
-      toast.error('נא להזין שם לתבנית');
+      toast.error('Please enter a template name');
       return;
     }
 
@@ -460,9 +461,9 @@ export default function MealPlanBuilder({
     });
 
     if (error) {
-      toast.error('שגיאה בשמירת תבנית');
+      toast.error('Error saving template');
     } else {
-      toast.success('התבנית נשמרה בהצלחה');
+      toast.success('Template saved successfully');
       setShowTemplateModal(false);
       setTemplateName('');
       await loadTemplates();
@@ -491,7 +492,7 @@ export default function MealPlanBuilder({
 
     setMeals(loadedMeals);
     setShowLoadTemplateModal(false);
-    toast.success('התבנית נטענה בהצלחה');
+    toast.success('Template loaded successfully');
   };
 
   const handleAddNoteFromTemplate = (template: NoteTemplate) => {
@@ -501,12 +502,12 @@ export default function MealPlanBuilder({
     const newNotes = currentNotes ? `${currentNotes}\n${template.content}` : template.content;
     handleUpdatePlan({ notes: newNotes });
     setShowNoteTemplateModal(false);
-    toast.success('ההערה נוספה');
+    toast.success('Note added');
   };
 
   const handleCreateNoteTemplate = async () => {
     if (!newNoteTemplate.title.trim() || !newNoteTemplate.content.trim()) {
-      toast.error('נא למלא את כל השדות');
+      toast.error('Please fill in all fields');
       return;
     }
 
@@ -517,9 +518,9 @@ export default function MealPlanBuilder({
     });
 
     if (error) {
-      toast.error('שגיאה בשמירת תבנית');
+      toast.error('Error saving template');
     } else {
-      toast.success('התבנית נשמרה');
+      toast.success('Template saved');
       setShowNewNoteTemplateModal(false);
       setNewNoteTemplate({ title: '', content: '' });
       await loadNoteTemplates();
@@ -555,56 +556,73 @@ export default function MealPlanBuilder({
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-600 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <ArrowRight className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">תפריט תזונה</h1>
-            <p className="text-gray-600">{traineeName}</p>
+    <div className="space-y-8">
+      {/* Premium Header */}
+      <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl shadow-xl border border-white/10 p-6 backdrop-blur-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onBack}
+              className="p-3 hover:bg-white/10 rounded-xl transition-all duration-300 text-gray-400 hover:text-white"
+            >
+              <ArrowRight className="h-5 w-5" />
+            </button>
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-emerald-500/30 to-teal-500/30 rounded-2xl shadow-lg">
+                <UtensilsCrossed className="h-6 w-6 text-emerald-400" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Meal Plan</h1>
+                <p className="text-gray-400">{traineeName}</p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="flex gap-2">
-          <button
-            onClick={() => setView('list')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              view === 'list' ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            רשימה
-          </button>
-          {activePlan && (
-            <>
-              <button
-                onClick={() => setView('editor')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  view === 'editor' ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                עריכה
-              </button>
-              <button
-                onClick={() => {
-                  loadHistory(activePlan.id);
-                  setView('history');
-                }}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  view === 'history' ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                <History className="h-4 w-4" />
-              </button>
-            </>
-          )}
+          <div className="flex gap-3">
+            <button
+              onClick={() => setView('list')}
+              className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
+                view === 'list'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
+                  : 'bg-gray-800/60 text-gray-400 hover:bg-gray-700/60 hover:text-white'
+              }`}
+            >
+              List
+            </button>
+            {activePlan && (
+              <>
+                <button
+                  onClick={() => setView('editor')}
+                  className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
+                    view === 'editor'
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
+                      : 'bg-gray-800/60 text-gray-400 hover:bg-gray-700/60 hover:text-white'
+                  }`}
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => {
+                    loadHistory(activePlan.id);
+                    setView('history');
+                  }}
+                  className={`p-2.5 rounded-xl font-semibold transition-all duration-300 ${
+                    view === 'history'
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
+                      : 'bg-gray-800/60 text-gray-400 hover:bg-gray-700/60 hover:text-white'
+                  }`}
+                >
+                  <History className="h-5 w-5" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -652,7 +670,7 @@ export default function MealPlanBuilder({
           onRestore={(entry) => {
             if (entry.snapshot.meals) {
               setMeals(entry.snapshot.meals);
-              toast.success('הגרסה שוחזרה - לחץ שמור לשמירה');
+              toast.success('Version restored - click Save to save');
               setView('editor');
             }
           }}
@@ -722,66 +740,66 @@ interface PlanListViewProps {
 
 function PlanListView({ plans, activePlan, onActivate, onEdit, onDelete, onCreateNew }: PlanListViewProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <button
         onClick={onCreateNew}
-        className="w-full bg-orange-600 hover:bg-orange-700 text-white py-4 rounded-xl flex items-center justify-center gap-2 font-medium transition-colors"
+        className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white py-4 rounded-2xl flex items-center justify-center gap-3 font-semibold transition-all duration-300 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/30 hover:scale-[1.01]"
       >
         <Plus className="h-5 w-5" />
-        צור תפריט חדש
+        Create New Meal Plan
       </button>
 
       {activePlan && (
-        <div className="bg-gradient-to-l from-orange-500 to-orange-600 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-8 text-white shadow-xl shadow-emerald-500/20">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <span className="bg-white/20 text-xs px-2 py-1 rounded-full">תפריט פעיל</span>
-              <h3 className="text-xl font-bold mt-2">{activePlan.name}</h3>
-              {activePlan.description && <p className="text-orange-100 text-sm mt-1">{activePlan.description}</p>}
+              <span className="bg-white/20 text-xs px-3 py-1.5 rounded-xl font-semibold">Active Plan</span>
+              <h3 className="text-2xl font-bold mt-3">{activePlan.name}</h3>
+              {activePlan.description && <p className="text-emerald-100 text-sm mt-2">{activePlan.description}</p>}
             </div>
             <button
               onClick={() => onEdit(activePlan)}
-              className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-medium transition-colors"
+              className="bg-white/20 hover:bg-white/30 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 hover:scale-105"
             >
-              ערוך
+              Edit
             </button>
           </div>
 
           {(activePlan.daily_calories || activePlan.protein_grams) && (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
               {activePlan.daily_calories && (
-                <div className="bg-white/10 rounded-lg p-3 text-center">
-                  <Flame className="h-5 w-5 mx-auto mb-1" />
-                  <p className="text-lg font-bold">{activePlan.daily_calories}</p>
-                  <p className="text-xs text-orange-200">קלוריות</p>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/20 transition-all duration-300">
+                  <Flame className="h-6 w-6 mx-auto mb-2" />
+                  <p className="text-xl font-bold">{activePlan.daily_calories}</p>
+                  <p className="text-xs text-emerald-200">Calories</p>
                 </div>
               )}
               {activePlan.protein_grams && (
-                <div className="bg-white/10 rounded-lg p-3 text-center">
-                  <Beef className="h-5 w-5 mx-auto mb-1" />
-                  <p className="text-lg font-bold">{activePlan.protein_grams}g</p>
-                  <p className="text-xs text-orange-200">חלבון</p>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/20 transition-all duration-300">
+                  <Beef className="h-6 w-6 mx-auto mb-2" />
+                  <p className="text-xl font-bold">{activePlan.protein_grams}g</p>
+                  <p className="text-xs text-emerald-200">Protein</p>
                 </div>
               )}
               {activePlan.carbs_grams && (
-                <div className="bg-white/10 rounded-lg p-3 text-center">
-                  <Wheat className="h-5 w-5 mx-auto mb-1" />
-                  <p className="text-lg font-bold">{activePlan.carbs_grams}g</p>
-                  <p className="text-xs text-orange-200">פחמימות</p>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/20 transition-all duration-300">
+                  <Wheat className="h-6 w-6 mx-auto mb-2" />
+                  <p className="text-xl font-bold">{activePlan.carbs_grams}g</p>
+                  <p className="text-xs text-emerald-200">Carbs</p>
                 </div>
               )}
               {activePlan.fat_grams && (
-                <div className="bg-white/10 rounded-lg p-3 text-center">
-                  <Droplet className="h-5 w-5 mx-auto mb-1" />
-                  <p className="text-lg font-bold">{activePlan.fat_grams}g</p>
-                  <p className="text-xs text-orange-200">שומן</p>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/20 transition-all duration-300">
+                  <Droplet className="h-6 w-6 mx-auto mb-2" />
+                  <p className="text-xl font-bold">{activePlan.fat_grams}g</p>
+                  <p className="text-xs text-emerald-200">Fat</p>
                 </div>
               )}
               {activePlan.daily_water_ml && (
-                <div className="bg-white/10 rounded-lg p-3 text-center">
-                  <Droplets className="h-5 w-5 mx-auto mb-1" />
-                  <p className="text-lg font-bold">{(activePlan.daily_water_ml / 1000).toFixed(1)}L</p>
-                  <p className="text-xs text-orange-200">מים</p>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/20 transition-all duration-300">
+                  <Droplets className="h-6 w-6 mx-auto mb-2" />
+                  <p className="text-xl font-bold">{(activePlan.daily_water_ml / 1000).toFixed(1)}L</p>
+                  <p className="text-xs text-emerald-200">Water</p>
                 </div>
               )}
             </div>
@@ -789,40 +807,40 @@ function PlanListView({ plans, activePlan, onActivate, onEdit, onDelete, onCreat
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-100">
-        <div className="p-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900">היסטוריית תפריטים</h3>
+      <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl border border-white/10 shadow-xl overflow-hidden">
+        <div className="p-6 border-b border-white/10">
+          <h3 className="font-bold text-white text-lg">Plan History</h3>
         </div>
-        <div className="divide-y">
+        <div className="divide-y divide-white/10">
           {plans.filter((p) => p.id !== activePlan?.id).length === 0 ? (
-            <div className="p-8 text-center text-gray-500">אין תפריטים נוספים</div>
+            <div className="p-12 text-center text-gray-500">No other plans</div>
           ) : (
             plans
               .filter((p) => p.id !== activePlan?.id)
               .map((plan) => (
-                <div key={plan.id} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                <div key={plan.id} className="p-5 flex items-center justify-between hover:bg-white/5 transition-all duration-300">
                   <div>
-                    <h4 className="font-medium text-gray-900">{plan.name}</h4>
+                    <h4 className="font-semibold text-white">{plan.name}</h4>
                     <p className="text-sm text-gray-500">
-                      {new Date(plan.created_at).toLocaleDateString('he-IL')}
+                      {new Date(plan.created_at).toLocaleDateString('en-US')}
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button
                       onClick={() => onActivate(plan.id)}
-                      className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200 transition-colors"
+                      className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-500/30 transition-all duration-300 hover:scale-105"
                     >
-                      הפעל
+                      Activate
                     </button>
                     <button
                       onClick={() => onEdit(plan)}
-                      className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors"
+                      className="px-4 py-2 bg-gray-700/50 text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-700 transition-all duration-300"
                     >
-                      ערוך
+                      Edit
                     </button>
                     <button
                       onClick={() => onDelete(plan.id)}
-                      className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                      className="p-2 text-red-400 hover:bg-red-500/20 rounded-xl transition-all duration-300"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -880,152 +898,154 @@ function PlanEditorView({
   const totals = calculateTotalMacros();
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl border border-gray-100 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900">הגדרות תפריט</h3>
-          <div className="flex gap-2">
+    <div className="space-y-8">
+      {/* Plan Settings Card */}
+      <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl border border-white/10 shadow-xl p-8">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-bold text-white text-xl">Plan Settings</h3>
+          <div className="flex gap-3">
             <button
               onClick={onLoadTemplate}
-              className="flex items-center gap-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200 transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-blue-500/20 text-blue-400 rounded-xl text-sm font-semibold hover:bg-blue-500/30 transition-all duration-300 hover:scale-105"
             >
               <Download className="h-4 w-4" />
-              טען תבנית
+              Load Template
             </button>
             <button
               onClick={onSaveAsTemplate}
-              className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-700/50 text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-700 transition-all duration-300"
             >
               <Upload className="h-4 w-4" />
-              שמור כתבנית
+              Save as Template
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">שם התפריט</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">Plan Name</label>
             <input
               type="text"
               value={plan.name || ''}
               onChange={(e) => onUpdatePlan({ name: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">תיאור</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">Description</label>
             <input
               type="text"
               value={plan.description || ''}
               onChange={(e) => onUpdatePlan({ description: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-              placeholder="למשל: תפריט להורדת משקל"
+              className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+              placeholder="e.g., Weight loss plan"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              <Flame className="h-4 w-4 inline ml-1" />
-              קלוריות
+            <label className="block text-sm font-semibold text-gray-300 mb-2">
+              <Flame className="h-4 w-4 inline ml-1 text-amber-400" />
+              Calories
             </label>
             <input
               type="number"
               value={plan.daily_calories || ''}
               onChange={(e) => onUpdatePlan({ daily_calories: e.target.value ? parseInt(e.target.value) : null })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              <Beef className="h-4 w-4 inline ml-1" />
-              חלבון (גרם)
+            <label className="block text-sm font-semibold text-gray-300 mb-2">
+              <Beef className="h-4 w-4 inline ml-1 text-red-400" />
+              Protein (g)
             </label>
             <input
               type="number"
               value={plan.protein_grams || ''}
               onChange={(e) => onUpdatePlan({ protein_grams: e.target.value ? parseInt(e.target.value) : null })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              <Wheat className="h-4 w-4 inline ml-1" />
-              פחמימות (גרם)
+            <label className="block text-sm font-semibold text-gray-300 mb-2">
+              <Wheat className="h-4 w-4 inline ml-1 text-amber-500" />
+              Carbs (g)
             </label>
             <input
               type="number"
               value={plan.carbs_grams || ''}
               onChange={(e) => onUpdatePlan({ carbs_grams: e.target.value ? parseInt(e.target.value) : null })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              <Droplet className="h-4 w-4 inline ml-1" />
-              שומן (גרם)
+            <label className="block text-sm font-semibold text-gray-300 mb-2">
+              <Droplet className="h-4 w-4 inline ml-1 text-yellow-400" />
+              Fat (g)
             </label>
             <input
               type="number"
               value={plan.fat_grams || ''}
               onChange={(e) => onUpdatePlan({ fat_grams: e.target.value ? parseInt(e.target.value) : null })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              <Droplets className="h-4 w-4 inline ml-1" />
-              מים (מ"ל)
+            <label className="block text-sm font-semibold text-gray-300 mb-2">
+              <Droplets className="h-4 w-4 inline ml-1 text-blue-400" />
+              Water (ml)
             </label>
             <input
               type="number"
               value={plan.daily_water_ml || ''}
               onChange={(e) => onUpdatePlan({ daily_water_ml: e.target.value ? parseInt(e.target.value) : null })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
             />
           </div>
         </div>
 
-        <div className="mt-4">
-          <div className="flex items-center justify-between mb-1">
-            <label className="block text-sm font-medium text-gray-700">הערות כלליות</label>
+        <div className="mt-6">
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-semibold text-gray-300">General Notes</label>
             <button
               onClick={onAddNote}
-              className="text-sm text-orange-600 hover:text-orange-700 flex items-center gap-1"
+              className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors duration-300"
             >
               <FileText className="h-4 w-4" />
-              הוסף מתבנית
+              Add from template
             </button>
           </div>
           <textarea
             value={plan.notes || ''}
             onChange={(e) => onUpdatePlan({ notes: e.target.value })}
-            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
             rows={3}
-            placeholder="הערות כלליות לתפריט..."
+            placeholder="General notes for the plan..."
           />
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100">
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900">ארוחות ({meals.length})</h3>
+      {/* Meals Card */}
+      <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl border border-white/10 shadow-xl overflow-hidden">
+        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+          <h3 className="font-bold text-white text-xl">Meals ({meals.length})</h3>
           <button
             onClick={onAddMeal}
-            className="flex items-center gap-1 px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg text-sm hover:bg-orange-200 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500/20 text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-500/30 transition-all duration-300 hover:scale-105"
           >
             <Plus className="h-4 w-4" />
-            הוסף ארוחה
+            Add Meal
           </button>
         </div>
 
-        <div className="divide-y">
+        <div className="divide-y divide-white/10">
           {meals.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              <AlertCircle className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-              <p>אין ארוחות בתפריט</p>
-              <p className="text-sm">לחץ על "הוסף ארוחה" להתחיל</p>
+            <div className="p-12 text-center text-gray-500">
+              <AlertCircle className="h-14 w-14 mx-auto mb-4 text-gray-600" />
+              <p className="font-medium">No meals in this plan</p>
+              <p className="text-sm mt-2">Click "Add Meal" to get started</p>
             </div>
           ) : (
             meals.map((meal, index) => (
@@ -1035,28 +1055,30 @@ function PlanEditorView({
                 onDragStart={() => onDragStart(index)}
                 onDragOver={(e) => onDragOver(e, index)}
                 onDragEnd={onDragEnd}
-                className="p-4 hover:bg-gray-50 transition-colors"
+                className="p-5 hover:bg-white/5 transition-all duration-300"
               >
                 <div
                   className="flex items-center justify-between cursor-pointer"
                   onClick={() => onToggleMeal(index)}
                 >
-                  <div className="flex items-center gap-3">
-                    <GripVertical className="h-5 w-5 text-gray-400 cursor-grab" />
-                    <Clock className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium">{meal.meal_time}</span>
-                    <span className="text-gray-600">{getMealLabel(meal.meal_name)}</span>
+                  <div className="flex items-center gap-4">
+                    <GripVertical className="h-5 w-5 text-gray-500 cursor-grab hover:text-gray-300 transition-colors" />
+                    <div className="p-2 bg-emerald-500/20 rounded-xl">
+                      <Clock className="h-4 w-4 text-emerald-400" />
+                    </div>
+                    <span className="font-semibold text-white">{meal.meal_time}</span>
+                    <span className="text-gray-400">{getMealLabel(meal.meal_name)}</span>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
                     {meal.calories && (
-                      <span className="text-sm text-gray-500">{meal.calories} קל'</span>
+                      <span className="text-sm text-gray-500 bg-gray-700/50 px-3 py-1 rounded-lg">{meal.calories} cal</span>
                     )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onDeleteMeal(index);
                       }}
-                      className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                      className="p-2 text-red-400 hover:bg-red-500/20 rounded-xl transition-all duration-300"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -1069,23 +1091,23 @@ function PlanEditorView({
                 </div>
 
                 {expandedMeals.has(index) && (
-                  <div className="mt-4 space-y-4 pr-8">
-                    <div className="grid grid-cols-2 gap-4">
+                  <div className="mt-6 space-y-5 pr-10">
+                    <div className="grid grid-cols-2 gap-5">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">שעה</label>
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">Time</label>
                         <input
                           type="time"
                           value={meal.meal_time}
                           onChange={(e) => onUpdateMeal(index, 'meal_time', e.target.value)}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                          className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">סוג ארוחה</label>
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">Meal Type</label>
                         <select
                           value={meal.meal_name}
                           onChange={(e) => onUpdateMeal(index, 'meal_name', e.target.value)}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                          className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
                         >
                           {MEAL_NAMES.map((m) => (
                             <option key={m.value} value={m.value}>
@@ -1097,74 +1119,74 @@ function PlanEditorView({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">תיאור האוכל</label>
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">Food Description</label>
                       <textarea
                         value={meal.description}
                         onChange={(e) => onUpdateMeal(index, 'description', e.target.value)}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                        className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
                         rows={3}
-                        placeholder="לדוגמה: 2 ביצים, 2 פרוסות לחם מלא, סלט ירקות..."
+                        placeholder="e.g., 2 eggs, 2 slices whole wheat bread, vegetable salad..."
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">חלופות</label>
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">Alternatives</label>
                       <textarea
                         value={meal.alternatives}
                         onChange={(e) => onUpdateMeal(index, 'alternatives', e.target.value)}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                        className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
                         rows={2}
-                        placeholder="אפשר להחליף ב..."
+                        placeholder="Can substitute with..."
                       />
                     </div>
 
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-4 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">קלוריות</label>
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">Calories</label>
                         <input
                           type="number"
                           value={meal.calories || ''}
                           onChange={(e) => onUpdateMeal(index, 'calories', e.target.value ? parseInt(e.target.value) : null)}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                          className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">חלבון</label>
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">Protein</label>
                         <input
                           type="number"
                           value={meal.protein || ''}
                           onChange={(e) => onUpdateMeal(index, 'protein', e.target.value ? parseInt(e.target.value) : null)}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                          className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">פחמימות</label>
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">Carbs</label>
                         <input
                           type="number"
                           value={meal.carbs || ''}
                           onChange={(e) => onUpdateMeal(index, 'carbs', e.target.value ? parseInt(e.target.value) : null)}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                          className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">שומן</label>
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">Fat</label>
                         <input
                           type="number"
                           value={meal.fat || ''}
                           onChange={(e) => onUpdateMeal(index, 'fat', e.target.value ? parseInt(e.target.value) : null)}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                          className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">הערות</label>
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">Notes</label>
                       <input
                         type="text"
                         value={meal.notes}
                         onChange={(e) => onUpdateMeal(index, 'notes', e.target.value)}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
-                        placeholder="הערות נוספות..."
+                        className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
+                        placeholder="Additional notes..."
                       />
                     </div>
                   </div>
@@ -1175,14 +1197,14 @@ function PlanEditorView({
         </div>
 
         {meals.length > 0 && totals.calories > 0 && (
-          <div className="p-4 bg-gray-50 border-t">
+          <div className="p-5 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-t border-white/10">
             <div className="flex items-center justify-between">
-              <span className="font-medium text-gray-700">סה"כ מארוחות:</span>
-              <div className="flex gap-4 text-sm">
-                <span>{totals.calories} קלוריות</span>
-                <span>{totals.protein}g חלבון</span>
-                <span>{totals.carbs}g פחמימות</span>
-                <span>{totals.fat}g שומן</span>
+              <span className="font-semibold text-white">Totals from meals:</span>
+              <div className="flex gap-6 text-sm">
+                <span className="text-gray-300"><span className="text-emerald-400 font-semibold">{totals.calories}</span> calories</span>
+                <span className="text-gray-300"><span className="text-emerald-400 font-semibold">{totals.protein}g</span> protein</span>
+                <span className="text-gray-300"><span className="text-emerald-400 font-semibold">{totals.carbs}g</span> carbs</span>
+                <span className="text-gray-300"><span className="text-emerald-400 font-semibold">{totals.fat}g</span> fat</span>
               </div>
             </div>
           </div>
@@ -1193,17 +1215,17 @@ function PlanEditorView({
         <button
           onClick={onSave}
           disabled={saving}
-          className="bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white px-8 py-3 rounded-xl flex items-center gap-2 font-medium transition-colors"
+          className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 text-white px-10 py-4 rounded-2xl flex items-center gap-3 font-semibold transition-all duration-300 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/30 hover:scale-[1.02]"
         >
           {saving ? (
             <>
               <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-              שומר...
+              Saving...
             </>
           ) : (
             <>
               <Save className="h-5 w-5" />
-              שמור תפריט
+              Save Meal Plan
             </>
           )}
         </button>
@@ -1219,27 +1241,27 @@ interface HistoryViewProps {
 
 function HistoryView({ history, onRestore }: HistoryViewProps) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100">
-      <div className="p-4 border-b border-gray-100">
-        <h3 className="font-semibold text-gray-900">היסטוריית שינויים</h3>
+    <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl border border-white/10 shadow-xl overflow-hidden">
+      <div className="p-6 border-b border-white/10">
+        <h3 className="font-bold text-white text-xl">Change History</h3>
       </div>
-      <div className="divide-y">
+      <div className="divide-y divide-white/10">
         {history.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">אין היסטוריה</div>
+          <div className="p-12 text-center text-gray-500">No history</div>
         ) : (
           history.map((entry) => (
-            <div key={entry.id} className="p-4 flex items-center justify-between hover:bg-gray-50">
+            <div key={entry.id} className="p-5 flex items-center justify-between hover:bg-white/5 transition-all duration-300">
               <div>
-                <p className="font-medium text-gray-900">{entry.change_description}</p>
+                <p className="font-semibold text-white">{entry.change_description}</p>
                 <p className="text-sm text-gray-500">
-                  {new Date(entry.changed_at).toLocaleString('he-IL')}
+                  {new Date(entry.changed_at).toLocaleString('en-US')}
                 </p>
               </div>
               <button
                 onClick={() => onRestore(entry)}
-                className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200 transition-colors"
+                className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-xl text-sm font-semibold hover:bg-blue-500/30 transition-all duration-300 hover:scale-105"
               >
-                שחזר גרסה
+                Restore Version
               </button>
             </div>
           ))
@@ -1259,107 +1281,107 @@ interface CreatePlanModalProps {
 
 function CreatePlanModal({ data, saving, onChange, onSave, onClose }: CreatePlanModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b flex items-center justify-between">
-          <h2 className="text-xl font-bold">תפריט חדש</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
-            <X className="h-5 w-5" />
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center p-4 z-50">
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl border border-white/10 max-w-lg w-full max-h-[90vh] overflow-y-auto animate-fade-in">
+        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-white">New Meal Plan</h2>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-all duration-300">
+            <X className="h-5 w-5 text-gray-400" />
           </button>
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">שם התפריט *</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">Plan Name *</label>
             <input
               type="text"
               value={data.name}
               onChange={(e) => onChange({ ...data, name: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
-              placeholder="לדוגמה: תפריט הורדת משקל"
+              className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+              placeholder="e.g., Weight loss plan"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">תיאור</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">Description</label>
             <input
               type="text"
               value={data.description}
               onChange={(e) => onChange({ ...data, description: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">יעד קלוריות יומי</label>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">Daily Calories Target</label>
               <input
                 type="number"
                 value={data.daily_calories}
                 onChange={(e) => onChange({ ...data, daily_calories: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">מים יומי (מ"ל)</label>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">Daily Water (ml)</label>
               <input
                 type="number"
                 value={data.daily_water_ml}
                 onChange={(e) => onChange({ ...data, daily_water_ml: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
               />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">חלבון (גרם)</label>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">Protein (g)</label>
               <input
                 type="number"
                 value={data.protein_grams}
                 onChange={(e) => onChange({ ...data, protein_grams: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">פחמימות (גרם)</label>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">Carbs (g)</label>
               <input
                 type="number"
                 value={data.carbs_grams}
                 onChange={(e) => onChange({ ...data, carbs_grams: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">שומן (גרם)</label>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">Fat (g)</label>
               <input
                 type="number"
                 value={data.fat_grams}
                 onChange={(e) => onChange({ ...data, fat_grams: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">הערות כלליות</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">General Notes</label>
             <textarea
               value={data.notes}
               onChange={(e) => onChange({ ...data, notes: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
               rows={3}
             />
           </div>
         </div>
-        <div className="p-6 border-t flex gap-3">
+        <div className="p-6 border-t border-white/10 flex gap-4">
           <button
             onClick={onSave}
             disabled={saving}
-            className="flex-1 bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white py-3 rounded-xl font-medium"
+            className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-emerald-500/25"
           >
-            {saving ? 'יוצר...' : 'צור תפריט'}
+            {saving ? 'Creating...' : 'Create Plan'}
           </button>
           <button
             onClick={onClose}
             disabled={saving}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-medium"
+            className="flex-1 bg-gray-700/50 hover:bg-gray-700 text-gray-300 py-3.5 rounded-xl font-semibold transition-all duration-300"
           >
-            ביטול
+            Cancel
           </button>
         </div>
       </div>
@@ -1377,34 +1399,34 @@ interface SaveTemplateModalProps {
 
 function SaveTemplateModal({ templateName, saving, onNameChange, onSave, onClose }: SaveTemplateModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl max-w-md w-full">
-        <div className="p-6 border-b flex items-center justify-between">
-          <h2 className="text-xl font-bold">שמור כתבנית</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
-            <X className="h-5 w-5" />
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center p-4 z-50">
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl border border-white/10 max-w-md w-full animate-fade-in">
+        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-white">Save as Template</h2>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-all duration-300">
+            <X className="h-5 w-5 text-gray-400" />
           </button>
         </div>
         <div className="p-6">
-          <label className="block text-sm font-medium text-gray-700 mb-1">שם התבנית</label>
+          <label className="block text-sm font-semibold text-gray-300 mb-2">Template Name</label>
           <input
             type="text"
             value={templateName}
             onChange={(e) => onNameChange(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
-            placeholder="לדוגמה: תפריט 1800 קלוריות"
+            className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+            placeholder="e.g., 1800 calorie plan"
           />
         </div>
-        <div className="p-6 border-t flex gap-3">
+        <div className="p-6 border-t border-white/10 flex gap-4">
           <button
             onClick={onSave}
             disabled={saving}
-            className="flex-1 bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white py-3 rounded-xl font-medium"
+            className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-emerald-500/25"
           >
-            {saving ? 'שומר...' : 'שמור תבנית'}
+            {saving ? 'Saving...' : 'Save Template'}
           </button>
-          <button onClick={onClose} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-medium">
-            ביטול
+          <button onClick={onClose} className="flex-1 bg-gray-700/50 hover:bg-gray-700 text-gray-300 py-3.5 rounded-xl font-semibold transition-all duration-300">
+            Cancel
           </button>
         </div>
       </div>
@@ -1420,37 +1442,37 @@ interface LoadTemplateModalProps {
 
 function LoadTemplateModal({ templates, onLoad, onClose }: LoadTemplateModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto">
-        <div className="p-6 border-b flex items-center justify-between sticky top-0 bg-white">
-          <h2 className="text-xl font-bold">טען מתבנית</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
-            <X className="h-5 w-5" />
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center p-4 z-50">
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl border border-white/10 max-w-lg w-full max-h-[80vh] overflow-y-auto animate-fade-in">
+        <div className="p-6 border-b border-white/10 flex items-center justify-between sticky top-0 bg-gradient-to-br from-gray-900 to-gray-800">
+          <h2 className="text-xl font-bold text-white">Load from Template</h2>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-all duration-300">
+            <X className="h-5 w-5 text-gray-400" />
           </button>
         </div>
         <div className="p-6">
           {templates.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">אין תבניות שמורות</div>
+            <div className="text-center text-gray-500 py-12">No saved templates</div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {templates.map((template) => (
                 <button
                   key={template.id}
                   onClick={() => onLoad(template)}
-                  className="w-full text-right p-4 border rounded-xl hover:bg-gray-50 transition-colors"
+                  className="w-full text-right p-5 border-2 border-gray-700/50 rounded-2xl hover:border-emerald-500/30 hover:bg-gradient-to-br hover:from-emerald-500/5 hover:to-teal-500/5 transition-all duration-300 group"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-900">{template.name}</p>
+                      <p className="font-semibold text-white group-hover:text-emerald-300 transition-colors">{template.name}</p>
                       {template.description && (
-                        <p className="text-sm text-gray-500">{template.description}</p>
+                        <p className="text-sm text-gray-500 mt-1">{template.description}</p>
                       )}
-                      <div className="flex gap-3 mt-2 text-xs text-gray-500">
-                        {template.daily_calories && <span>{template.daily_calories} קל'</span>}
-                        {template.protein_grams && <span>{template.protein_grams}g חלבון</span>}
+                      <div className="flex gap-4 mt-3 text-xs text-gray-500">
+                        {template.daily_calories && <span>{template.daily_calories} cal</span>}
+                        {template.protein_grams && <span>{template.protein_grams}g protein</span>}
                       </div>
                     </div>
-                    <Copy className="h-5 w-5 text-gray-400" />
+                    <Copy className="h-5 w-5 text-gray-500 group-hover:text-emerald-400 transition-colors" />
                   </div>
                 </button>
               ))}
@@ -1471,31 +1493,31 @@ interface NoteTemplateModalProps {
 
 function NoteTemplateModal({ templates, onSelect, onCreateNew, onClose }: NoteTemplateModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl max-w-md w-full max-h-[80vh] overflow-y-auto">
-        <div className="p-6 border-b flex items-center justify-between sticky top-0 bg-white">
-          <h2 className="text-xl font-bold">הוסף הערה מתבנית</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
-            <X className="h-5 w-5" />
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center p-4 z-50">
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl border border-white/10 max-w-md w-full max-h-[80vh] overflow-y-auto animate-fade-in">
+        <div className="p-6 border-b border-white/10 flex items-center justify-between sticky top-0 bg-gradient-to-br from-gray-900 to-gray-800">
+          <h2 className="text-xl font-bold text-white">Add Note from Template</h2>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-all duration-300">
+            <X className="h-5 w-5 text-gray-400" />
           </button>
         </div>
-        <div className="p-6 space-y-3">
+        <div className="p-6 space-y-4">
           {templates.map((template) => (
             <button
               key={template.id}
               onClick={() => onSelect(template)}
-              className="w-full text-right p-4 border rounded-xl hover:bg-gray-50 transition-colors"
+              className="w-full text-right p-5 border-2 border-gray-700/50 rounded-2xl hover:border-emerald-500/30 hover:bg-gradient-to-br hover:from-emerald-500/5 hover:to-teal-500/5 transition-all duration-300 group"
             >
-              <p className="font-medium text-gray-900">{template.title}</p>
-              <p className="text-sm text-gray-500 mt-1">{template.content}</p>
+              <p className="font-semibold text-white group-hover:text-emerald-300 transition-colors">{template.title}</p>
+              <p className="text-sm text-gray-500 mt-2">{template.content}</p>
             </button>
           ))}
           <button
             onClick={onCreateNew}
-            className="w-full p-4 border-2 border-dashed rounded-xl text-gray-500 hover:text-gray-700 hover:border-gray-400 transition-colors flex items-center justify-center gap-2"
+            className="w-full p-5 border-2 border-dashed border-gray-700/50 rounded-2xl text-gray-500 hover:text-emerald-400 hover:border-emerald-500/30 transition-all duration-300 flex items-center justify-center gap-3"
           >
             <Plus className="h-5 w-5" />
-            צור תבנית חדשה
+            Create New Template
           </button>
         </div>
       </div>
@@ -1512,45 +1534,45 @@ interface CreateNoteTemplateModalProps {
 
 function CreateNoteTemplateModal({ data, onChange, onSave, onClose }: CreateNoteTemplateModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl max-w-md w-full">
-        <div className="p-6 border-b flex items-center justify-between">
-          <h2 className="text-xl font-bold">תבנית הערה חדשה</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
-            <X className="h-5 w-5" />
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center p-4 z-50">
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl border border-white/10 max-w-md w-full animate-fade-in">
+        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-white">New Note Template</h2>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-all duration-300">
+            <X className="h-5 w-5 text-gray-400" />
           </button>
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">כותרת</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">Title</label>
             <input
               type="text"
               value={data.title}
               onChange={(e) => onChange({ ...data, title: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
-              placeholder="לדוגמה: שתיית מים"
+              className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+              placeholder="e.g., Drink Water"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">תוכן ההערה</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">Note Content</label>
             <textarea
               value={data.content}
               onChange={(e) => onChange({ ...data, content: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
               rows={3}
-              placeholder="לדוגמה: שתה כוס מים לפני כל ארוחה"
+              placeholder="e.g., Drink a glass of water before each meal"
             />
           </div>
         </div>
-        <div className="p-6 border-t flex gap-3">
+        <div className="p-6 border-t border-white/10 flex gap-4">
           <button
             onClick={onSave}
-            className="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-xl font-medium"
+            className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-emerald-500/25"
           >
-            שמור תבנית
+            Save Template
           </button>
-          <button onClick={onClose} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-medium">
-            ביטול
+          <button onClick={onClose} className="flex-1 bg-gray-700/50 hover:bg-gray-700 text-gray-300 py-3.5 rounded-xl font-semibold transition-all duration-300">
+            Cancel
           </button>
         </div>
       </div>

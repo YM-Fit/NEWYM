@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, X, Calendar, ClipboardCheck } from 'lucide-react';
+import { Bell, X, Calendar, ClipboardCheck, Check } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -166,14 +166,26 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
     }
   };
 
-  const getNotificationColor = (type: string) => {
+  const getNotificationStyle = (type: string) => {
     switch (type) {
       case 'food_diary_completed':
-        return 'text-green-600';
+        return {
+          iconColor: 'text-emerald-600',
+          bgColor: 'bg-gradient-to-br from-emerald-100 to-teal-100',
+          borderColor: 'border-emerald-200'
+        };
       case 'workout_completed':
-        return 'text-blue-600';
+        return {
+          iconColor: 'text-blue-600',
+          bgColor: 'bg-gradient-to-br from-blue-100 to-cyan-100',
+          borderColor: 'border-blue-200'
+        };
       default:
-        return 'text-gray-600';
+        return {
+          iconColor: 'text-gray-600',
+          bgColor: 'bg-gradient-to-br from-gray-100 to-slate-100',
+          borderColor: 'border-gray-200'
+        };
     }
   };
 
@@ -191,76 +203,90 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
 
   return (
     <div className="relative" ref={dropdownRef}>
+      {/* Bell Button */}
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+        className="relative p-2.5 hover:bg-gray-100 rounded-xl transition-all duration-300 hover:scale-105 group"
       >
-        <Bell className="w-6 h-6 text-gray-700" />
+        <Bell className="w-6 h-6 text-gray-700 group-hover:text-emerald-600 transition-colors duration-300" />
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+          <span className="absolute -top-1 -right-1 bg-gradient-to-br from-red-500 to-rose-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
+      {/* Dropdown */}
       {showDropdown && (
-        <div className="absolute left-0 mt-2 w-96 bg-white rounded-lg shadow-xl border z-50 max-h-[600px] flex flex-col">
-          <div className="p-4 border-b flex items-center justify-between">
-            <h3 className="font-bold text-lg">התראות</h3>
+        <div className="absolute left-0 mt-3 w-[400px] bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 max-h-[600px] flex flex-col overflow-hidden backdrop-blur-sm">
+          {/* Header */}
+          <div className="p-5 bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <Bell className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="font-bold text-lg text-white">התראות</h3>
+            </div>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="text-sm text-blue-600 hover:text-blue-800"
+                className="text-sm text-white/90 hover:text-white bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-all duration-300 flex items-center gap-1.5 font-medium"
               >
-                סמן הכל כנקרא
+                <Check className="w-4 h-4" />
+                סמן הכל
               </button>
             )}
           </div>
 
-          <div className="overflow-y-auto flex-1">
+          {/* Notifications List */}
+          <div className="overflow-y-auto flex-1 bg-gradient-to-b from-gray-50 to-white">
             {notifications.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <Bell className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                <p>אין התראות חדשות</p>
+              <div className="p-10 text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Bell className="w-8 h-8 text-gray-400" />
+                </div>
+                <p className="text-gray-500 font-medium">אין התראות חדשות</p>
               </div>
             ) : (
-              <div className="divide-y">
+              <div className="p-3 space-y-2">
                 {notifications.map((notification) => {
                   const NotificationIcon = getNotificationIcon(notification.notification_type);
-                  const iconColor = getNotificationColor(notification.notification_type);
+                  const style = getNotificationStyle(notification.notification_type);
 
                   return (
                     <div
                       key={notification.id}
-                      className={`p-4 hover:bg-gray-50 transition-colors ${
-                        !notification.is_read ? 'bg-blue-50' : ''
+                      className={`p-4 rounded-xl transition-all duration-300 hover:shadow-lg cursor-pointer border ${
+                        !notification.is_read
+                          ? 'bg-gradient-to-br from-emerald-50/80 to-teal-50/80 border-emerald-200 shadow-md'
+                          : 'bg-white border-gray-100 hover:bg-gray-50'
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className={`mt-1 ${iconColor}`}>
-                          <NotificationIcon className="w-5 h-5" />
+                        <div className={`p-2.5 rounded-xl ${style.bgColor} flex-shrink-0`}>
+                          <NotificationIcon className={`w-5 h-5 ${style.iconColor}`} />
                         </div>
                         <div
-                          className="flex-1 cursor-pointer"
+                          className="flex-1 min-w-0"
                           onClick={() => handleNotificationClick(notification)}
                         >
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-sm">{notification.title}</h4>
+                            <h4 className="font-semibold text-sm text-gray-900">{notification.title}</h4>
                             {!notification.is_read && (
-                              <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                              <span className="w-2.5 h-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full animate-pulse shadow-sm"></span>
                             )}
                           </div>
                           {notification.message && (
-                            <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
+                            <p className="text-sm text-gray-600 mb-2 line-clamp-2">{notification.message}</p>
                           )}
-                          <p className="text-xs text-gray-400">{getTimeAgo(notification.created_at)}</p>
+                          <p className="text-xs text-gray-400 font-medium">{getTimeAgo(notification.created_at)}</p>
                         </div>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteNotification(notification.id);
                           }}
-                          className="text-gray-400 hover:text-red-600 transition-colors"
+                          className="text-gray-400 hover:text-red-500 transition-all duration-300 p-1.5 hover:bg-red-50 rounded-lg flex-shrink-0"
                         >
                           <X className="w-4 h-4" />
                         </button>

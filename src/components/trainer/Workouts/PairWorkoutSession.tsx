@@ -1,4 +1,4 @@
-import { ArrowRight, Check, X, Plus, Copy, Trash2 } from 'lucide-react';
+import { ArrowRight, Check, X, Plus, Copy, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -202,85 +202,103 @@ export default function PairWorkoutSession({
   };
 
   const renderExerciseColumn = (exercises: WorkoutExercise[], member: 'member_1' | 'member_2', name: string, isBlue: boolean) => (
-    <div className={`bg-white rounded-xl shadow-sm border-2 ${isBlue ? 'border-blue-200' : 'border-purple-200'}`}>
-      <div className={`${isBlue ? 'bg-blue-50 border-blue-200' : 'bg-purple-50 border-purple-200'} border-b-2 p-4`}>
-        <h2 className={`text-lg font-bold ${isBlue ? 'text-blue-900' : 'text-purple-900'} text-center`}>
+    <div className={`bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border ${isBlue ? 'border-blue-100' : 'border-teal-100'} overflow-hidden`}>
+      {/* Premium Member Tab Header */}
+      <div className={`${isBlue ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-teal-500 to-emerald-600'} p-5`}>
+        <h2 className="text-xl font-bold text-white text-center tracking-wide">
           {name}
         </h2>
+        <p className="text-center text-white/80 text-sm mt-1">
+          {exercises.length} {exercises.length === 1 ? 'תרגיל' : 'תרגילים'}
+        </p>
       </div>
-      <div className="p-4 space-y-4">
+      <div className="p-5 space-y-4">
         {exercises.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
-            <p className="text-sm mb-4">עדיין לא נוספו תרגילים</p>
+          <div className="text-center text-gray-400 py-12 bg-gray-50/50 rounded-xl border-2 border-dashed border-gray-200">
+            <p className="text-base mb-2 font-medium">עדיין לא נוספו תרגילים</p>
+            <p className="text-sm text-gray-400">לחץ על הכפתור למטה להוספה</p>
           </div>
         ) : (
           exercises.map((exercise, exIdx) => (
-            <div key={exercise.tempId} className="border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-gray-900">{exercise.exercise.name}</h3>
+            <div key={exercise.tempId} className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-gray-900 text-lg">{exercise.exercise.name}</h3>
                 <button
                   onClick={() => removeExercise(exIdx, member)}
-                  className="text-red-600 hover:text-red-700 p-1"
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50 p-2 rounded-xl transition-all duration-300"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {exercise.sets.map((set, setIdx) => (
-                  <div key={setIdx} className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-600 w-8">#{setIdx + 1}</span>
+                  <div key={setIdx} className="flex items-center gap-2 bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+                    <span className={`text-sm font-bold ${isBlue ? 'text-blue-600 bg-blue-50' : 'text-teal-600 bg-teal-50'} w-10 h-10 flex items-center justify-center rounded-xl`}>
+                      #{setIdx + 1}
+                    </span>
 
-                    <input
-                      type="number"
-                      placeholder="משקל"
-                      value={set.weight || ''}
-                      onChange={(e) => updateSet(exIdx, setIdx, 'weight', Number(e.target.value), member)}
-                      className="w-20 p-2 border border-gray-300 rounded text-center"
-                    />
-                    <span className="text-xs text-gray-500">ק״ג</span>
+                    <div className="flex-1 flex items-center gap-2">
+                      <div className="flex-1">
+                        <input
+                          type="number"
+                          placeholder="משקל"
+                          value={set.weight || ''}
+                          onChange={(e) => updateSet(exIdx, setIdx, 'weight', Number(e.target.value), member)}
+                          className="w-full p-3 border-2 border-emerald-200 rounded-xl text-center font-bold text-emerald-700 bg-emerald-50/50 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                        />
+                        <span className="text-xs text-gray-500 block text-center mt-1">ק״ג</span>
+                      </div>
 
-                    <input
-                      type="number"
-                      placeholder="חזרות"
-                      value={set.reps || ''}
-                      onChange={(e) => updateSet(exIdx, setIdx, 'reps', Number(e.target.value), member)}
-                      className="w-20 p-2 border border-gray-300 rounded text-center"
-                    />
-                    <span className="text-xs text-gray-500">חזרות</span>
+                      <div className="flex-1">
+                        <input
+                          type="number"
+                          placeholder="חזרות"
+                          value={set.reps || ''}
+                          onChange={(e) => updateSet(exIdx, setIdx, 'reps', Number(e.target.value), member)}
+                          className="w-full p-3 border-2 border-blue-200 rounded-xl text-center font-bold text-blue-700 bg-blue-50/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                        />
+                        <span className="text-xs text-gray-500 block text-center mt-1">חזרות</span>
+                      </div>
 
-                    <input
-                      type="number"
-                      placeholder="RPE"
-                      min="1"
-                      max="10"
-                      value={set.rpe || ''}
-                      onChange={(e) => updateSet(exIdx, setIdx, 'rpe', Number(e.target.value), member)}
-                      className="w-16 p-2 border border-gray-300 rounded text-center"
-                    />
+                      <div className="flex-1">
+                        <input
+                          type="number"
+                          placeholder="RPE"
+                          min="1"
+                          max="10"
+                          value={set.rpe || ''}
+                          onChange={(e) => updateSet(exIdx, setIdx, 'rpe', Number(e.target.value), member)}
+                          className="w-full p-3 border-2 border-amber-200 rounded-xl text-center font-bold text-amber-700 bg-amber-50/50 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300"
+                        />
+                        <span className="text-xs text-gray-500 block text-center mt-1">RPE</span>
+                      </div>
+                    </div>
 
-                    <button
-                      onClick={() => duplicateSet(exIdx, setIdx, member)}
-                      className="text-blue-600 hover:text-blue-700 p-1"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </button>
-
-                    {exercise.sets.length > 1 && (
+                    <div className="flex gap-1">
                       <button
-                        onClick={() => removeSet(exIdx, setIdx, member)}
-                        className="text-red-600 hover:text-red-700 p-1"
+                        onClick={() => duplicateSet(exIdx, setIdx, member)}
+                        className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-2 rounded-xl transition-all duration-300"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Copy className="h-4 w-4" />
                       </button>
-                    )}
+
+                      {exercise.sets.length > 1 && (
+                        <button
+                          onClick={() => removeSet(exIdx, setIdx, member)}
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50 p-2 rounded-xl transition-all duration-300"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
 
               <button
                 onClick={() => addSet(exIdx, member)}
-                className="mt-3 w-full text-sm text-blue-600 hover:text-blue-700 py-2 border border-blue-200 rounded-lg hover:bg-blue-50"
+                className={`mt-4 w-full text-sm ${isBlue ? 'text-blue-600 hover:text-blue-700 border-blue-200 hover:bg-blue-50' : 'text-teal-600 hover:text-teal-700 border-teal-200 hover:bg-teal-50'} py-3 border-2 border-dashed rounded-xl transition-all duration-300 font-medium`}
               >
                 + הוסף סט
               </button>
@@ -290,7 +308,7 @@ export default function PairWorkoutSession({
 
         <button
           onClick={() => setShowExerciseSelector(member)}
-          className={`w-full ${isBlue ? 'bg-blue-500 hover:bg-blue-600' : 'bg-purple-500 hover:bg-purple-600'} text-white py-3 px-4 rounded-lg flex items-center justify-center space-x-2 rtl:space-x-reverse transition-colors`}
+          className={`w-full ${isBlue ? 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700' : 'bg-gradient-to-br from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700'} text-white py-4 px-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all duration-300 shadow-lg hover:shadow-xl font-semibold`}
         >
           <Plus className="h-5 w-5" />
           <span>הוסף תרגיל</span>
@@ -300,38 +318,46 @@ export default function PairWorkoutSession({
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
-            <button
-              onClick={onBack}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowRight className="h-6 w-6" />
-            </button>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">אימון זוגי</h1>
-              <p className="text-sm text-gray-600">{trainee.full_name}</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Premium Header */}
+      <div className="sticky top-0 z-10 bg-gradient-to-br from-emerald-600 to-teal-700 shadow-xl">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4 rtl:space-x-reverse">
+              <button
+                onClick={onBack}
+                className="p-3 hover:bg-white/10 rounded-xl transition-all duration-300 text-white"
+              >
+                <ArrowRight className="h-6 w-6" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-white">אימון זוגי</h1>
+                  <p className="text-sm text-emerald-100">{trainee.full_name}</p>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div className="flex space-x-3 rtl:space-x-reverse">
-            <button
-              onClick={onBack}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center space-x-2 rtl:space-x-reverse transition-colors"
-            >
-              <X className="h-4 w-4" />
-              <span>ביטול</span>
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 rtl:space-x-reverse transition-colors disabled:opacity-50"
-            >
-              <Check className="h-4 w-4" />
-              <span>{saving ? 'שומר...' : 'סיים אימון'}</span>
-            </button>
+            <div className="flex space-x-3 rtl:space-x-reverse">
+              <button
+                onClick={onBack}
+                className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-5 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 font-medium"
+              >
+                <X className="h-5 w-5" />
+                <span>ביטול</span>
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="bg-white hover:bg-gray-50 text-emerald-700 px-6 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-xl font-bold"
+              >
+                <Check className="h-5 w-5" />
+                <span>{saving ? 'שומר...' : 'סיים אימון'}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

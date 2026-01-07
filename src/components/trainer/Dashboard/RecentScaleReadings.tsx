@@ -78,9 +78,9 @@ export default function RecentScaleReadings({
 
     if (isSaved) {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 bg-lime-500/20 text-lime-500 rounded-lg text-xs font-medium">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-400 rounded-xl text-xs font-semibold shadow-sm">
           <CheckCircle className="h-3.5 w-3.5" />
-          נשמר
+          Saved
         </span>
       );
     }
@@ -90,14 +90,14 @@ export default function RecentScaleReadings({
         type="button"
         onClick={(e) => handleSave(e, match.traineeId, match.traineeName, reading)}
         disabled={isSaving}
-        className="inline-flex items-center gap-1 px-2 py-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 hover:from-teal-500/30 hover:to-emerald-500/30 text-teal-400 rounded-xl text-xs font-semibold transition-all duration-300 disabled:opacity-50 hover:scale-105 hover:shadow-lg"
       >
         {isSaving ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
         ) : (
           <Save className="h-3.5 w-3.5" />
         )}
-        {isSaving ? 'שומר...' : 'שמור'}
+        {isSaving ? 'Saving...' : 'Save'}
       </button>
     );
   };
@@ -115,17 +115,17 @@ export default function RecentScaleReadings({
     yesterday.setDate(yesterday.getDate() - 1);
 
     if (date.toDateString() === today.toDateString()) {
-      return 'היום';
+      return 'Today';
     } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'אתמול';
+      return 'Yesterday';
     }
     return date.toLocaleDateString('he-IL', { day: 'numeric', month: 'short' });
   };
 
   const getConfidenceColor = (score: number) => {
-    if (score >= 90) return 'text-lime-500 bg-lime-500/20';
-    if (score >= 70) return 'text-emerald-400 bg-emerald-500/20';
-    if (score >= 50) return 'text-amber-400 bg-amber-500/20';
+    if (score >= 90) return 'text-emerald-400 bg-gradient-to-r from-emerald-500/20 to-teal-500/20';
+    if (score >= 70) return 'text-teal-400 bg-gradient-to-r from-teal-500/20 to-cyan-500/20';
+    if (score >= 50) return 'text-amber-400 bg-gradient-to-r from-amber-500/20 to-orange-500/20';
     return 'text-gray-400 bg-gray-500/20';
   };
 
@@ -137,39 +137,41 @@ export default function RecentScaleReadings({
 
   if (readings.length === 0) {
     return (
-      <div className="glass-card p-5">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-cyan-500/20 rounded-xl">
-            <Scale className="h-5 w-5 text-cyan-400" />
+      <div className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 rounded-2xl p-6 shadow-xl border border-white/10 backdrop-blur-sm">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="p-3 bg-gradient-to-br from-teal-500/30 to-emerald-500/30 rounded-2xl shadow-lg">
+            <Scale className="h-6 w-6 text-teal-400" />
           </div>
           <div>
-            <h3 className="font-semibold text-white">שקילות אחרונות</h3>
-            <div className="flex items-center gap-2 text-sm">
-              <span className={`inline-flex items-center gap-1 ${isListening ? 'text-lime-500' : 'text-gray-500'}`}>
-                <span className={`h-2 w-2 rounded-full ${isListening ? 'bg-lime-500 animate-pulse' : 'bg-gray-500'}`}></span>
-                {isListening ? 'מאזין' : 'לא מחובר'}
+            <h3 className="font-bold text-lg text-white">Recent Scale Readings</h3>
+            <div className="flex items-center gap-2 text-sm mt-1">
+              <span className={`inline-flex items-center gap-1.5 ${isListening ? 'text-emerald-400' : 'text-gray-500'}`}>
+                <span className={`h-2.5 w-2.5 rounded-full ${isListening ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50' : 'bg-gray-500'}`}></span>
+                {isListening ? 'Listening' : 'Not connected'}
               </span>
             </div>
           </div>
         </div>
-        <div className="text-center py-8">
-          <Scale className="h-12 w-12 mx-auto text-gray-600 mb-3" />
-          <p className="text-gray-400">אין שקילות אחרונות</p>
-          <p className="text-sm text-gray-500 mt-1">שקילות חדשות יופיעו כאן אוטומטית</p>
+        <div className="text-center py-12">
+          <div className="p-4 bg-gray-800/50 rounded-2xl inline-block mb-4">
+            <Scale className="h-14 w-14 mx-auto text-gray-600" />
+          </div>
+          <p className="text-gray-400 font-medium">No recent readings</p>
+          <p className="text-sm text-gray-500 mt-2">New readings will appear here automatically</p>
         </div>
       </div>
     );
   }
 
   const dateEditorModal = editingDateReadingId !== null && (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="glass-card p-6 max-w-sm mx-4 shadow-dark-lg animate-fade-in">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-cyan-500/20">
-              <Calendar className="h-5 w-5 text-cyan-400" />
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50">
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 max-w-sm mx-4 shadow-2xl border border-white/10 animate-fade-in">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-teal-500/30 to-emerald-500/30 shadow-lg">
+              <Calendar className="h-6 w-6 text-teal-400" />
             </div>
-            <h3 className="text-lg font-semibold text-white">בחירת תאריך</h3>
+            <h3 className="text-xl font-bold text-white">Select Date</h3>
           </div>
           <button
             onClick={() => {
@@ -178,27 +180,27 @@ export default function RecentScaleReadings({
               setEditingDateTraineeName(null);
               setSelectedDate('');
             }}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {editingDateTraineeName && (
-          <p className="text-sm text-gray-400 mb-4">שמירה למתאמן: <span className="font-medium text-white">{editingDateTraineeName}</span></p>
+          <p className="text-sm text-gray-400 mb-6">Saving for trainee: <span className="font-semibold text-white">{editingDateTraineeName}</span></p>
         )}
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-300 mb-2">תאריך המדידה</label>
+        <div className="mb-8">
+          <label className="block text-sm font-semibold text-gray-300 mb-3">Measurement Date</label>
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl glass-input"
+            className="w-full px-4 py-3 rounded-xl bg-gray-800/80 border border-white/10 text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 transition-all duration-300"
           />
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-4">
           <button
             onClick={() => {
               setEditingDateReadingId(null);
@@ -206,24 +208,24 @@ export default function RecentScaleReadings({
               setEditingDateTraineeName(null);
               setSelectedDate('');
             }}
-            className="flex-1 btn-glass px-4 py-2 rounded-xl font-medium"
+            className="flex-1 px-4 py-3 rounded-xl font-semibold bg-gray-700/50 hover:bg-gray-700 text-gray-300 transition-all duration-300"
           >
-            ביטול
+            Cancel
           </button>
           <button
             onClick={handleConfirmSave}
             disabled={savingReadings.has(`${editingDateReadingId}-${editingDateTraineeId}`)}
-            className="flex-1 btn-lime px-4 py-2 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-3 rounded-xl font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02]"
           >
             {savingReadings.has(`${editingDateReadingId}-${editingDateTraineeId}`) ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                שומר...
+                Saving...
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                שמור
+                Save
               </>
             )}
           </button>
@@ -235,41 +237,41 @@ export default function RecentScaleReadings({
   return (
     <>
       {dateEditorModal}
-      <div className="glass-card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-cyan-500/20 rounded-xl">
-              <Scale className="h-5 w-5 text-cyan-400" />
+      <div className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 rounded-2xl p-6 shadow-xl border border-white/10 backdrop-blur-sm">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-gradient-to-br from-teal-500/30 to-emerald-500/30 rounded-2xl shadow-lg">
+              <Scale className="h-6 w-6 text-teal-400" />
             </div>
             <div>
-              <h3 className="font-semibold text-white">שקילות אחרונות</h3>
-              <div className="flex items-center gap-2 text-sm">
-                <span className={`inline-flex items-center gap-1 ${isListening ? 'text-lime-500' : 'text-gray-500'}`}>
-                  <span className={`h-2 w-2 rounded-full ${isListening ? 'bg-lime-500 animate-pulse' : 'bg-gray-500'}`}></span>
-                  {isListening ? 'מאזין' : 'לא מחובר'}
+              <h3 className="font-bold text-lg text-white">Recent Scale Readings</h3>
+              <div className="flex items-center gap-2 text-sm mt-1">
+                <span className={`inline-flex items-center gap-1.5 ${isListening ? 'text-emerald-400' : 'text-gray-500'}`}>
+                  <span className={`h-2.5 w-2.5 rounded-full ${isListening ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50' : 'bg-gray-500'}`}></span>
+                  {isListening ? 'Listening' : 'Not connected'}
                 </span>
               </div>
             </div>
           </div>
-          <span className="text-sm text-gray-500">{readings.length} שקילות</span>
+          <span className="text-sm text-gray-500 bg-gray-800/50 px-3 py-1.5 rounded-xl font-medium">{readings.length} readings</span>
         </div>
 
-        <div className="space-y-3 max-h-96 overflow-y-auto">
+        <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
           {readings.map((item, index) => (
             <div
               key={`${item.reading.id}-${index}`}
-              className={`p-4 rounded-xl border transition-all ${
+              className={`p-5 rounded-2xl border transition-all duration-300 hover:shadow-xl ${
                 item.bestMatch
-                  ? 'border-lime-500/30 bg-lime-500/5 hover:bg-lime-500/10'
-                  : 'border-white/10 bg-white/5 hover:bg-white/10'
-              } ${item.bestMatch && onTraineeClick ? 'cursor-pointer' : ''}`}
+                  ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 hover:from-emerald-500/10 hover:to-teal-500/10 hover:border-emerald-500/50'
+                  : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'
+              } ${item.bestMatch && onTraineeClick ? 'cursor-pointer hover:scale-[1.01]' : ''}`}
               onClick={() => item.bestMatch && onTraineeClick?.(item.bestMatch.traineeId)}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl ${item.bestMatch ? 'bg-lime-500/20' : 'bg-gray-500/20'}`}>
+                <div className="flex items-center gap-4">
+                  <div className={`p-3 rounded-2xl shadow-lg ${item.bestMatch ? 'bg-gradient-to-br from-emerald-500/30 to-teal-500/30' : 'bg-gray-700/50'}`}>
                     {item.bestMatch ? (
-                      <User className="h-5 w-5 text-lime-500" />
+                      <User className="h-5 w-5 text-emerald-400" />
                     ) : (
                       <HelpCircle className="h-5 w-5 text-gray-500" />
                     )}
@@ -277,26 +279,26 @@ export default function RecentScaleReadings({
                   <div>
                     {item.bestMatch ? (
                       <>
-                        <p className="font-medium text-white">{item.bestMatch.traineeName}</p>
-                        <div className="flex items-center gap-2 text-sm text-gray-400">
-                          <span>{item.reading.weight_kg?.toFixed(1)} ק"ג</span>
+                        <p className="font-semibold text-white text-lg">{item.bestMatch.traineeName}</p>
+                        <div className="flex items-center gap-3 text-sm text-gray-400 mt-1">
+                          <span className="font-medium">{item.reading.weight_kg?.toFixed(1)} kg</span>
                           {item.reading.body_fat_percent && (
-                            <span className="text-gray-600">|</span>
-                          )}
-                          {item.reading.body_fat_percent && (
-                            <span>{item.reading.body_fat_percent?.toFixed(1)}% שומן</span>
+                            <>
+                              <span className="text-gray-600">|</span>
+                              <span>{item.reading.body_fat_percent?.toFixed(1)}% body fat</span>
+                            </>
                           )}
                         </div>
                       </>
                     ) : (
                       <>
-                        <p className="font-medium text-gray-300">לא זוהה</p>
-                        <div className="flex items-center gap-2 text-sm text-gray-400">
-                          <span>{item.reading.weight_kg?.toFixed(1)} ק"ג</span>
+                        <p className="font-semibold text-gray-300">Not identified</p>
+                        <div className="flex items-center gap-3 text-sm text-gray-400 mt-1">
+                          <span className="font-medium">{item.reading.weight_kg?.toFixed(1)} kg</span>
                           {item.reading.body_fat_percent && (
                             <>
                               <span className="text-gray-600">|</span>
-                              <span>{item.reading.body_fat_percent?.toFixed(1)}% שומן</span>
+                              <span>{item.reading.body_fat_percent?.toFixed(1)}% body fat</span>
                             </>
                           )}
                         </div>
@@ -305,20 +307,20 @@ export default function RecentScaleReadings({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <div className="text-left">
-                    <p className="text-sm text-gray-400">{formatDate(item.timestamp)}</p>
+                    <p className="text-sm text-gray-400 font-medium">{formatDate(item.timestamp)}</p>
                     <p className="text-xs text-gray-500">{formatTime(item.timestamp)}</p>
                   </div>
                   {item.bestMatch && (
                     <>
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getConfidenceColor(item.bestMatch.confidenceScore)}`}>
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold ${getConfidenceColor(item.bestMatch.confidenceScore)}`}>
                         {getConfidenceIcon(item.bestMatch.confidenceScore)}
                         {item.bestMatch.confidenceScore}%
                       </span>
                       {onSaveMeasurement && renderSaveButton(item.reading, item.bestMatch)}
                       {onTraineeClick && (
-                        <ChevronLeft className="h-4 w-4 text-gray-500" />
+                        <ChevronLeft className="h-5 w-5 text-gray-500" />
                       )}
                     </>
                   )}
@@ -326,20 +328,20 @@ export default function RecentScaleReadings({
               </div>
 
               {item.matches.length > 1 && (
-                <div className="mt-3 pt-3 border-t border-white/10">
-                  <p className="text-xs text-gray-500 mb-2">התאמות נוספות:</p>
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <p className="text-xs text-gray-500 mb-3 font-medium">Other matches:</p>
                   <div className="flex flex-wrap gap-2">
                     {item.matches.slice(1, 4).map((match) => (
-                      <div key={match.traineeId} className="inline-flex items-center gap-1">
+                      <div key={match.traineeId} className="inline-flex items-center gap-2">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             onTraineeClick?.(match.traineeId);
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-1 glass-card-light rounded-lg text-xs hover:bg-white/10 transition-colors"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800/50 hover:bg-gray-700/50 rounded-xl text-xs transition-all duration-300 hover:scale-105"
                         >
-                          <span className="text-gray-300">{match.traineeName}</span>
+                          <span className="text-gray-300 font-medium">{match.traineeName}</span>
                           <span className="text-gray-500">({match.confidenceScore}%)</span>
                         </button>
                         {onSaveMeasurement && renderSaveButton(item.reading, match)}

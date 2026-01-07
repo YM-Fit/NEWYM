@@ -116,12 +116,12 @@ const muscleGroupIcons: Record<string, typeof Dumbbell> = {
 };
 
 const dayColors = [
-  { bg: 'from-green-500 to-emerald-600', light: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-  { bg: 'from-blue-500 to-blue-600', light: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+  { bg: 'from-emerald-500 to-teal-600', light: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  { bg: 'from-blue-500 to-cyan-600', light: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
   { bg: 'from-amber-500 to-orange-600', light: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
   { bg: 'from-rose-500 to-pink-600', light: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
   { bg: 'from-cyan-500 to-teal-600', light: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200' },
-  { bg: 'from-violet-500 to-purple-600', light: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
+  { bg: 'from-teal-500 to-emerald-600', light: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
   { bg: 'from-slate-500 to-slate-600', light: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' },
 ];
 
@@ -342,7 +342,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-green-600 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-emerald-600 border-t-transparent"></div>
       </div>
     );
   }
@@ -350,11 +350,11 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   if (!plan) {
     return (
       <div className="text-center py-12">
-        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
           <ClipboardList className="w-10 h-10 text-gray-400" />
         </div>
-        <h3 className="text-lg font-bold text-gray-700 mb-2">אין תוכנית אימונים פעילה</h3>
-        <p className="text-gray-500">המאמן שלך עדיין לא יצר לך תוכנית אימונים</p>
+        <h3 className="text-2xl font-bold text-gray-700 mb-2">אין תוכנית אימונים פעילה</h3>
+        <p className="text-sm text-gray-500">המאמן שלך עדיין לא יצר לך תוכנית אימונים</p>
       </div>
     );
   }
@@ -370,17 +370,17 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
       <div className="space-y-4 pb-4">
         <button
           onClick={() => setSelectedDay(null)}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-2 text-gray-600 hover:text-emerald-600 transition-all duration-300 font-medium"
         >
           <ArrowRight className="w-5 h-5" />
           <span>חזרה לתוכנית</span>
         </button>
 
-        <div className={`bg-gradient-to-l ${color.bg} rounded-xl p-5 text-white`}>
+        <div className={`bg-gradient-to-br ${color.bg} rounded-2xl p-6 text-white shadow-xl`}>
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm opacity-80">יום {selectedDay.day_number}</p>
-              <h2 className="text-xl font-bold">
+              <p className="text-sm opacity-80 font-medium">יום {selectedDay.day_number}</p>
+              <h2 className="text-2xl font-bold">
                 {selectedDay.day_name || `יום אימון ${selectedDay.day_number}`}
               </h2>
               {selectedDay.focus && (
@@ -390,7 +390,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                 </p>
               )}
             </div>
-            <div className="bg-white/20 p-3 rounded-xl">
+            <div className="bg-white/20 p-4 rounded-2xl shadow-lg">
               <Icon className="w-8 h-8" />
             </div>
           </div>
@@ -401,22 +401,22 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
               <span>{exercises.length} תרגילים</span>
             </div>
             {completedCount > 0 && (
-              <div className="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full">
+              <div className="flex items-center gap-2 bg-white/20 px-4 py-1.5 rounded-xl">
                 <Check className="w-4 h-4" />
-                <span>{completedCount}/{exercises.length} הושלמו</span>
+                <span className="font-medium">{completedCount}/{exercises.length} הושלמו</span>
               </div>
             )}
           </div>
         </div>
 
         {selectedDay.notes && (
-          <div className={`${color.light} ${color.border} border rounded-xl p-4`}>
-            <p className={`text-sm font-medium ${color.text} mb-1`}>הערות ליום זה</p>
-            <p className="text-gray-700">{selectedDay.notes}</p>
+          <div className={`${color.light} ${color.border} border-2 rounded-2xl p-4 shadow-lg`}>
+            <p className={`text-sm font-bold ${color.text} mb-1`}>הערות ליום זה</p>
+            <p className="text-gray-700 leading-relaxed">{selectedDay.notes}</p>
           </div>
         )}
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {exercises.map((exercise, index) => {
             const isCompleted = completedExercises.has(exercise.id);
             const isEditing = editingExercise === exercise.id;
@@ -425,31 +425,31 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
             return (
               <div
                 key={exercise.id}
-                className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all border-2 ${
-                  isCompleted ? 'border-green-500 bg-green-50' : 'border-gray-200'
+                className={`bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] border-2 ${
+                  isCompleted ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200'
                 }`}
               >
-                <div className="p-4 lg:p-5">
-                  <div className="flex items-start gap-3">
+                <div className="p-5 lg:p-6">
+                  <div className="flex items-start gap-4">
                     <button
                       onClick={() => toggleExerciseComplete(exercise.id)}
-                      className={`flex-shrink-0 w-12 h-12 lg:w-14 lg:h-14 rounded-xl flex items-center justify-center transition-all shadow-md ${
+                      className={`flex-shrink-0 w-14 h-14 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg ${
                         isCompleted
-                          ? 'bg-green-500 text-white'
-                          : `bg-gradient-to-br ${color.bg} text-white hover:shadow-lg`
+                          ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white'
+                          : `bg-gradient-to-br ${color.bg} text-white hover:shadow-xl`
                       }`}
                     >
                       {isCompleted ? (
-                        <Check className="w-6 h-6 lg:w-7 lg:h-7" />
+                        <Check className="w-7 h-7 lg:w-8 lg:h-8" />
                       ) : (
-                        <span className="text-xl lg:text-2xl font-bold">{index + 1}</span>
+                        <span className="text-2xl lg:text-3xl font-bold">{index + 1}</span>
                       )}
                     </button>
 
                     <div className="flex-1">
                       <div className="flex items-start justify-between">
                         <div>
-                          <h3 className={`text-lg lg:text-xl font-bold ${isCompleted ? 'text-green-700' : 'text-gray-900'}`}>
+                          <h3 className={`text-lg lg:text-xl font-bold ${isCompleted ? 'text-emerald-700' : 'text-gray-900'}`}>
                             {exerciseName}
                           </h3>
                           {exercise.exercise?.muscle_group?.name && (
@@ -459,92 +459,92 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                         {!isEditing && (
                           <button
                             onClick={() => startEditing(exercise)}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300"
                           >
                             <Edit3 className="w-5 h-5" />
                           </button>
                         )}
                       </div>
 
-                      <div className="bg-gray-50 rounded-xl p-4 mt-3 border-2 border-gray-200 space-y-3">
+                      <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 mt-4 border-2 border-gray-200 space-y-3 shadow-inner">
                         <div className="grid grid-cols-3 gap-3">
-                          <div className={`${color.light} ${color.border} border-2 rounded-lg p-3 text-center`}>
+                          <div className={`${color.light} ${color.border} border-2 rounded-xl p-3 text-center shadow-md`}>
                             <div className={`flex items-center justify-center gap-1 mb-1 ${color.text}`}>
                               <Repeat className="w-4 h-4" />
-                              <span className="text-xs font-medium">סטים</span>
+                              <span className="text-xs font-bold">סטים</span>
                             </div>
                             <div className={`text-2xl lg:text-3xl font-bold ${color.text}`}>
                               {exercise.sets_count}
                             </div>
                           </div>
 
-                          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3 text-center">
+                          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-3 text-center shadow-md">
                             <div className="flex items-center justify-center gap-1 mb-1 text-blue-700">
                               <Target className="w-4 h-4" />
-                              <span className="text-xs font-medium">חזרות</span>
+                              <span className="text-xs font-bold">חזרות</span>
                             </div>
                             <div className="text-2xl lg:text-3xl font-bold text-blue-700">
                               {exercise.reps_range}
                             </div>
                           </div>
 
-                          <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-3 text-center">
-                            <div className="flex items-center justify-center gap-1 mb-1 text-orange-700">
+                          <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-3 text-center shadow-md">
+                            <div className="flex items-center justify-center gap-1 mb-1 text-amber-700">
                               <Clock className="w-4 h-4" />
-                              <span className="text-xs font-medium">מנוחה</span>
+                              <span className="text-xs font-bold">מנוחה</span>
                             </div>
-                            <div className="text-lg lg:text-xl font-bold text-orange-700">
+                            <div className="text-lg lg:text-xl font-bold text-amber-700">
                               {formatRestTime(exercise.rest_seconds)}
                             </div>
                           </div>
                         </div>
 
                         {exercise.target_weight && (
-                          <div className="bg-white border-2 border-gray-200 rounded-lg p-3 flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-600">משקל יעד (מאמן)</span>
+                          <div className="bg-white border-2 border-gray-200 rounded-xl p-3 flex items-center justify-between shadow-sm">
+                            <span className="text-sm font-bold text-gray-600">משקל יעד (מאמן)</span>
                             <span className="text-lg font-bold text-gray-900">{exercise.target_weight} ק״ג</span>
                           </div>
                         )}
 
                         {exercise.trainee_target_weight && !isEditing && (
-                          <div className="bg-green-50 border-2 border-green-200 rounded-lg p-3 flex items-center justify-between">
-                            <span className="text-sm font-medium text-green-600">משקל יעד שלי</span>
-                            <span className="text-lg font-bold text-green-700">{exercise.trainee_target_weight} ק״ג</span>
+                          <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-3 flex items-center justify-between shadow-sm">
+                            <span className="text-sm font-bold text-emerald-600">משקל יעד שלי</span>
+                            <span className="text-lg font-bold text-emerald-700">{exercise.trainee_target_weight} ק״ג</span>
                           </div>
                         )}
 
                         {exercise.target_rpe && (
-                          <div className="bg-white border-2 border-gray-200 rounded-lg p-3 flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-600">RPE יעד</span>
+                          <div className="bg-white border-2 border-gray-200 rounded-xl p-3 flex items-center justify-between shadow-sm">
+                            <span className="text-sm font-bold text-gray-600">RPE יעד</span>
                             <span className="text-lg font-bold text-gray-900">{exercise.target_rpe}/10</span>
                           </div>
                         )}
 
                         {exercise.equipment && (
-                          <div className="bg-white border-2 border-gray-200 rounded-lg p-3 flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-600">ציוד</span>
+                          <div className="bg-white border-2 border-gray-200 rounded-xl p-3 flex items-center justify-between shadow-sm">
+                            <span className="text-sm font-bold text-gray-600">ציוד</span>
                             <div className="flex items-center gap-2">
                               {exercise.equipment.emoji && <span className="text-lg">{exercise.equipment.emoji}</span>}
-                              <span className="font-medium text-gray-900">{exercise.equipment.name}</span>
+                              <span className="font-bold text-gray-900">{exercise.equipment.name}</span>
                             </div>
                           </div>
                         )}
 
                         {exercise.failure && (
-                          <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3 flex items-center justify-center gap-2">
+                          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-3 flex items-center justify-center gap-2 shadow-sm">
                             <span className="text-sm font-bold text-red-700">לכשל</span>
                           </div>
                         )}
 
                         {exercise.set_type === 'superset' && exercise.superset_exercise && (
-                          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3 space-y-2">
+                          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 space-y-2 shadow-sm">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-blue-700 bg-blue-200 px-2 py-1 rounded-full">סופרסט</span>
-                              <span className="font-medium text-blue-900">{exercise.superset_exercise.name}</span>
+                              <span className="text-xs font-bold text-blue-700 bg-blue-200 px-3 py-1 rounded-xl">סופרסט</span>
+                              <span className="font-bold text-blue-900">{exercise.superset_exercise.name}</span>
                             </div>
                             {exercise.superset_weight && exercise.superset_reps && (
                               <div className="flex items-center justify-between">
-                                <span className="text-sm text-blue-600">משקל וחזרות</span>
+                                <span className="text-sm font-medium text-blue-600">משקל וחזרות</span>
                                 <span className="text-sm font-bold text-blue-900">
                                   {exercise.superset_weight} ק״ג x {exercise.superset_reps}
                                 </span>
@@ -552,18 +552,18 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                             )}
                             {exercise.superset_rpe && (
                               <div className="flex items-center justify-between">
-                                <span className="text-sm text-blue-600">RPE</span>
+                                <span className="text-sm font-medium text-blue-600">RPE</span>
                                 <span className="text-sm font-bold text-blue-900">{exercise.superset_rpe}/10</span>
                               </div>
                             )}
                             {exercise.superset_equipment && (
                               <div className="flex items-center justify-between">
-                                <span className="text-sm text-blue-600">ציוד</span>
+                                <span className="text-sm font-medium text-blue-600">ציוד</span>
                                 <div className="flex items-center gap-1">
                                   {exercise.superset_equipment.emoji && (
                                     <span>{exercise.superset_equipment.emoji}</span>
                                   )}
-                                  <span className="text-sm font-medium text-blue-900">
+                                  <span className="text-sm font-bold text-blue-900">
                                     {exercise.superset_equipment.name}
                                   </span>
                                 </div>
@@ -573,13 +573,13 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                         )}
 
                         {exercise.set_type === 'dropset' && (exercise.dropset_weight || exercise.dropset_reps) && (
-                          <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-3">
+                          <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 shadow-sm">
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="text-xs font-bold text-orange-700 bg-orange-200 px-2 py-1 rounded-full">דרופסט</span>
+                              <span className="text-xs font-bold text-amber-700 bg-amber-200 px-3 py-1 rounded-xl">דרופסט</span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-sm text-orange-600">משקל וחזרות</span>
-                              <span className="text-sm font-bold text-orange-900">
+                              <span className="text-sm font-medium text-amber-600">משקל וחזרות</span>
+                              <span className="text-sm font-bold text-amber-900">
                                 {exercise.dropset_weight} ק״ג x {exercise.dropset_reps}
                               </span>
                             </div>
@@ -588,35 +588,35 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                       </div>
 
                       {exercise.notes && (
-                        <div className="mt-3 p-3 bg-amber-50 rounded-lg border-2 border-amber-200">
-                          <div className="flex items-start gap-2">
+                        <div className="mt-4 p-4 bg-amber-50 rounded-xl border-2 border-amber-200 shadow-sm">
+                          <div className="flex items-start gap-3">
                             <span className="text-lg">&#128161;</span>
                             <div>
-                              <p className="text-xs font-medium text-amber-600 mb-1">הערות המאמן</p>
-                              <p className="text-sm text-amber-800 font-medium">{exercise.notes}</p>
+                              <p className="text-xs font-bold text-amber-600 mb-1">הערות המאמן</p>
+                              <p className="text-sm text-amber-800 font-medium leading-relaxed">{exercise.notes}</p>
                             </div>
                           </div>
                         </div>
                       )}
 
                       {exercise.trainee_notes && !isEditing && (
-                        <div className="mt-3 p-3 bg-green-50 rounded-lg border-2 border-green-200">
-                          <div className="flex items-start gap-2">
+                        <div className="mt-4 p-4 bg-emerald-50 rounded-xl border-2 border-emerald-200 shadow-sm">
+                          <div className="flex items-start gap-3">
                             <span className="text-lg">&#128221;</span>
                             <div>
-                              <p className="text-xs font-medium text-green-600 mb-1">ההערות שלי</p>
-                              <p className="text-sm text-green-800 font-medium">{exercise.trainee_notes}</p>
+                              <p className="text-xs font-bold text-emerald-600 mb-1">ההערות שלי</p>
+                              <p className="text-sm text-emerald-800 font-medium leading-relaxed">{exercise.trainee_notes}</p>
                             </div>
                           </div>
                         </div>
                       )}
 
                       {isEditing && (
-                        <div className="mt-4 p-4 bg-blue-50 rounded-xl border-2 border-blue-200 space-y-4">
-                          <h4 className="font-bold text-blue-900">עריכה אישית</h4>
+                        <div className="mt-4 p-5 bg-blue-50 rounded-2xl border-2 border-blue-200 space-y-4 shadow-lg">
+                          <h4 className="font-bold text-blue-900 text-lg">עריכה אישית</h4>
 
                           <div>
-                            <label className="block text-sm font-medium text-blue-700 mb-1">
+                            <label className="block text-sm font-bold text-blue-700 mb-2">
                               משקל יעד שלי (ק״ג)
                             </label>
                             <input
@@ -626,12 +626,12 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                                 setEditData({ ...editData, trainee_target_weight: e.target.value ? Number(e.target.value) : null })
                               }
                               placeholder={exercise.target_weight ? `המאמן המליץ: ${exercise.target_weight}` : 'הזן משקל יעד'}
-                              className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg"
+                              className="w-full px-4 py-4 border-2 border-blue-300 rounded-xl focus:border-blue-500 focus:outline-none text-lg transition-all duration-300"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-sm font-medium text-blue-700 mb-1">
+                            <label className="block text-sm font-bold text-blue-700 mb-2">
                               הערות שלי
                             </label>
                             <textarea
@@ -639,7 +639,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                               onChange={(e) => setEditData({ ...editData, trainee_notes: e.target.value })}
                               placeholder="הוסף הערות אישיות לתרגיל..."
                               rows={3}
-                              className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:outline-none resize-none"
+                              className="w-full px-4 py-4 border-2 border-blue-300 rounded-xl focus:border-blue-500 focus:outline-none resize-none transition-all duration-300"
                             />
                           </div>
 
@@ -647,14 +647,14 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                             <button
                               onClick={() => saveExerciseChanges(exercise)}
                               disabled={saving}
-                              className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                              className="flex-1 py-4 px-4 bg-gradient-to-br from-blue-500 to-cyan-600 text-white rounded-xl font-bold hover:from-blue-600 hover:to-cyan-700 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
                             >
                               <Save className="w-5 h-5" />
                               {saving ? 'שומר...' : 'שמור'}
                             </button>
                             <button
                               onClick={cancelEditing}
-                              className="py-3 px-4 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 flex items-center justify-center"
+                              className="py-4 px-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 flex items-center justify-center transition-all duration-300"
                             >
                               <X className="w-5 h-5" />
                             </button>
@@ -663,7 +663,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                       )}
 
                       {exercise.trainee_modified_at && !isEditing && (
-                        <p className="text-xs text-gray-400 mt-2">
+                        <p className="text-xs text-gray-400 mt-3 bg-gray-100 px-3 py-1 rounded-lg w-fit">
                           עודכן על ידך: {formatDate(exercise.trainee_modified_at)}
                         </p>
                       )}
@@ -676,12 +676,12 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
         </div>
 
         {exercises.length > 0 && completedCount === exercises.length && (
-          <div className="bg-gradient-to-l from-green-500 to-emerald-600 rounded-xl p-5 text-white text-center">
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Check className="w-8 h-8" />
+          <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white text-center shadow-xl">
+            <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <Check className="w-10 h-10" />
             </div>
-            <h3 className="text-xl font-bold">כל הכבוד!</h3>
-            <p className="text-green-100 mt-1">סיימת את כל התרגילים ליום זה</p>
+            <h3 className="text-2xl font-bold">כל הכבוד!</h3>
+            <p className="text-emerald-100 mt-2">סיימת את כל התרגילים ליום זה</p>
           </div>
         )}
       </div>
@@ -690,26 +690,26 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="bg-gradient-to-l from-green-600 to-green-500 rounded-xl p-5 text-white">
+      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-xl">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-xl font-bold">{plan.name}</h2>
+            <h2 className="text-2xl font-bold">{plan.name}</h2>
             {plan.description && (
-              <p className="text-green-100 text-sm mt-1">{plan.description}</p>
+              <p className="text-emerald-100 text-sm mt-2">{plan.description}</p>
             )}
           </div>
-          <div className="bg-white/20 p-3 rounded-xl">
-            <ClipboardList className="w-7 h-7" />
+          <div className="bg-white/20 p-4 rounded-2xl shadow-lg">
+            <ClipboardList className="w-8 h-8" />
           </div>
         </div>
 
         <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/20">
           <Calendar className="w-4 h-4" />
-          <span>{plan.days_per_week} ימי אימון בשבוע</span>
+          <span className="font-medium">{plan.days_per_week} ימי אימון בשבוע</span>
         </div>
 
         {plan.updated_at && (
-          <div className="flex items-center gap-2 mt-2 text-green-100 text-sm">
+          <div className="flex items-center gap-2 mt-2 text-emerald-100 text-sm">
             <Clock className="w-4 h-4" />
             <span>
               עדכון אחרון: {formatDate(plan.updated_at)}
@@ -724,16 +724,16 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
       </div>
 
       {history.length > 0 && (
-        <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-2xl">
           <button
             onClick={() => setShowHistory(!showHistory)}
-            className="w-full p-4 flex items-center justify-between text-right hover:bg-gray-50 transition-colors"
+            className="w-full p-4 flex items-center justify-between text-right hover:bg-gray-50 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                <History className="w-5 h-5 text-gray-600" />
+              <div className="w-12 h-12 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center shadow-md">
+                <History className="w-6 h-6 text-gray-600" />
               </div>
-              <span className="font-medium text-gray-900">היסטוריית שינויים</span>
+              <span className="font-bold text-gray-900">היסטוריית שינויים</span>
             </div>
             {showHistory ? (
               <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -745,14 +745,14 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           {showHistory && (
             <div className="border-t border-gray-200 p-4 space-y-3 max-h-64 overflow-y-auto">
               {history.map((item) => (
-                <div key={item.id} className="flex items-start gap-3 text-sm">
+                <div key={item.id} className="flex items-start gap-3 text-sm bg-gray-50 p-3 rounded-xl">
                   <div
-                    className={`w-2 h-2 rounded-full mt-2 ${
-                      item.changed_by_type === 'trainer' ? 'bg-blue-500' : 'bg-green-500'
+                    className={`w-3 h-3 rounded-full mt-1.5 ${
+                      item.changed_by_type === 'trainer' ? 'bg-blue-500' : 'bg-emerald-500'
                     }`}
                   />
                   <div className="flex-1">
-                    <p className="text-gray-900">{item.change_description}</p>
+                    <p className="text-gray-900 font-medium">{item.change_description}</p>
                     <p className="text-gray-500 text-xs mt-1">
                       {formatDate(item.created_at)} | {item.changed_by_type === 'trainer' ? 'מאמן' : 'מתאמן'}
                     </p>
@@ -773,23 +773,23 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           const completedCount = getCompletedCount(day.id);
 
           return (
-            <div key={day.id} className="bg-white rounded-xl shadow-lg overflow-hidden border-2 border-gray-200">
-              <div className={`bg-gradient-to-l ${color.bg} p-5 text-white`}>
+            <div key={day.id} className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-gray-200 transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
+              <div className={`bg-gradient-to-br ${color.bg} p-6 text-white`}>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="bg-white/20 p-2 rounded-lg">
+                      <div className="bg-white/20 p-2.5 rounded-xl shadow-lg">
                         <Icon className="w-6 h-6" />
                       </div>
                       {completedCount > 0 && completedCount === exercises.length && (
-                        <span className="bg-white/20 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                        <span className="bg-white/20 text-white text-xs px-3 py-1.5 rounded-xl flex items-center gap-1 font-bold">
                           <Check className="w-3 h-3" />
                           הושלם
                         </span>
                       )}
                     </div>
-                    <p className="text-sm opacity-80">יום {day.day_number}</p>
-                    <h3 className="text-xl font-bold">
+                    <p className="text-sm opacity-80 font-medium">יום {day.day_number}</p>
+                    <h3 className="text-2xl font-bold">
                       {day.day_name || `יום אימון ${day.day_number}`}
                     </h3>
                     {day.focus && (
@@ -800,9 +800,9 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                     )}
                   </div>
                   <div className="text-left">
-                    <div className="bg-white/20 rounded-lg p-3 text-center min-w-[60px]">
+                    <div className="bg-white/20 rounded-2xl p-4 text-center min-w-[70px] shadow-lg">
                       <p className="text-3xl font-bold">{exercises.length}</p>
-                      <p className="text-xs opacity-80">תרגילים</p>
+                      <p className="text-xs opacity-80 font-medium">תרגילים</p>
                     </div>
                   </div>
                 </div>
@@ -810,14 +810,14 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                 {completedCount > 0 && completedCount < exercises.length && (
                   <div className="mt-4 pt-4 border-t border-white/20">
                     <div className="flex items-center justify-between text-sm mb-2">
-                      <span>התקדמות</span>
-                      <span className="font-semibold">
+                      <span className="font-medium">התקדמות</span>
+                      <span className="font-bold">
                         {completedCount}/{exercises.length}
                       </span>
                     </div>
-                    <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                    <div className="h-3 bg-white/20 rounded-full overflow-hidden shadow-inner">
                       <div
-                        className="h-full bg-white transition-all"
+                        className="h-full bg-white transition-all duration-500 ease-out rounded-full"
                         style={{ width: `${(completedCount / exercises.length) * 100}%` }}
                       />
                     </div>
@@ -828,7 +828,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
               <div className="p-4">
                 <button
                   onClick={() => setSelectedDay(day)}
-                  className={`w-full py-4 px-4 rounded-xl font-semibold text-lg transition-all shadow-md hover:shadow-lg ${color.light} ${color.text} border-2 ${color.border}`}
+                  className={`w-full py-4 px-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] ${color.light} ${color.text} border-2 ${color.border}`}
                 >
                   {completedCount === exercises.length && exercises.length > 0 ? 'צפה באימון' : 'התחל אימון'}
                 </button>
@@ -839,10 +839,12 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
       </div>
 
       {days.length === 0 && (
-        <div className="text-center py-8 bg-gray-50 rounded-xl">
-          <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-600">אין ימי אימון בתוכנית</p>
-          <p className="text-sm text-gray-500 mt-1">המאמן שלך יוסיף ימי אימון בקרוב</p>
+        <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-xl">
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <Calendar className="w-8 h-8 text-gray-400" />
+          </div>
+          <p className="text-gray-600 font-bold text-lg">אין ימי אימון בתוכנית</p>
+          <p className="text-sm text-gray-500 mt-2">המאמן שלך יוסיף ימי אימון בקרוב</p>
         </div>
       )}
     </div>

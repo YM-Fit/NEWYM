@@ -390,22 +390,22 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
-      <div className="bg-white rounded-xl shadow-sm p-4 mb-4 sticky top-0 z-10">
+      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-xl p-5 mb-4 sticky top-0 z-10">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
             <button
               type="button"
               onClick={onBack}
-              className="p-3 hover:bg-gray-100 rounded-xl transition-colors"
+              className="p-3 hover:bg-white/20 rounded-xl transition-all duration-300 text-white"
               aria-label="חזור"
             >
               <ArrowRight className="h-6 w-6" />
             </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">אימון עצמאי</h1>
-              <p className="text-base text-gray-600">{traineeName}</p>
+            <div className="text-white">
+              <h1 className="text-2xl font-bold">אימון עצמאי</h1>
+              <p className="text-base text-emerald-100">{traineeName}</p>
               {exercises.length > 0 && (
-                <p className="text-sm text-green-600 font-semibold mt-1">
+                <p className="text-sm text-white font-bold mt-1 bg-white/20 px-3 py-1 rounded-lg inline-block">
                   נפח כולל: {calculateTotalVolume().toLocaleString()} ק"ג
                 </p>
               )}
@@ -417,16 +417,16 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
             type="button"
             onClick={() => handleSave()}
             disabled={saving || exercises.length === 0}
-            className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+            className="bg-white text-emerald-600 px-6 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:scale-[1.02]"
           >
             <Save className="h-5 w-5" />
-            <span className="font-semibold">{saving ? 'שומר...' : 'סיים אימון'}</span>
+            <span className="font-bold">{saving ? 'שומר...' : 'סיים אימון'}</span>
           </button>
         </div>
 
-        <div className="flex items-center justify-center bg-blue-50 border-2 border-blue-200 rounded-xl p-3">
-          <Clock className="h-5 w-5 text-blue-600 ml-2" />
-          <span className="text-lg font-bold text-blue-900">{formatTime(elapsedTime)}</span>
+        <div className="flex items-center justify-center bg-white/20 backdrop-blur-sm rounded-xl p-4 shadow-inner">
+          <Clock className="h-6 w-6 text-white ml-2" />
+          <span className="text-2xl font-bold text-white">{formatTime(elapsedTime)}</span>
         </div>
       </div>
 
@@ -437,21 +437,23 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
         return (
           <div
             key={workoutExercise.tempId}
-            className={`bg-white rounded-xl shadow-sm mb-4 transition-all ${
-              isMinimized ? 'bg-green-50 border-r-4 border-green-500' : ''
+            className={`bg-white rounded-2xl shadow-xl mb-4 transition-all duration-300 hover:shadow-2xl ${
+              isMinimized ? 'bg-emerald-50 border-r-4 border-emerald-500' : ''
             }`}
             style={{
-              height: isMinimized ? '64px' : 'auto',
+              height: isMinimized ? '72px' : 'auto',
               overflow: isMinimized ? 'hidden' : 'visible',
             }}
           >
             {isMinimized ? (
               <div
-                className="h-full flex items-center justify-between px-4 cursor-pointer hover:bg-green-100 transition-colors"
+                className="h-full flex items-center justify-between px-4 cursor-pointer hover:bg-emerald-100 transition-all duration-300"
                 onClick={() => toggleMinimizeExercise(workoutExercise.tempId)}
               >
                 <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                  <span className="text-2xl">✓</span>
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
+                    <span className="text-white text-lg font-bold">✓</span>
+                  </div>
                   <div>
                     <h3 className="text-lg font-bold text-gray-900">{workoutExercise.exercise.name}</h3>
                     <p className="text-sm text-gray-600">
@@ -460,14 +462,14 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                   </div>
                 </div>
                 <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                  <span className="text-sm text-green-600 font-semibold">לחץ לעריכה</span>
+                  <span className="text-sm text-emerald-600 font-bold bg-emerald-100 px-3 py-1 rounded-lg">לחץ לעריכה</span>
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       removeExercise(exerciseIndex);
                     }}
-                    className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                    className="p-2 hover:bg-red-50 text-red-600 rounded-xl transition-all duration-300"
                     aria-label="מחק תרגיל"
                   >
                     <Trash2 className="h-5 w-5" />
@@ -475,12 +477,12 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                 </div>
               </div>
             ) : (
-              <div className="p-4">
+              <div className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="text-xl font-bold text-gray-900">{workoutExercise.exercise.name}</h3>
                     {workoutExercise.sets.length > 0 && (
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-gray-600 mt-1 bg-gray-100 px-3 py-1 rounded-lg inline-block">
                         נפח: {calculateExerciseVolume(workoutExercise).toLocaleString()} ק"ג
                       </p>
                     )}
@@ -489,14 +491,14 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                     <button
                       type="button"
                       onClick={() => completeExercise(workoutExercise.tempId)}
-                      className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm font-semibold"
+                      className="px-4 py-2 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl"
                     >
                       סיים תרגיל
                     </button>
                     <button
                       type="button"
                       onClick={() => removeExercise(exerciseIndex)}
-                      className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                      className="p-2 hover:bg-red-50 text-red-600 rounded-xl transition-all duration-300"
                       aria-label="מחק תרגיל"
                     >
                       <Trash2 className="h-5 w-5" />
@@ -504,19 +506,19 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {workoutExercise.sets.map((set, setIndex) => (
                     <div
                       key={set.id}
-                      className="bg-gray-50 rounded-xl p-4 border-2 border-gray-200"
+                      className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border-2 border-gray-200 shadow-lg"
                     >
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="font-semibold text-base text-gray-700">סט {set.set_number}</span>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="font-bold text-base text-gray-700 bg-white px-3 py-1 rounded-lg shadow-sm">סט {set.set_number}</span>
                         <div className="flex space-x-2 rtl:space-x-reverse">
                           <button
                             type="button"
                             onClick={() => duplicateSet(exerciseIndex, setIndex)}
-                            className="p-2 hover:bg-white rounded-lg transition-colors"
+                            className="p-2 hover:bg-white rounded-xl transition-all duration-300 shadow-sm"
                             title="שכפל סט"
                             aria-label="שכפל סט"
                           >
@@ -526,7 +528,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                             <button
                               type="button"
                               onClick={() => removeSet(exerciseIndex, setIndex)}
-                              className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                              className="p-2 hover:bg-red-50 text-red-600 rounded-xl transition-all duration-300"
                               aria-label="מחק סט"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -535,53 +537,53 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-3 mb-3">
+                      <div className="grid grid-cols-3 gap-3 mb-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">משקל (ק״ג)</label>
+                          <label className="block text-sm font-bold text-gray-700 mb-2">משקל (ק״ג)</label>
                           <button
                             type="button"
                             onClick={() => openNumericPad(exerciseIndex, setIndex, 'weight', 'משקל (ק״ג)')}
-                            className="w-full px-3 py-4 text-2xl font-bold border-2 border-green-500 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-all"
+                            className="w-full px-3 py-4 text-2xl font-bold border-2 border-emerald-500 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 transition-all duration-300 shadow-md hover:shadow-lg hover:scale-[1.02]"
                           >
                             {set.weight || '0'}
                           </button>
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">חזרות</label>
+                          <label className="block text-sm font-bold text-gray-700 mb-2">חזרות</label>
                           <button
                             type="button"
                             onClick={() => openNumericPad(exerciseIndex, setIndex, 'reps', 'חזרות')}
-                            className="w-full px-3 py-4 text-2xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-all"
+                            className="w-full px-3 py-4 text-2xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-all duration-300 shadow-md hover:shadow-lg hover:scale-[1.02]"
                           >
                             {set.reps || '0'}
                           </button>
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">RPE</label>
+                          <label className="block text-sm font-bold text-gray-700 mb-2">RPE</label>
                           <button
                             type="button"
                             onClick={() => openNumericPad(exerciseIndex, setIndex, 'rpe', 'RPE (1-10)')}
-                            className="w-full px-3 py-4 text-2xl font-bold border-2 border-purple-500 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-all"
+                            className="w-full px-3 py-4 text-2xl font-bold border-2 border-amber-500 bg-amber-50 text-amber-700 rounded-xl hover:bg-amber-100 transition-all duration-300 shadow-md hover:shadow-lg hover:scale-[1.02]"
                           >
                             {set.rpe || '-'}
                           </button>
                         </div>
                       </div>
 
-                      <div className="mb-3 grid grid-cols-2 gap-2">
+                      <div className="mb-4 grid grid-cols-2 gap-3">
                         <button
                           type="button"
                           onClick={() => setEquipmentSelector({ exerciseIndex, setIndex })}
-                          className={`py-3 px-3 rounded-xl border-2 transition-all text-right ${
-                            set.equipment ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-300 bg-white'
+                          className={`py-3 px-3 rounded-xl border-2 transition-all duration-300 text-right shadow-sm ${
+                            set.equipment ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-300 bg-white hover:shadow-md'
                           }`}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2 rtl:space-x-reverse">
                               <span className="text-xl">{set.equipment?.emoji || '🎒'}</span>
-                              <span className="font-medium text-sm">{set.equipment?.name || 'ציוד'}</span>
+                              <span className="font-bold text-sm">{set.equipment?.name || 'ציוד'}</span>
                             </div>
                             {set.equipment && (
                               <button
@@ -603,13 +605,13 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                         <button
                           type="button"
                           onClick={() => updateSet(exerciseIndex, setIndex, 'failure', !set.failure)}
-                          className={`py-3 px-3 rounded-xl border-2 transition-all ${
-                            set.failure ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-300 hover:border-red-300 bg-white text-gray-700'
+                          className={`py-3 px-3 rounded-xl border-2 transition-all duration-300 shadow-sm ${
+                            set.failure ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-300 hover:border-red-300 bg-white text-gray-700 hover:shadow-md'
                           }`}
                         >
                           <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse">
                             <span className="text-xl">{set.failure ? '🔥' : '💪'}</span>
-                            <span className="font-medium text-sm">כשל</span>
+                            <span className="font-bold text-sm">כשל</span>
                           </div>
                         </button>
                       </div>
@@ -618,8 +620,8 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                         <button
                           type="button"
                           onClick={() => updateSet(exerciseIndex, setIndex, 'set_type', 'regular')}
-                          className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                            set.set_type === 'regular' ? 'bg-green-500 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                          className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all duration-300 shadow-sm ${
+                            set.set_type === 'regular' ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md' : 'bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50'
                           }`}
                         >
                           רגיל
@@ -631,8 +633,8 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                               updateSet(exerciseIndex, setIndex, 'set_type', 'superset');
                             }
                           }}
-                          className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                            set.set_type === 'superset' ? 'bg-blue-500 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                          className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all duration-300 shadow-sm ${
+                            set.set_type === 'superset' ? 'bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-md' : 'bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50'
                           }`}
                         >
                           סופר-סט
@@ -640,8 +642,8 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                         <button
                           type="button"
                           onClick={() => updateSet(exerciseIndex, setIndex, 'set_type', 'dropset')}
-                          className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                            set.set_type === 'dropset' ? 'bg-orange-500 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                          className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all duration-300 shadow-sm ${
+                            set.set_type === 'dropset' ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md' : 'bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50'
                           }`}
                         >
                           דרופ-סט
@@ -649,12 +651,12 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                       </div>
 
                       {set.set_type === 'superset' && (
-                        <div className="mt-3 pt-3 border-t border-gray-300">
-                          <div className="mb-3">
-                            <label className="block text-sm font-medium text-blue-700 mb-2">תרגיל סופר-סט</label>
+                        <div className="mt-4 pt-4 border-t-2 border-gray-200">
+                          <div className="mb-4">
+                            <label className="block text-sm font-bold text-blue-700 mb-2">תרגיל סופר-סט</label>
                             {set.superset_exercise_id ? (
-                              <div className="flex items-center justify-between bg-blue-50 border-2 border-blue-500 rounded-lg p-3">
-                                <span className="font-medium text-blue-900">{set.superset_exercise_name}</span>
+                              <div className="flex items-center justify-between bg-blue-50 border-2 border-blue-500 rounded-xl p-4 shadow-sm">
+                                <span className="font-bold text-blue-900">{set.superset_exercise_name}</span>
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -673,7 +675,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                               <button
                                 type="button"
                                 onClick={() => setSupersetSelector({ exerciseIndex, setIndex })}
-                                className="w-full py-3 px-4 border-2 border-dashed border-blue-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 text-blue-600 font-medium transition-all"
+                                className="w-full py-4 px-4 border-2 border-dashed border-blue-300 rounded-xl hover:border-blue-500 hover:bg-blue-50 text-blue-600 font-bold transition-all duration-300"
                               >
                                 + בחר תרגיל לסופר-סט
                               </button>
@@ -683,31 +685,31 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                             <div className="space-y-3">
                               <div className="grid grid-cols-3 gap-3">
                                 <div>
-                                  <label className="block text-sm font-medium text-blue-700 mb-1">משקל (ק״ג)</label>
+                                  <label className="block text-sm font-bold text-blue-700 mb-2">משקל (ק״ג)</label>
                                   <button
                                     type="button"
                                     onClick={() => openSupersetNumericPad(exerciseIndex, setIndex, 'superset_weight', 'משקל סופר-סט (ק״ג)')}
-                                    className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-all"
+                                    className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-all duration-300 shadow-md hover:shadow-lg"
                                   >
                                     {set.superset_weight || '0'}
                                   </button>
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-blue-700 mb-1">חזרות</label>
+                                  <label className="block text-sm font-bold text-blue-700 mb-2">חזרות</label>
                                   <button
                                     type="button"
                                     onClick={() => openSupersetNumericPad(exerciseIndex, setIndex, 'superset_reps', 'חזרות סופר-סט')}
-                                    className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-all"
+                                    className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-all duration-300 shadow-md hover:shadow-lg"
                                   >
                                     {set.superset_reps || '0'}
                                   </button>
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-blue-700 mb-1">RPE</label>
+                                  <label className="block text-sm font-bold text-blue-700 mb-2">RPE</label>
                                   <button
                                     type="button"
                                     onClick={() => openSupersetNumericPad(exerciseIndex, setIndex, 'superset_rpe', 'RPE סופר-סט (1-10)')}
-                                    className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-all"
+                                    className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-all duration-300 shadow-md hover:shadow-lg"
                                   >
                                     {set.superset_rpe || '-'}
                                   </button>
@@ -718,14 +720,14 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                                 <button
                                   type="button"
                                   onClick={() => setSupersetEquipmentSelector({ exerciseIndex, setIndex })}
-                                  className={`w-full py-3 px-4 rounded-xl border-2 transition-all text-right ${
-                                    set.superset_equipment ? 'border-blue-500 bg-blue-50' : 'border-blue-300 hover:border-blue-500 bg-white'
+                                  className={`w-full py-3 px-4 rounded-xl border-2 transition-all duration-300 text-right shadow-sm ${
+                                    set.superset_equipment ? 'border-blue-500 bg-blue-50' : 'border-blue-300 hover:border-blue-500 bg-white hover:shadow-md'
                                   }`}
                                 >
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center space-x-2 rtl:space-x-reverse">
                                       <span className="text-2xl">{set.superset_equipment?.emoji || '🎒'}</span>
-                                      <span className="font-medium text-base">{set.superset_equipment?.name || 'הוסף ציוד (אופציונלי)'}</span>
+                                      <span className="font-bold text-base">{set.superset_equipment?.name || 'הוסף ציוד (אופציונלי)'}</span>
                                     </div>
                                     {set.superset_equipment && (
                                       <button
@@ -750,23 +752,23 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                       )}
 
                       {set.set_type === 'dropset' && (
-                        <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-gray-300">
+                        <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t-2 border-gray-200">
                           <div>
-                            <label className="block text-sm font-medium text-orange-700 mb-1">משקל דרופ (ק״ג)</label>
+                            <label className="block text-sm font-bold text-amber-700 mb-2">משקל דרופ (ק״ג)</label>
                             <button
                               type="button"
                               onClick={() => openDropsetNumericPad(exerciseIndex, setIndex, 'dropset_weight', 'משקל דרופ-סט (ק״ג)')}
-                              className="w-full px-3 py-3 text-xl font-bold border-2 border-orange-500 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-all"
+                              className="w-full px-3 py-3 text-xl font-bold border-2 border-amber-500 bg-amber-50 text-amber-700 rounded-xl hover:bg-amber-100 transition-all duration-300 shadow-md hover:shadow-lg"
                             >
                               {set.dropset_weight || '0'}
                             </button>
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-orange-700 mb-1">חזרות דרופ</label>
+                            <label className="block text-sm font-bold text-amber-700 mb-2">חזרות דרופ</label>
                             <button
                               type="button"
                               onClick={() => openDropsetNumericPad(exerciseIndex, setIndex, 'dropset_reps', 'חזרות דרופ-סט')}
-                              className="w-full px-3 py-3 text-xl font-bold border-2 border-orange-500 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-all"
+                              className="w-full px-3 py-3 text-xl font-bold border-2 border-amber-500 bg-amber-50 text-amber-700 rounded-xl hover:bg-amber-100 transition-all duration-300 shadow-md hover:shadow-lg"
                             >
                               {set.dropset_reps || '0'}
                             </button>
@@ -780,7 +782,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                 <button
                   type="button"
                   onClick={() => addSet(exerciseIndex)}
-                  className="w-full mt-4 py-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-green-500 hover:bg-green-50 text-gray-600 hover:text-green-700 font-semibold text-base transition-all"
+                  className="w-full mt-4 py-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-emerald-500 hover:bg-emerald-50 text-gray-600 hover:text-emerald-700 font-bold text-base transition-all duration-300"
                 >
                   + הוסף סט
                 </button>
@@ -791,9 +793,11 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
       })}
 
       {exercises.length === 0 && (
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-8 text-center">
-          <Dumbbell className="mx-auto h-16 w-16 text-blue-400 mb-4" />
-          <h3 className="text-lg font-bold text-blue-900 mb-2">התחל אימון עצמאי</h3>
+        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-2xl p-8 text-center shadow-xl">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <Dumbbell className="h-10 w-10 text-white" />
+          </div>
+          <h3 className="text-2xl font-bold text-blue-900 mb-2">התחל אימון עצמאי</h3>
           <p className="text-blue-700 mb-4">הוסף תרגילים ורשום את הסטים שלך</p>
         </div>
       )}
@@ -801,10 +805,10 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
       <button
         type="button"
         onClick={() => setShowExerciseSelector(true)}
-        className="w-full bg-green-500 hover:bg-green-600 text-white py-5 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all shadow-lg"
+        className="w-full bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-5 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]"
       >
         <Plus className="h-6 w-6" />
-        <span className="font-semibold text-lg">{exercises.length === 0 ? 'התחל אימון' : 'הוסף תרגיל'}</span>
+        <span className="font-bold text-lg">{exercises.length === 0 ? 'התחל אימון' : 'הוסף תרגיל'}</span>
       </button>
 
       {showExerciseSelector && (

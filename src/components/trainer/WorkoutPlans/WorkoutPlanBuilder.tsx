@@ -11,6 +11,7 @@ import {
   Repeat,
   Copy,
   Calculator,
+  Dumbbell,
 } from 'lucide-react';
 import ExerciseSelector from '../Workouts/ExerciseSelector';
 import QuickNumericPad from '../Workouts/QuickNumericPad';
@@ -78,12 +79,12 @@ interface WorkoutPlanBuilderProps {
 }
 
 const dayColors = [
-  { bg: 'from-green-500 to-emerald-600', light: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-  { bg: 'from-blue-500 to-blue-600', light: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-  { bg: 'from-amber-500 to-orange-600', light: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-  { bg: 'from-rose-500 to-pink-600', light: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
-  { bg: 'from-cyan-500 to-teal-600', light: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200' },
-  { bg: 'from-violet-500 to-purple-600', light: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
+  { bg: 'from-emerald-500 to-teal-600', light: 'bg-gradient-to-br from-emerald-50 to-teal-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  { bg: 'from-blue-500 to-sky-600', light: 'bg-gradient-to-br from-blue-50 to-sky-50', text: 'text-blue-700', border: 'border-blue-200' },
+  { bg: 'from-amber-500 to-orange-600', light: 'bg-gradient-to-br from-amber-50 to-orange-50', text: 'text-amber-700', border: 'border-amber-200' },
+  { bg: 'from-rose-500 to-pink-600', light: 'bg-gradient-to-br from-rose-50 to-pink-50', text: 'text-rose-700', border: 'border-rose-200' },
+  { bg: 'from-cyan-500 to-teal-600', light: 'bg-gradient-to-br from-cyan-50 to-teal-50', text: 'text-cyan-700', border: 'border-cyan-200' },
+  { bg: 'from-green-500 to-emerald-600', light: 'bg-gradient-to-br from-green-50 to-emerald-50', text: 'text-green-700', border: 'border-green-200' },
 ];
 
 interface WorkoutPlanTemplate {
@@ -635,58 +636,64 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
     const color = dayColors[colorIndex];
 
     return (
-      <div className="min-h-screen bg-gray-50 p-4 lg:p-6">
-        <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 lg:p-6">
+        {/* Day Edit Header */}
+        <div className="bg-white rounded-2xl shadow-xl p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3 rtl:space-x-reverse">
               <button
                 onClick={() => setSelectedDay(null)}
-                className="p-3 lg:p-4 hover:bg-gray-100 rounded-xl transition-colors"
+                className="p-3 lg:p-4 hover:bg-gray-100 rounded-xl transition-all duration-300"
               >
-                <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7" />
+                <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7 text-gray-600" />
               </button>
-              <div>
-                <h1 className="text-xl lg:text-3xl font-bold text-gray-900">יום {selectedDay.day_number}</h1>
-                <p className="text-base lg:text-lg text-gray-600">{selectedDay.day_name || 'הגדר שם ליום'}</p>
+              <div className="flex items-center gap-4">
+                <div className={`w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br ${color.bg} rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105`}>
+                  <span className="text-2xl lg:text-3xl font-bold text-white">{selectedDay.day_number}</span>
+                </div>
+                <div>
+                  <h1 className="text-xl lg:text-3xl font-bold text-gray-900">יום {selectedDay.day_number}</h1>
+                  <p className="text-base lg:text-lg text-gray-600">{selectedDay.day_name || 'הגדר שם ליום'}</p>
+                </div>
               </div>
             </div>
             <button
               onClick={() => completeDay(selectedDay.tempId)}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+              className="bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-5 py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
             >
               סיים יום
             </button>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">שם היום</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">שם היום</label>
               <input
                 type="text"
                 value={selectedDay.day_name}
                 onChange={(e) => updateDay(selectedDay.tempId, 'day_name', e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
                 placeholder="לדוגמה: חזה + טריצפס"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">פוקוס (קבוצות שריר)</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">פוקוס (קבוצות שריר)</label>
               <input
                 type="text"
                 value={selectedDay.focus}
                 onChange={(e) => updateDay(selectedDay.tempId, 'focus', e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
                 placeholder="חזה, כתפיים קדמיות, טריצפס"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">הערות ליום</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">הערות ליום</label>
               <textarea
                 value={selectedDay.notes}
                 onChange={(e) => updateDay(selectedDay.tempId, 'notes', e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
                 rows={2}
                 placeholder="הערות כלליות ליום האימון..."
               />
@@ -694,6 +701,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           </div>
         </div>
 
+        {/* Exercise List */}
         <div className="space-y-4">
           {selectedDay.exercises.map((exercise, exerciseIndex) => {
             const isMinimized = selectedExerciseIndex !== exerciseIndex;
@@ -701,34 +709,36 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             return (
               <div
                 key={exercise.tempId}
-                className={`bg-white rounded-xl shadow-sm transition-all ${
-                  !isMinimized ? '' : 'bg-green-50 border-r-4 border-green-500'
+                className={`bg-white rounded-2xl shadow-xl transition-all duration-300 hover:shadow-2xl ${
+                  !isMinimized ? '' : 'bg-gradient-to-br from-emerald-50 to-teal-50 border-r-4 border-emerald-500'
                 }`}
                 style={{
-                  height: isMinimized ? '64px' : 'auto',
+                  height: isMinimized ? '72px' : 'auto',
                   overflow: isMinimized ? 'hidden' : 'visible',
                 }}
               >
                 {isMinimized ? (
                   <div
-                    className="h-full flex items-center justify-between px-4 lg:px-6 cursor-pointer hover:bg-green-100 transition-colors"
+                    className="h-full flex items-center justify-between px-4 lg:px-6 cursor-pointer hover:bg-emerald-100/50 transition-all duration-300"
                     onClick={() => completeExercise(exerciseIndex)}
                   >
                     <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                      <span className="text-2xl">✓</span>
+                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
+                        <span className="text-lg text-white font-bold">{exerciseIndex + 1}</span>
+                      </div>
                       <div>
                         <h3 className="text-lg font-bold text-gray-900">{exercise.exercise.name}</h3>
                         <p className="text-sm text-gray-600">{exercise.sets.length} סטים</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                      <span className="text-sm text-green-600 font-semibold">לחץ לעריכה</span>
+                      <span className="text-sm text-emerald-600 font-semibold">לחץ לעריכה</span>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           removeExerciseFromDay(exerciseIndex);
                         }}
-                        className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                        className="p-2 hover:bg-red-50 text-red-600 rounded-xl transition-all duration-300"
                       >
                         <Trash2 className="h-5 w-5" />
                       </button>
@@ -737,40 +747,45 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                 ) : (
                   <div className="p-4 lg:p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg lg:text-2xl font-bold text-gray-900">{exercise.exercise.name}</h3>
-                        {exercise.exercise.muscle_group?.name && (
-                          <p className="text-sm text-gray-500">{exercise.exercise.muscle_group.name}</p>
-                        )}
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
+                          <span className="text-xl text-white font-bold">{exerciseIndex + 1}</span>
+                        </div>
+                        <div>
+                          <h3 className="text-lg lg:text-2xl font-bold text-gray-900">{exercise.exercise.name}</h3>
+                          {exercise.exercise.muscle_group?.name && (
+                            <p className="text-sm text-gray-500">{exercise.exercise.muscle_group.name}</p>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center space-x-2 rtl:space-x-reverse">
                         <button
                           onClick={() => completeExercise(exerciseIndex)}
-                          className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm font-semibold"
+                          className="px-4 py-2 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105"
                         >
                           סיים תרגיל
                         </button>
                         <button
                           onClick={() => removeExerciseFromDay(exerciseIndex)}
-                          className="p-2 lg:p-3 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                          className="p-3 hover:bg-red-50 text-red-600 rounded-xl transition-all duration-300"
                         >
                           <Trash2 className="h-5 w-5 lg:h-6 lg:w-6" />
                         </button>
                       </div>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {exercise.sets.map((set, setIndex) => (
                         <div
                           key={set.id}
-                          className="bg-gray-50 rounded-xl p-4 border-2 border-gray-200"
+                          className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border-2 border-gray-200 transition-all duration-300 hover:shadow-md"
                         >
                           <div className="flex items-center justify-between mb-3">
-                            <span className="font-semibold text-base lg:text-lg text-gray-700">סט {set.set_number}</span>
+                            <span className="font-bold text-base lg:text-lg text-gray-700 bg-white px-3 py-1 rounded-lg shadow-sm">סט {set.set_number}</span>
                             <div className="flex space-x-2 rtl:space-x-reverse">
                               <button
                                 onClick={() => duplicateSet(exerciseIndex, setIndex)}
-                                className="p-2 lg:p-3 hover:bg-white rounded-lg transition-colors"
+                                className="p-2 lg:p-3 hover:bg-white rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
                                 title="שכפל סט"
                               >
                                 <Copy className="h-4 w-4 lg:h-5 lg:w-5 text-gray-600" />
@@ -778,7 +793,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                               {exercise.sets.length > 1 && (
                                 <button
                                   onClick={() => removeSet(exerciseIndex, setIndex)}
-                                  className="p-2 lg:p-3 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                                  className="p-2 lg:p-3 hover:bg-red-50 text-red-600 rounded-xl transition-all duration-300"
                                 >
                                   <Trash2 className="h-4 w-4 lg:h-5 lg:w-5" />
                                 </button>
@@ -788,30 +803,30 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
                           <div className="grid grid-cols-3 gap-3 lg:gap-4 mb-3">
                             <div>
-                              <label className="block text-sm lg:text-base font-medium text-gray-700 mb-1">משקל (ק״ג)</label>
+                              <label className="block text-sm lg:text-base font-semibold text-gray-700 mb-2">משקל (ק״ג)</label>
                               <button
                                 onClick={() => openNumericPad(exerciseIndex, setIndex, 'weight', 'משקל (ק״ג)')}
-                                className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-green-500 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-all"
+                                className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-emerald-500 bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-700 rounded-xl hover:from-emerald-100 hover:to-teal-100 transition-all duration-300 shadow-md hover:shadow-lg"
                               >
                                 {set.weight || '0'}
                               </button>
                             </div>
 
                             <div>
-                              <label className="block text-sm lg:text-base font-medium text-gray-700 mb-1">חזרות</label>
+                              <label className="block text-sm lg:text-base font-semibold text-gray-700 mb-2">חזרות</label>
                               <button
                                 onClick={() => openNumericPad(exerciseIndex, setIndex, 'reps', 'חזרות')}
-                                className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-all"
+                                className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-sky-50 text-blue-700 rounded-xl hover:from-blue-100 hover:to-sky-100 transition-all duration-300 shadow-md hover:shadow-lg"
                               >
                                 {set.reps || '0'}
                               </button>
                             </div>
 
                             <div>
-                              <label className="block text-sm lg:text-base font-medium text-gray-700 mb-1">RPE</label>
+                              <label className="block text-sm lg:text-base font-semibold text-gray-700 mb-2">RPE</label>
                               <button
                                 onClick={() => openNumericPad(exerciseIndex, setIndex, 'rpe', 'RPE (1-10)')}
-                                className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-purple-500 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-all"
+                                className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-amber-500 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 transition-all duration-300 shadow-md hover:shadow-lg"
                               >
                                 {set.rpe || '-'}
                               </button>
@@ -821,10 +836,10 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                           <div className="mb-3 grid grid-cols-2 gap-2">
                             <button
                               onClick={() => setEquipmentSelector({ exerciseIndex, setIndex })}
-                              className={`py-3 lg:py-4 px-3 rounded-xl border-2 transition-all text-right ${
+                              className={`py-3 lg:py-4 px-3 rounded-xl border-2 transition-all duration-300 text-right shadow-sm hover:shadow-md ${
                                 set.equipment
-                                  ? 'border-blue-500 bg-blue-50'
-                                  : 'border-gray-300 hover:border-blue-300 bg-white'
+                                  ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-sky-50'
+                                  : 'border-gray-300 hover:border-blue-400 bg-white'
                               }`}
                             >
                               <div className="flex items-center justify-between">
@@ -832,7 +847,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                                   <span className="text-xl lg:text-2xl">
                                     {set.equipment?.emoji || '🎒'}
                                   </span>
-                                  <span className="font-medium text-sm lg:text-base">
+                                  <span className="font-semibold text-sm lg:text-base">
                                     {set.equipment?.name || 'ציוד'}
                                   </span>
                                 </div>
@@ -853,17 +868,17 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
                             <button
                               onClick={() => updateSet(exerciseIndex, setIndex, 'failure', !set.failure)}
-                              className={`py-3 lg:py-4 px-3 rounded-xl border-2 transition-all ${
+                              className={`py-3 lg:py-4 px-3 rounded-xl border-2 transition-all duration-300 shadow-sm hover:shadow-md ${
                                 set.failure
-                                  ? 'border-red-500 bg-red-50 text-red-700'
-                                  : 'border-gray-300 hover:border-red-300 bg-white text-gray-700'
+                                  ? 'border-red-500 bg-gradient-to-br from-red-50 to-rose-50 text-red-700'
+                                  : 'border-gray-300 hover:border-red-400 bg-white text-gray-700'
                               }`}
                             >
                               <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse">
                                 <span className="text-xl lg:text-2xl">
                                   {set.failure ? '🔥' : '💪'}
                                 </span>
-                                <span className="font-medium text-sm lg:text-base">
+                                <span className="font-semibold text-sm lg:text-base">
                                   כשל
                                 </span>
                               </div>
@@ -873,10 +888,10 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                           <div className="flex space-x-2 rtl:space-x-reverse">
                             <button
                               onClick={() => updateSet(exerciseIndex, setIndex, 'set_type', 'regular')}
-                              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                              className={`flex-1 py-3 px-3 rounded-xl text-sm font-bold transition-all duration-300 ${
                                 set.set_type === 'regular'
-                                  ? 'bg-green-500 text-white'
-                                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                  ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg'
+                                  : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
                               }`}
                             >
                               רגיל
@@ -887,20 +902,20 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                                   updateSet(exerciseIndex, setIndex, 'set_type', 'superset');
                                 }
                               }}
-                              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                              className={`flex-1 py-3 px-3 rounded-xl text-sm font-bold transition-all duration-300 ${
                                 set.set_type === 'superset'
-                                  ? 'bg-blue-500 text-white'
-                                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                  ? 'bg-gradient-to-br from-blue-500 to-sky-600 text-white shadow-lg'
+                                  : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
                               }`}
                             >
                               סופר-סט
                             </button>
                             <button
                               onClick={() => updateSet(exerciseIndex, setIndex, 'set_type', 'dropset')}
-                              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                              className={`flex-1 py-3 px-3 rounded-xl text-sm font-bold transition-all duration-300 ${
                                 set.set_type === 'dropset'
-                                  ? 'bg-orange-500 text-white'
-                                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                  ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg'
+                                  : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
                               }`}
                             >
                               דרופ-סט
@@ -908,14 +923,14 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                           </div>
 
                           {set.set_type === 'superset' && (
-                            <div className="mt-3 pt-3 border-t border-gray-300">
+                            <div className="mt-4 pt-4 border-t-2 border-blue-200">
                               <div className="mb-3">
-                                <label className="block text-sm font-medium text-blue-700 mb-2">
+                                <label className="block text-sm font-bold text-blue-700 mb-2">
                                   תרגיל סופר-סט
                                 </label>
                                 {set.superset_exercise_id ? (
-                                  <div className="flex items-center justify-between bg-blue-50 border-2 border-blue-500 rounded-lg p-3">
-                                    <span className="font-medium text-blue-900">{set.superset_exercise_name}</span>
+                                  <div className="flex items-center justify-between bg-gradient-to-br from-blue-50 to-sky-50 border-2 border-blue-500 rounded-xl p-4 shadow-md">
+                                    <span className="font-bold text-blue-900">{set.superset_exercise_name}</span>
                                     <button
                                       onClick={() => {
                                         updateSet(exerciseIndex, setIndex, 'superset_exercise_id', null);
@@ -931,7 +946,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                                 ) : (
                                   <button
                                     onClick={() => setSupersetSelector({ exerciseIndex, setIndex })}
-                                    className="w-full py-3 px-4 border-2 border-dashed border-blue-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 text-blue-600 font-medium transition-all"
+                                    className="w-full py-4 px-4 border-2 border-dashed border-blue-400 rounded-xl hover:border-blue-500 hover:bg-blue-50 text-blue-600 font-bold transition-all duration-300"
                                   >
                                     + בחר תרגיל לסופר-סט
                                   </button>
@@ -941,34 +956,34 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                                 <div className="space-y-3">
                                   <div className="grid grid-cols-3 gap-3">
                                     <div>
-                                      <label className="block text-sm font-medium text-blue-700 mb-1">
+                                      <label className="block text-sm font-bold text-blue-700 mb-2">
                                         משקל (ק״ג)
                                       </label>
                                       <button
                                         onClick={() => openSupersetNumericPad(exerciseIndex, setIndex, 'superset_weight', 'משקל סופר-סט (ק״ג)')}
-                                        className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-all"
+                                        className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-sky-50 text-blue-700 rounded-xl hover:from-blue-100 hover:to-sky-100 transition-all duration-300 shadow-md hover:shadow-lg"
                                       >
                                         {set.superset_weight || '0'}
                                       </button>
                                     </div>
                                     <div>
-                                      <label className="block text-sm font-medium text-blue-700 mb-1">
+                                      <label className="block text-sm font-bold text-blue-700 mb-2">
                                         חזרות
                                       </label>
                                       <button
                                         onClick={() => openSupersetNumericPad(exerciseIndex, setIndex, 'superset_reps', 'חזרות סופר-סט')}
-                                        className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-all"
+                                        className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-sky-50 text-blue-700 rounded-xl hover:from-blue-100 hover:to-sky-100 transition-all duration-300 shadow-md hover:shadow-lg"
                                       >
                                         {set.superset_reps || '0'}
                                       </button>
                                     </div>
                                     <div>
-                                      <label className="block text-sm font-medium text-blue-700 mb-1">
+                                      <label className="block text-sm font-bold text-blue-700 mb-2">
                                         RPE
                                       </label>
                                       <button
                                         onClick={() => openSupersetNumericPad(exerciseIndex, setIndex, 'superset_rpe', 'RPE סופר-סט (1-10)')}
-                                        className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-all"
+                                        className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-sky-50 text-blue-700 rounded-xl hover:from-blue-100 hover:to-sky-100 transition-all duration-300 shadow-md hover:shadow-lg"
                                       >
                                         {set.superset_rpe || '-'}
                                       </button>
@@ -978,9 +993,9 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                                   <div>
                                     <button
                                       onClick={() => setSupersetEquipmentSelector({ exerciseIndex, setIndex })}
-                                      className={`w-full py-3 px-4 rounded-xl border-2 transition-all text-right ${
+                                      className={`w-full py-3 px-4 rounded-xl border-2 transition-all duration-300 text-right shadow-sm hover:shadow-md ${
                                         set.superset_equipment
-                                          ? 'border-blue-500 bg-blue-50'
+                                          ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-sky-50'
                                           : 'border-blue-300 hover:border-blue-500 bg-white'
                                       }`}
                                     >
@@ -989,7 +1004,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                                           <span className="text-2xl">
                                             {set.superset_equipment?.emoji || '🎒'}
                                           </span>
-                                          <span className="font-medium text-base">
+                                          <span className="font-semibold text-base">
                                             {set.superset_equipment?.name || 'הוסף ציוד (אופציונלי)'}
                                           </span>
                                         </div>
@@ -1010,30 +1025,30 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                                   </div>
 
                                   <div>
-                                    <label className="block text-sm font-medium text-blue-700 mb-2">
+                                    <label className="block text-sm font-bold text-blue-700 mb-2">
                                       דרופ-סט לסופר-סט (אופציונלי)
                                     </label>
                                     {(set.superset_dropset_weight !== null && set.superset_dropset_weight !== undefined) || (set.superset_dropset_reps !== null && set.superset_dropset_reps !== undefined) ? (
-                                      <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-3">
+                                      <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-4 shadow-md">
                                         <div className="grid grid-cols-2 gap-3 mb-2">
                                           <div>
-                                            <label className="block text-xs font-medium text-orange-700 mb-1">
+                                            <label className="block text-xs font-bold text-amber-700 mb-1">
                                               משקל דרופ (ק״ג)
                                             </label>
                                             <button
                                               onClick={() => openSupersetDropsetNumericPad(exerciseIndex, setIndex, 'superset_dropset_weight', 'משקל דרופ-סט סופר (ק״ג)')}
-                                              className="w-full px-2 py-2 text-lg font-bold border-2 border-orange-500 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-all"
+                                              className="w-full px-2 py-2 text-lg font-bold border-2 border-amber-500 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 transition-all duration-300 shadow-md"
                                             >
                                               {set.superset_dropset_weight || '0'}
                                             </button>
                                           </div>
                                           <div>
-                                            <label className="block text-xs font-medium text-orange-700 mb-1">
+                                            <label className="block text-xs font-bold text-amber-700 mb-1">
                                               חזרות דרופ
                                             </label>
                                             <button
                                               onClick={() => openSupersetDropsetNumericPad(exerciseIndex, setIndex, 'superset_dropset_reps', 'חזרות דרופ-סט סופר')}
-                                              className="w-full px-2 py-2 text-lg font-bold border-2 border-orange-500 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-all"
+                                              className="w-full px-2 py-2 text-lg font-bold border-2 border-amber-500 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 transition-all duration-300 shadow-md"
                                             >
                                               {set.superset_dropset_reps || '0'}
                                             </button>
@@ -1044,7 +1059,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                                             updateSet(exerciseIndex, setIndex, 'superset_dropset_weight', null);
                                             updateSet(exerciseIndex, setIndex, 'superset_dropset_reps', null);
                                           }}
-                                          className="text-xs text-red-600 hover:text-red-700"
+                                          className="text-xs text-red-600 hover:text-red-700 font-semibold"
                                         >
                                           הסר דרופ-סט
                                         </button>
@@ -1055,7 +1070,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                                           updateSet(exerciseIndex, setIndex, 'superset_dropset_weight', 0);
                                           updateSet(exerciseIndex, setIndex, 'superset_dropset_reps', 0);
                                         }}
-                                        className="w-full py-2 px-4 border-2 border-dashed border-orange-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 text-orange-600 font-medium transition-all text-sm"
+                                        className="w-full py-2 px-4 border-2 border-dashed border-amber-400 rounded-xl hover:border-amber-500 hover:bg-amber-50 text-amber-600 font-bold transition-all duration-300 text-sm"
                                       >
                                         + הוסף דרופ-סט
                                       </button>
@@ -1067,25 +1082,25 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                           )}
 
                           {set.set_type === 'dropset' && (
-                            <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-gray-300">
+                            <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t-2 border-amber-200">
                               <div>
-                                <label className="block text-sm font-medium text-orange-700 mb-1">
+                                <label className="block text-sm font-bold text-amber-700 mb-2">
                                   משקל דרופ (ק״ג)
                                 </label>
                                 <button
                                   onClick={() => openDropsetNumericPad(exerciseIndex, setIndex, 'dropset_weight', 'משקל דרופ-סט (ק״ג)')}
-                                  className="w-full px-3 py-3 text-xl font-bold border-2 border-orange-500 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-all"
+                                  className="w-full px-3 py-3 text-xl font-bold border-2 border-amber-500 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 transition-all duration-300 shadow-md hover:shadow-lg"
                                 >
                                   {set.dropset_weight || '0'}
                                 </button>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-orange-700 mb-1">
+                                <label className="block text-sm font-bold text-amber-700 mb-2">
                                   חזרות דרופ
                                 </label>
                                 <button
                                   onClick={() => openDropsetNumericPad(exerciseIndex, setIndex, 'dropset_reps', 'חזרות דרופ-סט')}
-                                  className="w-full px-3 py-3 text-xl font-bold border-2 border-orange-500 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-all"
+                                  className="w-full px-3 py-3 text-xl font-bold border-2 border-amber-500 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 transition-all duration-300 shadow-md hover:shadow-lg"
                                 >
                                   {set.dropset_reps || '0'}
                                 </button>
@@ -1098,17 +1113,17 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
                     <button
                       onClick={() => addSet(exerciseIndex)}
-                      className="w-full mt-4 py-4 lg:py-5 border-2 border-dashed border-gray-300 rounded-xl hover:border-green-500 hover:bg-green-50 text-gray-600 hover:text-green-700 font-semibold text-base lg:text-lg transition-all"
+                      className="w-full mt-4 py-4 lg:py-5 border-2 border-dashed border-gray-300 rounded-xl hover:border-emerald-500 hover:bg-emerald-50 text-gray-600 hover:text-emerald-700 font-bold text-base lg:text-lg transition-all duration-300"
                     >
                       + הוסף סט
                     </button>
 
                     <div className="mt-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">הערות לתרגיל</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">הערות לתרגיל</label>
                       <textarea
                         value={exercise.notes}
                         onChange={(e) => updateExercise(exerciseIndex, 'notes', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
                         rows={2}
                         placeholder="הערות לביצוע התרגיל..."
                       />
@@ -1122,10 +1137,10 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
         <button
           onClick={() => setShowExerciseSelector(true)}
-          className="w-full mt-4 bg-green-500 hover:bg-green-600 text-white py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all shadow-lg"
+          className="w-full mt-4 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]"
         >
           <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
-          <span className="font-semibold text-lg lg:text-xl">הוסף תרגיל</span>
+          <span className="font-bold text-lg lg:text-xl">הוסף תרגיל</span>
         </button>
 
         {showExerciseSelector && (
@@ -1206,61 +1221,67 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 lg:p-6">
-      <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 lg:p-6">
+      {/* Main Header */}
+      <div className="bg-white rounded-2xl shadow-xl p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
             <button
               onClick={onBack}
-              className="p-3 lg:p-4 hover:bg-gray-100 rounded-xl transition-colors"
+              className="p-3 lg:p-4 hover:bg-gray-100 rounded-xl transition-all duration-300"
             >
-              <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7" />
+              <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7 text-gray-600" />
             </button>
-            <div>
-              <h1 className="text-xl lg:text-3xl font-bold text-gray-900">תוכנית אימון חדשה</h1>
-              <p className="text-base lg:text-lg text-gray-600">{traineeName}</p>
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105">
+                <Dumbbell className="w-7 h-7 lg:w-8 lg:h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl lg:text-3xl font-bold text-gray-900">תוכנית אימון חדשה</h1>
+                <p className="text-base lg:text-lg text-gray-600">{traineeName}</p>
+              </div>
             </div>
           </div>
 
           <button
             onClick={handleSave}
             disabled={saving || days.length === 0 || !planName.trim()}
-            className="bg-green-500 hover:bg-green-600 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+            className="bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl hover:scale-105"
           >
             <Save className="h-5 w-5 lg:h-6 lg:w-6" />
-            <span className="font-semibold text-base lg:text-lg">{saving ? 'שומר...' : 'שמור תוכנית'}</span>
+            <span className="font-bold text-base lg:text-lg">{saving ? 'שומר...' : 'שמור תוכנית'}</span>
           </button>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">שם התוכנית</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">שם התוכנית</label>
             <input
               type="text"
               value={planName}
               onChange={(e) => setPlanName(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
               placeholder="לדוגמה: תוכנית כוח - שלב 1"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">תיאור</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">תיאור</label>
             <textarea
               value={planDescription}
               onChange={(e) => setPlanDescription(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
               rows={2}
               placeholder="מטרות, הערות כלליות..."
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">ימי אימון בשבוע</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">ימי אימון בשבוע</label>
             <select
               value={daysPerWeek}
               onChange={(e) => setDaysPerWeek(parseInt(e.target.value))}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
             >
               {[1, 2, 3, 4, 5, 6, 7].map(n => (
                 <option key={n} value={n}>{n} ימים</option>
@@ -1268,14 +1289,14 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             </select>
           </div>
 
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={() => {
                 loadTemplates();
                 setShowLoadTemplateModal(true);
               }}
-              className="flex-1 py-3 px-4 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold rounded-lg transition-colors border border-blue-200"
+              className="flex-1 py-4 px-4 bg-gradient-to-br from-blue-50 to-sky-50 hover:from-blue-100 hover:to-sky-100 text-blue-700 font-bold rounded-xl transition-all duration-300 border-2 border-blue-200 shadow-md hover:shadow-lg"
             >
               טען תבנית
             </button>
@@ -1283,7 +1304,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
               <button
                 type="button"
                 onClick={() => setShowSaveTemplateModal(true)}
-                className="flex-1 py-3 px-4 bg-green-50 hover:bg-green-100 text-green-700 font-semibold rounded-lg transition-colors border border-green-200"
+                className="flex-1 py-4 px-4 bg-gradient-to-br from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 text-emerald-700 font-bold rounded-xl transition-all duration-300 border-2 border-emerald-200 shadow-md hover:shadow-lg"
               >
                 שמור כתבנית
               </button>
@@ -1294,9 +1315,9 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
       {/* Load Template Modal */}
       {showLoadTemplateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-gray-200">
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50 p-4 transition-all duration-300">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col transition-all duration-300">
+            <div className="p-6 border-b border-gray-200 bg-gradient-to-br from-blue-50 to-sky-50">
               <h3 className="text-2xl font-bold text-gray-900">בחר תבנית</h3>
               <p className="text-gray-600 mt-1">טען תוכנית אימון מוכנה מראש</p>
             </div>
@@ -1304,7 +1325,10 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             <div className="flex-1 overflow-y-auto p-6">
               {templates.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-500">אין תבניות שמורות</p>
+                  <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Dumbbell className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 text-lg font-medium">אין תבניות שמורות</p>
                   <p className="text-sm text-gray-400 mt-2">צור תוכנית ושמור אותה כתבנית</p>
                 </div>
               ) : (
@@ -1313,13 +1337,13 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                     <button
                       key={template.id}
                       onClick={() => handleLoadTemplate(template)}
-                      className="w-full text-right p-4 bg-gray-50 hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-400 rounded-lg transition-all"
+                      className="w-full text-right p-5 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-blue-50 hover:to-sky-50 border-2 border-gray-200 hover:border-blue-400 rounded-2xl transition-all duration-300 shadow-md hover:shadow-lg"
                     >
-                      <h4 className="font-bold text-gray-900">{template.name}</h4>
+                      <h4 className="font-bold text-gray-900 text-lg">{template.name}</h4>
                       {template.description && (
                         <p className="text-sm text-gray-600 mt-1">{template.description}</p>
                       )}
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-gray-500 mt-2 font-medium">
                         {template.days?.length || 0} ימי אימון
                       </p>
                     </button>
@@ -1331,7 +1355,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             <div className="p-6 border-t border-gray-200">
               <button
                 onClick={() => setShowLoadTemplateModal(false)}
-                className="w-full py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-colors"
+                className="w-full py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl transition-all duration-300"
               >
                 סגור
               </button>
@@ -1342,27 +1366,27 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
       {/* Save Template Modal */}
       {showSaveTemplateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50 p-4 transition-all duration-300">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transition-all duration-300">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">שמור כתבנית</h3>
-            <p className="text-gray-600 mb-4">תוכל לטעון תבנית זו בעתיד</p>
+            <p className="text-gray-600 mb-6">תוכל לטעון תבנית זו בעתיד</p>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">שם התבנית</label>
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">שם התבנית</label>
               <input
                 type="text"
                 value={templateName}
                 onChange={(e) => setTemplateName(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
                 placeholder="לדוגמה: תוכנית כוח בסיסית"
                 autoFocus
               />
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button
                 onClick={handleSaveAsTemplate}
-                className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors"
+                className="flex-1 py-4 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
               >
                 שמור
               </button>
@@ -1371,7 +1395,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                   setShowSaveTemplateModal(false);
                   setTemplateName('');
                 }}
-                className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-colors"
+                className="flex-1 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl transition-all duration-300"
               >
                 ביטול
               </button>
@@ -1380,6 +1404,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
         </div>
       )}
 
+      {/* Day Cards */}
       <div className="space-y-4">
         {days.map((day) => {
           const colorIndex = (day.day_number - 1) % dayColors.length;
@@ -1389,41 +1414,43 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           return (
             <div
               key={day.tempId}
-              className={`bg-white rounded-xl shadow-sm transition-all ${
-                isMinimized ? 'bg-green-50 border-r-4 border-green-500' : ''
+              className={`bg-white rounded-2xl shadow-xl transition-all duration-300 hover:shadow-2xl ${
+                isMinimized ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-r-4 border-emerald-500' : ''
               }`}
               style={{
-                height: isMinimized ? '80px' : 'auto',
+                height: isMinimized ? '88px' : 'auto',
                 overflow: isMinimized ? 'hidden' : 'visible',
               }}
             >
               {isMinimized ? (
                 <div
-                  className="h-full flex items-center justify-between px-4 lg:px-6 cursor-pointer hover:bg-green-100 transition-colors"
+                  className="h-full flex items-center justify-between px-4 lg:px-6 cursor-pointer hover:bg-emerald-100/50 transition-all duration-300"
                   onClick={() => {
                     setSelectedDay(day);
                     toggleMinimizeDay(day.tempId);
                   }}
                 >
                   <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                    <span className="text-2xl">✓</span>
+                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
+                      <span className="text-xl text-white font-bold">{day.day_number}</span>
+                    </div>
                     <div>
                       <h3 className="text-lg font-bold text-gray-900">
                         יום {day.day_number} {day.day_name ? `- ${day.day_name}` : ''}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        {day.exercises.length} תרגילים • {day.focus || 'ללא פוקוס'}
+                        {day.exercises.length} תרגילים {day.focus ? `| ${day.focus}` : ''}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                    <span className="text-sm text-green-600 font-semibold">לחץ לעריכה</span>
+                    <span className="text-sm text-emerald-600 font-semibold">לחץ לעריכה</span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         removeDay(day.tempId);
                       }}
-                      className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                      className="p-2 hover:bg-red-50 text-red-600 rounded-xl transition-all duration-300"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -1431,10 +1458,10 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                 </div>
               ) : (
                 <div className="p-4 lg:p-6">
-                  <div className={`bg-gradient-to-l ${color.bg} rounded-xl p-5 text-white mb-4`}>
+                  <div className={`bg-gradient-to-br ${color.bg} rounded-2xl p-5 text-white mb-4 shadow-lg transition-all duration-300`}>
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-sm opacity-80">יום {day.day_number}</p>
+                        <p className="text-sm opacity-80 font-medium">יום {day.day_number}</p>
                         <h2 className="text-xl font-bold">
                           {day.day_name || `יום אימון ${day.day_number}`}
                         </h2>
@@ -1448,14 +1475,14 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => duplicateDay(day)}
-                          className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                          className="p-2 bg-white/20 hover:bg-white/30 rounded-xl transition-all duration-300"
                           title="שכפל יום"
                         >
                           <Copy className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => removeDay(day.tempId)}
-                          className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                          className="p-2 bg-white/20 hover:bg-white/30 rounded-xl transition-all duration-300"
                           title="מחק יום"
                         >
                           <Trash2 className="w-5 h-5" />
@@ -1464,42 +1491,46 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                     </div>
 
                     <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/20">
-                      <span>{day.exercises.length} תרגילים</span>
+                      <span className="font-medium">{day.exercises.length} תרגילים</span>
                     </div>
                   </div>
 
                   {day.exercises.length > 0 && (
                     <div className="space-y-2 mb-4">
                       {day.exercises.map((exercise, index) => (
-                        <div key={exercise.tempId} className={`${color.light} ${color.border} border rounded-lg p-3`}>
+                        <div key={exercise.tempId} className={`${color.light} ${color.border} border-2 rounded-xl p-4 transition-all duration-300 hover:shadow-md`}>
                           <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <h4 className={`font-bold ${color.text}`}>{exercise.exercise.name}</h4>
-                              <div className="flex items-center gap-3 mt-1 text-sm text-gray-600">
-                                <span className="flex items-center gap-1">
-                                  <Repeat className="w-3 h-3" />
-                                  {exercise.sets.length} סטים
-                                </span>
+                            <div className="flex-1 flex items-center gap-3">
+                              <div className={`w-8 h-8 bg-gradient-to-br ${color.bg} rounded-lg flex items-center justify-center shadow-md`}>
+                                <span className="text-sm text-white font-bold">{index + 1}</span>
+                              </div>
+                              <div>
+                                <h4 className={`font-bold ${color.text}`}>{exercise.exercise.name}</h4>
+                                <div className="flex items-center gap-3 mt-1 text-sm text-gray-600">
+                                  <span className="flex items-center gap-1">
+                                    <Repeat className="w-3 h-3" />
+                                    {exercise.sets.length} סטים
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                            <span className={`text-2xl font-bold ${color.text}`}>{index + 1}</span>
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button
                       onClick={() => setSelectedDay(day)}
-                      className={`flex-1 py-3 px-4 rounded-lg ${color.light} ${color.text} font-semibold hover:opacity-80 transition-colors`}
+                      className={`flex-1 py-4 px-4 rounded-xl ${color.light} ${color.text} font-bold hover:opacity-80 transition-all duration-300 border-2 ${color.border} shadow-md hover:shadow-lg`}
                     >
                       {day.exercises.length === 0 ? 'הוסף תרגילים' : 'ערוך יום'}
                     </button>
                     {day.exercises.length > 0 && (
                       <button
                         onClick={() => completeDay(day.tempId)}
-                        className="px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors"
+                        className="px-5 py-4 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl"
                       >
                         סיים יום
                       </button>
@@ -1514,10 +1545,10 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
       <button
         onClick={addDay}
-        className="w-full mt-4 bg-green-500 hover:bg-green-600 text-white py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all shadow-lg"
+        className="w-full mt-4 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]"
       >
         <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
-        <span className="font-semibold text-lg lg:text-xl">{days.length === 0 ? 'הוסף יום אימון ראשון' : 'הוסף יום אימון נוסף'}</span>
+        <span className="font-bold text-lg lg:text-xl">{days.length === 0 ? 'הוסף יום אימון ראשון' : 'הוסף יום אימון נוסף'}</span>
       </button>
     </div>
   );

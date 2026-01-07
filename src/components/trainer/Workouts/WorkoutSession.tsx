@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { ArrowRight, Plus, Save, Copy, Trash2, Calculator, BookMarked } from 'lucide-react';
+import { ArrowRight, Plus, Save, Copy, Trash2, Calculator, BookMarked, Dumbbell } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useAutoSave } from '../../../hooks/useAutoSave';
@@ -499,29 +499,35 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 lg:p-6">
-      <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 lg:p-6">
+      {/* Premium Header */}
+      <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl shadow-xl p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3 lg:space-x-4 rtl:space-x-reverse">
             <button
               type="button"
               onClick={onBack}
-              className="p-3 lg:p-4 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors touch-manipulation"
+              className="p-3 lg:p-4 hover:bg-white/10 active:bg-white/20 rounded-xl transition-all duration-300 touch-manipulation text-white"
               aria-label="חזור"
             >
               <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7" />
             </button>
-            <div>
-              <h1 className="text-xl lg:text-3xl font-bold text-gray-900">
-                {workoutId ? 'עריכת אימון' : 'אימון חדש'}
-              </h1>
-              <p className="text-base lg:text-lg text-gray-600">{trainee.full_name}</p>
-              {exercises.length > 0 && (
-                <p className="text-sm lg:text-base text-green-600 font-semibold mt-1">
-                  נפח כולל: {calculateTotalVolume().toLocaleString()} ק"ג
-                </p>
-              )}
-              {!workoutId && <AutoSaveIndicator lastSaved={lastSaved} isDirty={isDirty} />}
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <Dumbbell className="h-6 w-6 lg:h-7 lg:w-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl lg:text-3xl font-bold text-white">
+                  {workoutId ? 'עריכת אימון' : 'אימון חדש'}
+                </h1>
+                <p className="text-base lg:text-lg text-emerald-100">{trainee.full_name}</p>
+                {exercises.length > 0 && (
+                  <p className="text-sm lg:text-base text-white font-semibold mt-1 bg-white/20 rounded-lg px-2 py-0.5 inline-block">
+                    נפח כולל: {calculateTotalVolume().toLocaleString()} ק"ג
+                  </p>
+                )}
+                {!workoutId && <AutoSaveIndicator lastSaved={lastSaved} isDirty={isDirty} />}
+              </div>
             </div>
           </div>
 
@@ -529,7 +535,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
             <button
               type="button"
               onClick={() => setShowCalculator(true)}
-              className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white px-4 lg:px-6 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all shadow-lg hover:shadow-xl touch-manipulation"
+              className="bg-white/20 hover:bg-white/30 backdrop-blur-sm active:bg-white/40 text-white px-4 lg:px-6 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 shadow-lg hover:shadow-xl touch-manipulation"
             >
               <Calculator className="h-5 w-5 lg:h-6 lg:w-6" />
               <span className="font-semibold text-base lg:text-lg">מחשבון</span>
@@ -538,7 +544,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
               <button
                 type="button"
                 onClick={() => setShowSaveTemplateModal(true)}
-                className="bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white px-4 lg:px-6 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all shadow-lg hover:shadow-xl touch-manipulation"
+                className="bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white px-4 lg:px-6 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 shadow-lg hover:shadow-xl touch-manipulation"
               >
                 <BookMarked className="h-5 w-5 lg:h-6 lg:w-6" />
                 <span className="font-semibold text-base lg:text-lg">שמור תבנית</span>
@@ -548,21 +554,21 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
               type="button"
               onClick={handleSave}
               disabled={saving || exercises.length === 0}
-              className="bg-green-500 hover:bg-green-600 active:bg-green-700 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl touch-manipulation"
+              className="bg-white hover:bg-gray-50 active:bg-gray-100 text-emerald-700 px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl touch-manipulation font-bold"
             >
               <Save className="h-5 w-5 lg:h-6 lg:w-6" />
-              <span className="font-semibold text-base lg:text-lg">{saving ? 'שומר...' : (workoutId ? 'עדכן אימון' : 'שמור אימון')}</span>
+              <span className="text-base lg:text-lg">{saving ? 'שומר...' : (workoutId ? 'עדכן אימון' : 'שמור אימון')}</span>
             </button>
           </div>
         </div>
 
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">תאריך האימון</label>
+        <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl p-4">
+          <label className="block text-sm font-medium text-emerald-100 mb-2">תאריך האימון</label>
           <input
             type="date"
             value={workoutDate.toISOString().split('T')[0]}
             onChange={(e) => setWorkoutDate(new Date(e.target.value))}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            className="w-full px-4 py-3 border-2 border-white/20 bg-white/10 text-white rounded-xl focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
           />
         </div>
 
@@ -570,10 +576,10 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           <button
             type="button"
             onClick={() => setWorkoutType('personal')}
-            className={`py-4 lg:py-5 px-4 rounded-lg border-2 transition-all touch-manipulation ${
+            className={`py-4 lg:py-5 px-4 rounded-xl border-2 transition-all duration-300 touch-manipulation ${
               workoutType === 'personal'
-                ? 'border-green-500 bg-green-50 text-green-700 font-semibold'
-                : 'border-gray-200 hover:bg-gray-50 active:bg-gray-100'
+                ? 'border-white bg-white text-emerald-700 font-bold shadow-lg'
+                : 'border-white/30 hover:bg-white/10 text-white'
             }`}
           >
             <span className="text-base lg:text-lg">אימון אישי</span>
@@ -581,10 +587,10 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           <button
             type="button"
             onClick={() => setWorkoutType('pair')}
-            className={`py-4 lg:py-5 px-4 rounded-lg border-2 transition-all touch-manipulation ${
+            className={`py-4 lg:py-5 px-4 rounded-xl border-2 transition-all duration-300 touch-manipulation ${
               workoutType === 'pair'
-                ? 'border-green-500 bg-green-50 text-green-700 font-semibold'
-                : 'border-gray-200 hover:bg-gray-50 active:bg-gray-100'
+                ? 'border-white bg-white text-emerald-700 font-bold shadow-lg'
+                : 'border-white/30 hover:bg-white/10 text-white'
             }`}
           >
             <span className="text-base lg:text-lg">אימון זוגי</span>
@@ -599,39 +605,41 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
         return (
           <div
             key={workoutExercise.tempId}
-            className={`bg-white rounded-xl shadow-sm mb-4 lg:mb-6 transition-all duration-300 ease-in-out ${
+            className={`bg-white rounded-2xl shadow-xl hover:shadow-2xl mb-4 lg:mb-6 transition-all duration-300 ease-in-out overflow-hidden ${
               isMinimized
-                ? 'bg-green-50 border-r-4 border-green-500'
-                : ''
+                ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-r-4 border-emerald-500'
+                : 'border border-gray-100'
             }`}
             style={{
-              height: isMinimized ? '64px' : 'auto',
+              height: isMinimized ? '72px' : 'auto',
               overflow: isMinimized ? 'hidden' : 'visible',
             }}
           >
             {isMinimized ? (
               <div
-                className="h-full flex items-center justify-between px-4 lg:px-6 cursor-pointer hover:bg-green-100 transition-colors"
+                className="h-full flex items-center justify-between px-4 lg:px-6 cursor-pointer hover:bg-emerald-100/50 transition-all duration-300"
                 onClick={() => toggleMinimizeExercise(workoutExercise.tempId)}
               >
                 <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                  <span className="text-2xl">✓</span>
+                  <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-lg font-bold">V</span>
+                  </div>
                   <div>
                     <h3 className="text-lg font-bold text-gray-900">{workoutExercise.exercise.name}</h3>
                     <p className="text-sm text-gray-600">
-                      {summary.totalSets} סטים • {summary.maxWeight} ק״ג מקס • נפח: {summary.totalVolume.toLocaleString()} ק״ג
+                      {summary.totalSets} סטים | {summary.maxWeight} ק״ג מקס | נפח: {summary.totalVolume.toLocaleString()} ק״ג
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                  <span className="text-sm text-green-600 font-semibold">לחץ לעריכה</span>
+                  <span className="text-sm text-emerald-600 font-semibold bg-emerald-100 px-3 py-1 rounded-lg">לחץ לעריכה</span>
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       removeExercise(exerciseIndex);
                     }}
-                    className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                    className="p-2 hover:bg-red-50 text-red-500 rounded-xl transition-all duration-300"
                     aria-label="מחק תרגיל"
                   >
                     <Trash2 className="h-5 w-5" />
@@ -644,7 +652,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                   <div>
                     <h3 className="text-lg lg:text-2xl font-bold text-gray-900">{workoutExercise.exercise.name}</h3>
                     {workoutExercise.sets.length > 0 && (
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-emerald-600 mt-1 font-semibold">
                         נפח: {calculateExerciseVolume(workoutExercise).toLocaleString()} ק"ג
                       </p>
                     )}
@@ -653,14 +661,14 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                     <button
                       type="button"
                       onClick={() => completeExercise(workoutExercise.tempId)}
-                      className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm font-semibold"
+                      className="px-4 py-2 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-xl"
                     >
                       סיים תרגיל
                     </button>
                     <button
                       type="button"
                       onClick={() => removeExercise(exerciseIndex)}
-                      className="p-2 lg:p-3 hover:bg-red-50 active:bg-red-100 text-red-600 rounded-lg transition-colors touch-manipulation"
+                      className="p-2 lg:p-3 hover:bg-red-50 active:bg-red-100 text-red-500 rounded-xl transition-all duration-300 touch-manipulation"
                       aria-label="מחק תרגיל"
                     >
                       <Trash2 className="h-5 w-5 lg:h-6 lg:w-6" />
@@ -672,25 +680,25 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
             {workoutExercise.sets.map((set, setIndex) => (
               <div
                 key={set.id}
-                className="bg-gray-50 rounded-xl p-4 border-2 border-gray-200"
+                className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-semibold text-base lg:text-lg text-gray-700">סט {set.set_number}</span>
+                  <span className="font-bold text-base lg:text-lg text-white bg-gradient-to-br from-emerald-500 to-teal-600 px-4 py-2 rounded-xl">סט {set.set_number}</span>
                   <div className="flex space-x-2 rtl:space-x-reverse">
                     <button
                       type="button"
                       onClick={() => duplicateSet(exerciseIndex, setIndex)}
-                      className="p-2 lg:p-3 hover:bg-white active:bg-gray-100 rounded-lg transition-colors touch-manipulation"
+                      className="p-2 lg:p-3 hover:bg-blue-50 active:bg-blue-100 rounded-xl transition-all duration-300 touch-manipulation"
                       title="שכפל סט"
                       aria-label="שכפל סט"
                     >
-                      <Copy className="h-4 w-4 lg:h-5 lg:w-5 text-gray-600" />
+                      <Copy className="h-4 w-4 lg:h-5 lg:w-5 text-blue-600" />
                     </button>
                     {workoutExercise.sets.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeSet(exerciseIndex, setIndex)}
-                        className="p-2 lg:p-3 hover:bg-red-50 active:bg-red-100 text-red-600 rounded-lg transition-colors touch-manipulation"
+                        className="p-2 lg:p-3 hover:bg-red-50 active:bg-red-100 text-red-500 rounded-xl transition-all duration-300 touch-manipulation"
                         aria-label="מחק סט"
                       >
                         <Trash2 className="h-4 w-4 lg:h-5 lg:w-5" />
@@ -705,7 +713,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                     <button
                       type="button"
                       onClick={() => openNumericPad(exerciseIndex, setIndex, 'weight', 'משקל (ק״ג)')}
-                      className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-green-500 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 active:bg-green-200 transition-all touch-manipulation"
+                      className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-emerald-400 bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-700 rounded-xl hover:from-emerald-100 hover:to-teal-100 active:from-emerald-200 active:to-teal-200 transition-all duration-300 touch-manipulation shadow-md hover:shadow-lg"
                     >
                       {set.weight || '0'}
                     </button>
@@ -716,7 +724,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                     <button
                       type="button"
                       onClick={() => openNumericPad(exerciseIndex, setIndex, 'reps', 'חזרות')}
-                      className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 active:bg-blue-200 transition-all touch-manipulation"
+                      className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-700 rounded-xl hover:from-blue-100 hover:to-cyan-100 active:from-blue-200 active:to-cyan-200 transition-all duration-300 touch-manipulation shadow-md hover:shadow-lg"
                     >
                       {set.reps || '0'}
                     </button>
@@ -727,7 +735,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                     <button
                       type="button"
                       onClick={() => openNumericPad(exerciseIndex, setIndex, 'rpe', 'RPE (1-10)')}
-                      className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-purple-500 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 active:bg-purple-200 transition-all touch-manipulation"
+                      className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 active:from-amber-200 active:to-orange-200 transition-all duration-300 touch-manipulation shadow-md hover:shadow-lg"
                     >
                       {set.rpe || '-'}
                     </button>
@@ -738,10 +746,10 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                   <button
                     type="button"
                     onClick={() => setEquipmentSelector({ exerciseIndex, setIndex })}
-                    className={`py-3 lg:py-4 px-3 rounded-xl border-2 transition-all text-right ${
+                    className={`py-3 lg:py-4 px-3 rounded-xl border-2 transition-all duration-300 text-right shadow-md hover:shadow-lg ${
                       set.equipment
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-300 hover:border-blue-300 bg-white'
+                        ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50'
+                        : 'border-gray-200 hover:border-blue-300 bg-white hover:bg-blue-50/50'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -761,7 +769,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                             updateSet(exerciseIndex, setIndex, 'equipment_id', null);
                             updateSet(exerciseIndex, setIndex, 'equipment', null);
                           }}
-                          className="p-1 hover:bg-red-100 rounded-lg text-red-600"
+                          className="p-1 hover:bg-red-100 rounded-lg text-red-500 transition-all duration-300"
                           aria-label="מחק ציוד"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -773,10 +781,10 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                   <button
                     type="button"
                     onClick={() => updateSet(exerciseIndex, setIndex, 'failure', !set.failure)}
-                    className={`py-3 lg:py-4 px-3 rounded-xl border-2 transition-all ${
+                    className={`py-3 lg:py-4 px-3 rounded-xl border-2 transition-all duration-300 shadow-md hover:shadow-lg ${
                       set.failure
-                        ? 'border-red-500 bg-red-50 text-red-700'
-                        : 'border-gray-300 hover:border-red-300 bg-white text-gray-700'
+                        ? 'border-red-400 bg-gradient-to-br from-red-50 to-orange-50 text-red-700'
+                        : 'border-gray-200 hover:border-red-300 bg-white text-gray-700 hover:bg-red-50/50'
                     }`}
                   >
                     <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse">
@@ -792,10 +800,10 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                   <button
                     type="button"
                     onClick={() => setCalculatorData({ weight: set.weight, reps: set.reps })}
-                    className="py-3 lg:py-4 px-3 rounded-xl border-2 border-gray-300 hover:border-orange-300 bg-white hover:bg-orange-50 transition-all"
+                    className="py-3 lg:py-4 px-3 rounded-xl border-2 border-gray-200 hover:border-amber-300 bg-white hover:bg-gradient-to-br hover:from-amber-50 hover:to-orange-50 transition-all duration-300 shadow-md hover:shadow-lg"
                   >
                     <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse">
-                      <Calculator className="h-5 w-5 lg:h-6 lg:w-6 text-orange-600" />
+                      <Calculator className="h-5 w-5 lg:h-6 lg:w-6 text-amber-600" />
                       <span className="font-medium text-sm lg:text-base text-gray-700">
                         1RM
                       </span>
@@ -807,10 +815,10 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                   <button
                     type="button"
                     onClick={() => updateSet(exerciseIndex, setIndex, 'set_type', 'regular')}
-                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all duration-300 ${
                       set.set_type === 'regular'
-                        ? 'bg-green-500 text-white'
-                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg'
+                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-emerald-300'
                     }`}
                   >
                     רגיל
@@ -822,10 +830,10 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                         updateSet(exerciseIndex, setIndex, 'set_type', 'superset');
                       }
                     }}
-                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all duration-300 ${
                       set.set_type === 'superset'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        ? 'bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-lg'
+                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-blue-300'
                     }`}
                   >
                     סופר-סט
@@ -833,10 +841,10 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                   <button
                     type="button"
                     onClick={() => updateSet(exerciseIndex, setIndex, 'set_type', 'dropset')}
-                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all duration-300 ${
                       set.set_type === 'dropset'
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg'
+                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-amber-300'
                     }`}
                   >
                     דרופ-סט
@@ -844,13 +852,13 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                 </div>
 
                 {set.set_type === 'superset' && (
-                  <div className="mt-3 pt-3 border-t border-gray-300">
+                  <div className="mt-3 pt-3 border-t border-gray-200">
                     <div className="mb-3">
                       <label className="block text-sm font-medium text-blue-700 mb-2">
                         תרגיל סופר-סט
                       </label>
                       {set.superset_exercise_id ? (
-                        <div className="flex items-center justify-between bg-blue-50 border-2 border-blue-500 rounded-lg p-3">
+                        <div className="flex items-center justify-between bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-400 rounded-xl p-3 shadow-md">
                           <span className="font-medium text-blue-900">{set.superset_exercise_name}</span>
                           <button
                             type="button"
@@ -860,7 +868,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                               updateSet(exerciseIndex, setIndex, 'superset_weight', null);
                               updateSet(exerciseIndex, setIndex, 'superset_reps', null);
                             }}
-                            className="p-1 hover:bg-red-100 rounded-lg text-red-600"
+                            className="p-1 hover:bg-red-100 rounded-lg text-red-500 transition-all duration-300"
                             aria-label="מחק תרגיל סופר-סט"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -870,7 +878,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                         <button
                           type="button"
                           onClick={() => setSupersetSelector({ exerciseIndex, setIndex })}
-                          className="w-full py-3 px-4 border-2 border-dashed border-blue-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 text-blue-600 font-medium transition-all"
+                          className="w-full py-3 px-4 border-2 border-dashed border-blue-300 rounded-xl hover:border-blue-500 hover:bg-blue-50 text-blue-600 font-medium transition-all duration-300"
                         >
                           + בחר תרגיל לסופר-סט
                         </button>
@@ -886,7 +894,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                             <button
                               type="button"
                               onClick={() => openSupersetNumericPad(exerciseIndex, setIndex, 'superset_weight', 'משקל סופר-סט (ק״ג)')}
-                              className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 active:bg-blue-200 transition-all"
+                              className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-700 rounded-xl hover:from-blue-100 hover:to-cyan-100 active:from-blue-200 active:to-cyan-200 transition-all duration-300 shadow-md"
                             >
                               {set.superset_weight || '0'}
                             </button>
@@ -898,7 +906,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                             <button
                               type="button"
                               onClick={() => openSupersetNumericPad(exerciseIndex, setIndex, 'superset_reps', 'חזרות סופר-סט')}
-                              className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 active:bg-blue-200 transition-all"
+                              className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-700 rounded-xl hover:from-blue-100 hover:to-cyan-100 active:from-blue-200 active:to-cyan-200 transition-all duration-300 shadow-md"
                             >
                               {set.superset_reps || '0'}
                             </button>
@@ -910,7 +918,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                             <button
                               type="button"
                               onClick={() => openSupersetNumericPad(exerciseIndex, setIndex, 'superset_rpe', 'RPE סופר-סט (1-10)')}
-                              className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 active:bg-blue-200 transition-all"
+                              className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-700 rounded-xl hover:from-blue-100 hover:to-cyan-100 active:from-blue-200 active:to-cyan-200 transition-all duration-300 shadow-md"
                             >
                               {set.superset_rpe || '-'}
                             </button>
@@ -921,10 +929,10 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                           <button
                             type="button"
                             onClick={() => setSupersetEquipmentSelector({ exerciseIndex, setIndex })}
-                            className={`w-full py-3 px-4 rounded-xl border-2 transition-all text-right ${
+                            className={`w-full py-3 px-4 rounded-xl border-2 transition-all duration-300 text-right shadow-md hover:shadow-lg ${
                               set.superset_equipment
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-blue-300 hover:border-blue-500 bg-white'
+                                ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50'
+                                : 'border-blue-200 hover:border-blue-400 bg-white'
                             }`}
                           >
                             <div className="flex items-center justify-between">
@@ -944,7 +952,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                                     updateSet(exerciseIndex, setIndex, 'superset_equipment_id', null);
                                     updateSet(exerciseIndex, setIndex, 'superset_equipment', null);
                                   }}
-                                  className="p-1 hover:bg-red-100 rounded-lg text-red-600"
+                                  className="p-1 hover:bg-red-100 rounded-lg text-red-500 transition-all duration-300"
                                   aria-label="מחק ציוד"
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -959,28 +967,28 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                             דרופ-סט לסופר-סט (אופציונלי)
                           </label>
                           {(set.superset_dropset_weight !== null && set.superset_dropset_weight !== undefined) || (set.superset_dropset_reps !== null && set.superset_dropset_reps !== undefined) ? (
-                            <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-3">
+                            <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-3 shadow-md">
                               <div className="grid grid-cols-2 gap-3 mb-2">
                                 <div>
-                                  <label className="block text-xs font-medium text-orange-700 mb-1">
+                                  <label className="block text-xs font-medium text-amber-700 mb-1">
                                     משקל דרופ (ק״ג)
                                   </label>
                                   <button
                                     type="button"
                                     onClick={() => openSupersetDropsetNumericPad(exerciseIndex, setIndex, 'superset_dropset_weight', 'משקל דרופ-סט סופר (ק״ג)')}
-                                    className="w-full px-2 py-2 text-lg font-bold border-2 border-orange-500 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 active:bg-orange-200 transition-all touch-manipulation"
+                                    className="w-full px-2 py-2 text-lg font-bold border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 active:from-amber-200 active:to-orange-200 transition-all duration-300 touch-manipulation shadow-sm"
                                   >
                                     {set.superset_dropset_weight || '0'}
                                   </button>
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-medium text-orange-700 mb-1">
+                                  <label className="block text-xs font-medium text-amber-700 mb-1">
                                     חזרות דרופ
                                   </label>
                                   <button
                                     type="button"
                                     onClick={() => openSupersetDropsetNumericPad(exerciseIndex, setIndex, 'superset_dropset_reps', 'חזרות דרופ-סט סופר')}
-                                    className="w-full px-2 py-2 text-lg font-bold border-2 border-orange-500 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 active:bg-orange-200 transition-all touch-manipulation"
+                                    className="w-full px-2 py-2 text-lg font-bold border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 active:from-amber-200 active:to-orange-200 transition-all duration-300 touch-manipulation shadow-sm"
                                   >
                                     {set.superset_dropset_reps || '0'}
                                   </button>
@@ -992,7 +1000,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                                   updateSet(exerciseIndex, setIndex, 'superset_dropset_weight', null);
                                   updateSet(exerciseIndex, setIndex, 'superset_dropset_reps', null);
                                 }}
-                                className="text-xs text-red-600 hover:text-red-700"
+                                className="text-xs text-red-500 hover:text-red-600 transition-all duration-300"
                               >
                                 הסר דרופ-סט
                               </button>
@@ -1004,7 +1012,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                                 updateSet(exerciseIndex, setIndex, 'superset_dropset_weight', 0);
                                 updateSet(exerciseIndex, setIndex, 'superset_dropset_reps', 0);
                               }}
-                              className="w-full py-2 px-4 border-2 border-dashed border-orange-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 text-orange-600 font-medium transition-all text-sm"
+                              className="w-full py-2 px-4 border-2 border-dashed border-amber-300 rounded-xl hover:border-amber-500 hover:bg-amber-50 text-amber-600 font-medium transition-all duration-300 text-sm"
                             >
                               + הוסף דרופ-סט
                             </button>
@@ -1016,27 +1024,27 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                 )}
 
                 {set.set_type === 'dropset' && (
-                  <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-gray-300">
+                  <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-gray-200">
                     <div>
-                      <label className="block text-sm font-medium text-orange-700 mb-1">
+                      <label className="block text-sm font-medium text-amber-700 mb-1">
                         משקל דרופ (ק״ג)
                       </label>
                       <button
                         type="button"
                         onClick={() => openDropsetNumericPad(exerciseIndex, setIndex, 'dropset_weight', 'משקל דרופ-סט (ק״ג)')}
-                        className="w-full px-3 py-3 text-xl font-bold border-2 border-orange-500 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 active:bg-orange-200 transition-all touch-manipulation"
+                        className="w-full px-3 py-3 text-xl font-bold border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 active:from-amber-200 active:to-orange-200 transition-all duration-300 touch-manipulation shadow-md"
                       >
                         {set.dropset_weight || '0'}
                       </button>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-orange-700 mb-1">
+                      <label className="block text-sm font-medium text-amber-700 mb-1">
                         חזרות דרופ
                       </label>
                       <button
                         type="button"
                         onClick={() => openDropsetNumericPad(exerciseIndex, setIndex, 'dropset_reps', 'חזרות דרופ-סט')}
-                        className="w-full px-3 py-3 text-xl font-bold border-2 border-orange-500 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 active:bg-orange-200 transition-all touch-manipulation"
+                        className="w-full px-3 py-3 text-xl font-bold border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 active:from-amber-200 active:to-orange-200 transition-all duration-300 touch-manipulation shadow-md"
                       >
                         {set.dropset_reps || '0'}
                       </button>
@@ -1050,7 +1058,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           <button
             type="button"
             onClick={() => addSet(exerciseIndex)}
-            className="w-full mt-4 py-4 lg:py-5 border-2 border-dashed border-gray-300 rounded-xl hover:border-green-500 active:border-green-600 hover:bg-green-50 active:bg-green-100 text-gray-600 hover:text-green-700 font-semibold text-base lg:text-lg transition-all touch-manipulation"
+            className="w-full mt-4 py-4 lg:py-5 border-2 border-dashed border-gray-300 rounded-xl hover:border-emerald-500 active:border-emerald-600 hover:bg-emerald-50 active:bg-emerald-100 text-gray-500 hover:text-emerald-700 font-semibold text-base lg:text-lg transition-all duration-300 touch-manipulation"
           >
             + הוסף סט
           </button>
@@ -1061,13 +1069,13 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
       })}
 
       {exercises.length === 0 && !workoutId && (
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-4">
+        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-2xl p-6 mb-4 shadow-xl">
           <h3 className="text-lg font-bold text-blue-900 mb-2">התחל אימון חדש</h3>
           <p className="text-blue-700 mb-4">בחר תבנית קיימת או התחל אימון ריק</p>
           <button
             type="button"
             onClick={() => setShowTemplateModal(true)}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-lg flex items-center justify-center space-x-2 rtl:space-x-reverse transition-colors font-semibold mb-3"
+            className="w-full bg-gradient-to-br from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white py-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all duration-300 font-semibold mb-3 shadow-lg hover:shadow-xl"
           >
             <BookMarked className="h-5 w-5" />
             <span>טען תבנית קיימת</span>
@@ -1079,7 +1087,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
       <button
         type="button"
         onClick={() => setShowExerciseSelector(true)}
-        className="w-full bg-green-500 hover:bg-green-600 active:bg-green-700 text-white py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all shadow-lg hover:shadow-xl touch-manipulation"
+        className="w-full bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:from-emerald-700 active:to-teal-800 text-white py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl touch-manipulation"
       >
         <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
         <span className="font-semibold text-lg lg:text-xl">{exercises.length === 0 ? 'התחל אימון ריק' : 'הוסף תרגיל'}</span>
@@ -1186,10 +1194,17 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
       )}
 
       {showSaveTemplateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">שמור כתבנית</h3>
-            <p className="text-gray-600 mb-6">שמור את האימון הזה כתבנית לשימוש עתידי מהיר</p>
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-100">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
+                <BookMarked className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">שמור כתבנית</h3>
+                <p className="text-gray-600 text-sm">שמור את האימון הזה כתבנית לשימוש עתידי מהיר</p>
+              </div>
+            </div>
 
             <div className="space-y-4 mb-6">
               <div>
@@ -1200,7 +1215,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                   type="text"
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300"
                   placeholder="למשל: אימון רגליים מלא"
                   autoFocus
                 />
@@ -1213,14 +1228,14 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                 <textarea
                   value={templateDescription}
                   onChange={(e) => setTemplateDescription(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300"
                   placeholder="הוסף תיאור לתבנית..."
                   rows={3}
                 />
               </div>
 
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                <p className="text-sm text-orange-800">
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3">
+                <p className="text-sm text-amber-800">
                   <strong>{exercises.length}</strong> תרגילים יישמרו בתבנית
                 </p>
               </div>
@@ -1230,7 +1245,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
               <button
                 onClick={handleSaveAsTemplate}
                 disabled={savingTemplate || !templateName.trim()}
-                className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                className="flex-1 bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
               >
                 {savingTemplate ? 'שומר...' : 'שמור תבנית'}
               </button>
@@ -1240,7 +1255,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                   setTemplateName('');
                   setTemplateDescription('');
                 }}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-colors"
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-all duration-300"
               >
                 ביטול
               </button>
