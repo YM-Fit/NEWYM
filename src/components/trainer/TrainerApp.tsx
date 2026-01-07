@@ -489,6 +489,7 @@ export default function TrainerApp() {
           id,
           workout_date,
           is_completed,
+          is_self_recorded,
           created_at,
           workout_exercises (
             id,
@@ -550,7 +551,8 @@ export default function TrainerApp() {
               sets: ex.exercise_sets?.length || 0
             })),
             totalVolume,
-            duration: 0
+            duration: 0,
+            isSelfRecorded: w.is_self_recorded || false
           };
         })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

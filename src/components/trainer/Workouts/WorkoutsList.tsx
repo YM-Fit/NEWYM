@@ -1,4 +1,4 @@
-import { ArrowRight, Dumbbell, Copy, Edit2, Trash2, Calendar } from 'lucide-react';
+import { ArrowRight, Dumbbell, Copy, Edit2, Trash2, Calendar, User } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 
 interface Workout {
@@ -10,6 +10,7 @@ interface Workout {
   }>;
   totalVolume: number;
   duration: number;
+  isSelfRecorded?: boolean;
 }
 
 interface WorkoutsListProps {
@@ -79,18 +80,29 @@ export default function WorkoutsList({
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 rtl:space-x-reverse mb-3">
-                    <div className="bg-green-50 p-2 rounded-lg">
-                      <Dumbbell className="h-5 w-5 text-green-600" />
+                    <div className={`p-2 rounded-lg ${workout.isSelfRecorded ? 'bg-blue-50' : 'bg-green-50'}`}>
+                      {workout.isSelfRecorded ? (
+                        <User className="h-5 w-5 text-blue-600" />
+                      ) : (
+                        <Dumbbell className="h-5 w-5 text-green-600" />
+                      )}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {new Date(workout.date).toLocaleDateString('he-IL', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-gray-900">
+                          {new Date(workout.date).toLocaleDateString('he-IL', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </h3>
+                        {workout.isSelfRecorded && (
+                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                            אימון עצמאי
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-500">
                         {workout.exercises.length} תרגילים
                       </p>
