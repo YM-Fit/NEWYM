@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Plus, BookMarked } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
@@ -9,6 +9,7 @@ import ExerciseSelector from './ExerciseSelector';
 import QuickNumericPad from './QuickNumericPad';
 import EquipmentSelector from '../Equipment/EquipmentSelector';
 import WorkingWeightCalculator from '../Tools/WorkingWeightCalculator';
+import WorkoutSummary from './WorkoutSummary';
 import DraftModal from '../../common/DraftModal';
 import WorkoutTemplates from './WorkoutTemplates';
 import { WorkoutHeader } from './WorkoutHeader';
@@ -160,6 +161,11 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
   const [templateName, setTemplateName] = useState('');
   const [templateDescription, setTemplateDescription] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+  const [savedWorkout, setSavedWorkout] = useState<Workout | null>(null);
+  const [muscleGroups, setMuscleGroups] = useState<{ id: string; name: string }[]>([]);
+  const [personalRecords, setPersonalRecords] = useState<{ exerciseName: string; type: 'weight' | 'reps' | 'volume'; oldValue: number; newValue: number }[]>([]);
+  const workoutStartTime = useRef(Date.now());
 
   const workoutData = {
     exercises,
@@ -215,6 +221,14 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty, exercises.length, workoutId]);
+
+  useEffect(() => {
+    const loadMuscleGroups = async () => {
+      const { data } = await supabase.from('muscle_groups').select('id, name');
+      if (data) setMuscleGroups(data);
+    };
+    loadMuscleGroups();
+  }, []);
 
 
   const openNumericPad = (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe', label: string) => {
@@ -540,13 +554,92 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
       }
 
       clearSaved();
-      toast.success(workoutId ? 'האימון עודכן בהצלחה!' : 'האימון נשמר בהצלחה!');
-      onSave(result.workout);
+
+      const newPRs = await checkAndUpdatePersonalRecords(result.workout.id);
+      setPersonalRecords(newPRs);
+      setSavedWorkout(result.workout);
+      setShowSummary(true);
     } catch (error) {
       console.error('Error saving workout:', error);
       toast.error('שגיאה בשמירת האימון');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const checkAndUpdatePersonalRecords = async (workoutId: string): Promise<{ exerciseName: string; type: 'weight' | 'reps' | 'volume'; oldValue: number; newValue: number }[]> => {
+    const newRecords: { exerciseName: string; type: 'weight' | 'reps' | 'volume'; oldValue: number; newValue: number }[] = [];
+
+    for (const ex of exercises) {
+      const maxWeight = Math.max(...ex.sets.map(s => s.weight));
+      const maxReps = Math.max(...ex.sets.map(s => s.reps));
+      const maxVolume = Math.max(...ex.sets.map(s => s.weight * s.reps));
+
+      const { data: existingRecords } = await supabase
+        .from('personal_records')
+        .select('*')
+        .eq('trainee_id', trainee.id)
+        .eq('exercise_id', ex.exercise.id)
+        .eq('pair_member', selectedMember || '');
+
+      const weightRecord = existingRecords?.find(r => r.record_type === 'max_weight');
+      const repsRecord = existingRecords?.find(r => r.record_type === 'max_reps');
+      const volumeRecord = existingRecords?.find(r => r.record_type === 'max_volume');
+
+      if (!weightRecord || maxWeight > (weightRecord.weight || 0)) {
+        if (weightRecord) {
+          newRecords.push({ exerciseName: ex.exercise.name, type: 'weight', oldValue: weightRecord.weight || 0, newValue: maxWeight });
+        }
+        await supabase.from('personal_records').upsert({
+          trainee_id: trainee.id,
+          exercise_id: ex.exercise.id,
+          record_type: 'max_weight',
+          weight: maxWeight,
+          achieved_at: new Date().toISOString(),
+          workout_id: workoutId,
+          pair_member: selectedMember || null,
+        }, { onConflict: 'trainee_id,exercise_id,record_type,pair_member' });
+      }
+
+      if (!repsRecord || maxReps > (repsRecord.reps || 0)) {
+        if (repsRecord) {
+          newRecords.push({ exerciseName: ex.exercise.name, type: 'reps', oldValue: repsRecord.reps || 0, newValue: maxReps });
+        }
+        await supabase.from('personal_records').upsert({
+          trainee_id: trainee.id,
+          exercise_id: ex.exercise.id,
+          record_type: 'max_reps',
+          reps: maxReps,
+          achieved_at: new Date().toISOString(),
+          workout_id: workoutId,
+          pair_member: selectedMember || null,
+        }, { onConflict: 'trainee_id,exercise_id,record_type,pair_member' });
+      }
+
+      if (!volumeRecord || maxVolume > (volumeRecord.volume || 0)) {
+        if (volumeRecord) {
+          newRecords.push({ exerciseName: ex.exercise.name, type: 'volume', oldValue: volumeRecord.volume || 0, newValue: maxVolume });
+        }
+        await supabase.from('personal_records').upsert({
+          trainee_id: trainee.id,
+          exercise_id: ex.exercise.id,
+          record_type: 'max_volume',
+          volume: maxVolume,
+          achieved_at: new Date().toISOString(),
+          workout_id: workoutId,
+          pair_member: selectedMember || null,
+        }, { onConflict: 'trainee_id,exercise_id,record_type,pair_member' });
+      }
+    }
+
+    return newRecords;
+  };
+
+  const handleCloseSummary = () => {
+    setShowSummary(false);
+    toast.success(workoutId ? 'האימון עודכן בהצלחה!' : 'האימון נשמר בהצלחה!');
+    if (savedWorkout) {
+      onSave(savedWorkout);
     }
   };
 
@@ -800,6 +893,22 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
             </div>
           </div>
         </div>
+      )}
+
+      {showSummary && (
+        <WorkoutSummary
+          onClose={handleCloseSummary}
+          exercises={exercises}
+          muscleGroups={muscleGroups}
+          duration={Math.floor((Date.now() - workoutStartTime.current) / 1000)}
+          traineeName={trainee.full_name}
+          previousWorkout={previousWorkout ? {
+            totalVolume: previousWorkout.totalVolume,
+            exerciseCount: previousWorkout.exercises?.length || 0,
+            averageRpe: previousWorkout.averageRpe || 0,
+          } : null}
+          personalRecords={personalRecords}
+        />
       )}
     </div>
   );

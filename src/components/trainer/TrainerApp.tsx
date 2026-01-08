@@ -27,6 +27,7 @@ import MentalToolsEditor from './MentalTools/MentalToolsEditor';
 import ToolsView from './Tools/ToolsView';
 import TraineeFoodDiaryView from './Trainees/TraineeFoodDiaryView';
 import CardioManager from './Cardio/CardioManager';
+import ReportsView from './Reports/ReportsView';
 
 interface Trainee {
   id: string;
@@ -1024,6 +1025,9 @@ export default function TrainerApp() {
 
       case 'tools':
         return <ToolsView />;
+
+      case 'reports':
+        return <ReportsView />;
 
       default:
         return (

@@ -1,10 +1,16 @@
 import { useState } from 'react';
-import { Calculator, Dumbbell, Wrench } from 'lucide-react';
+import { Calculator, Dumbbell, Wrench, Percent, Droplets, Beef, Clock } from 'lucide-react';
 import TDEECalculator from './TDEECalculator';
 import WorkingWeightCalculator from './WorkingWeightCalculator';
+import BodyFatCalculator from './BodyFatCalculator';
+import WaterIntakeCalculator from './WaterIntakeCalculator';
+import ProteinCalculator from './ProteinCalculator';
+import RecoveryCalculator from './RecoveryCalculator';
+
+type CalculatorType = 'tdee' | 'working-weight' | 'body-fat' | 'water' | 'protein' | 'recovery' | null;
 
 export default function ToolsView() {
-  const [activeCalculator, setActiveCalculator] = useState<'tdee' | 'working-weight' | null>(null);
+  const [activeCalculator, setActiveCalculator] = useState<CalculatorType>(null);
 
   const tools = [
     {
@@ -24,6 +30,42 @@ export default function ToolsView() {
       gradient: 'from-blue-500 via-blue-600 to-cyan-600',
       shadowColor: 'shadow-blue-500/30',
       hoverShadow: 'hover:shadow-blue-500/40',
+    },
+    {
+      id: 'body-fat',
+      name: 'מחשבון אחוז שומן',
+      description: 'חישוב אחוז שומן לפי מדידות היקפים',
+      icon: Percent,
+      gradient: 'from-rose-500 via-pink-500 to-rose-600',
+      shadowColor: 'shadow-rose-500/30',
+      hoverShadow: 'hover:shadow-rose-500/40',
+    },
+    {
+      id: 'water',
+      name: 'מחשבון צריכת מים',
+      description: 'כמה מים לשתות ביום לפי משקל ופעילות',
+      icon: Droplets,
+      gradient: 'from-cyan-500 via-blue-500 to-cyan-600',
+      shadowColor: 'shadow-cyan-500/30',
+      hoverShadow: 'hover:shadow-cyan-500/40',
+    },
+    {
+      id: 'protein',
+      name: 'מחשבון חלבון יומי',
+      description: 'כמות חלבון מומלצת לפי משקל ומטרה',
+      icon: Beef,
+      gradient: 'from-amber-500 via-orange-500 to-amber-600',
+      shadowColor: 'shadow-amber-500/30',
+      hoverShadow: 'hover:shadow-amber-500/40',
+    },
+    {
+      id: 'recovery',
+      name: 'מחשבון זמן התאוששות',
+      description: 'כמה מנוחה צריך בין אימונים לכל שריר',
+      icon: Clock,
+      gradient: 'from-teal-500 via-emerald-500 to-teal-600',
+      shadowColor: 'shadow-teal-500/30',
+      hoverShadow: 'hover:shadow-teal-500/40',
     },
   ];
 
@@ -49,7 +91,7 @@ export default function ToolsView() {
           return (
             <button
               key={tool.id}
-              onClick={() => setActiveCalculator(tool.id as 'tdee' | 'working-weight')}
+              onClick={() => setActiveCalculator(tool.id as CalculatorType)}
               className={`bg-white rounded-2xl shadow-xl ${tool.shadowColor} hover:shadow-2xl ${tool.hoverShadow} transition-all duration-300 p-8 text-right group hover:scale-[1.03] border border-gray-100`}
             >
               <div className={`w-20 h-20 bg-gradient-to-br ${tool.gradient} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg`}>
@@ -76,6 +118,22 @@ export default function ToolsView() {
 
       {activeCalculator === 'working-weight' && (
         <WorkingWeightCalculator onClose={() => setActiveCalculator(null)} />
+      )}
+
+      {activeCalculator === 'body-fat' && (
+        <BodyFatCalculator onClose={() => setActiveCalculator(null)} />
+      )}
+
+      {activeCalculator === 'water' && (
+        <WaterIntakeCalculator onClose={() => setActiveCalculator(null)} />
+      )}
+
+      {activeCalculator === 'protein' && (
+        <ProteinCalculator onClose={() => setActiveCalculator(null)} />
+      )}
+
+      {activeCalculator === 'recovery' && (
+        <RecoveryCalculator onClose={() => setActiveCalculator(null)} />
       )}
     </div>
   );

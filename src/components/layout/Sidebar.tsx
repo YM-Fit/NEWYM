@@ -1,4 +1,4 @@
-import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles } from 'lucide-react';
+import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface SidebarProps {
@@ -21,6 +21,7 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
     { id: 'dashboard', label: 'דף הבית', icon: Home, description: 'סקירה כללית' },
     { id: 'trainees', label: 'מתאמנים', icon: Users, description: 'ניהול מתאמנים' },
     { id: 'tools', label: 'כלים', icon: Calculator, description: 'מחשבונים וכלים' },
+    { id: 'reports', label: 'דוחות', icon: BarChart3, description: 'סטטיסטיקות ונתונים' },
   ];
 
   return (
