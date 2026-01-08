@@ -26,7 +26,7 @@ import TraineeAccessManager from './Trainees/TraineeAccessManager';
 import MentalToolsEditor from './MentalTools/MentalToolsEditor';
 import ToolsView from './Tools/ToolsView';
 import TraineeFoodDiaryView from './Trainees/TraineeFoodDiaryView';
-import CardioForm from './Cardio/CardioForm';
+import CardioManager from './Cardio/CardioManager';
 
 interface Trainee {
   id: string;
@@ -821,7 +821,7 @@ export default function TrainerApp() {
             onViewTraineeAccess={() => setActiveView('trainee-access')}
             onMarkSelfWeightsSeen={markSelfWeightsSeen}
             onViewMentalTools={() => setActiveView('mental-tools')}
-            onViewCardio={() => setActiveView('add-cardio')}
+            onViewCardio={() => setActiveView('cardio-manager')}
           />
         ) : null;
 
@@ -1012,16 +1012,13 @@ export default function TrainerApp() {
           />
         ) : null;
 
-      case 'add-cardio':
+      case 'cardio-manager':
         return selectedTrainee && user ? (
-          <CardioForm
+          <CardioManager
             traineeId={selectedTrainee.id}
             trainerId={user.id}
-            onClose={() => setActiveView('trainee-profile')}
-            onSave={async () => {
-              setActiveView('trainee-profile');
-              toast.success('פעילות אירובית נשמרה בהצלחה');
-            }}
+            traineeName={selectedTrainee.full_name}
+            onBack={() => setActiveView('trainee-profile')}
           />
         ) : null;
 

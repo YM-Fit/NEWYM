@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Activity, TrendingUp, Timer, Calendar, Target, BarChart3 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { Activity, TrendingUp, Timer, Calendar, Target, BarChart3, Footprints, CheckCircle, AlertCircle } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
 import toast from 'react-hot-toast';
 
 interface CardioActivity {
@@ -25,13 +25,6 @@ interface MyCardioProps {
 export default function MyCardio({ traineeId }: MyCardioProps) {
   const [activities, setActivities] = useState<CardioActivity[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    avgSteps: 0,
-    avgDistance: 0,
-    avgDuration: 0,
-    totalActivities: 0,
-    goalProgress: 0
-  });
 
   useEffect(() => {
     if (traineeId) {
@@ -56,47 +49,46 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
 
     if (data) {
       setActivities(data as any);
-      calculateStats(data as any);
     }
     setLoading(false);
   };
 
-  const calculateStats = (data: CardioActivity[]) => {
-    if (data.length === 0) {
-      setStats({
-        avgSteps: 0,
-        avgDistance: 0,
-        avgDuration: 0,
-        totalActivities: 0,
-        goalProgress: 0
-      });
-      return;
-    }
+  const latestActivity = activities[0];
+  const previousActivity = activities[1];
 
-    const totalSteps = data.reduce((sum, a) => sum + a.avg_weekly_steps, 0);
-    const totalDistance = data.reduce((sum, a) => sum + a.distance, 0);
-    const totalDuration = data.reduce((sum, a) => sum + a.duration, 0);
-    const totalGoal = data.reduce((sum, a) => sum + a.weekly_goal_steps, 0);
-
-    setStats({
-      avgSteps: Math.round(totalSteps / data.length),
-      avgDistance: parseFloat((totalDistance / data.length).toFixed(1)),
-      avgDuration: Math.round(totalDuration / data.length),
-      totalActivities: data.length,
-      goalProgress: totalGoal > 0 ? Math.round((totalSteps / totalGoal) * 100) : 0
-    });
+  const getProgressPercentage = () => {
+    if (!latestActivity || latestActivity.weekly_goal_steps === 0) return 0;
+    return Math.min(100, Math.round((latestActivity.avg_weekly_steps / latestActivity.weekly_goal_steps) * 100));
   };
+
+  const getStats = () => {
+    if (activities.length === 0) return null;
+
+    const totalSteps = activities.reduce((sum, a) => sum + a.avg_weekly_steps, 0);
+    const totalGoal = activities.reduce((sum, a) => sum + a.weekly_goal_steps, 0);
+    const avgSteps = Math.round(totalSteps / activities.length);
+    const successCount = activities.filter(a => a.avg_weekly_steps >= a.weekly_goal_steps).length;
+    const successRate = Math.round((successCount / activities.length) * 100);
+
+    const stepsChange = latestActivity && previousActivity
+      ? latestActivity.avg_weekly_steps - previousActivity.avg_weekly_steps
+      : 0;
+
+    return { avgSteps, successRate, stepsChange, totalGoal: Math.round(totalGoal / activities.length) };
+  };
+
+  const stats = getStats();
+  const progressPercentage = getProgressPercentage();
 
   const getChartData = () => {
     return activities
-      .slice(0, 10)
+      .slice(0, 8)
       .reverse()
-      .map(activity => ({
-        date: new Date(activity.date).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' }),
-        צעדים: activity.avg_weekly_steps,
-        יעד: activity.weekly_goal_steps,
-        מרחק: activity.distance,
-        זמן: activity.duration
+      .map(a => ({
+        date: new Date(a.date).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' }),
+        בוצע: a.avg_weekly_steps,
+        יעד: a.weekly_goal_steps,
+        achieved: a.avg_weekly_steps >= a.weekly_goal_steps
       }));
   };
 
@@ -118,87 +110,155 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
         </div>
         <div>
           <h2 className="text-2xl font-bold text-white">האירובי שלי</h2>
-          <p className="text-sm text-zinc-500">מעקב אחר פעילות אירובית</p>
+          <p className="text-sm text-zinc-500">מעקב יעדים והתקדמות</p>
         </div>
       </div>
 
       {activities.length === 0 ? (
         <div className="premium-card-static p-12 text-center">
           <Activity className="h-16 w-16 text-zinc-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-zinc-400 mb-2">אין פעילויות אירוביות</h3>
-          <p className="text-zinc-500">המאמן שלך עוד לא הוסיף פעילויות אירוביות</p>
+          <h3 className="text-xl font-semibold text-zinc-400 mb-2">אין תוכנית אירובי</h3>
+          <p className="text-zinc-500">המאמן שלך עוד לא הגדיר תוכנית אירובית</p>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="stat-card p-5 bg-gradient-to-br from-sky-500/20 to-sky-500/5 shadow-[0_0_20px_rgba(14,165,233,0.15)]">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <p className="text-xs font-medium text-zinc-400 mb-1">ממוצע צעדים</p>
-                  <p className="text-2xl font-bold text-sky-400">{stats.avgSteps.toLocaleString()}</p>
-                </div>
-                <div className="p-2.5 rounded-lg bg-sky-500/20">
-                  <TrendingUp className="h-5 w-5 text-sky-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="stat-card p-5 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <p className="text-xs font-medium text-zinc-400 mb-1">אחוז השגת יעד</p>
-                  <p className="text-2xl font-bold text-emerald-400">{stats.goalProgress}%</p>
-                </div>
-                <div className="p-2.5 rounded-lg bg-emerald-500/20">
+          {latestActivity && (
+            <div className="premium-card-static p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                   <Target className="h-5 w-5 text-emerald-400" />
-                </div>
+                  היעד השבועי שלי
+                </h3>
+                <span className="px-3 py-1 bg-sky-500/15 text-sky-400 rounded-lg text-sm font-medium">
+                  {latestActivity.cardio_type.name}
+                </span>
               </div>
-            </div>
 
-            <div className="stat-card p-5 bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <p className="text-xs font-medium text-zinc-400 mb-1">ממוצע מרחק</p>
-                  <p className="text-2xl font-bold text-cyan-400">{stats.avgDistance} ק״מ</p>
+              <div className="mb-6">
+                <div className="flex justify-between items-end mb-3">
+                  <div>
+                    <p className="text-sm text-zinc-500 mb-1">התקדמות ליעד</p>
+                    <p className="text-4xl font-bold text-white">
+                      {latestActivity.avg_weekly_steps.toLocaleString()}
+                      <span className="text-lg text-zinc-500 font-normal mr-2">
+                        / {latestActivity.weekly_goal_steps.toLocaleString()} צעדים
+                      </span>
+                    </p>
+                  </div>
+                  <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ${
+                    progressPercentage >= 100
+                      ? 'bg-emerald-500/15 text-emerald-400'
+                      : progressPercentage >= 80
+                        ? 'bg-amber-500/15 text-amber-400'
+                        : 'bg-red-500/15 text-red-400'
+                  }`}>
+                    {progressPercentage >= 100 ? (
+                      <CheckCircle className="h-5 w-5" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5" />
+                    )}
+                    <span className="text-2xl font-bold">{progressPercentage}%</span>
+                  </div>
                 </div>
-                <div className="p-2.5 rounded-lg bg-cyan-500/20">
-                  <BarChart3 className="h-5 w-5 text-cyan-400" />
-                </div>
-              </div>
-            </div>
 
-            <div className="stat-card p-5 bg-gradient-to-br from-violet-500/20 to-violet-500/5 shadow-[0_0_20px_rgba(139,92,246,0.15)]">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <p className="text-xs font-medium text-zinc-400 mb-1">ממוצע זמן</p>
-                  <p className="text-2xl font-bold text-violet-400">{stats.avgDuration} דק׳</p>
+                <div className="h-4 bg-zinc-800 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-1000 ${
+                      progressPercentage >= 100
+                        ? 'bg-gradient-to-r from-emerald-500 to-emerald-400'
+                        : progressPercentage >= 80
+                          ? 'bg-gradient-to-r from-amber-500 to-amber-400'
+                          : 'bg-gradient-to-r from-red-500 to-red-400'
+                    }`}
+                    style={{ width: `${Math.min(100, progressPercentage)}%` }}
+                  />
                 </div>
-                <div className="p-2.5 rounded-lg bg-violet-500/20">
-                  <Timer className="h-5 w-5 text-violet-400" />
+
+                {progressPercentage < 100 && (
+                  <p className="text-sm text-zinc-500 mt-2">
+                    נשארו עוד {(latestActivity.weekly_goal_steps - latestActivity.avg_weekly_steps).toLocaleString()} צעדים להשגת היעד
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-zinc-800">
+                {latestActivity.frequency > 0 && (
+                  <div className="text-center p-3 bg-zinc-900/50 rounded-xl">
+                    <Calendar className="h-5 w-5 text-sky-400 mx-auto mb-2" />
+                    <p className="text-xs text-zinc-500 mb-1">תדירות</p>
+                    <p className="text-lg font-bold text-white">{latestActivity.frequency}x שבוע</p>
+                  </div>
+                )}
+                {latestActivity.duration > 0 && (
+                  <div className="text-center p-3 bg-zinc-900/50 rounded-xl">
+                    <Timer className="h-5 w-5 text-amber-400 mx-auto mb-2" />
+                    <p className="text-xs text-zinc-500 mb-1">משך זמן</p>
+                    <p className="text-lg font-bold text-white">{latestActivity.duration} דק'</p>
+                  </div>
+                )}
+                {latestActivity.distance > 0 && (
+                  <div className="text-center p-3 bg-zinc-900/50 rounded-xl">
+                    <TrendingUp className="h-5 w-5 text-cyan-400 mx-auto mb-2" />
+                    <p className="text-xs text-zinc-500 mb-1">מרחק</p>
+                    <p className="text-lg font-bold text-white">{latestActivity.distance} ק"מ</p>
+                  </div>
+                )}
+              </div>
+
+              {latestActivity.notes && (
+                <div className="mt-4 pt-4 border-t border-zinc-800">
+                  <p className="text-sm text-zinc-400">{latestActivity.notes}</p>
                 </div>
+              )}
+            </div>
+          )}
+
+          {stats && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="stat-card p-5 bg-gradient-to-br from-sky-500/20 to-sky-500/5">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="text-xs font-medium text-zinc-400 mb-1">ממוצע צעדים</p>
+                    <p className="text-2xl font-bold text-sky-400">{stats.avgSteps.toLocaleString()}</p>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-sky-500/20">
+                    <Footprints className="h-5 w-5 text-sky-400" />
+                  </div>
+                </div>
+                {stats.stepsChange !== 0 && (
+                  <p className={`text-xs ${stats.stepsChange > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {stats.stepsChange > 0 ? '+' : ''}{stats.stepsChange.toLocaleString()} מהשבוע הקודם
+                  </p>
+                )}
+              </div>
+
+              <div className="stat-card p-5 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="text-xs font-medium text-zinc-400 mb-1">אחוז הצלחה</p>
+                    <p className="text-2xl font-bold text-emerald-400">{stats.successRate}%</p>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-emerald-500/20">
+                    <CheckCircle className="h-5 w-5 text-emerald-400" />
+                  </div>
+                </div>
+                <p className="text-xs text-zinc-500">שבועות שעמדת ביעד</p>
               </div>
             </div>
-          </div>
+          )}
 
           {activities.length >= 2 && (
             <div className="premium-card-static p-6">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-sky-400" />
-                מעקב התקדמות
+                התקדמות לאורך זמן
               </h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={getChartData()}>
+                  <BarChart data={getChartData()}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                    <XAxis
-                      dataKey="date"
-                      stroke="#71717a"
-                      style={{ fontSize: '12px' }}
-                    />
-                    <YAxis
-                      stroke="#71717a"
-                      style={{ fontSize: '12px' }}
-                    />
+                    <XAxis dataKey="date" stroke="#71717a" style={{ fontSize: '11px' }} />
+                    <YAxis stroke="#71717a" style={{ fontSize: '11px' }} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: '#18181b',
@@ -208,22 +268,13 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
                       }}
                     />
                     <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="צעדים"
-                      stroke="#0ea5e9"
-                      strokeWidth={2}
-                      dot={{ fill: '#0ea5e9', r: 4 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="יעד"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                      dot={{ fill: '#10b981', r: 4 }}
-                    />
-                  </LineChart>
+                    <Bar dataKey="יעד" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="בוצע" radius={[4, 4, 0, 0]}>
+                      {getChartData().map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.achieved ? '#0ea5e9' : '#f59e0b'} />
+                      ))}
+                    </Bar>
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
@@ -232,90 +283,63 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
           <div className="premium-card-static p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Calendar className="h-5 w-5 text-sky-400" />
-              היסטוריית פעילות
+              היסטוריית שבועות
             </h3>
             <div className="space-y-3">
-              {activities.map(activity => (
-                <div
-                  key={activity.id}
-                  className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-all"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h4 className="text-white font-semibold mb-1">
-                        {activity.cardio_type.name}
-                      </h4>
-                      <p className="text-sm text-zinc-500">
-                        {new Date(activity.date).toLocaleDateString('he-IL', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                    {activity.weekly_goal_steps > 0 && (
+              {activities.map((activity) => {
+                const achieved = activity.avg_weekly_steps >= activity.weekly_goal_steps;
+                const percentage = activity.weekly_goal_steps > 0
+                  ? Math.round((activity.avg_weekly_steps / activity.weekly_goal_steps) * 100)
+                  : 0;
+
+                return (
+                  <div
+                    key={activity.id}
+                    className={`p-4 rounded-xl border transition-all ${
+                      achieved
+                        ? 'bg-emerald-500/5 border-emerald-500/30'
+                        : 'bg-zinc-900/50 border-zinc-800'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        {achieved ? (
+                          <CheckCircle className="h-5 w-5 text-emerald-400" />
+                        ) : (
+                          <AlertCircle className="h-5 w-5 text-amber-400" />
+                        )}
+                        <div>
+                          <p className="text-white font-medium">{activity.cardio_type.name}</p>
+                          <p className="text-xs text-zinc-500">
+                            {new Date(activity.date).toLocaleDateString('he-IL', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </p>
+                        </div>
+                      </div>
                       <div className="text-left">
-                        <p className="text-xs text-zinc-500 mb-1">השגת יעד</p>
-                        <p className={`text-lg font-bold ${
-                          activity.avg_weekly_steps >= activity.weekly_goal_steps
-                            ? 'text-emerald-400'
-                            : 'text-amber-400'
-                        }`}>
-                          {Math.round((activity.avg_weekly_steps / activity.weekly_goal_steps) * 100)}%
+                        <p className={`text-lg font-bold ${achieved ? 'text-emerald-400' : 'text-amber-400'}`}>
+                          {percentage}%
                         </p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-sky-400" />
-                      <div>
-                        <p className="text-xs text-zinc-500">צעדים</p>
-                        <p className="text-sm font-semibold text-white">
-                          {activity.avg_weekly_steps.toLocaleString()}
+                        <p className="text-xs text-zinc-500">
+                          {activity.avg_weekly_steps.toLocaleString()} / {activity.weekly_goal_steps.toLocaleString()}
                         </p>
                       </div>
                     </div>
 
-                    {activity.distance > 0 && (
-                      <div className="flex items-center gap-2">
-                        <BarChart3 className="h-4 w-4 text-cyan-400" />
-                        <div>
-                          <p className="text-xs text-zinc-500">מרחק</p>
-                          <p className="text-sm font-semibold text-white">{activity.distance} ק״מ</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {activity.duration > 0 && (
-                      <div className="flex items-center gap-2">
-                        <Timer className="h-4 w-4 text-violet-400" />
-                        <div>
-                          <p className="text-xs text-zinc-500">זמן</p>
-                          <p className="text-sm font-semibold text-white">{activity.duration} דק׳</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {activity.frequency > 0 && (
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-rose-400" />
-                        <div>
-                          <p className="text-xs text-zinc-500">תדירות</p>
-                          <p className="text-sm font-semibold text-white">{activity.frequency}x שבוע</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {activity.notes && (
-                    <div className="pt-3 border-t border-zinc-800">
-                      <p className="text-sm text-zinc-400">{activity.notes}</p>
+                    <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          achieved ? 'bg-emerald-500' : 'bg-amber-500'
+                        }`}
+                        style={{ width: `${Math.min(100, percentage)}%` }}
+                      />
                     </div>
-                  )}
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </>
