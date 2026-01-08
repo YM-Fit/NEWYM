@@ -286,6 +286,73 @@ export type Database = {
           created_at?: string;
         };
       };
+      cardio_types: {
+        Row: {
+          id: string;
+          trainer_id: string;
+          name: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          trainer_id: string;
+          name: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          trainer_id?: string;
+          name?: string;
+          created_at?: string;
+        };
+      };
+      cardio_activities: {
+        Row: {
+          id: string;
+          trainee_id: string;
+          trainer_id: string;
+          cardio_type_id: string;
+          date: string;
+          avg_weekly_steps: number;
+          distance: number;
+          duration: number;
+          frequency: number;
+          weekly_goal_steps: number;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trainee_id: string;
+          trainer_id: string;
+          cardio_type_id: string;
+          date?: string;
+          avg_weekly_steps?: number;
+          distance?: number;
+          duration?: number;
+          frequency?: number;
+          weekly_goal_steps?: number;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trainee_id?: string;
+          trainer_id?: string;
+          cardio_type_id?: string;
+          date?: string;
+          avg_weekly_steps?: number;
+          distance?: number;
+          duration?: number;
+          frequency?: number;
+          weekly_goal_steps?: number;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 };

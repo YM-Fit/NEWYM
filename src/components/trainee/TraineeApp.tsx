@@ -11,6 +11,7 @@ import MyWorkoutPlan from './MyWorkoutPlan';
 import MyMentalTools from './MyMentalTools';
 import FoodDiary from './FoodDiary';
 import SelfWorkoutSession from './SelfWorkoutSession';
+import MyCardio from './MyCardio';
 
 interface Trainee {
   id: string;
@@ -130,7 +131,7 @@ export default function TraineeApp() {
 
         {showMoreMenu && (
           <div className="absolute bottom-full mb-2 left-4 right-4 glass-card p-4 rounded-2xl animate-fade-in border border-zinc-700/50">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               <MoreMenuItem
                 icon={ClipboardList}
                 label="תפריט"
@@ -148,6 +149,12 @@ export default function TraineeApp() {
                 label="יומן אוכל"
                 onClick={() => { setActiveTab('diary'); setShowMoreMenu(false); }}
                 active={activeTab === 'diary'}
+              />
+              <MoreMenuItem
+                icon={Activity}
+                label="אירובי"
+                onClick={() => { setActiveTab('cardio'); setShowMoreMenu(false); }}
+                active={activeTab === 'cardio'}
               />
             </div>
           </div>
@@ -173,6 +180,7 @@ export default function TraineeApp() {
         {activeTab === 'menu' && <MyMealPlan traineeId={traineeId} />}
         {activeTab === 'mental' && <MyMentalTools traineeId={traineeId} />}
         {activeTab === 'diary' && <FoodDiary traineeId={traineeId} />}
+        {activeTab === 'cardio' && <MyCardio traineeId={traineeId} />}
         {activeTab === 'self-workout' && trainee && (
           <SelfWorkoutSession
             traineeId={trainee.id}

@@ -1,4 +1,4 @@
-import { ArrowRight, CreditCard as Edit, Calendar, Scale, BarChart3, User, Phone, Mail, Trash2, TrendingUp, ClipboardList, UtensilsCrossed, Key, Home, CheckCircle, Brain, BookOpen, Calculator, Sparkles, Users } from 'lucide-react';
+import { ArrowRight, CreditCard as Edit, Calendar, Scale, BarChart3, User, Phone, Mail, Trash2, TrendingUp, ClipboardList, UtensilsCrossed, Key, Home, CheckCircle, Brain, BookOpen, Calculator, Sparkles, Users, Activity } from 'lucide-react';
 import { Trainee, BodyMeasurement, Workout } from '../../../types';
 import { useState } from 'react';
 import TDEECalculator from '../Tools/TDEECalculator';
@@ -34,6 +34,7 @@ interface TraineeProfileProps {
   onViewTraineeAccess?: () => void;
   onMarkSelfWeightsSeen?: () => void;
   onViewMentalTools?: () => void;
+  onViewCardio?: () => void;
 }
 
 export default function TraineeProfile({
@@ -54,7 +55,8 @@ export default function TraineeProfile({
   onViewFoodDiary,
   onViewTraineeAccess,
   onMarkSelfWeightsSeen,
-  onViewMentalTools
+  onViewMentalTools,
+  onViewCardio
 }: TraineeProfileProps) {
   const [showTDEE, setShowTDEE] = useState(false);
 
@@ -334,6 +336,18 @@ export default function TraineeProfile({
                 <Brain className="h-5 w-5" />
               </div>
               <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">כלים מנטליים</span>
+            </button>
+          )}
+
+          {onViewCardio && (
+            <button
+              onClick={onViewCardio}
+              className="action-btn group"
+            >
+              <div className="p-3 rounded-xl bg-sky-500/15 text-sky-400 mb-2 group-hover:bg-sky-500/25 transition-all">
+                <Activity className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">אירובי</span>
             </button>
           )}
 
