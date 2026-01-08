@@ -33,6 +33,11 @@ interface SetData {
   dropset_reps?: number | null;
   equipment_id?: string | null;
   equipment?: Equipment | null;
+  // Suggestions for progressive overload
+  suggested_weight?: number | null;
+  suggested_reps?: number | null;
+  suggested_superset_weight?: number | null;
+  suggested_superset_reps?: number | null;
 }
 
 interface WorkoutExercise {
@@ -63,21 +68,24 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
   });
 
   const createSetFromPrevious = (setNumber: number, previousSet: SetData): SetData => {
-    const suggestedWeight = previousSet.weight > 0 ? previousSet.weight + 2.5 : previousSet.weight;
-    const suggestedReps = previousSet.reps > 0 ? previousSet.reps + 1 : previousSet.reps;
+    // Calculate suggestions but don't auto-fill
+    const suggestedWeight = previousSet.weight > 0 ? previousSet.weight + 2.5 : null;
+    const suggestedReps = previousSet.reps > 0 ? previousSet.reps + 1 : null;
+    const suggestedSupersetWeight = previousSet.superset_weight ? previousSet.superset_weight + 2.5 : null;
+    const suggestedSupersetReps = previousSet.superset_reps ? previousSet.superset_reps + 1 : null;
 
     return {
       id: `temp-${Date.now()}-${setNumber}`,
       set_number: setNumber,
-      weight: suggestedWeight,
-      reps: suggestedReps,
+      weight: 0,  // Start empty, user will fill
+      reps: 0,    // Start empty, user will fill
       rpe: previousSet.rpe,
       set_type: previousSet.set_type,
       failure: false,
       superset_exercise_id: previousSet.superset_exercise_id,
       superset_exercise_name: previousSet.superset_exercise_name,
-      superset_weight: previousSet.superset_weight ? previousSet.superset_weight + 2.5 : previousSet.superset_weight,
-      superset_reps: previousSet.superset_reps ? previousSet.superset_reps + 1 : previousSet.superset_reps,
+      superset_weight: null,  // Start empty for superset
+      superset_reps: null,    // Start empty for superset
       superset_rpe: previousSet.superset_rpe,
       superset_equipment_id: previousSet.superset_equipment_id,
       superset_equipment: previousSet.superset_equipment,
@@ -87,6 +95,11 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
       dropset_reps: previousSet.dropset_reps,
       equipment_id: previousSet.equipment_id,
       equipment: previousSet.equipment,
+      // Store suggestions separately
+      suggested_weight: suggestedWeight,
+      suggested_reps: suggestedReps,
+      suggested_superset_weight: suggestedSupersetWeight,
+      suggested_superset_reps: suggestedSupersetReps,
     };
   };
 
@@ -137,6 +150,26 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     const exercise = exercises[exerciseIndex];
     const setIds = exercise.sets.map(s => s.id);
     setCollapsedSets(prev => prev.filter(id => !setIds.includes(id)));
+  };
+
+  const applySuggestion = (exerciseIndex: number, setIndex: number) => {
+    const updatedExercises = [...exercises];
+    const set = updatedExercises[exerciseIndex].sets[setIndex];
+
+    if (set.suggested_weight !== null && set.suggested_weight !== undefined) {
+      set.weight = set.suggested_weight;
+    }
+    if (set.suggested_reps !== null && set.suggested_reps !== undefined) {
+      set.reps = set.suggested_reps;
+    }
+    if (set.suggested_superset_weight !== null && set.suggested_superset_weight !== undefined) {
+      set.superset_weight = set.suggested_superset_weight;
+    }
+    if (set.suggested_superset_reps !== null && set.suggested_superset_reps !== undefined) {
+      set.superset_reps = set.suggested_superset_reps;
+    }
+
+    setExercises(updatedExercises);
   };
 
   const removeSet = (exerciseIndex: number, setIndex: number) => {
@@ -251,5 +284,6 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     getExerciseSummary,
     toggleCollapseSet,
     expandAllSets,
+    applySuggestion,
   };
 }

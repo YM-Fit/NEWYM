@@ -1,5 +1,5 @@
 import { memo, useCallback } from 'react';
-import { Copy, Trash2, Calculator } from 'lucide-react';
+import { Copy, Trash2, Calculator, Sparkles } from 'lucide-react';
 
 interface Equipment {
   id: string;
@@ -28,6 +28,10 @@ interface SetData {
   dropset_reps?: number | null;
   equipment_id?: string | null;
   equipment?: Equipment | null;
+  suggested_weight?: number | null;
+  suggested_reps?: number | null;
+  suggested_superset_weight?: number | null;
+  suggested_superset_reps?: number | null;
 }
 
 interface WorkoutSetCardProps {
@@ -47,6 +51,7 @@ interface WorkoutSetCardProps {
   onOpenSupersetDropsetNumericPad: (field: 'superset_dropset_weight' | 'superset_dropset_reps') => void;
   onUpdateSet: (field: string, value: any) => void;
   onOpenCalculator: () => void;
+  onApplySuggestion?: () => void;
 }
 
 export const WorkoutSetCard = memo(({
@@ -66,7 +71,11 @@ export const WorkoutSetCard = memo(({
   onOpenSupersetDropsetNumericPad,
   onUpdateSet,
   onOpenCalculator,
+  onApplySuggestion,
 }: WorkoutSetCardProps) => {
+  const hasSuggestion = (set.suggested_weight !== null && set.suggested_weight !== undefined) ||
+                        (set.suggested_reps !== null && set.suggested_reps !== undefined);
+  const isSuggestionEmpty = set.weight === 0 && set.reps === 0 && hasSuggestion;
   if (isCollapsed) {
     return (
       <div
@@ -131,6 +140,11 @@ export const WorkoutSetCard = memo(({
           >
             {set.weight || '0'}
           </button>
+          {set.suggested_weight !== null && set.suggested_weight !== undefined && (
+            <div className="text-xs text-emerald-600 mt-1 font-medium">
+              הצעה: {set.suggested_weight}
+            </div>
+          )}
         </div>
 
         <div>
@@ -142,6 +156,11 @@ export const WorkoutSetCard = memo(({
           >
             {set.reps || '0'}
           </button>
+          {set.suggested_reps !== null && set.suggested_reps !== undefined && (
+            <div className="text-xs text-blue-600 mt-1 font-medium">
+              הצעה: {set.suggested_reps}
+            </div>
+          )}
         </div>
 
         <div>
@@ -155,6 +174,19 @@ export const WorkoutSetCard = memo(({
           </button>
         </div>
       </div>
+
+      {isSuggestionEmpty && onApplySuggestion && (
+        <div className="mb-3">
+          <button
+            type="button"
+            onClick={onApplySuggestion}
+            className="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-medium rounded-xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+          >
+            <Sparkles className="h-5 w-5" />
+            <span>השתמש בהצעת Progressive Overload</span>
+          </button>
+        </div>
+      )}
 
       <div className="mb-3 grid grid-cols-3 gap-2">
         <button
@@ -312,6 +344,11 @@ export const WorkoutSetCard = memo(({
                   >
                     {set.superset_weight || '0'}
                   </button>
+                  {set.suggested_superset_weight !== null && set.suggested_superset_weight !== undefined && (
+                    <div className="text-xs text-blue-600 mt-1 font-medium">
+                      הצעה: {set.suggested_superset_weight}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-blue-700 mb-1">
@@ -324,6 +361,11 @@ export const WorkoutSetCard = memo(({
                   >
                     {set.superset_reps || '0'}
                   </button>
+                  {set.suggested_superset_reps !== null && set.suggested_superset_reps !== undefined && (
+                    <div className="text-xs text-blue-600 mt-1 font-medium">
+                      הצעה: {set.suggested_superset_reps}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-blue-700 mb-1">

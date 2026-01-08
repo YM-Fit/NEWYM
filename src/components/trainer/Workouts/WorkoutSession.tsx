@@ -48,6 +48,10 @@ interface SetData {
   dropset_reps?: number | null;
   equipment_id?: string | null;
   equipment?: Equipment | null;
+  suggested_weight?: number | null;
+  suggested_reps?: number | null;
+  suggested_superset_weight?: number | null;
+  suggested_superset_reps?: number | null;
 }
 
 interface WorkoutExercise {
@@ -87,6 +91,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     completeExercise,
     getExerciseSummary,
     toggleCollapseSet,
+    applySuggestion,
   } = useWorkoutSession({ initialExercises: editingWorkout?.exercises });
 
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
@@ -593,6 +598,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           onOpenSupersetDropsetNumericPad={(setIndex, field) => openSupersetDropsetNumericPad(exerciseIndex, setIndex, field, field === 'superset_dropset_weight' ? 'משקל דרופ-סט סופר (ק״ג)' : 'חזרות דרופ-סט סופר')}
           onUpdateSet={(setIndex, field, value) => updateSet(exerciseIndex, setIndex, field, value)}
           onOpenCalculator={(setIndex) => setCalculatorData({ weight: exercises[exerciseIndex].sets[setIndex].weight, reps: exercises[exerciseIndex].sets[setIndex].reps })}
+          onApplySuggestion={(setIndex) => applySuggestion(exerciseIndex, setIndex)}
         />
       ))}
 

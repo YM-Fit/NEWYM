@@ -43,6 +43,10 @@ interface SetData {
   dropset_reps?: number | null;
   equipment_id?: string | null;
   equipment?: Equipment | null;
+  suggested_weight?: number | null;
+  suggested_reps?: number | null;
+  suggested_superset_weight?: number | null;
+  suggested_superset_reps?: number | null;
 }
 
 interface WorkoutExercise {
@@ -75,6 +79,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
     toggleMinimizeExercise,
     completeExercise,
     getExerciseSummary,
+    applySuggestion,
   } = useWorkoutSession();
 
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
@@ -547,6 +552,11 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                           >
                             {set.weight || '0'}
                           </button>
+                          {set.suggested_weight !== null && set.suggested_weight !== undefined && (
+                            <div className="text-xs text-emerald-600 mt-1 font-medium">
+                              הצעה: {set.suggested_weight}
+                            </div>
+                          )}
                         </div>
 
                         <div>
@@ -558,6 +568,11 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                           >
                             {set.reps || '0'}
                           </button>
+                          {set.suggested_reps !== null && set.suggested_reps !== undefined && (
+                            <div className="text-xs text-blue-600 mt-1 font-medium">
+                              הצעה: {set.suggested_reps}
+                            </div>
+                          )}
                         </div>
 
                         <div>
@@ -571,6 +586,19 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                           </button>
                         </div>
                       </div>
+
+                      {set.weight === 0 && set.reps === 0 && (set.suggested_weight !== null || set.suggested_reps !== null) && (
+                        <div className="mb-4">
+                          <button
+                            type="button"
+                            onClick={() => applySuggestion(exerciseIndex, setIndex)}
+                            className="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-medium rounded-xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                          >
+                            <Dumbbell className="h-5 w-5" />
+                            <span>השתמש בהצעת Progressive Overload</span>
+                          </button>
+                        </div>
+                      )}
 
                       <div className="mb-4 grid grid-cols-2 gap-3">
                         <button
@@ -693,6 +721,11 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                                   >
                                     {set.superset_weight || '0'}
                                   </button>
+                                  {set.suggested_superset_weight !== null && set.suggested_superset_weight !== undefined && (
+                                    <div className="text-xs text-blue-600 mt-1 font-medium">
+                                      הצעה: {set.suggested_superset_weight}
+                                    </div>
+                                  )}
                                 </div>
                                 <div>
                                   <label className="block text-sm font-bold text-blue-700 mb-2">חזרות</label>
@@ -703,6 +736,11 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                                   >
                                     {set.superset_reps || '0'}
                                   </button>
+                                  {set.suggested_superset_reps !== null && set.suggested_superset_reps !== undefined && (
+                                    <div className="text-xs text-blue-600 mt-1 font-medium">
+                                      הצעה: {set.suggested_superset_reps}
+                                    </div>
+                                  )}
                                 </div>
                                 <div>
                                   <label className="block text-sm font-bold text-blue-700 mb-2">RPE</label>

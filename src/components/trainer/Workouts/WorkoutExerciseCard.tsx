@@ -29,6 +29,10 @@ interface SetData {
   dropset_reps?: number | null;
   equipment_id?: string | null;
   equipment?: Equipment | null;
+  suggested_weight?: number | null;
+  suggested_reps?: number | null;
+  suggested_superset_weight?: number | null;
+  suggested_superset_reps?: number | null;
 }
 
 interface WorkoutExercise {
@@ -70,6 +74,7 @@ interface WorkoutExerciseCardProps {
   onOpenSupersetDropsetNumericPad: (setIndex: number, field: 'superset_dropset_weight' | 'superset_dropset_reps') => void;
   onUpdateSet: (setIndex: number, field: string, value: any) => void;
   onOpenCalculator: (setIndex: number) => void;
+  onApplySuggestion: (setIndex: number) => void;
 }
 
 export const WorkoutExerciseCard = memo(({
@@ -95,6 +100,7 @@ export const WorkoutExerciseCard = memo(({
   onOpenSupersetDropsetNumericPad,
   onUpdateSet,
   onOpenCalculator,
+  onApplySuggestion,
 }: WorkoutExerciseCardProps) => {
   if (isMinimized) {
     return (
@@ -187,6 +193,7 @@ export const WorkoutExerciseCard = memo(({
               onOpenSupersetDropsetNumericPad={(field) => onOpenSupersetDropsetNumericPad(setIndex, field)}
               onUpdateSet={(field, value) => onUpdateSet(setIndex, field, value)}
               onOpenCalculator={() => onOpenCalculator(setIndex)}
+              onApplySuggestion={() => onApplySuggestion(setIndex)}
             />
           ))}
         </div>
