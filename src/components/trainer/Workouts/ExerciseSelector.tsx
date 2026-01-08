@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, X, Plus, Clock, PlusCircle } from 'lucide-react';
+import { Search, X, Plus, Clock, PlusCircle, Trash2 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import ExerciseHistory from './ExerciseHistory';
@@ -103,6 +103,31 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
       console.error('Error adding exercise:', error);
     } finally {
       setSavingExercise(false);
+    }
+  };
+
+  const handleDeleteExercise = async (exerciseId: string, exerciseName: string) => {
+    if (!confirm(`האם אתה בטוח שברצונך למחוק את התרגיל "${exerciseName}"?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from('exercises')
+        .delete()
+        .eq('id', exerciseId);
+
+      if (error) {
+        toast.error('שגיאה במחיקת התרגיל');
+        console.error('Error deleting exercise:', error);
+      } else {
+        toast.success('התרגיל נמחק בהצלחה');
+        setMuscleGroups(prev => prev.map(group => ({
+          ...group,
+          exercises: group.exercises.filter(ex => ex.id !== exerciseId),
+        })));
+      }
+    } catch (error) {
+      toast.error('שגיאה במחיקת התרגיל');
+      console.error('Error deleting exercise:', error);
     }
   };
 
@@ -254,6 +279,17 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                                 <Plus className="h-5 w-5 text-gray-400 group-hover:text-emerald-600" />
                               </div>
                             </div>
+                          </button>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteExercise(exercise.id, exercise.name);
+                            }}
+                            className="p-4 bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border border-red-200 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
+                            title="מחק תרגיל"
+                          >
+                            <Trash2 className="h-5 w-5 text-red-600" />
                           </button>
                         </div>
                       ))}
