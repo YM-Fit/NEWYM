@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import { ArrowRight, Plus, Save, Copy, Trash2, Calculator, BookMarked, Dumbbell } from 'lucide-react';
+import { Plus, BookMarked } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useAutoSave } from '../../../hooks/useAutoSave';
@@ -9,9 +9,10 @@ import ExerciseSelector from './ExerciseSelector';
 import QuickNumericPad from './QuickNumericPad';
 import EquipmentSelector from '../Equipment/EquipmentSelector';
 import WorkingWeightCalculator from '../Tools/WorkingWeightCalculator';
-import AutoSaveIndicator from '../../common/AutoSaveIndicator';
 import DraftModal from '../../common/DraftModal';
 import WorkoutTemplates from './WorkoutTemplates';
+import { WorkoutHeader } from './WorkoutHeader';
+import { WorkoutExerciseCard } from './WorkoutExerciseCard';
 import { WorkoutTemplate, WorkoutTemplateExercise, Trainee, Workout } from '../../../types';
 
 interface Exercise {
@@ -356,142 +357,72 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     setSaving(true);
 
     try {
-      let workout;
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (workoutId) {
-        const { data: existingSets } = await supabase
-          .from('workout_exercises')
-          .select('id')
-          .eq('workout_id', workoutId);
-
-        if (existingSets && existingSets.length > 0) {
-          await supabase
-            .from('exercise_sets')
-            .delete()
-            .in(
-              'workout_exercise_id',
-              existingSets.map((we) => we.id)
-            );
-        }
-
-        await supabase.from('workout_exercises').delete().eq('workout_id', workoutId);
-
-        const { data: updatedWorkout } = await supabase
-          .from('workouts')
-          .update({
-            notes: notes || null,
-            updated_at: new Date().toISOString(),
-            workout_date: workoutDate.toISOString(),
-          })
-          .eq('id', workoutId)
-          .select()
-          .single();
-
-        workout = updatedWorkout;
-      } else {
-        const { data: newWorkout, error: workoutError } = await supabase
-          .from('workouts')
-          .insert([
-            {
-              trainer_id: user.id,
-              workout_type: workoutType,
-              notes,
-              workout_date: workoutDate.toISOString(),
-            },
-          ])
-          .select()
-          .single();
-
-        if (workoutError || !newWorkout) {
-          console.error('Workout error:', workoutError);
-          toast.error('שגיאה בשמירת האימון');
-          setSaving(false);
-          return;
-        }
-
-        const { error: traineeError } = await supabase
-          .from('workout_trainees')
-          .insert([
-            {
-              workout_id: newWorkout.id,
-              trainee_id: trainee.id,
-            },
-          ]);
-
-        if (traineeError) {
-          console.error('Trainee link error:', traineeError);
-          toast.error('שגיאה בקישור המתאמן לאימון');
-          setSaving(false);
-          return;
-        }
-
-        workout = newWorkout;
-      }
-
-      if (!workout) {
-        toast.error('שגיאה בשמירת האימון');
+      if (!session) {
+        toast.error('נדרשת התחברות מחדש');
         setSaving(false);
         return;
       }
 
-      for (let i = 0; i < exercises.length; i++) {
-        const exercise = exercises[i];
-
-        const { data: workoutExercise, error: exerciseError } = await supabase
-          .from('workout_exercises')
-          .insert([
-            {
-              workout_id: workout.id,
-              trainee_id: trainee.id,
-              exercise_id: exercise.exercise.id,
-              order_index: i,
-              pair_member: trainee.is_pair ? selectedMember : null,
-            },
-          ])
-          .select()
-          .single();
-
-        if (exerciseError || !workoutExercise) {
-          console.error('Exercise error:', exerciseError, 'Exercise:', exercise);
-          toast.error(`שגיאה בשמירת התרגיל: ${exerciseError?.message || 'לא ידוע'}`);
-          setSaving(false);
-          return;
-        }
-
-        const setsToInsert = exercise.sets.map((set) => ({
-          workout_exercise_id: workoutExercise.id,
+      const exercisesData = exercises.map((ex, index) => ({
+        exercise_id: ex.exercise.id,
+        order_index: index,
+        sets: ex.sets.map((set) => ({
           set_number: set.set_number,
           weight: set.weight,
           reps: set.reps,
-          rpe: set.rpe >= 1 && set.rpe <= 10 ? set.rpe : null,
+          rpe: set.rpe,
           set_type: set.set_type,
           failure: set.failure || false,
-          superset_exercise_id: set.superset_exercise_id,
-          superset_weight: set.superset_weight,
-          superset_reps: set.superset_reps,
-          superset_rpe: set.superset_rpe >= 1 && set.superset_rpe <= 10 ? set.superset_rpe : null,
-          superset_equipment_id: set.superset_equipment_id,
-          superset_dropset_weight: set.superset_dropset_weight,
-          superset_dropset_reps: set.superset_dropset_reps,
-          dropset_weight: set.dropset_weight,
-          dropset_reps: set.dropset_reps,
-          equipment_id: set.equipment_id,
-        }));
+          superset_exercise_id: set.superset_exercise_id || null,
+          superset_weight: set.superset_weight || null,
+          superset_reps: set.superset_reps || null,
+          superset_rpe: set.superset_rpe || null,
+          superset_equipment_id: set.superset_equipment_id || null,
+          superset_dropset_weight: set.superset_dropset_weight || null,
+          superset_dropset_reps: set.superset_dropset_reps || null,
+          dropset_weight: set.dropset_weight || null,
+          dropset_reps: set.dropset_reps || null,
+          equipment_id: set.equipment_id || null,
+        })),
+      }));
 
-        const { error: setsError } = await supabase
-          .from('exercise_sets')
-          .insert(setsToInsert);
+      const requestBody = {
+        trainee_id: trainee.id,
+        trainer_id: user.id,
+        workout_type: workoutType,
+        notes: notes || null,
+        workout_date: workoutDate.toISOString(),
+        exercises: exercisesData,
+        pair_member: trainee.is_pair ? selectedMember : null,
+        workout_id: workoutId || undefined,
+      };
 
-        if (setsError) {
-          console.error('Sets error:', setsError);
-          toast.error(`שגיאה בשמירת הסטים: ${setsError?.message || 'לא ידוע'}`);
-          setSaving(false);
-          return;
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/save-workout`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify(requestBody),
         }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        console.error('Save workout error:', result);
+        toast.error(result.error || 'שגיאה בשמירת האימון');
+        setSaving(false);
+        return;
       }
 
       clearSaved();
-      onSave(workout);
+      toast.success(workoutId ? 'האימון עודכן בהצלחה!' : 'האימון נשמר בהצלחה!');
+      onSave(result.workout);
     } catch (error) {
       console.error('Error saving workout:', error);
       toast.error('שגיאה בשמירת האימון');
@@ -500,607 +431,55 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     }
   };
 
+  const totalVolume = useMemo(() => calculateTotalVolume(), [exercises]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 lg:p-6">
-      {/* Premium Header */}
-      <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl shadow-xl p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3 lg:space-x-4 rtl:space-x-reverse">
-            <button
-              type="button"
-              onClick={onBack}
-              className="p-3 lg:p-4 hover:bg-white/10 active:bg-white/20 rounded-xl transition-all duration-300 touch-manipulation text-white"
-              aria-label="חזור"
-            >
-              <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7" />
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <Dumbbell className="h-6 w-6 lg:h-7 lg:w-7 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl lg:text-3xl font-bold text-white">
-                  {workoutId ? 'עריכת אימון' : 'אימון חדש'}
-                </h1>
-                <p className="text-base lg:text-lg text-emerald-100">{trainee.full_name}</p>
-                {exercises.length > 0 && (
-                  <p className="text-sm lg:text-base text-white font-semibold mt-1 bg-white/20 rounded-lg px-2 py-0.5 inline-block">
-                    נפח כולל: {calculateTotalVolume().toLocaleString()} ק"ג
-                  </p>
-                )}
-                {!workoutId && <AutoSaveIndicator lastSaved={lastSaved} isDirty={isDirty} />}
-              </div>
-            </div>
-          </div>
+      <WorkoutHeader
+        trainee={trainee}
+        workoutId={workoutId}
+        totalVolume={totalVolume}
+        lastSaved={lastSaved}
+        isDirty={isDirty}
+        workoutDate={workoutDate}
+        workoutType={workoutType}
+        exercisesCount={exercises.length}
+        saving={saving}
+        onBack={onBack}
+        onSave={handleSave}
+        onCalculator={() => setShowCalculator(true)}
+        onSaveTemplate={() => setShowSaveTemplateModal(true)}
+        onDateChange={setWorkoutDate}
+        onWorkoutTypeChange={setWorkoutType}
+      />
 
-          <div className="flex space-x-3 rtl:space-x-reverse">
-            <button
-              type="button"
-              onClick={() => setShowCalculator(true)}
-              className="bg-white/20 hover:bg-white/30 backdrop-blur-sm active:bg-white/40 text-white px-4 lg:px-6 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 shadow-lg hover:shadow-xl touch-manipulation"
-            >
-              <Calculator className="h-5 w-5 lg:h-6 lg:w-6" />
-              <span className="font-semibold text-base lg:text-lg">מחשבון</span>
-            </button>
-            {exercises.length > 0 && !workoutId && (
-              <button
-                type="button"
-                onClick={() => setShowSaveTemplateModal(true)}
-                className="bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white px-4 lg:px-6 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 shadow-lg hover:shadow-xl touch-manipulation"
-              >
-                <BookMarked className="h-5 w-5 lg:h-6 lg:w-6" />
-                <span className="font-semibold text-base lg:text-lg">שמור תבנית</span>
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving || exercises.length === 0}
-              className="bg-white hover:bg-gray-50 active:bg-gray-100 text-emerald-700 px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl touch-manipulation font-bold"
-            >
-              <Save className="h-5 w-5 lg:h-6 lg:w-6" />
-              <span className="text-base lg:text-lg">{saving ? 'שומר...' : (workoutId ? 'עדכן אימון' : 'שמור אימון')}</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl p-4">
-          <label className="block text-sm font-medium text-emerald-100 mb-2">תאריך האימון</label>
-          <input
-            type="date"
-            value={workoutDate.toISOString().split('T')[0]}
-            onChange={(e) => setWorkoutDate(new Date(e.target.value))}
-            className="w-full px-4 py-3 border-2 border-white/20 bg-white/10 text-white rounded-xl focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 lg:gap-4 mt-4">
-          <button
-            type="button"
-            onClick={() => setWorkoutType('personal')}
-            className={`py-4 lg:py-5 px-4 rounded-xl border-2 transition-all duration-300 touch-manipulation ${
-              workoutType === 'personal'
-                ? 'border-white bg-white text-emerald-700 font-bold shadow-lg'
-                : 'border-white/30 hover:bg-white/10 text-white'
-            }`}
-          >
-            <span className="text-base lg:text-lg">אימון אישי</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setWorkoutType('pair')}
-            className={`py-4 lg:py-5 px-4 rounded-xl border-2 transition-all duration-300 touch-manipulation ${
-              workoutType === 'pair'
-                ? 'border-white bg-white text-emerald-700 font-bold shadow-lg'
-                : 'border-white/30 hover:bg-white/10 text-white'
-            }`}
-          >
-            <span className="text-base lg:text-lg">אימון זוגי</span>
-          </button>
-        </div>
-      </div>
-
-      {exercises.map((workoutExercise, exerciseIndex) => {
-        const isMinimized = minimizedExercises.includes(workoutExercise.tempId);
-        const summary = getExerciseSummary(workoutExercise);
-
-        return (
-          <div
-            key={workoutExercise.tempId}
-            className={`bg-white rounded-2xl shadow-xl hover:shadow-2xl mb-4 lg:mb-6 transition-all duration-300 ease-in-out overflow-hidden ${
-              isMinimized
-                ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-r-4 border-emerald-500'
-                : 'border border-gray-100'
-            }`}
-            style={{
-              height: isMinimized ? '72px' : 'auto',
-              overflow: isMinimized ? 'hidden' : 'visible',
-            }}
-          >
-            {isMinimized ? (
-              <div
-                className="h-full flex items-center justify-between px-4 lg:px-6 cursor-pointer hover:bg-emerald-100/50 transition-all duration-300"
-                onClick={() => toggleMinimizeExercise(workoutExercise.tempId)}
-              >
-                <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                  <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
-                    <span className="text-white text-lg font-bold">V</span>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900">{workoutExercise.exercise.name}</h3>
-                    <p className="text-sm text-gray-600">
-                      {summary.totalSets} סטים | {summary.maxWeight} ק״ג מקס | נפח: {summary.totalVolume.toLocaleString()} ק״ג
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                  <span className="text-sm text-emerald-600 font-semibold bg-emerald-100 px-3 py-1 rounded-lg">לחץ לעריכה</span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeExercise(exerciseIndex);
-                    }}
-                    className="p-2 hover:bg-red-50 text-red-500 rounded-xl transition-all duration-300"
-                    aria-label="מחק תרגיל"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="p-4 lg:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg lg:text-2xl font-bold text-gray-900">{workoutExercise.exercise.name}</h3>
-                    {workoutExercise.sets.length > 0 && (
-                      <p className="text-sm text-emerald-600 mt-1 font-semibold">
-                        נפח: {calculateExerciseVolume(workoutExercise).toLocaleString()} ק"ג
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                    <button
-                      type="button"
-                      onClick={() => completeExercise(workoutExercise.tempId)}
-                      className="px-4 py-2 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-xl"
-                    >
-                      סיים תרגיל
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeExercise(exerciseIndex)}
-                      className="p-2 lg:p-3 hover:bg-red-50 active:bg-red-100 text-red-500 rounded-xl transition-all duration-300 touch-manipulation"
-                      aria-label="מחק תרגיל"
-                    >
-                      <Trash2 className="h-5 w-5 lg:h-6 lg:w-6" />
-                    </button>
-                  </div>
-                </div>
-
-          <div className="space-y-3">
-            {workoutExercise.sets.map((set, setIndex) => {
-              const isCollapsed = collapsedSets.includes(set.id);
-
-              if (isCollapsed) {
-                return (
-                  <div
-                    key={set.id}
-                    onClick={() => toggleCollapseSet(set.id)}
-                    className="bg-gradient-to-br from-gray-100 to-gray-50 rounded-xl p-3 border border-gray-200 cursor-pointer hover:border-emerald-300 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-teal-50 transition-all duration-300"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-sm text-white bg-gradient-to-br from-emerald-500 to-teal-600 px-3 py-1.5 rounded-lg">סט {set.set_number}</span>
-                        <span className="text-gray-700 font-medium">{set.weight} ק״ג</span>
-                        <span className="text-gray-500">x</span>
-                        <span className="text-gray-700 font-medium">{set.reps} חזרות</span>
-                        {set.rpe && <span className="text-amber-600 text-sm">RPE {set.rpe}</span>}
-                        {set.set_type !== 'regular' && (
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
-                            set.set_type === 'superset' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
-                          }`}>
-                            {set.set_type === 'superset' ? 'סופר-סט' : 'דרופ-סט'}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-emerald-600 font-medium">לחץ לעריכה</span>
-                    </div>
-                  </div>
-                );
-              }
-
-              return (
-              <div
-                key={set.id}
-                className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-bold text-base lg:text-lg text-white bg-gradient-to-br from-emerald-500 to-teal-600 px-4 py-2 rounded-xl">סט {set.set_number}</span>
-                  <div className="flex space-x-2 rtl:space-x-reverse">
-                    <button
-                      type="button"
-                      onClick={() => duplicateSet(exerciseIndex, setIndex)}
-                      className="p-2 lg:p-3 hover:bg-blue-50 active:bg-blue-100 rounded-xl transition-all duration-300 touch-manipulation"
-                      title="שכפל סט"
-                      aria-label="שכפל סט"
-                    >
-                      <Copy className="h-4 w-4 lg:h-5 lg:w-5 text-blue-600" />
-                    </button>
-                    {workoutExercise.sets.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeSet(exerciseIndex, setIndex)}
-                        className="p-2 lg:p-3 hover:bg-red-50 active:bg-red-100 text-red-500 rounded-xl transition-all duration-300 touch-manipulation"
-                        aria-label="מחק סט"
-                      >
-                        <Trash2 className="h-4 w-4 lg:h-5 lg:w-5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3 lg:gap-4 mb-3">
-                  <div>
-                    <label className="block text-sm lg:text-base font-medium text-gray-700 mb-1">משקל (ק״ג)</label>
-                    <button
-                      type="button"
-                      onClick={() => openNumericPad(exerciseIndex, setIndex, 'weight', 'משקל (ק״ג)')}
-                      className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-emerald-400 bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-700 rounded-xl hover:from-emerald-100 hover:to-teal-100 active:from-emerald-200 active:to-teal-200 transition-all duration-300 touch-manipulation shadow-md hover:shadow-lg"
-                    >
-                      {set.weight || '0'}
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm lg:text-base font-medium text-gray-700 mb-1">חזרות</label>
-                    <button
-                      type="button"
-                      onClick={() => openNumericPad(exerciseIndex, setIndex, 'reps', 'חזרות')}
-                      className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-700 rounded-xl hover:from-blue-100 hover:to-cyan-100 active:from-blue-200 active:to-cyan-200 transition-all duration-300 touch-manipulation shadow-md hover:shadow-lg"
-                    >
-                      {set.reps || '0'}
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm lg:text-base font-medium text-gray-700 mb-1">RPE</label>
-                    <button
-                      type="button"
-                      onClick={() => openNumericPad(exerciseIndex, setIndex, 'rpe', 'RPE (1-10)')}
-                      className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 active:from-amber-200 active:to-orange-200 transition-all duration-300 touch-manipulation shadow-md hover:shadow-lg"
-                    >
-                      {set.rpe || '-'}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mb-3 grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setEquipmentSelector({ exerciseIndex, setIndex })}
-                    className={`py-3 lg:py-4 px-3 rounded-xl border-2 transition-all duration-300 text-right shadow-md hover:shadow-lg ${
-                      set.equipment
-                        ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50'
-                        : 'border-gray-200 hover:border-blue-300 bg-white hover:bg-blue-50/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                        <span className="text-xl lg:text-2xl">
-                          {set.equipment?.emoji || '🎒'}
-                        </span>
-                        <span className="font-medium text-sm lg:text-base">
-                          {set.equipment?.name || 'ציוד'}
-                        </span>
-                      </div>
-                      {set.equipment && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            updateSet(exerciseIndex, setIndex, 'equipment_id', null);
-                            updateSet(exerciseIndex, setIndex, 'equipment', null);
-                          }}
-                          className="p-1 hover:bg-red-100 rounded-lg text-red-500 transition-all duration-300"
-                          aria-label="מחק ציוד"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => updateSet(exerciseIndex, setIndex, 'failure', !set.failure)}
-                    className={`py-3 lg:py-4 px-3 rounded-xl border-2 transition-all duration-300 shadow-md hover:shadow-lg ${
-                      set.failure
-                        ? 'border-red-400 bg-gradient-to-br from-red-50 to-orange-50 text-red-700'
-                        : 'border-gray-200 hover:border-red-300 bg-white text-gray-700 hover:bg-red-50/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse">
-                      <span className="text-xl lg:text-2xl">
-                        {set.failure ? '🔥' : '💪'}
-                      </span>
-                      <span className="font-medium text-sm lg:text-base">
-                        כשל
-                      </span>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setCalculatorData({ weight: set.weight, reps: set.reps })}
-                    className="py-3 lg:py-4 px-3 rounded-xl border-2 border-gray-200 hover:border-amber-300 bg-white hover:bg-gradient-to-br hover:from-amber-50 hover:to-orange-50 transition-all duration-300 shadow-md hover:shadow-lg"
-                  >
-                    <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse">
-                      <Calculator className="h-5 w-5 lg:h-6 lg:w-6 text-amber-600" />
-                      <span className="font-medium text-sm lg:text-base text-gray-700">
-                        1RM
-                      </span>
-                    </div>
-                  </button>
-                </div>
-
-                <div className="flex space-x-2 rtl:space-x-reverse">
-                  <button
-                    type="button"
-                    onClick={() => updateSet(exerciseIndex, setIndex, 'set_type', 'regular')}
-                    className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all duration-300 ${
-                      set.set_type === 'regular'
-                        ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg'
-                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-emerald-300'
-                    }`}
-                  >
-                    רגיל
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (set.set_type !== 'superset') {
-                        updateSet(exerciseIndex, setIndex, 'set_type', 'superset');
-                      }
-                    }}
-                    className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all duration-300 ${
-                      set.set_type === 'superset'
-                        ? 'bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-lg'
-                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-blue-300'
-                    }`}
-                  >
-                    סופר-סט
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => updateSet(exerciseIndex, setIndex, 'set_type', 'dropset')}
-                    className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all duration-300 ${
-                      set.set_type === 'dropset'
-                        ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg'
-                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-amber-300'
-                    }`}
-                  >
-                    דרופ-סט
-                  </button>
-                </div>
-
-                {set.set_type === 'superset' && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <div className="mb-3">
-                      <label className="block text-sm font-medium text-blue-700 mb-2">
-                        תרגיל סופר-סט
-                      </label>
-                      {set.superset_exercise_id ? (
-                        <div className="flex items-center justify-between bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-400 rounded-xl p-3 shadow-md">
-                          <span className="font-medium text-blue-900">{set.superset_exercise_name}</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              updateSet(exerciseIndex, setIndex, 'superset_exercise_id', null);
-                              updateSet(exerciseIndex, setIndex, 'superset_exercise_name', null);
-                              updateSet(exerciseIndex, setIndex, 'superset_weight', null);
-                              updateSet(exerciseIndex, setIndex, 'superset_reps', null);
-                            }}
-                            className="p-1 hover:bg-red-100 rounded-lg text-red-500 transition-all duration-300"
-                            aria-label="מחק תרגיל סופר-סט"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setSupersetSelector({ exerciseIndex, setIndex })}
-                          className="w-full py-3 px-4 border-2 border-dashed border-blue-300 rounded-xl hover:border-blue-500 hover:bg-blue-50 text-blue-600 font-medium transition-all duration-300"
-                        >
-                          + בחר תרגיל לסופר-סט
-                        </button>
-                      )}
-                    </div>
-                    {set.superset_exercise_id && (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <label className="block text-sm font-medium text-blue-700 mb-1">
-                              משקל (ק״ג)
-                            </label>
-                            <button
-                              type="button"
-                              onClick={() => openSupersetNumericPad(exerciseIndex, setIndex, 'superset_weight', 'משקל סופר-סט (ק״ג)')}
-                              className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-700 rounded-xl hover:from-blue-100 hover:to-cyan-100 active:from-blue-200 active:to-cyan-200 transition-all duration-300 shadow-md"
-                            >
-                              {set.superset_weight || '0'}
-                            </button>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-blue-700 mb-1">
-                              חזרות
-                            </label>
-                            <button
-                              type="button"
-                              onClick={() => openSupersetNumericPad(exerciseIndex, setIndex, 'superset_reps', 'חזרות סופר-סט')}
-                              className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-700 rounded-xl hover:from-blue-100 hover:to-cyan-100 active:from-blue-200 active:to-cyan-200 transition-all duration-300 shadow-md"
-                            >
-                              {set.superset_reps || '0'}
-                            </button>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-blue-700 mb-1">
-                              RPE
-                            </label>
-                            <button
-                              type="button"
-                              onClick={() => openSupersetNumericPad(exerciseIndex, setIndex, 'superset_rpe', 'RPE סופר-סט (1-10)')}
-                              className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-700 rounded-xl hover:from-blue-100 hover:to-cyan-100 active:from-blue-200 active:to-cyan-200 transition-all duration-300 shadow-md"
-                            >
-                              {set.superset_rpe || '-'}
-                            </button>
-                          </div>
-                        </div>
-
-                        <div>
-                          <button
-                            type="button"
-                            onClick={() => setSupersetEquipmentSelector({ exerciseIndex, setIndex })}
-                            className={`w-full py-3 px-4 rounded-xl border-2 transition-all duration-300 text-right shadow-md hover:shadow-lg ${
-                              set.superset_equipment
-                                ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50'
-                                : 'border-blue-200 hover:border-blue-400 bg-white'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                                <span className="text-2xl">
-                                  {set.superset_equipment?.emoji || '🎒'}
-                                </span>
-                                <span className="font-medium text-base">
-                                  {set.superset_equipment?.name || 'הוסף ציוד (אופציונלי)'}
-                                </span>
-                              </div>
-                              {set.superset_equipment && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateSet(exerciseIndex, setIndex, 'superset_equipment_id', null);
-                                    updateSet(exerciseIndex, setIndex, 'superset_equipment', null);
-                                  }}
-                                  className="p-1 hover:bg-red-100 rounded-lg text-red-500 transition-all duration-300"
-                                  aria-label="מחק ציוד"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              )}
-                            </div>
-                          </button>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-blue-700 mb-2">
-                            דרופ-סט לסופר-סט (אופציונלי)
-                          </label>
-                          {(set.superset_dropset_weight !== null && set.superset_dropset_weight !== undefined) || (set.superset_dropset_reps !== null && set.superset_dropset_reps !== undefined) ? (
-                            <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-3 shadow-md">
-                              <div className="grid grid-cols-2 gap-3 mb-2">
-                                <div>
-                                  <label className="block text-xs font-medium text-amber-700 mb-1">
-                                    משקל דרופ (ק״ג)
-                                  </label>
-                                  <button
-                                    type="button"
-                                    onClick={() => openSupersetDropsetNumericPad(exerciseIndex, setIndex, 'superset_dropset_weight', 'משקל דרופ-סט סופר (ק״ג)')}
-                                    className="w-full px-2 py-2 text-lg font-bold border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 active:from-amber-200 active:to-orange-200 transition-all duration-300 touch-manipulation shadow-sm"
-                                  >
-                                    {set.superset_dropset_weight || '0'}
-                                  </button>
-                                </div>
-                                <div>
-                                  <label className="block text-xs font-medium text-amber-700 mb-1">
-                                    חזרות דרופ
-                                  </label>
-                                  <button
-                                    type="button"
-                                    onClick={() => openSupersetDropsetNumericPad(exerciseIndex, setIndex, 'superset_dropset_reps', 'חזרות דרופ-סט סופר')}
-                                    className="w-full px-2 py-2 text-lg font-bold border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 active:from-amber-200 active:to-orange-200 transition-all duration-300 touch-manipulation shadow-sm"
-                                  >
-                                    {set.superset_dropset_reps || '0'}
-                                  </button>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  updateSet(exerciseIndex, setIndex, 'superset_dropset_weight', null);
-                                  updateSet(exerciseIndex, setIndex, 'superset_dropset_reps', null);
-                                }}
-                                className="text-xs text-red-500 hover:text-red-600 transition-all duration-300"
-                              >
-                                הסר דרופ-סט
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                updateSet(exerciseIndex, setIndex, 'superset_dropset_weight', 0);
-                                updateSet(exerciseIndex, setIndex, 'superset_dropset_reps', 0);
-                              }}
-                              className="w-full py-2 px-4 border-2 border-dashed border-amber-300 rounded-xl hover:border-amber-500 hover:bg-amber-50 text-amber-600 font-medium transition-all duration-300 text-sm"
-                            >
-                              + הוסף דרופ-סט
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {set.set_type === 'dropset' && (
-                  <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-gray-200">
-                    <div>
-                      <label className="block text-sm font-medium text-amber-700 mb-1">
-                        משקל דרופ (ק״ג)
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => openDropsetNumericPad(exerciseIndex, setIndex, 'dropset_weight', 'משקל דרופ-סט (ק״ג)')}
-                        className="w-full px-3 py-3 text-xl font-bold border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 active:from-amber-200 active:to-orange-200 transition-all duration-300 touch-manipulation shadow-md"
-                      >
-                        {set.dropset_weight || '0'}
-                      </button>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-amber-700 mb-1">
-                        חזרות דרופ
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => openDropsetNumericPad(exerciseIndex, setIndex, 'dropset_reps', 'חזרות דרופ-סט')}
-                        className="w-full px-3 py-3 text-xl font-bold border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 active:from-amber-200 active:to-orange-200 transition-all duration-300 touch-manipulation shadow-md"
-                      >
-                        {set.dropset_reps || '0'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-              );
-            })}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => addSet(exerciseIndex)}
-            className="w-full mt-4 py-4 lg:py-5 border-2 border-dashed border-gray-300 rounded-xl hover:border-emerald-500 active:border-emerald-600 hover:bg-emerald-50 active:bg-emerald-100 text-gray-500 hover:text-emerald-700 font-semibold text-base lg:text-lg transition-all duration-300 touch-manipulation"
-          >
-            + הוסף סט
-          </button>
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {exercises.map((workoutExercise, exerciseIndex) => (
+        <WorkoutExerciseCard
+          key={workoutExercise.tempId}
+          workoutExercise={workoutExercise}
+          exerciseIndex={exerciseIndex}
+          isMinimized={minimizedExercises.includes(workoutExercise.tempId)}
+          collapsedSets={collapsedSets}
+          summary={getExerciseSummary(workoutExercise)}
+          totalVolume={calculateExerciseVolume(workoutExercise)}
+          onRemove={() => removeExercise(exerciseIndex)}
+          onToggleMinimize={() => toggleMinimizeExercise(workoutExercise.tempId)}
+          onComplete={() => completeExercise(workoutExercise.tempId)}
+          onAddSet={() => addSet(exerciseIndex)}
+          onDuplicateSet={(setIndex) => duplicateSet(exerciseIndex, setIndex)}
+          onRemoveSet={(setIndex) => removeSet(exerciseIndex, setIndex)}
+          onToggleCollapseSet={toggleCollapseSet}
+          onOpenNumericPad={(setIndex, field) => openNumericPad(exerciseIndex, setIndex, field, field === 'weight' ? 'משקל (ק״ג)' : field === 'reps' ? 'חזרות' : 'RPE (1-10)')}
+          onOpenEquipmentSelector={(setIndex) => setEquipmentSelector({ exerciseIndex, setIndex })}
+          onOpenSupersetSelector={(setIndex) => setSupersetSelector({ exerciseIndex, setIndex })}
+          onOpenSupersetNumericPad={(setIndex, field) => openSupersetNumericPad(exerciseIndex, setIndex, field, field === 'superset_weight' ? 'משקל סופר-סט (ק״ג)' : field === 'superset_reps' ? 'חזרות סופר-סט' : 'RPE סופר-סט (1-10)')}
+          onOpenSupersetEquipmentSelector={(setIndex) => setSupersetEquipmentSelector({ exerciseIndex, setIndex })}
+          onOpenDropsetNumericPad={(setIndex, field) => openDropsetNumericPad(exerciseIndex, setIndex, field, field === 'dropset_weight' ? 'משקל דרופ-סט (ק״ג)' : 'חזרות דרופ-סט')}
+          onOpenSupersetDropsetNumericPad={(setIndex, field) => openSupersetDropsetNumericPad(exerciseIndex, setIndex, field, field === 'superset_dropset_weight' ? 'משקל דרופ-סט סופר (ק״ג)' : 'חזרות דרופ-סט סופר')}
+          onUpdateSet={(setIndex, field, value) => updateSet(exerciseIndex, setIndex, field, value)}
+          onOpenCalculator={(setIndex) => setCalculatorData({ weight: exercises[exerciseIndex].sets[setIndex].weight, reps: exercises[exerciseIndex].sets[setIndex].reps })}
+        />
+      ))}
 
       {exercises.length === 0 && !workoutId && (
         <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-2xl p-6 mb-4 shadow-xl">

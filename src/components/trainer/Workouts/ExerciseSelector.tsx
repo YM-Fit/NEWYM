@@ -3,6 +3,7 @@ import { Search, X, Plus, Clock, PlusCircle, Trash2 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import ExerciseHistory from './ExerciseHistory';
+import { useExerciseCache } from '../../../hooks/useExerciseCache';
 
 interface Exercise {
   id: string;
@@ -33,6 +34,8 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
   const [newExerciseName, setNewExerciseName] = useState('');
   const [savingExercise, setSavingExercise] = useState(false);
 
+  const { cachedExercises, isCacheValid, saveToCache } = useExerciseCache();
+
   useEffect(() => {
     loadMuscleGroupsAndExercises();
   }, []);
@@ -48,6 +51,17 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
       return;
     }
 
+    if (isCacheValid && cachedExercises) {
+      const groupsWithExercises = groups.map((group) => ({
+        ...group,
+        exercises: cachedExercises.filter((ex) => ex.muscle_group_id === group.id),
+      }));
+
+      setMuscleGroups(groupsWithExercises);
+      setLoading(false);
+      return;
+    }
+
     const { data: exercises, error: exercisesError } = await supabase
       .from('exercises')
       .select('*')
@@ -57,6 +71,8 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
       setLoading(false);
       return;
     }
+
+    saveToCache(exercises);
 
     const groupsWithExercises = groups.map((group) => ({
       ...group,
