@@ -202,9 +202,8 @@ export default function PairWorkoutSession({
   };
 
   const renderExerciseColumn = (exercises: WorkoutExercise[], member: 'member_1' | 'member_2', name: string, isBlue: boolean) => (
-    <div className={`bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border ${isBlue ? 'border-blue-100' : 'border-teal-100'} overflow-hidden`}>
-      {/* Premium Member Tab Header */}
-      <div className={`${isBlue ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-teal-500 to-emerald-600'} p-5`}>
+    <div className={`bg-zinc-900 rounded-2xl border ${isBlue ? 'border-cyan-500/30' : 'border-emerald-500/30'} overflow-hidden`}>
+      <div className={`${isBlue ? 'bg-cyan-500' : 'bg-emerald-500'} p-5`}>
         <h2 className="text-xl font-bold text-white text-center tracking-wide">
           {name}
         </h2>
@@ -214,18 +213,18 @@ export default function PairWorkoutSession({
       </div>
       <div className="p-5 space-y-4">
         {exercises.length === 0 ? (
-          <div className="text-center text-gray-400 py-12 bg-gray-50/50 rounded-xl border-2 border-dashed border-gray-200">
+          <div className="text-center text-zinc-500 py-12 bg-zinc-800/50 rounded-xl border-2 border-dashed border-zinc-700">
             <p className="text-base mb-2 font-medium">עדיין לא נוספו תרגילים</p>
-            <p className="text-sm text-gray-400">לחץ על הכפתור למטה להוספה</p>
+            <p className="text-sm text-zinc-500">לחץ על הכפתור למטה להוספה</p>
           </div>
         ) : (
           exercises.map((exercise, exIdx) => (
-            <div key={exercise.tempId} className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
+            <div key={exercise.tempId} className="bg-zinc-800/50 rounded-2xl p-5 border border-zinc-700/50">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-gray-900 text-lg">{exercise.exercise.name}</h3>
+                <h3 className="font-bold text-white text-lg">{exercise.exercise.name}</h3>
                 <button
                   onClick={() => removeExercise(exIdx, member)}
-                  className="text-red-500 hover:text-red-600 hover:bg-red-50 p-2 rounded-xl transition-all duration-300"
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 p-2 rounded-xl transition-all"
                 >
                   <Trash2 className="h-5 w-5" />
                 </button>
@@ -233,8 +232,8 @@ export default function PairWorkoutSession({
 
               <div className="space-y-3">
                 {exercise.sets.map((set, setIdx) => (
-                  <div key={setIdx} className="flex items-center gap-2 bg-white rounded-xl p-3 shadow-sm border border-gray-100">
-                    <span className={`text-sm font-bold ${isBlue ? 'text-blue-600 bg-blue-50' : 'text-teal-600 bg-teal-50'} w-10 h-10 flex items-center justify-center rounded-xl`}>
+                  <div key={setIdx} className="flex items-center gap-2 bg-zinc-900/50 rounded-xl p-3 border border-zinc-700/30">
+                    <span className={`text-sm font-bold ${isBlue ? 'text-cyan-400 bg-cyan-500/10' : 'text-emerald-400 bg-emerald-500/10'} w-10 h-10 flex items-center justify-center rounded-xl`}>
                       #{setIdx + 1}
                     </span>
 
@@ -245,9 +244,9 @@ export default function PairWorkoutSession({
                           placeholder="משקל"
                           value={set.weight || ''}
                           onChange={(e) => updateSet(exIdx, setIdx, 'weight', Number(e.target.value), member)}
-                          className="w-full p-3 border-2 border-emerald-200 rounded-xl text-center font-bold text-emerald-700 bg-emerald-50/50 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                          className="w-full p-3 border border-emerald-500/30 rounded-xl text-center font-bold text-emerald-400 bg-emerald-500/10 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
                         />
-                        <span className="text-xs text-gray-500 block text-center mt-1">ק״ג</span>
+                        <span className="text-xs text-zinc-500 block text-center mt-1">ק״ג</span>
                       </div>
 
                       <div className="flex-1">
@@ -256,9 +255,9 @@ export default function PairWorkoutSession({
                           placeholder="חזרות"
                           value={set.reps || ''}
                           onChange={(e) => updateSet(exIdx, setIdx, 'reps', Number(e.target.value), member)}
-                          className="w-full p-3 border-2 border-blue-200 rounded-xl text-center font-bold text-blue-700 bg-blue-50/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                          className="w-full p-3 border border-cyan-500/30 rounded-xl text-center font-bold text-cyan-400 bg-cyan-500/10 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                         />
-                        <span className="text-xs text-gray-500 block text-center mt-1">חזרות</span>
+                        <span className="text-xs text-zinc-500 block text-center mt-1">חזרות</span>
                       </div>
 
                       <div className="flex-1">
@@ -269,16 +268,16 @@ export default function PairWorkoutSession({
                           max="10"
                           value={set.rpe || ''}
                           onChange={(e) => updateSet(exIdx, setIdx, 'rpe', Number(e.target.value), member)}
-                          className="w-full p-3 border-2 border-amber-200 rounded-xl text-center font-bold text-amber-700 bg-amber-50/50 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300"
+                          className="w-full p-3 border border-amber-500/30 rounded-xl text-center font-bold text-amber-400 bg-amber-500/10 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                         />
-                        <span className="text-xs text-gray-500 block text-center mt-1">RPE</span>
+                        <span className="text-xs text-zinc-500 block text-center mt-1">RPE</span>
                       </div>
                     </div>
 
                     <div className="flex gap-1">
                       <button
                         onClick={() => duplicateSet(exIdx, setIdx, member)}
-                        className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-2 rounded-xl transition-all duration-300"
+                        className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 p-2 rounded-xl transition-all"
                       >
                         <Copy className="h-4 w-4" />
                       </button>
@@ -286,7 +285,7 @@ export default function PairWorkoutSession({
                       {exercise.sets.length > 1 && (
                         <button
                           onClick={() => removeSet(exIdx, setIdx, member)}
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50 p-2 rounded-xl transition-all duration-300"
+                          className="text-red-400 hover:text-red-300 hover:bg-red-500/10 p-2 rounded-xl transition-all"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -298,7 +297,7 @@ export default function PairWorkoutSession({
 
               <button
                 onClick={() => addSet(exIdx, member)}
-                className={`mt-4 w-full text-sm ${isBlue ? 'text-blue-600 hover:text-blue-700 border-blue-200 hover:bg-blue-50' : 'text-teal-600 hover:text-teal-700 border-teal-200 hover:bg-teal-50'} py-3 border-2 border-dashed rounded-xl transition-all duration-300 font-medium`}
+                className={`mt-4 w-full text-sm ${isBlue ? 'text-cyan-400 hover:text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/10' : 'text-emerald-400 hover:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/10'} py-3 border-2 border-dashed rounded-xl transition-all font-medium`}
               >
                 + הוסף סט
               </button>
@@ -308,7 +307,7 @@ export default function PairWorkoutSession({
 
         <button
           onClick={() => setShowExerciseSelector(member)}
-          className={`w-full ${isBlue ? 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700' : 'bg-gradient-to-br from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700'} text-white py-4 px-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all duration-300 shadow-lg hover:shadow-xl font-semibold`}
+          className={`w-full ${isBlue ? 'bg-cyan-500 hover:bg-cyan-600' : 'bg-emerald-500 hover:bg-emerald-600'} text-white py-4 px-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold`}
         >
           <Plus className="h-5 w-5" />
           <span>הוסף תרגיל</span>
@@ -318,25 +317,24 @@ export default function PairWorkoutSession({
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Premium Header */}
-      <div className="sticky top-0 z-10 bg-gradient-to-br from-emerald-600 to-teal-700 shadow-xl">
+    <div className="min-h-screen bg-zinc-950">
+      <div className="sticky top-0 z-10 bg-zinc-900 border-b border-zinc-800">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 rtl:space-x-reverse">
               <button
                 onClick={onBack}
-                className="p-3 hover:bg-white/10 rounded-xl transition-all duration-300 text-white"
+                className="p-3 hover:bg-zinc-800 rounded-xl transition-all text-zinc-400 hover:text-white"
               >
                 <ArrowRight className="h-6 w-6" />
               </button>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                  <Users className="h-6 w-6 text-white" />
+                <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                  <Users className="h-6 w-6 text-emerald-400" />
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-white">אימון זוגי</h1>
-                  <p className="text-sm text-emerald-100">{trainee.full_name}</p>
+                  <p className="text-sm text-zinc-400">{trainee.full_name}</p>
                 </div>
               </div>
             </div>
@@ -344,7 +342,7 @@ export default function PairWorkoutSession({
             <div className="flex space-x-3 rtl:space-x-reverse">
               <button
                 onClick={onBack}
-                className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-5 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 font-medium"
+                className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-5 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all font-medium border border-zinc-700"
               >
                 <X className="h-5 w-5" />
                 <span>ביטול</span>
@@ -352,7 +350,7 @@ export default function PairWorkoutSession({
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-white hover:bg-gray-50 text-emerald-700 px-6 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-xl font-bold"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all disabled:opacity-50 font-bold"
               >
                 <Check className="h-5 w-5" />
                 <span>{saving ? 'שומר...' : 'סיים אימון'}</span>

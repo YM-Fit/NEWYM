@@ -646,7 +646,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
   const totalVolume = useMemo(() => calculateTotalVolume(), [exercises]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 lg:p-6">
+    <div className="min-h-screen bg-zinc-950 p-4 lg:p-6">
       <WorkoutHeader
         trainee={trainee}
         workoutId={workoutId}
@@ -696,28 +696,28 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
       ))}
 
       {exercises.length === 0 && !workoutId && (
-        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-2xl p-6 mb-4 shadow-xl">
-          <h3 className="text-lg font-bold text-blue-900 mb-2">התחל אימון חדש</h3>
-          <p className="text-blue-700 mb-4">בחר תבנית קיימת או התחל אימון ריק</p>
+        <div className="premium-card-static p-6 mb-4">
+          <h3 className="text-lg font-bold text-white mb-2">התחל אימון חדש</h3>
+          <p className="text-zinc-400 mb-4">בחר תבנית קיימת או התחל אימון ריק</p>
           <button
             type="button"
             onClick={() => setShowTemplateModal(true)}
-            className="w-full bg-gradient-to-br from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white py-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all duration-300 font-semibold mb-3 shadow-lg hover:shadow-xl"
+            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold mb-3"
           >
             <BookMarked className="h-5 w-5" />
             <span>טען תבנית קיימת</span>
           </button>
-          <p className="text-center text-sm text-blue-600">או</p>
+          <p className="text-center text-sm text-zinc-500">או</p>
         </div>
       )}
 
       <button
         type="button"
         onClick={() => setShowExerciseSelector(true)}
-        className="w-full bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:from-emerald-700 active:to-teal-800 text-white py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl touch-manipulation"
+        className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all touch-manipulation font-bold"
       >
         <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
-        <span className="font-semibold text-lg lg:text-xl">{exercises.length === 0 ? 'התחל אימון ריק' : 'הוסף תרגיל'}</span>
+        <span className="text-lg lg:text-xl">{exercises.length === 0 ? 'התחל אימון ריק' : 'הוסף תרגיל'}</span>
       </button>
 
       {showExerciseSelector && (
@@ -825,48 +825,48 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
       )}
 
       {showSaveTemplateModal && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-100">
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
-                <BookMarked className="h-6 w-6 text-white" />
+              <div className="p-3 rounded-xl bg-amber-500/15">
+                <BookMarked className="h-6 w-6 text-amber-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-900">שמור כתבנית</h3>
-                <p className="text-gray-600 text-sm">שמור את האימון הזה כתבנית לשימוש עתידי מהיר</p>
+                <h3 className="text-xl font-bold text-white">שמור כתבנית</h3>
+                <p className="text-zinc-500 text-sm">שמור את האימון הזה כתבנית לשימוש עתידי מהיר</p>
               </div>
             </div>
 
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
                   שם התבנית *
                 </label>
                 <input
                   type="text"
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300"
+                  className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="למשל: אימון רגליים מלא"
                   autoFocus
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
                   תיאור (אופציונלי)
                 </label>
                 <textarea
                   value={templateDescription}
                   onChange={(e) => setTemplateDescription(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300"
+                  className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="הוסף תיאור לתבנית..."
                   rows={3}
                 />
               </div>
 
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3">
-                <p className="text-sm text-amber-800">
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3">
+                <p className="text-sm text-amber-400">
                   <strong>{exercises.length}</strong> תרגילים יישמרו בתבנית
                 </p>
               </div>
@@ -876,7 +876,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
               <button
                 onClick={handleSaveAsTemplate}
                 disabled={savingTemplate || !templateName.trim()}
-                className="flex-1 bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all"
               >
                 {savingTemplate ? 'שומר...' : 'שמור תבנית'}
               </button>
@@ -886,7 +886,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                   setTemplateName('');
                   setTemplateDescription('');
                 }}
-                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-all duration-300"
+                className="flex-1 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 text-zinc-300 px-6 py-3 rounded-xl font-semibold transition-all"
               >
                 ביטול
               </button>

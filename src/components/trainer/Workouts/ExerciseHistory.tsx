@@ -108,10 +108,9 @@ export default function ExerciseHistory({
   };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-xl transition-all duration-300">
-        {/* Premium Header */}
-        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-4 lg:p-6">
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+        <div className="bg-emerald-500 p-4 lg:p-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-3 rtl:space-x-reverse">
               <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
@@ -125,26 +124,26 @@ export default function ExerciseHistory({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300"
+              className="p-2 hover:bg-white/20 rounded-xl transition-all"
             >
               <X className="h-6 w-6 text-white" />
             </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-gradient-to-b from-gray-50 to-white">
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-zinc-900">
           {loading ? (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading history...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+              <p className="text-zinc-400">Loading history...</p>
             </div>
           ) : history.length === 0 ? (
             <div className="text-center py-12">
-              <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Calendar className="h-10 w-10 text-gray-400" />
+              <div className="w-20 h-20 bg-zinc-800 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-zinc-700">
+                <Calendar className="h-10 w-10 text-zinc-500" />
               </div>
-              <p className="text-gray-700 text-lg font-medium">No history for this exercise</p>
-              <p className="text-gray-500 text-sm mt-2">This will be the first workout!</p>
+              <p className="text-white text-lg font-medium">No history for this exercise</p>
+              <p className="text-zinc-500 text-sm mt-2">This will be the first workout!</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -155,14 +154,14 @@ export default function ExerciseHistory({
                 return (
                   <div
                     key={workout.workout_id}
-                    className="bg-white rounded-2xl p-4 border border-gray-100 shadow-xl hover:shadow-2xl transition-all duration-300"
+                    className="bg-zinc-800/50 rounded-2xl p-4 border border-zinc-700/50"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                        <div className="p-1.5 bg-emerald-100 rounded-lg">
-                          <Calendar className="h-4 w-4 text-emerald-600" />
+                        <div className="p-1.5 bg-emerald-500/20 rounded-lg">
+                          <Calendar className="h-4 w-4 text-emerald-400" />
                         </div>
-                        <span className="font-semibold text-gray-900">
+                        <span className="font-semibold text-white">
                           {new Date(workout.workout_date).toLocaleDateString('he-IL', {
                             year: 'numeric',
                             month: 'long',
@@ -171,9 +170,9 @@ export default function ExerciseHistory({
                         </span>
                       </div>
                       <div className="flex items-center space-x-3 rtl:space-x-reverse text-sm">
-                        <div className="flex items-center space-x-1 rtl:space-x-reverse bg-blue-50 px-3 py-1.5 rounded-xl">
-                          <TrendingUp className="h-4 w-4 text-blue-600" />
-                          <span className="font-semibold text-blue-700">{totalVolume.toLocaleString()} kg</span>
+                        <div className="flex items-center space-x-1 rtl:space-x-reverse bg-cyan-500/10 px-3 py-1.5 rounded-xl border border-cyan-500/30">
+                          <TrendingUp className="h-4 w-4 text-cyan-400" />
+                          <span className="font-semibold text-cyan-400">{totalVolume.toLocaleString()} kg</span>
                         </div>
                       </div>
                     </div>
@@ -182,39 +181,39 @@ export default function ExerciseHistory({
                       {workout.sets.map((set) => (
                         <div
                           key={set.set_number}
-                          className={`flex items-center justify-between p-3 rounded-xl transition-all duration-300 ${
+                          className={`flex items-center justify-between p-3 rounded-xl transition-all ${
                             bestSet && set.set_number === bestSet.set_number
-                              ? 'bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 shadow-md'
-                              : 'bg-gray-50 border border-gray-100 hover:bg-gray-100'
+                              ? 'bg-amber-500/10 border border-amber-500/30'
+                              : 'bg-zinc-900/50 border border-zinc-700/30 hover:bg-zinc-800/50'
                           }`}
                         >
                           <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                            <span className="text-sm font-semibold text-gray-700 min-w-[60px]">
+                            <span className="text-sm font-semibold text-zinc-400 min-w-[60px]">
                               Set #{set.set_number}
                             </span>
                             {set.set_type === 'superset' && (
-                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-lg font-medium">Super</span>
+                              <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded-lg font-medium border border-cyan-500/30">Super</span>
                             )}
                             {set.set_type === 'dropset' && (
-                              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-lg font-medium">Drop</span>
+                              <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-1 rounded-lg font-medium border border-amber-500/30">Drop</span>
                             )}
                             {set.failure && (
-                              <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-lg font-medium">Failure</span>
+                              <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-lg font-medium border border-red-500/30">Failure</span>
                             )}
                             {bestSet && set.set_number === bestSet.set_number && (
-                              <span className="text-xs bg-gradient-to-r from-amber-400 to-amber-500 text-white px-2 py-1 rounded-lg font-medium shadow-sm">Best</span>
+                              <span className="text-xs bg-amber-500 text-white px-2 py-1 rounded-lg font-medium">Best</span>
                             )}
                           </div>
                           <div className="flex items-center space-x-4 rtl:space-x-reverse text-sm">
-                            <span className="font-bold text-gray-900">
+                            <span className="font-bold text-white">
                               {set.weight} kg x {set.reps}
                             </span>
                             {set.rpe && (
-                              <span className="text-gray-500 bg-gray-100 px-2 py-1 rounded-lg">
+                              <span className="text-zinc-400 bg-zinc-800 px-2 py-1 rounded-lg border border-zinc-700/50">
                                 RPE: {set.rpe}
                               </span>
                             )}
-                            <span className="text-emerald-600 font-semibold min-w-[70px] text-left bg-emerald-50 px-2 py-1 rounded-lg">
+                            <span className="text-emerald-400 font-semibold min-w-[70px] text-left bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/30">
                               {(set.weight * set.reps).toLocaleString()} kg
                             </span>
                           </div>
@@ -222,9 +221,9 @@ export default function ExerciseHistory({
                       ))}
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-gray-200 flex justify-between text-sm">
-                      <span className="text-gray-600 font-medium">{workout.sets.length} sets</span>
-                      <span className="text-emerald-600 font-semibold">Total volume: {totalVolume.toLocaleString()} kg</span>
+                    <div className="mt-4 pt-3 border-t border-zinc-700/50 flex justify-between text-sm">
+                      <span className="text-zinc-400 font-medium">{workout.sets.length} sets</span>
+                      <span className="text-emerald-400 font-semibold">Total volume: {totalVolume.toLocaleString()} kg</span>
                     </div>
                   </div>
                 );

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  X, Trophy, TrendingUp, TrendingDown, Minus, Clock, Dumbbell,
+  X, Trophy, TrendingUp, TrendingDown, Clock, Dumbbell,
   Flame, Target, Star, Share2, CheckCircle, Sparkles
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -158,7 +158,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
   };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50 p-4 overflow-y-auto">
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
       {showConfetti && (
         <div className="fixed inset-0 pointer-events-none z-50">
           {[...Array(50)].map((_, i) => (
@@ -184,8 +184,8 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
         </div>
       )}
 
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-4">
-        <div className="sticky top-0 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 p-6 rounded-t-2xl">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-4">
+        <div className="sticky top-0 bg-emerald-500 p-6 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 rtl:space-x-reverse">
               <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
@@ -199,13 +199,13 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
             <div className="flex items-center gap-2">
               <button
                 onClick={handleShare}
-                className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all duration-300 hover:scale-105"
+                className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all"
               >
                 <Share2 className="h-5 w-5 text-white" />
               </button>
               <button
                 onClick={onClose}
-                className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all duration-300 hover:scale-105"
+                className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all"
               >
                 <X className="h-6 w-6 text-white" />
               </button>
@@ -215,14 +215,14 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
 
         <div className="p-6 space-y-6">
           {personalRecords.length > 0 && (
-            <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100 rounded-2xl p-6 border-2 border-amber-300 shadow-lg animate-pulse-slow">
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 animate-pulse-slow">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center">
                   <Trophy className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-amber-900">שיאים חדשים!</h3>
-                  <p className="text-sm text-amber-700">{personalRecords.length} שיאים נשברו באימון הזה</p>
+                  <h3 className="text-xl font-bold text-amber-400">שיאים חדשים!</h3>
+                  <p className="text-sm text-amber-400/70">{personalRecords.length} שיאים נשברו באימון הזה</p>
                 </div>
                 <Sparkles className="w-8 h-8 text-amber-500 mr-auto animate-spin-slow" />
               </div>
@@ -230,16 +230,16 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 {personalRecords.map((pr, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between bg-white rounded-xl p-3 border border-amber-200"
+                    className="flex items-center justify-between bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/30"
                   >
                     <div className="flex items-center gap-3">
                       <Star className="w-5 h-5 text-amber-500" />
-                      <span className="font-semibold text-gray-900">{pr.exerciseName}</span>
+                      <span className="font-semibold text-white">{pr.exerciseName}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-500 line-through">{pr.oldValue}</span>
+                      <span className="text-sm text-zinc-500 line-through">{pr.oldValue}</span>
                       <TrendingUp className="w-4 h-4 text-emerald-500" />
-                      <span className="font-bold text-emerald-600">
+                      <span className="font-bold text-emerald-400">
                         {pr.newValue} {pr.type === 'weight' ? 'ק"ג' : pr.type === 'reps' ? 'חזרות' : 'ק"ג'}
                       </span>
                     </div>
@@ -250,64 +250,64 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
           )}
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className={`bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border-2 border-emerald-200 transition-all duration-500 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div className={`bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 transition-all duration-500 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <div className="flex items-center gap-2 mb-2">
-                <Dumbbell className="w-5 h-5 text-emerald-600" />
-                <span className="text-sm font-semibold text-emerald-700">נפח כולל</span>
+                <Dumbbell className="w-5 h-5 text-emerald-400" />
+                <span className="text-sm font-semibold text-emerald-400">נפח כולל</span>
               </div>
-              <p className="text-2xl font-bold text-emerald-900">{totalVolume.toLocaleString()}</p>
-              <p className="text-xs text-emerald-600">ק"ג</p>
+              <p className="text-2xl font-bold text-white">{totalVolume.toLocaleString()}</p>
+              <p className="text-xs text-emerald-400/70">ק"ג</p>
               {volumeChange !== null && (
-                <div className={`flex items-center gap-1 mt-2 text-xs ${volumeChange >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                <div className={`flex items-center gap-1 mt-2 text-xs ${volumeChange >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {volumeChange >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                   <span>{Math.abs(volumeChange).toFixed(1)}% מהאימון הקודם</span>
                 </div>
               )}
             </div>
 
-            <div className={`bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border-2 border-blue-200 transition-all duration-500 delay-100 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div className={`bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-4 transition-all duration-500 delay-100 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <div className="flex items-center gap-2 mb-2">
-                <Target className="w-5 h-5 text-blue-600" />
-                <span className="text-sm font-semibold text-blue-700">תרגילים</span>
+                <Target className="w-5 h-5 text-cyan-400" />
+                <span className="text-sm font-semibold text-cyan-400">תרגילים</span>
               </div>
-              <p className="text-2xl font-bold text-blue-900">{exercises.length}</p>
-              <p className="text-xs text-blue-600">{totalSets} סטים</p>
+              <p className="text-2xl font-bold text-white">{exercises.length}</p>
+              <p className="text-xs text-cyan-400/70">{totalSets} סטים</p>
             </div>
 
-            <div className={`bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border-2 border-amber-200 transition-all duration-500 delay-200 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div className={`bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 transition-all duration-500 delay-200 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <div className="flex items-center gap-2 mb-2">
-                <Clock className="w-5 h-5 text-amber-600" />
-                <span className="text-sm font-semibold text-amber-700">משך</span>
+                <Clock className="w-5 h-5 text-amber-400" />
+                <span className="text-sm font-semibold text-amber-400">משך</span>
               </div>
-              <p className="text-2xl font-bold text-amber-900">{formatDuration(duration)}</p>
+              <p className="text-2xl font-bold text-white">{formatDuration(duration)}</p>
             </div>
 
-            <div className={`bg-gradient-to-br from-rose-50 to-pink-50 rounded-xl p-4 border-2 border-rose-200 transition-all duration-500 delay-300 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div className={`bg-red-500/10 border border-red-500/30 rounded-xl p-4 transition-all duration-500 delay-300 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <div className="flex items-center gap-2 mb-2">
-                <Flame className="w-5 h-5 text-rose-600" />
-                <span className="text-sm font-semibold text-rose-700">מאמץ</span>
+                <Flame className="w-5 h-5 text-red-400" />
+                <span className="text-sm font-semibold text-red-400">מאמץ</span>
               </div>
-              <p className="text-2xl font-bold text-rose-900">{effortScore}</p>
-              <p className="text-xs text-rose-600">{getEffortLabel(effortScore)}</p>
+              <p className="text-2xl font-bold text-white">{effortScore}</p>
+              <p className="text-xs text-red-400/70">{getEffortLabel(effortScore)}</p>
             </div>
           </div>
 
           {chartData.length > 0 && (
-            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-lg">
+            <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900">נפח לפי קבוצת שריר</h3>
+                <h3 className="text-lg font-bold text-white">נפח לפי קבוצת שריר</h3>
               </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 80, bottom: 5 }}>
-                    <XAxis type="number" tickFormatter={(v) => `${(v / 1000).toFixed(1)}K`} />
-                    <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 12 }} />
+                    <XAxis type="number" tickFormatter={(v) => `${(v / 1000).toFixed(1)}K`} stroke="#71717a" />
+                    <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 12, fill: '#a1a1aa' }} stroke="#71717a" />
                     <Tooltip
                       formatter={(value: number) => [`${value.toLocaleString()} ק"ג`, 'נפח']}
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                      contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: '#27272a', color: '#fff' }}
                     />
                     <Bar dataKey="volume" radius={[0, 8, 8, 0]}>
                       {chartData.map((entry, index) => (
@@ -320,8 +320,8 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
             </div>
           )}
 
-          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border-2 border-gray-200">
-            <h3 className="font-bold text-gray-900 mb-4">סיכום תרגילים</h3>
+          <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-2xl p-6">
+            <h3 className="font-bold text-white mb-4">סיכום תרגילים</h3>
             <div className="space-y-2">
               {exercises.map((ex, index) => {
                 const exVolume = ex.sets.reduce((t, s) => t + (s.weight * s.reps), 0);
@@ -329,15 +329,15 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 return (
                   <div
                     key={index}
-                    className="flex items-center justify-between bg-white rounded-xl p-3 border border-gray-200"
+                    className="flex items-center justify-between bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/30"
                   >
                     <div>
-                      <p className="font-semibold text-gray-900">{ex.exercise.name}</p>
-                      <p className="text-xs text-gray-500">{ex.sets.length} סטים</p>
+                      <p className="font-semibold text-white">{ex.exercise.name}</p>
+                      <p className="text-xs text-zinc-500">{ex.sets.length} סטים</p>
                     </div>
                     <div className="text-left">
-                      <p className="font-bold text-emerald-600">{exVolume.toLocaleString()} ק"ג</p>
-                      <p className="text-xs text-gray-500">מקס: {maxWeight} ק"ג</p>
+                      <p className="font-bold text-emerald-400">{exVolume.toLocaleString()} ק"ג</p>
+                      <p className="text-xs text-zinc-500">מקס: {maxWeight} ק"ג</p>
                     </div>
                   </div>
                 );
@@ -346,10 +346,10 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
           </div>
         </div>
 
-        <div className="sticky bottom-0 bg-gradient-to-br from-gray-50 to-white border-t border-gray-200 p-6 rounded-b-2xl">
+        <div className="sticky bottom-0 bg-zinc-800/50 border-t border-zinc-700/30 p-6 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]"
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all"
           >
             סגור
           </button>
