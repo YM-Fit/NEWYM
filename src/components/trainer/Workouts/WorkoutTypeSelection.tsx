@@ -14,23 +14,22 @@ export default function WorkoutTypeSelection({
   onBack
 }: WorkoutTypeSelectionProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
-      {/* Premium Header */}
-      <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl shadow-xl p-4 md:p-6 mb-6">
-        <div className="flex items-center space-x-4 rtl:space-x-reverse">
+    <div className="min-h-screen bg-zinc-950 p-4 md:p-6">
+      <div className="premium-card-static p-6 mb-6">
+        <div className="flex items-center gap-4">
           <button
             onClick={onBack}
-            className="p-3 hover:bg-white/10 rounded-xl transition-all duration-300 text-white"
+            className="p-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
           >
-            <ArrowRight className="h-6 w-6" />
+            <ArrowRight className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-              <Dumbbell className="h-6 w-6 text-white" />
+            <div className="p-3 rounded-xl bg-emerald-500/15">
+              <Dumbbell className="h-6 w-6 text-emerald-400" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">{trainee.full_name}</h1>
-              <p className="text-emerald-100">בחר סוג אימון</p>
+              <h1 className="text-xl font-bold text-white">{trainee.full_name}</h1>
+              <p className="text-sm text-zinc-500">בחר סוג אימון</p>
             </div>
           </div>
         </div>
@@ -38,52 +37,50 @@ export default function WorkoutTypeSelection({
 
       <div className="max-w-4xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Pair Workout Card */}
           <button
             onClick={onSelectPair}
-            className="bg-white rounded-2xl border-2 border-gray-100 hover:border-emerald-400 shadow-xl hover:shadow-2xl p-8 transition-all duration-300 group text-right"
+            className="premium-card-static p-8 text-right group hover:border-emerald-500/30 transition-all"
           >
-            <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl flex items-center justify-center group-hover:from-emerald-200 group-hover:to-teal-200 transition-all duration-300 shadow-lg">
-              <Users className="h-12 w-12 text-emerald-600 group-hover:text-emerald-700 transition-all duration-300" />
+            <div className="w-20 h-20 mx-auto mb-4 bg-emerald-500/15 rounded-2xl flex items-center justify-center group-hover:bg-emerald-500/25 transition-all">
+              <Users className="h-10 w-10 text-emerald-400" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2 text-center group-hover:text-emerald-700 transition-all duration-300">אימון זוגי</h3>
-            <p className="text-gray-600 text-center">{trainee.pair_name_1} ו{trainee.pair_name_2} ביחד</p>
-            <div className="mt-4 py-2 px-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 text-center">
-              <span className="text-sm font-medium text-emerald-700">לחץ להתחלה</span>
+            <h3 className="text-xl font-bold text-white mb-2 text-center group-hover:text-emerald-400 transition-all">אימון זוגי</h3>
+            <p className="text-zinc-500 text-center">{trainee.pair_name_1} ו{trainee.pair_name_2} ביחד</p>
+            <div className="mt-4 py-2 px-4 bg-emerald-500/15 border border-emerald-500/30 rounded-xl text-center">
+              <span className="text-sm font-medium text-emerald-400">לחץ להתחלה</span>
             </div>
           </button>
 
-          {/* Personal Workout Card */}
-          <div className="bg-white rounded-2xl border-2 border-gray-100 shadow-xl hover:shadow-2xl p-6 transition-all duration-300">
+          <div className="premium-card-static p-6">
             <div className="flex items-center justify-center mb-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl flex items-center justify-center shadow-lg">
-                <User className="h-10 w-10 text-blue-600" />
+              <div className="w-16 h-16 bg-cyan-500/15 rounded-2xl flex items-center justify-center">
+                <User className="h-8 w-8 text-cyan-400" />
               </div>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 text-center mb-4">אימון אישי</h3>
-            <p className="text-gray-600 text-center mb-6">בחר מי מגיע לאימון:</p>
+            <h3 className="text-xl font-bold text-white text-center mb-4">אימון אישי</h3>
+            <p className="text-zinc-500 text-center mb-6">בחר מי מגיע לאימון:</p>
 
             <div className="space-y-3">
               <button
                 onClick={() => onSelectPersonal(1)}
-                className="w-full bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 border-2 border-blue-200 hover:border-blue-400 text-blue-900 p-4 rounded-xl transition-all duration-300 font-medium shadow-md hover:shadow-lg group"
+                className="w-full bg-zinc-800/50 hover:bg-cyan-500/15 border border-zinc-700/50 hover:border-cyan-500/30 text-white p-4 rounded-xl transition-all font-medium group"
               >
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center group-hover:from-blue-600 group-hover:to-cyan-700 transition-all duration-300">
-                    <span className="text-white font-bold text-sm">1</span>
+                <div className="flex items-center justify-center gap-3">
+                  <div className="w-8 h-8 bg-cyan-500/20 group-hover:bg-cyan-500/30 rounded-lg flex items-center justify-center transition-all">
+                    <span className="text-cyan-400 font-bold text-sm">1</span>
                   </div>
-                  <span className="text-lg">{trainee.pair_name_1}</span>
+                  <span className="text-lg group-hover:text-cyan-400 transition-all">{trainee.pair_name_1}</span>
                 </div>
               </button>
               <button
                 onClick={() => onSelectPersonal(2)}
-                className="w-full bg-gradient-to-br from-teal-50 to-emerald-50 hover:from-teal-100 hover:to-emerald-100 border-2 border-teal-200 hover:border-teal-400 text-teal-900 p-4 rounded-xl transition-all duration-300 font-medium shadow-md hover:shadow-lg group"
+                className="w-full bg-zinc-800/50 hover:bg-amber-500/15 border border-zinc-700/50 hover:border-amber-500/30 text-white p-4 rounded-xl transition-all font-medium group"
               >
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg flex items-center justify-center group-hover:from-teal-600 group-hover:to-emerald-700 transition-all duration-300">
-                    <span className="text-white font-bold text-sm">2</span>
+                <div className="flex items-center justify-center gap-3">
+                  <div className="w-8 h-8 bg-amber-500/20 group-hover:bg-amber-500/30 rounded-lg flex items-center justify-center transition-all">
+                    <span className="text-amber-400 font-bold text-sm">2</span>
                   </div>
-                  <span className="text-lg">{trainee.pair_name_2}</span>
+                  <span className="text-lg group-hover:text-amber-400 transition-all">{trainee.pair_name_2}</span>
                 </div>
               </button>
             </div>

@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Check } from 'lucide-react';
 import { WorkoutSetCard } from './WorkoutSetCard';
 
 interface Equipment {
@@ -105,33 +105,33 @@ export const WorkoutExerciseCard = memo(({
   if (isMinimized) {
     return (
       <div
-        className={`bg-white rounded-2xl shadow-xl hover:shadow-2xl mb-4 lg:mb-6 transition-all duration-300 ease-in-out overflow-hidden bg-gradient-to-br from-emerald-50 to-teal-50 border-r-4 border-emerald-500`}
+        className="premium-card-static mb-4 lg:mb-6 overflow-hidden border-r-4 border-emerald-500"
         style={{ height: '72px', overflow: 'hidden' }}
       >
         <div
-          className="h-full flex items-center justify-between px-4 lg:px-6 cursor-pointer hover:bg-emerald-100/50 transition-all duration-300"
+          className="h-full flex items-center justify-between px-4 lg:px-6 cursor-pointer hover:bg-zinc-800/50 transition-all"
           onClick={onToggleMinimize}
         >
-          <div className="flex items-center space-x-3 rtl:space-x-reverse">
+          <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
-              <span className="text-white text-lg font-bold">V</span>
+              <Check className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">{workoutExercise.exercise.name}</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="text-lg font-bold text-white">{workoutExercise.exercise.name}</h3>
+              <p className="text-sm text-zinc-500">
                 {summary.totalSets} סטים | {summary.maxWeight} ק״ג מקס | נפח: {summary.totalVolume.toLocaleString()} ק״ג
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-2 rtl:space-x-reverse">
-            <span className="text-sm text-emerald-600 font-semibold bg-emerald-100 px-3 py-1 rounded-lg">לחץ לעריכה</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-emerald-400 font-medium bg-emerald-500/15 px-3 py-1 rounded-lg">לחץ לעריכה</span>
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onRemove();
               }}
-              className="p-2 hover:bg-red-50 text-red-500 rounded-xl transition-all duration-300"
+              className="p-2 hover:bg-red-500/15 text-red-400 rounded-xl transition-all"
               aria-label="מחק תרגיל"
             >
               <Trash2 className="h-5 w-5" />
@@ -143,29 +143,29 @@ export const WorkoutExerciseCard = memo(({
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl hover:shadow-2xl mb-4 lg:mb-6 transition-all duration-300 ease-in-out overflow-hidden border border-gray-100">
+    <div className="premium-card-static mb-4 lg:mb-6 overflow-hidden">
       <div className="p-4 lg:p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg lg:text-2xl font-bold text-gray-900">{workoutExercise.exercise.name}</h3>
+            <h3 className="text-lg lg:text-xl font-bold text-white">{workoutExercise.exercise.name}</h3>
             {workoutExercise.sets.length > 0 && (
-              <p className="text-sm text-emerald-600 mt-1 font-semibold">
+              <p className="text-sm text-emerald-400 mt-1 font-semibold">
                 נפח: {totalVolume.toLocaleString()} ק"ג
               </p>
             )}
           </div>
-          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={onComplete}
-              className="px-4 py-2 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-xl"
+              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all text-sm font-semibold"
             >
               סיים תרגיל
             </button>
             <button
               type="button"
               onClick={onRemove}
-              className="p-2 lg:p-3 hover:bg-red-50 active:bg-red-100 text-red-500 rounded-xl transition-all duration-300 touch-manipulation"
+              className="p-2 lg:p-3 hover:bg-red-500/15 text-red-400 rounded-xl transition-all touch-manipulation"
               aria-label="מחק תרגיל"
             >
               <Trash2 className="h-5 w-5 lg:h-6 lg:w-6" />
@@ -201,7 +201,7 @@ export const WorkoutExerciseCard = memo(({
         <button
           type="button"
           onClick={onAddSet}
-          className="w-full mt-4 py-4 lg:py-5 border-2 border-dashed border-gray-300 rounded-xl hover:border-emerald-500 active:border-emerald-600 hover:bg-emerald-50 active:bg-emerald-100 text-gray-500 hover:text-emerald-700 font-semibold text-base lg:text-lg transition-all duration-300 touch-manipulation"
+          className="w-full mt-4 py-4 lg:py-5 border-2 border-dashed border-zinc-700/50 rounded-xl hover:border-emerald-500/50 hover:bg-emerald-500/10 text-zinc-500 hover:text-emerald-400 font-semibold text-base lg:text-lg transition-all touch-manipulation"
         >
           + הוסף סט
         </button>

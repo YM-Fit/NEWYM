@@ -1,4 +1,4 @@
-import { ArrowRight, Save, Calculator, BookMarked, Dumbbell, Copy } from 'lucide-react';
+import { ArrowRight, Save, Calculator, BookMarked, Dumbbell, Copy, Calendar } from 'lucide-react';
 import { memo } from 'react';
 import AutoSaveIndicator from '../../common/AutoSaveIndicator';
 
@@ -42,28 +42,28 @@ export const WorkoutHeader = memo(({
   onWorkoutTypeChange,
 }: WorkoutHeaderProps) => {
   return (
-    <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl shadow-xl p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10">
+    <div className="premium-card-static p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10">
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-3 lg:space-x-4 rtl:space-x-reverse">
+        <div className="flex items-center gap-3 lg:gap-4">
           <button
             type="button"
             onClick={onBack}
-            className="p-3 lg:p-4 hover:bg-white/10 active:bg-white/20 rounded-xl transition-all duration-300 touch-manipulation text-white"
+            className="p-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all touch-manipulation"
             aria-label="חזור"
           >
-            <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7" />
+            <ArrowRight className="h-5 w-5 lg:h-6 lg:w-6" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-              <Dumbbell className="h-6 w-6 lg:h-7 lg:w-7 text-white" />
+            <div className="p-3 rounded-xl bg-emerald-500/15">
+              <Dumbbell className="h-6 w-6 lg:h-7 lg:w-7 text-emerald-400" />
             </div>
             <div>
-              <h1 className="text-xl lg:text-3xl font-bold text-white">
+              <h1 className="text-xl lg:text-2xl font-bold text-white">
                 {workoutId ? 'עריכת אימון' : 'אימון חדש'}
               </h1>
-              <p className="text-base lg:text-lg text-emerald-100">{trainee.full_name}</p>
+              <p className="text-sm lg:text-base text-zinc-500">{trainee.full_name}</p>
               {exercisesCount > 0 && (
-                <p className="text-sm lg:text-base text-white font-semibold mt-1 bg-white/20 rounded-lg px-2 py-0.5 inline-block">
+                <p className="text-sm font-semibold mt-1 text-emerald-400 bg-emerald-500/15 rounded-lg px-2 py-0.5 inline-block">
                   נפח כולל: {totalVolume.toLocaleString()} ק"ג
                 </p>
               )}
@@ -72,65 +72,68 @@ export const WorkoutHeader = memo(({
           </div>
         </div>
 
-        <div className="flex space-x-3 rtl:space-x-reverse">
+        <div className="flex gap-2">
           {exercisesCount === 0 && !workoutId && (
             <button
               type="button"
               onClick={onLoadPrevious}
-              className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white px-4 lg:px-6 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 shadow-lg hover:shadow-xl touch-manipulation"
+              className="bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-400 px-3 lg:px-5 py-2.5 lg:py-3 rounded-xl flex items-center gap-2 transition-all touch-manipulation"
             >
-              <Copy className="h-5 w-5 lg:h-6 lg:w-6" />
-              <span className="font-semibold text-base lg:text-lg">טען אימון אחרון</span>
+              <Copy className="h-4 w-4 lg:h-5 lg:w-5" />
+              <span className="font-medium text-sm lg:text-base hidden sm:inline">טען אימון אחרון</span>
             </button>
           )}
           <button
             type="button"
             onClick={onCalculator}
-            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm active:bg-white/40 text-white px-4 lg:px-6 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 shadow-lg hover:shadow-xl touch-manipulation"
+            className="bg-zinc-800/50 hover:bg-zinc-700/50 border border-zinc-700/50 text-zinc-300 px-3 lg:px-5 py-2.5 lg:py-3 rounded-xl flex items-center gap-2 transition-all touch-manipulation"
           >
-            <Calculator className="h-5 w-5 lg:h-6 lg:w-6" />
-            <span className="font-semibold text-base lg:text-lg">מחשבון</span>
+            <Calculator className="h-4 w-4 lg:h-5 lg:w-5" />
+            <span className="font-medium text-sm lg:text-base hidden sm:inline">מחשבון</span>
           </button>
           {exercisesCount > 0 && !workoutId && (
             <button
               type="button"
               onClick={onSaveTemplate}
-              className="bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white px-4 lg:px-6 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 shadow-lg hover:shadow-xl touch-manipulation"
+              className="bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 px-3 lg:px-5 py-2.5 lg:py-3 rounded-xl flex items-center gap-2 transition-all touch-manipulation"
             >
-              <BookMarked className="h-5 w-5 lg:h-6 lg:w-6" />
-              <span className="font-semibold text-base lg:text-lg">שמור תבנית</span>
+              <BookMarked className="h-4 w-4 lg:h-5 lg:w-5" />
+              <span className="font-medium text-sm lg:text-base hidden sm:inline">שמור תבנית</span>
             </button>
           )}
           <button
             type="button"
             onClick={onSave}
             disabled={saving || exercisesCount === 0}
-            className="bg-white hover:bg-gray-50 active:bg-gray-100 text-emerald-700 px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl touch-manipulation font-bold"
+            className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-4 lg:px-6 py-2.5 lg:py-3 rounded-xl flex items-center gap-2 transition-all disabled:cursor-not-allowed touch-manipulation font-bold"
           >
-            <Save className="h-5 w-5 lg:h-6 lg:w-6" />
-            <span className="text-base lg:text-lg">{saving ? 'שומר...' : (workoutId ? 'עדכן אימון' : 'שמור אימון')}</span>
+            <Save className="h-4 w-4 lg:h-5 lg:w-5" />
+            <span className="text-sm lg:text-base">{saving ? 'שומר...' : (workoutId ? 'עדכן' : 'שמור')}</span>
           </button>
         </div>
       </div>
 
-      <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl p-4">
-        <label className="block text-sm font-medium text-emerald-100 mb-2">תאריך האימון</label>
+      <div className="mt-4 bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Calendar className="h-4 w-4 text-zinc-500" />
+          <label className="text-sm font-medium text-zinc-400">תאריך האימון</label>
+        </div>
         <input
           type="date"
           value={workoutDate.toISOString().split('T')[0]}
           onChange={(e) => onDateChange(new Date(e.target.value))}
-          className="w-full px-4 py-3 border-2 border-white/20 bg-white/10 text-white rounded-xl focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
+          className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:gap-4 mt-4">
+      <div className="grid grid-cols-2 gap-3 mt-4">
         <button
           type="button"
           onClick={() => onWorkoutTypeChange('personal')}
-          className={`py-4 lg:py-5 px-4 rounded-xl border-2 transition-all duration-300 touch-manipulation ${
+          className={`py-3 lg:py-4 px-4 rounded-xl border transition-all touch-manipulation ${
             workoutType === 'personal'
-              ? 'border-white bg-white text-emerald-700 font-bold shadow-lg'
-              : 'border-white/30 hover:bg-white/10 text-white'
+              ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-400 font-bold'
+              : 'border-zinc-700/50 bg-zinc-800/30 hover:bg-zinc-800/50 text-zinc-400 hover:text-white'
           }`}
         >
           <span className="text-base lg:text-lg">אימון אישי</span>
@@ -138,10 +141,10 @@ export const WorkoutHeader = memo(({
         <button
           type="button"
           onClick={() => onWorkoutTypeChange('pair')}
-          className={`py-4 lg:py-5 px-4 rounded-xl border-2 transition-all duration-300 touch-manipulation ${
+          className={`py-3 lg:py-4 px-4 rounded-xl border transition-all touch-manipulation ${
             workoutType === 'pair'
-              ? 'border-white bg-white text-emerald-700 font-bold shadow-lg'
-              : 'border-white/30 hover:bg-white/10 text-white'
+              ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-400 font-bold'
+              : 'border-zinc-700/50 bg-zinc-800/30 hover:bg-zinc-800/50 text-zinc-400 hover:text-white'
           }`}
         >
           <span className="text-base lg:text-lg">אימון זוגי</span>
