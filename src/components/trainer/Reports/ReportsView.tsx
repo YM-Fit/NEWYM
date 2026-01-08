@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BarChart3, Calendar, Users, TrendingUp, Download, ChevronLeft, ChevronRight, Dumbbell, Scale, Trophy } from 'lucide-react';
+import { BarChart3, Calendar, Users, TrendingUp, ChevronLeft, ChevronRight, Dumbbell, Scale, Trophy, Sparkles } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import MonthlyReport from './MonthlyReport';
@@ -91,27 +91,32 @@ export default function ReportsView() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-cyan-700 rounded-2xl p-8 mb-8 shadow-xl">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-            <BarChart3 className="w-8 h-8 text-white" />
+      <div className="premium-card-static p-8 mb-8 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="relative flex items-center gap-4">
+          <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30">
+            <BarChart3 className="w-8 h-8 text-emerald-400" />
           </div>
           <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">סטטיסטיקות</span>
+            </div>
             <h1 className="text-3xl font-bold text-white mb-1">דוחות וסטטיסטיקות</h1>
-            <p className="text-blue-100 text-lg">נתונים ותובנות על הסטודיו שלך</p>
+            <p className="text-zinc-400 text-lg">נתונים ותובנות על הסטודיו שלך</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-4 mb-6 shadow-lg border border-gray-100">
-        <div className="flex items-center justify-between">
+      <div className="premium-card-static p-4 mb-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex gap-2">
             <button
               onClick={() => setActiveTab('overview')}
               className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                 activeTab === 'overview'
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:text-white hover:border-zinc-600/50'
               }`}
             >
               סקירה חודשית
@@ -120,8 +125,8 @@ export default function ReportsView() {
               onClick={() => setActiveTab('progress')}
               className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                 activeTab === 'progress'
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:text-white hover:border-zinc-600/50'
               }`}
             >
               התקדמות מתאמנים
@@ -131,20 +136,20 @@ export default function ReportsView() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigateMonth('prev')}
-              className="p-2 hover:bg-gray-100 rounded-xl transition-all"
+              className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-zinc-400 hover:text-white"
             >
-              <ChevronRight className="w-5 h-5 text-gray-600" />
+              <ChevronRight className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-xl">
-              <Calendar className="w-5 h-5 text-blue-600" />
-              <span className="font-semibold text-gray-900">{formatMonth(selectedMonth)}</span>
+            <div className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700/50">
+              <Calendar className="w-5 h-5 text-emerald-400" />
+              <span className="font-semibold text-white">{formatMonth(selectedMonth)}</span>
             </div>
             <button
               onClick={() => navigateMonth('next')}
-              className="p-2 hover:bg-gray-100 rounded-xl transition-all"
+              className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-zinc-400 hover:text-white disabled:opacity-50"
               disabled={selectedMonth >= new Date()}
             >
-              <ChevronLeft className="w-5 h-5 text-gray-600" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -154,69 +159,69 @@ export default function ReportsView() {
         <>
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+              <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
             </div>
           ) : stats && (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="premium-card-static p-6 group hover:border-zinc-600/50 transition-all">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
-                      <Dumbbell className="w-7 h-7 text-white" />
+                    <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
+                      <Dumbbell className="w-6 h-6 text-emerald-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500 font-medium">אימונים החודש</p>
-                      <p className="text-3xl font-bold text-gray-900">{stats.totalWorkouts}</p>
+                      <p className="text-sm text-zinc-500 font-medium">אימונים החודש</p>
+                      <p className="text-3xl font-bold text-white">{stats.totalWorkouts}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="text-gray-500">ממוצע למתאמן:</span>
-                    <span className="font-semibold text-blue-600">{stats.averageWorkoutsPerTrainee}</span>
+                    <span className="text-zinc-500">ממוצע למתאמן:</span>
+                    <span className="font-semibold text-emerald-400">{stats.averageWorkoutsPerTrainee}</span>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div className="premium-card-static p-6 group hover:border-zinc-600/50 transition-all">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-                      <Users className="w-7 h-7 text-white" />
+                    <div className="p-3 rounded-xl bg-cyan-500/15 border border-cyan-500/30">
+                      <Users className="w-6 h-6 text-cyan-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500 font-medium">מתאמנים פעילים</p>
-                      <p className="text-3xl font-bold text-gray-900">{stats.activeTrainees}</p>
+                      <p className="text-sm text-zinc-500 font-medium">מתאמנים פעילים</p>
+                      <p className="text-3xl font-bold text-white">{stats.activeTrainees}</p>
                     </div>
                   </div>
                   {stats.newTrainees > 0 && (
                     <div className="flex items-center gap-2 text-sm">
-                      <TrendingUp className="w-4 h-4 text-emerald-500" />
-                      <span className="text-emerald-600 font-semibold">+{stats.newTrainees} חדשים החודש</span>
+                      <TrendingUp className="w-4 h-4 text-emerald-400" />
+                      <span className="text-emerald-400 font-semibold">+{stats.newTrainees} חדשים החודש</span>
                     </div>
                   )}
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div className="premium-card-static p-6 group hover:border-zinc-600/50 transition-all">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
-                      <Scale className="w-7 h-7 text-white" />
+                    <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/30">
+                      <Scale className="w-6 h-6 text-amber-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500 font-medium">נפח כולל</p>
-                      <p className="text-3xl font-bold text-gray-900">{(stats.totalVolume / 1000).toFixed(1)}K</p>
+                      <p className="text-sm text-zinc-500 font-medium">נפח כולל</p>
+                      <p className="text-3xl font-bold text-white">{(stats.totalVolume / 1000).toFixed(1)}K</p>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500">ק"ג הורמו החודש</p>
+                  <p className="text-sm text-zinc-500">ק"ג הורמו החודש</p>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div className="premium-card-static p-6 group hover:border-zinc-600/50 transition-all">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl flex items-center justify-center">
-                      <Trophy className="w-7 h-7 text-white" />
+                    <div className="p-3 rounded-xl bg-yellow-500/15 border border-yellow-500/30">
+                      <Trophy className="w-6 h-6 text-yellow-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500 font-medium">שיאים אישיים</p>
-                      <p className="text-3xl font-bold text-gray-900">{stats.personalRecords}</p>
+                      <p className="text-sm text-zinc-500 font-medium">שיאים אישיים</p>
+                      <p className="text-3xl font-bold text-white">{stats.personalRecords}</p>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500">PR נשברו החודש</p>
+                  <p className="text-sm text-zinc-500">PR נשברו החודש</p>
                 </div>
               </div>
 
