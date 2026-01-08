@@ -218,37 +218,37 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
     }
   };
 
-  const getGoalTypeColor = (type: string) => {
+  const getGoalTypeStyles = (type: string) => {
     switch (type) {
-      case 'weight': return 'from-emerald-500 to-teal-500';
-      case 'strength': return 'from-blue-500 to-cyan-500';
-      case 'measurement': return 'from-amber-500 to-orange-500';
-      default: return 'from-gray-500 to-zinc-500';
+      case 'weight': return { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' };
+      case 'strength': return { bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/30' };
+      case 'measurement': return { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' };
+      default: return { bg: 'bg-zinc-500/15', text: 'text-zinc-400', border: 'border-zinc-500/30' };
     }
   };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="sticky top-0 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 p-6 rounded-t-2xl flex items-center justify-between">
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
-            <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <Target className="h-7 w-7 text-white" />
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="premium-card-static max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-zinc-800/50 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-emerald-500/15">
+              <Target className="h-6 w-6 text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">יעדים אישיים</h2>
-              <p className="text-sm text-emerald-100">{traineeName}</p>
+              <h2 className="text-xl font-bold text-white">יעדים אישיים</h2>
+              <p className="text-sm text-zinc-500">{traineeName}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all duration-300 hover:scale-105"
+            className="p-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
           >
-            <X className="h-6 w-6 text-white" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+        <div className="p-4 border-b border-zinc-800/50 flex items-center justify-between flex-wrap gap-3">
           <div className="flex gap-2">
             {[
               { id: 'active', label: 'פעילים' },
@@ -257,11 +257,11 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
             ].map(f => (
               <button
                 key={f.id}
-                onClick={() => setFilter(f.id as any)}
-                className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-300 ${
+                onClick={() => setFilter(f.id as typeof filter)}
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
                   filter === f.id
-                    ? 'bg-emerald-600 text-white shadow-lg'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-zinc-800/50 text-zinc-400 hover:text-white border border-zinc-700/30'
                 }`}
               >
                 {f.label}
@@ -270,7 +270,7 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
           </div>
           <button
             onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm transition-all duration-300"
+            className="flex items-center gap-2 px-4 py-2 btn-primary text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
             יעד חדש
@@ -280,15 +280,17 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
+              <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
             </div>
           ) : filteredGoals.length === 0 ? (
             <div className="text-center py-12">
-              <Target className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">אין יעדים להצגה</p>
+              <div className="w-14 h-14 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
+                <Target className="w-7 h-7 text-zinc-600" />
+              </div>
+              <p className="text-zinc-500">אין יעדים להצגה</p>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="mt-4 text-emerald-600 font-semibold hover:text-emerald-700"
+                className="mt-4 text-emerald-400 font-medium hover:text-emerald-300 transition-colors"
               >
                 הוסף יעד ראשון
               </button>
@@ -296,41 +298,42 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
           ) : (
             filteredGoals.map(goal => {
               const progress = getProgress(goal);
+              const styles = getGoalTypeStyles(goal.goal_type);
               return (
                 <div
                   key={goal.id}
-                  className={`bg-white rounded-xl border-2 p-5 transition-all duration-300 ${
-                    goal.status === 'achieved' ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200 hover:border-emerald-300'
+                  className={`bg-zinc-800/30 rounded-xl border p-5 transition-all ${
+                    goal.status === 'achieved' ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-zinc-700/30 hover:border-zinc-600/50'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getGoalTypeColor(goal.goal_type)} flex items-center justify-center text-white`}>
-                        {goal.status === 'achieved' ? <Trophy className="w-6 h-6" /> : getGoalTypeIcon(goal.goal_type)}
+                      <div className={`w-12 h-12 rounded-xl ${styles.bg} flex items-center justify-center ${styles.text}`}>
+                        {goal.status === 'achieved' ? <Trophy className="w-6 h-6 text-yellow-400" /> : getGoalTypeIcon(goal.goal_type)}
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-900">{goal.title}</h3>
+                        <h3 className="font-semibold text-white">{goal.title}</h3>
                         {goal.target_date && (
-                          <p className="text-sm text-gray-500 flex items-center gap-1">
+                          <p className="text-sm text-zinc-500 flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             יעד: {new Date(goal.target_date).toLocaleDateString('he-IL')}
                           </p>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       {goal.status === 'active' && (
                         <>
                           <button
                             onClick={() => handleMarkAchieved(goal.id)}
-                            className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                            className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all"
                             title="סמן כהושג"
                           >
                             <Check className="w-5 h-5" />
                           </button>
                           <button
                             onClick={() => handleEdit(goal)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                            className="p-2 text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-all"
                           >
                             <Edit2 className="w-5 h-5" />
                           </button>
@@ -338,7 +341,7 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
                       )}
                       <button
                         onClick={() => handleDelete(goal.id)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                        className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
@@ -348,17 +351,17 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
                   {goal.target_value && (
                     <div className="mb-4">
                       <div className="flex items-center justify-between text-sm mb-2">
-                        <span className="text-gray-600">התקדמות</span>
-                        <span className="font-bold text-gray-900">
+                        <span className="text-zinc-500">התקדמות</span>
+                        <span className="font-semibold text-white">
                           {goal.current_value || 0} / {goal.target_value} {goal.unit}
                         </span>
                       </div>
-                      <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-3 bg-zinc-800 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ${
                             goal.status === 'achieved'
-                              ? 'bg-gradient-to-r from-yellow-400 to-amber-500'
-                              : 'bg-gradient-to-r from-emerald-400 to-teal-500'
+                              ? 'bg-gradient-to-r from-yellow-500 to-amber-500'
+                              : 'bg-gradient-to-r from-emerald-500 to-teal-500'
                           }`}
                           style={{ width: `${progress}%` }}
                         />
@@ -368,7 +371,7 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
                           <input
                             type="number"
                             placeholder="עדכן התקדמות"
-                            className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                            className="flex-1 glass-input px-3 py-2 text-sm"
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
                                 handleUpdateProgress(goal.id, (e.target as HTMLInputElement).value);
@@ -376,14 +379,14 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
                               }
                             }}
                           />
-                          <span className="text-sm text-gray-500">{goal.unit}</span>
+                          <span className="text-sm text-zinc-500">{goal.unit}</span>
                         </div>
                       )}
                     </div>
                   )}
 
                   {goal.notes && (
-                    <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3">{goal.notes}</p>
+                    <p className="text-sm text-zinc-400 bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/30">{goal.notes}</p>
                   )}
                 </div>
               );
@@ -392,18 +395,18 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
         </div>
 
         {showAddForm && (
-          <div className="fixed inset-0 backdrop-blur-sm bg-black/40 flex items-center justify-center z-[60] p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
+          <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-[60] p-4">
+            <div className="premium-card-static max-w-md w-full p-6">
+              <h3 className="text-xl font-bold text-white mb-4">
                 {editingGoal ? 'עריכת יעד' : 'יעד חדש'}
               </h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">סוג יעד</label>
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">סוג יעד</label>
                   <select
                     value={formData.goal_type}
                     onChange={(e) => setFormData({ ...formData, goal_type: e.target.value as Goal['goal_type'] })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full glass-input px-4 py-3"
                   >
                     <option value="weight">משקל</option>
                     <option value="strength">כוח (תרגיל)</option>
@@ -413,12 +416,12 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">כותרת *</label>
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">כותרת *</label>
                   <input
                     type="text"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full glass-input px-4 py-3"
                     placeholder="למשל: ירידה ל-75 ק״ג"
                     required
                   />
@@ -426,11 +429,11 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
 
                 {formData.goal_type === 'strength' && (
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">תרגיל</label>
+                    <label className="block text-sm font-medium text-zinc-400 mb-2">תרגיל</label>
                     <select
                       value={formData.exercise_id}
                       onChange={(e) => setFormData({ ...formData, exercise_id: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full glass-input px-4 py-3"
                     >
                       <option value="">בחר תרגיל</option>
                       {exercises.map(ex => (
@@ -442,22 +445,22 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">ערך נוכחי</label>
+                    <label className="block text-sm font-medium text-zinc-400 mb-2">ערך נוכחי</label>
                     <input
                       type="number"
                       value={formData.current_value}
                       onChange={(e) => setFormData({ ...formData, current_value: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full glass-input px-4 py-3"
                       step="0.1"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">ערך יעד</label>
+                    <label className="block text-sm font-medium text-zinc-400 mb-2">ערך יעד</label>
                     <input
                       type="number"
                       value={formData.target_value}
                       onChange={(e) => setFormData({ ...formData, target_value: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full glass-input px-4 py-3"
                       step="0.1"
                     />
                   </div>
@@ -465,32 +468,32 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">יחידת מדידה</label>
+                    <label className="block text-sm font-medium text-zinc-400 mb-2">יחידת מדידה</label>
                     <input
                       type="text"
                       value={formData.unit}
                       onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full glass-input px-4 py-3"
                       placeholder='ק"ג / ס"מ / חזרות'
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">תאריך יעד</label>
+                    <label className="block text-sm font-medium text-zinc-400 mb-2">תאריך יעד</label>
                     <input
                       type="date"
                       value={formData.target_date}
                       onChange={(e) => setFormData({ ...formData, target_date: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full glass-input px-4 py-3"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">הערות</label>
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">הערות</label>
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full glass-input px-4 py-3"
                     rows={2}
                     placeholder="הערות נוספות..."
                   />
@@ -499,14 +502,14 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
                 <div className="flex gap-3 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300"
+                    className="flex-1 btn-primary px-6 py-3 font-semibold"
                   >
                     {editingGoal ? 'עדכן' : 'הוסף'}
                   </button>
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-all duration-300"
+                    className="flex-1 btn-secondary px-6 py-3 font-semibold"
                   >
                     ביטול
                   </button>
@@ -516,10 +519,10 @@ export default function TraineeGoals({ traineeId, traineeName, onClose, pairMemb
           </div>
         )}
 
-        <div className="sticky bottom-0 bg-gradient-to-br from-gray-50 to-white border-t border-gray-200 p-6 rounded-b-2xl">
+        <div className="p-6 border-t border-zinc-800/50">
           <button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]"
+            className="w-full btn-primary px-6 py-4 text-lg font-bold"
           >
             סגור
           </button>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, FileText, Plus, Pin, Trash2, Edit2, Check, Tag } from 'lucide-react';
+import { X, FileText, Plus, Pin, Trash2, Edit2 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -22,11 +22,11 @@ interface TraineeNotesProps {
 }
 
 const CATEGORIES = {
-  general: { label: 'כללי', color: 'gray' },
-  health: { label: 'בריאות', color: 'red' },
-  nutrition: { label: 'תזונה', color: 'emerald' },
-  training: { label: 'אימון', color: 'blue' },
-  personal: { label: 'אישי', color: 'amber' },
+  general: { label: 'כללי', bg: 'bg-zinc-500/15', text: 'text-zinc-400', border: 'border-zinc-500/30' },
+  health: { label: 'בריאות', bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30' },
+  nutrition: { label: 'תזונה', bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' },
+  training: { label: 'אימון', bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/30' },
+  personal: { label: 'אישי', bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' },
 };
 
 export default function TraineeNotes({ traineeId, traineeName, onClose }: TraineeNotesProps) {
@@ -145,52 +145,43 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
 
   const filteredNotes = filter === 'all' ? notes : notes.filter(n => n.category === filter);
 
-  const getCategoryStyle = (category: string) => {
-    const cat = CATEGORIES[category as keyof typeof CATEGORIES] || CATEGORIES.general;
-    return {
-      bg: `bg-${cat.color}-100`,
-      text: `text-${cat.color}-700`,
-      border: `border-${cat.color}-200`,
-    };
-  };
-
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="sticky top-0 bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-6 rounded-t-2xl flex items-center justify-between">
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
-            <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <FileText className="h-7 w-7 text-white" />
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="premium-card-static max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-zinc-800/50 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-amber-500/15">
+              <FileText className="h-6 w-6 text-amber-400" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">הערות פנימיות</h2>
-              <p className="text-sm text-amber-100">{traineeName} (רק המאמן רואה)</p>
+              <h2 className="text-xl font-bold text-white">הערות פנימיות</h2>
+              <p className="text-sm text-zinc-500">{traineeName} (רק המאמן רואה)</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all duration-300 hover:scale-105"
+            className="p-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
           >
-            <X className="h-6 w-6 text-white" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between flex-wrap gap-2">
-          <div className="flex gap-2 overflow-x-auto">
+        <div className="p-4 border-b border-zinc-800/50 flex items-center justify-between flex-wrap gap-3">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar">
             <button
               onClick={() => setFilter('all')}
-              className={`px-3 py-2 rounded-lg font-semibold text-sm transition-all ${
-                filter === 'all' ? 'bg-amber-600 text-white' : 'bg-white text-gray-600 border border-gray-200'
+              className={`px-3 py-2 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
+                filter === 'all' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/30'
               }`}
             >
               הכל
             </button>
-            {Object.entries(CATEGORIES).map(([key, { label }]) => (
+            {Object.entries(CATEGORIES).map(([key, { label, bg, text, border }]) => (
               <button
                 key={key}
                 onClick={() => setFilter(key as Note['category'])}
-                className={`px-3 py-2 rounded-lg font-semibold text-sm transition-all whitespace-nowrap ${
-                  filter === key ? 'bg-amber-600 text-white' : 'bg-white text-gray-600 border border-gray-200'
+                className={`px-3 py-2 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
+                  filter === key ? `${bg} ${text} border ${border}` : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/30'
                 }`}
               >
                 {label}
@@ -199,7 +190,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
           </div>
           <button
             onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold text-sm transition-all duration-300"
+            className="flex items-center gap-2 px-4 py-2 btn-primary text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
             הערה חדשה
@@ -209,38 +200,40 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-10 h-10 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin" />
+              <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
             </div>
           ) : filteredNotes.length === 0 ? (
             <div className="text-center py-12">
-              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">אין הערות להצגה</p>
+              <div className="w-14 h-14 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-7 h-7 text-zinc-600" />
+              </div>
+              <p className="text-zinc-500">אין הערות להצגה</p>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="mt-4 text-amber-600 font-semibold hover:text-amber-700"
+                className="mt-4 text-emerald-400 font-medium hover:text-emerald-300 transition-colors"
               >
                 הוסף הערה ראשונה
               </button>
             </div>
           ) : (
             filteredNotes.map(note => {
-              const catStyle = getCategoryStyle(note.category);
+              const catStyle = CATEGORIES[note.category];
               return (
                 <div
                   key={note.id}
-                  className={`bg-white rounded-xl border-2 p-5 transition-all duration-300 ${
-                    note.is_pinned ? 'border-amber-300 bg-amber-50' : 'border-gray-200 hover:border-amber-200'
+                  className={`bg-zinc-800/30 rounded-xl border p-5 transition-all ${
+                    note.is_pinned ? 'border-amber-500/30 bg-amber-500/5' : 'border-zinc-700/30 hover:border-zinc-600/50'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {note.is_pinned && (
-                        <Pin className="w-4 h-4 text-amber-500 fill-amber-500" />
+                        <Pin className="w-4 h-4 text-amber-400 fill-amber-400" />
                       )}
-                      <span className={`px-2 py-1 rounded-lg text-xs font-semibold bg-${CATEGORIES[note.category].color}-100 text-${CATEGORIES[note.category].color}-700`}>
-                        {CATEGORIES[note.category].label}
+                      <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${catStyle.bg} ${catStyle.text} border ${catStyle.border}`}>
+                        {catStyle.label}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-zinc-600">
                         {new Date(note.created_at).toLocaleDateString('he-IL')}
                       </span>
                     </div>
@@ -248,7 +241,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                       <button
                         onClick={() => handleTogglePin(note)}
                         className={`p-2 rounded-lg transition-all ${
-                          note.is_pinned ? 'text-amber-500 hover:bg-amber-100' : 'text-gray-400 hover:bg-gray-100'
+                          note.is_pinned ? 'text-amber-400 hover:bg-amber-500/10' : 'text-zinc-500 hover:bg-zinc-700/50'
                         }`}
                         title={note.is_pinned ? 'בטל הצמדה' : 'הצמד'}
                       >
@@ -256,19 +249,19 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                       </button>
                       <button
                         onClick={() => handleEdit(note)}
-                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
+                        className="p-2 text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-all"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(note.id)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                        className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
-                  <p className="text-gray-700 whitespace-pre-wrap">{note.note_text}</p>
+                  <p className="text-zinc-300 whitespace-pre-wrap leading-relaxed">{note.note_text}</p>
                 </div>
               );
             })
@@ -276,18 +269,18 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
         </div>
 
         {showAddForm && (
-          <div className="fixed inset-0 backdrop-blur-sm bg-black/40 flex items-center justify-center z-[60] p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
+          <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-[60] p-4">
+            <div className="premium-card-static max-w-md w-full p-6">
+              <h3 className="text-xl font-bold text-white mb-4">
                 {editingNote ? 'עריכת הערה' : 'הערה חדשה'}
               </h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">קטגוריה</label>
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">קטגוריה</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value as Note['category'] })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full glass-input px-4 py-3"
                   >
                     {Object.entries(CATEGORIES).map(([key, { label }]) => (
                       <option key={key} value={key}>{label}</option>
@@ -296,11 +289,11 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">תוכן ההערה *</label>
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">תוכן ההערה *</label>
                   <textarea
                     value={formData.note_text}
                     onChange={(e) => setFormData({ ...formData, note_text: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full glass-input px-4 py-3"
                     rows={5}
                     placeholder="כתוב את ההערה כאן..."
                     required
@@ -312,22 +305,22 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                     type="checkbox"
                     checked={formData.is_pinned}
                     onChange={(e) => setFormData({ ...formData, is_pinned: e.target.checked })}
-                    className="w-5 h-5 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                    className="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
                   />
-                  <span className="text-sm font-medium text-gray-700">הצמד הערה</span>
+                  <span className="text-sm font-medium text-zinc-300">הצמד הערה</span>
                 </label>
 
                 <div className="flex gap-3 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300"
+                    className="flex-1 btn-primary px-6 py-3 font-semibold"
                   >
                     {editingNote ? 'עדכן' : 'הוסף'}
                   </button>
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-all duration-300"
+                    className="flex-1 btn-secondary px-6 py-3 font-semibold"
                   >
                     ביטול
                   </button>
@@ -337,10 +330,10 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
           </div>
         )}
 
-        <div className="sticky bottom-0 bg-gradient-to-br from-gray-50 to-white border-t border-gray-200 p-6 rounded-b-2xl">
+        <div className="p-6 border-t border-zinc-800/50">
           <button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]"
+            className="w-full btn-primary px-6 py-4 text-lg font-bold"
           >
             סגור
           </button>

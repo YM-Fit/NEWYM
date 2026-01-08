@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, Dumbbell, Scale, FileText, Trophy, TrendingUp, TrendingDown, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Calendar, Dumbbell, Scale, FileText, Trophy, TrendingDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 
 interface TimelineItem {
@@ -145,14 +145,14 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
     }
   };
 
-  const getItemColor = (type: string) => {
+  const getItemStyles = (type: string) => {
     switch (type) {
-      case 'workout': return 'from-blue-500 to-cyan-500';
-      case 'measurement': return 'from-emerald-500 to-teal-500';
-      case 'self_weight': return 'from-amber-500 to-orange-500';
-      case 'goal_achieved': return 'from-yellow-500 to-amber-500';
-      case 'note': return 'from-gray-500 to-zinc-500';
-      default: return 'from-gray-500 to-zinc-500';
+      case 'workout': return { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' };
+      case 'measurement': return { bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/30' };
+      case 'self_weight': return { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' };
+      case 'goal_achieved': return { bg: 'bg-yellow-500/15', text: 'text-yellow-400', border: 'border-yellow-500/30' };
+      case 'note': return { bg: 'bg-zinc-500/15', text: 'text-zinc-400', border: 'border-zinc-500/30' };
+      default: return { bg: 'bg-zinc-500/15', text: 'text-zinc-400', border: 'border-zinc-500/30' };
     }
   };
 
@@ -162,28 +162,28 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
   };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="sticky top-0 bg-gradient-to-br from-blue-600 via-blue-700 to-cyan-700 p-6 rounded-t-2xl flex items-center justify-between">
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
-            <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <Calendar className="h-7 w-7 text-white" />
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="premium-card-static max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-zinc-800/50 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-emerald-500/15">
+              <Calendar className="h-6 w-6 text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">ציר זמן</h2>
-              <p className="text-sm text-blue-100">{traineeName}</p>
+              <h2 className="text-xl font-bold text-white">ציר זמן</h2>
+              <p className="text-sm text-zinc-500">{traineeName}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all duration-300 hover:scale-105"
+            className="p-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
           >
-            <X className="h-6 w-6 text-white" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="p-4 border-b border-gray-200 bg-gray-50">
-          <div className="flex gap-2 overflow-x-auto">
+        <div className="p-4 border-b border-zinc-800/50">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar">
             {[
               { id: 'all', label: 'הכל' },
               { id: 'workout', label: 'אימונים' },
@@ -192,11 +192,11 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
             ].map(f => (
               <button
                 key={f.id}
-                onClick={() => setFilter(f.id as any)}
-                className={`px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap transition-all duration-300 ${
+                onClick={() => setFilter(f.id as typeof filter)}
+                className={`px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap transition-all ${
                   filter === f.id
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-zinc-800/50 text-zinc-400 hover:text-white border border-zinc-700/30'
                 }`}
               >
                 {f.label}
@@ -208,90 +208,95 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+              <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
             </div>
           ) : filteredItems.length === 0 ? (
             <div className="text-center py-12">
-              <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">אין פעילות להצגה</p>
+              <div className="w-14 h-14 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-7 h-7 text-zinc-600" />
+              </div>
+              <p className="text-zinc-500">אין פעילות להצגה</p>
             </div>
           ) : (
             <div className="relative">
-              <div className="absolute right-6 top-0 bottom-0 w-0.5 bg-gray-200" />
+              <div className="absolute right-6 top-0 bottom-0 w-0.5 bg-zinc-800" />
               <div className="space-y-4">
-                {filteredItems.map((item, index) => (
-                  <div key={item.id} className="relative pr-14">
-                    <div className={`absolute right-4 w-5 h-5 rounded-full bg-gradient-to-br ${getItemColor(item.type)} flex items-center justify-center text-white shadow-lg`}>
-                      <div className="w-2 h-2 bg-white rounded-full" />
-                    </div>
-                    <div
-                      className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
-                      onClick={() => toggleExpand(item.id)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getItemColor(item.type)} flex items-center justify-center text-white`}>
-                            {getItemIcon(item.type)}
-                          </div>
-                          <div>
-                            <p className="font-bold text-gray-900">{item.title}</p>
-                            <p className="text-sm text-gray-500">{formatDate(item.date)}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {item.description && (
-                            <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-1 rounded-lg">
-                              {item.description}
-                            </span>
-                          )}
-                          {expandedItems.has(item.id) ? (
-                            <ChevronUp className="w-5 h-5 text-gray-400" />
-                          ) : (
-                            <ChevronDown className="w-5 h-5 text-gray-400" />
-                          )}
-                        </div>
+                {filteredItems.map((item) => {
+                  const styles = getItemStyles(item.type);
+                  return (
+                    <div key={item.id} className="relative pr-14">
+                      <div className={`absolute right-4 w-5 h-5 rounded-full ${styles.bg} border-2 ${styles.border} flex items-center justify-center`}>
+                        <div className={`w-2 h-2 rounded-full ${styles.bg}`} />
                       </div>
-                      {expandedItems.has(item.id) && item.metadata && (
-                        <div className="mt-4 pt-4 border-t border-gray-100">
-                          {item.type === 'measurement' && (
-                            <div className="grid grid-cols-3 gap-3">
-                              <div className="bg-emerald-50 rounded-lg p-3 text-center">
-                                <p className="text-xs text-emerald-600 mb-1">משקל</p>
-                                <p className="font-bold text-emerald-700">{item.metadata.weight} ק"ג</p>
-                              </div>
-                              {item.metadata.bodyFat && (
-                                <div className="bg-blue-50 rounded-lg p-3 text-center">
-                                  <p className="text-xs text-blue-600 mb-1">אחוז שומן</p>
-                                  <p className="font-bold text-blue-700">{item.metadata.bodyFat}%</p>
-                                </div>
-                              )}
-                              {item.metadata.muscleMass && (
-                                <div className="bg-amber-50 rounded-lg p-3 text-center">
-                                  <p className="text-xs text-amber-600 mb-1">מסת שריר</p>
-                                  <p className="font-bold text-amber-700">{item.metadata.muscleMass} ק"ג</p>
-                                </div>
-                              )}
+                      <div
+                        className="bg-zinc-800/30 rounded-xl border border-zinc-700/30 p-4 hover:border-zinc-600/50 transition-all cursor-pointer"
+                        onClick={() => toggleExpand(item.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-xl ${styles.bg} flex items-center justify-center ${styles.text}`}>
+                              {getItemIcon(item.type)}
                             </div>
-                          )}
-                          {item.metadata.notes && (
-                            <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
-                              {item.metadata.notes as string}
-                            </p>
-                          )}
+                            <div>
+                              <p className="font-semibold text-white">{item.title}</p>
+                              <p className="text-sm text-zinc-500">{formatDate(item.date)}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {item.description && (
+                              <span className={`text-sm font-medium px-3 py-1 rounded-lg ${styles.bg} ${styles.text}`}>
+                                {item.description}
+                              </span>
+                            )}
+                            {expandedItems.has(item.id) ? (
+                              <ChevronUp className="w-5 h-5 text-zinc-500" />
+                            ) : (
+                              <ChevronDown className="w-5 h-5 text-zinc-500" />
+                            )}
+                          </div>
                         </div>
-                      )}
+                        {expandedItems.has(item.id) && item.metadata && (
+                          <div className="mt-4 pt-4 border-t border-zinc-700/30">
+                            {item.type === 'measurement' && (
+                              <div className="grid grid-cols-3 gap-3">
+                                <div className="bg-cyan-500/10 rounded-xl p-3 text-center border border-cyan-500/20">
+                                  <p className="text-xs text-cyan-400 mb-1">משקל</p>
+                                  <p className="font-bold text-cyan-400">{item.metadata.weight} ק"ג</p>
+                                </div>
+                                {item.metadata.bodyFat && (
+                                  <div className="bg-emerald-500/10 rounded-xl p-3 text-center border border-emerald-500/20">
+                                    <p className="text-xs text-emerald-400 mb-1">אחוז שומן</p>
+                                    <p className="font-bold text-emerald-400">{item.metadata.bodyFat}%</p>
+                                  </div>
+                                )}
+                                {item.metadata.muscleMass && (
+                                  <div className="bg-amber-500/10 rounded-xl p-3 text-center border border-amber-500/20">
+                                    <p className="text-xs text-amber-400 mb-1">מסת שריר</p>
+                                    <p className="font-bold text-amber-400">{item.metadata.muscleMass} ק"ג</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            {item.metadata.notes && (
+                              <p className="text-sm text-zinc-400 bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/30">
+                                {item.metadata.notes as string}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
         </div>
 
-        <div className="sticky bottom-0 bg-gradient-to-br from-gray-50 to-white border-t border-gray-200 p-6 rounded-b-2xl">
+        <div className="p-6 border-t border-zinc-800/50">
           <button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]"
+            className="w-full btn-primary px-6 py-4 text-lg font-bold"
           >
             סגור
           </button>
