@@ -355,51 +355,61 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     if (!user) return;
 
     try {
-      const { data: previousWorkout, error } = await supabase
-        .from('workouts')
+      const { data: workouts, error: workoutsError } = await supabase
+        .from('workout_trainees')
         .select(`
-          id,
-          workout_date,
-          workout_exercises (
+          workout_id,
+          workouts!inner (
             id,
-            order_index,
-            exercise_id,
-            exercises (
+            workout_date,
+            trainer_id,
+            workout_exercises (
               id,
-              name,
-              muscle_group_id
-            ),
-            exercise_sets (
-              set_number,
-              weight,
-              reps,
-              rpe,
-              set_type,
-              failure,
-              superset_exercise_id,
-              superset_weight,
-              superset_reps,
-              superset_rpe,
-              superset_equipment_id,
-              superset_dropset_weight,
-              superset_dropset_reps,
-              dropset_weight,
-              dropset_reps,
-              equipment_id
+              order_index,
+              exercise_id,
+              exercises (
+                id,
+                name,
+                muscle_group_id
+              ),
+              exercise_sets (
+                set_number,
+                weight,
+                reps,
+                rpe,
+                set_type,
+                failure,
+                superset_exercise_id,
+                superset_weight,
+                superset_reps,
+                superset_rpe,
+                superset_equipment_id,
+                superset_dropset_weight,
+                superset_dropset_reps,
+                dropset_weight,
+                dropset_reps,
+                equipment_id
+              )
             )
           )
         `)
-        .eq('trainer_id', user.id)
-        .contains('workout_trainees.trainee_id', [trainee.id])
-        .order('workout_date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .eq('trainee_id', trainee.id)
+        .eq('workouts.trainer_id', user.id)
+        .order('workouts.workout_date', { ascending: false })
+        .limit(1);
 
-      if (error) {
-        console.error('Error loading previous workout:', error);
+      if (workoutsError) {
+        console.error('Error loading previous workout:', workoutsError);
         toast.error('שגיאה בטעינת האימון הקודם');
         return;
       }
+
+      if (!workouts || workouts.length === 0) {
+        toast.error('לא נמצא אימון קודם');
+        return;
+      }
+
+      const previousWorkout = workouts[0].workouts;
 
       if (!previousWorkout || !previousWorkout.workout_exercises || previousWorkout.workout_exercises.length === 0) {
         toast.error('לא נמצא אימון קודם');
