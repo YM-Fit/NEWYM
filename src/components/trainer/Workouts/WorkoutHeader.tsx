@@ -1,4 +1,4 @@
-import { ArrowRight, Save, Calculator, BookMarked, Dumbbell } from 'lucide-react';
+import { ArrowRight, Save, Calculator, BookMarked, Dumbbell, Copy } from 'lucide-react';
 import { memo } from 'react';
 import AutoSaveIndicator from '../../common/AutoSaveIndicator';
 
@@ -18,6 +18,7 @@ interface WorkoutHeaderProps {
   onSave: () => void;
   onCalculator: () => void;
   onSaveTemplate: () => void;
+  onLoadPrevious: () => void;
   onDateChange: (date: Date) => void;
   onWorkoutTypeChange: (type: 'personal' | 'pair') => void;
 }
@@ -36,6 +37,7 @@ export const WorkoutHeader = memo(({
   onSave,
   onCalculator,
   onSaveTemplate,
+  onLoadPrevious,
   onDateChange,
   onWorkoutTypeChange,
 }: WorkoutHeaderProps) => {
@@ -71,6 +73,16 @@ export const WorkoutHeader = memo(({
         </div>
 
         <div className="flex space-x-3 rtl:space-x-reverse">
+          {exercisesCount === 0 && !workoutId && (
+            <button
+              type="button"
+              onClick={onLoadPrevious}
+              className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white px-4 lg:px-6 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 shadow-lg hover:shadow-xl touch-manipulation"
+            >
+              <Copy className="h-5 w-5 lg:h-6 lg:w-6" />
+              <span className="font-semibold text-base lg:text-lg">טען אימון אחרון</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={onCalculator}

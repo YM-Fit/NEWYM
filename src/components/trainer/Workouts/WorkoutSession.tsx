@@ -351,6 +351,103 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     }
   };
 
+  const handleLoadPrevious = async () => {
+    if (!user) return;
+
+    try {
+      const { data: previousWorkout, error } = await supabase
+        .from('workouts')
+        .select(`
+          id,
+          workout_date,
+          workout_exercises (
+            id,
+            order_index,
+            exercise_id,
+            exercises (
+              id,
+              name,
+              muscle_group_id
+            ),
+            exercise_sets (
+              set_number,
+              weight,
+              reps,
+              rpe,
+              set_type,
+              failure,
+              superset_exercise_id,
+              superset_weight,
+              superset_reps,
+              superset_rpe,
+              superset_equipment_id,
+              superset_dropset_weight,
+              superset_dropset_reps,
+              dropset_weight,
+              dropset_reps,
+              equipment_id
+            )
+          )
+        `)
+        .eq('trainer_id', user.id)
+        .contains('workout_trainees.trainee_id', [trainee.id])
+        .order('workout_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error loading previous workout:', error);
+        toast.error('שגיאה בטעינת האימון הקודם');
+        return;
+      }
+
+      if (!previousWorkout || !previousWorkout.workout_exercises || previousWorkout.workout_exercises.length === 0) {
+        toast.error('לא נמצא אימון קודם');
+        return;
+      }
+
+      const loadedExercises: WorkoutExercise[] = previousWorkout.workout_exercises
+        .sort((a, b) => a.order_index - b.order_index)
+        .map((we: any) => ({
+          tempId: Date.now().toString() + Math.random(),
+          exercise: {
+            id: we.exercises.id,
+            name: we.exercises.name,
+            muscle_group_id: we.exercises.muscle_group_id,
+          },
+          sets: we.exercise_sets
+            .sort((a: any, b: any) => a.set_number - b.set_number)
+            .map((set: any, index: number) => ({
+              id: `temp-${Date.now()}-${index}`,
+              set_number: set.set_number,
+              weight: set.weight,
+              reps: set.reps,
+              rpe: set.rpe,
+              set_type: set.set_type,
+              failure: set.failure || false,
+              superset_exercise_id: set.superset_exercise_id,
+              superset_weight: set.superset_weight,
+              superset_reps: set.superset_reps,
+              superset_rpe: set.superset_rpe,
+              superset_equipment_id: set.superset_equipment_id,
+              superset_dropset_weight: set.superset_dropset_weight,
+              superset_dropset_reps: set.superset_dropset_reps,
+              dropset_weight: set.dropset_weight,
+              dropset_reps: set.dropset_reps,
+              equipment_id: set.equipment_id,
+              equipment: null,
+              superset_equipment: null,
+            })),
+        }));
+
+      setExercises(loadedExercises);
+      toast.success('האימון הקודם נטען בהצלחה!');
+    } catch (error) {
+      console.error('Error loading previous workout:', error);
+      toast.error('שגיאה בטעינת האימון הקודם');
+    }
+  };
+
   const handleSave = async () => {
     if (!user || exercises.length === 0) return;
 
@@ -449,6 +546,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
         onSave={handleSave}
         onCalculator={() => setShowCalculator(true)}
         onSaveTemplate={() => setShowSaveTemplateModal(true)}
+        onLoadPrevious={handleLoadPrevious}
         onDateChange={setWorkoutDate}
         onWorkoutTypeChange={setWorkoutType}
       />

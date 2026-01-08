@@ -62,6 +62,34 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     equipment: null,
   });
 
+  const createSetFromPrevious = (setNumber: number, previousSet: SetData): SetData => {
+    const suggestedWeight = previousSet.weight > 0 ? previousSet.weight + 2.5 : previousSet.weight;
+    const suggestedReps = previousSet.reps > 0 ? previousSet.reps + 1 : previousSet.reps;
+
+    return {
+      id: `temp-${Date.now()}-${setNumber}`,
+      set_number: setNumber,
+      weight: suggestedWeight,
+      reps: suggestedReps,
+      rpe: previousSet.rpe,
+      set_type: previousSet.set_type,
+      failure: false,
+      superset_exercise_id: previousSet.superset_exercise_id,
+      superset_exercise_name: previousSet.superset_exercise_name,
+      superset_weight: previousSet.superset_weight ? previousSet.superset_weight + 2.5 : previousSet.superset_weight,
+      superset_reps: previousSet.superset_reps ? previousSet.superset_reps + 1 : previousSet.superset_reps,
+      superset_rpe: previousSet.superset_rpe,
+      superset_equipment_id: previousSet.superset_equipment_id,
+      superset_equipment: previousSet.superset_equipment,
+      superset_dropset_weight: previousSet.superset_dropset_weight,
+      superset_dropset_reps: previousSet.superset_dropset_reps,
+      dropset_weight: previousSet.dropset_weight,
+      dropset_reps: previousSet.dropset_reps,
+      equipment_id: previousSet.equipment_id,
+      equipment: previousSet.equipment,
+    };
+  };
+
   const addExercise = (exercise: Exercise) => {
     if (exercises.length > 0) {
       const lastExercise = exercises[exercises.length - 1];
@@ -89,7 +117,13 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     const existingSetIds = exercise.sets.map(s => s.id);
     setCollapsedSets(prev => [...prev, ...existingSetIds.filter(id => !prev.includes(id))]);
     const newSetNumber = exercise.sets.length + 1;
-    exercise.sets.push(createEmptySet(newSetNumber));
+
+    const previousSet = exercise.sets[exercise.sets.length - 1];
+    const newSet = previousSet && (previousSet.weight > 0 || previousSet.reps > 0)
+      ? createSetFromPrevious(newSetNumber, previousSet)
+      : createEmptySet(newSetNumber);
+
+    exercise.sets.push(newSet);
     setExercises(updatedExercises);
   };
 
