@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ArrowRight, TrendingUp, Dumbbell, User, BarChart3, Target, Repeat } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ArrowRight, TrendingUp, TrendingDown, Dumbbell, User, BarChart3, Target, Repeat, List, Table2, Minus, Trophy, Calendar, Flame } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../../../lib/supabase';
 
 interface WorkoutProgressProps {
@@ -13,6 +13,7 @@ interface ExerciseData {
   name: string;
   progressData: Array<{
     date: string;
+    fullDate: string;
     maxWeight: number;
     totalReps: number;
     totalSets: number;
@@ -26,6 +27,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
   const [loading, setLoading] = useState(true);
   const [metricType, setMetricType] = useState<'weight' | 'reps' | 'volume'>('weight');
   const [selectedMember, setSelectedMember] = useState<'member_1' | 'member_2' | 'all'>('all');
+  const [viewMode, setViewMode] = useState<'chart' | 'list' | 'table'>('chart');
 
   useEffect(() => {
     loadProgressData();
@@ -115,6 +117,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
 
         exercise.progressData.push({
           date: new Date(workout.workout_date).toLocaleDateString('he-IL'),
+          fullDate: workout.workout_date,
           maxWeight,
           totalReps,
           totalSets,
@@ -136,37 +139,51 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
 
   const selectedExerciseData = exercises.find((ex) => ex.id === selectedExercise);
 
+  const getMetricValue = (data: ExerciseData['progressData'][0]) => {
+    switch (metricType) {
+      case 'weight': return data.maxWeight;
+      case 'reps': return data.totalReps;
+      case 'volume': return data.totalVolume;
+    }
+  };
+
   const getChartData = () => {
     if (!selectedExerciseData) return [];
-
-    switch (metricType) {
-      case 'weight':
-        return selectedExerciseData.progressData.map((d) => ({
-          date: d.date,
-          value: d.maxWeight,
-        }));
-      case 'reps':
-        return selectedExerciseData.progressData.map((d) => ({
-          date: d.date,
-          value: d.totalReps,
-        }));
-      case 'volume':
-        return selectedExerciseData.progressData.map((d) => ({
-          date: d.date,
-          value: d.totalVolume,
-        }));
-    }
+    return selectedExerciseData.progressData.map((d) => ({
+      date: d.date,
+      value: getMetricValue(d),
+    }));
   };
 
   const getMetricLabel = () => {
     switch (metricType) {
-      case 'weight':
-        return 'Max Weight (kg)';
-      case 'reps':
-        return 'Total Reps';
-      case 'volume':
-        return 'Total Volume (kg)';
+      case 'weight': return 'משקל מקסימלי (ק"ג)';
+      case 'reps': return 'סה"כ חזרות';
+      case 'volume': return 'נפח כולל (ק"ג)';
     }
+  };
+
+  const getMetricUnit = () => {
+    switch (metricType) {
+      case 'weight': return 'ק"ג';
+      case 'reps': return 'חזרות';
+      case 'volume': return 'ק"ג';
+    }
+  };
+
+  const getMetricColor = () => {
+    switch (metricType) {
+      case 'weight': return '#10b981';
+      case 'reps': return '#06b6d4';
+      case 'volume': return '#f59e0b';
+    }
+  };
+
+  const getChange = (current: number, previous: number) => {
+    const diff = current - previous;
+    const percentage = previous > 0 ? ((diff / previous) * 100).toFixed(1) : '0';
+    const isPositive = diff > 0;
+    return { diff, percentage, isPositive };
   };
 
   const getProgress = () => {
@@ -176,37 +193,41 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
     const first = data[0];
     const last = data[data.length - 1];
 
-    let firstValue = 0;
-    let lastValue = 0;
+    const firstValue = getMetricValue(first);
+    const lastValue = getMetricValue(last);
 
-    switch (metricType) {
-      case 'weight':
-        firstValue = first.maxWeight;
-        lastValue = last.maxWeight;
-        break;
-      case 'reps':
-        firstValue = first.totalReps;
-        lastValue = last.totalReps;
-        break;
-      case 'volume':
-        firstValue = first.totalVolume;
-        lastValue = last.totalVolume;
-        break;
+    return getChange(lastValue, firstValue);
+  };
+
+  const getBestWorkout = () => {
+    if (!selectedExerciseData) return null;
+    let best = selectedExerciseData.progressData[0];
+    selectedExerciseData.progressData.forEach(d => {
+      if (getMetricValue(d) > getMetricValue(best)) {
+        best = d;
+      }
+    });
+    return best;
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3 shadow-xl">
+          <p className="text-zinc-400 text-sm mb-1">{label}</p>
+          <p className="font-bold text-lg" style={{ color: getMetricColor() }}>
+            {metricType === 'volume' ? payload[0].value.toLocaleString() : payload[0].value} {getMetricUnit()}
+          </p>
+        </div>
+      );
     }
-
-    const change = lastValue - firstValue;
-    const percentChange = firstValue > 0 ? ((change / firstValue) * 100).toFixed(1) : 0;
-
-    return { change, percentChange };
+    return null;
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading progress data...</p>
-        </div>
+        <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
       </div>
     );
   }
@@ -214,27 +235,29 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
   if (exercises.length === 0) {
     return (
       <div className="space-y-6">
-        {/* Premium Header */}
-        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 shadow-xl">
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
-            <button onClick={onBack} className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300">
-              <ArrowRight className="h-5 w-5 text-white" />
+        <div className="premium-card-static p-6">
+          <div className="flex items-center gap-4">
+            <button onClick={onBack} className="p-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all">
+              <ArrowRight className="h-5 w-5" />
             </button>
-            <div>
-              <h1 className="text-2xl font-bold text-white">Progress Chart</h1>
-              <p className="text-emerald-100">{trainee.name}</p>
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-emerald-500/15">
+                <TrendingUp className="h-6 w-6 text-emerald-400" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white">גרף התקדמות</h1>
+                <p className="text-sm text-zinc-500">{trainee.name}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="text-center py-12 bg-white rounded-2xl border border-gray-100 shadow-xl">
-          <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <TrendingUp className="h-10 w-10 text-gray-400" />
+        <div className="text-center py-12 premium-card-static">
+          <div className="w-16 h-16 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
+            <TrendingUp className="h-8 w-8 text-zinc-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Not Enough Data</h3>
-          <p className="text-gray-500">
-            Need at least 2 workouts with the same exercise to see progress
-          </p>
+          <h3 className="text-lg font-semibold text-white mb-2">אין מספיק נתונים</h3>
+          <p className="text-zinc-500">נדרשים לפחות 2 אימונים עם אותו תרגיל כדי לראות התקדמות</p>
         </div>
       </div>
     );
@@ -242,243 +265,369 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
 
   const progress = getProgress();
   const chartData = getChartData();
+  const bestWorkout = getBestWorkout();
 
   return (
     <div className="space-y-6">
-      {/* Premium Header */}
-      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 shadow-xl">
-        <div className="flex items-center space-x-4 rtl:space-x-reverse">
-          <button onClick={onBack} className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300">
-            <ArrowRight className="h-5 w-5 text-white" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-white">Progress Chart</h1>
-            <p className="text-emerald-100">{trainee.name}</p>
+      <div className="premium-card-static p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button onClick={onBack} className="p-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all">
+              <ArrowRight className="h-5 w-5" />
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-emerald-500/15">
+                <TrendingUp className="h-6 w-6 text-emerald-400" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white">גרף התקדמות</h1>
+                <p className="text-sm text-zinc-500">{trainee.name}</p>
+              </div>
+            </div>
           </div>
+          {progress && (
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
+              progress.isPositive ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
+            }`}>
+              {progress.isPositive ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+              <span className="font-bold text-lg">
+                {progress.diff > 0 ? '+' : ''}{metricType === 'volume' ? progress.diff.toLocaleString() : progress.diff.toFixed(1)} ({progress.percentage}%)
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Pair Member Selection */}
       {trainee.is_pair && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-xl p-4 transition-all duration-300">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Show progress for:</h3>
+        <div className="premium-card-static p-4">
+          <p className="text-sm font-medium text-zinc-400 mb-3">הצג התקדמות עבור:</p>
           <div className="grid grid-cols-3 gap-3">
-            <button
-              onClick={() => setSelectedMember('all')}
-              className={`p-3 rounded-xl border-2 transition-all duration-300 ${
-                selectedMember === 'all'
-                  ? 'border-emerald-500 bg-gradient-to-br from-emerald-50 to-teal-100 shadow-lg'
-                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-              }`}
-            >
-              <User className={`h-6 w-6 mx-auto mb-2 ${
-                selectedMember === 'all' ? 'text-emerald-600' : 'text-gray-400'
-              }`} />
-              <p className={`text-sm font-semibold text-center ${
-                selectedMember === 'all' ? 'text-emerald-700' : 'text-gray-600'
-              }`}>{trainee.pair_name_1} + {trainee.pair_name_2}</p>
-            </button>
-            <button
-              onClick={() => setSelectedMember('member_1')}
-              className={`p-3 rounded-xl border-2 transition-all duration-300 ${
-                selectedMember === 'member_1'
-                  ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg'
-                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-              }`}
-            >
-              <User className={`h-6 w-6 mx-auto mb-2 ${
-                selectedMember === 'member_1' ? 'text-blue-600' : 'text-gray-400'
-              }`} />
-              <p className={`text-sm font-semibold text-center ${
-                selectedMember === 'member_1' ? 'text-blue-700' : 'text-gray-600'
-              }`}>{trainee.pair_name_1}</p>
-            </button>
-            <button
-              onClick={() => setSelectedMember('member_2')}
-              className={`p-3 rounded-xl border-2 transition-all duration-300 ${
-                selectedMember === 'member_2'
-                  ? 'border-teal-500 bg-gradient-to-br from-teal-50 to-teal-100 shadow-lg'
-                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-              }`}
-            >
-              <User className={`h-6 w-6 mx-auto mb-2 ${
-                selectedMember === 'member_2' ? 'text-teal-600' : 'text-gray-400'
-              }`} />
-              <p className={`text-sm font-semibold text-center ${
-                selectedMember === 'member_2' ? 'text-teal-700' : 'text-gray-600'
-              }`}>{trainee.pair_name_2}</p>
-            </button>
+            {[
+              { id: 'all', label: `${trainee.pair_name_1} + ${trainee.pair_name_2}`, color: 'emerald' },
+              { id: 'member_1', label: trainee.pair_name_1, color: 'cyan' },
+              { id: 'member_2', label: trainee.pair_name_2, color: 'amber' },
+            ].map((member) => (
+              <button
+                key={member.id}
+                onClick={() => setSelectedMember(member.id as typeof selectedMember)}
+                className={`p-3 rounded-xl border transition-all ${
+                  selectedMember === member.id
+                    ? `bg-${member.color}-500/15 border-${member.color}-500/30 text-${member.color}-400`
+                    : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:text-white hover:border-zinc-600/50'
+                }`}
+              >
+                <User className="w-5 h-5 mx-auto mb-2" />
+                <p className="text-sm font-medium text-center truncate">{member.label}</p>
+              </button>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Metric Type Selection */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <button
-          onClick={() => setMetricType('weight')}
-          className={`p-4 rounded-2xl border-2 transition-all duration-300 shadow-xl hover:shadow-2xl ${
-            metricType === 'weight'
-              ? 'border-emerald-500 bg-gradient-to-br from-emerald-50 to-teal-100'
-              : 'border-gray-200 bg-white hover:bg-gray-50'
-          }`}
-        >
-          <div className="text-center">
-            <div className={`w-12 h-12 mx-auto mb-2 rounded-xl flex items-center justify-center ${
-              metricType === 'weight'
-                ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                : 'bg-gray-100'
-            }`}>
-              <BarChart3 className={`h-6 w-6 ${metricType === 'weight' ? 'text-white' : 'text-gray-400'}`} />
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { id: 'weight', label: 'משקל', sublabel: 'מקסימלי', icon: BarChart3, color: '#10b981' },
+          { id: 'reps', label: 'חזרות', sublabel: 'סה"כ', icon: Repeat, color: '#06b6d4' },
+          { id: 'volume', label: 'נפח', sublabel: 'כולל', icon: Target, color: '#f59e0b' },
+        ].map((metric) => (
+          <button
+            key={metric.id}
+            onClick={() => setMetricType(metric.id as typeof metricType)}
+            className={`p-4 rounded-xl border transition-all ${
+              metricType === metric.id
+                ? 'border-emerald-500/30'
+                : 'border-zinc-700/30 hover:border-zinc-600/50'
+            }`}
+            style={{
+              backgroundColor: metricType === metric.id ? `${metric.color}15` : 'rgba(39, 39, 42, 0.3)'
+            }}
+          >
+            <div
+              className="w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center"
+              style={{ backgroundColor: metricType === metric.id ? `${metric.color}20` : 'rgba(63, 63, 70, 0.5)' }}
+            >
+              <metric.icon
+                className="w-5 h-5"
+                style={{ color: metricType === metric.id ? metric.color : '#71717a' }}
+              />
             </div>
-            <div className={`font-bold ${metricType === 'weight' ? 'text-emerald-700' : 'text-gray-900'}`}>Weight</div>
-            <div className="text-sm text-gray-600">Maximum</div>
-          </div>
-        </button>
-
-        <button
-          onClick={() => setMetricType('reps')}
-          className={`p-4 rounded-2xl border-2 transition-all duration-300 shadow-xl hover:shadow-2xl ${
-            metricType === 'reps'
-              ? 'border-emerald-500 bg-gradient-to-br from-emerald-50 to-teal-100'
-              : 'border-gray-200 bg-white hover:bg-gray-50'
-          }`}
-        >
-          <div className="text-center">
-            <div className={`w-12 h-12 mx-auto mb-2 rounded-xl flex items-center justify-center ${
-              metricType === 'reps'
-                ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                : 'bg-gray-100'
-            }`}>
-              <Repeat className={`h-6 w-6 ${metricType === 'reps' ? 'text-white' : 'text-gray-400'}`} />
-            </div>
-            <div className={`font-bold ${metricType === 'reps' ? 'text-emerald-700' : 'text-gray-900'}`}>Reps</div>
-            <div className="text-sm text-gray-600">Total</div>
-          </div>
-        </button>
-
-        <button
-          onClick={() => setMetricType('volume')}
-          className={`p-4 rounded-2xl border-2 transition-all duration-300 shadow-xl hover:shadow-2xl ${
-            metricType === 'volume'
-              ? 'border-emerald-500 bg-gradient-to-br from-emerald-50 to-teal-100'
-              : 'border-gray-200 bg-white hover:bg-gray-50'
-          }`}
-        >
-          <div className="text-center">
-            <div className={`w-12 h-12 mx-auto mb-2 rounded-xl flex items-center justify-center ${
-              metricType === 'volume'
-                ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                : 'bg-gray-100'
-            }`}>
-              <Target className={`h-6 w-6 ${metricType === 'volume' ? 'text-white' : 'text-gray-400'}`} />
-            </div>
-            <div className={`font-bold ${metricType === 'volume' ? 'text-emerald-700' : 'text-gray-900'}`}>Volume</div>
-            <div className="text-sm text-gray-600">Total</div>
-          </div>
-        </button>
+            <p className="font-bold text-center" style={{ color: metricType === metric.id ? metric.color : '#fff' }}>
+              {metric.label}
+            </p>
+            <p className="text-xs text-zinc-500 text-center">{metric.sublabel}</p>
+          </button>
+        ))}
       </div>
 
-      {/* Chart Card */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-xl transition-all duration-300">
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Select Exercise</label>
-          <select
-            value={selectedExercise || ''}
-            onChange={(e) => setSelectedExercise(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 shadow-sm"
-          >
-            {exercises.map((ex) => (
-              <option key={ex.id} value={ex.id}>
-                {ex.name} ({ex.progressData.length} workouts)
-              </option>
-            ))}
-          </select>
+      <div className="premium-card-static p-6 space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <select
+              value={selectedExercise || ''}
+              onChange={(e) => setSelectedExercise(e.target.value)}
+              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+            >
+              {exercises.map((ex) => (
+                <option key={ex.id} value={ex.id}>
+                  {ex.name} ({ex.progressData.length} אימונים)
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex gap-1 bg-zinc-800/50 p-1 rounded-xl border border-zinc-700/50">
+            <button
+              onClick={() => setViewMode('chart')}
+              className={`p-2.5 rounded-lg transition-all ${
+                viewMode === 'chart' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+              }`}
+              title="גרף"
+            >
+              <BarChart3 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2.5 rounded-lg transition-all ${
+                viewMode === 'list' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+              }`}
+              title="רשימה"
+            >
+              <List className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`p-2.5 rounded-lg transition-all ${
+                viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+              }`}
+              title="טבלה"
+            >
+              <Table2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        {progress && (
-          <div className="mb-6 p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1 font-medium">Overall Progress</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {progress.change > 0 ? '+' : ''}
-                  {progress.change.toFixed(metricType === 'volume' ? 0 : 1)}{' '}
-                  {metricType === 'reps' ? 'reps' : 'kg'}
-                </p>
+        {selectedExerciseData && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-zinc-800/30 rounded-xl p-3 border border-zinc-700/30">
+              <div className="flex items-center gap-2 mb-1">
+                <Calendar className="w-4 h-4 text-zinc-500" />
+                <p className="text-xs text-zinc-500">אימונים</p>
               </div>
-              <div
-                className={`text-3xl font-bold px-4 py-2 rounded-xl ${
-                  Number(progress.percentChange) >= 0
-                    ? 'bg-gradient-to-br from-emerald-100 to-teal-200 text-emerald-700'
-                    : 'bg-gradient-to-br from-red-100 to-red-200 text-red-700'
-                }`}
-              >
-                {progress.percentChange > 0 ? '+' : ''}
-                {progress.percentChange}%
+              <p className="text-xl font-bold text-white">{selectedExerciseData.progressData.length}</p>
+            </div>
+            <div className="bg-zinc-800/30 rounded-xl p-3 border border-zinc-700/30">
+              <div className="flex items-center gap-2 mb-1">
+                <Trophy className="w-4 h-4 text-amber-500" />
+                <p className="text-xs text-zinc-500">שיא {metricType === 'weight' ? 'משקל' : metricType === 'reps' ? 'חזרות' : 'נפח'}</p>
               </div>
+              <p className="text-xl font-bold" style={{ color: getMetricColor() }}>
+                {metricType === 'volume' ? getMetricValue(bestWorkout!).toLocaleString() : getMetricValue(bestWorkout!)}
+              </p>
+            </div>
+            <div className="bg-zinc-800/30 rounded-xl p-3 border border-zinc-700/30">
+              <div className="flex items-center gap-2 mb-1">
+                <Dumbbell className="w-4 h-4 text-zinc-500" />
+                <p className="text-xs text-zinc-500">התחלה</p>
+              </div>
+              <p className="text-xl font-bold text-zinc-300">
+                {metricType === 'volume'
+                  ? getMetricValue(selectedExerciseData.progressData[0]).toLocaleString()
+                  : getMetricValue(selectedExerciseData.progressData[0])}
+              </p>
+            </div>
+            <div className="bg-zinc-800/30 rounded-xl p-3 border border-zinc-700/30">
+              <div className="flex items-center gap-2 mb-1">
+                <Flame className="w-4 h-4 text-emerald-500" />
+                <p className="text-xs text-zinc-500">נוכחי</p>
+              </div>
+              <p className="text-xl font-bold text-emerald-400">
+                {metricType === 'volume'
+                  ? getMetricValue(selectedExerciseData.progressData[selectedExerciseData.progressData.length - 1]).toLocaleString()
+                  : getMetricValue(selectedExerciseData.progressData[selectedExerciseData.progressData.length - 1])}
+              </p>
             </div>
           </div>
         )}
 
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="date" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '12px',
-                  boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-                }}
-              />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="value"
-                name={getMetricLabel()}
-                stroke="#10b981"
-                strokeWidth={3}
-                dot={{ r: 6, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}
-                activeDot={{ r: 8, fill: '#059669', strokeWidth: 2, stroke: '#fff' }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+        {viewMode === 'chart' && (
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                <XAxis dataKey="date" stroke="#71717a" fontSize={12} tickLine={false} />
+                <YAxis stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke={getMetricColor()}
+                  strokeWidth={3}
+                  dot={{ fill: getMetricColor(), strokeWidth: 2, r: 5, stroke: '#18181b' }}
+                  activeDot={{ r: 7, stroke: getMetricColor(), strokeWidth: 2, fill: '#18181b' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
-      {/* History Card */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-xl transition-all duration-300">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">
-          {selectedExerciseData?.name} History
-        </h3>
-        <div className="space-y-2">
-          {selectedExerciseData?.progressData.map((data, idx) => (
-            <div
-              key={idx}
-              className="flex items-center justify-between p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl hover:shadow-md transition-all duration-300"
-            >
-              <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-xl flex items-center justify-center">
-                  <Dumbbell className="h-5 w-5 text-emerald-600" />
+        {viewMode === 'list' && selectedExerciseData && (
+          <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            {[...selectedExerciseData.progressData].reverse().map((data, index, arr) => {
+              const value = getMetricValue(data);
+              const prevData = arr[index + 1];
+              const prevValue = prevData ? getMetricValue(prevData) : null;
+              const change = prevValue !== null ? getChange(value, prevValue) : null;
+              const isBest = bestWorkout && data.fullDate === bestWorkout.fullDate;
+
+              return (
+                <div
+                  key={index}
+                  className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
+                    isBest
+                      ? 'bg-amber-500/10 border-amber-500/30'
+                      : 'bg-zinc-800/30 border-zinc-700/30 hover:border-zinc-600/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={{ backgroundColor: isBest ? 'rgba(245, 158, 11, 0.2)' : `${getMetricColor()}20` }}
+                    >
+                      {isBest ? (
+                        <Trophy className="w-5 h-5 text-amber-400" />
+                      ) : (
+                        <span className="text-sm font-bold" style={{ color: getMetricColor() }}>
+                          {arr.length - index}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold">
+                        {new Date(data.fullDate).toLocaleDateString('he-IL', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        {data.totalSets} סטים - {data.totalReps} חזרות - {data.totalVolume.toLocaleString()} ק"ג נפח
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {change && (
+                      <div className={`flex items-center gap-1 text-sm ${
+                        change.isPositive ? 'text-emerald-400' : change.diff < 0 ? 'text-red-400' : 'text-zinc-500'
+                      }`}>
+                        {change.diff === 0 ? (
+                          <Minus className="w-3 h-3" />
+                        ) : change.isPositive ? (
+                          <TrendingUp className="w-3 h-3" />
+                        ) : (
+                          <TrendingDown className="w-3 h-3" />
+                        )}
+                        <span className="font-medium">
+                          {change.diff > 0 ? '+' : ''}{metricType === 'volume' ? change.diff.toLocaleString() : change.diff.toFixed(1)}
+                        </span>
+                      </div>
+                    )}
+                    <div
+                      className="px-4 py-2 rounded-xl font-bold text-lg"
+                      style={{
+                        backgroundColor: `${getMetricColor()}15`,
+                        color: getMetricColor()
+                      }}
+                    >
+                      {metricType === 'volume' ? value.toLocaleString() : value}
+                      <span className="text-xs font-normal mr-1">{getMetricUnit()}</span>
+                    </div>
+                  </div>
                 </div>
-                <span className="text-sm font-semibold text-gray-900">{data.date}</span>
-              </div>
-              <div className="text-left">
-                <div className="text-sm font-bold text-gray-900">
-                  {metricType === 'weight' && `${data.maxWeight} kg`}
-                  {metricType === 'reps' && `${data.totalReps} reps`}
-                  {metricType === 'volume' && `${data.totalVolume.toLocaleString()} kg`}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {data.totalSets} sets - {data.totalReps} reps
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
+
+        {viewMode === 'table' && selectedExerciseData && (
+          <div className="overflow-x-auto max-h-[400px]">
+            <table className="w-full min-w-[700px]">
+              <thead className="sticky top-0 bg-zinc-900">
+                <tr className="border-b border-zinc-700/50">
+                  <th className="text-right py-3 px-3 text-xs font-semibold text-zinc-400">#</th>
+                  <th className="text-right py-3 px-3 text-xs font-semibold text-zinc-400">תאריך</th>
+                  <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">סטים</th>
+                  <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">חזרות</th>
+                  <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">משקל מקס'</th>
+                  <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">נפח</th>
+                  <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">שינוי</th>
+                  <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">מהתחלה</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...selectedExerciseData.progressData].reverse().map((data, index, arr) => {
+                  const value = getMetricValue(data);
+                  const prevData = arr[index + 1];
+                  const prevValue = prevData ? getMetricValue(prevData) : null;
+                  const change = prevValue !== null ? getChange(value, prevValue) : null;
+                  const firstValue = getMetricValue(selectedExerciseData.progressData[0]);
+                  const fromStart = index < arr.length - 1 ? getChange(value, firstValue) : null;
+                  const isBest = bestWorkout && data.fullDate === bestWorkout.fullDate;
+
+                  return (
+                    <tr key={index} className={`border-b border-zinc-800/50 transition-all ${
+                      isBest ? 'bg-amber-500/10' : 'hover:bg-zinc-800/30'
+                    }`}>
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-zinc-500 text-sm">{arr.length - index}</span>
+                          {isBest && <Trophy className="w-4 h-4 text-amber-400" />}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className="text-white text-sm">
+                          {new Date(data.fullDate).toLocaleDateString('he-IL')}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className="text-zinc-300">{data.totalSets}</span>
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className="text-cyan-400 font-semibold">{data.totalReps}</span>
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className="text-emerald-400 font-semibold">{data.maxWeight}</span>
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className="text-amber-400 font-semibold">{data.totalVolume.toLocaleString()}</span>
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        {change ? (
+                          <span className={`text-sm font-medium ${
+                            change.isPositive ? 'text-emerald-400' : change.diff < 0 ? 'text-red-400' : 'text-zinc-500'
+                          }`}>
+                            {change.diff > 0 ? '+' : ''}{metricType === 'volume' ? change.diff.toLocaleString() : change.diff.toFixed(1)}
+                          </span>
+                        ) : (
+                          <span className="text-zinc-600">-</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        {fromStart ? (
+                          <span className={`text-sm font-medium px-2 py-0.5 rounded ${
+                            fromStart.isPositive ? 'bg-emerald-500/15 text-emerald-400' : fromStart.diff < 0 ? 'bg-red-500/15 text-red-400' : 'text-zinc-500'
+                          }`}>
+                            {fromStart.diff > 0 ? '+' : ''}{fromStart.percentage}%
+                          </span>
+                        ) : (
+                          <span className="text-zinc-600">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
