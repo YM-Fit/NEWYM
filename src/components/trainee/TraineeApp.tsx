@@ -179,7 +179,7 @@ export default function TraineeApp() {
             trainerId={trainee.trainer_id}
             traineeName={trainee.full_name}
             onBack={() => setActiveTab('dashboard')}
-            onComplete={() => setActiveTab('workouts')}
+            onSave={() => setActiveTab('workouts')}
           />
         )}
       </main>

@@ -373,7 +373,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
         await supabase.from('trainer_notifications').insert({
           trainer_id: trainerId,
           trainee_id: traineeId,
-          type: 'self_workout',
+          notification_type: 'self_workout',
           title: 'אימון עצמאי חדש',
           message: `${traineeName} סיים אימון עצמאי`,
           is_read: false,
