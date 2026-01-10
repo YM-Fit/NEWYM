@@ -394,7 +394,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-4">
+    <div className="min-h-screen bg-[var(--color-bg-base)] transition-colors duration-300 p-4">
       <div className="bg-emerald-500 rounded-2xl shadow-xl p-5 mb-4 sticky top-0 z-10">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3 rtl:space-x-reverse">

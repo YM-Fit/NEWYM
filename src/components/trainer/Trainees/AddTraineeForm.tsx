@@ -117,7 +117,7 @@ export default function AddTraineeForm({ onBack, onSave }: AddTraineeFormProps) 
   const labelClass = "block text-sm font-medium text-zinc-400 mb-2";
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-4 md:p-6 animate-fade-in">
+    <div className="min-h-screen bg-[var(--color-bg-base)] transition-colors duration-300 p-4 md:p-6 animate-fade-in">
       <div className="premium-card-static p-6 mb-6 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="relative flex items-center gap-4">

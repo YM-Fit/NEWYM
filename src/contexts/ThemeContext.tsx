@@ -47,7 +47,7 @@ export function ThemeProvider({ children, defaultTheme = 'dark' }: ThemeProvider
     if (metaThemeColor) {
       metaThemeColor.setAttribute(
         'content',
-        theme === 'dark' ? '#09090b' : '#f4f4f5'
+        theme === 'dark' ? '#09090b' : '#f8faf9'
       );
     }
   }, [theme]);
@@ -88,25 +88,30 @@ export function useThemeClasses() {
   const { isDark } = useTheme();
 
   return {
-    // Background classes
-    bgBase: isDark ? 'bg-zinc-950' : 'bg-zinc-100',
+    // Background classes - elegant gray-green for light mode
+    bgBase: isDark ? 'bg-zinc-950' : 'bg-[#f8faf9]',
     bgElevated: isDark ? 'bg-zinc-900' : 'bg-white',
-    bgSurface: isDark ? 'bg-zinc-800' : 'bg-zinc-200',
-    bgCard: isDark ? 'bg-zinc-900/90' : 'bg-white/90',
+    bgSurface: isDark ? 'bg-zinc-800' : 'bg-[#ecf0ed]',
+    bgCard: isDark ? 'bg-zinc-900/90' : 'bg-white/97',
 
-    // Text classes
-    textPrimary: isDark ? 'text-white' : 'text-zinc-900',
-    textSecondary: isDark ? 'text-zinc-400' : 'text-zinc-600',
-    textMuted: isDark ? 'text-zinc-500' : 'text-zinc-500',
+    // Text classes - gray-green tones for light mode
+    textPrimary: isDark ? 'text-white' : 'text-[#1a2e22]',
+    textSecondary: isDark ? 'text-zinc-400' : 'text-[#3d5347]',
+    textMuted: isDark ? 'text-zinc-500' : 'text-[#6b7f72]',
 
-    // Border classes
-    border: isDark ? 'border-zinc-800' : 'border-zinc-200',
-    borderHover: isDark ? 'border-zinc-700' : 'border-zinc-300',
+    // Border classes - emerald tinted for light mode
+    border: isDark ? 'border-zinc-800' : 'border-emerald-500/10',
+    borderHover: isDark ? 'border-zinc-700' : 'border-emerald-500/20',
 
     // Input classes
-    inputBg: isDark ? 'bg-zinc-800/50' : 'bg-white',
-    inputBorder: isDark ? 'border-zinc-700' : 'border-zinc-300',
-    inputText: isDark ? 'text-white' : 'text-zinc-900',
-    inputPlaceholder: isDark ? 'placeholder-zinc-500' : 'placeholder-zinc-400',
+    inputBg: isDark ? 'bg-zinc-800/50' : 'bg-white/95',
+    inputBorder: isDark ? 'border-zinc-700' : 'border-emerald-500/15',
+    inputText: isDark ? 'text-white' : 'text-[#1a2e22]',
+    inputPlaceholder: isDark ? 'placeholder-zinc-500' : 'placeholder-[#6b7f72]',
+
+    // Card background
+    cardBg: isDark ? 'bg-zinc-900/90' : 'bg-white/95',
+    cardBorder: isDark ? 'border-zinc-800' : 'border-emerald-500/12',
+    cardShadow: isDark ? 'shadow-lg shadow-black/20' : 'shadow-lg shadow-emerald-900/8',
   };
 }

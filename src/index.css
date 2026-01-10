@@ -31,23 +31,26 @@
     --color-shadow-strong: rgba(0, 0, 0, 0.5);
   }
 
-  /* Light theme */
+  /* Light theme - Elegant Gray-Green for Health & Luxury */
   .light {
-    --color-bg-base: #f4f4f5;
+    --color-bg-base: #f8faf9;
     --color-bg-elevated: #ffffff;
-    --color-bg-surface: #e4e4e7;
-    --color-bg-card: rgba(255, 255, 255, 0.95);
-    --color-bg-input: rgba(255, 255, 255, 0.9);
+    --color-bg-surface: #ecf0ed;
+    --color-bg-card: rgba(255, 255, 255, 0.97);
+    --color-bg-input: rgba(255, 255, 255, 0.95);
 
-    --color-text-primary: #09090b;
-    --color-text-secondary: #52525b;
-    --color-text-muted: #71717a;
+    --color-text-primary: #1a2e22;
+    --color-text-secondary: #3d5347;
+    --color-text-muted: #6b7f72;
 
-    --color-border: rgba(0, 0, 0, 0.08);
-    --color-border-hover: rgba(0, 0, 0, 0.15);
+    --color-border: rgba(16, 185, 129, 0.12);
+    --color-border-hover: rgba(16, 185, 129, 0.25);
 
-    --color-shadow: rgba(0, 0, 0, 0.1);
-    --color-shadow-strong: rgba(0, 0, 0, 0.2);
+    --color-shadow: rgba(16, 90, 60, 0.08);
+    --color-shadow-strong: rgba(16, 90, 60, 0.15);
+
+    --color-accent-bg: rgba(16, 185, 129, 0.08);
+    --color-accent-bg-hover: rgba(16, 185, 129, 0.12);
   }
 
   html {
@@ -73,9 +76,27 @@
     background: linear-gradient(145deg, #09090b 0%, #18181b 50%, #0c1a14 100%);
   }
 
-  /* Light mode clean background */
+  /* Light mode elegant gray-green gradient */
   .light body {
-    background: linear-gradient(145deg, #f4f4f5 0%, #ffffff 50%, #e4e4e7 100%);
+    background: linear-gradient(145deg, #f8faf9 0%, #ffffff 40%, #ecf5f0 100%);
+  }
+
+  /* Light mode scrollbar */
+  .light ::-webkit-scrollbar-track {
+    background: rgba(16, 185, 129, 0.05);
+  }
+
+  .light ::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.25);
+  }
+
+  .light ::-webkit-scrollbar-thumb:hover {
+    background: rgba(16, 185, 129, 0.4);
+  }
+
+  .light ::selection {
+    background: rgba(16, 185, 129, 0.2);
+    color: #1a2e22;
   }
 
   button, input, select, textarea {
@@ -136,6 +157,19 @@
     box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
   }
 
+  /* Light mode premium cards */
+  .light .premium-card,
+  .light .premium-card-static {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 249, 0.9) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    box-shadow: 0 4px 24px -4px rgba(16, 90, 60, 0.1), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+  }
+
+  .light .premium-card:hover {
+    border-color: rgba(16, 185, 129, 0.3);
+    box-shadow: 0 8px 32px -4px rgba(16, 90, 60, 0.15), 0 0 20px rgba(16, 185, 129, 0.08);
+  }
+
   .glass-card {
     background: var(--color-bg-card);
     backdrop-filter: blur(16px);
@@ -164,6 +198,12 @@
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.04);
     border-radius: 12px;
+  }
+
+  /* Light mode glass-card-light */
+  .light .glass-card-light {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(16, 185, 129, 0.08);
   }
 
   .glass-input {
@@ -282,6 +322,19 @@
     color: white;
   }
 
+  /* Light mode secondary button */
+  .light .btn-secondary {
+    background: rgba(248, 250, 249, 0.9);
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    color: #3d5347;
+  }
+
+  .light .btn-secondary:hover {
+    background: rgba(236, 240, 237, 0.95);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #1a2e22;
+  }
+
   .btn-glass {
     background: rgba(39, 39, 42, 0.6);
     backdrop-filter: blur(8px);
@@ -298,6 +351,19 @@
     color: white;
   }
 
+  /* Light mode glass button */
+  .light .btn-glass {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(16, 185, 129, 0.12);
+    color: #3d5347;
+  }
+
+  .light .btn-glass:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(16, 185, 129, 0.25);
+    color: #1a2e22;
+  }
+
   .btn-ghost {
     background: transparent;
     border: 1px solid transparent;
@@ -310,6 +376,16 @@
   .btn-ghost:hover {
     background: rgba(255, 255, 255, 0.05);
     color: white;
+  }
+
+  /* Light mode ghost button */
+  .light .btn-ghost {
+    color: #6b7f72;
+  }
+
+  .light .btn-ghost:hover {
+    background: rgba(16, 185, 129, 0.08);
+    color: #1a2e22;
   }
 
   .btn-danger {
@@ -361,6 +437,22 @@
     border-color: rgba(16, 185, 129, 0.2);
     transform: translateY(-4px);
     box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Light mode stat card */
+  .light .stat-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 249, 0.9) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.1);
+    box-shadow: 0 4px 16px -4px rgba(16, 90, 60, 0.08);
+  }
+
+  .light .stat-card::before {
+    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.15), transparent);
+  }
+
+  .light .stat-card:hover {
+    border-color: rgba(16, 185, 129, 0.25);
+    box-shadow: 0 12px 40px -8px rgba(16, 90, 60, 0.12);
   }
 
   .nav-item {
@@ -418,6 +510,12 @@
     color: rgba(161, 161, 170, 0.6);
   }
 
+  /* Light mode calendar day */
+  .light .calendar-day.empty {
+    background: rgba(236, 240, 237, 0.5);
+    color: rgba(107, 127, 114, 0.6);
+  }
+
   .badge-primary {
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%);
     color: #34d399;
@@ -463,12 +561,22 @@
     background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.06) 50%, transparent 100%);
   }
 
+  /* Light mode divider */
+  .light .divider {
+    background: linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.15) 50%, transparent 100%);
+  }
+
   .section-title {
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: #71717a;
+  }
+
+  /* Light mode section title */
+  .light .section-title {
+    color: #6b7f72;
   }
 
   .avatar-ring {
@@ -483,6 +591,11 @@
     color: #a1a1aa;
     margin-bottom: 8px;
     display: block;
+  }
+
+  /* Light mode input label */
+  .light .input-label {
+    color: #3d5347;
   }
 
   .status-active {

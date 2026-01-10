@@ -53,18 +53,18 @@ export default class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-zinc-950 dark:bg-zinc-950 p-4" dir="rtl">
+        <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-base)] p-4 transition-colors duration-300" dir="rtl">
           <div className="max-w-md w-full">
             <div className="glass-card p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-red-500/20 flex items-center justify-center">
                 <AlertTriangle className="w-8 h-8 text-red-400" />
               </div>
 
-              <h1 className="text-2xl font-bold text-white mb-3">
+              <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-3">
                 אופס! משהו השתבש
               </h1>
 
-              <p className="text-zinc-400 mb-6">
+              <p className="text-[var(--color-text-secondary)] mb-6">
                 אירעה שגיאה בלתי צפויה. אנחנו מצטערים על אי הנוחות.
               </p>
 
@@ -75,10 +75,10 @@ export default class ErrorBoundary extends Component<Props, State> {
                   </p>
                   {this.state.errorInfo && (
                     <details className="mt-2">
-                      <summary className="text-xs text-zinc-500 cursor-pointer hover:text-zinc-400">
+                      <summary className="text-xs text-[var(--color-text-muted)] cursor-pointer hover:text-[var(--color-text-secondary)]">
                         פרטי Stack Trace
                       </summary>
-                      <pre className="mt-2 text-xs text-zinc-500 overflow-auto max-h-40">
+                      <pre className="mt-2 text-xs text-[var(--color-text-muted)] overflow-auto max-h-40">
                         {this.state.errorInfo.componentStack}
                       </pre>
                     </details>
@@ -106,7 +106,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
               <button
                 onClick={this.handleReload}
-                className="mt-4 text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
+                className="mt-4 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
               >
                 רענן את הדף
               </button>

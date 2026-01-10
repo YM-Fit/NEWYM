@@ -54,7 +54,7 @@ export default function TraineeApp() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-base)]">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-glow animate-pulse">
           <Activity className="w-8 h-8 text-white" />
         </div>
@@ -65,7 +65,7 @@ export default function TraineeApp() {
   const getFirstName = (fullName: string) => fullName.split(' ')[0];
 
   return (
-    <div className="min-h-screen bg-zinc-950" dir="rtl">
+    <div className="min-h-screen bg-[var(--color-bg-base)] transition-colors duration-300" dir="rtl">
       <header className="sticky top-0 z-30 glass-card rounded-none border-x-0 border-t-0 px-4 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
@@ -75,15 +75,15 @@ export default function TraineeApp() {
               </span>
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white">
+              <h1 className="text-lg font-bold text-[var(--color-text-primary)]">
                 שלום, {getFirstName(trainee?.full_name || '')}
               </h1>
-              <p className="text-xs text-zinc-500">בואו נתחיל לאמן!</p>
+              <p className="text-xs text-[var(--color-text-muted)]">בואו נתחיל לאמן!</p>
             </div>
           </div>
           <button
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl text-zinc-400 hover:text-amber-400 hover:bg-amber-500/10 transition-all border border-zinc-800 hover:border-amber-500/30"
+            className="p-2.5 rounded-xl text-[var(--color-text-secondary)] hover:text-amber-400 hover:bg-amber-500/10 transition-all border border-[var(--color-border)] hover:border-amber-500/30"
             title={theme === 'dark' ? 'מצב בהיר' : 'מצב כהה'}
             aria-label={theme === 'dark' ? 'עבור למצב בהיר' : 'עבור למצב כהה'}
           >
@@ -91,7 +91,7 @@ export default function TraineeApp() {
           </button>
           <button
             onClick={signOut}
-            className="p-2.5 text-zinc-400 hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all border border-zinc-800 hover:border-red-500/30"
+            className="p-2.5 text-[var(--color-text-secondary)] hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all border border-[var(--color-border)] hover:border-red-500/30"
             title="התנתק"
           >
             <LogOut className="w-5 h-5" />
@@ -99,8 +99,8 @@ export default function TraineeApp() {
         </div>
       </header>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
-        <div className="glass-card px-2 py-3 rounded-2xl shadow-dark-lg border border-zinc-800/80">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 safe-bottom">
+        <div className="glass-card px-2 py-3 rounded-2xl shadow-lg border border-[var(--color-border)]">
           <div className="flex items-center justify-around relative">
             <TabButton
               icon={Home}
@@ -118,7 +118,7 @@ export default function TraineeApp() {
             <div className="relative -mt-10">
               <button
                 onClick={() => setActiveTab('self-workout')}
-                className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-glow transition-transform hover:scale-105 active:scale-95 border-4 border-zinc-900"
+                className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-glow transition-transform hover:scale-105 active:scale-95 border-4 border-[var(--color-bg-base)]"
               >
                 <Plus className="w-7 h-7 text-white" />
               </button>

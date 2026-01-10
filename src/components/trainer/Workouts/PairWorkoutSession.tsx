@@ -317,7 +317,7 @@ export default function PairWorkoutSession({
   );
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-[var(--color-bg-base)] transition-colors duration-300">
       <div className="sticky top-0 z-10 bg-zinc-900 border-b border-zinc-800">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">

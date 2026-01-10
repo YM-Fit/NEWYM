@@ -14,7 +14,7 @@ export default function WorkoutTypeSelection({
   onBack
 }: WorkoutTypeSelectionProps) {
   return (
-    <div className="min-h-screen bg-zinc-950 p-4 md:p-6">
+    <div className="min-h-screen bg-[var(--color-bg-base)] transition-colors duration-300 p-4 md:p-6">
       <div className="premium-card-static p-6 mb-6">
         <div className="flex items-center gap-4">
           <button

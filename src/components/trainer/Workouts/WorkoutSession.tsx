@@ -646,7 +646,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
   const totalVolume = useMemo(() => calculateTotalVolume(), [exercises]);
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-4 lg:p-6">
+    <div className="min-h-screen bg-[var(--color-bg-base)] p-4 lg:p-6 transition-colors duration-300">
       <WorkoutHeader
         trainee={trainee}
         workoutId={workoutId}
