@@ -53,6 +53,233 @@
     --color-accent-bg-hover: rgba(16, 185, 129, 0.12);
   }
 
+  /* ============================================
+     Light Mode Global Overrides
+     These automatically fix Tailwind classes
+     ============================================ */
+
+  /* Text colors - override white to dark */
+  .light .text-white {
+    color: #1a2e22 !important;
+  }
+
+  .light .text-zinc-100,
+  .light .text-zinc-200 {
+    color: #1a2e22 !important;
+  }
+
+  .light .text-zinc-300 {
+    color: #2d4a38 !important;
+  }
+
+  .light .text-zinc-400 {
+    color: #3d5347 !important;
+  }
+
+  .light .text-zinc-500 {
+    color: #6b7f72 !important;
+  }
+
+  .light .text-gray-400 {
+    color: #3d5347 !important;
+  }
+
+  .light .text-gray-500 {
+    color: #6b7f72 !important;
+  }
+
+  /* Background colors */
+  .light .bg-zinc-950 {
+    background-color: #f8faf9 !important;
+  }
+
+  .light .bg-zinc-900 {
+    background-color: #ffffff !important;
+  }
+
+  .light .bg-zinc-900\/90 {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+  }
+
+  .light .bg-zinc-900\/80 {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .light .bg-zinc-900\/50 {
+    background-color: rgba(255, 255, 255, 0.7) !important;
+  }
+
+  .light .bg-zinc-800 {
+    background-color: #ecf0ed !important;
+  }
+
+  .light .bg-zinc-800\/50,
+  .light .bg-zinc-800\/80 {
+    background-color: rgba(236, 240, 237, 0.8) !important;
+  }
+
+  .light .bg-black\/70,
+  .light .bg-black\/60,
+  .light .bg-black\/50 {
+    background-color: rgba(26, 46, 34, 0.5) !important;
+  }
+
+  /* Border colors */
+  .light .border-zinc-800 {
+    border-color: rgba(16, 185, 129, 0.15) !important;
+  }
+
+  .light .border-zinc-800\/50,
+  .light .border-zinc-800\/80 {
+    border-color: rgba(16, 185, 129, 0.12) !important;
+  }
+
+  .light .border-zinc-700 {
+    border-color: rgba(16, 185, 129, 0.2) !important;
+  }
+
+  .light .border-zinc-700\/50 {
+    border-color: rgba(16, 185, 129, 0.15) !important;
+  }
+
+  /* Placeholder colors */
+  .light .placeholder-zinc-500::placeholder,
+  .light .placeholder-zinc-400::placeholder {
+    color: #6b7f72 !important;
+  }
+
+  /* Hover states */
+  .light .hover\:text-white:hover {
+    color: #1a2e22 !important;
+  }
+
+  .light .hover\:bg-zinc-800:hover {
+    background-color: #ecf0ed !important;
+  }
+
+  .light .hover\:bg-zinc-800\/50:hover {
+    background-color: rgba(236, 240, 237, 0.7) !important;
+  }
+
+  .light .hover\:bg-white\/5:hover {
+    background-color: rgba(16, 185, 129, 0.08) !important;
+  }
+
+  /* Ring and focus colors */
+  .light .ring-zinc-800 {
+    --tw-ring-color: rgba(16, 185, 129, 0.2) !important;
+  }
+
+  .light .focus\:ring-zinc-700:focus {
+    --tw-ring-color: rgba(16, 185, 129, 0.3) !important;
+  }
+
+  /* Shadow adjustments */
+  .light .shadow-dark-lg,
+  .light .shadow-dark-xl {
+    box-shadow: 0 10px 40px -10px rgba(16, 90, 60, 0.15) !important;
+  }
+
+  /* Additional text colors */
+  .light .text-e4e4e7,
+  .light [class*="text-\[#e4e4e7\]"] {
+    color: #3d5347 !important;
+  }
+
+  /* Divide colors */
+  .light .divide-zinc-800 > :not([hidden]) ~ :not([hidden]) {
+    border-color: rgba(16, 185, 129, 0.12) !important;
+  }
+
+  /* From colors (gradients) - keep emerald visible */
+  .light .from-zinc-900,
+  .light .to-zinc-900 {
+    --tw-gradient-from: #ffffff !important;
+    --tw-gradient-to: #f8faf9 !important;
+  }
+
+  /* Specific rgba backgrounds */
+  .light [class*="bg-\[rgba(24"] {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+  }
+
+  .light [class*="bg-\[rgba(15"] {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .light [class*="bg-\[rgba(39"] {
+    background-color: rgba(248, 250, 249, 0.9) !important;
+  }
+
+  /* Fix zinc text with opacity */
+  .light .text-zinc-400\/60,
+  .light .text-zinc-500\/60 {
+    color: rgba(61, 83, 71, 0.7) !important;
+  }
+
+  /* Fix white with opacity */
+  .light .text-white\/80,
+  .light .text-white\/70,
+  .light .text-white\/60 {
+    color: rgba(26, 46, 34, 0.85) !important;
+  }
+
+  /* Fix bg with white opacity */
+  .light .bg-white\/5,
+  .light .bg-white\/10 {
+    background-color: rgba(16, 185, 129, 0.05) !important;
+  }
+
+  /* Inset shadows and borders */
+  .light [class*="inset"] {
+    --tw-shadow-color: rgba(16, 185, 129, 0.1) !important;
+  }
+
+  /* Fix fill colors for icons */
+  .light .fill-zinc-400,
+  .light .fill-zinc-500 {
+    fill: #6b7f72 !important;
+  }
+
+  /* Fix stroke colors */
+  .light .stroke-zinc-400,
+  .light .stroke-zinc-500 {
+    stroke: #6b7f72 !important;
+  }
+
+  /* Preserve white text on colored backgrounds */
+  .light .bg-gradient-to-br .text-white,
+  .light .bg-gradient-to-r .text-white,
+  .light .bg-emerald-500 .text-white,
+  .light .bg-emerald-600 .text-white,
+  .light .btn-primary .text-white,
+  .light .action-btn-emerald .text-white,
+  .light .action-btn-cyan .text-white,
+  .light .action-btn-amber .text-white,
+  .light .action-btn-rose .text-white,
+  .light [class*="from-emerald"] .text-white,
+  .light [class*="bg-gradient"] .text-white,
+  .light [class*="\[\.light_\&\]\:text-white"] {
+    color: #ffffff !important;
+  }
+
+  /* Fix: Keep white on gradient buttons */
+  .light .btn-primary,
+  .light .btn-lime,
+  .light .btn-danger,
+  .light .action-btn-emerald,
+  .light .action-btn-cyan,
+  .light .action-btn-amber,
+  .light .action-btn-teal,
+  .light .action-btn-rose {
+    color: #ffffff !important;
+  }
+
+  /* Keep white on colored badges */
+  .light .calendar-day.has-workout {
+    color: #ffffff !important;
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;

@@ -28,9 +28,9 @@ export default function Header({ onLogout, trainerName, onNavigateToTrainee, onT
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-2.5 rounded-xl shadow-glow">
-                <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-white [.light_&]:text-white" />
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-zinc-900 animate-pulse" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-[var(--color-bg-base)] animate-pulse" />
             </div>
             <div className="hidden sm:block">
               <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">
