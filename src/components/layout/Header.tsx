@@ -1,5 +1,6 @@
-import { User, LogOut, Activity, Menu } from 'lucide-react';
+import { User, LogOut, Activity, Menu, Sun, Moon } from 'lucide-react';
 import NotificationBell from '../trainer/Notifications/NotificationBell';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface HeaderProps {
   onLogout?: () => void;
@@ -10,6 +11,8 @@ interface HeaderProps {
 }
 
 export default function Header({ onLogout, trainerName, onNavigateToTrainee, onToggleSidebar }: HeaderProps) {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <header className="sticky top-0 z-30 glass-card rounded-none border-x-0 border-t-0 px-4 py-3 sm:px-6 sm:py-4">
       <div className="flex items-center justify-between">
@@ -41,6 +44,15 @@ export default function Header({ onLogout, trainerName, onNavigateToTrainee, onT
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            onClick={toggleTheme}
+            className="p-2.5 rounded-xl text-zinc-400 hover:text-amber-400 dark:hover:text-amber-400 hover:bg-amber-500/10 transition-all border border-transparent hover:border-amber-500/20"
+            title={theme === 'dark' ? 'מצב בהיר' : 'מצב כהה'}
+            aria-label={theme === 'dark' ? 'עבור למצב בהיר' : 'עבור למצב כהה'}
+          >
+            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </button>
+
           <NotificationBell onNavigateToTrainee={onNavigateToTrainee} />
 
           <div className="hidden sm:flex items-center gap-3 px-4 py-2.5 bg-zinc-800/50 rounded-xl border border-zinc-700/50">

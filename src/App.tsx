@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import TrainerApp from './components/trainer/TrainerApp';
@@ -38,9 +40,23 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Toaster position="top-center" />
-      <AppContent />
-    </AuthProvider>
+    <ErrorBoundary>
+      <ThemeProvider defaultTheme="dark">
+        <AuthProvider>
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              className: 'glass-card',
+              style: {
+                background: 'var(--color-bg-elevated)',
+                color: 'var(--color-text-primary)',
+                border: '1px solid var(--color-border)',
+              },
+            }}
+          />
+          <AppContent />
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

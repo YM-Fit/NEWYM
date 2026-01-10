@@ -1,5 +1,6 @@
 import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { getFromStorage, setToStorage, STORAGE_KEYS } from '../../utils/storage';
 
 interface SidebarProps {
   activeView: string;
@@ -9,12 +10,11 @@ interface SidebarProps {
 
 export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
   const [isMinimized, setIsMinimized] = useState(() => {
-    const saved = localStorage.getItem('sidebarMinimized');
-    return saved ? JSON.parse(saved) : false;
+    return getFromStorage(STORAGE_KEYS.SIDEBAR_MINIMIZED, false);
   });
 
   useEffect(() => {
-    localStorage.setItem('sidebarMinimized', JSON.stringify(isMinimized));
+    setToStorage(STORAGE_KEYS.SIDEBAR_MINIMIZED, isMinimized);
   }, [isMinimized]);
 
   const menuItems = [

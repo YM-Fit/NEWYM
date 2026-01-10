@@ -7,6 +7,7 @@ import { useGlobalScaleListener, IdentifiedReading } from '../../hooks/useGlobal
 import { ScaleReading } from '../../hooks/useScaleListener';
 import Header from '../layout/Header';
 import Sidebar from '../layout/Sidebar';
+import MobileSidebar from '../layout/MobileSidebar';
 import Dashboard from './Dashboard/Dashboard';
 import TraineesList from './Trainees/TraineesList';
 import TraineeProfile from './Trainees/TraineeProfile';
@@ -69,6 +70,7 @@ export default function TrainerApp() {
   const [trainerName, setTrainerName] = useState<string>('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [selfWeights, setSelfWeights] = useState<any[]>([]);
   const [unseenWeightsCounts, setUnseenWeightsCounts] = useState<Map<string, number>>(new Map());
 
@@ -316,6 +318,10 @@ export default function TrainerApp() {
 
   const toggleHeader = () => {
     setHeaderCollapsed(!headerCollapsed);
+  };
+
+  const toggleMobileSidebar = () => {
+    setMobileSidebarOpen(!mobileSidebarOpen);
   };
 
   const convertTraineeToDisplayFormat = (trainee: Trainee) => {
@@ -1046,6 +1052,7 @@ export default function TrainerApp() {
 
   return (
     <div className="min-h-screen flex touch-manipulation" dir="rtl">
+      {/* Desktop Sidebar */}
       {!sidebarCollapsed && (
         <Sidebar
           activeView={activeView}
@@ -1054,6 +1061,14 @@ export default function TrainerApp() {
         />
       )}
 
+      {/* Mobile Sidebar */}
+      <MobileSidebar
+        isOpen={mobileSidebarOpen}
+        onClose={() => setMobileSidebarOpen(false)}
+        activeView={activeView}
+        onViewChange={handleViewChange}
+      />
+
       <div className="flex-1 flex flex-col pb-20 md:pb-0">
         {!headerCollapsed && (
           <Header
@@ -1061,6 +1076,7 @@ export default function TrainerApp() {
             trainerName={trainerName}
             collapsed={headerCollapsed}
             onNavigateToTrainee={handleNavigateToTrainee}
+            onToggleSidebar={toggleMobileSidebar}
           />
         )}
 
