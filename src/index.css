@@ -866,6 +866,78 @@
     }
   }
 
+  /* ============================================
+     Sidebar Light Mode Overrides
+     ============================================ */
+
+  /* Desktop sidebar (aside element) */
+  .light aside.glass-card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 249, 0.95) 100%) !important;
+    border-left-color: rgba(16, 185, 129, 0.12) !important;
+  }
+
+  /* Sidebar menu items - inactive state */
+  .light aside .text-zinc-400 {
+    color: #6b7f72 !important;
+  }
+
+  .light aside .text-zinc-500 {
+    color: #6b7f72 !important;
+  }
+
+  .light aside .text-zinc-600 {
+    color: #8b9f92 !important;
+  }
+
+  /* Sidebar menu items - hover state */
+  .light aside .hover\:bg-zinc-800\/50:hover {
+    background-color: rgba(16, 185, 129, 0.08) !important;
+  }
+
+  .light aside .hover\:text-white:hover {
+    color: #1a2e22 !important;
+  }
+
+  /* Sidebar active item text */
+  .light aside .text-white {
+    color: #1a2e22 !important;
+  }
+
+  /* Sidebar footer border */
+  .light aside .border-t.border-zinc-800\/50 {
+    border-top-color: rgba(16, 185, 129, 0.12) !important;
+  }
+
+  /* Sidebar YM Coach Pro card */
+  .light aside .bg-gradient-to-br.from-emerald-500\/10.to-emerald-600\/5 {
+    background: linear-gradient(to bottom right, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.03)) !important;
+  }
+
+  /* Header light mode fixes */
+  .light header.glass-card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 249, 0.95) 100%) !important;
+    border-bottom-color: rgba(16, 185, 129, 0.12) !important;
+  }
+
+  /* Header title */
+  .light header .text-white {
+    color: #1a2e22 !important;
+  }
+
+  /* Header user info box */
+  .light header .bg-zinc-800\/50 {
+    background-color: rgba(236, 240, 237, 0.8) !important;
+  }
+
+  /* Header text colors */
+  .light header .text-zinc-400 {
+    color: #6b7f72 !important;
+  }
+
+  .light header .text-zinc-500 {
+    color: #8b9f92 !important;
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
