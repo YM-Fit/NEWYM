@@ -938,6 +938,133 @@
     color: #8b9f92 !important;
   }
 
+  /* ============================================
+     Meal Plan & Trainee Components Light Mode
+     ============================================ */
+
+  /* Main content area text */
+  .light main .text-white {
+    color: #1a2e22 !important;
+  }
+
+  .light main .text-zinc-300 {
+    color: #3d5347 !important;
+  }
+
+  .light main .text-zinc-400 {
+    color: #6b7f72 !important;
+  }
+
+  .light main .text-zinc-500 {
+    color: #8b9f92 !important;
+  }
+
+  /* Meal plan cards backgrounds */
+  .light main .bg-zinc-800\/30 {
+    background-color: rgba(236, 240, 237, 0.6) !important;
+  }
+
+  .light main .bg-zinc-800\/50 {
+    background-color: rgba(236, 240, 237, 0.8) !important;
+  }
+
+  /* Meal plan borders */
+  .light main .border-zinc-700\/50 {
+    border-color: rgba(16, 185, 129, 0.15) !important;
+  }
+
+  .light main .border-t.border-zinc-700\/50 {
+    border-top-color: rgba(16, 185, 129, 0.15) !important;
+  }
+
+  /* Premium card static in light mode for main content */
+  .light main .premium-card-static {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 249, 0.95) 100%) !important;
+    border: 1px solid rgba(16, 185, 129, 0.12) !important;
+  }
+
+  /* Empty state backgrounds */
+  .light .bg-zinc-800\/50.rounded-full {
+    background-color: rgba(236, 240, 237, 0.8) !important;
+  }
+
+  /* Dashed borders for alternatives */
+  .light .border-dashed.border-zinc-700\/50 {
+    border-color: rgba(16, 185, 129, 0.2) !important;
+  }
+
+  /* Keep colored badge text visible */
+  .light .text-red-400 {
+    color: #dc2626 !important;
+  }
+
+  .light .text-amber-400 {
+    color: #d97706 !important;
+  }
+
+  .light .text-blue-400 {
+    color: #2563eb !important;
+  }
+
+  .light .text-cyan-400 {
+    color: #0891b2 !important;
+  }
+
+  .light .text-cyan-300 {
+    color: #06b6d4 !important;
+  }
+
+  /* Bottom navigation for trainee app */
+  .light nav.fixed.bottom-0 {
+    background: transparent !important;
+  }
+
+  .light nav.fixed.bottom-0 .glass-card {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border: 1px solid rgba(16, 185, 129, 0.15) !important;
+    box-shadow: 0 -4px 20px -5px rgba(16, 90, 60, 0.1) !important;
+  }
+
+  /* Tab buttons in trainee nav */
+  .light nav .text-zinc-500 {
+    color: #6b7f72 !important;
+  }
+
+  .light nav .hover\:text-zinc-300:hover {
+    color: #3d5347 !important;
+  }
+
+  /* More menu popup */
+  .light .absolute.bottom-full .glass-card {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border: 1px solid rgba(16, 185, 129, 0.15) !important;
+  }
+
+  /* Border color for more menu */
+  .light .border.border-zinc-700\/50 {
+    border-color: rgba(16, 185, 129, 0.15) !important;
+  }
+
+  /* "עוד..." button */
+  .light .text-zinc-400.border-zinc-700\/50 {
+    color: #6b7f72 !important;
+    border-color: rgba(16, 185, 129, 0.15) !important;
+    background-color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .light .hover\:border-zinc-600:hover {
+    border-color: rgba(16, 185, 129, 0.25) !important;
+  }
+
+  /* More menu items */
+  .light .text-zinc-400.hover\:bg-zinc-800\/50:hover {
+    background-color: rgba(16, 185, 129, 0.08) !important;
+  }
+
+  .light .hover\:text-white:hover {
+    color: #1a2e22 !important;
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
