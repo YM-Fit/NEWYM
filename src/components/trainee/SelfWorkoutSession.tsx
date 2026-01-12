@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { ArrowRight, Plus, Save, Copy, Trash2, Clock, Dumbbell } from 'lucide-react';
+import { ArrowRight, Plus, Save, Copy, Trash2, Clock, Dumbbell, CheckCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAutoSave } from '../../hooks/useAutoSave';
 import { useWorkoutSession } from '../../hooks/useWorkoutSession';
@@ -68,6 +68,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
     exercises,
     setExercises,
     minimizedExercises,
+    collapsedSets,
     addExercise,
     removeExercise,
     addSet,
@@ -79,7 +80,9 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
     toggleMinimizeExercise,
     completeExercise,
     getExerciseSummary,
+    toggleCollapseSet,
     applySuggestion,
+    completeSetAndMoveNext,
   } = useWorkoutSession();
 
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
@@ -512,10 +515,41 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                 </div>
 
                 <div className="space-y-4">
-                  {workoutExercise.sets.map((set, setIndex) => (
+                  {workoutExercise.sets.map((set, setIndex) => {
+                    const isCollapsed = collapsedSets.includes(set.id);
+
+                    if (isCollapsed) {
+                      return (
+                        <div
+                          key={set.id}
+                          onClick={() => toggleCollapseSet(set.id)}
+                          className="bg-zinc-800/30 rounded-xl p-3 border border-zinc-700/30 cursor-pointer hover:border-emerald-500/30 hover:bg-zinc-800/50 transition-all duration-300 animate-fade-in"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <span className="font-bold text-sm text-white bg-emerald-500 px-3 py-1.5 rounded-lg shadow-sm">סט {set.set_number}</span>
+                              <span className="text-zinc-300 font-medium">{set.weight} ק״ג</span>
+                              <span className="text-zinc-500">x</span>
+                              <span className="text-zinc-300 font-medium">{set.reps} חזרות</span>
+                              {set.rpe && <span className="text-amber-400 text-sm">RPE {set.rpe}</span>}
+                              {set.set_type !== 'regular' && (
+                                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                  set.set_type === 'superset' ? 'bg-cyan-500/15 text-cyan-400' : 'bg-amber-500/15 text-amber-400'
+                                }`}>
+                                  {set.set_type === 'superset' ? 'סופר-סט' : 'דרופ-סט'}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-xs text-emerald-400 font-medium">לחץ לעריכה</span>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
                     <div
                       key={set.id}
-                      className="bg-zinc-800/50 rounded-2xl p-4 border border-zinc-700/50"
+                      className="bg-zinc-800/50 rounded-2xl p-4 border border-zinc-700/50 transition-all duration-300 animate-fade-in"
                     >
                       <div className="flex items-center justify-between mb-4">
                         <span className="font-bold text-base text-white bg-zinc-700 px-3 py-1 rounded-lg">סט {set.set_number}</span>
@@ -813,8 +847,19 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                           </div>
                         </div>
                       )}
+
+                      {/* Complete Set Button */}
+                      <button
+                        type="button"
+                        onClick={() => completeSetAndMoveNext(exerciseIndex, setIndex)}
+                        className="w-full mt-4 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-lg rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+                      >
+                        <CheckCircle className="h-6 w-6" />
+                        <span>סיים סט ועבור לבא</span>
+                      </button>
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
 
                 <button
