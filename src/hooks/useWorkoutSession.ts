@@ -68,7 +68,7 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
   });
 
   const createSetFromPrevious = (setNumber: number, previousSet: SetData): SetData => {
-    // Calculate suggestions but don't auto-fill
+    // Calculate suggestions for progressive overload
     const suggestedWeight = previousSet.weight > 0 ? previousSet.weight + 2.5 : null;
     const suggestedReps = previousSet.reps > 0 ? previousSet.reps + 1 : null;
     const suggestedSupersetWeight = previousSet.superset_weight ? previousSet.superset_weight + 2.5 : null;
@@ -77,25 +77,29 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     return {
       id: `temp-${Date.now()}-${setNumber}`,
       set_number: setNumber,
-      weight: 0,  // Start empty, user will fill
-      reps: 0,    // Start empty, user will fill
+      // Auto-fill from previous set
+      weight: previousSet.weight,
+      reps: previousSet.reps,
       rpe: previousSet.rpe,
       set_type: previousSet.set_type,
-      failure: false,
+      failure: previousSet.failure,
+      // Superset/Accessories - auto-fill from previous
       superset_exercise_id: previousSet.superset_exercise_id,
       superset_exercise_name: previousSet.superset_exercise_name,
-      superset_weight: null,  // Start empty for superset
-      superset_reps: null,    // Start empty for superset
+      superset_weight: previousSet.superset_weight,
+      superset_reps: previousSet.superset_reps,
       superset_rpe: previousSet.superset_rpe,
       superset_equipment_id: previousSet.superset_equipment_id,
       superset_equipment: previousSet.superset_equipment,
       superset_dropset_weight: previousSet.superset_dropset_weight,
       superset_dropset_reps: previousSet.superset_dropset_reps,
+      // Drop set - auto-fill from previous
       dropset_weight: previousSet.dropset_weight,
       dropset_reps: previousSet.dropset_reps,
+      // Equipment - auto-fill from previous
       equipment_id: previousSet.equipment_id,
       equipment: previousSet.equipment,
-      // Store suggestions separately
+      // Store suggestions separately for progressive overload feature
       suggested_weight: suggestedWeight,
       suggested_reps: suggestedReps,
       suggested_superset_weight: suggestedSupersetWeight,
