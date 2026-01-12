@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Copy, Trash2, Calculator, Sparkles } from 'lucide-react';
+import { Copy, Trash2, Calculator, Sparkles, CheckCircle } from 'lucide-react';
 
 interface Equipment {
   id: string;
@@ -40,6 +40,7 @@ interface WorkoutSetCardProps {
   isCollapsed: boolean;
   canDelete: boolean;
   onToggleCollapse: () => void;
+  onCompleteSet: () => void;
   onDuplicate: () => void;
   onRemove: () => void;
   onOpenNumericPad: (field: 'weight' | 'reps' | 'rpe') => void;
@@ -60,6 +61,7 @@ export const WorkoutSetCard = memo(({
   isCollapsed,
   canDelete,
   onToggleCollapse,
+  onCompleteSet,
   onDuplicate,
   onRemove,
   onOpenNumericPad,
@@ -81,11 +83,11 @@ export const WorkoutSetCard = memo(({
     return (
       <div
         onClick={onToggleCollapse}
-        className="bg-zinc-800/30 rounded-xl p-3 border border-zinc-700/30 cursor-pointer hover:border-emerald-500/30 hover:bg-zinc-800/50 transition-all"
+        className="bg-zinc-800/30 rounded-xl p-3 border border-zinc-700/30 cursor-pointer hover:border-emerald-500/30 hover:bg-zinc-800/50 transition-all duration-300 animate-fade-in"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="font-bold text-sm text-white bg-emerald-500 px-3 py-1.5 rounded-lg">סט {set.set_number}</span>
+            <span className="font-bold text-sm text-white bg-emerald-500 px-3 py-1.5 rounded-lg shadow-sm">סט {set.set_number}</span>
             <span className="text-zinc-300 font-medium">{set.weight} ק״ג</span>
             <span className="text-zinc-500">x</span>
             <span className="text-zinc-300 font-medium">{set.reps} חזרות</span>
@@ -105,7 +107,7 @@ export const WorkoutSetCard = memo(({
   }
 
   return (
-    <div className="bg-zinc-800/30 rounded-2xl p-4 border border-zinc-700/30 transition-all">
+    <div className="bg-zinc-800/30 rounded-2xl p-4 border border-zinc-700/30 transition-all duration-300 animate-fade-in">
       <div className="flex items-center justify-between mb-3">
         <span className="font-bold text-base lg:text-lg text-white bg-emerald-500 px-4 py-2 rounded-xl">סט {set.set_number}</span>
         <div className="flex gap-2">
@@ -451,6 +453,16 @@ export const WorkoutSetCard = memo(({
           </div>
         </div>
       )}
+
+      {/* Complete Set Button */}
+      <button
+        type="button"
+        onClick={onCompleteSet}
+        className="w-full mt-4 py-4 lg:py-5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-lg rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] touch-manipulation"
+      >
+        <CheckCircle className="h-6 w-6 lg:h-7 lg:w-7" />
+        <span>סיים סט ועבור לבא</span>
+      </button>
     </div>
   );
 });

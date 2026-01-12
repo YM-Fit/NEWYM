@@ -93,6 +93,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     getExerciseSummary,
     toggleCollapseSet,
     applySuggestion,
+    completeSetAndMoveNext,
   } = useWorkoutSession({ initialExercises: editingWorkout?.exercises });
 
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
@@ -682,6 +683,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           onDuplicateSet={(setIndex) => duplicateSet(exerciseIndex, setIndex)}
           onRemoveSet={(setIndex) => removeSet(exerciseIndex, setIndex)}
           onToggleCollapseSet={toggleCollapseSet}
+          onCompleteSet={(setIndex) => completeSetAndMoveNext(exerciseIndex, setIndex)}
           onOpenNumericPad={(setIndex, field) => openNumericPad(exerciseIndex, setIndex, field, field === 'weight' ? 'משקל (ק״ג)' : field === 'reps' ? 'חזרות' : 'RPE (1-10)')}
           onOpenEquipmentSelector={(setIndex) => setEquipmentSelector({ exerciseIndex, setIndex })}
           onOpenSupersetSelector={(setIndex) => setSupersetSelector({ exerciseIndex, setIndex })}

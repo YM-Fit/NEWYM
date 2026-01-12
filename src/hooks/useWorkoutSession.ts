@@ -145,15 +145,50 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
   };
 
   const toggleCollapseSet = (setId: string) => {
-    setCollapsedSets(prev =>
-      prev.includes(setId) ? prev.filter(id => id !== setId) : [...prev, setId]
-    );
+    setCollapsedSets(prev => {
+      // If clicking on a collapsed set, open it and close all others in the same exercise
+      if (prev.includes(setId)) {
+        // Find which exercise this set belongs to
+        const exercise = exercises.find(ex => ex.sets.some(s => s.id === setId));
+        if (exercise) {
+          // Get all set IDs for this exercise except the one being opened
+          const allSetIds = exercise.sets.map(s => s.id).filter(id => id !== setId);
+          // Close all other sets in this exercise, open the clicked one
+          return [...prev.filter(id => id !== setId), ...allSetIds.filter(id => !prev.includes(id))];
+        }
+        return prev.filter(id => id !== setId);
+      } else {
+        // If clicking on an open set, just close it
+        return [...prev, setId];
+      }
+    });
   };
 
   const expandAllSets = (exerciseIndex: number) => {
     const exercise = exercises[exerciseIndex];
     const setIds = exercise.sets.map(s => s.id);
     setCollapsedSets(prev => prev.filter(id => !setIds.includes(id)));
+  };
+
+  const completeSetAndMoveNext = (exerciseIndex: number, setIndex: number) => {
+    const exercise = exercises[exerciseIndex];
+    const currentSet = exercise.sets[setIndex];
+    const nextSet = exercise.sets[setIndex + 1];
+
+    if (nextSet) {
+      // Close current set and open next set
+      setCollapsedSets(prev => {
+        // Add current set to collapsed
+        const newCollapsed = prev.includes(currentSet.id) ? prev : [...prev, currentSet.id];
+        // Remove next set from collapsed (open it)
+        return newCollapsed.filter(id => id !== nextSet.id);
+      });
+    } else {
+      // This is the last set, just collapse it
+      setCollapsedSets(prev =>
+        prev.includes(currentSet.id) ? prev : [...prev, currentSet.id]
+      );
+    }
   };
 
   const applySuggestion = (exerciseIndex: number, setIndex: number) => {
@@ -289,5 +324,6 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     toggleCollapseSet,
     expandAllSets,
     applySuggestion,
+    completeSetAndMoveNext,
   };
 }

@@ -65,6 +65,7 @@ interface WorkoutExerciseCardProps {
   onDuplicateSet: (setIndex: number) => void;
   onRemoveSet: (setIndex: number) => void;
   onToggleCollapseSet: (setId: string) => void;
+  onCompleteSet: (setIndex: number) => void;
   onOpenNumericPad: (setIndex: number, field: 'weight' | 'reps' | 'rpe') => void;
   onOpenEquipmentSelector: (setIndex: number) => void;
   onOpenSupersetSelector: (setIndex: number) => void;
@@ -91,6 +92,7 @@ export const WorkoutExerciseCard = memo(({
   onDuplicateSet,
   onRemoveSet,
   onToggleCollapseSet,
+  onCompleteSet,
   onOpenNumericPad,
   onOpenEquipmentSelector,
   onOpenSupersetSelector,
@@ -182,6 +184,7 @@ export const WorkoutExerciseCard = memo(({
               isCollapsed={collapsedSets.includes(set.id)}
               canDelete={workoutExercise.sets.length > 1}
               onToggleCollapse={() => onToggleCollapseSet(set.id)}
+              onCompleteSet={() => onCompleteSet(setIndex)}
               onDuplicate={() => onDuplicateSet(setIndex)}
               onRemove={() => onRemoveSet(setIndex)}
               onOpenNumericPad={(field) => onOpenNumericPad(setIndex, field)}
