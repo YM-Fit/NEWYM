@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import {
-  ArrowRight,
   Calendar,
   Clock,
   Dumbbell,
@@ -20,6 +19,10 @@ import {
   History,
   ChevronDown,
   ChevronUp,
+  Info,
+  TrendingUp,
+  Award,
+  Activity,
 } from 'lucide-react';
 
 interface MyWorkoutPlanProps {
@@ -115,14 +118,24 @@ const muscleGroupIcons: Record<string, typeof Dumbbell> = {
   'ישבן': Flame,
 };
 
-const dayColors = [
-  { bg: 'from-emerald-500 to-teal-600', light: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-  { bg: 'from-blue-500 to-cyan-600', light: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-  { bg: 'from-amber-500 to-orange-600', light: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-  { bg: 'from-rose-500 to-pink-600', light: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
-  { bg: 'from-cyan-500 to-teal-600', light: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200' },
-  { bg: 'from-teal-500 to-emerald-600', light: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
-  { bg: 'from-slate-500 to-slate-600', light: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' },
+const muscleGroupColors: Record<string, string> = {
+  'חזה': 'bg-rose-500/10 text-rose-700 border-rose-200',
+  'גב': 'bg-cyan-500/10 text-cyan-700 border-cyan-200',
+  'כתפיים': 'bg-amber-500/10 text-amber-700 border-amber-200',
+  'רגליים': 'bg-orange-500/10 text-orange-700 border-orange-200',
+  'זרועות': 'bg-blue-500/10 text-blue-700 border-blue-200',
+  'בטן': 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
+  'ישבן': 'bg-purple-500/10 text-purple-700 border-purple-200',
+};
+
+const dayGradients = [
+  'from-emerald-500 to-teal-600',
+  'from-cyan-500 to-blue-600',
+  'from-amber-500 to-orange-600',
+  'from-rose-500 to-pink-600',
+  'from-purple-500 to-indigo-600',
+  'from-teal-500 to-emerald-600',
+  'from-blue-500 to-cyan-600',
 ];
 
 export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
@@ -130,7 +143,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   const [days, setDays] = useState<WorkoutDay[]>([]);
   const [dayExercises, setDayExercises] = useState<Record<string, DayExercise[]>>({});
   const [loading, setLoading] = useState(true);
-  const [selectedDay, setSelectedDay] = useState<WorkoutDay | null>(null);
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
   const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
   const [editingExercise, setEditingExercise] = useState<string | null>(null);
   const [editData, setEditData] = useState<{ trainee_notes: string; trainee_target_weight: number | null }>({
@@ -140,6 +153,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   const [saving, setSaving] = useState(false);
   const [history, setHistory] = useState<PlanHistory[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [showInfoTooltip, setShowInfoTooltip] = useState<string | null>(null);
 
   useEffect(() => {
     if (traineeId) {
@@ -228,6 +242,18 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     }
   };
 
+  const toggleDay = (dayId: string) => {
+    setExpandedDays(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(dayId)) {
+        newSet.delete(dayId);
+      } else {
+        newSet.add(dayId);
+      }
+      return newSet;
+    });
+  };
+
   const startEditing = (exercise: DayExercise) => {
     setEditingExercise(exercise.id);
     setEditData({
@@ -310,13 +336,49 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     return exercises.filter((ex) => completedExercises.has(ex.id)).length;
   };
 
+  const calculateDayVolume = (dayId: string) => {
+    const exercises = dayExercises[dayId] || [];
+    let totalVolume = 0;
+
+    exercises.forEach(ex => {
+      const weight = ex.target_weight || ex.trainee_target_weight || 0;
+      const avgReps = ex.reps_range.includes('-')
+        ? (parseInt(ex.reps_range.split('-')[0]) + parseInt(ex.reps_range.split('-')[1])) / 2
+        : parseInt(ex.reps_range) || 0;
+      totalVolume += weight * avgReps * ex.sets_count;
+
+      if (ex.superset_weight && ex.superset_reps) {
+        totalVolume += ex.superset_weight * ex.superset_reps * ex.sets_count;
+      }
+
+      if (ex.dropset_weight && ex.dropset_reps) {
+        totalVolume += ex.dropset_weight * ex.dropset_reps * ex.sets_count;
+      }
+    });
+
+    return Math.round(totalVolume);
+  };
+
+  const getMuscleGroups = (dayId: string): string[] => {
+    const exercises = dayExercises[dayId] || [];
+    const groups = new Set<string>();
+
+    exercises.forEach(ex => {
+      if (ex.exercise?.muscle_group?.name) {
+        groups.add(ex.exercise.muscle_group.name);
+      }
+    });
+
+    return Array.from(groups);
+  };
+
   const formatRestTime = (seconds: number) => {
     if (seconds >= 60) {
       const minutes = Math.floor(seconds / 60);
       const remainingSeconds = seconds % 60;
-      return remainingSeconds > 0 ? `${minutes}:${String(remainingSeconds).padStart(2, '0')} דקות` : `${minutes} דקות`;
+      return remainingSeconds > 0 ? `${minutes}:${String(remainingSeconds).padStart(2, '0')}` : `${minutes}`;
     }
-    return `${seconds} שניות`;
+    return `${seconds}`;
   };
 
   const getMuscleGroupIcon = (focus: string | null) => {
@@ -359,375 +421,45 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     );
   }
 
-  if (selectedDay) {
-    const exercises = dayExercises[selectedDay.id] || [];
-    const colorIndex = (selectedDay.day_number - 1) % dayColors.length;
-    const color = dayColors[colorIndex];
-    const Icon = getMuscleGroupIcon(selectedDay.focus);
-    const completedCount = getCompletedCount(selectedDay.id);
-
-    return (
-      <div className="space-y-4 pb-4">
-        <button
-          onClick={() => setSelectedDay(null)}
-          className="flex items-center gap-2 text-gray-600 hover:text-emerald-600 transition-all duration-300 font-medium"
-        >
-          <ArrowRight className="w-5 h-5" />
-          <span>חזרה לתוכנית</span>
-        </button>
-
-        <div className={`bg-gradient-to-br ${color.bg} rounded-2xl p-6 text-white shadow-xl`}>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm opacity-80 font-medium">יום {selectedDay.day_number}</p>
-              <h2 className="text-2xl font-bold">
-                {selectedDay.day_name || `יום אימון ${selectedDay.day_number}`}
-              </h2>
-              {selectedDay.focus && (
-                <p className="flex items-center gap-2 mt-2 text-sm opacity-90">
-                  <Target className="w-4 h-4" />
-                  {selectedDay.focus}
-                </p>
-              )}
-            </div>
-            <div className="bg-white/20 p-4 rounded-2xl shadow-lg">
-              <Icon className="w-8 h-8" />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/20">
-            <div className="flex items-center gap-2">
-              <Dumbbell className="w-4 h-4" />
-              <span>{exercises.length} תרגילים</span>
-            </div>
-            {completedCount > 0 && (
-              <div className="flex items-center gap-2 bg-white/20 px-4 py-1.5 rounded-xl">
-                <Check className="w-4 h-4" />
-                <span className="font-medium">{completedCount}/{exercises.length} הושלמו</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {selectedDay.notes && (
-          <div className={`${color.light} ${color.border} border-2 rounded-2xl p-4 shadow-lg`}>
-            <p className={`text-sm font-bold ${color.text} mb-1`}>הערות ליום זה</p>
-            <p className="text-gray-700 leading-relaxed">{selectedDay.notes}</p>
-          </div>
-        )}
-
-        <div className="space-y-4">
-          {exercises.map((exercise, index) => {
-            const isCompleted = completedExercises.has(exercise.id);
-            const isEditing = editingExercise === exercise.id;
-            const exerciseName = exercise.exercise?.name || exercise.exercise_name || 'תרגיל';
-
-            return (
-              <div
-                key={exercise.id}
-                className={`bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] border-2 ${
-                  isCompleted ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200'
-                }`}
-              >
-                <div className="p-5 lg:p-6">
-                  <div className="flex items-start gap-4">
-                    <button
-                      onClick={() => toggleExerciseComplete(exercise.id)}
-                      className={`flex-shrink-0 w-14 h-14 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg ${
-                        isCompleted
-                          ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white'
-                          : `bg-gradient-to-br ${color.bg} text-white hover:shadow-xl`
-                      }`}
-                    >
-                      {isCompleted ? (
-                        <Check className="w-7 h-7 lg:w-8 lg:h-8" />
-                      ) : (
-                        <span className="text-2xl lg:text-3xl font-bold">{index + 1}</span>
-                      )}
-                    </button>
-
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className={`text-lg lg:text-xl font-bold ${isCompleted ? 'text-emerald-700' : 'text-gray-900'}`}>
-                            {exerciseName}
-                          </h3>
-                          {exercise.exercise?.muscle_group?.name && (
-                            <p className="text-sm text-gray-500 mt-0.5">{exercise.exercise.muscle_group.name}</p>
-                          )}
-                        </div>
-                        {!isEditing && (
-                          <button
-                            onClick={() => startEditing(exercise)}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300"
-                          >
-                            <Edit3 className="w-5 h-5" />
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 mt-4 border-2 border-gray-200 space-y-3 shadow-inner">
-                        <div className="grid grid-cols-3 gap-3">
-                          <div className={`${color.light} ${color.border} border-2 rounded-xl p-3 text-center shadow-md`}>
-                            <div className={`flex items-center justify-center gap-1 mb-1 ${color.text}`}>
-                              <Repeat className="w-4 h-4" />
-                              <span className="text-xs font-bold">סטים</span>
-                            </div>
-                            <div className={`text-2xl lg:text-3xl font-bold ${color.text}`}>
-                              {exercise.sets_count}
-                            </div>
-                          </div>
-
-                          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-3 text-center shadow-md">
-                            <div className="flex items-center justify-center gap-1 mb-1 text-blue-700">
-                              <Target className="w-4 h-4" />
-                              <span className="text-xs font-bold">חזרות</span>
-                            </div>
-                            <div className="text-2xl lg:text-3xl font-bold text-blue-700">
-                              {exercise.reps_range}
-                            </div>
-                          </div>
-
-                          <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-3 text-center shadow-md">
-                            <div className="flex items-center justify-center gap-1 mb-1 text-amber-700">
-                              <Clock className="w-4 h-4" />
-                              <span className="text-xs font-bold">מנוחה</span>
-                            </div>
-                            <div className="text-lg lg:text-xl font-bold text-amber-700">
-                              {formatRestTime(exercise.rest_seconds)}
-                            </div>
-                          </div>
-                        </div>
-
-                        {exercise.target_weight && (
-                          <div className="bg-white border-2 border-gray-200 rounded-xl p-3 flex items-center justify-between shadow-sm">
-                            <span className="text-sm font-bold text-gray-600">משקל יעד (מאמן)</span>
-                            <span className="text-lg font-bold text-gray-900">{exercise.target_weight} ק״ג</span>
-                          </div>
-                        )}
-
-                        {exercise.trainee_target_weight && !isEditing && (
-                          <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-3 flex items-center justify-between shadow-sm">
-                            <span className="text-sm font-bold text-emerald-600">משקל יעד שלי</span>
-                            <span className="text-lg font-bold text-emerald-700">{exercise.trainee_target_weight} ק״ג</span>
-                          </div>
-                        )}
-
-                        {exercise.target_rpe && (
-                          <div className="bg-white border-2 border-gray-200 rounded-xl p-3 flex items-center justify-between shadow-sm">
-                            <span className="text-sm font-bold text-gray-600">RPE יעד</span>
-                            <span className="text-lg font-bold text-gray-900">{exercise.target_rpe}/10</span>
-                          </div>
-                        )}
-
-                        {exercise.equipment && (
-                          <div className="bg-white border-2 border-gray-200 rounded-xl p-3 flex items-center justify-between shadow-sm">
-                            <span className="text-sm font-bold text-gray-600">ציוד</span>
-                            <div className="flex items-center gap-2">
-                              {exercise.equipment.emoji && <span className="text-lg">{exercise.equipment.emoji}</span>}
-                              <span className="font-bold text-gray-900">{exercise.equipment.name}</span>
-                            </div>
-                          </div>
-                        )}
-
-                        {exercise.failure && (
-                          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-3 flex items-center justify-center gap-2 shadow-sm">
-                            <span className="text-sm font-bold text-red-700">לכשל</span>
-                          </div>
-                        )}
-
-                        {exercise.set_type === 'superset' && exercise.superset_exercise && (
-                          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 space-y-2 shadow-sm">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-blue-700 bg-blue-200 px-3 py-1 rounded-xl">סופרסט</span>
-                              <span className="font-bold text-blue-900">{exercise.superset_exercise.name}</span>
-                            </div>
-                            {exercise.superset_weight && exercise.superset_reps && (
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-blue-600">משקל וחזרות</span>
-                                <span className="text-sm font-bold text-blue-900">
-                                  {exercise.superset_weight} ק״ג x {exercise.superset_reps}
-                                </span>
-                              </div>
-                            )}
-                            {exercise.superset_rpe && (
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-blue-600">RPE</span>
-                                <span className="text-sm font-bold text-blue-900">{exercise.superset_rpe}/10</span>
-                              </div>
-                            )}
-                            {exercise.superset_equipment && (
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-blue-600">ציוד</span>
-                                <div className="flex items-center gap-1">
-                                  {exercise.superset_equipment.emoji && (
-                                    <span>{exercise.superset_equipment.emoji}</span>
-                                  )}
-                                  <span className="text-sm font-bold text-blue-900">
-                                    {exercise.superset_equipment.name}
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {exercise.set_type === 'dropset' && (exercise.dropset_weight || exercise.dropset_reps) && (
-                          <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 shadow-sm">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-xs font-bold text-amber-700 bg-amber-200 px-3 py-1 rounded-xl">דרופסט</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-amber-600">משקל וחזרות</span>
-                              <span className="text-sm font-bold text-amber-900">
-                                {exercise.dropset_weight} ק״ג x {exercise.dropset_reps}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {exercise.notes && (
-                        <div className="mt-4 p-4 bg-amber-50 rounded-xl border-2 border-amber-200 shadow-sm">
-                          <div className="flex items-start gap-3">
-                            <span className="text-lg">&#128161;</span>
-                            <div>
-                              <p className="text-xs font-bold text-amber-600 mb-1">הערות המאמן</p>
-                              <p className="text-sm text-amber-800 font-medium leading-relaxed">{exercise.notes}</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {exercise.trainee_notes && !isEditing && (
-                        <div className="mt-4 p-4 bg-emerald-50 rounded-xl border-2 border-emerald-200 shadow-sm">
-                          <div className="flex items-start gap-3">
-                            <span className="text-lg">&#128221;</span>
-                            <div>
-                              <p className="text-xs font-bold text-emerald-600 mb-1">ההערות שלי</p>
-                              <p className="text-sm text-emerald-800 font-medium leading-relaxed">{exercise.trainee_notes}</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {isEditing && (
-                        <div className="mt-4 p-5 bg-blue-50 rounded-2xl border-2 border-blue-200 space-y-4 shadow-lg">
-                          <h4 className="font-bold text-blue-900 text-lg">עריכה אישית</h4>
-
-                          <div>
-                            <label className="block text-sm font-bold text-blue-700 mb-2">
-                              משקל יעד שלי (ק״ג)
-                            </label>
-                            <input
-                              type="number"
-                              value={editData.trainee_target_weight || ''}
-                              onChange={(e) =>
-                                setEditData({ ...editData, trainee_target_weight: e.target.value ? Number(e.target.value) : null })
-                              }
-                              placeholder={exercise.target_weight ? `המאמן המליץ: ${exercise.target_weight}` : 'הזן משקל יעד'}
-                              className="w-full px-4 py-4 border-2 border-blue-300 rounded-xl focus:border-blue-500 focus:outline-none text-lg transition-all duration-300"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-bold text-blue-700 mb-2">
-                              הערות שלי
-                            </label>
-                            <textarea
-                              value={editData.trainee_notes}
-                              onChange={(e) => setEditData({ ...editData, trainee_notes: e.target.value })}
-                              placeholder="הוסף הערות אישיות לתרגיל..."
-                              rows={3}
-                              className="w-full px-4 py-4 border-2 border-blue-300 rounded-xl focus:border-blue-500 focus:outline-none resize-none transition-all duration-300"
-                            />
-                          </div>
-
-                          <div className="flex gap-3">
-                            <button
-                              onClick={() => saveExerciseChanges(exercise)}
-                              disabled={saving}
-                              className="flex-1 py-4 px-4 bg-gradient-to-br from-blue-500 to-cyan-600 text-white rounded-xl font-bold hover:from-blue-600 hover:to-cyan-700 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
-                            >
-                              <Save className="w-5 h-5" />
-                              {saving ? 'שומר...' : 'שמור'}
-                            </button>
-                            <button
-                              onClick={cancelEditing}
-                              className="py-4 px-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 flex items-center justify-center transition-all duration-300"
-                            >
-                              <X className="w-5 h-5" />
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {exercise.trainee_modified_at && !isEditing && (
-                        <p className="text-xs text-gray-400 mt-3 bg-gray-100 px-3 py-1 rounded-lg w-fit">
-                          עודכן על ידך: {formatDate(exercise.trainee_modified_at)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {exercises.length > 0 && completedCount === exercises.length && (
-          <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white text-center shadow-xl">
-            <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <Check className="w-10 h-10" />
-            </div>
-            <h3 className="text-2xl font-bold">כל הכבוד!</h3>
-            <p className="text-emerald-100 mt-2">סיימת את כל התרגילים ליום זה</p>
-          </div>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4 pb-4">
-      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-xl">
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-2xl font-bold">{plan.name}</h2>
+    <div className="space-y-6 pb-6">
+      {/* Header Card */}
+      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-6 lg:p-8 text-white shadow-2xl animate-fade-in">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <h1 className="text-3xl lg:text-4xl font-bold mb-2">{plan.name}</h1>
             {plan.description && (
-              <p className="text-emerald-100 text-sm mt-2">{plan.description}</p>
+              <p className="text-emerald-100 text-sm lg:text-base opacity-90">{plan.description}</p>
             )}
           </div>
-          <div className="bg-white/20 p-4 rounded-2xl shadow-lg">
+          <div className="bg-white/20 p-4 rounded-2xl shadow-lg backdrop-blur-sm">
             <ClipboardList className="w-8 h-8" />
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/20">
-          <Calendar className="w-4 h-4" />
-          <span className="font-medium">{plan.days_per_week} ימי אימון בשבוע</span>
-        </div>
-
-        {plan.updated_at && (
-          <div className="flex items-center gap-2 mt-2 text-emerald-100 text-sm">
-            <Clock className="w-4 h-4" />
-            <span>
-              עדכון אחרון: {formatDate(plan.updated_at)}
-              {plan.last_modified_by && (
-                <span className="mr-1">
-                  ({plan.last_modified_by === 'trainer' ? 'מאמן' : 'מתאמן'})
-                </span>
-              )}
-            </span>
+        <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-white/20">
+          <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl backdrop-blur-sm">
+            <Calendar className="w-4 h-4" />
+            <span className="font-medium text-sm">{plan.days_per_week} ימים/שבוע</span>
           </div>
-        )}
+
+          {plan.updated_at && (
+            <div className="flex items-center gap-2 text-emerald-100 text-sm bg-white/10 px-4 py-2 rounded-xl backdrop-blur-sm">
+              <Clock className="w-4 h-4" />
+              <span>
+                עדכון: {formatDate(plan.updated_at)}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* History Card */}
       {history.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-2xl">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-xl animate-fade-in">
           <button
             onClick={() => setShowHistory(!showHistory)}
-            className="w-full p-4 flex items-center justify-between text-right hover:bg-gray-50 transition-all duration-300"
+            className="w-full p-5 flex items-center justify-between text-right hover:bg-gray-50 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center shadow-md">
@@ -736,18 +468,18 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
               <span className="font-bold text-gray-900">היסטוריית שינויים</span>
             </div>
             {showHistory ? (
-              <ChevronUp className="w-5 h-5 text-gray-400" />
+              <ChevronUp className="w-5 h-5 text-gray-400 transition-transform duration-300" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-gray-400" />
+              <ChevronDown className="w-5 h-5 text-gray-400 transition-transform duration-300" />
             )}
           </button>
 
           {showHistory && (
-            <div className="border-t border-gray-200 p-4 space-y-3 max-h-64 overflow-y-auto">
+            <div className="border-t border-gray-200 p-5 space-y-3 max-h-64 overflow-y-auto animate-slide-down">
               {history.map((item) => (
-                <div key={item.id} className="flex items-start gap-3 text-sm bg-gray-50 p-3 rounded-xl">
+                <div key={item.id} className="flex items-start gap-3 text-sm bg-gray-50 p-4 rounded-xl transition-all duration-300 hover:bg-gray-100">
                   <div
-                    className={`w-3 h-3 rounded-full mt-1.5 ${
+                    className={`w-3 h-3 rounded-full mt-1.5 shadow-sm ${
                       item.changed_by_type === 'trainer' ? 'bg-blue-500' : 'bg-emerald-500'
                     }`}
                   />
@@ -764,82 +496,371 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
         </div>
       )}
 
-      <div className="space-y-4">
-        {days.map((day) => {
-          const colorIndex = (day.day_number - 1) % dayColors.length;
-          const color = dayColors[colorIndex];
+      {/* Workout Days Grid - Accordion Pattern */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {days.map((day, dayIndex) => {
+          const gradient = dayGradients[dayIndex % dayGradients.length];
           const exercises = dayExercises[day.id] || [];
           const Icon = getMuscleGroupIcon(day.focus);
           const completedCount = getCompletedCount(day.id);
+          const isExpanded = expandedDays.has(day.id);
+          const volume = calculateDayVolume(day.id);
+          const muscleGroups = getMuscleGroups(day.id);
+          const progressPercent = exercises.length > 0 ? (completedCount / exercises.length) * 100 : 0;
 
           return (
-            <div key={day.id} className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-gray-200 transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
-              <div className={`bg-gradient-to-br ${color.bg} p-6 text-white`}>
-                <div className="flex items-start justify-between">
+            <div
+              key={day.id}
+              className="bg-white rounded-3xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl animate-fade-in-up border border-gray-100"
+              style={{ animationDelay: `${dayIndex * 50}ms` }}
+            >
+              {/* Accordion Header - Always Visible */}
+              <div
+                onClick={() => toggleDay(day.id)}
+                className={`bg-gradient-to-br ${gradient} p-6 lg:p-7 text-white cursor-pointer transition-all duration-300 hover:shadow-lg`}
+              >
+                <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="bg-white/20 p-2.5 rounded-xl shadow-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="bg-white/20 p-3 rounded-xl shadow-lg backdrop-blur-sm">
                         <Icon className="w-6 h-6" />
                       </div>
-                      {completedCount > 0 && completedCount === exercises.length && (
-                        <span className="bg-white/20 text-white text-xs px-3 py-1.5 rounded-xl flex items-center gap-1 font-bold">
-                          <Check className="w-3 h-3" />
+                      {completedCount === exercises.length && exercises.length > 0 && (
+                        <span className="bg-white/20 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold backdrop-blur-sm animate-scale-in">
+                          <Check className="w-3.5 h-3.5" />
                           הושלם
                         </span>
                       )}
                     </div>
-                    <p className="text-sm opacity-80 font-medium">יום {day.day_number}</p>
-                    <h3 className="text-2xl font-bold">
+                    <p className="text-sm opacity-80 font-medium mb-1">יום {day.day_number}</p>
+                    <h3 className="text-2xl lg:text-3xl font-bold mb-2">
                       {day.day_name || `יום אימון ${day.day_number}`}
                     </h3>
                     {day.focus && (
-                      <p className="flex items-center gap-2 mt-2 text-sm opacity-90">
+                      <p className="flex items-center gap-2 text-sm opacity-90 font-medium">
                         <Target className="w-4 h-4" />
                         {day.focus}
                       </p>
                     )}
                   </div>
-                  <div className="text-left">
-                    <div className="bg-white/20 rounded-2xl p-4 text-center min-w-[70px] shadow-lg">
-                      <p className="text-3xl font-bold">{exercises.length}</p>
-                      <p className="text-xs opacity-80 font-medium">תרגילים</p>
-                    </div>
-                  </div>
+
+                  <button className="text-white/80 hover:text-white transition-all duration-300 hover:scale-110">
+                    {isExpanded ? (
+                      <ChevronUp className="w-7 h-7" />
+                    ) : (
+                      <ChevronDown className="w-7 h-7" />
+                    )}
+                  </button>
                 </div>
 
-                {completedCount > 0 && completedCount < exercises.length && (
-                  <div className="mt-4 pt-4 border-t border-white/20">
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="font-medium">התקדמות</span>
-                      <span className="font-bold">
-                        {completedCount}/{exercises.length}
-                      </span>
+                {/* Summary Stats - Pills */}
+                <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-white/20">
+                  <div className="bg-white/15 px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-1.5 backdrop-blur-sm shadow-sm">
+                    <Dumbbell className="w-3.5 h-3.5" />
+                    {exercises.length} תרגילים
+                  </div>
+
+                  {volume > 0 && (
+                    <div className="bg-white/15 px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-1.5 backdrop-blur-sm shadow-sm">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      ~{volume.toLocaleString()} ק״ג
                     </div>
-                    <div className="h-3 bg-white/20 rounded-full overflow-hidden shadow-inner">
+                  )}
+
+                  {completedCount > 0 && completedCount < exercises.length && (
+                    <div className="bg-white/15 px-3 py-1.5 rounded-full text-sm font-bold backdrop-blur-sm shadow-sm">
+                      {completedCount}/{exercises.length}
+                    </div>
+                  )}
+                </div>
+
+                {/* Muscle Group Tags */}
+                {muscleGroups.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {muscleGroups.map((group, idx) => (
+                      <span
+                        key={idx}
+                        className="bg-white/20 text-white text-xs px-3 py-1 rounded-full font-bold backdrop-blur-sm shadow-sm"
+                      >
+                        {group}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Progress Bar */}
+                {progressPercent > 0 && progressPercent < 100 && (
+                  <div className="mt-4">
+                    <div className="h-2 bg-white/20 rounded-full overflow-hidden shadow-inner backdrop-blur-sm">
                       <div
-                        className="h-full bg-white transition-all duration-500 ease-out rounded-full"
-                        style={{ width: `${(completedCount / exercises.length) * 100}%` }}
+                        className="h-full bg-white/90 transition-all duration-700 ease-out rounded-full shadow-sm"
+                        style={{ width: `${progressPercent}%` }}
                       />
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="p-4">
-                <button
-                  onClick={() => setSelectedDay(day)}
-                  className={`w-full py-4 px-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] ${color.light} ${color.text} border-2 ${color.border}`}
-                >
-                  {completedCount === exercises.length && exercises.length > 0 ? 'צפה באימון' : 'התחל אימון'}
-                </button>
-              </div>
+              {/* Accordion Content - Exercises */}
+              {isExpanded && (
+                <div className="p-5 lg:p-6 space-y-4 animate-slide-down bg-gradient-to-b from-gray-50 to-white">
+                  {day.notes && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-sm">
+                      <p className="text-sm font-bold text-amber-700 mb-1 flex items-center gap-2">
+                        <Info className="w-4 h-4" />
+                        הערות ליום זה
+                      </p>
+                      <p className="text-gray-700 text-sm leading-relaxed">{day.notes}</p>
+                    </div>
+                  )}
+
+                  {exercises.map((exercise, exIndex) => {
+                    const isCompleted = completedExercises.has(exercise.id);
+                    const isEditing = editingExercise === exercise.id;
+                    const exerciseName = exercise.exercise?.name || exercise.exercise_name || 'תרגיל';
+
+                    return (
+                      <div
+                        key={exercise.id}
+                        className={`bg-white rounded-2xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl border-2 ${
+                          isCompleted ? 'border-emerald-400 bg-emerald-50/30' : 'border-gray-100'
+                        }`}
+                        style={{ animationDelay: `${exIndex * 30}ms` }}
+                      >
+                        <div className="p-5">
+                          <div className="flex items-start gap-4">
+                            {/* Check Button */}
+                            <button
+                              onClick={() => toggleExerciseComplete(exercise.id)}
+                              className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg ${
+                                isCompleted
+                                  ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white scale-105'
+                                  : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                              }`}
+                            >
+                              {isCompleted ? (
+                                <Check className="w-6 h-6 animate-scale-in" />
+                              ) : (
+                                <span className="text-xl font-bold">{exIndex + 1}</span>
+                              )}
+                            </button>
+
+                            <div className="flex-1 min-w-0">
+                              {/* Exercise Name & Edit Button */}
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <h4 className={`text-lg font-bold ${isCompleted ? 'text-emerald-700' : 'text-gray-900'}`}>
+                                    {exerciseName}
+                                  </h4>
+                                  {exercise.exercise?.muscle_group?.name && (
+                                    <p className="text-sm text-gray-500 mt-0.5">{exercise.exercise.muscle_group.name}</p>
+                                  )}
+                                </div>
+                                {!isEditing && (
+                                  <button
+                                    onClick={() => startEditing(exercise)}
+                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300"
+                                  >
+                                    <Edit3 className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Pills - Sets, Reps, Rest */}
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                <div className="bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                  <Repeat className="w-3.5 h-3.5 text-emerald-600" />
+                                  <span className="text-sm font-bold text-emerald-700">{exercise.sets_count} סטים</span>
+                                </div>
+
+                                <div className="bg-cyan-50 border border-cyan-200 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                  <Target className="w-3.5 h-3.5 text-cyan-600" />
+                                  <span className="text-sm font-bold text-cyan-700">{exercise.reps_range} חזרות</span>
+                                </div>
+
+                                <div className="bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                  <Clock className="w-3.5 h-3.5 text-amber-600" />
+                                  <span className="text-sm font-bold text-amber-700">{formatRestTime(exercise.rest_seconds)}{exercise.rest_seconds >= 60 ? 'ד׳' : 'ש׳'}</span>
+                                </div>
+
+                                {exercise.failure && (
+                                  <div className="bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                    <Activity className="w-3.5 h-3.5 text-rose-600" />
+                                    <span className="text-sm font-bold text-rose-700">כשל</span>
+                                  </div>
+                                )}
+
+                                {exercise.target_rpe && (
+                                  <div className="bg-purple-50 border border-purple-200 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                    <Award className="w-3.5 h-3.5 text-purple-600" />
+                                    <span className="text-sm font-bold text-purple-700">RPE {exercise.target_rpe}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Mini Info - Equipment & Target Weight */}
+                              <div className="space-y-2">
+                                {exercise.equipment && (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <span className="text-gray-500 font-medium">ציוד:</span>
+                                    <div className="flex items-center gap-1.5 font-bold text-gray-700">
+                                      {exercise.equipment.emoji && <span className="text-base">{exercise.equipment.emoji}</span>}
+                                      {exercise.equipment.name}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {exercise.target_weight && (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <span className="text-gray-500 font-medium">משקל יעד (מאמן):</span>
+                                    <span className="font-bold text-teal-700">{exercise.target_weight} ק״ג</span>
+                                  </div>
+                                )}
+
+                                {exercise.trainee_target_weight && !isEditing && (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <span className="text-gray-500 font-medium">משקל יעד שלי:</span>
+                                    <span className="font-bold text-emerald-700">{exercise.trainee_target_weight} ק״ג</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Superset Info */}
+                              {exercise.set_type === 'superset' && exercise.superset_exercise && (
+                                <div className="mt-3 bg-blue-50 border border-blue-200 rounded-xl p-3 shadow-sm">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-xs font-bold text-blue-700 bg-blue-200 px-2 py-1 rounded-full">סופרסט</span>
+                                    <span className="font-bold text-blue-900 text-sm">{exercise.superset_exercise.name}</span>
+                                  </div>
+                                  {exercise.superset_weight && exercise.superset_reps && (
+                                    <div className="text-xs text-blue-700">
+                                      <span className="font-medium">משקל וחזרות:</span> <span className="font-bold">{exercise.superset_weight} ק״ג × {exercise.superset_reps}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Dropset Info */}
+                              {exercise.set_type === 'dropset' && (exercise.dropset_weight || exercise.dropset_reps) && (
+                                <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3 shadow-sm">
+                                  <span className="text-xs font-bold text-amber-700 bg-amber-200 px-2 py-1 rounded-full">דרופסט</span>
+                                  <div className="text-xs text-amber-700 mt-2">
+                                    <span className="font-medium">משקל וחזרות:</span> <span className="font-bold">{exercise.dropset_weight} ק״ג × {exercise.dropset_reps}</span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Trainer Notes - Info Icon */}
+                              {exercise.notes && (
+                                <div className="mt-3">
+                                  <button
+                                    onClick={() => setShowInfoTooltip(showInfoTooltip === exercise.id ? null : exercise.id)}
+                                    className="flex items-center gap-2 text-amber-600 hover:text-amber-700 transition-all duration-300 text-sm font-medium"
+                                  >
+                                    <Info className="w-4 h-4" />
+                                    <span>הערות מהמאמן</span>
+                                  </button>
+                                  {showInfoTooltip === exercise.id && (
+                                    <div className="mt-2 p-3 bg-amber-50 rounded-xl border border-amber-200 shadow-sm animate-fade-in">
+                                      <p className="text-sm text-amber-800 leading-relaxed">{exercise.notes}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Trainee Notes - Display */}
+                              {exercise.trainee_notes && !isEditing && (
+                                <div className="mt-3 p-3 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm">
+                                  <p className="text-xs font-bold text-emerald-600 mb-1">ההערות שלי</p>
+                                  <p className="text-sm text-emerald-800 leading-relaxed">{exercise.trainee_notes}</p>
+                                </div>
+                              )}
+
+                              {/* Edit Mode */}
+                              {isEditing && (
+                                <div className="mt-4 p-4 bg-blue-50 rounded-2xl border border-blue-200 space-y-4 shadow-md animate-fade-in">
+                                  <h5 className="font-bold text-blue-900">עריכה אישית</h5>
+
+                                  <div>
+                                    <label className="block text-sm font-bold text-blue-700 mb-2">
+                                      משקל יעד שלי (ק״ג)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={editData.trainee_target_weight || ''}
+                                      onChange={(e) =>
+                                        setEditData({ ...editData, trainee_target_weight: e.target.value ? Number(e.target.value) : null })
+                                      }
+                                      placeholder={exercise.target_weight ? `המאמן המליץ: ${exercise.target_weight}` : 'הזן משקל יעד'}
+                                      className="w-full px-4 py-3 border-2 border-blue-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-sm font-bold text-blue-700 mb-2">
+                                      הערות שלי
+                                    </label>
+                                    <textarea
+                                      value={editData.trainee_notes}
+                                      onChange={(e) => setEditData({ ...editData, trainee_notes: e.target.value })}
+                                      placeholder="הוסף הערות אישיות לתרגיל..."
+                                      rows={3}
+                                      className="w-full px-4 py-3 border-2 border-blue-300 rounded-xl focus:border-blue-500 focus:outline-none resize-none transition-all duration-300"
+                                    />
+                                  </div>
+
+                                  <div className="flex gap-3">
+                                    <button
+                                      onClick={() => saveExerciseChanges(exercise)}
+                                      disabled={saving}
+                                      className="flex-1 py-3 px-4 bg-gradient-to-br from-blue-500 to-cyan-600 text-white rounded-xl font-bold hover:from-blue-600 hover:to-cyan-700 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+                                    >
+                                      <Save className="w-5 h-5" />
+                                      {saving ? 'שומר...' : 'שמור'}
+                                    </button>
+                                    <button
+                                      onClick={cancelEditing}
+                                      className="py-3 px-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 flex items-center justify-center transition-all duration-300"
+                                    >
+                                      <X className="w-5 h-5" />
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Last Modified */}
+                              {exercise.trainee_modified_at && !isEditing && (
+                                <p className="text-xs text-gray-400 mt-2">
+                                  עודכן על ידך: {formatDate(exercise.trainee_modified_at)}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Completion Message */}
+                  {exercises.length > 0 && completedCount === exercises.length && (
+                    <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white text-center shadow-xl animate-scale-in">
+                      <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg backdrop-blur-sm">
+                        <Check className="w-8 h-8" />
+                      </div>
+                      <h4 className="text-xl font-bold">כל הכבוד!</h4>
+                      <p className="text-emerald-100 mt-1 text-sm">סיימת את כל התרגילים ליום זה</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
       </div>
 
+      {/* Empty State */}
       {days.length === 0 && (
-        <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-xl">
+        <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl shadow-xl animate-fade-in">
           <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <Calendar className="w-8 h-8 text-gray-400" />
           </div>
