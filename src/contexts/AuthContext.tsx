@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { setSecureSession, getSecureSession, removeSecureSession } from '../utils/secureSession';
 
 interface TraineeSession {
   trainee_id: string;
@@ -54,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             phone: session.user.user_metadata.phone || '',
           };
           setTraineeSession(traineeSession);
-          localStorage.setItem(TRAINEE_SESSION_KEY, JSON.stringify(traineeSession));
+          setSecureSession(TRAINEE_SESSION_KEY, traineeSession, { expiryHours: 24 });
         } else {
           setUserType('trainer');
         }
@@ -81,18 +82,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             phone: session.user.user_metadata.phone || '',
           };
           setTraineeSession(traineeSession);
-          localStorage.setItem(TRAINEE_SESSION_KEY, JSON.stringify(traineeSession));
+          setSecureSession(TRAINEE_SESSION_KEY, traineeSession, { expiryHours: 24 });
         } else {
           setUserType('trainer');
           setTraineeId(null);
           setTraineeSession(null);
-          localStorage.removeItem(TRAINEE_SESSION_KEY);
+          removeSecureSession(TRAINEE_SESSION_KEY);
         }
       } else {
         setUserType(null);
         setTraineeId(null);
         setTraineeSession(null);
-        localStorage.removeItem(TRAINEE_SESSION_KEY);
+        removeSecureSession(TRAINEE_SESSION_KEY);
       }
       setLoading(false);
     });
@@ -146,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           phone: data.trainee.phone,
         };
 
-        localStorage.setItem(TRAINEE_SESSION_KEY, JSON.stringify(newTraineeSession));
+        setSecureSession(TRAINEE_SESSION_KEY, newTraineeSession, { expiryHours: 24 });
         setTraineeSession(newTraineeSession);
       }
 
@@ -187,7 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
 
     // Clear trainee session data
-    localStorage.removeItem(TRAINEE_SESSION_KEY);
+    removeSecureSession(TRAINEE_SESSION_KEY);
     setTraineeSession(null);
     setTraineeId(null);
 
