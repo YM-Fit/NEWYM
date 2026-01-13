@@ -1765,6 +1765,11 @@
     background: linear-gradient(145deg, #09090b 0%, #18181b 50%, #0c1a14 100%);
   }
 
+  /* Light mode gradient background */
+  .light .bg-gradient-dark {
+    background: linear-gradient(145deg, #f8faf9 0%, #ffffff 40%, #ecf5f0 100%);
+  }
+
   @media (max-width: 767px) {
     .mobile-text-lg {
       font-size: 1.125rem;

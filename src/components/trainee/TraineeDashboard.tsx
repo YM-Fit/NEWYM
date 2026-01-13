@@ -327,7 +327,7 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
         <div className="flex justify-between">
           {weekDays.map((day, index) => (
             <div key={index} className="flex flex-col items-center">
-              <span className="text-xs text-zinc-500 mb-2 font-medium">
+              <span className="text-xs text-[var(--color-text-muted)] mb-2 font-medium">
                 {getHebrewDayName(day.date)}
               </span>
               <div
@@ -336,7 +336,7 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
                     ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-glow-sm'
                     : day.hasWorkout
                     ? 'bg-emerald-500/15 text-emerald-400'
-                    : 'bg-zinc-800/50 text-zinc-500 border border-zinc-700/30'
+                    : 'bg-[var(--color-bg-surface)] text-[var(--color-text-muted)] border border-[var(--color-border)]'
                 }`}
               >
                 {day.date.getDate()}

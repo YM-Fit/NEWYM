@@ -69,7 +69,7 @@ export default function TraineeApp() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-dark">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-dark transition-colors duration-300">
         <LoadingSpinner size="xl" text="טוען נתונים..." />
       </div>
     );
@@ -155,7 +155,7 @@ export default function TraineeApp() {
         </div>
 
         {showMoreMenu && (
-          <div className="absolute bottom-full mb-2 left-4 right-4 glass-card p-4 rounded-2xl animate-fade-in border border-zinc-700/50">
+          <div className="absolute bottom-full mb-2 left-4 right-4 glass-card p-4 rounded-2xl animate-fade-in border border-[var(--color-border)]">
             <div className="grid grid-cols-3 gap-3">
               <MoreMenuItem
                 icon={ClipboardList}
@@ -190,7 +190,7 @@ export default function TraineeApp() {
         <button
           onClick={() => setShowMoreMenu(!showMoreMenu)}
           className={`glass-card px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${
-            showMoreMenu ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' : 'text-zinc-400 border-zinc-700/50 hover:border-zinc-600'
+            showMoreMenu ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' : 'text-[var(--color-text-secondary)] border-[var(--color-border)] hover:border-emerald-500/30'
           }`}
         >
           עוד...
@@ -238,7 +238,7 @@ function TabButton({ icon: Icon, label, active, onClick }: TabButtonProps) {
       className={`relative flex flex-col items-center py-1.5 px-3 rounded-2xl transition-all ${
         active
           ? 'text-emerald-400'
-          : 'text-zinc-500 hover:text-zinc-300'
+          : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
       }`}
     >
       {active && (
@@ -264,7 +264,7 @@ function MoreMenuItem({ icon: Icon, label, active, onClick }: MoreMenuItemProps)
       className={`flex flex-col items-center p-4 rounded-xl transition-all ${
         active
           ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-          : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border border-transparent'
+          : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-accent-bg-hover)] hover:text-[var(--color-text-primary)] border border-transparent'
       }`}
     >
       <Icon className="w-5 h-5 mb-1.5" />
