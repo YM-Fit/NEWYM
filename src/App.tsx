@@ -18,10 +18,13 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600">טוען...</p>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-100 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center">
+        <div className="text-center animate-fade-in">
+          <div className="relative inline-block">
+            <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl animate-pulse-soft" />
+            <div className="relative inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-500/30 border-t-emerald-600"></div>
+          </div>
+          <p className="mt-6 text-gray-600 dark:text-zinc-400 font-medium animate-fade-in-up" style={{ animationDelay: '0.2s' }}>טוען...</p>
         </div>
       </div>
     );
@@ -40,8 +43,8 @@ function AppContent() {
       <ComponentErrorBoundary componentName="אפליקציית מתאמן">
         <Suspense
           fallback={
-            <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-100 flex items-center justify-center">
-              <LoadingSpinner size="lg" />
+            <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-100 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center">
+              <LoadingSpinner size="lg" variant="ring" text="טוען אפליקציה..." />
             </div>
           }
         >

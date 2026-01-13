@@ -2,10 +2,79 @@ import { useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { logger } from '../utils/logger';
 
+// Types for the data returned from useTraineeData
+export interface MeasurementData {
+  id: string;
+  measurement_date: string;
+  weight: number | null;
+  body_fat_percentage: number | null;
+  muscle_mass: number | null;
+  water_percentage: number | null;
+  bmi: number | null;
+  bmr: number | null;
+  metabolic_age: number | null;
+  source: 'tanita' | 'manual';
+  notes: string | null;
+  pair_member: 'member_1' | 'member_2' | null;
+  chest_back: number | null;
+  belly: number | null;
+  glutes: number | null;
+  thigh: number | null;
+  right_arm: number | null;
+  left_arm: number | null;
+}
+
+export interface SelfWeightData {
+  id: string;
+  weight_date: string;
+  weight: number;
+  is_seen_by_trainer: boolean;
+  notes: string | null;
+}
+
+export interface WorkoutData {
+  id: string;
+  date: string;
+  exercises: Array<{
+    name: string;
+    sets: number;
+  }>;
+  totalVolume: number;
+  duration: number;
+  isSelfRecorded: boolean;
+}
+
+interface WorkoutTraineeJoin {
+  workouts: {
+    id: string;
+    workout_date: string;
+    is_completed: boolean;
+    is_self_recorded: boolean;
+    created_at: string;
+    workout_exercises: Array<{
+      id: string;
+      exercises: {
+        name: string;
+      } | null;
+      exercise_sets: Array<{
+        id: string;
+        weight: number | null;
+        reps: number | null;
+        superset_weight: number | null;
+        superset_reps: number | null;
+        dropset_weight: number | null;
+        dropset_reps: number | null;
+        superset_dropset_weight: number | null;
+        superset_dropset_reps: number | null;
+      }>;
+    }>;
+  };
+}
+
 export interface TraineeData {
-  measurements: any[];
-  workouts: any[];
-  selfWeights: any[];
+  measurements: MeasurementData[];
+  workouts: WorkoutData[];
+  selfWeights: SelfWeightData[];
 }
 
 export function useTraineeData() {
@@ -74,14 +143,14 @@ export function useTraineeData() {
       }
 
       // Format workouts data
-      const formattedWorkouts = workoutsResult.data
-        ?.filter((wt: any) => wt.workouts)
-        .map((wt: any) => {
+      const formattedWorkouts: WorkoutData[] = (workoutsResult.data as WorkoutTraineeJoin[] | null)
+        ?.filter((wt: WorkoutTraineeJoin) => wt.workouts)
+        .map((wt: WorkoutTraineeJoin) => {
           const w = wt.workouts;
           const exercises = w.workout_exercises || [];
-          const totalVolume = exercises.reduce((sum: number, ex: any) => {
+          const totalVolume = exercises.reduce((sum: number, ex) => {
             const sets = ex.exercise_sets || [];
-            return sum + sets.reduce((setSum: number, set: any) => {
+            return sum + sets.reduce((setSum: number, set) => {
               let setVolume = (set.weight || 0) * (set.reps || 0);
               if (set.superset_weight && set.superset_reps) {
                 setVolume += set.superset_weight * set.superset_reps;
@@ -99,7 +168,7 @@ export function useTraineeData() {
           return {
             id: w.id,
             date: w.workout_date,
-            exercises: exercises.map((ex: any) => ({
+            exercises: exercises.map((ex) => ({
               name: ex.exercises?.name || 'תרגיל',
               sets: ex.exercise_sets?.length || 0
             })),
@@ -108,12 +177,12 @@ export function useTraineeData() {
             isSelfRecorded: w.is_self_recorded || false
           };
         })
-        .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()) || [];
+        .sort((a: WorkoutData, b: WorkoutData) => new Date(b.date).getTime() - new Date(a.date).getTime()) || [];
 
       return {
-        measurements: measurementsResult.data || [],
+        measurements: (measurementsResult.data as MeasurementData[]) || [],
         workouts: formattedWorkouts,
-        selfWeights: selfWeightsResult.data || [],
+        selfWeights: (selfWeightsResult.data as SelfWeightData[]) || [],
       };
     } catch (error) {
       logger.error('Error loading trainee data:', error, 'useTraineeData');

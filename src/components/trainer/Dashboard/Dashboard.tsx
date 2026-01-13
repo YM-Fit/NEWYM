@@ -10,10 +10,12 @@ import { ScaleReading } from '../../../hooks/useScaleListener';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
+import { logger } from '../../../utils/logger';
+import { Trainee } from '../../../types';
 
 interface DashboardProps {
   onViewChange: (view: string) => void;
-  trainees: any[];
+  trainees: Trainee[];
   trainerName?: string;
   onToggleSidebar?: () => void;
   onToggleHeader?: () => void;
@@ -87,7 +89,7 @@ export default function Dashboard({
 
       setRecentMeasurements(measurementsCount || 0);
     } catch (error) {
-      console.error('Error loading stats:', error);
+      logger.error('Error loading stats:', error, 'Dashboard');
     }
   };
 

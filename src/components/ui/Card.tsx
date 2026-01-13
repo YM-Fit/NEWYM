@@ -1,14 +1,16 @@
 import { HTMLAttributes, forwardRef } from 'react';
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'glass' | 'bordered';
+  variant?: 'default' | 'glass' | 'bordered' | 'premium';
   padding?: 'none' | 'sm' | 'md' | 'lg';
+  hover?: boolean;
 }
 
 const variantStyles = {
   default: 'bg-zinc-900 border border-zinc-800',
-  glass: 'bg-zinc-900/80 backdrop-blur-sm border border-zinc-800/50',
+  glass: 'glass-card',
   bordered: 'bg-transparent border-2 border-zinc-700',
+  premium: 'premium-card',
 };
 
 const paddingStyles = {
@@ -19,7 +21,9 @@ const paddingStyles = {
 };
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ variant = 'default', padding = 'md', className = '', children, ...props }, ref) => {
+  ({ variant = 'default', padding = 'md', hover = false, className = '', children, ...props }, ref) => {
+    const hoverClass = hover && variant !== 'premium' ? 'transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:border-zinc-700' : '';
+    
     return (
       <div
         ref={ref}
@@ -27,6 +31,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           rounded-2xl shadow-xl
           ${variantStyles[variant]}
           ${paddingStyles[padding]}
+          ${hoverClass}
           ${className}
         `}
         {...props}

@@ -2,8 +2,6 @@ import { Plus, TrendingDown, TrendingUp, Scale, BarChart3, Trash2, Edit, User, A
 import { useState, useMemo, useEffect } from 'react';
 import { Trainee, BodyMeasurement } from '../../../types';
 import MeasurementsChart from './MeasurementsChart';
-import WeightTrendAnalysis from './WeightTrendAnalysis';
-import WeightGoalsManager from './WeightGoalsManager';
 import { supabase } from '../../../lib/supabase';
 
 interface MeasurementsViewProps {
@@ -19,9 +17,6 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
   const [selectedMetric, setSelectedMetric] = useState<'weight' | 'bodyFat' | 'muscleMass' | 'waterPercentage' | 'metabolicAge'>('weight');
   const [selectedMember, setSelectedMember] = useState<'member_1' | 'member_2' | 'all'>('all');
   const [viewMode, setViewMode] = useState<'list' | 'table'>('list');
-  const [showAnalytics, setShowAnalytics] = useState(false);
-  const [showGoals, setShowGoals] = useState(false);
-  const [currentWeight, setCurrentWeight] = useState<number | undefined>();
 
   const filteredMeasurements = useMemo(() => {
     if (!trainee.isPair) {
@@ -81,11 +76,6 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
     red: { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30' },
   };
 
-  useEffect(() => {
-    if (latestMeasurement?.weight) {
-      setCurrentWeight(latestMeasurement.weight);
-    }
-  }, [latestMeasurement]);
 
   const getChangeIndicator = (current: number, previous: number | undefined, isReversed: boolean = false) => {
     if (!previous) return null;
@@ -174,28 +164,6 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowAnalytics(!showAnalytics)}
-              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
-                showAnalytics
-                  ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                  : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
-              }`}
-            >
-              <BarChart3 className="h-4 w-4" />
-              אנליטיקה
-            </button>
-            <button
-              onClick={() => setShowGoals(!showGoals)}
-              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
-                showGoals
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
-              }`}
-            >
-              <Target className="h-4 w-4" />
-              יעדים
-            </button>
-            <button
               onClick={onNewMeasurement}
               className="btn-primary px-6 py-3 rounded-xl flex items-center gap-2"
             >
@@ -205,20 +173,6 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
           </div>
         </div>
       </div>
-
-      {/* Analytics and Goals Sections */}
-      {showAnalytics && (
-        <WeightTrendAnalysis traineeId={trainee.id} traineeName={trainee.name} />
-      )}
-
-      {showGoals && (
-        <WeightGoalsManager
-          traineeId={trainee.id}
-          traineeName={trainee.name}
-          currentWeight={currentWeight}
-          onGoalUpdated={() => {}}
-        />
-      )}
 
       {/* Statistics Summary */}
       {statistics && (

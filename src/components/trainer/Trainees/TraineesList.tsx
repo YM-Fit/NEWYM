@@ -5,10 +5,11 @@ import { usePagination } from '../../../hooks/usePagination';
 import { Pagination, SkeletonTraineeCard } from '../../ui';
 import { EmptyState } from '../../common/EmptyState';
 import { useDebounce } from '../../../hooks/useDebounce';
+import { Trainee } from '../../../types';
 
 interface TraineesListProps {
-  trainees: any[];
-  onTraineeClick: (trainee: any) => void;
+  trainees: Trainee[];
+  onTraineeClick: (trainee: Trainee) => void;
   onAddTrainee: () => void;
   unseenWeightsCounts?: Map<string, number>;
 }

@@ -1,12 +1,10 @@
 import { ArrowRight, CreditCard as Edit, Calendar, Scale, BarChart3, User, Phone, Mail, Trash2, TrendingUp, ClipboardList, UtensilsCrossed, Key, Home, CheckCircle, Brain, BookOpen, Calculator, Sparkles, Users, Activity, History, Target, FileText, CalendarDays, Bell, TrendingDown } from 'lucide-react';
 import { Trainee, BodyMeasurement, Workout } from '../../../types';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import TDEECalculator from '../Tools/TDEECalculator';
 import TraineeTimeline from './TraineeTimeline';
 import TraineeGoals from './TraineeGoals';
 import TraineeNotes from './TraineeNotes';
-import WeightTrendAnalysis from '../Measurements/WeightTrendAnalysis';
-import WeightGoalsManager from '../Measurements/WeightGoalsManager';
 
 interface SelfWeight {
   id: string;
@@ -72,8 +70,6 @@ export default function TraineeProfile({
   const [showTimeline, setShowTimeline] = useState(false);
   const [showGoals, setShowGoals] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
-  const [showWeightTrend, setShowWeightTrend] = useState(false);
-  const [showWeightGoals, setShowWeightGoals] = useState(false);
 
   const latestMeasurement = measurements[0];
   const previousMeasurement = measurements[1];
@@ -87,7 +83,7 @@ export default function TraineeProfile({
   const recentWorkouts = workouts.slice(0, 5);
   const recentMeasurements = measurements.slice(0, 5);
 
-  const tabs: { id: TabType; label: string; icon: any }[] = [
+  const tabs: { id: TabType; label: string; icon: React.ComponentType<{ className?: string; size?: number }> }[] = [
     { id: 'overview', label: 'סקירה', icon: Sparkles },
     { id: 'workouts', label: 'אימונים', icon: Calendar },
     { id: 'measurements', label: 'מדידות', icon: Scale },
@@ -469,26 +465,6 @@ export default function TraineeProfile({
               <FileText className="h-5 w-5" />
             </div>
             <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">הערות</span>
-          </button>
-
-          <button
-            onClick={() => setShowWeightTrend(true)}
-            className="action-btn group"
-          >
-            <div className="p-3 rounded-xl bg-cyan-500/15 text-cyan-400 mb-2 group-hover:bg-cyan-500/25 transition-all">
-              <TrendingDown className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">ניתוח מגמות</span>
-          </button>
-
-          <button
-            onClick={() => setShowWeightGoals(true)}
-            className="action-btn group"
-          >
-            <div className="p-3 rounded-xl bg-emerald-500/15 text-emerald-400 mb-2 group-hover:bg-emerald-500/25 transition-all">
-              <Target className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">יעדי משקל</span>
           </button>
             </div>
           </div>
@@ -973,26 +949,6 @@ export default function TraineeProfile({
               <h4 className="font-semibold text-white mb-1">הערות</h4>
               <p className="text-sm text-zinc-400">הערות מאמן</p>
             </button>
-            <button
-              onClick={() => setShowWeightTrend(true)}
-              className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-cyan-500/50 transition-all text-right"
-            >
-              <div className="p-3 rounded-xl bg-cyan-500/15 text-cyan-400 mb-3 w-fit">
-                <TrendingDown className="h-5 w-5" />
-              </div>
-              <h4 className="font-semibold text-white mb-1">ניתוח מגמות</h4>
-              <p className="text-sm text-zinc-400">ניתוח מגמות משקל</p>
-            </button>
-            <button
-              onClick={() => setShowWeightGoals(true)}
-              className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-emerald-500/50 transition-all text-right"
-            >
-              <div className="p-3 rounded-xl bg-emerald-500/15 text-emerald-400 mb-3 w-fit">
-                <Target className="h-5 w-5" />
-              </div>
-              <h4 className="font-semibold text-white mb-1">יעדי משקל</h4>
-              <p className="text-sm text-zinc-400">הגדרת יעדי משקל</p>
-            </button>
           </div>
         </div>
       )}
@@ -1029,41 +985,6 @@ export default function TraineeProfile({
           traineeName={trainee.name}
           onClose={() => setShowNotes(false)}
         />
-      )}
-
-      {showWeightTrend && (
-        <div className="premium-card-static">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">ניתוח מגמות משקל</h3>
-            <button
-              onClick={() => setShowWeightTrend(false)}
-              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all"
-            >
-              <ArrowRight className="h-5 w-5" />
-            </button>
-          </div>
-          <WeightTrendAnalysis traineeId={trainee.id} traineeName={trainee.name} />
-        </div>
-      )}
-
-      {showWeightGoals && (
-        <div className="premium-card-static">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">יעדי משקל</h3>
-            <button
-              onClick={() => setShowWeightGoals(false)}
-              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all"
-            >
-              <ArrowRight className="h-5 w-5" />
-            </button>
-          </div>
-          <WeightGoalsManager
-            traineeId={trainee.id}
-            traineeName={trainee.name}
-            currentWeight={latestMeasurement?.weight}
-            onGoalUpdated={() => {}}
-          />
-        </div>
       )}
 
     </div>

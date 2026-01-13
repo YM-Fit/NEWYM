@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { handleApiError } from './config';
+import { logger } from '../utils/logger';
 
 export interface WeeklyTask {
   id: string;
@@ -65,7 +66,7 @@ export const tasksApi = {
       if (error) {
         // If table doesn't exist, return empty array instead of throwing
         if (isTableNotFoundError(error)) {
-          console.warn('[tasksApi] weekly_tasks table not found. Migration may not have been run.');
+          logger.warn('weekly_tasks table not found. Migration may not have been run.', error, 'tasksApi');
           return [];
         }
         throw error;
@@ -74,7 +75,7 @@ export const tasksApi = {
     } catch (error) {
       // Check again in catch block in case error was thrown
       if (isTableNotFoundError(error)) {
-        console.warn('[tasksApi] weekly_tasks table not found. Migration may not have been run.');
+        logger.warn('weekly_tasks table not found. Migration may not have been run.', error, 'tasksApi');
         return [];
       }
       throw handleApiError(error, 'שגיאה בטעינת משימות');

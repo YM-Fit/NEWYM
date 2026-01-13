@@ -1,4 +1,4 @@
-import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3, Search } from 'lucide-react';
+import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3, Search, LucideIcon } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { getFromStorage, setToStorage, STORAGE_KEYS } from '../../utils/storage';
 
@@ -11,7 +11,7 @@ interface SidebarProps {
 interface MenuItem {
   id: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   description: string;
   category?: string;
   badge?: string | number;
@@ -130,17 +130,20 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                 <button
                   key={id}
                   onClick={() => handleItemClick(id)}
-                  className="w-full flex items-center justify-center p-3 rounded-xl transition-all duration-200 group relative"
+                  className="w-full flex items-center justify-center p-3 rounded-xl transition-all duration-300 group relative hover:bg-zinc-800/30 active:scale-95"
                   title={label}
                 >
                   {isActive && (
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-l-full" />
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-l-full shadow-glow-sm" />
                   )}
-                  <Icon className={`h-5 w-5 transition-all ${
+                  <Icon className={`h-5 w-5 transition-all duration-300 ${
                     isActive 
-                      ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' 
-                      : 'text-zinc-400 group-hover:text-white'
+                      ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)] scale-110' 
+                      : 'text-zinc-400 group-hover:text-white group-hover:scale-110'
                   }`} />
+                  {isActive && (
+                    <div className="absolute inset-0 bg-emerald-500/10 rounded-xl blur-sm" />
+                  )}
                 </button>
               );
             })
@@ -177,37 +180,45 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                           <button
                             key={id}
                             onClick={() => handleItemClick(id)}
-                            className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-200 group relative ${
+                            className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden active:scale-[0.98] ${
                               isActive
-                                ? 'bg-gradient-to-r from-emerald-500/15 to-emerald-500/5 text-emerald-400'
+                                ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-500/10 text-emerald-400 shadow-lg shadow-emerald-500/10'
                                 : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
                             }`}
                           >
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                            
                             {isActive && (
-                              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-l-full" />
+                              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-l-full shadow-glow-sm" />
                             )}
 
-                            <div className="relative ml-3">
-                              <Icon className={`h-5 w-5 transition-all ${
-                                isActive ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' : ''
+                            <div className="relative ml-3 z-10">
+                              <Icon className={`h-5 w-5 transition-all duration-300 ${
+                                isActive 
+                                  ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)] scale-110' 
+                                  : 'group-hover:scale-110'
                               }`} />
                               {isActive && (
-                                <div className="absolute inset-0 bg-emerald-400/20 blur-xl rounded-full" />
+                                <div className="absolute inset-0 bg-emerald-400/30 blur-xl rounded-full animate-pulse-soft" />
                               )}
                             </div>
 
-                            <div className="flex-1 text-right mr-3">
+                            <div className="flex-1 text-right mr-3 z-10">
                               <div className="flex items-center justify-end gap-2">
-                                <span className={`block text-sm font-medium ${isActive ? 'text-white' : ''}`}>
+                                <span className={`block text-sm font-semibold transition-colors ${
+                                  isActive ? 'text-white' : 'group-hover:text-white'
+                                }`}>
                                   {label}
                                 </span>
                                 {badge && (
-                                  <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-500/20 text-emerald-400 rounded-full">
+                                  <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-500/20 text-emerald-400 rounded-full animate-scale-in shadow-sm">
                                     {badge}
                                   </span>
                                 )}
                               </div>
-                              <span className="block text-xs text-zinc-600 mt-0.5">
+                              <span className={`block text-xs mt-0.5 transition-colors ${
+                                isActive ? 'text-zinc-500' : 'text-zinc-600 group-hover:text-zinc-500'
+                              }`}>
                                 {description}
                               </span>
                             </div>

@@ -122,15 +122,7 @@ const muscleGroupIcons: Record<string, typeof Dumbbell> = {
   'ישבן': Flame,
 };
 
-const muscleGroupColors: Record<string, string> = {
-  'חזה': 'bg-rose-500/10 text-rose-700 border-rose-200',
-  'גב': 'bg-cyan-500/10 text-cyan-700 border-cyan-200',
-  'כתפיים': 'bg-amber-500/10 text-amber-700 border-amber-200',
-  'רגליים': 'bg-orange-500/10 text-orange-700 border-orange-200',
-  'זרועות': 'bg-blue-500/10 text-blue-700 border-blue-200',
-  'בטן': 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
-  'ישבן': 'bg-purple-500/10 text-purple-700 border-purple-200',
-};
+// Removed unused muscleGroupColors - colors are now handled by muscleGroupIcons
 
 const dayGradients = [
   'from-emerald-500 to-teal-600',
@@ -206,62 +198,88 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   };
 
   const loadPlanDays = async (planId: string) => {
-    const { data: daysData } = await supabase
-      .from('workout_plan_days')
-      .select('*')
-      .eq('plan_id', planId)
-      .order('order_index', { ascending: true });
+    try {
+      const { data: daysData, error: daysError } = await supabase
+        .from('workout_plan_days')
+        .select('*')
+        .eq('plan_id', planId)
+        .order('order_index', { ascending: true });
 
-    if (daysData) {
-      setDays(daysData);
-
-      const exercisesMap: Record<string, DayExercise[]> = {};
-      for (const day of daysData) {
-        const { data: exercisesData } = await supabase
-          .from('workout_plan_day_exercises')
-          .select(`
-            *,
-            exercise:exercise_id(
-              id,
-              name,
-              muscle_group_id,
-              instructions,
-              muscle_group:muscle_groups(name)
-            ),
-            equipment:equipment_id(
-              id,
-              name,
-              emoji
-            ),
-            superset_exercise:superset_exercise_id(
-              id,
-              name
-            ),
-            superset_equipment:superset_equipment_id(
-              id,
-              name,
-              emoji
-            )
-          `)
-          .eq('day_id', day.id)
-          .order('order_index', { ascending: true });
-
-        exercisesMap[day.id] = exercisesData || [];
+      if (daysError) {
+        logger.error('Error loading plan days:', daysError, 'MyWorkoutPlan');
+        toast.error('שגיאה בטעינת ימי האימון');
+        return;
       }
-      setDayExercises(exercisesMap);
+
+      if (daysData) {
+        setDays(daysData as WorkoutDay[]);
+
+        const exercisesMap: Record<string, DayExercise[]> = {};
+        for (const day of daysData) {
+          const { data: exercisesData, error: exercisesError } = await supabase
+            .from('workout_plan_day_exercises')
+            .select(`
+              *,
+              exercise:exercise_id(
+                id,
+                name,
+                muscle_group_id,
+                instructions,
+                muscle_group:muscle_groups(name)
+              ),
+              equipment:equipment_id(
+                id,
+                name,
+                emoji
+              ),
+              superset_exercise:superset_exercise_id(
+                id,
+                name
+              ),
+              superset_equipment:superset_equipment_id(
+                id,
+                name,
+                emoji
+              )
+            `)
+            .eq('day_id', (day as WorkoutDay).id)
+            .order('order_index', { ascending: true });
+
+          if (exercisesError) {
+            logger.error('Error loading exercises for day:', exercisesError, 'MyWorkoutPlan');
+            exercisesMap[(day as WorkoutDay).id] = [];
+          } else {
+            exercisesMap[(day as WorkoutDay).id] = (exercisesData || []) as DayExercise[];
+          }
+        }
+        setDayExercises(exercisesMap);
+      }
+    } catch (error) {
+      logger.error('Unexpected error loading plan days:', error, 'MyWorkoutPlan');
+      toast.error('שגיאה בטעינת התוכנית');
     }
   };
 
   const loadHistory = async (planId: string) => {
-    const { data } = await supabase
-      .from('workout_plan_history')
-      .select('*')
-      .eq('plan_id', planId)
-      .order('created_at', { ascending: false })
-      .limit(20);
+    try {
+      // @ts-ignore - Supabase types don't include workout_plan_history table
+      const { data, error } = await supabase
+        .from('workout_plan_history')
+        .select('*')
+        .eq('plan_id', planId)
+        .order('created_at', { ascending: false })
+        .limit(20);
 
-    if (data) {
-      setHistory(data);
+      if (error) {
+        logger.error('Error loading plan history:', error, 'MyWorkoutPlan');
+        return;
+      }
+
+      if (data) {
+        setHistory(data as PlanHistory[]);
+      }
+    } catch (error) {
+      logger.error('Unexpected error loading plan history:', error, 'MyWorkoutPlan');
     }
   };
 
@@ -296,6 +314,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
     const { error } = await supabase
       .from('workout_plan_day_exercises')
+      // @ts-ignore - Supabase types don't include workout_plan_day_exercises table
       .update({
         trainee_notes: editData.trainee_notes || null,
         trainee_target_weight: editData.trainee_target_weight,
@@ -309,6 +328,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     } else {
       const { data: userData } = await supabase.auth.getUser();
       if (userData.user) {
+        // @ts-ignore - Supabase types don't include workout_plan_history table
         await supabase.from('workout_plan_history').insert({
           plan_id: plan.id,
           changed_by_user_id: userData.user.id,
@@ -328,6 +348,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
       await supabase
         .from('trainee_workout_plans')
+        // @ts-ignore - Supabase types don't include trainee_workout_plans table
         .update({
           updated_at: new Date().toISOString(),
           last_modified_by: 'trainee',
@@ -692,26 +713,12 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                             </button>
 
                             <div className="flex-1 min-w-0">
-                              {/* Exercise Name & Edit Button */}
+                              {/* Exercise Name & Action Buttons */}
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <h4 className={`text-base md:text-lg font-bold leading-tight ${isCompleted ? 'text-emerald-400' : 'text-[var(--color-text-primary)]'}`}>
-                                      {exerciseName}
-                                    </h4>
-                                    {exercise.exercise?.instructions && (
-                                      <button
-                                        onClick={() => setInstructionsExercise({
-                                          name: exerciseName,
-                                          instructions: exercise.exercise?.instructions
-                                        })}
-                                        className="p-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-emerald-500/30"
-                                        title="הצג הוראות ביצוע"
-                                      >
-                                        <BookOpen className="w-4 h-4" />
-                                      </button>
-                                    )}
-                                  </div>
+                                  <h4 className={`text-base md:text-lg font-bold leading-tight ${isCompleted ? 'text-emerald-400' : 'text-[var(--color-text-primary)]'}`}>
+                                    {exerciseName}
+                                  </h4>
                                   {exercise.exercise?.muscle_group?.name && (
                                     <p className="text-xs md:text-sm text-[var(--color-text-muted)] mt-1 font-medium">{exercise.exercise.muscle_group.name}</p>
                                   )}
@@ -724,17 +731,20 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                                           name: exerciseName,
                                           instructions: exercise.exercise?.instructions
                                         })}
-                                        className="p-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-emerald-500/30"
+                                        className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-cyan-500/30 group"
                                         title="הצג הוראות ביצוע"
+                                        aria-label="הצג הוראות ביצוע"
                                       >
-                                        <BookOpen className="w-4 h-4" />
+                                        <BookOpen className="w-4 h-4 group-hover:scale-110 transition-transform" />
                                       </button>
                                     )}
                                     <button
                                       onClick={() => startEditing(exercise)}
-                                      className="p-2 text-[var(--color-text-muted)] hover:text-cyan-400 hover:bg-cyan-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-cyan-500/30"
+                                      className="p-2 text-[var(--color-text-muted)] hover:text-cyan-400 hover:bg-cyan-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-cyan-500/30 group"
+                                      title="ערוך תרגיל"
+                                      aria-label="ערוך תרגיל"
                                     >
-                                      <Edit3 className="w-4 h-4" />
+                                      <Edit3 className="w-4 h-4 group-hover:scale-110 transition-transform" />
                                     </button>
                                   </div>
                                 )}
