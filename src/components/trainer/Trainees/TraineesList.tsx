@@ -1,6 +1,8 @@
 import { Plus, Users, Search, Sparkles } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import TraineeCard from './TraineeCard';
+import { usePagination } from '../../../hooks/usePagination';
+import { Pagination } from '../../ui';
 
 interface TraineesListProps {
   trainees: any[];
@@ -39,6 +41,20 @@ export default function TraineesList({ trainees, onTraineeClick, onAddTrainee, u
     { value: 'inactive', label: 'לא פעילים', color: 'red' },
     { value: 'new', label: 'חדשים', color: 'cyan' },
   ];
+
+  const {
+    paginatedData,
+    currentPage,
+    totalPages,
+    totalItems,
+    startIndex,
+    endIndex,
+    hasNextPage,
+    hasPrevPage,
+    nextPage,
+    prevPage,
+    goToPage,
+  } = usePagination(filteredTrainees, { initialPageSize: 12 });
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -109,21 +125,39 @@ export default function TraineesList({ trainees, onTraineeClick, onAddTrainee, u
       </div>
 
       {filteredTrainees.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredTrainees.map((trainee, index) => (
-            <div
-              key={trainee.id}
-              className="animate-fade-in"
-              style={{ animationDelay: `${index * 50}ms` }}
-            >
-              <TraineeCard
-                trainee={trainee}
-                onClick={() => onTraineeClick(trainee)}
-                unseenWeightsCount={unseenWeightsCounts?.get(trainee.id) || 0}
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {paginatedData.map((trainee, index) => (
+              <div
+                key={trainee.id}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <TraineeCard
+                  trainee={trainee}
+                  onClick={() => onTraineeClick(trainee)}
+                  unseenWeightsCount={unseenWeightsCounts?.get(trainee.id) || 0}
+                />
+              </div>
+            ))}
+          </div>
+          {totalPages > 1 && (
+            <div className="premium-card-static">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                hasNextPage={hasNextPage}
+                hasPrevPage={hasPrevPage}
+                onNextPage={nextPage}
+                onPrevPage={prevPage}
+                onGoToPage={goToPage}
               />
             </div>
-          ))}
-        </div>
+          )}
+        </>
       ) : trainees.length === 0 ? (
         <div className="premium-card-static p-12 text-center">
           <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 flex items-center justify-center">

@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import ComponentErrorBoundary from './components/common/ComponentErrorBoundary';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import TrainerApp from './components/trainer/TrainerApp';
@@ -32,10 +33,18 @@ function AppContent() {
   }
 
   if (userType === 'trainee') {
-    return <TraineeApp />;
+    return (
+      <ComponentErrorBoundary componentName="אפליקציית מתאמן">
+        <TraineeApp />
+      </ComponentErrorBoundary>
+    );
   }
 
-  return <TrainerApp />;
+  return (
+    <ComponentErrorBoundary componentName="אפליקציית מאמן">
+      <TrainerApp />
+    </ComponentErrorBoundary>
+  );
 }
 
 export default function App() {
