@@ -80,7 +80,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
         // Get measurements in period
         const { data: measurements } = await supabase
           .from('measurements')
-          .select('weight_kg, measurement_date')
+          .select('weight, measurement_date')
           .eq('trainee_id', trainee.id)
           .gte('measurement_date', startDate.toISOString())
           .lte('measurement_date', endDate.toISOString())
@@ -98,7 +98,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
         // Get weights before period for start weight
         const { data: beforeMeasurements } = await supabase
           .from('measurements')
-          .select('weight_kg, measurement_date')
+          .select('weight, measurement_date')
           .eq('trainee_id', trainee.id)
           .lt('measurement_date', startDate.toISOString())
           .order('measurement_date', { ascending: false })
@@ -113,12 +113,12 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
           .limit(1);
 
         const allWeights = [
-          ...(measurements || []).map(m => ({ weight: m.weight_kg, date: m.measurement_date })),
+          ...(measurements || []).map(m => ({ weight: m.weight, date: m.measurement_date })),
           ...(selfWeights || []).map(w => ({ weight: w.weight_kg, date: w.weight_date }))
         ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         const beforeWeights = [
-          ...(beforeMeasurements || []).map(m => ({ weight: m.weight_kg, date: m.measurement_date })),
+          ...(beforeMeasurements || []).map(m => ({ weight: m.weight, date: m.measurement_date })),
           ...(beforeSelfWeights || []).map(w => ({ weight: w.weight_kg, date: w.weight_date }))
         ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 

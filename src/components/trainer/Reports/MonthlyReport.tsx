@@ -54,16 +54,18 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
     const traineeStats: TopTrainee[] = [];
 
     for (const trainee of (trainees || [])) {
-      const { data: workouts } = await supabase
-        .from('workouts')
-        .select('id')
-        .eq('workout_trainees.trainee_id', trainee.id)
-        .gte('workout_date', startOfMonth.toISOString())
-        .lte('workout_date', endOfMonth.toISOString());
+      const { data: workoutTrainees } = await supabase
+        .from('workout_trainees')
+        .select('workout_id, workouts!inner(id, workout_date)')
+        .eq('trainee_id', trainee.id)
+        .gte('workouts.workout_date', startOfMonth.toISOString())
+        .lte('workouts.workout_date', endOfMonth.toISOString());
+      
+      const workouts = workoutTrainees?.map((wt: any) => wt.workouts).filter(Boolean) || [];
 
       const { data: measurements } = await supabase
         .from('measurements')
-        .select('weight_kg, measurement_date')
+        .select('weight, measurement_date')
         .eq('trainee_id', trainee.id)
         .gte('measurement_date', startOfMonth.toISOString())
         .lte('measurement_date', endOfMonth.toISOString())
@@ -78,8 +80,8 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
 
       let weightChange: number | null = null;
       if (measurements && measurements.length >= 2) {
-        const firstWeight = measurements[0].weight_kg;
-        const lastWeight = measurements[measurements.length - 1].weight_kg;
+        const firstWeight = measurements[0].weight;
+        const lastWeight = measurements[measurements.length - 1].weight;
         weightChange = lastWeight - firstWeight;
       }
 

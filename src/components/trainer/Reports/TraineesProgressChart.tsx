@@ -70,7 +70,7 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
       if (chartType === 'weight') {
         const { data: measurements } = await supabase
           .from('measurements')
-          .select('weight_kg, measurement_date')
+          .select('weight, measurement_date')
           .eq('trainee_id', traineeId)
           .gte('measurement_date', startDate.toISOString())
           .lte('measurement_date', endDate.toISOString())
@@ -87,7 +87,7 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
         const allWeights: { date: string; weight: number }[] = [];
 
         measurements?.forEach(m => {
-          allWeights.push({ date: m.measurement_date, weight: m.weight_kg });
+          allWeights.push({ date: m.measurement_date, weight: m.weight });
         });
 
         selfWeights?.forEach(sw => {
@@ -103,18 +103,22 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
           data: allWeights,
         });
       } else {
-        const { data: workouts } = await supabase
-          .from('workouts')
+        const { data: workoutTrainees } = await supabase
+          .from('workout_trainees')
           .select(`
-            workout_date,
-            workout_exercises(
-              exercise_sets(weight, reps)
+            workouts!inner(
+              workout_date,
+              workout_exercises(
+                exercise_sets(weight, reps)
+              )
             )
           `)
-          .eq('workout_trainees.trainee_id', traineeId)
-          .gte('workout_date', startDate.toISOString())
-          .lte('workout_date', endDate.toISOString())
-          .order('workout_date', { ascending: true });
+          .eq('trainee_id', traineeId)
+          .gte('workouts.workout_date', startDate.toISOString())
+          .lte('workouts.workout_date', endDate.toISOString())
+          .order('workouts(workout_date)', { ascending: true });
+        
+        const workouts = workoutTrainees?.map((wt: any) => wt.workouts).filter(Boolean) || [];
 
         const volumeData: { date: string; weight: number }[] = [];
 

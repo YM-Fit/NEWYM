@@ -175,11 +175,25 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
       .limit(1)
       .maybeSingle();
 
-    if (planData) {
-      setPlan(planData);
-      await loadPlanDays(planData.id);
-      await loadHistory(planData.id);
+    // Defensive type/safety check to fix lint: Property 'id' does not exist on type 'never'
+    if (
+      !planData ||
+      typeof planData !== 'object' ||
+      planData === null ||
+      !('id' in planData) ||
+      typeof (planData as any).id !== 'string'
+    ) {
+      setPlan(null);
+      setDays([]);
+      setDayExercises({});
+      setHistory([]);
+      setLoading(false);
+      return;
     }
+
+    setPlan(planData as WorkoutPlan);
+    await loadPlanDays((planData as WorkoutPlan).id);
+    await loadHistory((planData as WorkoutPlan).id);
 
     setLoading(false);
   };

@@ -68,7 +68,7 @@ export default function WeightTrendAnalysis({
       // Load measurements
       const { data: measurements } = await supabase
         .from('measurements')
-        .select('weight_kg, measurement_date')
+        .select('weight, measurement_date')
         .eq('trainee_id', traineeId)
         .gte('measurement_date', startDate.toISOString())
         .order('measurement_date', { ascending: true });
@@ -84,7 +84,7 @@ export default function WeightTrendAnalysis({
       const allWeights: WeightDataPoint[] = [
         ...(measurements || []).map(m => ({
           date: m.measurement_date,
-          weight: m.weight_kg,
+          weight: m.weight,
           source: 'measurement' as const
         })),
         ...(selfWeights || []).map(w => ({

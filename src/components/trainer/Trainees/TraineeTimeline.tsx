@@ -32,22 +32,26 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
     setLoading(true);
     const timelineItems: TimelineItem[] = [];
 
-    const { data: workouts } = await supabase
-      .from('workouts')
+    const { data: workoutTrainees } = await supabase
+      .from('workout_trainees')
       .select(`
-        id,
-        workout_date,
-        workout_type,
-        notes,
-        is_self_recorded,
-        workout_exercises(
-          exercises(name),
-          exercise_sets(weight, reps)
+        workouts!inner (
+          id,
+          workout_date,
+          workout_type,
+          notes,
+          is_self_recorded,
+          workout_exercises(
+            exercises(name),
+            exercise_sets(weight, reps)
+          )
         )
       `)
-      .eq('workout_trainees.trainee_id', traineeId)
-      .order('workout_date', { ascending: false })
+      .eq('trainee_id', traineeId)
+      .order('workouts(workout_date)', { ascending: false })
       .limit(50);
+
+    const workouts = workoutTrainees?.map((wt: any) => wt.workouts).filter(Boolean) || [];
 
     workouts?.forEach(w => {
       const exerciseCount = w.workout_exercises?.length || 0;

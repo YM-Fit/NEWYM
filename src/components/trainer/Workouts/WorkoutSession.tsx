@@ -1076,7 +1076,13 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
       {showSummary && (
         <WorkoutSummary
           onClose={handleCloseSummary}
-          exercises={exercises}
+          exercises={exercises.map(ex => ({
+            ...ex,
+            sets: ex.sets.map(set => ({
+              ...set,
+              rpe: set.rpe === null ? undefined : set.rpe
+            }))
+          }))}
           muscleGroups={muscleGroups}
           duration={Math.floor((Date.now() - workoutStartTime.current) / 1000)}
           traineeName={trainee.full_name}

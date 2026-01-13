@@ -29,6 +29,24 @@ export interface CreateTaskInput {
   week_end_date: string;
 }
 
+// Helper to check if error is table-not-found
+function isTableNotFoundError(error: unknown): boolean {
+  if (error && typeof error === 'object') {
+    const err = error as any;
+    // Check for Supabase PostgREST error code PGRST205 (table not found)
+    if (err.code === 'PGRST205' || err.code === '42P01') {
+      return true;
+    }
+    // Check error message/hint for table not found
+    if (err.message?.includes("Could not find the table") || 
+        err.hint?.includes("Could not find the table") ||
+        err.message?.includes("does not exist")) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export const tasksApi = {
   async getTraineeTasks(traineeId: string, weekStart?: string): Promise<WeeklyTask[]> {
     try {
@@ -44,9 +62,21 @@ export const tasksApi = {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        // If table doesn't exist, return empty array instead of throwing
+        if (isTableNotFoundError(error)) {
+          console.warn('[tasksApi] weekly_tasks table not found. Migration may not have been run.');
+          return [];
+        }
+        throw error;
+      }
       return data || [];
     } catch (error) {
+      // Check again in catch block in case error was thrown
+      if (isTableNotFoundError(error)) {
+        console.warn('[tasksApi] weekly_tasks table not found. Migration may not have been run.');
+        return [];
+      }
       throw handleApiError(error, 'שגיאה בטעינת משימות');
     }
   },
@@ -59,9 +89,17 @@ export const tasksApi = {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (isTableNotFoundError(error)) {
+          throw new Error('טבלת המשימות השבועיות לא קיימת במסד הנתונים. יש להריץ את המיגרציה: 20260115000000_add_advanced_features.sql');
+        }
+        throw error;
+      }
       return data;
     } catch (error) {
+      if (isTableNotFoundError(error)) {
+        throw new Error('טבלת המשימות השבועיות לא קיימת במסד הנתונים. יש להריץ את המיגרציה: 20260115000000_add_advanced_features.sql');
+      }
       throw handleApiError(error, 'שגיאה ביצירת משימה');
     }
   },
@@ -75,9 +113,17 @@ export const tasksApi = {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (isTableNotFoundError(error)) {
+          throw new Error('טבלת המשימות השבועיות לא קיימת במסד הנתונים. יש להריץ את המיגרציה: 20260115000000_add_advanced_features.sql');
+        }
+        throw error;
+      }
       return data;
     } catch (error) {
+      if (isTableNotFoundError(error)) {
+        throw new Error('טבלת המשימות השבועיות לא קיימת במסד הנתונים. יש להריץ את המיגרציה: 20260115000000_add_advanced_features.sql');
+      }
       throw handleApiError(error, 'שגיאה בעדכון משימה');
     }
   },
@@ -95,9 +141,17 @@ export const tasksApi = {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (isTableNotFoundError(error)) {
+          throw new Error('טבלת המשימות השבועיות לא קיימת במסד הנתונים. יש להריץ את המיגרציה: 20260115000000_add_advanced_features.sql');
+        }
+        throw error;
+      }
       return data;
     } catch (error) {
+      if (isTableNotFoundError(error)) {
+        throw new Error('טבלת המשימות השבועיות לא קיימת במסד הנתונים. יש להריץ את המיגרציה: 20260115000000_add_advanced_features.sql');
+      }
       throw handleApiError(error, 'שגיאה בסימון משימה כמושלמת');
     }
   },
@@ -109,8 +163,16 @@ export const tasksApi = {
         .delete()
         .eq('id', taskId);
 
-      if (error) throw error;
+      if (error) {
+        if (isTableNotFoundError(error)) {
+          throw new Error('טבלת המשימות השבועיות לא קיימת במסד הנתונים. יש להריץ את המיגרציה: 20260115000000_add_advanced_features.sql');
+        }
+        throw error;
+      }
     } catch (error) {
+      if (isTableNotFoundError(error)) {
+        throw new Error('טבלת המשימות השבועיות לא קיימת במסד הנתונים. יש להריץ את המיגרציה: 20260115000000_add_advanced_features.sql');
+      }
       throw handleApiError(error, 'שגיאה במחיקת משימה');
     }
   },

@@ -66,7 +66,14 @@ export default function WeeklyTasksManager({
       setTasks(data);
     } catch (error) {
       logger.error('Error loading tasks', error, 'WeeklyTasksManager');
-      toast.error('שגיאה בטעינת משימות');
+      const errorMessage = error instanceof Error ? error.message : 'שגיאה בטעינת משימות';
+      if (errorMessage.includes('לא קיימת במסד הנתונים')) {
+        toast.error('טבלת המשימות השבועיות לא קיימת. יש להריץ את המיגרציה במסד הנתונים.', {
+          duration: 6000,
+        });
+      } else {
+        toast.error('שגיאה בטעינת משימות');
+      }
     } finally {
       setLoading(false);
     }

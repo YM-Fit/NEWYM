@@ -302,7 +302,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
             <div className="mt-4 pt-4 border-t border-gray-700/50">
               <div className="flex items-center gap-3">
                 {trend.type === 'up' ? (
-                  <TrendingUpIcon className="h-5 w-5 text-red-400" />
+                  <TrendingUp className="h-5 w-5 text-red-400" />
                 ) : trend.type === 'down' ? (
                   <TrendingDown className="h-5 w-5 text-emerald-400" />
                 ) : (

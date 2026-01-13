@@ -93,7 +93,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
         // Get latest measurements
         const { data: measurements } = await supabase
           .from('measurements')
-          .select('weight_kg, measurement_date')
+          .select('weight, measurement_date')
           .eq('trainee_id', trainee.id)
           .order('measurement_date', { ascending: false })
           .limit(2);
@@ -108,7 +108,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
 
         // Combine and sort by date
         const allWeights = [
-          ...(measurements || []).map(m => ({ weight: m.weight_kg, date: m.measurement_date })),
+          ...(measurements || []).map(m => ({ weight: m.weight, date: m.measurement_date })),
           ...(selfWeights || []).map(w => ({ weight: w.weight_kg, date: w.weight_date }))
         ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
