@@ -1,0 +1,319 @@
+import { useState } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BodyMeasurement } from '../../../types';
+import { TrendingUp, TrendingDown, BarChart3, List, Table2, Minus } from 'lucide-react';
+
+interface MeasurementsChartProps {
+  measurements: BodyMeasurement[];
+  metric: 'weight' | 'bodyFat' | 'muscleMass' | 'waterPercentage' | 'metabolicAge';
+}
+
+export default function MeasurementsChart({ measurements, metric }: MeasurementsChartProps) {
+  const [viewMode, setViewMode] = useState<'chart' | 'list' | 'table'>('chart');
+
+  const getMetricLabel = (metric: string) => {
+    switch (metric) {
+      case 'weight': return 'משקל (ק״ג)';
+      case 'bodyFat': return 'אחוז שומן (%)';
+      case 'muscleMass': return 'מסת שריר (ק״ג)';
+      case 'waterPercentage': return 'אחוז מים (%)';
+      case 'metabolicAge': return 'גיל מטבולי';
+      default: return metric;
+    }
+  };
+
+  const getMetricColor = (metric: string) => {
+    switch (metric) {
+      case 'weight': return '#10b981';
+      case 'bodyFat': return '#f59e0b';
+      case 'muscleMass': return '#06b6d4';
+      case 'waterPercentage': return '#3b82f6';
+      case 'metabolicAge': return '#ef4444';
+      default: return '#71717a';
+    }
+  };
+
+  const isReversed = ['bodyFat', 'metabolicAge'].includes(metric);
+
+  const sortedMeasurements = [...measurements]
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .filter(m => m[metric] && (m[metric] as number) > 0);
+
+  const chartData = sortedMeasurements.map(measurement => ({
+    date: new Date(measurement.date).toLocaleDateString('he-IL'),
+    fullDate: measurement.date,
+    value: measurement[metric] || 0
+  }));
+
+  const getChange = (current: number, previous: number) => {
+    const diff = current - previous;
+    const percentage = ((diff / previous) * 100).toFixed(1);
+    const isPositive = isReversed ? diff < 0 : diff > 0;
+    return { diff, percentage, isPositive };
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3 shadow-xl">
+          <p className="text-zinc-400 text-sm mb-1">{label}</p>
+          <p className="text-white font-bold text-lg" style={{ color: getMetricColor(metric) }}>
+            {payload[0].value} {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  if (sortedMeasurements.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64 text-zinc-500">
+        <div className="text-center">
+          <BarChart3 className="w-12 h-12 mx-auto mb-3 text-zinc-600" />
+          <p>אין נתונים להצגה עבור {getMetricLabel(metric)}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const firstValue = sortedMeasurements[0]?.[metric] as number;
+  const lastValue = sortedMeasurements[sortedMeasurements.length - 1]?.[metric] as number;
+  const totalChange = firstValue && lastValue ? getChange(lastValue, firstValue) : null;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {totalChange && (
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+              totalChange.isPositive ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
+            }`}>
+              {totalChange.isPositive ? (
+                <TrendingUp className="w-4 h-4" />
+              ) : (
+                <TrendingDown className="w-4 h-4" />
+              )}
+              <span className="text-sm font-semibold">
+                {totalChange.diff > 0 ? '+' : ''}{totalChange.diff.toFixed(1)} ({totalChange.percentage}%)
+              </span>
+            </div>
+          )}
+          <span className="text-xs text-zinc-500">
+            {sortedMeasurements.length} מדידות
+          </span>
+        </div>
+        <div className="flex gap-1 bg-zinc-800/50 p-1 rounded-xl border border-zinc-700/50">
+          <button
+            onClick={() => setViewMode('chart')}
+            className={`p-2 rounded-lg transition-all ${
+              viewMode === 'chart' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+            }`}
+            title="גרף"
+          >
+            <BarChart3 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded-lg transition-all ${
+              viewMode === 'list' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+            }`}
+            title="רשימה"
+          >
+            <List className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('table')}
+            className={`p-2 rounded-lg transition-all ${
+              viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+            }`}
+            title="טבלה"
+          >
+            <Table2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {viewMode === 'chart' && (
+        <div className="h-72 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+              <XAxis
+                dataKey="date"
+                stroke="#71717a"
+                fontSize={12}
+                tickLine={false}
+              />
+              <YAxis
+                stroke="#71717a"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke={getMetricColor(metric)}
+                strokeWidth={3}
+                dot={{ fill: getMetricColor(metric), strokeWidth: 2, r: 5, stroke: '#18181b' }}
+                activeDot={{ r: 7, stroke: getMetricColor(metric), strokeWidth: 2, fill: '#18181b' }}
+                name={getMetricLabel(metric)}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {viewMode === 'list' && (
+        <div className="space-y-2 max-h-72 overflow-y-auto">
+          {[...sortedMeasurements].reverse().map((measurement, index, arr) => {
+            const value = measurement[metric] as number;
+            const prevMeasurement = arr[index + 1];
+            const prevValue = prevMeasurement?.[metric] as number;
+            const change = prevValue ? getChange(value, prevValue) : null;
+
+            return (
+              <div
+                key={measurement.id}
+                className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-xl border border-zinc-700/30 hover:border-zinc-600/50 transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ backgroundColor: `${getMetricColor(metric)}20` }}
+                  >
+                    <span className="text-sm font-bold" style={{ color: getMetricColor(metric) }}>
+                      {arr.length - index}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold">
+                      {new Date(measurement.date).toLocaleDateString('he-IL', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {new Date(measurement.date).toLocaleDateString('he-IL', { weekday: 'long' })}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  {change && (
+                    <div className={`flex items-center gap-1 text-sm ${
+                      change.isPositive ? 'text-emerald-400' : 'text-red-400'
+                    }`}>
+                      {change.diff === 0 ? (
+                        <Minus className="w-3 h-3" />
+                      ) : change.isPositive ? (
+                        <TrendingUp className="w-3 h-3" />
+                      ) : (
+                        <TrendingDown className="w-3 h-3" />
+                      )}
+                      <span className="font-medium">
+                        {change.diff > 0 ? '+' : ''}{change.diff.toFixed(1)}
+                      </span>
+                    </div>
+                  )}
+                  <div
+                    className="px-4 py-2 rounded-xl font-bold text-lg"
+                    style={{
+                      backgroundColor: `${getMetricColor(metric)}15`,
+                      color: getMetricColor(metric)
+                    }}
+                  >
+                    {value.toFixed(1)}
+                    <span className="text-xs font-normal mr-1">
+                      {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {viewMode === 'table' && (
+        <div className="overflow-x-auto max-h-72">
+          <table className="w-full">
+            <thead className="sticky top-0 bg-zinc-900">
+              <tr className="border-b border-zinc-700/50">
+                <th className="text-right py-2 px-3 text-xs font-semibold text-zinc-400">#</th>
+                <th className="text-right py-2 px-3 text-xs font-semibold text-zinc-400">תאריך</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-zinc-400">{getMetricLabel(metric)}</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-zinc-400">שינוי</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-zinc-400">שינוי %</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-zinc-400">מהתחלה</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...sortedMeasurements].reverse().map((measurement, index, arr) => {
+                const value = measurement[metric] as number;
+                const prevMeasurement = arr[index + 1];
+                const prevValue = prevMeasurement?.[metric] as number;
+                const change = prevValue ? getChange(value, prevValue) : null;
+                const fromStart = firstValue ? getChange(value, firstValue) : null;
+
+                return (
+                  <tr key={measurement.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-all">
+                    <td className="py-2 px-3 text-zinc-500 text-sm">{arr.length - index}</td>
+                    <td className="py-2 px-3">
+                      <span className="text-white text-sm">
+                        {new Date(measurement.date).toLocaleDateString('he-IL')}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      <span
+                        className="font-bold"
+                        style={{ color: getMetricColor(metric) }}
+                      >
+                        {value.toFixed(1)}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      {change ? (
+                        <span className={`text-sm font-medium ${
+                          change.isPositive ? 'text-emerald-400' : 'text-red-400'
+                        }`}>
+                          {change.diff > 0 ? '+' : ''}{change.diff.toFixed(1)}
+                        </span>
+                      ) : (
+                        <span className="text-zinc-600">-</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      {change ? (
+                        <span className={`text-sm ${
+                          change.isPositive ? 'text-emerald-400' : 'text-red-400'
+                        }`}>
+                          {change.percentage}%
+                        </span>
+                      ) : (
+                        <span className="text-zinc-600">-</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      {fromStart && index < arr.length - 1 ? (
+                        <span className={`text-sm font-medium px-2 py-0.5 rounded ${
+                          fromStart.isPositive ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
+                        }`}>
+                          {fromStart.diff > 0 ? '+' : ''}{fromStart.diff.toFixed(1)}
+                        </span>
+                      ) : (
+                        <span className="text-zinc-600">-</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
