@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 
 interface Exercise {
   id: string;
@@ -207,7 +207,7 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     setExercises(updatedExercises);
   };
 
-  const calculateTotalVolume = () => {
+  const calculateTotalVolume = useCallback(() => {
     return exercises.reduce((total, ex) => {
       return total + ex.sets.reduce((sum, set) => {
         let setVolume = set.weight * set.reps;
@@ -227,9 +227,9 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
         return sum + setVolume;
       }, 0);
     }, 0);
-  };
+  }, [exercises]);
 
-  const calculateExerciseVolume = (workoutExercise: WorkoutExercise) => {
+  const calculateExerciseVolume = useCallback((workoutExercise: WorkoutExercise) => {
     return workoutExercise.sets.reduce((sum, set) => {
       let setVolume = set.weight * set.reps;
 
@@ -247,7 +247,7 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
 
       return sum + setVolume;
     }, 0);
-  };
+  }, []);
 
   const toggleMinimizeExercise = (exerciseId: string) => {
     setMinimizedExercises(prev => {
@@ -265,12 +265,12 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     }
   };
 
-  const getExerciseSummary = (exercise: WorkoutExercise) => {
+  const getExerciseSummary = useCallback((exercise: WorkoutExercise) => {
     const totalSets = exercise.sets.length;
-    const maxWeight = Math.max(...exercise.sets.map(s => s.weight), 0);
+    const maxWeight = exercise.sets.length > 0 ? Math.max(...exercise.sets.map(s => s.weight), 0) : 0;
     const totalVolume = exercise.sets.reduce((sum, set) => sum + (set.weight * set.reps), 0);
     return { totalSets, maxWeight, totalVolume };
-  };
+  }, []);
 
   return {
     exercises,

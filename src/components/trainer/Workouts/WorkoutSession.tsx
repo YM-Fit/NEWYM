@@ -158,6 +158,8 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
   const [muscleGroups, setMuscleGroups] = useState<{ id: string; name: string }[]>([]);
   const [personalRecords, setPersonalRecords] = useState<{ exerciseName: string; type: 'weight' | 'reps' | 'volume'; oldValue: number; newValue: number }[]>([]);
   const workoutStartTime = useRef(Date.now());
+  const exerciseCacheRef = useRef<Map<string, { sets: SetData[]; timestamp: number }>>(new Map());
+  const [loadingExercise, setLoadingExercise] = useState<string | null>(null);
 
   const workoutData = {
     exercises,
@@ -214,6 +216,45 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty, exercises.length, workoutId]);
 
+  // Keyboard shortcuts for better UX
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle shortcuts when modals are open or input is focused
+      if (showExerciseSelector || numericPad || equipmentSelector || supersetSelector || 
+          showDraftModal || showTemplateModal || showSaveTemplateModal || showSummary ||
+          document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Ctrl/Cmd + S to save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (exercises.length > 0 && !saving && user) {
+          // Call handleSave directly - it's defined in the component scope
+          handleSave();
+        }
+      }
+      // Ctrl/Cmd + N to add exercise
+      else if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        setShowExerciseSelector(true);
+      }
+      // Ctrl/Cmd + T to load template
+      else if ((e.ctrlKey || e.metaKey) && e.key === 't') {
+        e.preventDefault();
+        if (exercises.length === 0) {
+          setShowTemplateModal(true);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showExerciseSelector, numericPad, equipmentSelector, supersetSelector, 
+      showDraftModal, showTemplateModal, showSaveTemplateModal, showSummary, 
+      exercises.length, saving]);
+
   useEffect(() => {
     const loadMuscleGroups = async () => {
       const { data } = await supabase.from('muscle_groups').select('id, name');
@@ -228,6 +269,28 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
       return;
     }
 
+    // Check cache first (cache valid for 5 minutes)
+    const cacheKey = `${trainee.id}-${exercise.id}`;
+    const cached = exerciseCacheRef.current.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+      addExercise(exercise);
+      setExercises((prev) => {
+        if (!prev.length) return prev;
+        const updated = [...prev];
+        const lastIndex = updated.length - 1;
+        updated[lastIndex] = {
+          ...updated[lastIndex],
+          sets: cached.sets.map((set, index) => ({
+            ...set,
+            id: `temp-${Date.now()}-${index}`,
+          })),
+        };
+        return updated;
+      });
+      return;
+    }
+
+    setLoadingExercise(exercise.id);
     try {
       const { data: workouts, error } = await supabase
         .from('workouts')
@@ -269,12 +332,15 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
 
       if (error) {
         console.error('Error loading last exercise for autofill:', error);
+        toast.error('שגיאה בטעינת התרגיל הקודם, התרגיל נוסף ללא נתונים');
         addExercise(exercise);
+        setLoadingExercise(null);
         return;
       }
 
       if (!workouts || workouts.length === 0 || !workouts[0].workout_exercises?.length) {
         addExercise(exercise);
+        setLoadingExercise(null);
         return;
       }
 
@@ -283,6 +349,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
 
       if (!previousSets.length) {
         addExercise(exercise);
+        setLoadingExercise(null);
         return;
       }
 
@@ -311,6 +378,12 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           equipment: null,
         }));
 
+      // Cache the sets for future use
+      exerciseCacheRef.current.set(cacheKey, {
+        sets: mappedSets,
+        timestamp: Date.now(),
+      });
+
       // Add the exercise using the existing hook logic (minimize previous exercise etc.)
       addExercise(exercise);
 
@@ -325,9 +398,13 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
         };
         return updated;
       });
+      toast.success('התרגיל נטען עם הנתונים מהאימון הקודם');
     } catch (err) {
       console.error('Unexpected error in exercise autofill:', err);
+      toast.error('שגיאה בטעינת התרגיל, התרגיל נוסף ללא נתונים');
       addExercise(exercise);
+    } finally {
+      setLoadingExercise(null);
     }
   };
 
@@ -815,6 +892,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           traineeName={trainee.full_name}
           onSelect={handleAddExerciseWithAutoFill}
           onClose={() => setShowExerciseSelector(false)}
+          loadingExerciseId={loadingExercise}
         />
       )}
 

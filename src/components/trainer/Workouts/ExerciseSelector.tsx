@@ -23,9 +23,10 @@ interface ExerciseSelectorProps {
   traineeName?: string;
   onSelect: (exercise: Exercise) => void;
   onClose: () => void;
+  loadingExerciseId?: string | null;
 }
 
-export default function ExerciseSelector({ traineeId, traineeName, onSelect, onClose }: ExerciseSelectorProps) {
+export default function ExerciseSelector({ traineeId, traineeName, onSelect, onClose, loadingExerciseId }: ExerciseSelectorProps) {
   const [muscleGroups, setMuscleGroups] = useState<MuscleGroup[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -297,14 +298,22 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                               onSelect(exercise);
                               onClose();
                             }}
-                            className="flex-1 text-right px-6 py-4 bg-zinc-800/30 border border-zinc-700/30 hover:border-emerald-500/30 hover:bg-emerald-500/10 rounded-xl transition-all group"
+                            disabled={loadingExerciseId === exercise.id}
+                            className="flex-1 text-right px-6 py-4 bg-zinc-800/30 border border-zinc-700/30 hover:border-emerald-500/30 hover:bg-emerald-500/10 rounded-xl transition-all group disabled:opacity-50 disabled:cursor-wait"
                           >
                             <div className="flex items-center justify-between">
                               <span className="font-medium text-zinc-200 group-hover:text-emerald-400">
                                 {exercise.name}
+                                {loadingExerciseId === exercise.id && (
+                                  <span className="mr-2 text-xs text-emerald-400">טוען...</span>
+                                )}
                               </span>
                               <div className="p-2 bg-zinc-700/50 group-hover:bg-emerald-500/20 rounded-lg transition-all">
-                                <Plus className="h-5 w-5 text-zinc-500 group-hover:text-emerald-400" />
+                                {loadingExerciseId === exercise.id ? (
+                                  <div className="h-5 w-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <Plus className="h-5 w-5 text-zinc-500 group-hover:text-emerald-400" />
+                                )}
                               </div>
                             </div>
                           </button>
