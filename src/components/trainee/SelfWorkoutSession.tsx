@@ -134,6 +134,10 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
     startTime: number;
   } | null>(null);
   const [autoSaved, setAutoSaved] = useState(false);
+  const [instructionsExercise, setInstructionsExercise] = useState<{
+    name: string;
+    instructions: string | null;
+  } | null>(null);
 
   const workoutData = {
     exercises,
