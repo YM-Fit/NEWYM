@@ -400,24 +400,24 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
   };
 
   return (
-    <div className="min-h-screen bg-gradient-dark transition-colors duration-300 p-4">
-      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-xl p-5 mb-4 sticky top-0 z-10">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3 rtl:space-x-reverse">
+    <div className="min-h-screen bg-gradient-dark transition-colors duration-300 p-3 md:p-4">
+      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl md:rounded-2xl shadow-lg p-3 md:p-4 mb-3 md:mb-4 sticky top-0 z-10">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-2 rtl:space-x-reverse flex-1 min-w-0">
             <button
               type="button"
               onClick={onBack}
-              className="p-3 hover:bg-white/20 rounded-xl transition-all text-white"
+              className="p-2 md:p-2.5 hover:bg-white/20 rounded-lg transition-all text-white flex-shrink-0"
               aria-label="חזור"
             >
-              <ArrowRight className="h-6 w-6" />
+              <ArrowRight className="h-5 w-5 md:h-6 md:w-6" />
             </button>
-            <div className="text-white">
-              <h1 className="text-2xl font-bold">אימון עצמאי</h1>
-              <p className="text-base text-emerald-100">{traineeName}</p>
+            <div className="text-white flex-1 min-w-0">
+              <h1 className="text-lg md:text-xl font-bold truncate">אימון עצמאי</h1>
+              <p className="text-xs md:text-sm text-emerald-100 truncate">{traineeName}</p>
               {exercises.length > 0 && (
-                <p className="text-sm text-white font-bold mt-1 bg-white/20 px-3 py-1 rounded-lg inline-block">
-                  נפח כולל: {calculateTotalVolume().toLocaleString()} ק"ג
+                <p className="text-xs text-white/90 font-semibold mt-1 bg-white/15 px-2 py-0.5 rounded-md inline-block">
+                  נפח: {calculateTotalVolume().toLocaleString()} ק"ג
                 </p>
               )}
               <AutoSaveIndicator lastSaved={lastSaved} isDirty={isDirty} />
@@ -428,16 +428,16 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
             type="button"
             onClick={() => handleSave()}
             disabled={saving || exercises.length === 0}
-            className="bg-white text-emerald-600 px-6 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:scale-[1.02]"
+            className="bg-white text-emerald-600 px-4 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl flex items-center space-x-1.5 rtl:space-x-reverse transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-sm md:text-base flex-shrink-0 ml-2"
           >
-            <Save className="h-5 w-5" />
-            <span className="font-bold">{saving ? 'שומר...' : 'סיים אימון'}</span>
+            <Save className="h-4 w-4 md:h-5 md:w-5" />
+            <span className="font-semibold md:font-bold hidden sm:inline">{saving ? 'שומר...' : 'סיים'}</span>
           </button>
         </div>
 
-        <div className="flex items-center justify-center bg-white/20 backdrop-blur-sm rounded-xl p-4">
-          <Clock className="h-6 w-6 text-white ml-2" />
-          <span className="text-2xl font-bold text-white">{formatTime(elapsedTime)}</span>
+        <div className="flex items-center justify-center bg-white/15 backdrop-blur-sm rounded-lg md:rounded-xl p-2.5 md:p-3">
+          <Clock className="h-4 w-4 md:h-5 md:w-5 text-white ml-1.5 md:ml-2" />
+          <span className="text-lg md:text-xl font-bold text-white">{formatTime(elapsedTime)}</span>
         </div>
       </div>
 
@@ -448,103 +448,75 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
         return (
           <div
             key={workoutExercise.tempId}
-            className={`bg-zinc-900 rounded-2xl shadow-xl mb-4 transition-all border ${
-              isMinimized ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-zinc-800'
+            className={`bg-[var(--color-bg-surface)] rounded-xl md:rounded-2xl shadow-md md:shadow-lg mb-3 md:mb-4 transition-all border ${
+              isMinimized ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-[var(--color-border)]'
             }`}
             style={{
-              height: isMinimized ? '72px' : 'auto',
+              height: isMinimized ? '64px' : 'auto',
               overflow: isMinimized ? 'hidden' : 'visible',
             }}
           >
             {isMinimized ? (
               <div
-                className="h-full flex items-center justify-between px-4 cursor-pointer hover:bg-emerald-500/10 transition-all"
+                className="h-full flex items-center justify-between px-3 md:px-4 cursor-pointer hover:bg-emerald-500/10 transition-all"
                 onClick={() => toggleMinimizeExercise(workoutExercise.tempId)}
               >
-                <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                  <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-md">
-                    <span className="text-white text-lg font-bold">V</span>
+                <div className="flex items-center space-x-2 rtl:space-x-reverse flex-1 min-w-0">
+                  <div className="w-8 h-8 md:w-9 md:h-9 bg-emerald-500 rounded-lg md:rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
+                    <span className="text-white text-sm md:text-base font-bold">✓</span>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white">{workoutExercise.exercise.name}</h3>
-                    <p className="text-sm text-zinc-400">
-                      {summary.totalSets} סטים | {summary.maxWeight} ק״ג מקס | נפח: {summary.totalVolume.toLocaleString()} ק״ג
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm md:text-base font-bold text-[var(--color-text-primary)] truncate">{workoutExercise.exercise.name}</h3>
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      {summary.totalSets} סטים | {summary.maxWeight} ק״ג | {summary.totalVolume.toLocaleString()} ק״ג
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setInstructionsExercise({
-                        name: workoutExercise.exercise.name,
-                        instructions: workoutExercise.exercise.instructions,
-                      });
-                    }}
-                    className="p-2 hover:bg-cyan-500/10 text-cyan-400 rounded-xl transition-all"
-                    aria-label="איך לבצע"
-                    title="איך לבצע"
-                  >
-                    <Info className="h-5 w-5" />
-                  </button>
-                  <span className="text-sm text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/30">לחץ לעריכה</span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeExercise(exerciseIndex);
-                    }}
-                    className="p-2 hover:bg-red-500/10 text-red-400 rounded-xl transition-all"
-                    aria-label="מחק תרגיל"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                </div>
+                <span className="text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/30 flex-shrink-0 mr-2">ערוך</span>
               </div>
             ) : (
-              <div className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">{workoutExercise.exercise.name}</h3>
+              <div className="p-3 md:p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base md:text-lg font-bold text-[var(--color-text-primary)]">{workoutExercise.exercise.name}</h3>
                     {workoutExercise.sets.length > 0 && (
-                      <p className="text-sm text-zinc-400 mt-1 bg-zinc-800 px-3 py-1 rounded-lg inline-block border border-zinc-700/50">
+                      <p className="text-xs text-[var(--color-text-muted)] mt-1 bg-[var(--color-bg-elevated)] px-2 py-0.5 rounded-md inline-block border border-[var(--color-border)]">
                         נפח: {calculateExerciseVolume(workoutExercise).toLocaleString()} ק"ג
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <div className="flex items-center space-x-1.5 rtl:space-x-reverse flex-shrink-0 ml-2">
                     <button
                       type="button"
                       onClick={() => setInstructionsExercise({
                         name: workoutExercise.exercise.name,
                         instructions: workoutExercise.exercise.instructions,
                       })}
-                      className="p-2 hover:bg-cyan-500/10 text-cyan-400 rounded-xl transition-all"
+                      className="p-1.5 md:p-2 hover:bg-cyan-500/10 text-cyan-400 rounded-lg transition-all"
                       aria-label="איך לבצע"
                       title="איך לבצע"
                     >
-                      <Info className="h-5 w-5" />
+                      <Info className="h-4 w-4 md:h-5 md:w-5" />
                     </button>
                     <button
                       type="button"
-                      onClick={() => completeExercise(workoutExercise.tempId)}
-                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all text-sm font-bold shadow-lg hover:shadow-xl"
+                      onClick={() => toggleMinimizeExercise(workoutExercise.tempId)}
+                      className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-all text-xs font-semibold border border-emerald-500/30"
                     >
-                      סיים תרגיל
+                      מינימום
                     </button>
                     <button
                       type="button"
                       onClick={() => removeExercise(exerciseIndex)}
-                      className="p-2 hover:bg-red-500/10 text-red-400 rounded-xl transition-all"
+                      className="p-1.5 md:p-2 hover:bg-red-500/10 text-red-400 rounded-lg transition-all"
                       aria-label="מחק תרגיל"
                     >
-                      <Trash2 className="h-5 w-5" />
+                      <Trash2 className="h-4 w-4 md:h-5 md:w-5" />
                     </button>
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {workoutExercise.sets.map((set, setIndex) => {
                     const isCollapsed = collapsedSets.includes(set.id);
 
@@ -579,40 +551,40 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                     return (
                     <div
                       key={set.id}
-                      className="bg-[var(--color-bg-surface)] rounded-2xl p-4 border border-[var(--color-border)] transition-all duration-300 animate-fade-in"
+                      className="bg-[var(--color-bg-surface)] rounded-lg md:rounded-xl p-3 md:p-4 border border-[var(--color-border)] transition-all duration-300 animate-fade-in"
                     >
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="font-bold text-base text-[var(--color-text-primary)] bg-[var(--color-bg-elevated)] px-3 py-1 rounded-lg border border-[var(--color-border)]">סט {set.set_number}</span>
-                        <div className="flex space-x-2 rtl:space-x-reverse">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-bold text-sm md:text-base text-[var(--color-text-primary)] bg-[var(--color-bg-elevated)] px-2 py-1 rounded-md border border-[var(--color-border)]">סט {set.set_number}</span>
+                        <div className="flex space-x-1.5 rtl:space-x-reverse">
                           <button
                             type="button"
                             onClick={() => duplicateSet(exerciseIndex, setIndex)}
-                            className="p-2 hover:bg-[var(--color-bg-elevated)] rounded-xl transition-all"
+                            className="p-1.5 hover:bg-[var(--color-bg-elevated)] rounded-lg transition-all"
                             title="שכפל סט"
                             aria-label="שכפל סט"
                           >
-                            <Copy className="h-4 w-4 text-[var(--color-text-muted)]" />
+                            <Copy className="h-3.5 w-3.5 text-[var(--color-text-muted)]" />
                           </button>
                           {workoutExercise.sets.length > 1 && (
                             <button
                               type="button"
                               onClick={() => removeSet(exerciseIndex, setIndex)}
-                              className="p-2 hover:bg-red-500/10 text-red-400 rounded-xl transition-all"
+                              className="p-1.5 hover:bg-red-500/10 text-red-400 rounded-lg transition-all"
                               aria-label="מחק סט"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           )}
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="grid grid-cols-3 gap-2 md:gap-3 mb-3">
                         <div>
-                          <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-2">משקל (ק״ג)</label>
+                          <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5">משקל</label>
                           <button
                             type="button"
                             onClick={() => openNumericPad(exerciseIndex, setIndex, 'weight', 'משקל (ק״ג)')}
-                            className="w-full px-3 py-4 text-2xl font-bold border-2 border-emerald-500/50 bg-emerald-500/10 text-emerald-400 rounded-xl hover:bg-emerald-500/20 transition-all"
+                            className="w-full px-2 py-3 md:py-3.5 text-lg md:text-xl font-bold border-2 border-emerald-500/50 bg-emerald-500/10 text-emerald-400 rounded-lg md:rounded-xl hover:bg-emerald-500/20 transition-all"
                           >
                             {set.weight || '0'}
                           </button>
@@ -624,11 +596,11 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                         </div>
 
                         <div>
-                          <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-2">חזרות</label>
+                          <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5">חזרות</label>
                           <button
                             type="button"
                             onClick={() => openNumericPad(exerciseIndex, setIndex, 'reps', 'חזרות')}
-                            className="w-full px-3 py-4 text-2xl font-bold border-2 border-cyan-500/50 bg-cyan-500/10 text-cyan-400 rounded-xl hover:bg-cyan-500/20 transition-all"
+                            className="w-full px-2 py-3 md:py-3.5 text-lg md:text-xl font-bold border-2 border-cyan-500/50 bg-cyan-500/10 text-cyan-400 rounded-lg md:rounded-xl hover:bg-cyan-500/20 transition-all"
                           >
                             {set.reps || '0'}
                           </button>
@@ -640,11 +612,11 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                         </div>
 
                         <div>
-                          <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-2">RPE</label>
+                          <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5">RPE</label>
                           <button
                             type="button"
                             onClick={() => openNumericPad(exerciseIndex, setIndex, 'rpe', 'RPE (1-10)')}
-                            className="w-full px-3 py-4 text-2xl font-bold border-2 border-amber-500/50 bg-amber-500/10 text-amber-400 rounded-xl hover:bg-amber-500/20 transition-all"
+                            className="w-full px-2 py-3 md:py-3.5 text-lg md:text-xl font-bold border-2 border-amber-500/50 bg-amber-500/10 text-amber-400 rounded-lg md:rounded-xl hover:bg-amber-500/20 transition-all"
                           >
                             {set.rpe || '-'}
                           </button>
@@ -882,10 +854,10 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                       <button
                         type="button"
                         onClick={() => completeSetAndMoveNext(exerciseIndex, setIndex)}
-                        className="w-full mt-4 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-lg rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+                        className="w-full mt-3 py-2.5 md:py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold md:font-bold text-sm md:text-base rounded-lg md:rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg"
                       >
-                        <CheckCircle className="h-6 w-6" />
-                        <span>סיים סט ועבור לבא</span>
+                        <CheckCircle className="h-4 w-4 md:h-5 md:w-5" />
+                        <span>סיים סט</span>
                       </button>
                     </div>
                   );
@@ -918,10 +890,10 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
       <button
         type="button"
         onClick={() => setShowExerciseSelector(true)}
-        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-5 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all shadow-xl hover:shadow-2xl hover:scale-[1.02]"
+        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 md:py-4 rounded-lg md:rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all shadow-md hover:shadow-lg text-sm md:text-base font-semibold md:font-bold"
       >
-        <Plus className="h-6 w-6" />
-        <span className="font-bold text-lg">{exercises.length === 0 ? 'התחל אימון' : 'הוסף תרגיל'}</span>
+        <Plus className="h-5 w-5 md:h-6 md:w-6" />
+        <span>{exercises.length === 0 ? 'התחל אימון' : 'הוסף תרגיל'}</span>
       </button>
 
       {showExerciseSelector && (
