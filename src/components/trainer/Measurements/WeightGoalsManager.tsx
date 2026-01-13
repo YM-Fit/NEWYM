@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Target, Plus, Edit, Trash2, TrendingUp, TrendingDown, Calendar, CheckCircle, X, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
+import { logger } from '../../../utils/logger';
 
 interface WeightGoal {
   id: string;
@@ -71,7 +72,7 @@ export default function WeightGoalsManager({
 
       setGoals(goalsWithNames);
     } catch (error) {
-      console.error('Error loading goals:', error);
+      logger.error('Error loading goals', error, 'WeightGoalsManager');
       toast.error('שגיאה בטעינת יעדים');
     } finally {
       setLoading(false);
@@ -151,7 +152,7 @@ export default function WeightGoalsManager({
       loadGoals();
       onGoalUpdated?.();
     } catch (error) {
-      console.error('Error saving goal:', error);
+      logger.error('Error saving goal', error, 'WeightGoalsManager');
       toast.error('שגיאה בשמירת היעד');
     }
   };
@@ -170,7 +171,7 @@ export default function WeightGoalsManager({
       loadGoals();
       onGoalUpdated?.();
     } catch (error) {
-      console.error('Error deleting goal:', error);
+      logger.error('Error deleting goal', error, 'WeightGoalsManager');
       toast.error('שגיאה במחיקת היעד');
     }
   };
@@ -187,7 +188,7 @@ export default function WeightGoalsManager({
       loadGoals();
       onGoalUpdated?.();
     } catch (error) {
-      console.error('Error cancelling goal:', error);
+      logger.error('Error cancelling goal', error, 'WeightGoalsManager');
       toast.error('שגיאה בביטול היעד');
     }
   };

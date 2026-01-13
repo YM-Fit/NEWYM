@@ -861,6 +861,8 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
 
       {showExerciseSelector && (
         <ExerciseSelector
+          traineeId={traineeId}
+          traineeName={traineeName}
           onSelect={addExercise}
           onClose={() => setShowExerciseSelector(false)}
         />
@@ -886,6 +888,8 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
 
       {supersetSelector && (
         <ExerciseSelector
+          traineeId={traineeId}
+          traineeName={traineeName}
           onSelect={handleSupersetExerciseSelect}
           onClose={() => setSupersetSelector(null)}
         />

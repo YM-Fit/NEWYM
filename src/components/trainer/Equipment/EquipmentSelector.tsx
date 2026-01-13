@@ -58,27 +58,27 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
 
   const getCategoryLabel = (category: string) => {
     const labels: Record<string, string> = {
-      resistance_band: 'Resistance Bands',
-      leg_band: 'Leg Bands',
-      bar: 'Bars',
-      pulley_attachment: 'Pulley',
+      resistance_band: 'רצועות התנגדות',
+      leg_band: 'רצועות רגליים',
+      bar: 'מוטות',
+      pulley_attachment: 'כבל',
       suspension: 'TRX',
-      balance: 'Balance',
-      ball: 'Balls',
-      other: 'Other',
+      balance: 'שיווי משקל',
+      ball: 'כדורים',
+      other: 'אחר',
     };
     return labels[category] || category;
   };
 
   const categories = [
-    { id: 'all', label: 'All', emoji: '' },
-    { id: 'resistance_band', label: 'Bands', emoji: '' },
-    { id: 'leg_band', label: 'Legs', emoji: '' },
-    { id: 'bar', label: 'Bars', emoji: '' },
-    { id: 'pulley_attachment', label: 'Pulley', emoji: '' },
+    { id: 'all', label: 'הכל', emoji: '' },
+    { id: 'resistance_band', label: 'רצועות', emoji: '' },
+    { id: 'leg_band', label: 'רגליים', emoji: '' },
+    { id: 'bar', label: 'מוטות', emoji: '' },
+    { id: 'pulley_attachment', label: 'כבל', emoji: '' },
     { id: 'suspension', label: 'TRX', emoji: '' },
-    { id: 'balance', label: 'Balance', emoji: '' },
-    { id: 'ball', label: 'Balls', emoji: '' },
+    { id: 'balance', label: 'שיווי משקל', emoji: '' },
+    { id: 'ball', label: 'כדורים', emoji: '' },
   ];
 
   const filteredEquipment = equipment.filter(e => {
@@ -104,45 +104,45 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
 
   return (
     <div
-      className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div
-        className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl border border-white/10 max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-fade-in"
+        className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-6 lg:p-8 border-b border-white/10 bg-gradient-to-br from-gray-800/50 to-gray-900/50">
-          <div className="flex items-center justify-between mb-6">
+        <div className="p-6 lg:p-8 border-b border-zinc-800 bg-zinc-900">
+          <div className="flex items-center justify-between mb-6" dir="rtl">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-gradient-to-br from-emerald-500/30 to-teal-500/30 rounded-2xl shadow-lg">
                 <Package className="h-6 w-6 text-emerald-400" />
               </div>
-              <h2 className="text-2xl lg:text-3xl font-bold text-white">Select Equipment</h2>
+              <h2 className="text-2xl lg:text-3xl font-bold text-white">בחירת ציוד</h2>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="p-3 hover:bg-white/10 rounded-xl transition-all duration-300 text-gray-400 hover:text-white"
+              className="p-3 hover:bg-zinc-800 rounded-xl transition-all duration-300 text-zinc-400 hover:text-white"
             >
               <X className="h-6 w-6" />
             </button>
           </div>
 
           {/* Search Input */}
-          <div className="relative mb-6">
-            <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+          <div className="relative mb-6" dir="rtl">
+            <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-500" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search equipment..."
-              className="w-full pr-12 pl-4 py-4 bg-gray-800/80 border-2 border-gray-700/50 rounded-2xl text-white placeholder-gray-500 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+              placeholder="חיפוש ציוד..."
+              className="w-full pr-12 pl-4 py-4 bg-zinc-800/80 border-2 border-zinc-700/50 rounded-2xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
             />
           </div>
 
           {/* Category Pills */}
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="flex gap-2 overflow-x-auto pb-2" dir="rtl">
             {categories.map(cat => (
               <button
                 key={cat.id}
@@ -151,7 +151,7 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
                 className={`px-4 py-2.5 rounded-xl whitespace-nowrap text-sm font-semibold transition-all duration-300 flex items-center space-x-2 rtl:space-x-reverse ${
                   filter === cat.id
                     ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
-                    : 'bg-gray-800/60 text-gray-400 hover:bg-gray-700/60 hover:text-white'
+                    : 'bg-zinc-800/60 text-zinc-400 hover:bg-zinc-700/60 hover:text-white'
                 }`}
               >
                 <span>{cat.label}</span>
@@ -161,24 +161,28 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 lg:p-8">
+        <div className="flex-1 overflow-y-auto p-6 lg:p-8" dir="rtl">
           {/* No Equipment Option */}
           <button
             type="button"
-            onClick={() => handleSelect(null)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleSelect(null);
+            }}
             className={`w-full mb-6 p-5 rounded-2xl border-2 transition-all duration-300 text-right group ${
               !currentEquipmentId
                 ? 'border-emerald-500/50 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 shadow-lg shadow-emerald-500/10'
-                : 'border-gray-700/50 hover:border-emerald-500/30 bg-gray-800/30 hover:bg-gradient-to-br hover:from-emerald-500/5 hover:to-teal-500/5'
+                : 'border-zinc-700/50 hover:border-emerald-500/30 bg-zinc-800/30 hover:bg-gradient-to-br hover:from-emerald-500/5 hover:to-teal-500/5'
             } hover:scale-[1.01]`}
           >
             <div className="flex items-center space-x-4 rtl:space-x-reverse">
-              <div className={`p-3 rounded-2xl ${!currentEquipmentId ? 'bg-gradient-to-br from-emerald-500/30 to-teal-500/30' : 'bg-gray-700/50 group-hover:bg-emerald-500/20'} transition-all duration-300`}>
-                <X className={`h-6 w-6 ${!currentEquipmentId ? 'text-emerald-400' : 'text-gray-400 group-hover:text-emerald-400'} transition-colors duration-300`} />
+              <div className={`p-3 rounded-2xl ${!currentEquipmentId ? 'bg-gradient-to-br from-emerald-500/30 to-teal-500/30' : 'bg-zinc-700/50 group-hover:bg-emerald-500/20'} transition-all duration-300`}>
+                <X className={`h-6 w-6 ${!currentEquipmentId ? 'text-emerald-400' : 'text-zinc-400 group-hover:text-emerald-400'} transition-colors duration-300`} />
               </div>
               <div>
-                <h3 className="font-bold text-lg text-white">No Equipment</h3>
-                <p className="text-sm text-gray-400">Regular set without additional equipment</p>
+                <h3 className="font-bold text-lg text-white">ללא ציוד</h3>
+                <p className="text-sm text-zinc-400">סט רגיל ללא ציוד נוסף</p>
               </div>
               {!currentEquipmentId && (
                 <div className="ml-auto">
@@ -192,14 +196,14 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
             <div className="flex items-center justify-center py-16">
               <div className="text-center">
                 <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
-                <p className="mt-4 text-gray-400 font-medium">Loading equipment...</p>
+                <p className="mt-4 text-zinc-400 font-medium">טוען ציוד...</p>
               </div>
             </div>
           ) : (
             <div className="space-y-8">
               {Object.entries(groupedEquipment).map(([category, items]) => (
                 <div key={category}>
-                  <h3 className="text-lg font-bold text-gray-300 mb-4 px-2 flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-zinc-300 mb-4 px-2 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500"></span>
                     {getCategoryLabel(category)}
                   </h3>
@@ -208,11 +212,15 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
                       <button
                         key={item.id}
                         type="button"
-                        onClick={() => handleSelect(item)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleSelect(item);
+                        }}
                         className={`group p-5 rounded-2xl border-2 transition-all duration-300 text-right ${
                           currentEquipmentId === item.id
                             ? 'border-emerald-500/50 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 shadow-lg shadow-emerald-500/10'
-                            : 'border-gray-700/50 hover:border-emerald-500/30 bg-gray-800/30 hover:bg-gradient-to-br hover:from-emerald-500/5 hover:to-teal-500/5'
+                            : 'border-zinc-700/50 hover:border-emerald-500/30 bg-zinc-800/30 hover:bg-gradient-to-br hover:from-emerald-500/5 hover:to-teal-500/5'
                         } hover:scale-[1.02] hover:shadow-xl`}
                       >
                         <div className="flex items-center space-x-4 rtl:space-x-reverse">
@@ -223,18 +231,18 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
                             </h3>
                             <div className="flex flex-wrap gap-2 mt-2">
                               {item.weight_kg && (
-                                <span className="text-xs lg:text-sm text-gray-400 bg-gray-700/50 px-2.5 py-1 rounded-lg font-medium">
-                                  {item.weight_kg} kg
+                                <span className="text-xs lg:text-sm text-zinc-400 bg-zinc-700/50 px-2.5 py-1 rounded-lg font-medium">
+                                  {item.weight_kg} ק"ג
                                 </span>
                               )}
                               {item.resistance_level && (
-                                <span className="text-xs lg:text-sm text-gray-400 bg-gray-700/50 px-2.5 py-1 rounded-lg font-medium">
-                                  Level {item.resistance_level}/5
+                                <span className="text-xs lg:text-sm text-zinc-400 bg-zinc-700/50 px-2.5 py-1 rounded-lg font-medium">
+                                  רמה {item.resistance_level}/5
                                 </span>
                               )}
                               {item.is_bodyweight && (
                                 <span className="text-xs lg:text-sm text-emerald-400 bg-emerald-500/20 px-2.5 py-1 rounded-lg font-medium">
-                                  Bodyweight
+                                  משקל גוף
                                 </span>
                               )}
                             </div>
@@ -253,11 +261,11 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
 
           {!loading && filteredEquipment.length === 0 && (
             <div className="text-center py-16">
-              <div className="p-4 bg-gray-800/50 rounded-2xl inline-block mb-4">
-                <Package className="h-12 w-12 text-gray-600" />
+              <div className="p-4 bg-zinc-800/50 rounded-2xl inline-block mb-4">
+                <Package className="h-12 w-12 text-zinc-600" />
               </div>
-              <p className="text-gray-400 text-lg font-medium">No matching equipment found</p>
-              <p className="text-gray-500 text-sm mt-2">Try adjusting your search or filters</p>
+              <p className="text-zinc-400 text-lg font-medium">לא נמצא ציוד תואם</p>
+              <p className="text-zinc-500 text-sm mt-2">נסה לשנות את החיפוש או הפילטרים</p>
             </div>
           )}
         </div>

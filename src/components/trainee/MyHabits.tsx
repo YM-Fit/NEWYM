@@ -6,6 +6,7 @@ import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import toast from 'react-hot-toast';
 import { EmptyState } from '../common/EmptyState';
+import { logger } from '../../utils/logger';
 
 interface MyHabitsProps {
   traineeId: string;
@@ -24,6 +25,7 @@ export default function MyHabits({ traineeId }: MyHabitsProps) {
     unit: '',
   });
   const [todayLogs, setTodayLogs] = useState<Map<string, HabitLog>>(new Map());
+  const [inputValues, setInputValues] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     loadHabits();
@@ -50,7 +52,7 @@ export default function MyHabits({ traineeId }: MyHabitsProps) {
       }
       setHabitLogs(logsMap);
     } catch (error) {
-      console.error('Error loading habits:', error);
+      logger.error('Error loading habits', error, 'MyHabits');
       toast.error('שגיאה בטעינת הרגלים');
     } finally {
       setLoading(false);
@@ -106,12 +108,17 @@ export default function MyHabits({ traineeId }: MyHabitsProps) {
       });
       loadHabits();
     } catch (error) {
-      console.error('Error creating habit:', error);
+      logger.error('Error creating habit', error, 'MyHabits');
       toast.error('שגיאה ביצירת הרגל');
     }
   };
 
   const handleLogHabit = async (habitId: string, value: number) => {
+    if (isNaN(value) || value <= 0) {
+      toast.error('נא להזין ערך תקין');
+      return;
+    }
+
     try {
       const today = new Date().toISOString().split('T')[0];
       await habitsApi.logHabit({
@@ -121,11 +128,24 @@ export default function MyHabits({ traineeId }: MyHabitsProps) {
       });
 
       toast.success('ההרגל נרשם בהצלחה');
+      setInputValues(prev => {
+        const next = new Map(prev);
+        next.set(habitId, '');
+        return next;
+      });
       loadHabits();
     } catch (error) {
-      console.error('Error logging habit:', error);
+      logger.error('Error logging habit', error, 'MyHabits');
       toast.error('שגיאה ברישום הרגל');
     }
+  };
+
+  const handleInputChange = (habitId: string, value: string) => {
+    setInputValues(prev => {
+      const next = new Map(prev);
+      next.set(habitId, value);
+      return next;
+    });
   };
 
   const handleDeleteHabit = async (habitId: string) => {
@@ -136,7 +156,7 @@ export default function MyHabits({ traineeId }: MyHabitsProps) {
       toast.success('ההרגל נמחק בהצלחה');
       loadHabits();
     } catch (error) {
-      console.error('Error deleting habit:', error);
+      logger.error('Error deleting habit', error, 'MyHabits');
       toast.error('שגיאה במחיקת הרגל');
     }
   };
@@ -346,25 +366,25 @@ export default function MyHabits({ traineeId }: MyHabitsProps) {
                   <input
                     type="number"
                     placeholder={`הזן ${habit.unit || 'ערך'}`}
-                    defaultValue={todayLog?.actual_value || ''}
+                    value={inputValues.get(habit.id) || (todayLog?.actual_value?.toString() || '')}
+                    onChange={(e) => handleInputChange(habit.id, e.target.value)}
                     className="flex-1 px-4 py-2 rounded-xl bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-[var(--color-text-primary)]"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         const value = parseFloat((e.target as HTMLInputElement).value);
-                        if (!isNaN(value)) {
+                        if (!isNaN(value) && value > 0) {
                           handleLogHabit(habit.id, value);
-                          (e.target as HTMLInputElement).value = '';
                         }
                       }
                     }}
                   />
                   <Button
                     onClick={() => {
-                      const input = document.querySelector(`input[placeholder*="${habit.unit || 'ערך'}"]`) as HTMLInputElement;
-                      const value = parseFloat(input?.value || '0');
+                      const value = parseFloat(inputValues.get(habit.id) || '0');
                       if (!isNaN(value) && value > 0) {
                         handleLogHabit(habit.id, value);
-                        if (input) input.value = '';
+                      } else {
+                        toast.error('נא להזין ערך תקין');
                       }
                     }}
                     className="px-4"

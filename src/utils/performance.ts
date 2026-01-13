@@ -3,6 +3,8 @@
  * Measures and tracks performance metrics
  */
 
+import { logger } from './logger';
+
 export class PerformanceMonitor {
   private static marks: Map<string, number> = new Map();
   
@@ -27,7 +29,7 @@ export class PerformanceMonitor {
         
         // Log in development
         if (import.meta.env.DEV) {
-          console.log(`⏱️ ${name}: ${duration.toFixed(2)}ms`);
+          logger.log(`⏱️ ${name}: ${duration.toFixed(2)}ms`, undefined, 'PerformanceMonitor');
         }
         
         // Send to analytics in production for slow operations

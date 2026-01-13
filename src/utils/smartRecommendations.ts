@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { analyticsApi } from '../api/analyticsApi';
+import { logger } from './logger';
 
 export interface Recommendation {
   type: 'workout' | 'nutrition' | 'measurement' | 'habit' | 'general';
@@ -161,7 +162,7 @@ export const smartRecommendations = {
         });
       }
     } catch (error) {
-      console.error('Error generating recommendations:', error);
+      logger.error('Error generating recommendations', error, 'smartRecommendations');
     }
 
     return recommendations.sort((a, b) => {

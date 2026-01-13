@@ -5,6 +5,7 @@ import { LoadingSpinner } from '../../ui/LoadingSpinner';
 import { Card } from '../../ui/Card';
 import { useAuth } from '../../../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { logger } from '../../../utils/logger';
 
 export default function AdherenceMetricsComponent() {
   const { user } = useAuth();
@@ -26,7 +27,7 @@ export default function AdherenceMetricsComponent() {
       const data = await analyticsApi.getTraineeAdherence(user.id);
       setMetrics(data);
     } catch (error) {
-      console.error('Error loading adherence metrics:', error);
+      logger.error('Error loading adherence metrics', error, 'AdherenceMetrics');
       toast.error('שגיאה בטעינת מדדי adherence');
     } finally {
       setLoading(false);

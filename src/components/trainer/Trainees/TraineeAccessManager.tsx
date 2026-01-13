@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Key, Lock, Unlock, Eye, EyeOff, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
+import { logger } from '../../../utils/logger';
 
 interface TraineeAccess {
   id: string;
@@ -43,7 +44,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
       if (error) throw error;
       setAccess(data);
     } catch (error) {
-      console.error('Error loading access:', error);
+      logger.error('Error loading access', error, 'TraineeAccessManager');
       toast.error('שגיאה בטעינת פרטי גישה');
     } finally {
       setLoading(false);
@@ -96,7 +97,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
       setPassword('');
       await loadAccess();
     } catch (error) {
-      console.error('Error creating access:', error);
+      logger.error('Error creating access', error, 'TraineeAccessManager');
       toast.error('שגיאה ביצירת גישה');
     } finally {
       setSaving(false);
@@ -117,7 +118,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
       toast.success(access.is_active ? 'גישה הושבתה' : 'גישה הופעלה');
       setAccess({ ...access, is_active: !access.is_active });
     } catch (error) {
-      console.error('Error toggling access:', error);
+      logger.error('Error toggling access', error, 'TraineeAccessManager');
       toast.error('שגיאה בשינוי סטטוס גישה');
     }
   };
@@ -165,7 +166,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
 
       toast.success('הסיסמה עודכנה בהצלחה');
     } catch (error) {
-      console.error('Error resetting password:', error);
+      logger.error('Error resetting password', error, 'TraineeAccessManager');
       toast.error('שגיאה באיפוס סיסמה');
     }
   };
@@ -188,7 +189,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
       toast.success('גישה נמחקה בהצלחה');
       setAccess(null);
     } catch (error) {
-      console.error('Error deleting access:', error);
+      logger.error('Error deleting access', error, 'TraineeAccessManager');
       toast.error('שגיאה במחיקת גישה');
     }
   };

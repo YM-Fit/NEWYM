@@ -44,7 +44,9 @@ export default function QuickNumericPad({
       let newValue = isAbsolute ? amount : prev + amount;
       if (minValue !== undefined && newValue < minValue) newValue = minValue;
       if (maxValue !== undefined && newValue > maxValue) newValue = maxValue;
-      return allowDecimal ? Math.round(newValue * 10) / 10 : Math.round(newValue);
+      const finalValue = allowDecimal ? Math.round(newValue * 10) / 10 : Math.round(newValue);
+      setInputValue(finalValue.toString());
+      return finalValue;
     });
   }, [allowDecimal, minValue, maxValue]);
 
@@ -161,10 +163,11 @@ export default function QuickNumericPad({
         { label: '+20', value: 20, isAbsolute: false },
       ];
 
-  const handleReset = () => {
-    setCurrentValue(0);
-    setInputValue('0');
-  };
+  const handleReset = useCallback(() => {
+    const resetValue = minValue || 0;
+    setCurrentValue(resetValue);
+    setInputValue(resetValue.toString());
+  }, [minValue]);
 
   return (
     <div
@@ -215,12 +218,16 @@ export default function QuickNumericPad({
           </div>
         </div>
 
-        <div className={`grid gap-3 lg:gap-4 mb-6 ${isRpeMode ? 'grid-cols-5' : 'grid-cols-3'}`}>
+        <div className={`grid gap-3 lg:gap-4 mb-6 ${isRpeMode ? 'grid-cols-5' : 'grid-cols-3'}`} dir="rtl">
           {buttons.map((btn) => (
             <button
               key={btn.label}
               type="button"
-              onClick={() => handleAdd(btn.value, btn.isAbsolute)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleAdd(btn.value, btn.isAbsolute);
+              }}
               className={`${
                 isRpeMode && currentValue === btn.value
                   ? 'bg-emerald-500 ring-4 ring-emerald-500/30'
@@ -232,20 +239,28 @@ export default function QuickNumericPad({
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4" dir="rtl">
           <button
             type="button"
-            onClick={handleReset}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleReset();
+            }}
             className="bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 text-amber-400 py-6 lg:py-8 px-6 rounded-xl text-2xl lg:text-3xl font-bold transition-all active:scale-95 touch-manipulation"
           >
-            Reset
+            איפוס
           </button>
           <button
             type="button"
-            onClick={handleConfirm}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleConfirm();
+            }}
             className="bg-emerald-500 hover:bg-emerald-600 text-white py-6 lg:py-8 px-6 rounded-xl text-2xl lg:text-3xl font-bold transition-all active:scale-95 touch-manipulation"
           >
-            Confirm
+            אישור
           </button>
         </div>
       </div>

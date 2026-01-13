@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Bell, X, Calendar, ClipboardCheck, Check } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
+import { logger } from '../../../utils/logger';
 
 interface Notification {
   id: string;
@@ -80,7 +81,7 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
       setNotifications(data || []);
       setUnreadCount(data?.filter(n => !n.is_read).length || 0);
     } catch (error) {
-      console.error('Error loading notifications:', error);
+      logger.error('Error loading notifications', error, 'NotificationBell');
     }
   };
 
@@ -98,7 +99,7 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
       ));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      logger.error('Error marking notification as read', error, 'NotificationBell');
     }
   };
 
@@ -119,7 +120,7 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
       setUnreadCount(0);
       toast.success('כל התראות סומנו כנקראו');
     } catch (error) {
-      console.error('Error marking all as read:', error);
+      logger.error('Error marking all as read', error, 'NotificationBell');
       toast.error('שגיאה בסימון התראות');
     }
   };
@@ -139,7 +140,7 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
       }
       setNotifications(notifications.filter(n => n.id !== notificationId));
     } catch (error) {
-      console.error('Error deleting notification:', error);
+      logger.error('Error deleting notification', error, 'NotificationBell');
       toast.error('שגיאה במחיקת התראה');
     }
   };

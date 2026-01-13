@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Bell, AlertTriangle, TrendingUp, TrendingDown, Calendar, CheckCircle, X, Loader2, Settings, Filter } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
+import { logger } from '../../../utils/logger';
 
 interface WeightAlert {
   id: string;
@@ -53,7 +54,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
         setAlertSettings({ ...alertSettings, ...JSON.parse(savedSettings) });
       }
     } catch (error) {
-      console.error('Error loading settings:', error);
+      logger.error('Error loading settings', error, 'WeightAlerts');
     }
   };
 
@@ -65,7 +66,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
       setShowSettings(false);
       loadAlerts();
     } catch (error) {
-      console.error('Error saving settings:', error);
+      logger.error('Error saving settings', error, 'WeightAlerts');
       toast.error('שגיאה בשמירת ההגדרות');
     }
   };
@@ -195,7 +196,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
 
       setAlerts(newAlerts);
     } catch (error) {
-      console.error('Error loading alerts:', error);
+      logger.error('Error loading alerts', error, 'WeightAlerts');
       toast.error('שגיאה בטעינת התראות');
     } finally {
       setLoading(false);

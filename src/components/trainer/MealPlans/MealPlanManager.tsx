@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Power, PowerOff, ArrowRight, Sparkles, UtensilsCrossed, X } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
+import { logger } from '../../../utils/logger';
 
 interface MealPlan {
   id: string;
@@ -44,7 +45,7 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
       if (error) throw error;
       setPlans(data || []);
     } catch (error) {
-      console.error('Error loading meal plans:', error);
+      logger.error('Error loading meal plans', error, 'MealPlanManager');
       toast.error('שגיאה בטעינת תפריטים');
     } finally {
       setLoading(false);
@@ -80,7 +81,7 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
       setNewPlanName('');
       loadPlans();
     } catch (error) {
-      console.error('Error creating meal plan:', error);
+      logger.error('Error creating meal plan', error, 'MealPlanManager');
       toast.error('שגיאה ביצירת תפריט');
     } finally {
       setSaving(false);
@@ -99,7 +100,7 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
       toast.success(currentStatus ? 'תפריט הושבת' : 'תפריט הופעל');
       loadPlans();
     } catch (error) {
-      console.error('Error toggling meal plan:', error);
+      logger.error('Error toggling meal plan', error, 'MealPlanManager');
       toast.error('שגיאה בשינוי סטטוס תפריט');
     }
   };
@@ -120,7 +121,7 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
       toast.success('תפריט נמחק בהצלחה');
       loadPlans();
     } catch (error) {
-      console.error('Error deleting meal plan:', error);
+      logger.error('Error deleting meal plan', error, 'MealPlanManager');
       toast.error('שגיאה במחיקת תפריט');
     }
   };

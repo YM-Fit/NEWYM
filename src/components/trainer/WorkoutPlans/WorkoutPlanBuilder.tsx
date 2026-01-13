@@ -18,6 +18,7 @@ import ExerciseSelector from '../Workouts/ExerciseSelector';
 import QuickNumericPad from '../Workouts/QuickNumericPad';
 import EquipmentSelector from '../Equipment/EquipmentSelector';
 import ExerciseInstructionsModal from '../../common/ExerciseInstructionsModal';
+import { logger } from '../../../utils/logger';
 
 interface Exercise {
   id: string;
@@ -496,7 +497,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
         await loadPlanDays(planData.id);
       }
     } catch (error) {
-      console.error('Error loading active plan:', error);
+      logger.error('Error loading active plan', error, 'WorkoutPlanBuilder');
     } finally {
       setLoading(false);
     }
@@ -601,7 +602,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
       setDays(loadedDays);
     } catch (error) {
-      console.error('Error loading plan days:', error);
+      logger.error('Error loading plan days', error, 'WorkoutPlanBuilder');
       toast.error('שגיאה בטעינת התוכנית');
     }
   };
@@ -821,7 +822,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
       toast.success(activePlanId ? 'תוכנית עודכנה בהצלחה!' : 'תוכנית נשמרה בהצלחה!');
       onBack();
     } catch (error) {
-      console.error('Error saving plan:', error);
+      logger.error('Error saving plan', error, 'WorkoutPlanBuilder');
       toast.error('שגיאה בשמירת התוכנית');
     } finally {
       setSaving(false);

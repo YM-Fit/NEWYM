@@ -8,6 +8,7 @@ import { useScaleSound } from '../../../hooks/useScaleSound';
 import AutoSaveIndicator from '../../common/AutoSaveIndicator';
 import DraftModal from '../../common/DraftModal';
 import { calculateMetabolicAge, getMetabolicAgeMessage } from '../../../utils/metabolicAge';
+import { logger } from '../../../utils/logger';
 
 interface MeasurementFormProps {
   trainee: Trainee;
@@ -308,7 +309,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       .single();
 
     if (error) {
-      console.error('Error saving measurement:', error);
+      logger.error('Error saving measurement', error, 'MeasurementForm');
       alert('שגיאה בשמירת המדידה');
       return;
     }

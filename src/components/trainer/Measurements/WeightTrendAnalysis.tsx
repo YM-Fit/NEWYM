@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { TrendingUp, TrendingDown, Minus, BarChart3, Calculator, Target, Loader2, Calendar } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
+import { logger } from '../../../utils/logger';
 
 interface WeightDataPoint {
   date: string;
@@ -95,7 +96,7 @@ export default function WeightTrendAnalysis({
 
       setWeightData(allWeights);
     } catch (error) {
-      console.error('Error loading weight data:', error);
+      logger.error('Error loading weight data', error, 'WeightTrendAnalysis');
     } finally {
       setLoading(false);
     }

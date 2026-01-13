@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { FileText, Calendar, Download, Loader2, TrendingUp, TrendingDown, Target, Users } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
+import { logger } from '../../../utils/logger';
 
 interface WeightReport {
   trainee_id: string;
@@ -159,7 +160,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
       reports.sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
       setReports(reports);
     } catch (error) {
-      console.error('Error generating reports:', error);
+      logger.error('Error generating reports', error, 'WeightReports');
       toast.error('שגיאה ביצירת דוחות');
     } finally {
       setLoading(false);

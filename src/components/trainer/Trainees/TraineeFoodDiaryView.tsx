@@ -15,6 +15,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { logger } from '../../../utils/logger';
 
 interface TraineeFoodDiaryViewProps {
   traineeId: string;
@@ -180,7 +181,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
       .maybeSingle();
 
     if (error) {
-      console.error('Error marking diary as seen:', error);
+      logger.error('Error marking diary as seen', error, 'TraineeFoodDiaryView');
       return;
     }
 

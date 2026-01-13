@@ -2,6 +2,8 @@
  * Safe localStorage utilities with error handling
  */
 
+import { logger } from './logger';
+
 export function getFromStorage<T>(key: string, defaultValue: T): T {
   try {
     const item = localStorage.getItem(key);
@@ -10,7 +12,7 @@ export function getFromStorage<T>(key: string, defaultValue: T): T {
     }
     return JSON.parse(item) as T;
   } catch (error) {
-    console.warn(`Error reading from localStorage key "${key}":`, error);
+    logger.warn(`Error reading from localStorage key "${key}"`, error, 'storage');
     return defaultValue;
   }
 }
@@ -20,7 +22,7 @@ export function setToStorage<T>(key: string, value: T): boolean {
     localStorage.setItem(key, JSON.stringify(value));
     return true;
   } catch (error) {
-    console.warn(`Error writing to localStorage key "${key}":`, error);
+    logger.warn(`Error writing to localStorage key "${key}"`, error, 'storage');
     return false;
   }
 }
@@ -30,7 +32,7 @@ export function removeFromStorage(key: string): boolean {
     localStorage.removeItem(key);
     return true;
   } catch (error) {
-    console.warn(`Error removing from localStorage key "${key}":`, error);
+    logger.warn(`Error removing from localStorage key "${key}"`, error, 'storage');
     return false;
   }
 }
@@ -40,7 +42,7 @@ export function clearStorage(): boolean {
     localStorage.clear();
     return true;
   } catch (error) {
-    console.warn('Error clearing localStorage:', error);
+    logger.warn('Error clearing localStorage', error, 'storage');
     return false;
   }
 }
@@ -67,7 +69,7 @@ export function getFromSession<T>(key: string, defaultValue: T): T {
     }
     return JSON.parse(item) as T;
   } catch (error) {
-    console.warn(`Error reading from sessionStorage key "${key}":`, error);
+    logger.warn(`Error reading from sessionStorage key "${key}"`, error, 'storage');
     return defaultValue;
   }
 }
@@ -77,7 +79,7 @@ export function setToSession<T>(key: string, value: T): boolean {
     sessionStorage.setItem(key, JSON.stringify(value));
     return true;
   } catch (error) {
-    console.warn(`Error writing to sessionStorage key "${key}":`, error);
+    logger.warn(`Error writing to sessionStorage key "${key}"`, error, 'storage');
     return false;
   }
 }

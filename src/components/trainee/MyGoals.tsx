@@ -6,6 +6,7 @@ import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import toast from 'react-hot-toast';
 import { EmptyState } from '../common/EmptyState';
+import { logger } from '../../utils/logger';
 
 interface MyGoalsProps {
   traineeId: string;
@@ -33,7 +34,7 @@ export default function MyGoals({ traineeId }: MyGoalsProps) {
       const data = await goalsApi.getTraineeGoals(traineeId);
       setGoals(data);
     } catch (error) {
-      console.error('Error loading goals:', error);
+      logger.error('Error loading goals', error, 'MyGoals');
       toast.error('שגיאה בטעינת יעדים');
     } finally {
       setLoading(false);
@@ -67,7 +68,7 @@ export default function MyGoals({ traineeId }: MyGoalsProps) {
       });
       loadGoals();
     } catch (error) {
-      console.error('Error creating goal:', error);
+      logger.error('Error creating goal', error, 'MyGoals');
       toast.error('שגיאה ביצירת יעד');
     }
   };
@@ -80,7 +81,7 @@ export default function MyGoals({ traineeId }: MyGoalsProps) {
       toast.success('היעד נמחק בהצלחה');
       loadGoals();
     } catch (error) {
-      console.error('Error deleting goal:', error);
+      logger.error('Error deleting goal', error, 'MyGoals');
       toast.error('שגיאה במחיקת יעד');
     }
   };

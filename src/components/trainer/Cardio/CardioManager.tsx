@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { ArrowRight, Activity, TrendingUp, Timer, Calendar, Target, BarChart3, Plus, Edit2, Trash2, Save, X, Footprints, Loader2, Flame } from 'lucide-react';
+import { ArrowRight, Activity, TrendingUp, Calendar, Target, BarChart3, Plus, Edit2, Trash2, Save, X, Footprints, Loader2, Flame } from 'lucide-react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, Cell } from 'recharts';
 import toast from 'react-hot-toast';
 import { cardioApi, type CardioActivity, type CardioType, type CardioStats } from '../../../api/cardioApi';
+import { logger } from '../../../utils/logger';
 
 interface CardioManagerProps {
   traineeId: string;
@@ -47,7 +48,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
         loadStats()
       ]);
     } catch (error) {
-      console.error('Error loading data:', error);
+      logger.error('Error loading data', error, 'CardioManager');
     } finally {
       setLoading(false);
     }
@@ -76,7 +77,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
       const data = await cardioApi.getCardioStats(traineeId);
       setStats(data);
     } catch (error: any) {
-      console.error('Error loading stats:', error);
+      logger.error('Error loading stats', error, 'CardioManager');
     }
   };
 
@@ -162,7 +163,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
 
   const handleEdit = (activity: CardioActivity) => {
     setFormData({
-      cardio_type_id: activity.cardio_type.id,
+      cardio_type_id: activity.cardio_type?.id || '',
       date: activity.date,
       avg_weekly_steps: activity.avg_weekly_steps,
       distance: activity.distance,
@@ -261,7 +262,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
                 <Activity className="h-4 w-4 text-sky-400" />
                 <span className="text-xs text-zinc-500">סוג אירובי</span>
               </div>
-              <p className="text-lg font-bold text-white">{latestActivity.cardio_type.name}</p>
+              <p className="text-lg font-bold text-white">{latestActivity.cardio_type?.name || 'לא זמין'}</p>
             </div>
 
             <div className="p-4 bg-zinc-900/50 rounded-xl border border-zinc-800">
@@ -455,7 +456,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <span className="px-2.5 py-1 bg-sky-500/15 text-sky-400 rounded-lg text-sm font-medium">
-                        {activity.cardio_type.name}
+                        {activity.cardio_type?.name || 'לא זמין'}
                       </span>
                       <span className="text-sm text-zinc-500">
                         {new Date(activity.date).toLocaleDateString('he-IL', {

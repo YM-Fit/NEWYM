@@ -7,6 +7,7 @@ import { Card } from '../../ui/Card';
 import { useAuth } from '../../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { EmptyState } from '../../common/EmptyState';
+import { logger } from '../../../utils/logger';
 
 interface WeeklyTasksManagerProps {
   traineeId: string;
@@ -64,7 +65,7 @@ export default function WeeklyTasksManager({
       const data = await tasksApi.getTraineeTasks(traineeId, selectedWeek);
       setTasks(data);
     } catch (error) {
-      console.error('Error loading tasks:', error);
+      logger.error('Error loading tasks', error, 'WeeklyTasksManager');
       toast.error('שגיאה בטעינת משימות');
     } finally {
       setLoading(false);
@@ -97,7 +98,7 @@ export default function WeeklyTasksManager({
       });
       loadTasks();
     } catch (error) {
-      console.error('Error creating task:', error);
+      logger.error('Error creating task', error, 'WeeklyTasksManager');
       toast.error('שגיאה ביצירת משימה');
     }
   };
@@ -108,7 +109,7 @@ export default function WeeklyTasksManager({
       toast.success('המשימה סומנה כמושלמת');
       loadTasks();
     } catch (error) {
-      console.error('Error completing task:', error);
+      logger.error('Error completing task', error, 'WeeklyTasksManager');
       toast.error('שגיאה בסימון משימה');
     }
   };
@@ -121,7 +122,7 @@ export default function WeeklyTasksManager({
       toast.success('המשימה נמחקה בהצלחה');
       loadTasks();
     } catch (error) {
-      console.error('Error deleting task:', error);
+      logger.error('Error deleting task', error, 'WeeklyTasksManager');
       toast.error('שגיאה במחיקת משימה');
     }
   };
