@@ -691,32 +691,32 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
                               {/* Pills - Sets, Reps, Rest */}
                               <div className="flex flex-wrap gap-2 mb-3">
-                                <div className="bg-emerald-500/15 border border-emerald-500/30 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                <div className="bg-emerald-500/12 border border-emerald-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
                                   <Repeat className="w-3.5 h-3.5 text-emerald-400" />
-                                  <span className="text-sm font-bold text-emerald-400">{exercise.sets_count} סטים</span>
+                                  <span className="text-xs md:text-sm font-bold text-emerald-400">{exercise.sets_count} סטים</span>
                                 </div>
 
-                                <div className="bg-cyan-500/15 border border-cyan-500/30 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                <div className="bg-cyan-500/12 border border-cyan-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
                                   <Target className="w-3.5 h-3.5 text-cyan-400" />
-                                  <span className="text-sm font-bold text-cyan-400">{exercise.reps_range} חזרות</span>
+                                  <span className="text-xs md:text-sm font-bold text-cyan-400">{exercise.reps_range} חזרות</span>
                                 </div>
 
-                                <div className="bg-amber-500/15 border border-amber-500/30 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                <div className="bg-amber-500/12 border border-amber-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
                                   <Clock className="w-3.5 h-3.5 text-amber-400" />
-                                  <span className="text-sm font-bold text-amber-400">{formatRestTime(exercise.rest_seconds)}{exercise.rest_seconds >= 60 ? 'ד׳' : 'ש׳'}</span>
+                                  <span className="text-xs md:text-sm font-bold text-amber-400">{formatRestTime(exercise.rest_seconds)}{exercise.rest_seconds >= 60 ? 'ד׳' : 'ש׳'}</span>
                                 </div>
 
                                 {exercise.failure && (
-                                  <div className="bg-rose-500/15 border border-rose-500/30 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                  <div className="bg-rose-500/12 border border-rose-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
                                     <Activity className="w-3.5 h-3.5 text-rose-400" />
-                                    <span className="text-sm font-bold text-rose-400">כשל</span>
+                                    <span className="text-xs md:text-sm font-bold text-rose-400">כשל</span>
                                   </div>
                                 )}
 
                                 {exercise.target_rpe && (
-                                  <div className="bg-purple-500/15 border border-purple-500/30 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                  <div className="bg-purple-500/12 border border-purple-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
                                     <Award className="w-3.5 h-3.5 text-purple-400" />
-                                    <span className="text-sm font-bold text-purple-400">RPE {exercise.target_rpe}</span>
+                                    <span className="text-xs md:text-sm font-bold text-purple-400">RPE {exercise.target_rpe}</span>
                                   </div>
                                 )}
                               </div>
