@@ -38,42 +38,42 @@ const getCategoryStyle = (category: string) => {
   switch (category) {
     case 'motivation':
       return {
-        bg: 'bg-gradient-to-br from-rose-50 to-rose-100',
-        border: 'border-rose-200',
-        text: 'text-rose-700',
-        badge: 'bg-rose-200',
+        bg: 'bg-gradient-to-br from-rose-500/15 to-rose-500/8',
+        border: 'border-rose-500/30',
+        text: 'text-rose-400',
+        badge: 'bg-rose-500/20',
         icon: 'bg-rose-500',
       };
     case 'discipline':
       return {
-        bg: 'bg-gradient-to-br from-blue-50 to-blue-100',
-        border: 'border-blue-200',
-        text: 'text-blue-700',
-        badge: 'bg-blue-200',
+        bg: 'bg-gradient-to-br from-blue-500/15 to-blue-500/8',
+        border: 'border-blue-500/30',
+        text: 'text-blue-400',
+        badge: 'bg-blue-500/20',
         icon: 'bg-blue-500',
       };
     case 'patience':
       return {
-        bg: 'bg-gradient-to-br from-amber-50 to-amber-100',
-        border: 'border-amber-200',
-        text: 'text-amber-700',
-        badge: 'bg-amber-200',
+        bg: 'bg-gradient-to-br from-amber-500/15 to-amber-500/8',
+        border: 'border-amber-500/30',
+        text: 'text-amber-400',
+        badge: 'bg-amber-500/20',
         icon: 'bg-amber-500',
       };
     case 'focus':
       return {
-        bg: 'bg-gradient-to-br from-green-50 to-green-100',
-        border: 'border-green-200',
-        text: 'text-green-700',
-        badge: 'bg-green-200',
-        icon: 'bg-green-500',
+        bg: 'bg-gradient-to-br from-emerald-500/15 to-emerald-500/8',
+        border: 'border-emerald-500/30',
+        text: 'text-emerald-400',
+        badge: 'bg-emerald-500/20',
+        icon: 'bg-emerald-500',
       };
     default:
       return {
-        bg: 'bg-gradient-to-br from-slate-50 to-slate-100',
-        border: 'border-slate-200',
-        text: 'text-slate-700',
-        badge: 'bg-slate-200',
+        bg: 'bg-gradient-to-br from-slate-500/15 to-slate-500/8',
+        border: 'border-slate-500/30',
+        text: 'text-slate-400',
+        badge: 'bg-slate-500/20',
         icon: 'bg-slate-500',
       };
   }
