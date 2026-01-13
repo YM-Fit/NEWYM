@@ -490,8 +490,512 @@ export default function TraineeProfile({
             </div>
             <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">יעדי משקל</span>
           </button>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="premium-card-static h-full">
+              <div className="p-5 border-b border-zinc-800/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-emerald-400" />
+                  <h3 className="text-base font-semibold text-white">אימונים אחרונים</h3>
+                </div>
+                {onViewWorkouts && workouts.length > 0 && (
+                  <button
+                    onClick={onViewWorkouts}
+                    className="text-sm text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+                  >
+                    כל האימונים
+                  </button>
+                )}
+              </div>
+              <div className="p-5">
+                {workouts.length > 0 ? (
+                  <div className="space-y-3">
+                    {recentWorkouts.map((workout, index) => (
+                      <div
+                        key={workout.id}
+                        className="flex items-center justify-between p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all animate-fade-in"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <div>
+                          <p className="font-medium text-white">{new Date(workout.date).toLocaleDateString('he-IL')}</p>
+                          <p className="text-sm text-zinc-500">{workout.exercises.length} תרגילים</p>
+                        </div>
+                        <div className="text-left">
+                          <p className="text-lg font-bold text-emerald-400">{workout.totalVolume.toLocaleString()}</p>
+                          <p className="text-xs text-zinc-500">ק״ג נפח</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-3">
+                      <Calendar className="h-6 w-6 text-zinc-600" />
+                    </div>
+                    <p className="text-zinc-500 mb-3">אין אימונים עדיין</p>
+                    <button
+                      onClick={onNewWorkout}
+                      className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-lg hover:bg-emerald-500/30 transition-all text-sm"
+                    >
+                      הוסף אימון ראשון
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="premium-card-static h-full">
+              <div className="p-5 border-b border-zinc-800/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Scale className="h-4 w-4 text-cyan-400" />
+                  <h3 className="text-base font-semibold text-white">מדידות אחרונות</h3>
+                </div>
+                {onViewMeasurements && measurements.length > 0 && (
+                  <button
+                    onClick={onViewMeasurements}
+                    className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+                  >
+                    כל המדידות
+                  </button>
+                )}
+              </div>
+              <div className="p-5">
+                {measurements.length > 0 ? (
+                  <div className="space-y-3">
+                    {recentMeasurements.map((measurement, index) => (
+                      <div
+                        key={measurement.id}
+                        className="flex items-center justify-between p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all animate-fade-in"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <div>
+                          <p className="font-medium text-white">{new Date(measurement.date).toLocaleDateString('he-IL')}</p>
+                          <p className="text-sm text-zinc-500">{measurement.source === 'tanita' ? 'Tanita' : 'ידני'}</p>
+                        </div>
+                        <div className="text-left">
+                          <p className="text-lg font-bold text-cyan-400">{measurement.weight} ק״ג</p>
+                          {measurement.bodyFat && (
+                            <p className="text-xs text-zinc-500">{measurement.bodyFat.toFixed(1)}% שומן</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-3">
+                      <Scale className="h-6 w-6 text-zinc-600" />
+                    </div>
+                    <p className="text-zinc-500 mb-3">אין מדידות עדיין</p>
+                    <button
+                      onClick={onNewMeasurement}
+                      className="px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition-all text-sm"
+                    >
+                      הוסף מדידה ראשונה
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Self Weights */}
+          {selfWeights.length > 0 && (
+            <div className="premium-card-static">
+              <div className="p-5 border-b border-zinc-800/50 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-cyan-500/15">
+                    <Home className="h-5 w-5 text-cyan-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-white">שקילות מהבית</h3>
+                    <p className="text-sm text-zinc-500">משקלים שהמתאמן דיווח</p>
+                  </div>
+                </div>
+                {selfWeights.some(sw => !sw.is_seen_by_trainer) && onMarkSelfWeightsSeen && (
+                  <button
+                    onClick={onMarkSelfWeightsSeen}
+                    className="flex items-center gap-2 px-4 py-2 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 rounded-xl text-sm font-medium transition-all border border-cyan-500/30"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    סמן כנראה
+                  </button>
+                )}
+              </div>
+              <div className="p-5">
+                <div className="space-y-3">
+                  {selfWeights.slice(0, 5).map((sw, index) => (
+                    <div
+                      key={sw.id}
+                      className={`flex items-center justify-between p-4 rounded-xl transition-all animate-fade-in ${
+                        sw.is_seen_by_trainer
+                          ? 'bg-zinc-800/30 border border-zinc-700/30'
+                          : 'bg-cyan-500/10 border border-cyan-500/30'
+                      }`}
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <div className="flex items-center gap-3">
+                        {!sw.is_seen_by_trainer && (
+                          <span className="w-2.5 h-2.5 bg-cyan-400 rounded-full animate-pulse"></span>
+                        )}
+                        <div>
+                          <p className="font-medium text-white">
+                            {new Date(sw.weight_date).toLocaleDateString('he-IL')}
+                          </p>
+                          {sw.notes && (
+                            <p className="text-sm text-zinc-500">{sw.notes}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xl font-bold text-cyan-400">{sw.weight_kg} ק״ג</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Notes */}
+          {trainee.notes && (
+            <div className="premium-card-static p-6 border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-amber-500/5">
+              <h3 className="text-lg font-semibold text-amber-400 mb-3 flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                הערות מאמן
+              </h3>
+              <p className="text-zinc-300 leading-relaxed">{trainee.notes}</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {activeTab === 'workouts' && (
+        <div className="premium-card-static p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-emerald-400" />
+              אימונים
+            </h3>
+            <button
+              onClick={onNewWorkout}
+              className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl hover:bg-emerald-500/30 transition-all text-sm font-medium flex items-center gap-2"
+            >
+              <Calendar className="h-4 w-4" />
+              אימון חדש
+            </button>
+          </div>
+          {workouts.length > 0 ? (
+            <div className="space-y-3">
+              {workouts.map((workout, index) => (
+                <div
+                  key={workout.id}
+                  className="flex items-center justify-between p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all"
+                >
+                  <div>
+                    <p className="font-medium text-white">{new Date(workout.date).toLocaleDateString('he-IL')}</p>
+                    <p className="text-sm text-zinc-500">{workout.exercises.length} תרגילים</p>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-lg font-bold text-emerald-400">{workout.totalVolume.toLocaleString()}</p>
+                    <p className="text-xs text-zinc-500">ק״ג נפח</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
+                <Calendar className="h-8 w-8 text-zinc-600" />
+              </div>
+              <p className="text-zinc-500 mb-4">אין אימונים עדיין</p>
+              <button
+                onClick={onNewWorkout}
+                className="px-6 py-3 bg-emerald-500/20 text-emerald-400 rounded-xl hover:bg-emerald-500/30 transition-all font-medium"
+              >
+                הוסף אימון ראשון
+              </button>
+            </div>
+          )}
         </div>
-      </div>
+      )}
+
+      {activeTab === 'measurements' && (
+        <div className="space-y-6">
+          <div className="premium-card-static p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Scale className="h-5 w-5 text-cyan-400" />
+                מדידות
+              </h3>
+              <button
+                onClick={onNewMeasurement}
+                className="px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-xl hover:bg-cyan-500/30 transition-all text-sm font-medium flex items-center gap-2"
+              >
+                <Scale className="h-4 w-4" />
+                מדידה חדשה
+              </button>
+            </div>
+            {measurements.length > 0 ? (
+              <div className="space-y-3">
+                {measurements.map((measurement, index) => (
+                  <div
+                    key={measurement.id}
+                    className="flex items-center justify-between p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all"
+                  >
+                    <div>
+                      <p className="font-medium text-white">{new Date(measurement.date).toLocaleDateString('he-IL')}</p>
+                      <p className="text-sm text-zinc-500">{measurement.source === 'tanita' ? 'Tanita' : 'ידני'}</p>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-lg font-bold text-cyan-400">{measurement.weight} ק״ג</p>
+                      {measurement.bodyFat && (
+                        <p className="text-xs text-zinc-500">{measurement.bodyFat.toFixed(1)}% שומן</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
+                  <Scale className="h-8 w-8 text-zinc-600" />
+                </div>
+                <p className="text-zinc-500 mb-4">אין מדידות עדיין</p>
+                <button
+                  onClick={onNewMeasurement}
+                  className="px-6 py-3 bg-cyan-500/20 text-cyan-400 rounded-xl hover:bg-cyan-500/30 transition-all font-medium"
+                >
+                  הוסף מדידה ראשונה
+                </button>
+              </div>
+            )}
+          </div>
+          {selfWeights.length > 0 && (
+            <div className="premium-card-static">
+              <div className="p-5 border-b border-zinc-800/50 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Home className="h-5 w-5 text-cyan-400" />
+                  <h3 className="text-base font-semibold text-white">שקילות מהבית</h3>
+                </div>
+                {selfWeights.some(sw => !sw.is_seen_by_trainer) && onMarkSelfWeightsSeen && (
+                  <button
+                    onClick={onMarkSelfWeightsSeen}
+                    className="flex items-center gap-2 px-4 py-2 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 rounded-xl text-sm font-medium transition-all"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    סמן כנראה
+                  </button>
+                )}
+              </div>
+              <div className="p-5">
+                <div className="space-y-3">
+                  {selfWeights.map((sw, index) => (
+                    <div
+                      key={sw.id}
+                      className={`flex items-center justify-between p-4 rounded-xl transition-all ${
+                        sw.is_seen_by_trainer
+                          ? 'bg-zinc-800/30 border border-zinc-700/30'
+                          : 'bg-cyan-500/10 border border-cyan-500/30'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {!sw.is_seen_by_trainer && (
+                          <span className="w-2.5 h-2.5 bg-cyan-400 rounded-full animate-pulse"></span>
+                        )}
+                        <div>
+                          <p className="font-medium text-white">
+                            {new Date(sw.weight_date).toLocaleDateString('he-IL')}
+                          </p>
+                          {sw.notes && (
+                            <p className="text-sm text-zinc-500">{sw.notes}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xl font-bold text-cyan-400">{sw.weight_kg} ק״ג</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'plans' && (
+        <div className="premium-card-static p-6">
+          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 text-emerald-400" />
+            תוכניות
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {onViewWorkoutPlans && (
+              <button
+                onClick={onViewWorkoutPlans}
+                className="p-6 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-emerald-500/50 transition-all text-right"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-3 rounded-xl bg-rose-500/15 text-rose-400">
+                    <ClipboardList className="h-6 w-6" />
+                  </div>
+                  <h4 className="font-semibold text-white">תוכניות אימון</h4>
+                </div>
+                <p className="text-sm text-zinc-400">נהל תוכניות אימון שבועיות</p>
+              </button>
+            )}
+            {onViewMealPlans && (
+              <button
+                onClick={onViewMealPlans}
+                className="p-6 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-orange-500/50 transition-all text-right"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-3 rounded-xl bg-orange-500/15 text-orange-400">
+                    <UtensilsCrossed className="h-6 w-6" />
+                  </div>
+                  <h4 className="font-semibold text-white">תפריטים</h4>
+                </div>
+                <p className="text-sm text-zinc-400">נהל תוכניות תזונה</p>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'tools' && (
+        <div className="premium-card-static p-6">
+          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+            <Brain className="h-5 w-5 text-emerald-400" />
+            כלים ופיצ'רים
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {onViewMentalTools && (
+              <button
+                onClick={onViewMentalTools}
+                className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-pink-500/50 transition-all text-right"
+              >
+                <div className="p-3 rounded-xl bg-pink-500/15 text-pink-400 mb-3 w-fit">
+                  <Brain className="h-5 w-5" />
+                </div>
+                <h4 className="font-semibold text-white mb-1">כלים מנטליים</h4>
+                <p className="text-sm text-zinc-400">כלים פסיכולוגיים</p>
+              </button>
+            )}
+            {onViewCardio && (
+              <button
+                onClick={onViewCardio}
+                className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-sky-500/50 transition-all text-right"
+              >
+                <div className="p-3 rounded-xl bg-sky-500/15 text-sky-400 mb-3 w-fit">
+                  <Activity className="h-5 w-5" />
+                </div>
+                <h4 className="font-semibold text-white mb-1">אירובי</h4>
+                <p className="text-sm text-zinc-400">ניהול אימונים אירוביים</p>
+              </button>
+            )}
+            {onViewFoodDiary && (
+              <button
+                onClick={onViewFoodDiary}
+                className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-amber-500/50 transition-all text-right"
+              >
+                <div className="p-3 rounded-xl bg-amber-500/15 text-amber-400 mb-3 w-fit">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <h4 className="font-semibold text-white mb-1">יומן אכילה</h4>
+                <p className="text-sm text-zinc-400">עקוב אחר תזונה</p>
+              </button>
+            )}
+            {onViewWeeklyTasks && (
+              <button
+                onClick={onViewWeeklyTasks}
+                className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-purple-500/50 transition-all text-right"
+              >
+                <div className="p-3 rounded-xl bg-purple-500/15 text-purple-400 mb-3 w-fit">
+                  <ClipboardList className="h-5 w-5" />
+                </div>
+                <h4 className="font-semibold text-white mb-1">משימות שבועיות</h4>
+                <p className="text-sm text-zinc-400">ניהול משימות</p>
+              </button>
+            )}
+            {onViewTraineeAccess && (
+              <button
+                onClick={onViewTraineeAccess}
+                className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-sky-500/50 transition-all text-right"
+              >
+                <div className="p-3 rounded-xl bg-sky-500/15 text-sky-400 mb-3 w-fit">
+                  <Key className="h-5 w-5" />
+                </div>
+                <h4 className="font-semibold text-white mb-1">גישה לאפליקציה</h4>
+                <p className="text-sm text-zinc-400">ניהול הרשאות</p>
+              </button>
+            )}
+            <button
+              onClick={() => setShowTDEE(true)}
+              className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-emerald-500/50 transition-all text-right"
+            >
+              <div className="p-3 rounded-xl bg-emerald-500/15 text-emerald-400 mb-3 w-fit">
+                <Calculator className="h-5 w-5" />
+              </div>
+              <h4 className="font-semibold text-white mb-1">מחשבון TDEE</h4>
+              <p className="text-sm text-zinc-400">חישוב מטבוליזם</p>
+            </button>
+            <button
+              onClick={() => setShowTimeline(true)}
+              className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-blue-500/50 transition-all text-right"
+            >
+              <div className="p-3 rounded-xl bg-blue-500/15 text-blue-400 mb-3 w-fit">
+                <History className="h-5 w-5" />
+              </div>
+              <h4 className="font-semibold text-white mb-1">ציר זמן</h4>
+              <p className="text-sm text-zinc-400">היסטוריית פעילות</p>
+            </button>
+            <button
+              onClick={() => setShowGoals(true)}
+              className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-yellow-500/50 transition-all text-right"
+            >
+              <div className="p-3 rounded-xl bg-yellow-500/15 text-yellow-400 mb-3 w-fit">
+                <Target className="h-5 w-5" />
+              </div>
+              <h4 className="font-semibold text-white mb-1">יעדים</h4>
+              <p className="text-sm text-zinc-400">ניהול יעדים</p>
+            </button>
+            <button
+              onClick={() => setShowNotes(true)}
+              className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-orange-500/50 transition-all text-right"
+            >
+              <div className="p-3 rounded-xl bg-orange-500/15 text-orange-400 mb-3 w-fit">
+                <FileText className="h-5 w-5" />
+              </div>
+              <h4 className="font-semibold text-white mb-1">הערות</h4>
+              <p className="text-sm text-zinc-400">הערות מאמן</p>
+            </button>
+            <button
+              onClick={() => setShowWeightTrend(true)}
+              className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-cyan-500/50 transition-all text-right"
+            >
+              <div className="p-3 rounded-xl bg-cyan-500/15 text-cyan-400 mb-3 w-fit">
+                <TrendingDown className="h-5 w-5" />
+              </div>
+              <h4 className="font-semibold text-white mb-1">ניתוח מגמות</h4>
+              <p className="text-sm text-zinc-400">ניתוח מגמות משקל</p>
+            </button>
+            <button
+              onClick={() => setShowWeightGoals(true)}
+              className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-emerald-500/50 transition-all text-right"
+            >
+              <div className="p-3 rounded-xl bg-emerald-500/15 text-emerald-400 mb-3 w-fit">
+                <Target className="h-5 w-5" />
+              </div>
+              <h4 className="font-semibold text-white mb-1">יעדי משקל</h4>
+              <p className="text-sm text-zinc-400">הגדרת יעדי משקל</p>
+            </button>
+          </div>
+        </div>
+      )}
 
       {showTDEE && (
         <TDEECalculator
@@ -562,160 +1066,6 @@ export default function TraineeProfile({
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="premium-card-static h-full">
-          <div className="p-5 border-b border-zinc-800/50 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-emerald-400" />
-              <h3 className="text-base font-semibold text-white">אימונים אחרונים</h3>
-            </div>
-            {onViewWorkouts && workouts.length > 0 && (
-              <button
-                onClick={onViewWorkouts}
-                className="text-sm text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
-              >
-                כל האימונים
-              </button>
-            )}
-          </div>
-          <div className="p-5">
-            {workouts.length > 0 ? (
-              <div className="space-y-3">
-                {workouts.slice(0, 3).map((workout, index) => (
-                  <div
-                    key={workout.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all animate-fade-in"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <div>
-                      <p className="font-medium text-white">{new Date(workout.date).toLocaleDateString('he-IL')}</p>
-                      <p className="text-sm text-zinc-500">{workout.exercises.length} תרגילים</p>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-lg font-bold text-emerald-400">{workout.totalVolume.toLocaleString()}</p>
-                      <p className="text-xs text-zinc-500">ק״ג נפח</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="w-12 h-12 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-3">
-                  <Calendar className="h-6 w-6 text-zinc-600" />
-                </div>
-                <p className="text-zinc-500">אין אימונים עדיין</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="premium-card-static h-full">
-          <div className="p-5 border-b border-zinc-800/50">
-            <div className="flex items-center gap-2">
-              <Scale className="h-4 w-4 text-cyan-400" />
-              <h3 className="text-base font-semibold text-white">מדידות אחרונות</h3>
-            </div>
-          </div>
-          <div className="p-5">
-            {measurements.length > 0 ? (
-              <div className="space-y-3">
-                {measurements.slice(0, 3).map((measurement, index) => (
-                  <div
-                    key={measurement.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all animate-fade-in"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <div>
-                      <p className="font-medium text-white">{new Date(measurement.date).toLocaleDateString('he-IL')}</p>
-                      <p className="text-sm text-zinc-500">{measurement.source === 'tanita' ? 'Tanita' : 'ידני'}</p>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-lg font-bold text-cyan-400">{measurement.weight} ק״ג</p>
-                      {measurement.bodyFat && (
-                        <p className="text-xs text-zinc-500">{measurement.bodyFat.toFixed(1)}% שומן</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="w-12 h-12 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-3">
-                  <Scale className="h-6 w-6 text-zinc-600" />
-                </div>
-                <p className="text-zinc-500">אין מדידות עדיין</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {selfWeights.length > 0 && (
-        <div className="premium-card-static">
-          <div className="p-5 border-b border-zinc-800/50 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-cyan-500/15">
-                <Home className="h-5 w-5 text-cyan-400" />
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-white">שקילות מהבית</h3>
-                <p className="text-sm text-zinc-500">משקלים שהמתאמן דיווח</p>
-              </div>
-            </div>
-            {selfWeights.some(sw => !sw.is_seen_by_trainer) && onMarkSelfWeightsSeen && (
-              <button
-                onClick={onMarkSelfWeightsSeen}
-                className="flex items-center gap-2 px-4 py-2 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 rounded-xl text-sm font-medium transition-all border border-cyan-500/30"
-              >
-                <CheckCircle className="h-4 w-4" />
-                סמן כנראה
-              </button>
-            )}
-          </div>
-          <div className="p-5">
-            <div className="space-y-3">
-              {selfWeights.slice(0, 5).map((sw, index) => (
-                <div
-                  key={sw.id}
-                  className={`flex items-center justify-between p-4 rounded-xl transition-all animate-fade-in ${
-                    sw.is_seen_by_trainer
-                      ? 'bg-zinc-800/30 border border-zinc-700/30'
-                      : 'bg-cyan-500/10 border border-cyan-500/30'
-                  }`}
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <div className="flex items-center gap-3">
-                    {!sw.is_seen_by_trainer && (
-                      <span className="w-2.5 h-2.5 bg-cyan-400 rounded-full animate-pulse"></span>
-                    )}
-                    <div>
-                      <p className="font-medium text-white">
-                        {new Date(sw.weight_date).toLocaleDateString('he-IL')}
-                      </p>
-                      {sw.notes && (
-                        <p className="text-sm text-zinc-500">{sw.notes}</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-left">
-                    <p className="text-xl font-bold text-cyan-400">{sw.weight_kg} ק״ג</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {trainee.notes && (
-        <div className="premium-card-static p-6 border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-amber-500/5">
-          <h3 className="text-lg font-semibold text-amber-400 mb-3 flex items-center gap-2">
-            <Sparkles className="h-4 w-4" />
-            הערות מאמן
-          </h3>
-          <p className="text-zinc-300 leading-relaxed">{trainee.notes}</p>
-        </div>
-      )}
     </div>
   );
 }

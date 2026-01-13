@@ -695,20 +695,48 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                               {/* Exercise Name & Edit Button */}
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex-1">
-                                  <h4 className={`text-base md:text-lg font-bold leading-tight ${isCompleted ? 'text-emerald-400' : 'text-[var(--color-text-primary)]'}`}>
-                                    {exerciseName}
-                                  </h4>
+                                  <div className="flex items-center gap-2">
+                                    <h4 className={`text-base md:text-lg font-bold leading-tight ${isCompleted ? 'text-emerald-400' : 'text-[var(--color-text-primary)]'}`}>
+                                      {exerciseName}
+                                    </h4>
+                                    {exercise.exercise?.instructions && (
+                                      <button
+                                        onClick={() => setInstructionsExercise({
+                                          name: exerciseName,
+                                          instructions: exercise.exercise?.instructions
+                                        })}
+                                        className="p-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-emerald-500/30"
+                                        title="הצג הוראות ביצוע"
+                                      >
+                                        <BookOpen className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                  </div>
                                   {exercise.exercise?.muscle_group?.name && (
                                     <p className="text-xs md:text-sm text-[var(--color-text-muted)] mt-1 font-medium">{exercise.exercise.muscle_group.name}</p>
                                   )}
                                 </div>
                                 {!isEditing && (
-                                  <button
-                                    onClick={() => startEditing(exercise)}
-                                    className="p-2 text-[var(--color-text-muted)] hover:text-cyan-400 hover:bg-cyan-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-cyan-500/30"
-                                  >
-                                    <Edit3 className="w-4 h-4" />
-                                  </button>
+                                  <div className="flex items-center gap-2">
+                                    {exercise.exercise?.instructions && (
+                                      <button
+                                        onClick={() => setInstructionsExercise({
+                                          name: exerciseName,
+                                          instructions: exercise.exercise?.instructions
+                                        })}
+                                        className="p-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-emerald-500/30"
+                                        title="הצג הוראות ביצוע"
+                                      >
+                                        <BookOpen className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() => startEditing(exercise)}
+                                      className="p-2 text-[var(--color-text-muted)] hover:text-cyan-400 hover:bg-cyan-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-cyan-500/30"
+                                    >
+                                      <Edit3 className="w-4 h-4" />
+                                    </button>
+                                  </div>
                                 )}
                               </div>
 
@@ -916,6 +944,16 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           <p className="text-[var(--color-text-primary)] font-bold text-lg">אין ימי אימון בתוכנית</p>
           <p className="text-sm text-[var(--color-text-muted)] mt-2">המאמן שלך יוסיף ימי אימון בקרוב</p>
         </div>
+      )}
+
+      {/* Exercise Instructions Modal */}
+      {instructionsExercise && (
+        <ExerciseInstructionsModal
+          isOpen={!!instructionsExercise}
+          onClose={() => setInstructionsExercise(null)}
+          exerciseName={instructionsExercise.name}
+          instructions={instructionsExercise.instructions}
+        />
       )}
     </div>
   );
