@@ -337,8 +337,6 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
 
   const stats = useMemo(() => getMonthlyStats(), [workouts]);
   const latestPR = useMemo(() => getLatestPR(), [workouts, previousExerciseData]);
-  const filteredWorkouts = filteredWorkoutsMemo;
-
   const filteredWorkoutsMemo = useMemo(() => getFilteredWorkouts(), [workouts, selectedMonth, selectedMuscleGroup]);
 
   if (loading) {
@@ -494,7 +492,7 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
           <h3 className="font-bold text-[var(--color-text-primary)]">היסטוריית אימונים</h3>
         </div>
 
-        {filteredWorkouts.length === 0 ? (
+        {filteredWorkoutsMemo.length === 0 ? (
           <div className="p-8">
             <EmptyState
               icon={Dumbbell}
@@ -508,7 +506,7 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
           </div>
         ) : (
           <div className="divide-y divide-[var(--color-border)]">
-            {filteredWorkouts.map((workout) => (
+            {filteredWorkoutsMemo.map((workout) => (
               <button
                 key={workout.id}
                 onClick={() => setSelectedWorkout(workout)}
