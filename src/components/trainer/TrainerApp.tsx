@@ -306,6 +306,123 @@ export default function TrainerApp() {
     }
   }, []);
 
+  const loadMeasurements = useCallback(async (traineeId: string) => {
+    const { data, error } = await supabase
+      .from('measurements')
+      .select('*')
+      .eq('trainee_id', traineeId)
+      .order('measurement_date', { ascending: false });
+
+    if (!error && data) {
+      const formattedMeasurements = data.map(m => ({
+        id: m.id,
+        traineeId: m.trainee_id,
+        date: m.measurement_date,
+        weight: m.weight || 0,
+        bodyFat: m.body_fat_percentage || undefined,
+        muscleMass: m.muscle_mass || undefined,
+        waterPercentage: m.water_percentage || undefined,
+        bmr: m.bmr || undefined,
+        bmi: m.bmi || undefined,
+        metabolicAge: m.metabolic_age || undefined,
+        source: m.source as 'tanita' | 'manual',
+        notes: m.notes || undefined,
+        pairMember: m.pair_member as 'member_1' | 'member_2' | null,
+        measurements: {
+          chestBack: m.chest_back || 0,
+          belly: m.belly || 0,
+          glutes: m.glutes || 0,
+          thigh: m.thigh || 0,
+          rightArm: m.right_arm || 0,
+          leftArm: m.left_arm || 0,
+        }
+      }));
+      setMeasurements(formattedMeasurements);
+    }
+  }, []);
+
+  const loadWorkouts = useCallback(async (traineeId: string) => {
+    const { data: workoutTrainees, error } = await supabase
+      .from('workout_trainees')
+      .select(`
+        workouts!inner (
+          id,
+          workout_date,
+          is_completed,
+          is_self_recorded,
+          created_at,
+          workout_exercises (
+            id,
+            exercises (
+              name
+            ),
+            exercise_sets (
+              id,
+              weight,
+              reps,
+              superset_weight,
+              superset_reps,
+              dropset_weight,
+              dropset_reps,
+              superset_dropset_weight,
+              superset_dropset_reps
+            )
+          )
+        )
+      `)
+      .eq('trainee_id', traineeId)
+      .eq('workouts.is_completed', true);
+
+    if (!error && workoutTrainees) {
+      const formattedWorkouts = workoutTrainees
+        .filter(wt => wt.workouts)
+        .map(wt => {
+          const w = wt.workouts;
+          const exercises = w.workout_exercises || [];
+          const totalVolume = exercises.reduce((sum, ex) => {
+            const sets = ex.exercise_sets || [];
+            return sum + sets.reduce((setSum, set) => {
+              let setVolume = (set.weight || 0) * (set.reps || 0);
+
+              // Add superset volume
+              if (set.superset_weight && set.superset_reps) {
+                setVolume += set.superset_weight * set.superset_reps;
+              }
+
+              // Add dropset volume
+              if (set.dropset_weight && set.dropset_reps) {
+                setVolume += set.dropset_weight * set.dropset_reps;
+              }
+
+              // Add superset dropset volume
+              if (set.superset_dropset_weight && set.superset_dropset_reps) {
+                setVolume += set.superset_dropset_weight * set.superset_dropset_reps;
+              }
+
+              return setSum + setVolume;
+            }, 0);
+          }, 0);
+
+          return {
+            id: w.id,
+            date: w.workout_date,
+            exercises: exercises.map(ex => ({
+              name: ex.exercises?.name || 'תרגיל',
+              sets: ex.exercise_sets?.length || 0
+            })),
+            totalVolume,
+            duration: 0,
+            isSelfRecorded: w.is_self_recorded || false
+          };
+        })
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      setWorkouts(formattedWorkouts);
+    } else {
+      setWorkouts([]);
+    }
+  }, []);
+
   const markSelfWeightsSeen = async () => {
     if (!selectedTrainee) return;
 
@@ -486,123 +603,6 @@ export default function TrainerApp() {
     setSelectedTrainee(trainee);
     setActiveView('workout-progress');
   };
-
-  const loadMeasurements = useCallback(async (traineeId: string) => {
-    const { data, error } = await supabase
-      .from('measurements')
-      .select('*')
-      .eq('trainee_id', traineeId)
-      .order('measurement_date', { ascending: false });
-
-    if (!error && data) {
-      const formattedMeasurements = data.map(m => ({
-        id: m.id,
-        traineeId: m.trainee_id,
-        date: m.measurement_date,
-        weight: m.weight || 0,
-        bodyFat: m.body_fat_percentage || undefined,
-        muscleMass: m.muscle_mass || undefined,
-        waterPercentage: m.water_percentage || undefined,
-        bmr: m.bmr || undefined,
-        bmi: m.bmi || undefined,
-        metabolicAge: m.metabolic_age || undefined,
-        source: m.source as 'tanita' | 'manual',
-        notes: m.notes || undefined,
-        pairMember: m.pair_member as 'member_1' | 'member_2' | null,
-        measurements: {
-          chestBack: m.chest_back || 0,
-          belly: m.belly || 0,
-          glutes: m.glutes || 0,
-          thigh: m.thigh || 0,
-          rightArm: m.right_arm || 0,
-          leftArm: m.left_arm || 0,
-        }
-      }));
-      setMeasurements(formattedMeasurements);
-    }
-  }, []);
-
-  const loadWorkouts = useCallback(async (traineeId: string) => {
-    const { data: workoutTrainees, error } = await supabase
-      .from('workout_trainees')
-      .select(`
-        workouts!inner (
-          id,
-          workout_date,
-          is_completed,
-          is_self_recorded,
-          created_at,
-          workout_exercises (
-            id,
-            exercises (
-              name
-            ),
-            exercise_sets (
-              id,
-              weight,
-              reps,
-              superset_weight,
-              superset_reps,
-              dropset_weight,
-              dropset_reps,
-              superset_dropset_weight,
-              superset_dropset_reps
-            )
-          )
-        )
-      `)
-      .eq('trainee_id', traineeId)
-      .eq('workouts.is_completed', true);
-
-    if (!error && workoutTrainees) {
-      const formattedWorkouts = workoutTrainees
-        .filter(wt => wt.workouts)
-        .map(wt => {
-          const w = wt.workouts;
-          const exercises = w.workout_exercises || [];
-          const totalVolume = exercises.reduce((sum, ex) => {
-            const sets = ex.exercise_sets || [];
-            return sum + sets.reduce((setSum, set) => {
-              let setVolume = (set.weight || 0) * (set.reps || 0);
-
-              // Add superset volume
-              if (set.superset_weight && set.superset_reps) {
-                setVolume += set.superset_weight * set.superset_reps;
-              }
-
-              // Add dropset volume
-              if (set.dropset_weight && set.dropset_reps) {
-                setVolume += set.dropset_weight * set.dropset_reps;
-              }
-
-              // Add superset dropset volume
-              if (set.superset_dropset_weight && set.superset_dropset_reps) {
-                setVolume += set.superset_dropset_weight * set.superset_dropset_reps;
-              }
-
-              return setSum + setVolume;
-            }, 0);
-          }, 0);
-
-          return {
-            id: w.id,
-            date: w.workout_date,
-            exercises: exercises.map(ex => ({
-              name: ex.exercises?.name || 'תרגיל',
-              sets: ex.exercise_sets?.length || 0
-            })),
-            totalVolume,
-            duration: 0,
-            isSelfRecorded: w.is_self_recorded || false
-          };
-        })
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-      setWorkouts(formattedWorkouts);
-    } else {
-      setWorkouts([]);
-    }
-  }, []);
 
   const handleBack = () => {
     setSelectedTrainee(null);
