@@ -74,7 +74,6 @@ export default function AddTraineeForm({ onBack, onSave }: AddTraineeFormProps) 
         gender: null,
         birth_date: null,
         height: null,
-        status: 'new' as const,
         notes: formData.notes.trim(),
         is_pair: true,
         pair_name_1: formData.pair_name_1.trim(),
@@ -99,7 +98,6 @@ export default function AddTraineeForm({ onBack, onSave }: AddTraineeFormProps) 
         gender: formData.gender,
         birth_date: formData.birth_date || null,
         height: formData.height ? Number(formData.height) : null,
-        status: 'new' as const,
         notes: formData.notes.trim(),
         is_pair: false,
       };

@@ -31,7 +31,6 @@ export type Database = {
           gender: 'male' | 'female' | null;
           birth_date: string | null;
           height: number | null;
-          status: 'active' | 'inactive' | 'vacation' | 'new';
           start_date: string;
           notes: string;
           created_at: string;
@@ -45,7 +44,6 @@ export type Database = {
           gender?: 'male' | 'female' | null;
           birth_date?: string | null;
           height?: number | null;
-          status?: 'active' | 'inactive' | 'vacation' | 'new';
           start_date?: string;
           notes?: string;
           created_at?: string;
@@ -59,7 +57,6 @@ export type Database = {
           gender?: 'male' | 'female' | null;
           birth_date?: string | null;
           height?: number | null;
-          status?: 'active' | 'inactive' | 'vacation' | 'new';
           start_date?: string;
           notes?: string;
           created_at?: string;

@@ -2,6 +2,7 @@ import { ArrowRight, Check, X, Plus, Copy, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
+import { logger } from '../../../utils/logger';
 import ExerciseSelector from './ExerciseSelector';
 
 interface Exercise {
@@ -196,7 +197,7 @@ export default function PairWorkoutSession({
       setSaving(false);
       onComplete({ member1: member1Exercises, member2: member2Exercises });
     } catch (error) {
-      console.error('Error saving workout:', error);
+      logger.error('Error saving workout:', error, 'PairWorkoutSession');
       alert('שגיאה בשמירת האימון');
       setSaving(false);
     }

@@ -50,11 +50,12 @@ export default function ReportsView() {
       .gte('achieved_at', startOfMonth.toISOString())
       .lte('achieved_at', endOfMonth.toISOString());
 
-    const activeTrainees = trainees?.filter(t => t.status === 'active').length || 0;
     const newTrainees = trainees?.filter(t => {
       const createdAt = new Date(t.created_at);
       return createdAt >= startOfMonth && createdAt <= endOfMonth;
     }).length || 0;
+
+    const totalTrainees = trainees?.length || 0;
 
     let totalVolume = 0;
     workouts?.forEach(w => {
@@ -67,9 +68,9 @@ export default function ReportsView() {
 
     setStats({
       totalWorkouts: workouts?.length || 0,
-      activeTrainees,
+      activeTrainees: totalTrainees,
       newTrainees,
-      averageWorkoutsPerTrainee: activeTrainees > 0 ? Math.round((workouts?.length || 0) / activeTrainees * 10) / 10 : 0,
+      averageWorkoutsPerTrainee: totalTrainees > 0 ? Math.round((workouts?.length || 0) / totalTrainees * 10) / 10 : 0,
       totalVolume: Math.round(totalVolume),
       personalRecords: prs?.length || 0,
     });

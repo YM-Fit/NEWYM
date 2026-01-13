@@ -5,6 +5,7 @@
 import { supabase } from '../lib/supabase';
 import type { ApiResponse, TraineeLoginRequest, TraineeLoginResponse } from './types';
 import { API_CONFIG } from './config';
+import { logger } from '../utils/logger';
 
 /**
  * Sign in trainer with email and password
@@ -63,7 +64,7 @@ export async function signUpTrainer(
       ]);
 
     if (profileError) {
-      console.error('Error creating trainer profile:', profileError);
+      logger.error('Error creating trainer profile:', profileError, 'authApi');
       return { error: profileError.message };
     }
 

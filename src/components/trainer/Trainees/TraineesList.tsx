@@ -15,7 +15,6 @@ interface TraineesListProps {
 
 function TraineesList({ trainees, onTraineeClick, onAddTrainee, unseenWeightsCounts }: TraineesListProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   const filteredTrainees = useMemo(() => {
@@ -25,28 +24,9 @@ function TraineesList({ trainees, onTraineeClick, onAddTrainee, unseenWeightsCou
         trainee.full_name.toLowerCase().includes(searchLower) ||
         trainee.phone?.includes(debouncedSearchQuery) ||
         trainee.email?.toLowerCase().includes(searchLower);
-      const matchesStatus = statusFilter === 'all' || trainee.status === statusFilter;
-      return matchesSearch && matchesStatus;
+      return matchesSearch;
     });
-  }, [trainees, debouncedSearchQuery, statusFilter]);
-
-  const statusCounts = useMemo(() => {
-    return {
-      all: trainees.length,
-      active: trainees.filter(t => t.status === 'active').length,
-      vacation: trainees.filter(t => t.status === 'vacation').length,
-      inactive: trainees.filter(t => t.status === 'inactive').length,
-      new: trainees.filter(t => t.status === 'new').length,
-    };
-  }, [trainees]);
-
-  const statusOptions = [
-    { value: 'all', label: 'הכל', color: 'zinc' },
-    { value: 'active', label: 'פעילים', color: 'emerald' },
-    { value: 'vacation', label: 'חופשה', color: 'amber' },
-    { value: 'inactive', label: 'לא פעילים', color: 'red' },
-    { value: 'new', label: 'חדשים', color: 'cyan' },
-  ];
+  }, [trainees, debouncedSearchQuery]);
 
   const {
     paginatedData,
@@ -99,33 +79,6 @@ function TraineesList({ trainees, onTraineeClick, onAddTrainee, unseenWeightsCou
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pr-12 pl-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
             />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {statusOptions.map(option => (
-              <button
-                key={option.value}
-                onClick={() => setStatusFilter(option.value)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                  statusFilter === option.value
-                    ? option.color === 'emerald'
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                      : option.color === 'amber'
-                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                      : option.color === 'red'
-                      ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                      : option.color === 'cyan'
-                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                      : 'bg-zinc-700/50 text-white border border-zinc-600/50'
-                    : 'bg-zinc-800/30 text-zinc-400 border border-zinc-700/30 hover:bg-zinc-700/30 hover:text-zinc-300'
-                }`}
-              >
-                {option.label}
-                <span className="mr-2 text-xs opacity-70">
-                  ({statusCounts[option.value as keyof typeof statusCounts]})
-                </span>
-              </button>
-            ))}
           </div>
         </div>
       </div>

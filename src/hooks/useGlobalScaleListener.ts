@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { findTraineeByWeight, TraineeMatch, ScaleReading } from './useScaleListener';
+import { logger } from '../utils/logger';
 
 export interface IdentifiedReading {
   reading: ScaleReading;
@@ -97,7 +98,7 @@ export function useGlobalScaleListener(
         .limit(MAX_READINGS_TO_KEEP);
 
       if (error) {
-        console.error('Error loading scale readings:', error);
+        logger.error('Error loading scale readings:', error, 'useGlobalScaleListener');
         return;
       }
 

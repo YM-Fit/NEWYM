@@ -4,6 +4,7 @@ import { ArrowRight, Plus, Save, Copy, Trash2, Clock, Dumbbell, CheckCircle, Inf
 import { supabase } from '../../lib/supabase';
 import { useAutoSave } from '../../hooks/useAutoSave';
 import { useWorkoutSession } from '../../hooks/useWorkoutSession';
+import { logger } from '../../utils/logger';
 import ExerciseSelector from '../trainer/Workouts/ExerciseSelector';
 import QuickNumericPad from '../trainer/Workouts/QuickNumericPad';
 import EquipmentSelector from '../trainer/Equipment/EquipmentSelector';
@@ -274,7 +275,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
-        console.error('No authenticated user found');
+        logger.error('No authenticated user found', undefined, 'SelfWorkoutSession');
         toast.error('יש להתחבר מחדש');
         setSaving(false);
         return;
@@ -290,7 +291,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
         });
 
       if (workoutError || !workoutId) {
-        console.error('Workout error:', workoutError);
+        logger.error('Workout error:', workoutError, 'SelfWorkoutSession');
         toast.error('שגיאה בשמירת האימון');
         setSaving(false);
         return;
@@ -308,7 +309,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
         ]);
 
       if (traineeError) {
-        console.error('Trainee link error:', traineeError);
+        logger.error('Trainee link error:', traineeError, 'SelfWorkoutSession');
         toast.error('שגיאה בקישור המתאמן לאימון');
         setSaving(false);
         return;
@@ -332,7 +333,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
           .single();
 
         if (exerciseError || !workoutExercise) {
-          console.error('Exercise error:', exerciseError);
+          logger.error('Exercise error:', exerciseError, 'SelfWorkoutSession');
           toast.error('שגיאה בשמירת התרגיל');
           setSaving(false);
           return;
@@ -363,7 +364,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
           .insert(setsToInsert);
 
         if (setsError) {
-          console.error('Sets error:', setsError);
+          logger.error('Sets error:', setsError, 'SelfWorkoutSession');
           toast.error('שגיאה בשמירת הסטים');
           setSaving(false);
           return;
@@ -387,7 +388,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
         onSave();
       }
     } catch (error) {
-      console.error('Error saving workout:', error);
+      logger.error('Error saving workout:', error, 'SelfWorkoutSession');
       toast.error('שגיאה בשמירת האימון');
     } finally {
       setSaving(false);

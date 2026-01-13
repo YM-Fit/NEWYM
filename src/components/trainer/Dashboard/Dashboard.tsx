@@ -11,7 +11,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 
 interface DashboardProps {
   onViewChange: (view: string) => void;
-  trainees: { status: string }[];
+  trainees: any[];
   trainerName?: string;
   onToggleSidebar?: () => void;
   onToggleHeader?: () => void;
@@ -88,13 +88,6 @@ export default function Dashboard({
           change="מתאמנים רשומים במערכת"
           icon={Users}
           color="emerald"
-        />
-        <StatsCard
-          title="מתאמנים פעילים"
-          value={trainees.filter(t => t.status === 'active').length}
-          change="פעילים כרגע"
-          icon={Target}
-          color="cyan"
         />
       </div>
 

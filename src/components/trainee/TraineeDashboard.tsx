@@ -4,6 +4,7 @@ import { Dumbbell, Scale, Target, Flame, TrendingUp, Sparkles, Lightbulb } from 
 import { goalsApi } from '../../api/goalsApi';
 import { habitsApi } from '../../api/habitsApi';
 import { smartRecommendations, Recommendation } from '../../utils/smartRecommendations';
+import { logger } from '../../utils/logger';
 
 const MOTIVATIONAL_QUOTES = [
   'הצלחה היא סכום של מאמצים קטנים, יום אחרי יום',
@@ -139,7 +140,7 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
 
       setWeekDays(weekWorkouts);
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      logger.error('Error loading dashboard data:', error, 'TraineeDashboard');
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,7 @@ import { Scale, User, AlertCircle, CheckCircle, HelpCircle, ChevronLeft, Save, L
 import { IdentifiedReading } from '../../../hooks/useGlobalScaleListener';
 import { ScaleReading, TraineeMatch } from '../../../hooks/useScaleListener';
 import { supabase } from '../../../lib/supabase';
+import { logger } from '../../../utils/logger';
 
 interface SavedNote {
   id: string;
@@ -213,7 +214,7 @@ export default function RecentScaleReadings({
 
       setSavedNotes(notes);
     } catch (error) {
-      console.error('Error fetching notes:', error);
+      logger.error('Error fetching notes:', error, 'RecentScaleReadings');
     } finally {
       setLoadingNotes(false);
     }

@@ -1,5 +1,5 @@
-import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3, Search } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
 import { getFromStorage, setToStorage, STORAGE_KEYS } from '../../utils/storage';
 
 interface SidebarProps {
@@ -8,30 +8,85 @@ interface SidebarProps {
   collapsed?: boolean;
 }
 
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: any;
+  description: string;
+  category?: string;
+  badge?: string | number;
+}
+
 export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
   const [isMinimized, setIsMinimized] = useState(() => {
     return getFromStorage(STORAGE_KEYS.SIDEBAR_MINIMIZED, false);
   });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['main']));
 
   useEffect(() => {
     setToStorage(STORAGE_KEYS.SIDEBAR_MINIMIZED, isMinimized);
   }, [isMinimized]);
 
-  const menuItems = [
-    { id: 'dashboard', label: 'דף הבית', icon: Home, description: 'סקירה כללית' },
-    { id: 'trainees', label: 'מתאמנים', icon: Users, description: 'ניהול מתאמנים' },
-    { id: 'tools', label: 'כלים', icon: Calculator, description: 'מחשבונים וכלים' },
-    { id: 'reports', label: 'דוחות', icon: BarChart3, description: 'סטטיסטיקות ונתונים' },
+  const menuItems: MenuItem[] = [
+    // Main Navigation
+    { id: 'dashboard', label: 'דף הבית', icon: Home, description: 'סקירה כללית', category: 'main' },
+    { id: 'trainees', label: 'מתאמנים', icon: Users, description: 'ניהול מתאמנים', category: 'main' },
+    
+    // Tools & Analytics
+    { id: 'tools', label: 'כלים', icon: Calculator, description: 'מחשבונים וכלים', category: 'tools' },
+    { id: 'reports', label: 'דוחות', icon: BarChart3, description: 'סטטיסטיקות ונתונים', category: 'tools' },
   ];
+
+  const categories = [
+    { id: 'main', label: 'ניווט ראשי', icon: Home },
+    { id: 'tools', label: 'כלים וניתוח', icon: Calculator },
+  ];
+
+  const filteredItems = useMemo(() => {
+    if (!searchQuery) return menuItems;
+    const query = searchQuery.toLowerCase();
+    return menuItems.filter(item => 
+      item.label.toLowerCase().includes(query) || 
+      item.description.toLowerCase().includes(query)
+    );
+  }, [searchQuery]);
+
+  const groupedItems = useMemo(() => {
+    const groups: Record<string, MenuItem[]> = {};
+    filteredItems.forEach(item => {
+      const category = item.category || 'main';
+      if (!groups[category]) groups[category] = [];
+      groups[category].push(item);
+    });
+    return groups;
+  }, [filteredItems]);
+
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+      return next;
+    });
+  };
+
+  const handleItemClick = (id: string) => {
+    onViewChange(id);
+    setSearchQuery('');
+  };
 
   return (
     <aside
       className={`hidden md:flex flex-col glass-card rounded-none border-y-0 border-r-0 transition-all duration-300 ease-out ${
-        isMinimized ? 'w-20' : 'w-72'
+        isMinimized ? 'w-20' : 'w-80'
       }`}
     >
-      <div className="flex-1 py-6">
-        <div className={`flex items-center justify-between mb-6 ${isMinimized ? 'px-4' : 'px-5'}`}>
+      <div className="flex-1 py-6 overflow-y-auto">
+        <div className={`flex items-center justify-between mb-4 ${isMinimized ? 'px-4' : 'px-5'}`}>
           {!isMinimized && (
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-emerald-400" />
@@ -51,49 +106,120 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
           </button>
         </div>
 
-        <nav className={`space-y-1.5 ${isMinimized ? 'px-3' : 'px-4'}`}>
-          {menuItems.map(({ id, label, icon: Icon, description }) => {
-            const isActive = activeView === id || (id === 'trainees' && activeView.includes('trainee'));
+        {!isMinimized && (
+          <div className="px-4 mb-4">
+            <div className="relative">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+              <input
+                type="text"
+                placeholder="חפש בתפריט..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pr-10 pl-4 py-2.5 text-sm bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+              />
+            </div>
+          </div>
+        )}
 
-            return (
-              <button
-                key={id}
-                onClick={() => onViewChange(id)}
-                className={`w-full flex items-center ${
-                  isMinimized ? 'justify-center p-3' : 'px-4 py-3'
-                } rounded-xl transition-all duration-200 group relative ${
-                  isActive
-                    ? 'bg-gradient-to-r from-emerald-500/15 to-emerald-500/5 text-emerald-400'
-                    : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
-                }`}
-                title={isMinimized ? label : ''}
-              >
-                {isActive && (
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-l-full" />
-                )}
-
-                <div className={`relative ${!isMinimized && 'ml-3'}`}>
-                  <Icon className={`h-5 w-5 transition-all ${
-                    isActive ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' : ''
-                  }`} />
+        <nav className={`space-y-2 ${isMinimized ? 'px-3' : 'px-4'}`}>
+          {isMinimized ? (
+            // Minimized view - show all items as icons only
+            menuItems.map(({ id, label, icon: Icon }) => {
+              const isActive = activeView === id || (id === 'trainees' && activeView.includes('trainee'));
+              return (
+                <button
+                  key={id}
+                  onClick={() => handleItemClick(id)}
+                  className="w-full flex items-center justify-center p-3 rounded-xl transition-all duration-200 group relative"
+                  title={label}
+                >
                   {isActive && (
-                    <div className="absolute inset-0 bg-emerald-400/20 blur-xl rounded-full" />
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-l-full" />
+                  )}
+                  <Icon className={`h-5 w-5 transition-all ${
+                    isActive 
+                      ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' 
+                      : 'text-zinc-400 group-hover:text-white'
+                  }`} />
+                </button>
+              );
+            })
+          ) : (
+            // Expanded view with categories
+            categories.map(category => {
+              const items = groupedItems[category.id] || [];
+              if (items.length === 0) return null;
+              
+              const isExpanded = expandedCategories.has(category.id);
+              const CategoryIcon = category.icon;
+
+              return (
+                <div key={category.id} className="space-y-1.5">
+                  {category.id !== 'main' && (
+                    <button
+                      onClick={() => toggleCategory(category.id)}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-zinc-500 uppercase tracking-wider hover:text-zinc-400 hover:bg-zinc-800/30 transition-all"
+                    >
+                      <div className="flex items-center gap-2">
+                        <CategoryIcon className="h-3.5 w-3.5" />
+                        <span>{category.label}</span>
+                      </div>
+                      <ChevronRight className={`h-3.5 w-3.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                    </button>
+                  )}
+                  
+                  {(category.id === 'main' || isExpanded) && (
+                    <div className="space-y-1">
+                      {items.map(({ id, label, icon: Icon, description, badge }) => {
+                        const isActive = activeView === id || (id === 'trainees' && activeView.includes('trainee'));
+
+                        return (
+                          <button
+                            key={id}
+                            onClick={() => handleItemClick(id)}
+                            className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-200 group relative ${
+                              isActive
+                                ? 'bg-gradient-to-r from-emerald-500/15 to-emerald-500/5 text-emerald-400'
+                                : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                            }`}
+                          >
+                            {isActive && (
+                              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-l-full" />
+                            )}
+
+                            <div className="relative ml-3">
+                              <Icon className={`h-5 w-5 transition-all ${
+                                isActive ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' : ''
+                              }`} />
+                              {isActive && (
+                                <div className="absolute inset-0 bg-emerald-400/20 blur-xl rounded-full" />
+                              )}
+                            </div>
+
+                            <div className="flex-1 text-right mr-3">
+                              <div className="flex items-center justify-end gap-2">
+                                <span className={`block text-sm font-medium ${isActive ? 'text-white' : ''}`}>
+                                  {label}
+                                </span>
+                                {badge && (
+                                  <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-500/20 text-emerald-400 rounded-full">
+                                    {badge}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="block text-xs text-zinc-600 mt-0.5">
+                                {description}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
-
-                {!isMinimized && (
-                  <div className="flex-1 text-right mr-3">
-                    <span className={`block text-sm font-medium ${isActive ? 'text-white' : ''}`}>
-                      {label}
-                    </span>
-                    <span className="block text-xs text-zinc-600 mt-0.5">
-                      {description}
-                    </span>
-                  </div>
-                )}
-              </button>
-            );
-          })}
+              );
+            })
+          )}
         </nav>
       </div>
 

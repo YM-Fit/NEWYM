@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { logger } from '../utils/logger';
 
 interface UseAutoSaveOptions<T> {
   data: T;
@@ -33,7 +34,7 @@ export function useAutoSave<T>({
           setIsDirty(false);
           initialDataRef.current = JSON.stringify(data);
         } catch (error) {
-          console.error('Auto-save failed:', error);
+          logger.error('Auto-save failed:', error, 'useAutoSave');
         }
       }
     }, interval);
@@ -48,7 +49,7 @@ export function useAutoSave<T>({
       setIsDirty(false);
       initialDataRef.current = JSON.stringify(data);
     } catch (error) {
-      console.error('Failed to clear saved data:', error);
+      logger.error('Failed to clear saved data:', error, 'useAutoSave');
     }
   };
 
@@ -57,7 +58,7 @@ export function useAutoSave<T>({
       const saved = localStorage.getItem(localStorageKey);
       return saved ? JSON.parse(saved) : null;
     } catch (error) {
-      console.error('Failed to load saved data:', error);
+      logger.error('Failed to load saved data:', error, 'useAutoSave');
       return null;
     }
   };
@@ -69,7 +70,7 @@ export function useAutoSave<T>({
       setIsDirty(false);
       initialDataRef.current = JSON.stringify(data);
     } catch (error) {
-      console.error('Manual save failed:', error);
+      logger.error('Manual save failed:', error, 'useAutoSave');
     }
   };
 

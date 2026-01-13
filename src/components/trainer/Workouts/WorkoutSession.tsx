@@ -5,7 +5,9 @@ import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useAutoSave } from '../../../hooks/useAutoSave';
 import { useWorkoutSession } from '../../../hooks/useWorkoutSession';
+import { useErrorHandler } from '../../../hooks/useErrorHandler';
 import { saveWorkout } from '../../../api/workoutApi';
+import { logger } from '../../../utils/logger';
 import ExerciseSelector from './ExerciseSelector';
 import QuickNumericPad from './QuickNumericPad';
 import EquipmentSelector from '../Equipment/EquipmentSelector';
@@ -72,6 +74,7 @@ interface WorkoutSessionProps {
 
 export default function WorkoutSession({ trainee, onBack, onSave, previousWorkout, editingWorkout, initialSelectedMember }: WorkoutSessionProps) {
   const { user } = useAuth();
+  const { handleError } = useErrorHandler();
   const {
     exercises,
     setExercises,
@@ -331,7 +334,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
         .limit(1);
 
       if (error) {
-        console.error('Error loading last exercise for autofill:', error);
+        logger.error('Error loading last exercise for autofill:', error, 'WorkoutSession');
         toast.error('שגיאה בטעינת התרגיל הקודם, התרגיל נוסף ללא נתונים');
         addExercise(exercise);
         setLoadingExercise(null);
@@ -400,7 +403,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
       });
       toast.success('התרגיל נטען עם הנתונים מהאימון הקודם');
     } catch (err) {
-      console.error('Unexpected error in exercise autofill:', err);
+      logger.error('Unexpected error in exercise autofill:', err, 'WorkoutSession');
       toast.error('שגיאה בטעינת התרגיל, התרגיל נוסף ללא נתונים');
       addExercise(exercise);
     } finally {
@@ -532,7 +535,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
         });
 
       if (error) {
-        console.error('Error saving template:', error);
+        logger.error('Error saving template:', error, 'WorkoutSession');
         toast.error('שגיאה בשמירת התבנית');
       } else {
         toast.success('התבנית נשמרה בהצלחה!');
@@ -541,7 +544,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
         setTemplateDescription('');
       }
     } catch (error) {
-      console.error('Error saving template:', error);
+      logger.error('Error saving template:', error, 'WorkoutSession');
       toast.error('שגיאה בשמירת התבנית');
     } finally {
       setSavingTemplate(false);
@@ -596,7 +599,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
         .limit(10);
 
       if (workoutsError) {
-        console.error('Error loading previous workout:', workoutsError);
+        logger.error('Error loading previous workout:', workoutsError, 'WorkoutSession');
         toast.error('שגיאה בטעינת האימון הקודם');
         return;
       }
@@ -657,7 +660,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
       setExercises(loadedExercises);
       toast.success('האימון הקודם נטען בהצלחה!');
     } catch (error) {
-      console.error('Error loading previous workout:', error);
+      logger.error('Error loading previous workout:', error, 'WorkoutSession');
       toast.error('שגיאה בטעינת האימון הקודם');
     }
   };
@@ -713,7 +716,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
       const result = await saveWorkout(requestBody, session.access_token);
 
       if (result.error || !result.data) {
-        console.error('Save workout error:', result);
+        logger.error('Save workout error:', result, 'WorkoutSession');
         toast.error(result.error || 'שגיאה בשמירת האימון');
         setSaving(false);
         return;
@@ -728,7 +731,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
       setSavedWorkout(workoutResult.workout);
       setShowSummary(true);
     } catch (error) {
-      console.error('Error saving workout:', error);
+      logger.error('Error saving workout:', error, 'WorkoutSession');
       toast.error('שגיאה בשמירת האימון');
     } finally {
       setSaving(false);
@@ -867,8 +870,12 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           <p className="text-zinc-400 mb-4">בחר תבנית קיימת או התחל אימון ריק</p>
           <button
             type="button"
-            onClick={() => setShowTemplateModal(true)}
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold mb-3"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowTemplateModal(true);
+            }}
+            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold mb-3 cursor-pointer"
           >
             <BookMarked className="h-5 w-5" />
             <span>טען תבנית קיימת</span>
@@ -879,8 +886,12 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
 
       <button
         type="button"
-        onClick={() => setShowExerciseSelector(true)}
-        className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all touch-manipulation font-bold"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setShowExerciseSelector(true);
+        }}
+        className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all touch-manipulation font-bold cursor-pointer"
       >
         <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
         <span className="text-lg lg:text-xl">{exercises.length === 0 ? 'התחל אימון ריק' : 'הוסף תרגיל'}</span>
@@ -1033,19 +1044,27 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
 
             <div className="flex gap-3">
               <button
-                onClick={handleSaveAsTemplate}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSaveAsTemplate();
+                }}
                 disabled={savingTemplate || !templateName.trim()}
-                className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all"
+                className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
               >
                 {savingTemplate ? 'שומר...' : 'שמור תבנית'}
               </button>
               <button
-                onClick={() => {
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   setShowSaveTemplateModal(false);
                   setTemplateName('');
                   setTemplateDescription('');
                 }}
-                className="flex-1 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 text-zinc-300 px-6 py-3 rounded-xl font-semibold transition-all"
+                className="flex-1 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 text-zinc-300 px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
               >
                 ביטול
               </button>

@@ -43,7 +43,6 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
       .from('trainees')
       .select('id, full_name')
       .eq('trainer_id', user.id)
-      .eq('status', 'active')
       .order('full_name');
 
     if (data) {

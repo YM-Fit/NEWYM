@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { logger } from '../../utils/logger';
 import {
   ChevronRight,
   ChevronLeft,
@@ -496,7 +497,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       .single();
 
     if (traineeError) {
-      console.error('Error fetching trainee data:', traineeError);
+      logger.error('Error fetching trainee data:', traineeError, 'FoodDiary');
     }
 
     if (traineeData) {
@@ -509,7 +510,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       });
 
       if (notificationError) {
-        console.error('Error creating notification:', notificationError);
+        logger.error('Error creating notification:', notificationError, 'FoodDiary');
         toast.error('היום הושלם אבל לא הצלחנו לשלוח התראה למאמן');
       } else {
         toast.success('היום הושלם! המאמן שלך קיבל התראה');

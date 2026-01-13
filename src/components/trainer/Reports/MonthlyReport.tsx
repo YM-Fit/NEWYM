@@ -48,9 +48,8 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
 
     const { data: trainees } = await supabase
       .from('trainees')
-      .select('id, full_name, status')
-      .eq('trainer_id', user.id)
-      .eq('status', 'active');
+      .select('id, full_name')
+      .eq('trainer_id', user.id);
 
     const traineeStats: TopTrainee[] = [];
 

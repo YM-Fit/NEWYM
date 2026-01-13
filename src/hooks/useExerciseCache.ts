@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '../utils/logger';
 
 interface Exercise {
   id: string;
@@ -34,7 +35,7 @@ export function useExerciseCache() {
         }
       }
     } catch (error) {
-      console.error('Error loading exercise cache:', error);
+      logger.error('Error loading exercise cache:', error, 'useExerciseCache');
       localStorage.removeItem(CACHE_KEY);
     }
   }, []);
@@ -49,7 +50,7 @@ export function useExerciseCache() {
       setCachedExercises(exercises);
       setIsCacheValid(true);
     } catch (error) {
-      console.error('Error saving exercise cache:', error);
+      logger.error('Error saving exercise cache:', error, 'useExerciseCache');
     }
   }, []);
 
@@ -59,7 +60,7 @@ export function useExerciseCache() {
       setCachedExercises(null);
       setIsCacheValid(false);
     } catch (error) {
-      console.error('Error clearing exercise cache:', error);
+      logger.error('Error clearing exercise cache:', error, 'useExerciseCache');
     }
   }, []);
 

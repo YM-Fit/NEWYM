@@ -67,8 +67,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
       const { data: trainees } = await supabase
         .from('trainees')
         .select('id, full_name')
-        .eq('trainer_id', trainerId)
-        .eq('status', 'active');
+        .eq('trainer_id', trainerId);
 
       if (!trainees || trainees.length === 0) {
         setReports([]);

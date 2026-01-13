@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, X, Plus, Clock, PlusCircle, Trash2 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
+import { logger } from '../../../utils/logger';
 import ExerciseHistory from './ExerciseHistory';
 import { useExerciseCache } from '../../../hooks/useExerciseCache';
 
@@ -103,7 +104,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
 
       if (error) {
         toast.error('שגיאה בהוספת התרגיל');
-        console.error('Error adding exercise:', error);
+        logger.error('Error adding exercise:', error, 'ExerciseSelector');
       } else if (data) {
         toast.success('התרגיל נוסף בהצלחה');
         setMuscleGroups(prev => prev.map(group => {
@@ -121,7 +122,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
       }
     } catch (error) {
       toast.error('שגיאה בהוספת התרגיל');
-      console.error('Error adding exercise:', error);
+      logger.error('Error adding exercise:', error, 'ExerciseSelector');
     } finally {
       setSavingExercise(false);
     }
@@ -138,7 +139,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
 
       if (error) {
         toast.error('שגיאה במחיקת התרגיל');
-        console.error('Error deleting exercise:', error);
+        logger.error('Error deleting exercise:', error, 'ExerciseSelector');
       } else {
         toast.success('התרגיל נמחק בהצלחה');
         setMuscleGroups(prev => prev.map(group => ({
@@ -148,7 +149,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
       }
     } catch (error) {
       toast.error('שגיאה במחיקת התרגיל');
-      console.error('Error deleting exercise:', error);
+      logger.error('Error deleting exercise:', error, 'ExerciseSelector');
     }
   };
 

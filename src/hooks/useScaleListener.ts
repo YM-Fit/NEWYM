@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { logger } from '../utils/logger';
 
 export interface ScaleReading {
   id: number;
@@ -141,7 +142,7 @@ export function useScaleListener(deviceId: string = 'default'): UseScaleListener
         }));
       }
     } catch (err) {
-      console.error('Error checking script status:', err);
+      logger.error('Error checking script status:', err, 'useScaleListener');
     }
   }, [deviceId]);
 
@@ -149,14 +150,14 @@ export function useScaleListener(deviceId: string = 'default'): UseScaleListener
     const validation = validateScaleData(reading);
 
     if (!validation.valid) {
-      console.warn('⚠️ Tanita data validation warnings:', validation.warnings);
+      logger.warn('Tanita data validation warnings:', validation.warnings, 'useScaleListener');
     }
 
     if (reading.weight_kg !== null && reading.weight_kg > 0) {
       if (lastProcessedWeightRef.current !== null) {
         const weightDiff = Math.abs(reading.weight_kg - lastProcessedWeightRef.current);
         if (weightDiff > 2) {
-          console.warn(`⚠️ Large weight jump detected: ${weightDiff.toFixed(1)} kg`);
+          logger.warn(`Large weight jump detected: ${weightDiff.toFixed(1)} kg`, undefined, 'useScaleListener');
         }
       }
       lastProcessedWeightRef.current = reading.weight_kg;
@@ -238,7 +239,7 @@ export function useScaleListener(deviceId: string = 'default'): UseScaleListener
             setConnectionStatus('connected');
             setRetryCount(0);
           } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            console.error(`❌ Subscription ${status === 'CHANNEL_ERROR' ? 'error' : 'timed out'}`);
+            logger.error(`Subscription ${status === 'CHANNEL_ERROR' ? 'error' : 'timed out'}`, undefined, 'useScaleListener');
             setError(status === 'CHANNEL_ERROR' ? 'Failed to subscribe' : 'Subscription timed out');
             setConnectionStatus('disconnected');
 
@@ -251,7 +252,7 @@ export function useScaleListener(deviceId: string = 'default'): UseScaleListener
             } else {
               setIsListening(false);
               setError('הגעת למספר המקסימלי של ניסיונות חיבור. לחץ על רענן לניסיון נוסף.');
-              console.error('❌ Max retry attempts reached');
+              logger.error('Max retry attempts reached', undefined, 'useScaleListener');
             }
           }
         });
@@ -300,7 +301,7 @@ export function useScaleListener(deviceId: string = 'default'): UseScaleListener
       }, HEARTBEAT_CHECK_INTERVAL_MS);
 
     } catch (err) {
-      console.error('❌ Error setting up realtime listener:', err);
+      logger.error('Error setting up realtime listener:', err, 'useScaleListener');
       setError('Failed to set up listener');
       setIsListening(false);
       setConnectionStatus('disconnected');
@@ -353,7 +354,7 @@ export async function findTraineeByWeight(
     });
 
     if (error) {
-      console.error('Error finding trainee by weight:', error);
+      logger.error('Error finding trainee by weight:', error, 'useScaleListener');
       return [];
     }
 
@@ -366,7 +367,7 @@ export async function findTraineeByWeight(
       confidenceScore: row.confidence_score,
     }));
   } catch (err) {
-    console.error('Error in findTraineeByWeight:', err);
+    logger.error('Error in findTraineeByWeight:', err, 'useScaleListener');
     return [];
   }
 }

@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { handleApiError } from './config';
+import { logger } from '../utils/logger';
 
 export interface AdherenceMetrics {
   trainee_id: string;
@@ -32,8 +33,7 @@ export const analyticsApi = {
       const { data: trainees, error: traineesError } = await supabase
         .from('trainees')
         .select('id, full_name')
-        .eq('trainer_id', trainerId)
-        .eq('status', 'active');
+        .eq('trainer_id', trainerId);
 
       if (traineesError) throw traineesError;
       if (!trainees || trainees.length === 0) return [];
@@ -58,7 +58,7 @@ export const analyticsApi = {
           .gte('workouts.workout_date', weekAgoStr);
 
         if (workoutsError) {
-          console.error(`Error fetching workouts for trainee ${trainee.id}:`, workoutsError);
+          logger.error(`Error fetching workouts for trainee ${trainee.id}:`, workoutsError, 'analyticsApi');
           continue;
         }
 
@@ -273,7 +273,7 @@ export const analyticsApi = {
 
       return streak;
     } catch (error) {
-      console.error('Error calculating streak:', error);
+      logger.error('Error calculating streak:', error, 'analyticsApi');
       return 0;
     }
   },

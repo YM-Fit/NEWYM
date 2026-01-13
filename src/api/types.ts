@@ -26,7 +26,6 @@ export interface TraineeLoginResponse {
     gender: 'male' | 'female' | null;
     birth_date: string | null;
     height: number | null;
-    status: 'active' | 'inactive' | 'vacation' | 'new';
     is_pair: boolean;
     pair_name_1?: string;
     pair_name_2?: string;

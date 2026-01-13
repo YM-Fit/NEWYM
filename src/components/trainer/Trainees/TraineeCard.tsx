@@ -6,7 +6,6 @@ interface TraineeCardProps {
     full_name: string;
     is_pair?: boolean;
     gender?: string;
-    status: string;
     phone?: string;
     pair_name_1?: string;
     pair_name_2?: string;
@@ -18,51 +17,9 @@ interface TraineeCardProps {
 }
 
 function TraineeCard({ trainee, onClick, unseenWeightsCount = 0 }: TraineeCardProps) {
-  const getStatusConfig = (status: string) => {
-    switch (status) {
-      case 'active':
-        return {
-          bg: 'bg-emerald-500/15',
-          text: 'text-emerald-400',
-          border: 'border-emerald-500/30',
-          label: 'פעיל',
-        };
-      case 'vacation':
-        return {
-          bg: 'bg-amber-500/15',
-          text: 'text-amber-400',
-          border: 'border-amber-500/30',
-          label: 'חופשה',
-        };
-      case 'inactive':
-        return {
-          bg: 'bg-red-500/15',
-          text: 'text-red-400',
-          border: 'border-red-500/30',
-          label: 'לא פעיל',
-        };
-      case 'new':
-        return {
-          bg: 'bg-cyan-500/15',
-          text: 'text-cyan-400',
-          border: 'border-cyan-500/30',
-          label: 'חדש',
-        };
-      default:
-        return {
-          bg: 'bg-zinc-500/15',
-          text: 'text-zinc-400',
-          border: 'border-zinc-500/30',
-          label: status,
-        };
-    }
-  };
-
   const daysSinceLastWorkout = trainee.lastWorkout
     ? Math.floor((new Date().getTime() - new Date(trainee.lastWorkout).getTime()) / (1000 * 60 * 60 * 24))
     : null;
-
-  const statusConfig = getStatusConfig(trainee.status);
 
   return (
     <div
@@ -90,9 +47,6 @@ function TraineeCard({ trainee, onClick, unseenWeightsCount = 0 }: TraineeCardPr
                 </span>
               )}
             </div>
-            {trainee.status === 'active' && (
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-zinc-900" />
-            )}
           </div>
           <div>
             <h3 className="font-semibold text-white text-base group-hover:text-emerald-400 transition-colors">
@@ -111,9 +65,6 @@ function TraineeCard({ trainee, onClick, unseenWeightsCount = 0 }: TraineeCardPr
               <span>{unseenWeightsCount}</span>
             </div>
           )}
-          <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${statusConfig.bg} ${statusConfig.text} border ${statusConfig.border}`}>
-            {statusConfig.label}
-          </span>
         </div>
       </div>
 

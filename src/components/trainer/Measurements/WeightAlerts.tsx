@@ -78,8 +78,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
       const { data: trainees } = await supabase
         .from('trainees')
         .select('id, full_name')
-        .eq('trainer_id', trainerId)
-        .eq('status', 'active');
+        .eq('trainer_id', trainerId);
 
       if (!trainees || trainees.length === 0) {
         setAlerts([]);

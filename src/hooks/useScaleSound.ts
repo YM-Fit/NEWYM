@@ -1,4 +1,5 @@
 import { useCallback, useRef, useEffect } from 'react';
+import { logger } from '../utils/logger';
 
 const SOUND_ENABLED_KEY = 'scale_sound_enabled';
 
@@ -22,7 +23,7 @@ function createBeep(frequency: number, duration: number, volume: number = 0.3): 
       audioContext.close();
     }, duration + 100);
   } catch (e) {
-    console.warn('Audio not supported:', e);
+    logger.warn('Audio not supported:', e, 'useScaleSound');
   }
 }
 

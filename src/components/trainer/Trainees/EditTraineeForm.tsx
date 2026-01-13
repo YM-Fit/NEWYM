@@ -16,8 +16,7 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
     birth_date: trainee.birthDate || '',
     gender: trainee.gender || 'male',
     height: trainee.height || '',
-    notes: trainee.notes || '',
-    status: trainee.status || 'active'
+    notes: trainee.notes || ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -53,7 +52,6 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
         gender: formData.gender,
         birth_date: formData.birth_date || null,
         height: formData.height ? Number(formData.height) : null,
-        status: formData.status,
         notes: formData.notes.trim(),
       })
       .eq('id', trainee.id);
@@ -75,13 +73,6 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
     }`;
 
   const labelClass = "block text-sm font-medium text-zinc-400 mb-2";
-
-  const statusConfig = {
-    active: { bg: 'bg-emerald-500/15 border-emerald-500/30', text: 'text-emerald-400' },
-    inactive: { bg: 'bg-red-500/15 border-red-500/30', text: 'text-red-400' },
-    vacation: { bg: 'bg-amber-500/15 border-amber-500/30', text: 'text-amber-400' },
-    new: { bg: 'bg-cyan-500/15 border-cyan-500/30', text: 'text-cyan-400' },
-  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -197,30 +188,6 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
               >
                 נקבה
               </button>
-            </div>
-          </div>
-
-          <div className="md:col-span-2">
-            <label className={labelClass}>סטטוס</label>
-            <div className="flex flex-wrap gap-3">
-              {(['active', 'inactive', 'vacation', 'new'] as const).map((status) => {
-                const config = statusConfig[status];
-                const labels = { active: 'פעיל', inactive: 'לא פעיל', vacation: 'חופשה', new: 'חדש' };
-                return (
-                  <button
-                    key={status}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, status })}
-                    className={`px-4 py-3 rounded-xl border-2 transition-all ${
-                      formData.status === status
-                        ? `${config.bg} ${config.text} border-current`
-                        : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
-                    }`}
-                  >
-                    {labels[status]}
-                  </button>
-                );
-              })}
             </div>
           </div>
         </div>

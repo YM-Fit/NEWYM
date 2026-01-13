@@ -3,8 +3,11 @@ import { Home, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { logger } from '../../utils/logger';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
 import { useGlobalScaleListener, IdentifiedReading } from '../../hooks/useGlobalScaleListener';
 import { ScaleReading } from '../../hooks/useScaleListener';
+import { useTraineeData } from '../../hooks/useTraineeData';
 import Header from '../layout/Header';
 import Sidebar from '../layout/Sidebar';
 import MobileSidebar from '../layout/MobileSidebar';
@@ -39,7 +42,6 @@ interface Trainee {
   gender: 'male' | 'female' | null;
   birth_date: string | null;
   height: number | null;
-  status: 'active' | 'inactive' | 'vacation' | 'new';
   start_date: string;
   notes: string;
   is_pair?: boolean;
@@ -59,6 +61,8 @@ interface Trainee {
 
 export default function TrainerApp() {
   const { signOut, user } = useAuth();
+  const { handleError } = useErrorHandler();
+  const { loadTraineeData } = useTraineeData();
   const [activeView, setActiveView] = useState('dashboard');
   const [selectedTrainee, setSelectedTrainee] = useState<Trainee | null>(null);
   const [selectedWorkout, setSelectedWorkout] = useState<any | null>(null);
@@ -198,7 +202,7 @@ export default function TrainerApp() {
         });
 
       if (measurementError) {
-        console.error('Error saving measurement:', measurementError);
+        logger.error('Error saving measurement:', measurementError, 'TrainerApp');
         toast.error('שגיאה בשמירת המדידה');
         return false;
       }
@@ -223,7 +227,7 @@ export default function TrainerApp() {
       toast.success(`המדידה נשמרה עבור ${traineeName}`);
       return true;
     } catch (err) {
-      console.error('Error in handleSaveScaleMeasurement:', err);
+      logger.error('Error in handleSaveScaleMeasurement:', err, 'TrainerApp');
       toast.error('שגיאה בשמירת המדידה');
       return false;
     }
@@ -259,7 +263,7 @@ export default function TrainerApp() {
     if (!error && data) {
       setTrainees(data);
     } else if (error) {
-      console.error('Error loading trainees:', error);
+      logger.error('Error loading trainees:', error, 'TrainerApp');
     }
   }, [user?.id]);
 
@@ -458,7 +462,6 @@ export default function TrainerApp() {
       gender: (trainee.gender || 'male') as 'male' | 'female',
       height: trainee.height || 0,
       startDate: trainee.start_date,
-      status: trainee.status,
       notes: trainee.notes || '',
       isPair: trainee.is_pair || false,
       pairName1: trainee.pair_name_1,
@@ -559,7 +562,7 @@ export default function TrainerApp() {
         throw error;
       }
     } catch (err) {
-      console.error('Error deleting trainee:', err);
+      logger.error('Error deleting trainee:', err, 'TrainerApp');
       toast.error('שגיאה במחיקת המתאמן');
     }
   };
@@ -783,7 +786,7 @@ export default function TrainerApp() {
         throw error;
       }
     } catch (err) {
-      console.error('Error deleting workout:', err);
+      logger.error('Error deleting workout:', err, 'TrainerApp');
       toast.error('שגיאה במחיקת האימון');
     }
   };

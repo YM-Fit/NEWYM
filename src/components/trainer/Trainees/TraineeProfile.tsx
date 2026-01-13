@@ -79,23 +79,6 @@ export default function TraineeProfile({
     ? latestMeasurement.weight - previousMeasurement.weight
     : 0;
 
-  const getStatusConfig = (status: string) => {
-    switch (status) {
-      case 'active':
-        return { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30', label: 'פעיל' };
-      case 'vacation':
-        return { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30', label: 'חופשה' };
-      case 'inactive':
-        return { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30', label: 'לא פעיל' };
-      case 'new':
-        return { bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/30', label: 'חדש' };
-      default:
-        return { bg: 'bg-zinc-500/15', text: 'text-zinc-400', border: 'border-zinc-500/30', label: status };
-    }
-  };
-
-  const statusConfig = getStatusConfig(trainee.status || 'active');
-
   return (
     <div className="space-y-6 pb-20 lg:pb-6 animate-fade-in">
       <div className="premium-card-static p-6 md:p-8 relative overflow-hidden">
@@ -132,9 +115,6 @@ export default function TraineeProfile({
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <span className={`px-4 py-2 rounded-xl text-sm font-semibold ${statusConfig.bg} ${statusConfig.text} border ${statusConfig.border}`}>
-                {statusConfig.label}
-              </span>
               <button
                 onClick={onEdit}
                 className="px-4 py-2.5 rounded-xl bg-cyan-500/15 text-cyan-400 hover:bg-cyan-500/25 border border-cyan-500/30 flex items-center gap-2 transition-all font-medium"

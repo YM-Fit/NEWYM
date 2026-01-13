@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
+import { logger } from '../../utils/logger';
 import {
   Calendar,
   Clock,
@@ -282,7 +283,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
     if (error) {
       toast.error('שגיאה בשמירת השינויים');
-      console.error(error);
+      logger.error('Error saving workout plan changes:', error, 'MyWorkoutPlan');
     } else {
       const { data: userData } = await supabase.auth.getUser();
       if (userData.user) {

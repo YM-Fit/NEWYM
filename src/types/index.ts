@@ -8,7 +8,6 @@ export interface Trainee {
   height: number | null;
   birth_date?: string | null;
   start_date: string;
-  status: 'active' | 'inactive' | 'vacation' | 'new';
   notes: string;
   created_at: string;
   trainer_id: string;

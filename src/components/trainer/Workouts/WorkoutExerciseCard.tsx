@@ -124,10 +124,11 @@ export const WorkoutExerciseCard = memo(({
             <button
               type="button"
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 setShowInstructions(true);
               }}
-              className="p-2 hover:bg-cyan-500/15 text-cyan-400 rounded-xl transition-all"
+              className="p-2 hover:bg-cyan-500/15 text-cyan-400 rounded-xl transition-all cursor-pointer"
               aria-label="איך לבצע"
               title="איך לבצע"
             >
@@ -137,10 +138,11 @@ export const WorkoutExerciseCard = memo(({
             <button
               type="button"
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 onRemove();
               }}
-              className="p-2 hover:bg-red-500/15 text-red-400 rounded-xl transition-all"
+              className="p-2 hover:bg-red-500/15 text-red-400 rounded-xl transition-all cursor-pointer"
               aria-label="מחק תרגיל"
             >
               <Trash2 className="h-5 w-5" />
@@ -173,8 +175,12 @@ export const WorkoutExerciseCard = memo(({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setShowInstructions(true)}
-              className="p-2 lg:p-3 hover:bg-cyan-500/15 text-cyan-400 rounded-xl transition-all touch-manipulation"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowInstructions(true);
+              }}
+              className="p-2 lg:p-3 hover:bg-cyan-500/15 text-cyan-400 rounded-xl transition-all touch-manipulation cursor-pointer"
               aria-label="איך לבצע"
               title="איך לבצע"
             >
@@ -182,15 +188,23 @@ export const WorkoutExerciseCard = memo(({
             </button>
             <button
               type="button"
-              onClick={onComplete}
-              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all text-sm font-semibold"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onComplete();
+              }}
+              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all text-sm font-semibold cursor-pointer"
             >
               סיים תרגיל
             </button>
             <button
               type="button"
-              onClick={onRemove}
-              className="p-2 lg:p-3 hover:bg-red-500/15 text-red-400 rounded-xl transition-all touch-manipulation"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onRemove();
+              }}
+              className="p-2 lg:p-3 hover:bg-red-500/15 text-red-400 rounded-xl transition-all touch-manipulation cursor-pointer"
               aria-label="מחק תרגיל"
             >
               <Trash2 className="h-5 w-5 lg:h-6 lg:w-6" />
@@ -224,8 +238,12 @@ export const WorkoutExerciseCard = memo(({
 
         <button
           type="button"
-          onClick={onAddSet}
-          className="w-full mt-4 py-4 lg:py-5 border-2 border-dashed border-zinc-700/50 rounded-xl hover:border-emerald-500/50 hover:bg-emerald-500/10 text-zinc-500 hover:text-emerald-400 font-semibold text-base lg:text-lg transition-all touch-manipulation"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onAddSet();
+          }}
+          className="w-full mt-4 py-4 lg:py-5 border-2 border-dashed border-zinc-700/50 rounded-xl hover:border-emerald-500/50 hover:bg-emerald-500/10 text-zinc-500 hover:text-emerald-400 font-semibold text-base lg:text-lg transition-all touch-manipulation cursor-pointer"
         >
           + הוסף סט
         </button>

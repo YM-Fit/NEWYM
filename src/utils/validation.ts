@@ -27,13 +27,6 @@ export function validateGender(gender: string | null | undefined): 'male' | 'fem
   return 'male';
 }
 
-export function validateStatus(status: string | null | undefined): 'active' | 'inactive' | 'vacation' | 'new' {
-  if (status === 'inactive') return 'inactive';
-  if (status === 'vacation') return 'vacation';
-  if (status === 'new') return 'new';
-  return 'active';
-}
-
 export function validateSetType(setType: string | null | undefined): 'regular' | 'superset' | 'dropset' {
   if (setType === 'superset') return 'superset';
   if (setType === 'dropset') return 'dropset';

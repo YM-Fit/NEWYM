@@ -13,7 +13,6 @@ import {
   clampNumber,
   validateRPE,
   validateGender,
-  validateStatus,
 } from './validation';
 
 describe('validateWeightInput', () => {
@@ -218,16 +217,3 @@ describe('validateGender', () => {
   });
 });
 
-describe('validateStatus', () => {
-  it('should return active as default', () => {
-    expect(validateStatus(null)).toBe('active');
-    expect(validateStatus(undefined)).toBe('active');
-    expect(validateStatus('invalid')).toBe('active');
-  });
-
-  it('should return correct status values', () => {
-    expect(validateStatus('inactive')).toBe('inactive');
-    expect(validateStatus('vacation')).toBe('vacation');
-    expect(validateStatus('new')).toBe('new');
-  });
-});
