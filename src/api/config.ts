@@ -27,3 +27,23 @@ export function getCorsHeaders(origin: string | null): Record<string, string> {
     'Access-Control-Allow-Credentials': 'true',
   };
 }
+
+/**
+ * Handle API errors with user-friendly messages
+ */
+export function handleApiError(error: unknown, defaultMessage: string): Error {
+  if (error instanceof Error) {
+    // If it's already an Error, use the default message but preserve the original error
+    const apiError = new Error(defaultMessage);
+    apiError.cause = error;
+    return apiError;
+  }
+  
+  // For other error types, extract message if possible
+  if (error && typeof error === 'object' && 'message' in error) {
+    const errorMessage = typeof error.message === 'string' ? error.message : defaultMessage;
+    return new Error(errorMessage || defaultMessage);
+  }
+  
+  return new Error(defaultMessage);
+}

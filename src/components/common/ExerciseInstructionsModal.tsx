@@ -1,5 +1,5 @@
 import { Info } from 'lucide-react';
-import { Modal } from './ui/Modal';
+import { Modal } from '../ui/Modal';
 
 interface ExerciseInstructionsModalProps {
   isOpen: boolean;
