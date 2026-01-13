@@ -866,12 +866,15 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
                   {/* Completion Message */}
                   {exercises.length > 0 && completedCount === exercises.length && (
-                    <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white text-center shadow-xl animate-scale-in">
-                      <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg backdrop-blur-sm">
-                        <Check className="w-8 h-8" />
+                    <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl p-6 text-white text-center shadow-[0_8px_30px_rgba(16,185,129,0.3)] animate-scale-in overflow-hidden">
+                      <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,.1)_50%,transparent_75%,transparent_100%)] bg-[length:30px_30px] opacity-20" />
+                      <div className="relative">
+                        <div className="w-16 h-16 bg-white/25 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-[0_0_25px_rgba(255,255,255,0.3)] backdrop-blur-md border border-white/20">
+                          <Check className="w-8 h-8" />
+                        </div>
+                        <h4 className="text-xl md:text-2xl font-bold mb-2">כל הכבוד!</h4>
+                        <p className="text-emerald-50 mt-1 text-sm md:text-base">סיימת את כל התרגילים ליום זה</p>
                       </div>
-                      <h4 className="text-xl font-bold">כל הכבוד!</h4>
-                      <p className="text-emerald-100 mt-1 text-sm">סיימת את כל התרגילים ליום זה</p>
                     </div>
                   )}
                 </div>
