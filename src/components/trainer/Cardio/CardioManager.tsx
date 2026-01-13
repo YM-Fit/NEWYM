@@ -1,28 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../../lib/supabase';
-import { ArrowRight, Activity, TrendingUp, Timer, Calendar, Target, BarChart3, Plus, Edit2, Trash2, Save, X, Footprints } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar } from 'recharts';
+import { ArrowRight, Activity, TrendingUp, Timer, Calendar, Target, BarChart3, Plus, Edit2, Trash2, Save, X, Footprints, Loader2, Flame } from 'lucide-react';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, Cell } from 'recharts';
 import toast from 'react-hot-toast';
-
-interface CardioType {
-  id: string;
-  name: string;
-}
-
-interface CardioActivity {
-  id: string;
-  date: string;
-  avg_weekly_steps: number;
-  distance: number;
-  duration: number;
-  frequency: number;
-  weekly_goal_steps: number;
-  notes: string | null;
-  cardio_type: {
-    id: string;
-    name: string;
-  };
-}
+import { cardioApi, type CardioActivity, type CardioType, type CardioStats } from '../../../api/cardioApi';
 
 interface CardioManagerProps {
   traineeId: string;
@@ -34,11 +14,14 @@ interface CardioManagerProps {
 export default function CardioManager({ traineeId, trainerId, traineeName, onBack }: CardioManagerProps) {
   const [activities, setActivities] = useState<CardioActivity[]>([]);
   const [cardioTypes, setCardioTypes] = useState<CardioType[]>([]);
+  const [stats, setStats] = useState<CardioStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingActivity, setEditingActivity] = useState<CardioActivity | null>(null);
   const [newCardioType, setNewCardioType] = useState('');
   const [showNewType, setShowNewType] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     cardio_type_id: '',
@@ -57,55 +40,64 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
 
   const loadData = async () => {
     setLoading(true);
-    await Promise.all([loadActivities(), loadCardioTypes()]);
-    setLoading(false);
+    try {
+      await Promise.all([
+        loadActivities(),
+        loadCardioTypes(),
+        loadStats()
+      ]);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadActivities = async () => {
-    const { data, error } = await supabase
-      .from('cardio_activities')
-      .select('*, cardio_type:cardio_types(id, name)')
-      .eq('trainee_id', traineeId)
-      .order('date', { ascending: false });
-
-    if (error) {
-      toast.error('שגיאה בטעינת פעילויות');
-    } else if (data) {
-      setActivities(data as any);
+    try {
+      const data = await cardioApi.getTraineeActivities(traineeId);
+      setActivities(data);
+    } catch (error: any) {
+      toast.error(error.message || 'שגיאה בטעינת פעילויות');
     }
   };
 
   const loadCardioTypes = async () => {
-    const { data, error } = await supabase
-      .from('cardio_types')
-      .select('*')
-      .eq('trainer_id', trainerId)
-      .order('name');
-
-    if (error) {
-      toast.error('שגיאה בטעינת סוגי אירובי');
-    } else if (data) {
+    try {
+      const data = await cardioApi.getCardioTypes(trainerId);
       setCardioTypes(data);
+    } catch (error: any) {
+      toast.error(error.message || 'שגיאה בטעינת סוגי אירובי');
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const data = await cardioApi.getCardioStats(traineeId);
+      setStats(data);
+    } catch (error: any) {
+      console.error('Error loading stats:', error);
     }
   };
 
   const handleAddCardioType = async () => {
-    if (!newCardioType.trim()) return;
+    if (!newCardioType.trim()) {
+      toast.error('נא להזין שם סוג אירובי');
+      return;
+    }
 
-    const { data, error } = await supabase
-      .from('cardio_types')
-      .insert({ trainer_id: trainerId, name: newCardioType.trim() })
-      .select()
-      .single();
-
-    if (error) {
-      toast.error('שגיאה בהוספת סוג אירובי');
-    } else if (data) {
+    try {
+      const data = await cardioApi.createCardioType({
+        trainer_id: trainerId,
+        name: newCardioType.trim()
+      });
       setCardioTypes([...cardioTypes, data]);
       setFormData({ ...formData, cardio_type_id: data.id });
       setNewCardioType('');
       setShowNewType(false);
-      toast.success('סוג אירובי נוסף');
+      toast.success('סוג אירובי נוסף בהצלחה');
+    } catch (error: any) {
+      toast.error(error.message || 'שגיאה בהוספת סוג אירובי');
     }
   };
 
@@ -130,10 +122,10 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
       return;
     }
 
-    if (editingActivity) {
-      const { error } = await supabase
-        .from('cardio_activities')
-        .update({
+    setSaving(true);
+    try {
+      if (editingActivity) {
+        await cardioApi.updateActivity(editingActivity.id, {
           cardio_type_id: formData.cardio_type_id,
           date: formData.date,
           avg_weekly_steps: formData.avg_weekly_steps,
@@ -141,21 +133,11 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
           duration: formData.duration,
           frequency: formData.frequency,
           weekly_goal_steps: formData.weekly_goal_steps,
-          notes: formData.notes
-        })
-        .eq('id', editingActivity.id);
-
-      if (error) {
-        toast.error('שגיאה בעדכון');
+          notes: formData.notes || null
+        });
+        toast.success('פעילות עודכנה בהצלחה');
       } else {
-        toast.success('עודכן בהצלחה');
-        resetForm();
-        loadActivities();
-      }
-    } else {
-      const { error } = await supabase
-        .from('cardio_activities')
-        .insert({
+        await cardioApi.createActivity({
           trainee_id: traineeId,
           trainer_id: trainerId,
           cardio_type_id: formData.cardio_type_id,
@@ -165,16 +147,16 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
           duration: formData.duration,
           frequency: formData.frequency,
           weekly_goal_steps: formData.weekly_goal_steps,
-          notes: formData.notes
+          notes: formData.notes || null
         });
-
-      if (error) {
-        toast.error('שגיאה בשמירה');
-      } else {
-        toast.success('פעילות נשמרה');
-        resetForm();
-        loadActivities();
+        toast.success('פעילות נשמרה בהצלחה');
       }
+      resetForm();
+      await Promise.all([loadActivities(), loadStats()]);
+    } catch (error: any) {
+      toast.error(error.message || 'שגיאה בשמירה');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -196,39 +178,19 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
   const handleDelete = async (id: string) => {
     if (!confirm('האם למחוק את הפעילות?')) return;
 
-    const { error } = await supabase
-      .from('cardio_activities')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      toast.error('שגיאה במחיקה');
-    } else {
-      toast.success('נמחק בהצלחה');
-      loadActivities();
+    setDeletingId(id);
+    try {
+      await cardioApi.deleteActivity(id);
+      toast.success('פעילות נמחקה בהצלחה');
+      await Promise.all([loadActivities(), loadStats()]);
+    } catch (error: any) {
+      toast.error(error.message || 'שגיאה במחיקה');
+    } finally {
+      setDeletingId(null);
     }
   };
 
   const latestActivity = activities[0];
-  const previousActivity = activities[1];
-
-  const getStats = () => {
-    if (activities.length === 0) return null;
-
-    const totalSteps = activities.reduce((sum, a) => sum + a.avg_weekly_steps, 0);
-    const totalGoal = activities.reduce((sum, a) => sum + a.weekly_goal_steps, 0);
-    const avgSteps = Math.round(totalSteps / activities.length);
-    const avgGoal = Math.round(totalGoal / activities.length);
-    const goalProgress = avgGoal > 0 ? Math.round((avgSteps / avgGoal) * 100) : 0;
-
-    const stepsChange = latestActivity && previousActivity
-      ? latestActivity.avg_weekly_steps - previousActivity.avg_weekly_steps
-      : 0;
-
-    return { avgSteps, avgGoal, goalProgress, stepsChange, totalActivities: activities.length };
-  };
-
-  const stats = getStats();
 
   const getChartData = () => {
     return activities
@@ -237,7 +199,8 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
       .map(a => ({
         date: new Date(a.date).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' }),
         בוצע: a.avg_weekly_steps,
-        יעד: a.weekly_goal_steps
+        יעד: a.weekly_goal_steps,
+        achieved: a.weekly_goal_steps > 0 && a.avg_weekly_steps >= a.weekly_goal_steps
       }));
   };
 
@@ -396,6 +359,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
                 <Target className="h-4 w-4 text-emerald-400" />
               </div>
             </div>
+            <p className="text-xs text-zinc-400 mt-1">אחוז הצלחה: {stats.successRate}%</p>
           </div>
 
           <div className="stat-card p-5 bg-gradient-to-br from-amber-500/20 to-amber-500/5">
@@ -413,13 +377,19 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
           <div className="stat-card p-5 bg-gradient-to-br from-cyan-500/20 to-cyan-500/5">
             <div className="flex items-start justify-between mb-2">
               <div>
-                <p className="text-xs font-medium text-zinc-400 mb-1">סה"כ רשומות</p>
-                <p className="text-2xl font-bold text-cyan-400">{stats.totalActivities}</p>
+                <p className="text-xs font-medium text-zinc-400 mb-1">רצף נוכחי</p>
+                <p className="text-2xl font-bold text-cyan-400 flex items-center gap-1">
+                  {stats.currentStreak}
+                  {stats.currentStreak > 0 && <Flame className="h-5 w-5 text-orange-400" />}
+                </p>
               </div>
               <div className="p-2 rounded-lg bg-cyan-500/20">
                 <Calendar className="h-4 w-4 text-cyan-400" />
               </div>
             </div>
+            {stats.longestStreak > stats.currentStreak && (
+              <p className="text-xs text-zinc-400 mt-1">שיא: {stats.longestStreak} שבועות</p>
+            )}
           </div>
         </div>
       )}
@@ -446,7 +416,11 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
                 />
                 <Legend />
                 <Bar dataKey="יעד" fill="#10b981" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="בוצע" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="בוצע" radius={[4, 4, 0, 0]}>
+                  {getChartData().map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.achieved ? '#0ea5e9' : '#f59e0b'} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -541,9 +515,14 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
                     </button>
                     <button
                       onClick={() => handleDelete(activity.id)}
-                      className="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                      disabled={deletingId === activity.id}
+                      className="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      {deletingId === activity.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -683,10 +662,20 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={handleSave}
-                  className="flex-1 py-3 bg-gradient-to-r from-sky-500 to-sky-600 text-white rounded-xl font-medium hover:from-sky-600 hover:to-sky-700 transition-all flex items-center justify-center gap-2"
+                  disabled={saving}
+                  className="flex-1 py-3 bg-gradient-to-r from-sky-500 to-sky-600 text-white rounded-xl font-medium hover:from-sky-600 hover:to-sky-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Save className="h-5 w-5" />
-                  {editingActivity ? 'עדכן' : 'שמור'}
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      שומר...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-5 w-5" />
+                      {editingActivity ? 'עדכן' : 'שמור'}
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={resetForm}

@@ -9,7 +9,6 @@ import { saveWorkout } from '../../../api/workoutApi';
 import ExerciseSelector from './ExerciseSelector';
 import QuickNumericPad from './QuickNumericPad';
 import EquipmentSelector from '../Equipment/EquipmentSelector';
-import WorkingWeightCalculator from '../Tools/WorkingWeightCalculator';
 import WorkoutSummary from './WorkoutSummary';
 import DraftModal from '../../common/DraftModal';
 import WorkoutTemplates from './WorkoutTemplates';
@@ -51,10 +50,6 @@ interface SetData {
   dropset_reps?: number | null;
   equipment_id?: string | null;
   equipment?: Equipment | null;
-  suggested_weight?: number | null;
-  suggested_reps?: number | null;
-  suggested_superset_weight?: number | null;
-  suggested_superset_reps?: number | null;
 }
 
 interface WorkoutExercise {
@@ -94,7 +89,6 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
     completeExercise,
     getExerciseSummary,
     toggleCollapseSet,
-    applySuggestion,
     completeSetAndMoveNext,
   } = useWorkoutSession({ initialExercises: editingWorkout?.exercises });
 
@@ -146,10 +140,6 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
   const [supersetEquipmentSelector, setSupersetEquipmentSelector] = useState<{
     exerciseIndex: number;
     setIndex: number;
-  } | null>(null);
-  const [calculatorData, setCalculatorData] = useState<{
-    weight: number;
-    reps: number;
   } | null>(null);
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [draftData, setDraftData] = useState<{
@@ -319,10 +309,6 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           dropset_reps: set.dropset_reps,
           equipment_id: set.equipment_id,
           equipment: null,
-          suggested_weight: null,
-          suggested_reps: null,
-          suggested_superset_weight: null,
-          suggested_superset_reps: null,
         }));
 
       // Add the exercise using the existing hook logic (minimize previous exercise etc.)
@@ -795,8 +781,6 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           onOpenDropsetNumericPad={(setIndex, field) => openDropsetNumericPad(exerciseIndex, setIndex, field, field === 'dropset_weight' ? 'משקל דרופ-סט (ק״ג)' : 'חזרות דרופ-סט')}
           onOpenSupersetDropsetNumericPad={(setIndex, field) => openSupersetDropsetNumericPad(exerciseIndex, setIndex, field, field === 'superset_dropset_weight' ? 'משקל דרופ-סט סופר (ק״ג)' : 'חזרות דרופ-סט סופר')}
           onUpdateSet={(setIndex, field, value) => updateSet(exerciseIndex, setIndex, field, value)}
-          onOpenCalculator={(setIndex) => setCalculatorData({ weight: exercises[exerciseIndex].sets[setIndex].weight, reps: exercises[exerciseIndex].sets[setIndex].reps })}
-          onApplySuggestion={(setIndex) => applySuggestion(exerciseIndex, setIndex)}
         />
       ))}
 
@@ -902,14 +886,6 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
           onConfirm={handleSupersetDropsetNumericPadConfirm}
           onClose={() => setSupersetDropsetNumericPad(null)}
           allowDecimal={supersetDropsetNumericPad.field === 'superset_dropset_weight'}
-        />
-      )}
-
-      {calculatorData && (
-        <WorkingWeightCalculator
-          initialWeight={calculatorData.weight}
-          initialReps={calculatorData.reps}
-          onClose={() => setCalculatorData(null)}
         />
       )}
 

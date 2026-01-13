@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Scale, User, AlertCircle, CheckCircle, HelpCircle, ChevronLeft, Save, Loader2, Calendar, X, FileText } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Scale, User, AlertCircle, CheckCircle, HelpCircle, ChevronLeft, Save, Loader2, Calendar, X, FileText, Filter, Search, CheckSquare, Square, Trash2, Download, SortAsc, SortDesc } from 'lucide-react';
 import { IdentifiedReading } from '../../../hooks/useGlobalScaleListener';
 import { ScaleReading, TraineeMatch } from '../../../hooks/useScaleListener';
 import { supabase } from '../../../lib/supabase';
@@ -37,12 +37,142 @@ export default function RecentScaleReadings({
   const [notesInput, setNotesInput] = useState<string>('');
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [loadingNotes, setLoadingNotes] = useState(false);
+  
+  // Advanced filtering and bulk operations
+  const [selectedReadings, setSelectedReadings] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterSource, setFilterSource] = useState<'all' | 'identified' | 'unidentified'>('all');
+  const [sortBy, setSortBy] = useState<'date' | 'weight' | 'confidence'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [showFilters, setShowFilters] = useState(false);
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
 
   useEffect(() => {
     if (activeTab === 'notes') {
       fetchSavedNotes();
     }
   }, [activeTab]);
+
+  // Filtered and sorted readings
+  const filteredReadings = useMemo(() => {
+    let filtered = [...readings];
+
+    // Filter by source
+    if (filterSource === 'identified') {
+      filtered = filtered.filter(r => r.bestMatch !== null);
+    } else if (filterSource === 'unidentified') {
+      filtered = filtered.filter(r => r.bestMatch === null);
+    }
+
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(r => {
+        if (r.bestMatch) {
+          return r.bestMatch.traineeName.toLowerCase().includes(query) ||
+                 r.reading.weight_kg?.toString().includes(query) ||
+                 r.reading.notes?.toLowerCase().includes(query);
+        }
+        return r.reading.weight_kg?.toString().includes(query) ||
+               r.reading.notes?.toLowerCase().includes(query);
+      });
+    }
+
+    // Filter by date range
+    if (dateRange.start || dateRange.end) {
+      filtered = filtered.filter(r => {
+        const readingDate = new Date(r.timestamp);
+        if (dateRange.start && readingDate < new Date(dateRange.start)) return false;
+        if (dateRange.end && readingDate > new Date(dateRange.end)) return false;
+        return true;
+      });
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      if (sortBy === 'date') {
+        comparison = a.timestamp.getTime() - b.timestamp.getTime();
+      } else if (sortBy === 'weight') {
+        comparison = (a.reading.weight_kg || 0) - (b.reading.weight_kg || 0);
+      } else if (sortBy === 'confidence') {
+        comparison = (a.bestMatch?.confidenceScore || 0) - (b.bestMatch?.confidenceScore || 0);
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [readings, filterSource, searchQuery, dateRange, sortBy, sortOrder]);
+
+  // Bulk operations
+  const handleSelectAll = () => {
+    if (selectedReadings.size === filteredReadings.length) {
+      setSelectedReadings(new Set());
+    } else {
+      setSelectedReadings(new Set(filteredReadings.map(r => `${r.reading.id}-${r.bestMatch?.traineeId || 'unknown'}`)));
+    }
+  };
+
+  const handleSelectReading = (key: string) => {
+    setSelectedReadings(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  const handleBulkSave = async () => {
+    if (selectedReadings.size === 0 || !onSaveMeasurement) return;
+    
+    const readingsToSave = filteredReadings.filter(r => {
+      const key = `${r.reading.id}-${r.bestMatch?.traineeId || 'unknown'}`;
+      return selectedReadings.has(key) && r.bestMatch && !savedReadings.has(key);
+    });
+
+    for (const item of readingsToSave) {
+      if (item.bestMatch) {
+        const readingDate = new Date(item.reading.created_at).toISOString().split('T')[0];
+        await onSaveMeasurement(item.bestMatch.traineeId, item.bestMatch.traineeName, item.reading, readingDate);
+        const key = `${item.reading.id}-${item.bestMatch.traineeId}`;
+        setSavedReadings(prev => new Set(prev).add(key));
+      }
+    }
+
+    setSelectedReadings(new Set());
+  };
+
+  const handleExport = () => {
+    const dataToExport = filteredReadings.map(r => ({
+      date: r.timestamp.toISOString(),
+      trainee: r.bestMatch?.traineeName || 'לא זוהה',
+      weight: r.reading.weight_kg,
+      bodyFat: r.reading.body_fat_percent,
+      confidence: r.bestMatch?.confidenceScore || 0,
+      notes: r.reading.notes || ''
+    }));
+
+    const csv = [
+      ['תאריך', 'מתאמן', 'משקל (ק״ג)', 'אחוז שומן', 'רמת ביטחון', 'הערות'],
+      ...dataToExport.map(d => [
+        new Date(d.date).toLocaleDateString('he-IL'),
+        d.trainee,
+        d.weight?.toFixed(1) || '',
+        d.bodyFat?.toFixed(1) || '',
+        d.confidence.toString(),
+        d.notes
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `שקילויות_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
 
   const fetchSavedNotes = async () => {
     setLoadingNotes(true);
@@ -368,19 +498,171 @@ export default function RecentScaleReadings({
           </button>
         </div>
 
+        {activeTab === 'readings' && (
+          <div className="mb-6 space-y-4">
+            {/* Search and Filters */}
+            <div className="flex flex-wrap gap-3">
+              <div className="flex-1 min-w-[200px]">
+                <div className="relative">
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="חיפוש לפי שם, משקל או הערות..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-4 pr-10 py-2 rounded-xl bg-gray-800/80 border border-white/10 text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 transition-all"
+                  />
+                </div>
+              </div>
+              
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+                  showFilters
+                    ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
+                    : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
+                }`}
+              >
+                <Filter className="h-4 w-4" />
+                סינון
+              </button>
+
+              {selectedReadings.size > 0 && (
+                <>
+                  <button
+                    onClick={handleBulkSave}
+                    className="px-4 py-2 rounded-xl font-semibold text-sm bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all flex items-center gap-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    שמור נבחרים ({selectedReadings.size})
+                  </button>
+                  <button
+                    onClick={handleExport}
+                    className="px-4 py-2 rounded-xl font-semibold text-sm bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 transition-all flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    ייצא
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Advanced Filters */}
+            {showFilters && (
+              <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">מקור</label>
+                    <select
+                      value={filterSource}
+                      onChange={(e) => setFilterSource(e.target.value as any)}
+                      className="w-full px-4 py-2 rounded-xl bg-gray-800/80 border border-white/10 text-white focus:ring-2 focus:ring-teal-500/50"
+                    >
+                      <option value="all">הכל</option>
+                      <option value="identified">זוהו</option>
+                      <option value="unidentified">לא זוהו</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">מיון לפי</label>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as any)}
+                      className="w-full px-4 py-2 rounded-xl bg-gray-800/80 border border-white/10 text-white focus:ring-2 focus:ring-teal-500/50"
+                    >
+                      <option value="date">תאריך</option>
+                      <option value="weight">משקל</option>
+                      <option value="confidence">רמת ביטחון</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">סדר</label>
+                    <button
+                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                      className="w-full px-4 py-2 rounded-xl bg-gray-800/80 border border-white/10 text-white hover:bg-gray-700/50 transition-all flex items-center justify-center gap-2"
+                    >
+                      {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+                      {sortOrder === 'asc' ? 'עולה' : 'יורד'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">תאריך התחלה</label>
+                    <input
+                      type="date"
+                      value={dateRange.start}
+                      onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                      className="w-full px-4 py-2 rounded-xl bg-gray-800/80 border border-white/10 text-white focus:ring-2 focus:ring-teal-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">תאריך סיום</label>
+                    <input
+                      type="date"
+                      value={dateRange.end}
+                      onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                      className="w-full px-4 py-2 rounded-xl bg-gray-800/80 border border-white/10 text-white focus:ring-2 focus:ring-teal-500/50"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === 'readings' ? (
           <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
-            {readings.map((item, index) => (
+            {filteredReadings.length > 0 && (
+              <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                <button
+                  onClick={handleSelectAll}
+                  className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+                >
+                  {selectedReadings.size === filteredReadings.length ? (
+                    <CheckSquare className="h-4 w-4 text-teal-400" />
+                  ) : (
+                    <Square className="h-4 w-4" />
+                  )}
+                  בחר הכל ({filteredReadings.length})
+                </button>
+                <span className="text-sm text-gray-500">
+                  מוצג {filteredReadings.length} מתוך {readings.length}
+                </span>
+              </div>
+            )}
+            {filteredReadings.map((item, index) => {
+              const readingKey = `${item.reading.id}-${item.bestMatch?.traineeId || 'unknown'}`;
+              const isSelected = selectedReadings.has(readingKey);
+              return (
             <div
               key={`${item.reading.id}-${index}`}
               className={`p-5 rounded-2xl border transition-all duration-300 hover:shadow-xl ${
-                item.bestMatch
+                isSelected
+                  ? 'border-teal-500/50 bg-gradient-to-br from-teal-500/10 to-emerald-500/10'
+                  : item.bestMatch
                   ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 hover:from-emerald-500/10 hover:to-teal-500/10 hover:border-emerald-500/50'
                   : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'
               } ${item.bestMatch && onTraineeClick ? 'cursor-pointer hover:scale-[1.01]' : ''}`}
               onClick={() => item.bestMatch && onTraineeClick?.(item.bestMatch.traineeId)}
             >
               <div className="flex items-center justify-between">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelectReading(readingKey);
+                  }}
+                  className="mr-2"
+                >
+                  {isSelected ? (
+                    <CheckSquare className="h-5 w-5 text-teal-400" />
+                  ) : (
+                    <Square className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
                 <div className="flex items-center gap-4">
                   <div className={`p-3 rounded-2xl shadow-lg ${item.bestMatch ? 'bg-gradient-to-br from-emerald-500/30 to-teal-500/30' : 'bg-gray-700/50'}`}>
                     {item.bestMatch ? (
@@ -464,7 +746,24 @@ export default function RecentScaleReadings({
                 </div>
               )}
             </div>
-          ))}
+              );
+            })}
+            {filteredReadings.length === 0 && readings.length > 0 && (
+              <div className="text-center py-12">
+                <Filter className="h-12 w-12 mx-auto text-gray-600 mb-4" />
+                <p className="text-gray-400 font-medium">אין תוצאות לפי הסינון שנבחר</p>
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setFilterSource('all');
+                    setDateRange({ start: '', end: '' });
+                  }}
+                  className="mt-4 px-4 py-2 rounded-xl bg-gray-800/50 text-gray-400 hover:text-white transition-colors text-sm"
+                >
+                  נקה סינון
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-4 max-h-96 overflow-y-auto pr-1">

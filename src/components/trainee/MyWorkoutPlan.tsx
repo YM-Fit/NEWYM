@@ -424,35 +424,51 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   }
 
   return (
-    <div className="space-y-6 pb-6">
-      {/* Header Card */}
-      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-6 lg:p-8 text-white shadow-2xl animate-fade-in">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h1 className="text-3xl lg:text-4xl font-bold mb-2">{plan.name}</h1>
-            {plan.description && (
-              <p className="text-emerald-100 text-sm lg:text-base opacity-90">{plan.description}</p>
+    <div className="space-y-5 md:space-y-6 pb-6">
+      {/* Header Card - Premium Design */}
+      <div className="relative premium-card-static overflow-hidden animate-fade-in">
+        {/* Background Gradient Glow */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-teal-500/15 to-cyan-500/10 opacity-60" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        
+        <div className="relative p-5 md:p-7 lg:p-8">
+          <div className="flex items-start justify-between mb-5">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-[0_0_25px_rgba(16,185,129,0.4)]">
+                  <ClipboardList className="w-6 h-6 md:w-7 md:h-7 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs md:text-sm font-semibold text-emerald-400 uppercase tracking-wider mb-1">תוכנית אימון</p>
+                  <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[var(--color-text-primary)] leading-tight">
+                    {plan.name}
+                  </h1>
+                </div>
+              </div>
+              {plan.description && (
+                <p className="text-[var(--color-text-secondary)] text-sm md:text-base leading-relaxed max-w-2xl">
+                  {plan.description}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-[var(--color-border)]">
+            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-xl backdrop-blur-sm">
+              <Calendar className="w-4 h-4 text-emerald-400" />
+              <span className="font-semibold text-sm text-emerald-400">{plan.days_per_week} ימים/שבוע</span>
+            </div>
+
+            {plan.updated_at && (
+              <div className="flex items-center gap-2 bg-[var(--color-bg-surface)] border border-[var(--color-border)] px-4 py-2 rounded-xl">
+                <Clock className="w-4 h-4 text-[var(--color-text-muted)]" />
+                <span className="text-[var(--color-text-secondary)] text-sm font-medium">
+                  עדכון: {formatDate(plan.updated_at)}
+                </span>
+              </div>
             )}
           </div>
-          <div className="bg-white/20 p-4 rounded-2xl shadow-lg backdrop-blur-sm">
-            <ClipboardList className="w-8 h-8" />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-white/20">
-          <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl backdrop-blur-sm">
-            <Calendar className="w-4 h-4" />
-            <span className="font-medium text-sm">{plan.days_per_week} ימים/שבוע</span>
-          </div>
-
-          {plan.updated_at && (
-            <div className="flex items-center gap-2 text-emerald-100 text-sm bg-white/10 px-4 py-2 rounded-xl backdrop-blur-sm">
-              <Clock className="w-4 h-4" />
-              <span>
-                עדכון: {formatDate(plan.updated_at)}
-              </span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -499,7 +515,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
       )}
 
       {/* Workout Days Grid - Accordion Pattern */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
         {days.map((day, dayIndex) => {
           const gradient = dayGradients[dayIndex % dayGradients.length];
           const exercises = dayExercises[day.id] || [];
@@ -513,99 +529,104 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           return (
             <div
               key={day.id}
-              className="premium-card-static overflow-hidden transition-all duration-300 hover:shadow-card-hover animate-fade-in-up"
+              className="premium-card-static overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:-translate-y-1 animate-fade-in-up border border-[var(--color-border)]"
               style={{ animationDelay: `${dayIndex * 50}ms` }}
             >
               {/* Accordion Header - Always Visible */}
               <div
                 onClick={() => toggleDay(day.id)}
-                className={`bg-gradient-to-br ${gradient} p-6 lg:p-7 text-white cursor-pointer transition-all duration-300 hover:shadow-lg`}
+                className={`relative bg-gradient-to-br ${gradient} p-5 md:p-6 lg:p-7 text-white cursor-pointer transition-all duration-300 hover:shadow-xl overflow-hidden`}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="bg-white/20 p-3 rounded-xl shadow-lg backdrop-blur-sm">
-                        <Icon className="w-6 h-6" />
+                {/* Subtle Pattern Overlay */}
+                <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,.1)_50%,transparent_75%,transparent_100%)] bg-[length:20px_20px]" />
+                
+                <div className="relative">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="bg-white/25 p-3 rounded-xl shadow-[0_4px_15px_rgba(0,0,0,0.2)] backdrop-blur-md border border-white/20">
+                          <Icon className="w-5 h-5 md:w-6 md:h-6" />
+                        </div>
+                        {completedCount === exercises.length && exercises.length > 0 && (
+                          <span className="bg-white/30 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold backdrop-blur-md shadow-lg animate-scale-in border border-white/20">
+                            <Check className="w-3.5 h-3.5" />
+                            הושלם
+                          </span>
+                        )}
                       </div>
-                      {completedCount === exercises.length && exercises.length > 0 && (
-                        <span className="bg-white/20 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold backdrop-blur-sm animate-scale-in">
-                          <Check className="w-3.5 h-3.5" />
-                          הושלם
-                        </span>
+                      <p className="text-xs md:text-sm opacity-90 font-semibold mb-1.5 tracking-wide uppercase">יום {day.day_number}</p>
+                      <h3 className="text-xl md:text-2xl lg:text-3xl font-bold mb-2.5 leading-tight">
+                        {day.day_name || `יום אימון ${day.day_number}`}
+                      </h3>
+                      {day.focus && (
+                        <p className="flex items-center gap-2 text-sm opacity-95 font-semibold">
+                          <Target className="w-4 h-4" />
+                          {day.focus}
+                        </p>
                       )}
                     </div>
-                    <p className="text-sm opacity-80 font-medium mb-1">יום {day.day_number}</p>
-                    <h3 className="text-2xl lg:text-3xl font-bold mb-2">
-                      {day.day_name || `יום אימון ${day.day_number}`}
-                    </h3>
-                    {day.focus && (
-                      <p className="flex items-center gap-2 text-sm opacity-90 font-medium">
-                        <Target className="w-4 h-4" />
-                        {day.focus}
-                      </p>
+
+                    <button className="text-white/90 hover:text-white transition-all duration-300 hover:scale-110 bg-white/10 hover:bg-white/20 rounded-xl p-2 backdrop-blur-sm">
+                      {isExpanded ? (
+                        <ChevronUp className="w-5 h-5 md:w-6 md:h-6" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 md:w-6 md:h-6" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Summary Stats - Pills */}
+                  <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-white/25">
+                    <div className="bg-white/20 px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-1.5 backdrop-blur-md shadow-md border border-white/20">
+                      <Dumbbell className="w-3.5 h-3.5" />
+                      {exercises.length} תרגילים
+                    </div>
+
+                    {volume > 0 && (
+                      <div className="bg-white/20 px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-1.5 backdrop-blur-md shadow-md border border-white/20">
+                        <TrendingUp className="w-3.5 h-3.5" />
+                        ~{volume.toLocaleString()} ק״ג
+                      </div>
+                    )}
+
+                    {completedCount > 0 && completedCount < exercises.length && (
+                      <div className="bg-white/20 px-3 py-1.5 rounded-full text-sm font-bold backdrop-blur-md shadow-md border border-white/20">
+                        {completedCount}/{exercises.length}
+                      </div>
                     )}
                   </div>
 
-                  <button className="text-white/80 hover:text-white transition-all duration-300 hover:scale-110">
-                    {isExpanded ? (
-                      <ChevronUp className="w-7 h-7" />
-                    ) : (
-                      <ChevronDown className="w-7 h-7" />
-                    )}
-                  </button>
-                </div>
-
-                {/* Summary Stats - Pills */}
-                <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-white/20">
-                  <div className="bg-white/15 px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-1.5 backdrop-blur-sm shadow-sm">
-                    <Dumbbell className="w-3.5 h-3.5" />
-                    {exercises.length} תרגילים
-                  </div>
-
-                  {volume > 0 && (
-                    <div className="bg-white/15 px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-1.5 backdrop-blur-sm shadow-sm">
-                      <TrendingUp className="w-3.5 h-3.5" />
-                      ~{volume.toLocaleString()} ק״ג
+                  {/* Muscle Group Tags */}
+                  {muscleGroups.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {muscleGroups.map((group, idx) => (
+                        <span
+                          key={idx}
+                          className="bg-white/25 text-white text-xs px-3 py-1 rounded-full font-bold backdrop-blur-md shadow-md border border-white/20"
+                        >
+                          {group}
+                        </span>
+                      ))}
                     </div>
                   )}
 
-                  {completedCount > 0 && completedCount < exercises.length && (
-                    <div className="bg-white/15 px-3 py-1.5 rounded-full text-sm font-bold backdrop-blur-sm shadow-sm">
-                      {completedCount}/{exercises.length}
+                  {/* Progress Bar */}
+                  {progressPercent > 0 && progressPercent < 100 && (
+                    <div className="mt-4">
+                      <div className="h-2.5 bg-white/25 rounded-full overflow-hidden shadow-inner backdrop-blur-sm border border-white/10">
+                        <div
+                          className="h-full bg-white transition-all duration-700 ease-out rounded-full shadow-lg"
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
-
-                {/* Muscle Group Tags */}
-                {muscleGroups.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {muscleGroups.map((group, idx) => (
-                      <span
-                        key={idx}
-                        className="bg-white/20 text-white text-xs px-3 py-1 rounded-full font-bold backdrop-blur-sm shadow-sm"
-                      >
-                        {group}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Progress Bar */}
-                {progressPercent > 0 && progressPercent < 100 && (
-                  <div className="mt-4">
-                    <div className="h-2 bg-white/20 rounded-full overflow-hidden shadow-inner backdrop-blur-sm">
-                      <div
-                        className="h-full bg-white/90 transition-all duration-700 ease-out rounded-full shadow-sm"
-                        style={{ width: `${progressPercent}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Accordion Content - Exercises */}
               {isExpanded && (
-                <div className="p-5 lg:p-6 space-y-4 animate-slide-down bg-[var(--color-bg-base)]">
+                <div className="p-4 md:p-5 lg:p-6 space-y-4 animate-slide-down bg-[var(--color-bg-base)]">
                   {day.notes && (
                     <div className="bg-amber-500/15 border border-amber-500/30 rounded-2xl p-4 shadow-sm">
                       <p className="text-sm font-bold text-amber-400 mb-1 flex items-center gap-2">
@@ -651,17 +672,17 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                               {/* Exercise Name & Edit Button */}
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex-1">
-                                  <h4 className={`text-lg font-bold ${isCompleted ? 'text-emerald-400' : 'text-[var(--color-text-primary)]'}`}>
+                                  <h4 className={`text-base md:text-lg font-bold leading-tight ${isCompleted ? 'text-emerald-400' : 'text-[var(--color-text-primary)]'}`}>
                                     {exerciseName}
                                   </h4>
                                   {exercise.exercise?.muscle_group?.name && (
-                                    <p className="text-sm text-[var(--color-text-muted)] mt-0.5">{exercise.exercise.muscle_group.name}</p>
+                                    <p className="text-xs md:text-sm text-[var(--color-text-muted)] mt-1 font-medium">{exercise.exercise.muscle_group.name}</p>
                                   )}
                                 </div>
                                 {!isEditing && (
                                   <button
                                     onClick={() => startEditing(exercise)}
-                                    className="p-2 text-[var(--color-text-muted)] hover:text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-all duration-300"
+                                    className="p-2 text-[var(--color-text-muted)] hover:text-cyan-400 hover:bg-cyan-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-cyan-500/30"
                                   >
                                     <Edit3 className="w-4 h-4" />
                                   </button>

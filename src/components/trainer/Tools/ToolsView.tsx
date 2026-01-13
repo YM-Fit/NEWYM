@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { Calculator, Dumbbell, Wrench, Percent, Droplets, Beef, Clock } from 'lucide-react';
+import { Calculator, Wrench, Percent, Droplets, Beef, Clock } from 'lucide-react';
 import TDEECalculator from './TDEECalculator';
-import WorkingWeightCalculator from './WorkingWeightCalculator';
 import BodyFatCalculator from './BodyFatCalculator';
 import WaterIntakeCalculator from './WaterIntakeCalculator';
 import ProteinCalculator from './ProteinCalculator';
 import RecoveryCalculator from './RecoveryCalculator';
 
-type CalculatorType = 'tdee' | 'working-weight' | 'body-fat' | 'water' | 'protein' | 'recovery' | null;
+type CalculatorType = 'tdee' | 'body-fat' | 'water' | 'protein' | 'recovery' | null;
 
 export default function ToolsView() {
   const [activeCalculator, setActiveCalculator] = useState<CalculatorType>(null);
@@ -21,15 +20,6 @@ export default function ToolsView() {
       gradient: 'from-emerald-500 via-teal-500 to-cyan-600',
       shadowColor: 'shadow-emerald-500/30',
       hoverShadow: 'hover:shadow-emerald-500/40',
-    },
-    {
-      id: 'working-weight',
-      name: 'מחשבון משקל עבודה',
-      description: 'חישוב 1RM וטבלת אחוזים למשקל עבודה',
-      icon: Dumbbell,
-      gradient: 'from-blue-500 via-blue-600 to-cyan-600',
-      shadowColor: 'shadow-blue-500/30',
-      hoverShadow: 'hover:shadow-blue-500/40',
     },
     {
       id: 'body-fat',
@@ -114,10 +104,6 @@ export default function ToolsView() {
 
       {activeCalculator === 'tdee' && (
         <TDEECalculator onClose={() => setActiveCalculator(null)} />
-      )}
-
-      {activeCalculator === 'working-weight' && (
-        <WorkingWeightCalculator onClose={() => setActiveCalculator(null)} />
       )}
 
       {activeCalculator === 'body-fat' && (

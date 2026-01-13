@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Copy, Trash2, Calculator, Sparkles, CheckCircle } from 'lucide-react';
+import { Copy, Trash2, CheckCircle } from 'lucide-react';
 
 interface Equipment {
   id: string;
@@ -28,10 +28,6 @@ interface SetData {
   dropset_reps?: number | null;
   equipment_id?: string | null;
   equipment?: Equipment | null;
-  suggested_weight?: number | null;
-  suggested_reps?: number | null;
-  suggested_superset_weight?: number | null;
-  suggested_superset_reps?: number | null;
 }
 
 interface WorkoutSetCardProps {
@@ -51,8 +47,6 @@ interface WorkoutSetCardProps {
   onOpenDropsetNumericPad: (field: 'dropset_weight' | 'dropset_reps') => void;
   onOpenSupersetDropsetNumericPad: (field: 'superset_dropset_weight' | 'superset_dropset_reps') => void;
   onUpdateSet: (field: string, value: any) => void;
-  onOpenCalculator: () => void;
-  onApplySuggestion?: () => void;
 }
 
 export const WorkoutSetCard = memo(({
@@ -72,12 +66,7 @@ export const WorkoutSetCard = memo(({
   onOpenDropsetNumericPad,
   onOpenSupersetDropsetNumericPad,
   onUpdateSet,
-  onOpenCalculator,
-  onApplySuggestion,
 }: WorkoutSetCardProps) => {
-  const hasSuggestion = (set.suggested_weight !== null && set.suggested_weight !== undefined) ||
-                        (set.suggested_reps !== null && set.suggested_reps !== undefined);
-  const isSuggestionEmpty = set.weight === 0 && set.reps === 0 && hasSuggestion;
 
   if (isCollapsed) {
     return (
@@ -143,11 +132,6 @@ export const WorkoutSetCard = memo(({
           >
             {set.weight || '0'}
           </button>
-          {set.suggested_weight !== null && set.suggested_weight !== undefined && (
-            <div className="text-xs text-emerald-400 mt-1 font-medium">
-              הצעה: {set.suggested_weight}
-            </div>
-          )}
         </div>
 
         <div>
@@ -159,11 +143,6 @@ export const WorkoutSetCard = memo(({
           >
             {set.reps || '0'}
           </button>
-          {set.suggested_reps !== null && set.suggested_reps !== undefined && (
-            <div className="text-xs text-cyan-400 mt-1 font-medium">
-              הצעה: {set.suggested_reps}
-            </div>
-          )}
         </div>
 
         <div>
@@ -178,20 +157,7 @@ export const WorkoutSetCard = memo(({
         </div>
       </div>
 
-      {isSuggestionEmpty && onApplySuggestion && (
-        <div className="mb-3">
-          <button
-            type="button"
-            onClick={onApplySuggestion}
-            className="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2"
-          >
-            <Sparkles className="h-5 w-5" />
-            <span>השתמש בהצעת Progressive Overload</span>
-          </button>
-        </div>
-      )}
-
-      <div className="mb-3 grid grid-cols-3 gap-2">
+      <div className="mb-3 grid grid-cols-2 gap-2">
         <button
           type="button"
           onClick={onOpenEquipmentSelector}
@@ -246,18 +212,6 @@ export const WorkoutSetCard = memo(({
           </div>
         </button>
 
-        <button
-          type="button"
-          onClick={onOpenCalculator}
-          className="py-3 lg:py-4 px-3 rounded-xl border border-zinc-700/50 hover:border-amber-500/30 bg-zinc-800/30 hover:bg-amber-500/10 transition-all"
-        >
-          <div className="flex items-center justify-center gap-2">
-            <Calculator className="h-5 w-5 lg:h-6 lg:w-6 text-amber-400" />
-            <span className="font-medium text-sm lg:text-base text-zinc-300">
-              1RM
-            </span>
-          </div>
-        </button>
       </div>
 
       <div className="flex gap-2">
@@ -347,11 +301,6 @@ export const WorkoutSetCard = memo(({
                   >
                     {set.superset_weight || '0'}
                   </button>
-                  {set.suggested_superset_weight !== null && set.suggested_superset_weight !== undefined && (
-                    <div className="text-xs text-cyan-400 mt-1 font-medium">
-                      הצעה: {set.suggested_superset_weight}
-                    </div>
-                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-cyan-400 mb-1">
@@ -364,11 +313,6 @@ export const WorkoutSetCard = memo(({
                   >
                     {set.superset_reps || '0'}
                   </button>
-                  {set.suggested_superset_reps !== null && set.suggested_superset_reps !== undefined && (
-                    <div className="text-xs text-cyan-400 mt-1 font-medium">
-                      הצעה: {set.suggested_superset_reps}
-                    </div>
-                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-cyan-400 mb-1">

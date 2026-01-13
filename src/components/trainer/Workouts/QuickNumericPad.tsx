@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface QuickNumericPadProps {
   value: number;
@@ -22,18 +22,113 @@ export default function QuickNumericPad({
   maxValue
 }: QuickNumericPadProps) {
   const [currentValue, setCurrentValue] = useState(value);
+  const [inputValue, setInputValue] = useState(value.toString());
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isRpeMode = maxValue === 10 && minValue === 1;
 
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
+    setCurrentValue(value);
+    setInputValue(value.toString());
+  }, [value]);
+
+  useEffect(() => {
+    // Focus input on mount
+    if (inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, []);
+
+  const handleAdd = useCallback((amount: number, isAbsolute: boolean = false) => {
+    setCurrentValue(prev => {
+      let newValue = isAbsolute ? amount : prev + amount;
+      if (minValue !== undefined && newValue < minValue) newValue = minValue;
+      if (maxValue !== undefined && newValue > maxValue) newValue = maxValue;
+      return allowDecimal ? Math.round(newValue * 10) / 10 : Math.round(newValue);
+    });
+  }, [allowDecimal, minValue, maxValue]);
+
+  const handleConfirm = useCallback(() => {
+    const finalValue = allowDecimal ? parseFloat(inputValue) : parseInt(inputValue);
+    if (!isNaN(finalValue)) {
+      const clamped = minValue !== undefined && finalValue < minValue ? minValue :
+                    maxValue !== undefined && finalValue > maxValue ? maxValue : finalValue;
+      onConfirm(clamped);
+    } else {
+      onConfirm(currentValue);
+    }
+  }, [allowDecimal, inputValue, currentValue, minValue, maxValue, onConfirm]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
+      } else if (e.key === 'Enter' && document.activeElement !== inputRef.current) {
+        const finalValue = allowDecimal ? parseFloat(inputValue) : parseInt(inputValue);
+        if (!isNaN(finalValue)) {
+          const clamped = minValue !== undefined && finalValue < minValue ? minValue :
+                        maxValue !== undefined && finalValue > maxValue ? maxValue : finalValue;
+          onConfirm(clamped);
+        } else {
+          onConfirm(currentValue);
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        handleAdd(allowDecimal ? 0.5 : 1, false);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        handleAdd(allowDecimal ? -0.5 : -1, false);
+      } else if (e.key >= '0' && e.key <= '9' && document.activeElement !== inputRef.current) {
+        // Allow direct number input when not focused on input
+        const num = parseInt(e.key);
+        if (isRpeMode) {
+          if (num >= 1 && num <= 10) {
+            handleAdd(num, true);
+          }
+        } else {
+          setCurrentValue(prev => {
+            const newValue = prev * 10 + num;
+            const clamped = minValue !== undefined && newValue < minValue ? minValue :
+                          maxValue !== undefined && newValue > maxValue ? maxValue : newValue;
+            return allowDecimal ? Math.round(clamped * 10) / 10 : Math.round(clamped);
+          });
+        }
       }
     };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, allowDecimal, minValue, maxValue, isRpeMode, inputValue, currentValue, onConfirm]);
 
-  const isRpeMode = maxValue === 10 && minValue === 1;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    // Allow empty input for better UX
+    if (input === '' || input === '-') {
+      setInputValue(input);
+      return;
+    }
+    
+    const num = allowDecimal ? parseFloat(input) : parseInt(input);
+    if (!isNaN(num)) {
+      const clamped = minValue !== undefined && num < minValue ? minValue :
+                    maxValue !== undefined && num > maxValue ? maxValue : num;
+      setCurrentValue(clamped);
+      setInputValue(input);
+    }
+  };
+
+  const handleInputBlur = () => {
+    // Validate and clamp on blur
+    const num = allowDecimal ? parseFloat(inputValue) : parseInt(inputValue);
+    if (isNaN(num) || num < (minValue || 0)) {
+      setInputValue((minValue || 0).toString());
+      setCurrentValue(minValue || 0);
+    } else if (maxValue !== undefined && num > maxValue) {
+      setInputValue(maxValue.toString());
+      setCurrentValue(maxValue);
+    } else {
+      setInputValue(currentValue.toString());
+    }
+  };
 
   const buttons = isRpeMode
     ? [
@@ -66,21 +161,9 @@ export default function QuickNumericPad({
         { label: '+20', value: 20, isAbsolute: false },
       ];
 
-  const handleAdd = (amount: number, isAbsolute: boolean = false) => {
-    setCurrentValue(prev => {
-      let newValue = isAbsolute ? amount : prev + amount;
-      if (minValue !== undefined && newValue < minValue) newValue = minValue;
-      if (maxValue !== undefined && newValue > maxValue) newValue = maxValue;
-      return allowDecimal ? Math.round(newValue * 10) / 10 : Math.round(newValue);
-    });
-  };
-
   const handleReset = () => {
     setCurrentValue(0);
-  };
-
-  const handleConfirm = () => {
-    onConfirm(currentValue);
+    setInputValue('0');
   };
 
   return (
@@ -107,11 +190,27 @@ export default function QuickNumericPad({
 
         <div className="mb-8">
           <div className="bg-zinc-800/50 border-4 border-emerald-500/50 rounded-2xl p-8 text-center">
-            <div className="text-6xl lg:text-8xl font-bold text-emerald-400 tabular-nums">
-              {currentValue}
-            </div>
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="decimal"
+              value={inputValue}
+              onChange={handleInputChange}
+              onBlur={handleInputBlur}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleConfirm();
+                }
+              }}
+              className="w-full bg-transparent text-6xl lg:text-8xl font-bold text-emerald-400 tabular-nums text-center border-none outline-none focus:ring-0"
+              style={{ caretColor: 'transparent' }}
+            />
             <div className="text-xl lg:text-2xl text-zinc-500 mt-2 font-medium">
-              {allowDecimal ? 'kg' : ''}
+              {allowDecimal ? 'kg' : isRpeMode ? 'RPE' : 'reps'}
+            </div>
+            <div className="text-sm text-zinc-600 mt-2">
+              לחץ Enter לאישור • Esc לביטול • חצים למעלה/למטה
             </div>
           </div>
         </div>

@@ -1,7 +1,9 @@
-import { Plus, TrendingDown, TrendingUp, Scale, BarChart3, Trash2, Edit, User, Activity, ArrowRight, Sparkles, List, Table2 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { Plus, TrendingDown, TrendingUp, Scale, BarChart3, Trash2, Edit, User, Activity, ArrowRight, Sparkles, List, Table2, Calculator, Target, TrendingDown as TrendingDownIcon, Minus } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
 import { Trainee, BodyMeasurement } from '../../../types';
 import MeasurementsChart from './MeasurementsChart';
+import WeightTrendAnalysis from './WeightTrendAnalysis';
+import WeightGoalsManager from './WeightGoalsManager';
 import { supabase } from '../../../lib/supabase';
 
 interface MeasurementsViewProps {
@@ -17,6 +19,9 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
   const [selectedMetric, setSelectedMetric] = useState<'weight' | 'bodyFat' | 'muscleMass' | 'waterPercentage' | 'metabolicAge'>('weight');
   const [selectedMember, setSelectedMember] = useState<'member_1' | 'member_2' | 'all'>('all');
   const [viewMode, setViewMode] = useState<'list' | 'table'>('list');
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showGoals, setShowGoals] = useState(false);
+  const [currentWeight, setCurrentWeight] = useState<number | undefined>();
 
   const filteredMeasurements = useMemo(() => {
     if (!trainee.isPair) {
@@ -76,6 +81,12 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
     red: { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30' },
   };
 
+  useEffect(() => {
+    if (latestMeasurement?.weight) {
+      setCurrentWeight(latestMeasurement.weight);
+    }
+  }, [latestMeasurement]);
+
   const getChangeIndicator = (current: number, previous: number | undefined, isReversed: boolean = false) => {
     if (!previous) return null;
     const change = current - previous;
@@ -87,6 +98,55 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
       </span>
     );
   };
+
+  // Advanced statistics
+  const statistics = useMemo(() => {
+    if (filteredMeasurements.length === 0) return null;
+
+    const weights = filteredMeasurements.map(m => m.weight).filter(w => w !== undefined) as number[];
+    const bodyFats = filteredMeasurements.map(m => m.bodyFat).filter(bf => bf !== undefined) as number[];
+    const muscleMasses = filteredMeasurements.map(m => m.muscleMass).filter(mm => mm !== undefined) as number[];
+
+    const calculateStats = (values: number[]) => {
+      if (values.length === 0) return null;
+      const avg = values.reduce((a, b) => a + b, 0) / values.length;
+      const variance = values.reduce((acc, v) => acc + Math.pow(v - avg, 2), 0) / values.length;
+      const stdDev = Math.sqrt(variance);
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      return { avg, stdDev, min, max };
+    };
+
+    return {
+      weight: calculateStats(weights),
+      bodyFat: calculateStats(bodyFats),
+      muscleMass: calculateStats(muscleMasses)
+    };
+  }, [filteredMeasurements]);
+
+  // Calculate trend
+  const trend = useMemo(() => {
+    if (filteredMeasurements.length < 2) return null;
+    const first = filteredMeasurements[filteredMeasurements.length - 1];
+    const last = filteredMeasurements[0];
+    if (!first.weight || !last.weight) return null;
+    
+    const change = last.weight - first.weight;
+    const days = (new Date(last.date).getTime() - new Date(first.date).getTime()) / (1000 * 60 * 60 * 24);
+    const changePerWeek = (change / days) * 7;
+    
+    let trendType: 'up' | 'down' | 'stable' = 'stable';
+    if (Math.abs(change) > 0.5) {
+      trendType = change > 0 ? 'up' : 'down';
+    }
+
+    return {
+      type: trendType,
+      totalChange: change,
+      changePerWeek,
+      days
+    };
+  }, [filteredMeasurements]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -112,15 +172,155 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
             </div>
           </div>
 
-          <button
-            onClick={onNewMeasurement}
-            className="btn-primary px-6 py-3 rounded-xl flex items-center gap-2"
-          >
-            <Plus className="h-5 w-5" />
-            <span>מדידה חדשה</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowAnalytics(!showAnalytics)}
+              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+                showAnalytics
+                  ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                  : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
+              }`}
+            >
+              <BarChart3 className="h-4 w-4" />
+              אנליטיקה
+            </button>
+            <button
+              onClick={() => setShowGoals(!showGoals)}
+              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+                showGoals
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
+              }`}
+            >
+              <Target className="h-4 w-4" />
+              יעדים
+            </button>
+            <button
+              onClick={onNewMeasurement}
+              className="btn-primary px-6 py-3 rounded-xl flex items-center gap-2"
+            >
+              <Plus className="h-5 w-5" />
+              <span>מדידה חדשה</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Analytics and Goals Sections */}
+      {showAnalytics && (
+        <WeightTrendAnalysis traineeId={trainee.id} traineeName={trainee.name} />
+      )}
+
+      {showGoals && (
+        <WeightGoalsManager
+          traineeId={trainee.id}
+          traineeName={trainee.name}
+          currentWeight={currentWeight}
+          onGoalUpdated={() => {}}
+        />
+      )}
+
+      {/* Statistics Summary */}
+      {statistics && (
+        <div className="premium-card-static p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Calculator className="h-5 w-5 text-cyan-400" />
+            <h3 className="text-lg font-semibold text-white">סטטיסטיקות</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {statistics.weight && (
+              <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700/50">
+                <p className="text-sm text-gray-400 mb-3">משקל</p>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">ממוצע:</span>
+                    <span className="font-semibold text-white">{statistics.weight.avg.toFixed(1)} ק״ג</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">מינימום:</span>
+                    <span className="font-semibold text-white">{statistics.weight.min.toFixed(1)} ק״ג</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">מקסימום:</span>
+                    <span className="font-semibold text-white">{statistics.weight.max.toFixed(1)} ק״ג</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">סטיית תקן:</span>
+                    <span className="font-semibold text-white">{statistics.weight.stdDev.toFixed(2)} ק״ג</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            {statistics.bodyFat && (
+              <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700/50">
+                <p className="text-sm text-gray-400 mb-3">אחוז שומן</p>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">ממוצע:</span>
+                    <span className="font-semibold text-white">{statistics.bodyFat.avg.toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">מינימום:</span>
+                    <span className="font-semibold text-white">{statistics.bodyFat.min.toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">מקסימום:</span>
+                    <span className="font-semibold text-white">{statistics.bodyFat.max.toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">סטיית תקן:</span>
+                    <span className="font-semibold text-white">{statistics.bodyFat.stdDev.toFixed(2)}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            {statistics.muscleMass && (
+              <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700/50">
+                <p className="text-sm text-gray-400 mb-3">מסת שריר</p>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">ממוצע:</span>
+                    <span className="font-semibold text-white">{statistics.muscleMass.avg.toFixed(1)} ק״ג</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">מינימום:</span>
+                    <span className="font-semibold text-white">{statistics.muscleMass.min.toFixed(1)} ק״ג</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">מקסימום:</span>
+                    <span className="font-semibold text-white">{statistics.muscleMass.max.toFixed(1)} ק״ג</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">סטיית תקן:</span>
+                    <span className="font-semibold text-white">{statistics.muscleMass.stdDev.toFixed(2)} ק״ג</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          {trend && (
+            <div className="mt-4 pt-4 border-t border-gray-700/50">
+              <div className="flex items-center gap-3">
+                {trend.type === 'up' ? (
+                  <TrendingUpIcon className="h-5 w-5 text-red-400" />
+                ) : trend.type === 'down' ? (
+                  <TrendingDown className="h-5 w-5 text-emerald-400" />
+                ) : (
+                  <Minus className="h-5 w-5 text-gray-400" />
+                )}
+                <div>
+                  <p className="text-sm text-gray-400">מגמה כוללת</p>
+                  <p className="font-semibold text-white">
+                    {trend.type === 'up' ? 'עלייה' : trend.type === 'down' ? 'ירידה' : 'יציב'} -{' '}
+                    {trend.totalChange > 0 ? '+' : ''}{trend.totalChange.toFixed(1)} ק״ג
+                    {' '}({trend.changePerWeek > 0 ? '+' : ''}{trend.changePerWeek.toFixed(2)} ק״ג לשבוע)
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {trainee.isPair && (
         <div className="premium-card-static p-5">

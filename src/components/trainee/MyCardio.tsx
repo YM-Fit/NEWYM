@@ -1,22 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
-import { Activity, TrendingUp, Timer, Calendar, Target, BarChart3, Footprints, CheckCircle, AlertCircle } from 'lucide-react';
+import { Activity, TrendingUp, Timer, Calendar, Target, BarChart3, Footprints, CheckCircle, AlertCircle, Flame } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
 import toast from 'react-hot-toast';
-
-interface CardioActivity {
-  id: string;
-  date: string;
-  avg_weekly_steps: number;
-  distance: number;
-  duration: number;
-  frequency: number;
-  weekly_goal_steps: number;
-  notes: string | null;
-  cardio_type: {
-    name: string;
-  };
-}
+import { cardioApi, type CardioActivity } from '../../api/cardioApi';
 
 interface MyCardioProps {
   traineeId: string | null;
@@ -25,59 +11,51 @@ interface MyCardioProps {
 export default function MyCardio({ traineeId }: MyCardioProps) {
   const [activities, setActivities] = useState<CardioActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<{
+    avgSteps: number;
+    successRate: number;
+    stepsChange: number;
+    currentStreak: number;
+    longestStreak: number;
+  } | null>(null);
 
   useEffect(() => {
     if (traineeId) {
-      loadActivities();
+      loadData();
     }
   }, [traineeId]);
 
-  const loadActivities = async () => {
+  const loadData = async () => {
     if (!traineeId) return;
 
-    const { data, error } = await supabase
-      .from('cardio_activities')
-      .select('*, cardio_type:cardio_types(name)')
-      .eq('trainee_id', traineeId)
-      .order('date', { ascending: false });
-
-    if (error) {
-      toast.error('שגיאה בטעינת פעילויות אירוביות');
+    setLoading(true);
+    try {
+      const [activitiesData, statsData] = await Promise.all([
+        cardioApi.getTraineeActivities(traineeId),
+        cardioApi.getCardioStats(traineeId)
+      ]);
+      setActivities(activitiesData);
+      setStats({
+        avgSteps: statsData.avgSteps,
+        successRate: statsData.successRate,
+        stepsChange: statsData.stepsChange,
+        currentStreak: statsData.currentStreak,
+        longestStreak: statsData.longestStreak,
+      });
+    } catch (error: any) {
+      toast.error(error.message || 'שגיאה בטעינת פעילויות אירוביות');
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (data) {
-      setActivities(data as any);
-    }
-    setLoading(false);
   };
 
   const latestActivity = activities[0];
-  const previousActivity = activities[1];
 
   const getProgressPercentage = () => {
     if (!latestActivity || latestActivity.weekly_goal_steps === 0) return 0;
     return Math.min(100, Math.round((latestActivity.avg_weekly_steps / latestActivity.weekly_goal_steps) * 100));
   };
 
-  const getStats = () => {
-    if (activities.length === 0) return null;
-
-    const totalSteps = activities.reduce((sum, a) => sum + a.avg_weekly_steps, 0);
-    const totalGoal = activities.reduce((sum, a) => sum + a.weekly_goal_steps, 0);
-    const avgSteps = Math.round(totalSteps / activities.length);
-    const successCount = activities.filter(a => a.avg_weekly_steps >= a.weekly_goal_steps).length;
-    const successRate = Math.round((successCount / activities.length) * 100);
-
-    const stepsChange = latestActivity && previousActivity
-      ? latestActivity.avg_weekly_steps - previousActivity.avg_weekly_steps
-      : 0;
-
-    return { avgSteps, successRate, stepsChange, totalGoal: Math.round(totalGoal / activities.length) };
-  };
-
-  const stats = getStats();
   const progressPercentage = getProgressPercentage();
 
   const getChartData = () => {
@@ -88,7 +66,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
         date: new Date(a.date).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' }),
         בוצע: a.avg_weekly_steps,
         יעד: a.weekly_goal_steps,
-        achieved: a.avg_weekly_steps >= a.weekly_goal_steps
+        achieved: a.weekly_goal_steps > 0 && a.avg_weekly_steps >= a.weekly_goal_steps
       }));
   };
 
@@ -216,7 +194,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
           )}
 
           {stats && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="stat-card p-5 bg-gradient-to-br from-sky-500/20 to-sky-500/5">
                 <div className="flex items-start justify-between mb-2">
                   <div>
@@ -246,6 +224,39 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
                 </div>
                 <p className="text-xs text-[var(--color-text-muted)]">שבועות שעמדת ביעד</p>
               </div>
+
+              {stats.currentStreak > 0 && (
+                <div className="stat-card p-5 bg-gradient-to-br from-orange-500/20 to-orange-500/5">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">רצף נוכחי</p>
+                      <p className="text-2xl font-bold text-orange-400 flex items-center gap-1">
+                        {stats.currentStreak}
+                        <Flame className="h-5 w-5 text-orange-400" />
+                      </p>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-orange-500/20">
+                      <Flame className="h-5 w-5 text-orange-400" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-muted)]">שבועות רצופים</p>
+                </div>
+              )}
+
+              {stats.longestStreak > 0 && stats.longestStreak !== stats.currentStreak && (
+                <div className="stat-card p-5 bg-gradient-to-br from-purple-500/20 to-purple-500/5">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">שיא אישי</p>
+                      <p className="text-2xl font-bold text-purple-400">{stats.longestStreak}</p>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-purple-500/20">
+                      <Target className="h-5 w-5 text-purple-400" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-muted)]">שבועות רצופים</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -289,7 +300,8 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
             </h3>
             <div className="space-y-3">
               {activities.map((activity) => {
-                const achieved = activity.avg_weekly_steps >= activity.weekly_goal_steps;
+                const achieved = activity.weekly_goal_steps > 0 && 
+                  activity.avg_weekly_steps >= activity.weekly_goal_steps;
                 const percentage = activity.weekly_goal_steps > 0
                   ? Math.round((activity.avg_weekly_steps / activity.weekly_goal_steps) * 100)
                   : 0;

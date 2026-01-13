@@ -4,8 +4,10 @@ import RecentActivity from './RecentActivity';
 import QuickActions from './QuickActions';
 import RecentScaleReadings from './RecentScaleReadings';
 import AdherenceMetrics from '../Analytics/AdherenceMetrics';
+import WeightAlerts from '../Measurements/WeightAlerts';
 import { IdentifiedReading } from '../../../hooks/useGlobalScaleListener';
 import { ScaleReading } from '../../../hooks/useScaleListener';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface DashboardProps {
   onViewChange: (view: string) => void;
@@ -28,6 +30,7 @@ export default function Dashboard({
   onTraineeClick,
   onSaveMeasurement
 }: DashboardProps) {
+  const { user } = useAuth();
   const handleQuickAction = (action: string) => {
     switch (action) {
       case 'add-trainee':
@@ -101,6 +104,13 @@ export default function Dashboard({
         onTraineeClick={onTraineeClick}
         onSaveMeasurement={onSaveMeasurement}
       />
+
+      {user && (
+        <WeightAlerts
+          trainerId={user.id}
+          onTraineeClick={onTraineeClick}
+        />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">

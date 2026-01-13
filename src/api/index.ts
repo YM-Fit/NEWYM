@@ -13,3 +13,4 @@ export * from './tasksApi';
 export * from './messagesApi';
 export * from './workoutFeedbackApi';
 export * from './analyticsApi';
+export * from './cardioApi';

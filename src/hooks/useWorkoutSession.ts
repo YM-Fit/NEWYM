@@ -35,10 +35,6 @@ interface SetData {
   equipment_id?: string | null;
   equipment?: Equipment | null;
   // Suggestions for progressive overload
-  suggested_weight?: number | null;
-  suggested_reps?: number | null;
-  suggested_superset_weight?: number | null;
-  suggested_superset_reps?: number | null;
 }
 
 interface WorkoutExercise {
@@ -69,12 +65,6 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
   });
 
   const createSetFromPrevious = (setNumber: number, previousSet: SetData): SetData => {
-    // Calculate suggestions for progressive overload
-    const suggestedWeight = previousSet.weight > 0 ? previousSet.weight + 2.5 : null;
-    const suggestedReps = previousSet.reps > 0 ? previousSet.reps + 1 : null;
-    const suggestedSupersetWeight = previousSet.superset_weight ? previousSet.superset_weight + 2.5 : null;
-    const suggestedSupersetReps = previousSet.superset_reps ? previousSet.superset_reps + 1 : null;
-
     return {
       id: `temp-${Date.now()}-${setNumber}`,
       set_number: setNumber,
@@ -100,11 +90,6 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
       // Equipment - auto-fill from previous
       equipment_id: previousSet.equipment_id,
       equipment: previousSet.equipment,
-      // Store suggestions separately for progressive overload feature
-      suggested_weight: suggestedWeight,
-      suggested_reps: suggestedReps,
-      suggested_superset_weight: suggestedSupersetWeight,
-      suggested_superset_reps: suggestedSupersetReps,
     };
   };
 
@@ -192,25 +177,6 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     }
   };
 
-  const applySuggestion = (exerciseIndex: number, setIndex: number) => {
-    const updatedExercises = [...exercises];
-    const set = updatedExercises[exerciseIndex].sets[setIndex];
-
-    if (set.suggested_weight !== null && set.suggested_weight !== undefined) {
-      set.weight = set.suggested_weight;
-    }
-    if (set.suggested_reps !== null && set.suggested_reps !== undefined) {
-      set.reps = set.suggested_reps;
-    }
-    if (set.suggested_superset_weight !== null && set.suggested_superset_weight !== undefined) {
-      set.superset_weight = set.suggested_superset_weight;
-    }
-    if (set.suggested_superset_reps !== null && set.suggested_superset_reps !== undefined) {
-      set.superset_reps = set.suggested_superset_reps;
-    }
-
-    setExercises(updatedExercises);
-  };
 
   const removeSet = (exerciseIndex: number, setIndex: number) => {
     const updatedExercises = [...exercises];
@@ -324,7 +290,6 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     getExerciseSummary,
     toggleCollapseSet,
     expandAllSets,
-    applySuggestion,
     completeSetAndMoveNext,
   };
 }

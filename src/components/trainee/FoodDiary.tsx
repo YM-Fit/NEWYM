@@ -16,6 +16,13 @@ import {
   Clock,
   Check,
   Utensils,
+  Flame,
+  Beef,
+  Wheat,
+  Droplet,
+  Copy,
+  BarChart3,
+  Target,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -30,6 +37,10 @@ interface Meal {
   meal_type: string;
   meal_time: string | null;
   description: string | null;
+  calories: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
 }
 
 interface DailyLog {
@@ -45,6 +56,26 @@ interface FoodDiaryEntry {
   diary_date: string;
   completed: boolean;
   completed_at: string | null;
+}
+
+interface MealPlan {
+  id: string;
+  daily_calories: number | null;
+  protein_grams: number | null;
+  carbs_grams: number | null;
+  fat_grams: number | null;
+  daily_water_ml: number | null;
+}
+
+interface MealPlanMeal {
+  id: string;
+  meal_time: string;
+  meal_name: string;
+  description: string;
+  calories: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
 }
 
 const MEAL_TYPES = [
@@ -71,18 +102,53 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [expandedMeals, setExpandedMeals] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
+  const [mealPlanMeals, setMealPlanMeals] = useState<MealPlanMeal[]>([]);
+  const [showMealPlanCopy, setShowMealPlanCopy] = useState(false);
+  const [showDailySummary, setShowDailySummary] = useState<Set<string>>(new Set());
 
   const [mealForm, setMealForm] = useState({
     meal_time: '08:00',
     meal_type: 'breakfast',
     description: '',
+    calories: '',
+    protein: '',
+    carbs: '',
+    fat: '',
   });
 
   useEffect(() => {
     if (traineeId) {
       loadWeekData();
+      loadMealPlan();
     }
   }, [traineeId, currentWeekStart]);
+
+  const loadMealPlan = async () => {
+    if (!traineeId) return;
+
+    const { data: plan } = await supabase
+      .from('meal_plans')
+      .select('id, daily_calories, protein_grams, carbs_grams, fat_grams, daily_water_ml')
+      .eq('trainee_id', traineeId)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (plan) {
+      setMealPlan(plan);
+
+      const { data: mealsData } = await supabase
+        .from('meal_plan_meals')
+        .select('*')
+        .eq('plan_id', plan.id)
+        .order('order_index', { ascending: true });
+
+      setMealPlanMeals(mealsData || []);
+    } else {
+      setMealPlan(null);
+      setMealPlanMeals([]);
+    }
+  };
 
   const loadWeekData = async () => {
     if (!traineeId) return;
@@ -176,8 +242,46 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       meal_time: '08:00',
       meal_type: 'breakfast',
       description: '',
+      calories: '',
+      protein: '',
+      carbs: '',
+      fat: '',
     });
     setShowModal(true);
+  };
+
+  const copyMealFromPlan = (planMeal: MealPlanMeal) => {
+    const mealTypeMap: Record<string, string> = {
+      breakfast: 'breakfast',
+      morning_snack: 'snack',
+      lunch: 'lunch',
+      afternoon_snack: 'snack',
+      dinner: 'dinner',
+      evening_snack: 'snack',
+    };
+
+    setMealForm({
+      meal_time: planMeal.meal_time || '08:00',
+      meal_type: mealTypeMap[planMeal.meal_name] || 'breakfast',
+      description: planMeal.description || '',
+      calories: planMeal.calories?.toString() || '',
+      protein: planMeal.protein?.toString() || '',
+      carbs: planMeal.carbs?.toString() || '',
+      fat: planMeal.fat?.toString() || '',
+    });
+    setShowMealPlanCopy(false);
+  };
+
+  const copyMealFromPreviousDay = (meal: Meal) => {
+    setMealForm({
+      meal_time: meal.meal_time || '08:00',
+      meal_type: meal.meal_type,
+      description: meal.description || '',
+      calories: meal.calories?.toString() || '',
+      protein: meal.protein?.toString() || '',
+      carbs: meal.carbs?.toString() || '',
+      fat: meal.fat?.toString() || '',
+    });
   };
 
   const openEditMeal = (meal: Meal) => {
@@ -187,6 +291,10 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       meal_time: meal.meal_time || '08:00',
       meal_type: meal.meal_type,
       description: meal.description || '',
+      calories: meal.calories?.toString() || '',
+      protein: meal.protein?.toString() || '',
+      carbs: meal.carbs?.toString() || '',
+      fat: meal.fat?.toString() || '',
     });
     setShowModal(true);
   };
@@ -197,14 +305,20 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       return;
     }
 
+    const mealData: any = {
+      meal_time: mealForm.meal_time,
+      meal_type: mealForm.meal_type,
+      description: mealForm.description,
+      calories: mealForm.calories ? parseInt(mealForm.calories) : null,
+      protein: mealForm.protein ? parseInt(mealForm.protein) : null,
+      carbs: mealForm.carbs ? parseInt(mealForm.carbs) : null,
+      fat: mealForm.fat ? parseInt(mealForm.fat) : null,
+    };
+
     if (editingMeal) {
       const { error } = await supabase
         .from('meals')
-        .update({
-          meal_time: mealForm.meal_time,
-          meal_type: mealForm.meal_type,
-          description: mealForm.description,
-        })
+        .update(mealData)
         .eq('id', editingMeal.id);
 
       if (error) {
@@ -216,9 +330,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       const { error } = await supabase.from('meals').insert({
         trainee_id: traineeId,
         meal_date: selectedDate,
-        meal_time: mealForm.meal_time,
-        meal_type: mealForm.meal_type,
-        description: mealForm.description,
+        ...mealData,
       });
 
       if (error) {
@@ -230,6 +342,31 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
 
     setShowModal(false);
     loadWeekData();
+  };
+
+  const calculateDailyTotals = (dateStr: string) => {
+    const dayMeals = meals.get(dateStr) || [];
+    return dayMeals.reduce(
+      (acc, meal) => ({
+        calories: acc.calories + (meal.calories || 0),
+        protein: acc.protein + (meal.protein || 0),
+        carbs: acc.carbs + (meal.carbs || 0),
+        fat: acc.fat + (meal.fat || 0),
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+  };
+
+  const toggleDailySummary = (dateStr: string) => {
+    setShowDailySummary((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(dateStr)) {
+        newSet.delete(dateStr);
+      } else {
+        newSet.add(dateStr);
+      }
+      return newSet;
+    });
   };
 
   const deleteMeal = async (mealId: string) => {
@@ -424,7 +561,8 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
         const dayMeals = meals.get(dateStr) || [];
         const dayWater = waterLogs.get(dateStr);
         const waterAmount = dayWater?.water_ml || 0;
-        const waterProgress = Math.min((waterAmount / WATER_GOAL) * 100, 100);
+        const waterGoal = mealPlan?.daily_water_ml || WATER_GOAL;
+        const waterProgress = Math.min((waterAmount / waterGoal) * 100, 100);
         const diaryEntry = diaryEntries.get(dateStr);
         const isCompleted = diaryEntry?.completed || false;
 
@@ -503,7 +641,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 <div>
                   <span className="text-sm font-bold text-[var(--color-text-primary)]">מעקב מים</span>
                   <p className="text-sm text-[var(--color-text-muted)]">
-                    {waterAmount} / {WATER_GOAL} מ"ל
+                    {waterAmount} / {waterGoal} מ"ל
                   </p>
                 </div>
               </div>
@@ -529,11 +667,50 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               </div>
             </div>
 
+            {dayMeals.length > 0 && (
+              <div className="px-4 py-3 border-b border-[var(--color-border)] bg-gradient-to-br from-emerald-500/5 to-teal-500/5">
+                <button
+                  onClick={() => toggleDailySummary(dateStr)}
+                  className="w-full flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-emerald-400" />
+                    <span className="text-sm font-bold text-[var(--color-text-primary)]">סיכום יומי</span>
+                  </div>
+                  {showDailySummary.has(dateStr) ? (
+                    <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
+                  )}
+                </button>
+                {showDailySummary.has(dateStr) && (
+                  <DailySummaryCard
+                    dateStr={dateStr}
+                    totals={calculateDailyTotals(dateStr)}
+                    mealPlan={mealPlan}
+                    waterAmount={waterAmount}
+                  />
+                )}
+              </div>
+            )}
+
             <div className="p-4">
               {dayMeals.length === 0 ? (
-                <p className="text-center text-[var(--color-text-muted)] text-sm py-6">
-                  לא נרשמו ארוחות
-                </p>
+                <div className="text-center py-6">
+                  <p className="text-[var(--color-text-muted)] text-sm mb-4">לא נרשמו ארוחות</p>
+                  {mealPlanMeals.length > 0 && (
+                    <button
+                      onClick={() => {
+                        setSelectedDate(dateStr);
+                        setShowMealPlanCopy(true);
+                      }}
+                      className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center gap-1 mx-auto font-medium"
+                    >
+                      <Copy className="w-4 h-4" />
+                      העתק מתפריט
+                    </button>
+                  )}
+                </div>
               ) : (
                 <div className="space-y-3">
                   {dayMeals.map((meal) => {
@@ -542,6 +719,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                     const isExpanded = expandedMeals.has(meal.id);
                     const description = meal.description || '';
                     const shouldTruncate = description.length > 60;
+                    const hasNutrition = meal.calories || meal.protein || meal.carbs || meal.fat;
 
                     return (
                       <div
@@ -553,7 +731,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                             <Icon className="w-5 h-5" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <span className="font-bold text-sm text-[var(--color-text-primary)]">
                                 {typeInfo.label}
                               </span>
@@ -563,6 +741,22 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                                   {meal.meal_time.slice(0, 5)}
                                 </span>
                               )}
+                              {hasNutrition && (
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  {meal.calories && (
+                                    <span className="text-xs text-amber-500 flex items-center gap-1 bg-amber-500/15 px-2 py-0.5 rounded-full border border-amber-500/30">
+                                      <Flame className="w-3 h-3" />
+                                      {meal.calories} קל'
+                                    </span>
+                                  )}
+                                  {meal.protein && (
+                                    <span className="text-xs text-red-500 flex items-center gap-1 bg-red-500/15 px-2 py-0.5 rounded-full border border-red-500/30">
+                                      <Beef className="w-3 h-3" />
+                                      {meal.protein}ג'
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                             <p
                               className={`text-sm text-[var(--color-text-secondary)] leading-relaxed ${
@@ -571,6 +765,25 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                             >
                               {description}
                             </p>
+                            {isExpanded && hasNutrition && (
+                              <div className="flex gap-2 flex-wrap mt-2">
+                                {meal.protein && (
+                                  <span className="text-xs text-red-500 bg-red-500/15 px-2 py-1 rounded-lg border border-red-500/30">
+                                    חלבון: {meal.protein}ג'
+                                  </span>
+                                )}
+                                {meal.carbs && (
+                                  <span className="text-xs text-amber-500 bg-amber-500/15 px-2 py-1 rounded-lg border border-amber-500/30">
+                                    פחמימות: {meal.carbs}ג'
+                                  </span>
+                                )}
+                                {meal.fat && (
+                                  <span className="text-xs text-blue-500 bg-blue-500/15 px-2 py-1 rounded-lg border border-blue-500/30">
+                                    שומן: {meal.fat}ג'
+                                  </span>
+                                )}
+                              </div>
+                            )}
                             {shouldTruncate && (
                               <button
                                 onClick={() => toggleMealExpand(meal.id)}
@@ -645,6 +858,37 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
             </div>
 
             <div className="p-6 space-y-6">
+              {mealPlanMeals.length > 0 && !editingMeal && (
+                <div>
+                  <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-2">
+                    העתק מתפריט
+                  </label>
+                  <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+                    {mealPlanMeals.slice(0, 3).map((planMeal) => (
+                      <button
+                        key={planMeal.id}
+                        onClick={() => copyMealFromPlan(planMeal)}
+                        className="p-3 rounded-xl border-2 border-emerald-500/30 hover:border-emerald-500/50 bg-emerald-500/10 hover:bg-emerald-500/15 transition-all text-right"
+                      >
+                        <div className="text-sm font-bold text-[var(--color-text-primary)]">
+                          {planMeal.meal_name === 'breakfast' ? 'ארוחת בוקר' :
+                           planMeal.meal_name === 'lunch' ? 'ארוחת צהריים' :
+                           planMeal.meal_name === 'dinner' ? 'ארוחת ערב' : planMeal.meal_name}
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] line-clamp-1">
+                          {planMeal.description}
+                        </div>
+                        {planMeal.calories && (
+                          <div className="text-xs text-amber-500 mt-1">
+                            {planMeal.calories} קלוריות
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-2">
                   שעה
@@ -702,6 +946,74 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                   className="glass-input w-full p-4 resize-none"
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-3">
+                  ערכים תזונתיים (אופציונלי)
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">
+                      <Flame className="w-3 h-3 inline ml-1" />
+                      קלוריות
+                    </label>
+                    <input
+                      type="number"
+                      value={mealForm.calories}
+                      onChange={(e) =>
+                        setMealForm({ ...mealForm, calories: e.target.value })
+                      }
+                      placeholder="0"
+                      className="glass-input w-full p-3"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">
+                      <Beef className="w-3 h-3 inline ml-1" />
+                      חלבון (גרם)
+                    </label>
+                    <input
+                      type="number"
+                      value={mealForm.protein}
+                      onChange={(e) =>
+                        setMealForm({ ...mealForm, protein: e.target.value })
+                      }
+                      placeholder="0"
+                      className="glass-input w-full p-3"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">
+                      <Wheat className="w-3 h-3 inline ml-1" />
+                      פחמימות (גרם)
+                    </label>
+                    <input
+                      type="number"
+                      value={mealForm.carbs}
+                      onChange={(e) =>
+                        setMealForm({ ...mealForm, carbs: e.target.value })
+                      }
+                      placeholder="0"
+                      className="glass-input w-full p-3"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">
+                      <Droplet className="w-3 h-3 inline ml-1" />
+                      שומן (גרם)
+                    </label>
+                    <input
+                      type="number"
+                      value={mealForm.fat}
+                      onChange={(e) =>
+                        setMealForm({ ...mealForm, fat: e.target.value })
+                      }
+                      placeholder="0"
+                      className="glass-input w-full p-3"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="sticky bottom-0 bg-[var(--color-bg-base)] p-4 border-t border-[var(--color-border)] flex gap-3">
@@ -718,6 +1030,153 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 {editingMeal ? 'עדכן' : 'הוסף'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showMealPlanCopy && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="premium-card-static w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-br from-emerald-500 to-teal-600 p-4 flex items-center justify-between rounded-t-2xl">
+              <h3 className="text-lg font-bold text-white">העתק מתפריט</h3>
+              <button
+                onClick={() => {
+                  setShowMealPlanCopy(false);
+                  setShowModal(true);
+                }}
+                className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-3">
+              {mealPlanMeals.map((planMeal) => (
+                <button
+                  key={planMeal.id}
+                  onClick={() => {
+                    copyMealFromPlan(planMeal);
+                    setShowMealPlanCopy(false);
+                    setShowModal(true);
+                  }}
+                  className="w-full p-4 rounded-xl border-2 border-emerald-500/30 hover:border-emerald-500/50 bg-emerald-500/10 hover:bg-emerald-500/15 transition-all text-right"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-bold text-[var(--color-text-primary)]">
+                      {planMeal.meal_name === 'breakfast' ? 'ארוחת בוקר' :
+                       planMeal.meal_name === 'lunch' ? 'ארוחת צהריים' :
+                       planMeal.meal_name === 'dinner' ? 'ארוחת ערב' : planMeal.meal_name}
+                    </div>
+                    <span className="text-xs text-[var(--color-text-muted)]">
+                      {planMeal.meal_time}
+                    </span>
+                  </div>
+                  <div className="text-xs text-[var(--color-text-secondary)] mb-2">
+                    {planMeal.description}
+                  </div>
+                  {(planMeal.calories || planMeal.protein) && (
+                    <div className="flex gap-2 flex-wrap">
+                      {planMeal.calories && (
+                        <span className="text-xs text-amber-500 bg-amber-500/15 px-2 py-1 rounded-lg">
+                          {planMeal.calories} קל'
+                        </span>
+                      )}
+                      {planMeal.protein && (
+                        <span className="text-xs text-red-500 bg-red-500/15 px-2 py-1 rounded-lg">
+                          {planMeal.protein}ג' חלבון
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className="sticky bottom-0 bg-[var(--color-bg-base)] p-4 border-t border-[var(--color-border)]">
+              <button
+                onClick={() => {
+                  setShowMealPlanCopy(false);
+                  setShowModal(true);
+                }}
+                className="w-full py-4 btn-secondary rounded-xl font-bold"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DailySummaryCard({
+  dateStr,
+  totals,
+  mealPlan,
+  waterAmount,
+}: {
+  dateStr: string;
+  totals: { calories: number; protein: number; carbs: number; fat: number };
+  mealPlan: MealPlan | null;
+  waterAmount: number;
+}) {
+  const waterGoal = mealPlan?.daily_water_ml || WATER_GOAL;
+
+  return (
+    <div className="mt-4 space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-amber-500/15 border border-amber-500/30 rounded-lg p-3 text-center">
+          <Flame className="w-5 h-5 text-amber-500 mx-auto mb-1" />
+          <p className="text-lg font-bold text-[var(--color-text-primary)]">{totals.calories}</p>
+          <p className="text-xs text-[var(--color-text-secondary)]">קלוריות</p>
+          {mealPlan?.daily_calories && (
+            <p className={`text-xs mt-1 ${totals.calories <= mealPlan.daily_calories ? 'text-emerald-500' : 'text-red-500'}`}>
+              מתוך {mealPlan.daily_calories}
+            </p>
+          )}
+        </div>
+        <div className="bg-red-500/15 border border-red-500/30 rounded-lg p-3 text-center">
+          <Beef className="w-5 h-5 text-red-500 mx-auto mb-1" />
+          <p className="text-lg font-bold text-[var(--color-text-primary)]">{totals.protein}ג'</p>
+          <p className="text-xs text-[var(--color-text-secondary)]">חלבון</p>
+          {mealPlan?.protein_grams && (
+            <p className={`text-xs mt-1 ${totals.protein >= mealPlan.protein_grams ? 'text-emerald-500' : 'text-orange-500'}`}>
+              מתוך {mealPlan.protein_grams}ג'
+            </p>
+          )}
+        </div>
+        <div className="bg-amber-500/15 border border-amber-500/30 rounded-lg p-3 text-center">
+          <Wheat className="w-5 h-5 text-amber-500 mx-auto mb-1" />
+          <p className="text-lg font-bold text-[var(--color-text-primary)]">{totals.carbs}ג'</p>
+          <p className="text-xs text-[var(--color-text-secondary)]">פחמימות</p>
+          {mealPlan?.carbs_grams && (
+            <p className="text-xs text-[var(--color-text-muted)] mt-1">מתוך {mealPlan.carbs_grams}ג'</p>
+          )}
+        </div>
+        <div className="bg-blue-500/15 border border-blue-500/30 rounded-lg p-3 text-center">
+          <Droplet className="w-5 h-5 text-blue-500 mx-auto mb-1" />
+          <p className="text-lg font-bold text-[var(--color-text-primary)]">{totals.fat}ג'</p>
+          <p className="text-xs text-[var(--color-text-secondary)]">שומן</p>
+          {mealPlan?.fat_grams && (
+            <p className="text-xs text-[var(--color-text-muted)] mt-1">מתוך {mealPlan.fat_grams}ג'</p>
+          )}
+        </div>
+      </div>
+      {mealPlan && (
+        <div className="bg-cyan-500/15 border border-cyan-500/30 rounded-lg p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Droplets className="w-5 h-5 text-cyan-500" />
+              <span className="font-medium text-cyan-600 dark:text-cyan-400">מים</span>
+            </div>
+            <span className="text-lg font-bold text-cyan-600 dark:text-cyan-400">
+              {waterAmount} / {waterGoal} מ"ל
+            </span>
+          </div>
+          <div className="h-2 bg-cyan-500/20 rounded-full overflow-hidden mt-2">
+            <div
+              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500"
+              style={{ width: `${Math.min((waterAmount / waterGoal) * 100, 100)}%` }}
+            />
           </div>
         </div>
       )}
