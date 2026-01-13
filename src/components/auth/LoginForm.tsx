@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Activity, User, Dumbbell, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Activity, User, Dumbbell, Eye, EyeOff, ArrowRight, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { checkRateLimit, recordFailedAttempt, clearRateLimit, getRateLimitMessage } from '../../utils/rateLimit';
 
 interface LoginFormProps {
   onToggleMode: () => void;
@@ -14,25 +15,61 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [warning, setWarning] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
   const { signIn, signInTrainee } = useAuth();
+
+  useEffect(() => {
+    if (identifier) {
+      const result = checkRateLimit(identifier);
+      setIsLocked(!result.allowed);
+      if (!result.allowed) {
+        setError(getRateLimitMessage(result));
+      }
+    }
+  }, [identifier]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setWarning('');
+
+    const rateLimitCheck = checkRateLimit(identifier);
+    if (!rateLimitCheck.allowed) {
+      setError(getRateLimitMessage(rateLimitCheck));
+      setIsLocked(true);
+      return;
+    }
+
     setLoading(true);
 
     try {
+      let loginError = null;
+
       if (userType === 'trainer') {
         const { error } = await signIn(identifier, password);
-        if (error) {
-          setError('אימייל או סיסמה שגויים');
-        }
+        loginError = error;
       } else {
         const { error } = await signInTrainee(identifier, password);
-        if (error) {
-          setError(error.message || 'מספר טלפון או סיסמה שגויים');
+        loginError = error;
+      }
+
+      if (loginError) {
+        const result = recordFailedAttempt(identifier);
+        setIsLocked(!result.allowed);
+
+        if (!result.allowed) {
+          setError(getRateLimitMessage(result));
+        } else {
+          setError(userType === 'trainer' ? 'אימייל או סיסמה שגויים' : 'מספר טלפון או סיסמה שגויים');
+          const warningMsg = getRateLimitMessage(result);
+          if (warningMsg) {
+            setWarning(warningMsg);
+          }
         }
+      } else {
+        clearRateLimit(identifier);
       }
     } catch {
       setError('שגיאה בהתחברות');
@@ -99,9 +136,16 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl mb-6 text-right text-sm flex items-center gap-2 animate-fade-in">
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl mb-4 text-right text-sm flex items-center gap-2 animate-fade-in">
               <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
               {error}
+            </div>
+          )}
+
+          {warning && !error && (
+            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 px-4 py-3 rounded-xl mb-4 text-right text-sm flex items-center gap-2 animate-fade-in">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              {warning}
             </div>
           )}
 
@@ -146,8 +190,8 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full btn-primary py-4 px-6 rounded-xl text-base font-semibold flex items-center justify-center gap-2 mt-8"
+              disabled={loading || isLocked}
+              className="w-full btn-primary py-4 px-6 rounded-xl text-base font-semibold flex items-center justify-center gap-2 mt-8 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
