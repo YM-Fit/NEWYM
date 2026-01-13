@@ -142,13 +142,11 @@ export function useGlobalScaleListener(
           table: 'scale_readings',
         },
         (payload) => {
-          console.log('New scale reading received:', payload.new);
           const newReading = payload.new as ScaleReading;
           processReading(newReading, true);
         }
       )
       .subscribe((status) => {
-        console.log('Scale listener status:', status);
         if (status === 'SUBSCRIBED') {
           setIsListening(true);
         }

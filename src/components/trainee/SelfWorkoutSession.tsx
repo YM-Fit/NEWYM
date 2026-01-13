@@ -271,9 +271,6 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      console.log('Current auth user:', user?.id);
-      console.log('Trainer ID being saved:', trainerId);
-      console.log('Trainee ID:', traineeId);
 
       if (!user) {
         console.error('No authenticated user found');

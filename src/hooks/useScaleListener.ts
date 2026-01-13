@@ -244,7 +244,6 @@ export function useScaleListener(deviceId: string = 'default'): UseScaleListener
 
             if (attempt < MAX_RETRY_ATTEMPTS) {
               const delay = getRetryDelay(attempt);
-              console.log(`🔄 Retrying in ${delay}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`);
               setTimeout(() => {
                 setRetryCount(attempt);
                 setupRealtimeListener(attempt + 1);
