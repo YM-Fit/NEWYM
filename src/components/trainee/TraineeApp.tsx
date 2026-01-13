@@ -115,101 +115,103 @@ export default function TraineeApp() {
       </header>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 px-3 md:px-4 pb-4 safe-bottom">
-        <div className="mx-auto max-w-3xl glass-card px-2 py-2.5 rounded-2xl shadow-lg border border-[var(--color-border)] backdrop-blur-xl">
-          <div className="flex items-center justify-around gap-1 relative">
-            <TabButton
-              icon={Home}
-              label="בית"
-              active={activeTab === 'dashboard'}
-              onClick={() => { setActiveTab('dashboard'); setShowMoreMenu(false); }}
-            />
-            <TabButton
-              icon={Calendar}
-              label="תוכנית"
-              active={activeTab === 'workout-plan'}
-              onClick={() => { setActiveTab('workout-plan'); setShowMoreMenu(false); }}
-            />
-
-            <div className="relative -mt-10">
-              <button
-                onClick={() => { setActiveTab('self-workout'); setShowMoreMenu(false); }}
-                className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow transition-transform hover:scale-105 active:scale-95 border-4 border-[var(--color-bg-base)]"
-                title="אימון חדש"
-              >
-                <Plus className="w-7 h-7 text-white" />
-              </button>
+        <div className="mx-auto max-w-3xl relative">
+          {showMoreMenu && (
+            <div className="absolute bottom-full mb-2 left-4 right-4 glass-card p-4 rounded-2xl animate-fade-in border border-[var(--color-border)] shadow-dark-lg z-10">
+              <div className="mb-3 pb-3 border-b border-[var(--color-border)]">
+                <h3 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider text-right">
+                  תזונה ובריאות
+                </h3>
+              </div>
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                <MoreMenuItem
+                  icon={ClipboardList}
+                  label="תפריט"
+                  onClick={() => { setActiveTab('menu'); setShowMoreMenu(false); }}
+                  active={activeTab === 'menu'}
+                />
+                <MoreMenuItem
+                  icon={Utensils}
+                  label="יומן אוכל"
+                  onClick={() => { setActiveTab('diary'); setShowMoreMenu(false); }}
+                  active={activeTab === 'diary'}
+                />
+                <MoreMenuItem
+                  icon={Activity}
+                  label="אירובי"
+                  onClick={() => { setActiveTab('cardio'); setShowMoreMenu(false); }}
+                  active={activeTab === 'cardio'}
+                />
+              </div>
+              
+              <div className="mb-3 pb-3 border-b border-[var(--color-border)]">
+                <h3 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider text-right">
+                  התפתחות אישית
+                </h3>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <MoreMenuItem
+                  icon={Brain}
+                  label="מנטלי"
+                  onClick={() => { setActiveTab('mental'); setShowMoreMenu(false); }}
+                  active={activeTab === 'mental'}
+                />
+                <MoreMenuItem
+                  icon={Target}
+                  label="מטרות"
+                  onClick={() => { setActiveTab('goals'); setShowMoreMenu(false); }}
+                  active={activeTab === 'goals'}
+                />
+                <MoreMenuItem
+                  icon={Flame}
+                  label="הרגלים"
+                  onClick={() => { setActiveTab('habits'); setShowMoreMenu(false); }}
+                  active={activeTab === 'habits'}
+                />
+              </div>
             </div>
+          )}
 
-            <TabButton
-              icon={Scale}
-              label="מדידות"
-              active={activeTab === 'measurements'}
-              onClick={() => { setActiveTab('measurements'); setShowMoreMenu(false); }}
-            />
-            <TabButton
-              icon={Dumbbell}
-              label="אימונים"
-              active={activeTab === 'workouts'}
-              onClick={() => { setActiveTab('workouts'); setShowMoreMenu(false); }}
-            />
+          <div className="glass-card px-2 py-2.5 rounded-2xl shadow-lg border border-[var(--color-border)] backdrop-blur-xl">
+            <div className="flex items-center justify-around gap-1 relative">
+              <TabButton
+                icon={Home}
+                label="בית"
+                active={activeTab === 'dashboard'}
+                onClick={() => { setActiveTab('dashboard'); setShowMoreMenu(false); }}
+              />
+              <TabButton
+                icon={Calendar}
+                label="תוכנית"
+                active={activeTab === 'workout-plan'}
+                onClick={() => { setActiveTab('workout-plan'); setShowMoreMenu(false); }}
+              />
+
+              <div className="relative -mt-10">
+                <button
+                  onClick={() => { setActiveTab('self-workout'); setShowMoreMenu(false); }}
+                  className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow transition-transform hover:scale-105 active:scale-95 border-4 border-[var(--color-bg-base)]"
+                  title="אימון חדש"
+                >
+                  <Plus className="w-7 h-7 text-white" />
+                </button>
+              </div>
+
+              <TabButton
+                icon={Scale}
+                label="מדידות"
+                active={activeTab === 'measurements'}
+                onClick={() => { setActiveTab('measurements'); setShowMoreMenu(false); }}
+              />
+              <TabButton
+                icon={Dumbbell}
+                label="אימונים"
+                active={activeTab === 'workouts'}
+                onClick={() => { setActiveTab('workouts'); setShowMoreMenu(false); }}
+              />
+            </div>
           </div>
         </div>
-
-        {showMoreMenu && (
-          <div className="absolute bottom-full mb-2 left-4 right-4 glass-card p-4 rounded-2xl animate-fade-in border border-[var(--color-border)] shadow-dark-lg">
-            <div className="mb-3 pb-3 border-b border-[var(--color-border)]">
-              <h3 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider text-right">
-                תזונה ובריאות
-              </h3>
-            </div>
-            <div className="grid grid-cols-3 gap-3 mb-3">
-              <MoreMenuItem
-                icon={ClipboardList}
-                label="תפריט"
-                onClick={() => { setActiveTab('menu'); setShowMoreMenu(false); }}
-                active={activeTab === 'menu'}
-              />
-              <MoreMenuItem
-                icon={Utensils}
-                label="יומן אוכל"
-                onClick={() => { setActiveTab('diary'); setShowMoreMenu(false); }}
-                active={activeTab === 'diary'}
-              />
-              <MoreMenuItem
-                icon={Activity}
-                label="אירובי"
-                onClick={() => { setActiveTab('cardio'); setShowMoreMenu(false); }}
-                active={activeTab === 'cardio'}
-              />
-            </div>
-            
-            <div className="mb-3 pb-3 border-b border-[var(--color-border)]">
-              <h3 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider text-right">
-                התפתחות אישית
-              </h3>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <MoreMenuItem
-                icon={Brain}
-                label="מנטלי"
-                onClick={() => { setActiveTab('mental'); setShowMoreMenu(false); }}
-                active={activeTab === 'mental'}
-              />
-              <MoreMenuItem
-                icon={Target}
-                label="מטרות"
-                onClick={() => { setActiveTab('goals'); setShowMoreMenu(false); }}
-                active={activeTab === 'goals'}
-              />
-              <MoreMenuItem
-                icon={Flame}
-                label="הרגלים"
-                onClick={() => { setActiveTab('habits'); setShowMoreMenu(false); }}
-                active={activeTab === 'habits'}
-              />
-            </div>
-          </div>
-        )}
       </nav>
 
       <div className="fixed bottom-24 left-4 z-40">

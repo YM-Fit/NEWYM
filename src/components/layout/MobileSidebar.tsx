@@ -44,7 +44,7 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
     return () => window.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
-  const menuItems: MenuItem[] = [
+  const menuItems: MenuItem[] = useMemo(() => [
     // Main Navigation
     { id: 'dashboard', label: 'דף הבית', icon: Home, description: 'סקירה כללית', category: 'main' },
     { id: 'trainees', label: 'מתאמנים', icon: Users, description: 'ניהול מתאמנים', category: 'main' },
@@ -52,12 +52,12 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
     // Tools & Analytics
     { id: 'tools', label: 'כלים', icon: Calculator, description: 'מחשבונים וכלים', category: 'tools' },
     { id: 'reports', label: 'דוחות', icon: BarChart3, description: 'סטטיסטיקות ונתונים', category: 'tools' },
-  ];
+  ], []);
 
-  const categories = [
+  const categories = useMemo(() => [
     { id: 'main', label: 'ניווט ראשי', icon: Home },
     { id: 'tools', label: 'כלים וניתוח', icon: Calculator },
-  ];
+  ], []);
 
   const filteredItems = useMemo(() => {
     if (!searchQuery) return menuItems;
@@ -66,7 +66,7 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
       item.label.toLowerCase().includes(query) || 
       item.description.toLowerCase().includes(query)
     );
-  }, [searchQuery]);
+  }, [searchQuery, menuItems]);
 
   const groupedItems = useMemo(() => {
     const groups: Record<string, MenuItem[]> = {};

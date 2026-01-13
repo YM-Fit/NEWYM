@@ -43,6 +43,8 @@ interface TraineeProfileProps {
   onViewWeeklyTasks?: () => void;
 }
 
+type TabType = 'overview' | 'workouts' | 'measurements' | 'plans' | 'tools';
+
 export default function TraineeProfile({
   trainee,
   measurements,
@@ -65,6 +67,7 @@ export default function TraineeProfile({
   onViewCardio,
   onViewWeeklyTasks
 }: TraineeProfileProps) {
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [showTDEE, setShowTDEE] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
   const [showGoals, setShowGoals] = useState(false);
@@ -79,8 +82,22 @@ export default function TraineeProfile({
     ? latestMeasurement.weight - previousMeasurement.weight
     : 0;
 
+  const totalWorkouts = workouts.length;
+  const totalVolume = workouts.reduce((sum, w) => sum + (w.totalVolume || 0), 0);
+  const recentWorkouts = workouts.slice(0, 5);
+  const recentMeasurements = measurements.slice(0, 5);
+
+  const tabs: { id: TabType; label: string; icon: any }[] = [
+    { id: 'overview', label: 'סקירה', icon: Sparkles },
+    { id: 'workouts', label: 'אימונים', icon: Calendar },
+    { id: 'measurements', label: 'מדידות', icon: Scale },
+    { id: 'plans', label: 'תוכניות', icon: ClipboardList },
+    { id: 'tools', label: 'כלים', icon: Brain },
+  ];
+
   return (
     <div className="space-y-6 pb-20 lg:pb-6 animate-fade-in">
+      {/* Header */}
       <div className="premium-card-static p-6 md:p-8 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
@@ -95,7 +112,7 @@ export default function TraineeProfile({
                 <ArrowRight className="h-5 w-5" />
               </button>
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 flex items-center justify-center shadow-lg">
                   {trainee.is_pair ? (
                     <Users className="h-8 w-8 text-emerald-400" />
                   ) : (
@@ -134,8 +151,9 @@ export default function TraineeProfile({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30">
+          {/* Info Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all">
               <div className="p-2.5 rounded-xl bg-cyan-500/15">
                 <User className="h-5 w-5 text-cyan-400" />
               </div>
@@ -145,7 +163,7 @@ export default function TraineeProfile({
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30">
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all">
               <div className="p-2.5 rounded-xl bg-emerald-500/15">
                 <Phone className="h-5 w-5 text-emerald-400" />
               </div>
@@ -155,7 +173,7 @@ export default function TraineeProfile({
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30">
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all">
               <div className="p-2.5 rounded-xl bg-amber-500/15">
                 <Mail className="h-5 w-5 text-amber-400" />
               </div>
@@ -165,7 +183,7 @@ export default function TraineeProfile({
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30">
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all">
               <div className="p-2.5 rounded-xl bg-teal-500/15">
                 <Calendar className="h-5 w-5 text-teal-400" />
               </div>
@@ -175,60 +193,118 @@ export default function TraineeProfile({
               </div>
             </div>
           </div>
+
+          {/* Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      : 'bg-zinc-800/30 text-zinc-400 hover:bg-zinc-700/30 border border-zinc-700/30'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {latestMeasurement && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="stat-card p-6 bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-zinc-400 mb-2">משקל נוכחי</p>
-                <p className="text-3xl font-bold text-cyan-400 tracking-tight">{latestMeasurement.weight} ק״ג</p>
-                {weightChange !== 0 && (
-                  <p className={`text-sm mt-2 font-medium ${weightChange > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
-                    {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} ק״ג
-                  </p>
-                )}
+      {/* Tab Content */}
+      {activeTab === 'overview' && (
+        <>
+          {/* Stats Cards */}
+          {latestMeasurement && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="stat-card p-6 bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-zinc-400 mb-2">משקל נוכחי</p>
+                    <p className="text-3xl font-bold text-cyan-400 tracking-tight">{latestMeasurement.weight} ק״ג</p>
+                    {weightChange !== 0 && (
+                      <p className={`text-sm mt-2 font-medium ${weightChange > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                        {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} ק״ג
+                      </p>
+                    )}
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-cyan-500/20">
+                    <Scale className="h-6 w-6 text-cyan-400" />
+                  </div>
+                </div>
               </div>
-              <div className="p-3.5 rounded-xl bg-cyan-500/20">
-                <Scale className="h-6 w-6 text-cyan-400" />
+
+              <div className="stat-card p-6 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-zinc-400 mb-2">אחוז שומן</p>
+                    <p className="text-3xl font-bold text-emerald-400 tracking-tight">{latestMeasurement.bodyFat?.toFixed(1) || '-'}%</p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-emerald-500/20">
+                    <BarChart3 className="h-6 w-6 text-emerald-400" />
+                  </div>
+                </div>
               </div>
+
+              <div className="stat-card p-6 bg-gradient-to-br from-amber-500/20 to-amber-500/5 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-zinc-400 mb-2">מסת שריר</p>
+                    <p className="text-3xl font-bold text-amber-400 tracking-tight">{latestMeasurement.muscleMass?.toFixed(1) || '-'} ק״ג</p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-amber-500/20">
+                    <User className="h-6 w-6 text-amber-400" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="premium-card-static p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Calendar className="h-5 w-5 text-emerald-400" />
+                <span className="text-2xl font-bold text-emerald-400">{totalWorkouts}</span>
+              </div>
+              <p className="text-xs text-zinc-400">סה״כ אימונים</p>
+            </div>
+            <div className="premium-card-static p-4">
+              <div className="flex items-center justify-between mb-2">
+                <TrendingUp className="h-5 w-5 text-cyan-400" />
+                <span className="text-2xl font-bold text-cyan-400">{totalVolume.toLocaleString()}</span>
+              </div>
+              <p className="text-xs text-zinc-400">ק״ג נפח כולל</p>
+            </div>
+            <div className="premium-card-static p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Scale className="h-5 w-5 text-amber-400" />
+                <span className="text-2xl font-bold text-amber-400">{measurements.length}</span>
+              </div>
+              <p className="text-xs text-zinc-400">מדידות</p>
+            </div>
+            <div className="premium-card-static p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Home className="h-5 w-5 text-rose-400" />
+                <span className="text-2xl font-bold text-rose-400">{selfWeights.length}</span>
+              </div>
+              <p className="text-xs text-zinc-400">שקילות בית</p>
             </div>
           </div>
 
-          <div className="stat-card p-6 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-zinc-400 mb-2">אחוז שומן</p>
-                <p className="text-3xl font-bold text-emerald-400 tracking-tight">{latestMeasurement.bodyFat?.toFixed(1) || '-'}%</p>
-              </div>
-              <div className="p-3.5 rounded-xl bg-emerald-500/20">
-                <BarChart3 className="h-6 w-6 text-emerald-400" />
-              </div>
-            </div>
-          </div>
-
-          <div className="stat-card p-6 bg-gradient-to-br from-amber-500/20 to-amber-500/5 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-zinc-400 mb-2">מסת שריר</p>
-                <p className="text-3xl font-bold text-amber-400 tracking-tight">{latestMeasurement.muscleMass?.toFixed(1) || '-'} ק״ג</p>
-              </div>
-              <div className="p-3.5 rounded-xl bg-amber-500/20">
-                <User className="h-6 w-6 text-amber-400" />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="premium-card-static p-6">
-        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-emerald-400" />
-          פעולות מהירות
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* Quick Actions */}
+          <div className="premium-card-static p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-emerald-400" />
+              פעולות מהירות
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           <button
             onClick={onNewWorkout}
             className="action-btn group"

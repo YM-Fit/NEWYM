@@ -24,7 +24,9 @@ import {
   TrendingUp,
   Award,
   Activity,
+  BookOpen,
 } from 'lucide-react';
+import ExerciseInstructionsModal from '../common/ExerciseInstructionsModal';
 
 interface MyWorkoutPlanProps {
   traineeId: string | null;
@@ -81,6 +83,7 @@ interface DayExercise {
     id: string;
     name: string;
     muscle_group_id: string;
+    instructions?: string | null;
     muscle_group?: {
       name: string;
     };
@@ -155,6 +158,10 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   const [history, setHistory] = useState<PlanHistory[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [showInfoTooltip, setShowInfoTooltip] = useState<string | null>(null);
+  const [instructionsExercise, setInstructionsExercise] = useState<{
+    name: string;
+    instructions: string | null | undefined;
+  } | null>(null);
 
   useEffect(() => {
     if (traineeId) {
@@ -218,6 +225,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
               id,
               name,
               muscle_group_id,
+              instructions,
               muscle_group:muscle_groups(name)
             ),
             equipment:equipment_id(

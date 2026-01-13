@@ -85,7 +85,7 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
         isMinimized ? 'w-20' : 'w-80'
       }`}
     >
-      <div className="flex-1 py-6 overflow-y-auto">
+      <div className="flex-1 py-6 overflow-y-auto overflow-x-hidden">
         <div className={`flex items-center justify-between mb-4 ${isMinimized ? 'px-4' : 'px-5'}`}>
           {!isMinimized && (
             <div className="flex items-center gap-2">
