@@ -179,14 +179,14 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
     }
 
     // Food diary today (simple: any entries for today)
-    const { data: todayFoodEntries } = await supabase
-      .from('food_diary_entries')
+    const { data: todayMeals } = await supabase
+      .from('meals')
       .select('id, meal_type')
       .eq('trainee_id', traineeId)
-      .eq('entry_date', todayStr);
+      .eq('meal_date', todayStr);
 
-    if (todayFoodEntries && todayFoodEntries.length > 0) {
-      const mealTypes = new Set(todayFoodEntries.map((e: any) => e.meal_type));
+    if (todayMeals && todayMeals.length > 0) {
+      const mealTypes = new Set(todayMeals.map((e: any) => e.meal_type));
       // heuristic: 3+ meal types => completed, אחרת חלקי
       setTodayFoodStatus(mealTypes.size >= 3 ? 'completed' : 'partial');
     } else {
@@ -194,15 +194,27 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
     }
 
     // Habits today: any logged habits for today
-    const { data: todayHabitsLogs } = await supabase
-      .from('habit_logs')
+    // Need to join through trainee_habits since habit_logs has habit_id, not trainee_id
+    const { data: traineeHabits } = await supabase
+      .from('trainee_habits')
       .select('id')
       .eq('trainee_id', traineeId)
-      .eq('log_date', todayStr);
+      .eq('is_active', true);
 
-    if (todayHabitsLogs && todayHabitsLogs.length > 0) {
-      // לא יודעים אחוז מדויק, אבל יש ביצוע
-      setTodayHabitsStatus('partial');
+    if (traineeHabits && traineeHabits.length > 0) {
+      const habitIds = traineeHabits.map((h: any) => h.id);
+      const { data: todayHabitsLogs } = await supabase
+        .from('habit_logs')
+        .select('id')
+        .in('habit_id', habitIds)
+        .eq('log_date', todayStr);
+
+      if (todayHabitsLogs && todayHabitsLogs.length > 0) {
+        // לא יודעים אחוז מדויק, אבל יש ביצוע
+        setTodayHabitsStatus('partial');
+      } else {
+        setTodayHabitsStatus('none');
+      }
     } else {
       setTodayHabitsStatus('none');
     }
