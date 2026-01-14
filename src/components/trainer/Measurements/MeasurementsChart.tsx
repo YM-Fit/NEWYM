@@ -6,9 +6,14 @@ import { TrendingUp, TrendingDown, BarChart3, List, Table2, Minus } from 'lucide
 interface MeasurementsChartProps {
   measurements: BodyMeasurement[];
   metric: 'weight' | 'bodyFat' | 'muscleMass' | 'waterPercentage' | 'metabolicAge';
+  trainee?: {
+    isPair?: boolean;
+    pairName1?: string;
+    pairName2?: string;
+  };
 }
 
-export default function MeasurementsChart({ measurements, metric }: MeasurementsChartProps) {
+export default function MeasurementsChart({ measurements, metric, trainee }: MeasurementsChartProps) {
   const [viewMode, setViewMode] = useState<'chart' | 'list' | 'table'>('chart');
 
   const getMetricLabel = (metric: string) => {
@@ -39,11 +44,33 @@ export default function MeasurementsChart({ measurements, metric }: Measurements
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .filter(m => m[metric] && (m[metric] as number) > 0);
 
+  // אם זה מתאמן זוגי ויש מדידות משני בני הזוג, נציג שני קווים
+  const isPairWithBothMembers = trainee?.isPair && 
+    sortedMeasurements.some(m => m.pairMember === 'member_1') &&
+    sortedMeasurements.some(m => m.pairMember === 'member_2');
+
   const chartData = sortedMeasurements.map(measurement => ({
     date: new Date(measurement.date).toLocaleDateString('he-IL'),
     fullDate: measurement.date,
-    value: measurement[metric] || 0
+    value: measurement[metric] || 0,
+    pairMember: measurement.pairMember
   }));
+
+  // נתונים משולבים עם ערכים נפרדים לכל בן זוג
+  const combinedChartData = isPairWithBothMembers ? (() => {
+    // אוסף את כל התאריכים הייחודיים
+    const allDates = [...new Set(chartData.map(d => d.fullDate))];
+    return allDates.map(date => {
+      const member1Data = chartData.find(d => d.fullDate === date && d.pairMember === 'member_1');
+      const member2Data = chartData.find(d => d.fullDate === date && d.pairMember === 'member_2');
+      return {
+        date: new Date(date).toLocaleDateString('he-IL'),
+        fullDate: date,
+        value1: member1Data?.value || null,
+        value2: member2Data?.value || null,
+      };
+    });
+  })() : chartData;
 
   const getChange = (current: number, previous: number) => {
     const diff = current - previous;
@@ -56,10 +83,25 @@ export default function MeasurementsChart({ measurements, metric }: Measurements
     if (active && payload && payload.length) {
       return (
         <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3 shadow-xl">
-          <p className="text-zinc-400 text-sm mb-1">{label}</p>
-          <p className="text-white font-bold text-lg" style={{ color: getMetricColor(metric) }}>
-            {payload[0].value} {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
-          </p>
+          <p className="text-zinc-400 text-sm mb-2">{label}</p>
+          {isPairWithBothMembers && payload.length > 1 ? (
+            <div className="space-y-2">
+              {payload.map((entry: any, index: number) => {
+                if (entry.value === null || entry.value === undefined) return null;
+                const memberName = index === 0 ? (trainee?.pairName1 || 'בן זוג 1') : (trainee?.pairName2 || 'בן זוג 2');
+                const color = index === 0 ? '#06b6d4' : '#f59e0b';
+                return (
+                  <p key={index} className="text-white font-bold text-base" style={{ color }}>
+                    {memberName}: {entry.value} {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
+                  </p>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-white font-bold text-lg" style={{ color: getMetricColor(metric) }}>
+              {payload[0].value} {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
+            </p>
+          )}
         </div>
       );
     }
@@ -137,7 +179,7 @@ export default function MeasurementsChart({ measurements, metric }: Measurements
       {viewMode === 'chart' && (
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <LineChart data={combinedChartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
               <XAxis
                 dataKey="date"
@@ -152,15 +194,40 @@ export default function MeasurementsChart({ measurements, metric }: Measurements
                 axisLine={false}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke={getMetricColor(metric)}
-                strokeWidth={3}
-                dot={{ fill: getMetricColor(metric), strokeWidth: 2, r: 5, stroke: '#18181b' }}
-                activeDot={{ r: 7, stroke: getMetricColor(metric), strokeWidth: 2, fill: '#18181b' }}
-                name={getMetricLabel(metric)}
-              />
+              {isPairWithBothMembers ? (
+                <>
+                  <Line
+                    type="monotone"
+                    dataKey="value1"
+                    stroke="#06b6d4"
+                    strokeWidth={3}
+                    dot={{ fill: '#06b6d4', strokeWidth: 2, r: 5, stroke: '#18181b' }}
+                    activeDot={{ r: 7, stroke: '#06b6d4', strokeWidth: 2, fill: '#18181b' }}
+                    name={trainee?.pairName1 || 'בן זוג 1'}
+                    connectNulls={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="value2"
+                    stroke="#f59e0b"
+                    strokeWidth={3}
+                    dot={{ fill: '#f59e0b', strokeWidth: 2, r: 5, stroke: '#18181b' }}
+                    activeDot={{ r: 7, stroke: '#f59e0b', strokeWidth: 2, fill: '#18181b' }}
+                    name={trainee?.pairName2 || 'בן זוג 2'}
+                    connectNulls={false}
+                  />
+                </>
+              ) : (
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke={getMetricColor(metric)}
+                  strokeWidth={3}
+                  dot={{ fill: getMetricColor(metric), strokeWidth: 2, r: 5, stroke: '#18181b' }}
+                  activeDot={{ r: 7, stroke: getMetricColor(metric), strokeWidth: 2, fill: '#18181b' }}
+                  name={getMetricLabel(metric)}
+                />
+              )}
             </LineChart>
           </ResponsiveContainer>
         </div>

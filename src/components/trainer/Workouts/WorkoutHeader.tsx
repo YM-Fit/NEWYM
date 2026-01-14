@@ -6,6 +6,8 @@ interface WorkoutHeaderProps {
   trainee: {
     full_name: string;
     is_pair?: boolean;
+    pairName1?: string;
+    pairName2?: string;
     pair_name_1?: string;
     pair_name_2?: string;
   };
@@ -86,7 +88,7 @@ export const WorkoutHeader = memo(({
                     ? 'text-cyan-400 bg-cyan-500/15 border border-cyan-500/30'
                     : 'text-amber-400 bg-amber-500/15 border border-amber-500/30'
                 }`}>
-                  {selectedMember === 'member_1' ? trainee.pair_name_1 : trainee.pair_name_2}
+                  {selectedMember === 'member_1' ? trainee.pairName1 : trainee.pairName2}
                 </p>
               )}
               {exercisesCount > 0 && (

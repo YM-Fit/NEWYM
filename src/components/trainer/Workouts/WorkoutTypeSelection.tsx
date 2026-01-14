@@ -45,7 +45,7 @@ export default function WorkoutTypeSelection({
               <Users className="h-10 w-10 text-emerald-400" />
             </div>
             <h3 className="text-xl font-bold text-white mb-2 text-center group-hover:text-emerald-400 transition-all">אימון זוגי</h3>
-            <p className="text-zinc-500 text-center">{trainee.pair_name_1} ו{trainee.pair_name_2} ביחד</p>
+            <p className="text-zinc-500 text-center">{trainee.pairName1 || ''} (1) ו{trainee.pairName2 || ''} (2) ביחד</p>
             <div className="mt-4 py-2 px-4 bg-emerald-500/15 border border-emerald-500/30 rounded-xl text-center">
               <span className="text-sm font-medium text-emerald-400">לחץ להתחלה</span>
             </div>
@@ -69,7 +69,7 @@ export default function WorkoutTypeSelection({
                   <div className="w-8 h-8 bg-cyan-500/20 group-hover:bg-cyan-500/30 rounded-lg flex items-center justify-center transition-all">
                     <span className="text-cyan-400 font-bold text-sm">1</span>
                   </div>
-                  <span className="text-lg group-hover:text-cyan-400 transition-all">{trainee.pair_name_1}</span>
+                  <span className="text-lg group-hover:text-cyan-400 transition-all">{trainee.pairName1 || ''} (1)</span>
                 </div>
               </button>
               <button
@@ -80,7 +80,7 @@ export default function WorkoutTypeSelection({
                   <div className="w-8 h-8 bg-amber-500/20 group-hover:bg-amber-500/30 rounded-lg flex items-center justify-center transition-all">
                     <span className="text-amber-400 font-bold text-sm">2</span>
                   </div>
-                  <span className="text-lg group-hover:text-amber-400 transition-all">{trainee.pair_name_2}</span>
+                  <span className="text-lg group-hover:text-amber-400 transition-all">{trainee.pairName2 || ''} (2)</span>
                 </div>
               </button>
             </div>

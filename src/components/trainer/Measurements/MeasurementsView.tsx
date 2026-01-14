@@ -24,7 +24,8 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
     }
 
     if (selectedMember === 'all') {
-      return measurements.filter(m => m.pairMember === null);
+      // הצג את כל המדידות של שני בני הזוג ביחד
+      return measurements.filter(m => m.pairMember === 'member_1' || m.pairMember === 'member_2');
     }
 
     return measurements.filter(m => m.pairMember === selectedMember);
@@ -395,7 +396,11 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
           </div>
         </div>
         <div className="p-5">
-          <MeasurementsChart measurements={filteredMeasurements} metric={selectedMetric} />
+          <MeasurementsChart 
+            measurements={filteredMeasurements} 
+            metric={selectedMetric}
+            trainee={trainee}
+          />
         </div>
       </div>
 

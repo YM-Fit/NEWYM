@@ -4,6 +4,7 @@ import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { logger } from '../../../utils/logger';
 import ExerciseSelector from './ExerciseSelector';
+import QuickNumericPad from './QuickNumericPad';
 
 interface Exercise {
   id: string;
@@ -40,6 +41,14 @@ export default function PairWorkoutSession({
   const [member2Exercises, setMember2Exercises] = useState<WorkoutExercise[]>([]);
   const [showExerciseSelector, setShowExerciseSelector] = useState<'member_1' | 'member_2' | null>(null);
   const [saving, setSaving] = useState(false);
+  const [numericPad, setNumericPad] = useState<{
+    exerciseIndex: number;
+    setIndex: number;
+    field: 'weight' | 'reps' | 'rpe';
+    member: 'member_1' | 'member_2';
+    value: number;
+    label: string;
+  } | null>(null);
 
   const addExercise = (exercise: Exercise, member: 'member_1' | 'member_2') => {
     const newExercise: WorkoutExercise = {
@@ -137,6 +146,34 @@ export default function PairWorkoutSession({
       setMember2Exercises([...targetExercises, exerciseToCopy]);
     } else {
       setMember1Exercises([...targetExercises, exerciseToCopy]);
+    }
+  };
+
+  const openNumericPad = (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe', member: 'member_1' | 'member_2') => {
+    const exercises = member === 'member_1' ? member1Exercises : member2Exercises;
+    const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
+    const label = field === 'weight' ? 'משקל (ק״ג)' : field === 'reps' ? 'חזרות' : 'RPE (1-10)';
+    setNumericPad({ exerciseIndex, setIndex, field, member, value: currentValue as number, label });
+  };
+
+  const handleNumericPadConfirm = (value: number) => {
+    if (numericPad) {
+      updateSet(numericPad.exerciseIndex, numericPad.setIndex, numericPad.field, value, numericPad.member);
+      
+      // מילוי אוטומטי לבן הזוג השני
+      const otherMember = numericPad.member === 'member_1' ? 'member_2' : 'member_1';
+      const otherExercises = otherMember === 'member_1' ? member1Exercises : member2Exercises;
+      
+      // מצא תרגיל תואם (אותו שם תרגיל) אצל בן הזוג השני
+      const currentExercises = numericPad.member === 'member_1' ? member1Exercises : member2Exercises;
+      const currentExercise = currentExercises[numericPad.exerciseIndex];
+      const matchingExerciseIndex = otherExercises.findIndex(ex => ex.exercise.id === currentExercise.exercise.id);
+      
+      if (matchingExerciseIndex !== -1 && otherExercises[matchingExerciseIndex].sets.length > numericPad.setIndex) {
+        updateSet(matchingExerciseIndex, numericPad.setIndex, numericPad.field, value, otherMember);
+      }
+      
+      setNumericPad(null);
     }
   };
 
@@ -279,37 +316,35 @@ export default function PairWorkoutSession({
 
                     <div className="flex-1 flex items-center gap-2">
                       <div className="flex-1">
-                        <input
-                          type="number"
-                          placeholder="משקל"
-                          value={set.weight || ''}
-                          onChange={(e) => updateSet(exIdx, setIdx, 'weight', Number(e.target.value), member)}
-                          className="w-full p-3 border border-emerald-500/30 rounded-xl text-center font-bold text-emerald-400 bg-emerald-500/10 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                        />
+                        <button
+                          type="button"
+                          onClick={() => openNumericPad(exIdx, setIdx, 'weight', member)}
+                          className="w-full p-3 border border-emerald-500/30 rounded-xl text-center font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all cursor-pointer"
+                        >
+                          {set.weight || 'משקל'}
+                        </button>
                         <span className="text-xs text-zinc-500 block text-center mt-1">ק״ג</span>
                       </div>
 
                       <div className="flex-1">
-                        <input
-                          type="number"
-                          placeholder="חזרות"
-                          value={set.reps || ''}
-                          onChange={(e) => updateSet(exIdx, setIdx, 'reps', Number(e.target.value), member)}
-                          className="w-full p-3 border border-cyan-500/30 rounded-xl text-center font-bold text-cyan-400 bg-cyan-500/10 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
-                        />
+                        <button
+                          type="button"
+                          onClick={() => openNumericPad(exIdx, setIdx, 'reps', member)}
+                          className="w-full p-3 border border-cyan-500/30 rounded-xl text-center font-bold text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all cursor-pointer"
+                        >
+                          {set.reps || 'חזרות'}
+                        </button>
                         <span className="text-xs text-zinc-500 block text-center mt-1">חזרות</span>
                       </div>
 
                       <div className="flex-1">
-                        <input
-                          type="number"
-                          placeholder="RPE"
-                          min="1"
-                          max="10"
-                          value={set.rpe || ''}
-                          onChange={(e) => updateSet(exIdx, setIdx, 'rpe', Number(e.target.value), member)}
-                          className="w-full p-3 border border-amber-500/30 rounded-xl text-center font-bold text-amber-400 bg-amber-500/10 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-                        />
+                        <button
+                          type="button"
+                          onClick={() => openNumericPad(exIdx, setIdx, 'rpe', member)}
+                          className="w-full p-3 border border-amber-500/30 rounded-xl text-center font-bold text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all cursor-pointer"
+                        >
+                          {set.rpe || 'RPE'}
+                        </button>
                         <span className="text-xs text-zinc-500 block text-center mt-1">RPE</span>
                       </div>
                     </div>
@@ -375,7 +410,7 @@ export default function PairWorkoutSession({
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-white">אימון זוגי</h1>
-                  <p className="text-sm text-zinc-400">{trainee.full_name}</p>
+                  <p className="text-sm text-zinc-400">{trainee.pairName1 || ''} (1) ו{trainee.pairName2 || ''} (2)</p>
                 </div>
               </div>
             </div>
@@ -410,10 +445,23 @@ export default function PairWorkoutSession({
 
       <div className="max-w-7xl mx-auto p-4 md:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {renderExerciseColumn(member1Exercises, 'member_1', trainee.pair_name_1, true)}
-          {renderExerciseColumn(member2Exercises, 'member_2', trainee.pair_name_2, false)}
+          {renderExerciseColumn(member1Exercises, 'member_1', `${trainee.pairName1 || ''} (1)`, true)}
+          {renderExerciseColumn(member2Exercises, 'member_2', `${trainee.pairName2 || ''} (2)`, false)}
         </div>
       </div>
+
+      {numericPad && (
+        <QuickNumericPad
+          value={numericPad.value}
+          label={numericPad.label}
+          onConfirm={handleNumericPadConfirm}
+          onClose={() => setNumericPad(null)}
+          allowDecimal={numericPad.field === 'weight'}
+          minValue={numericPad.field === 'rpe' ? 1 : undefined}
+          maxValue={numericPad.field === 'rpe' ? 10 : undefined}
+          compact={true}
+        />
+      )}
     </div>
   );
 }
