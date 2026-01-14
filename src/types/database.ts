@@ -353,6 +353,47 @@ export type Database = {
           updated_at?: string;
         };
       };
+      meal_plan_food_items: {
+        Row: {
+          id: string;
+          meal_id: string;
+          food_name: string;
+          quantity: number;
+          unit: string;
+          calories: number | null;
+          protein: number | null;
+          carbs: number | null;
+          fat: number | null;
+          order_index: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          meal_id: string;
+          food_name: string;
+          quantity?: number;
+          unit?: string;
+          calories?: number | null;
+          protein?: number | null;
+          carbs?: number | null;
+          fat?: number | null;
+          order_index?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          meal_id?: string;
+          food_name?: string;
+          quantity?: number;
+          unit?: string;
+          calories?: number | null;
+          protein?: number | null;
+          carbs?: number | null;
+          fat?: number | null;
+          order_index?: number;
+          created_at?: string;
+        };
+      };
     };
   };
 };

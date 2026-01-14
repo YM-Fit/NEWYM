@@ -1,15 +1,5 @@
-/*
-  
-  1. New table: `meal_plan_food_items`
-    - Stores individual food items within each meal
-    - Each item has: name, quantity, unit, nutritional values
-    - Linked to `meal_plan_meals` via `meal_id`
-  
-  2. Security
-    - RLS enabled
-    - Trainers can manage food items for their trainees' meal plans
-    - Trainees can view their own food items
-*/
+-- Migration: Add Meal Plan Food Items Table
+-- This migration creates the meal_plan_food_items table
 
 -- Create meal_plan_food_items table
 CREATE TABLE IF NOT EXISTS meal_plan_food_items (

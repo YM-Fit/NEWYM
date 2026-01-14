@@ -38,7 +38,6 @@ interface TraineeProfileProps {
   onMarkSelfWeightsSeen?: () => void;
   onViewMentalTools?: () => void;
   onViewCardio?: () => void;
-  onViewWeeklyTasks?: () => void;
 }
 
 type TabType = 'overview' | 'workouts' | 'measurements' | 'plans' | 'tools';
@@ -62,8 +61,7 @@ export default function TraineeProfile({
   onViewTraineeAccess,
   onMarkSelfWeightsSeen,
   onViewMentalTools,
-  onViewCardio,
-  onViewWeeklyTasks
+  onViewCardio
 }: TraineeProfileProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [showTDEE, setShowTDEE] = useState(false);
@@ -412,18 +410,6 @@ export default function TraineeProfile({
                 <Activity className="h-5 w-5" />
               </div>
               <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">אירובי</span>
-            </button>
-          )}
-
-          {onViewWeeklyTasks && (
-            <button
-              onClick={onViewWeeklyTasks}
-              className="action-btn group"
-            >
-              <div className="p-3 rounded-xl bg-purple-500/15 text-purple-400 mb-2 group-hover:bg-purple-500/25 transition-all">
-                <ClipboardList className="h-5 w-5" />
-              </div>
-              <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">משימות שבועיות</span>
             </button>
           )}
 
@@ -883,18 +869,6 @@ export default function TraineeProfile({
                 </div>
                 <h4 className="font-semibold text-white mb-1">יומן אכילה</h4>
                 <p className="text-sm text-zinc-400">עקוב אחר תזונה</p>
-              </button>
-            )}
-            {onViewWeeklyTasks && (
-              <button
-                onClick={onViewWeeklyTasks}
-                className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-purple-500/50 transition-all text-right"
-              >
-                <div className="p-3 rounded-xl bg-purple-500/15 text-purple-400 mb-3 w-fit">
-                  <ClipboardList className="h-5 w-5" />
-                </div>
-                <h4 className="font-semibold text-white mb-1">משימות שבועיות</h4>
-                <p className="text-sm text-zinc-400">ניהול משימות</p>
               </button>
             )}
             {onViewTraineeAccess && (

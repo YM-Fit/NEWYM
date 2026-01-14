@@ -32,7 +32,6 @@ import ToolsView from './Tools/ToolsView';
 import TraineeFoodDiaryView from './Trainees/TraineeFoodDiaryView';
 import CardioManager from './Cardio/CardioManager';
 import ReportsView from './Reports/ReportsView';
-import WeeklyTasksManager from './Tasks/WeeklyTasksManager';
 
 interface Trainee {
   id: string;
@@ -904,7 +903,6 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             onMarkSelfWeightsSeen={markSelfWeightsSeen}
             onViewMentalTools={() => setActiveView('mental-tools')}
             onViewCardio={() => setActiveView('cardio-manager')}
-            onViewWeeklyTasks={() => setActiveView('weekly-tasks')}
           />
         ) : null;
 
@@ -1111,15 +1109,6 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
 
       case 'reports':
         return <ReportsView />;
-
-      case 'weekly-tasks':
-        return selectedTrainee && user ? (
-          <WeeklyTasksManager
-            traineeId={selectedTrainee.id}
-            traineeName={selectedTrainee.full_name}
-            onBack={() => setActiveView('trainee-profile')}
-          />
-        ) : null;
 
       default:
         return (
