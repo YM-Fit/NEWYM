@@ -122,14 +122,20 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
       const activeGoals = goals.filter(g => g.status === 'active');
       setActiveGoalsCount(activeGoals.length);
 
-      // Load habits streak
-      const habits = await habitsApi.getTraineeHabits(traineeId);
-      let maxStreak = 0;
-      for (const habit of habits) {
-        const streak = await habitsApi.getHabitStreak(habit.id);
-        maxStreak = Math.max(maxStreak, streak);
+      // Load habits streak (if table exists)
+      try {
+        const habits = await habitsApi.getTraineeHabits(traineeId);
+        let maxStreak = 0;
+        for (const habit of habits) {
+          const streak = await habitsApi.getHabitStreak(habit.id);
+          maxStreak = Math.max(maxStreak, streak);
+        }
+        setHabitsStreak(maxStreak);
+      } catch (error) {
+        // Table might not exist yet, set streak to 0
+        logger.warn('Habits table not available:', error, 'TraineeDashboard');
+        setHabitsStreak(0);
       }
-      setHabitsStreak(maxStreak);
 
       // Load recommendations
       const recs = await smartRecommendations.getTraineeRecommendations(traineeId);

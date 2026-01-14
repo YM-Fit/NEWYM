@@ -402,10 +402,24 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
         targetWeight: ex.sets[0]?.weight || undefined,
       }));
 
+      // Get trainer's auth.uid() from trainers table
+      const { data: trainerData, error: trainerError } = await supabase
+        .from('trainers')
+        .select('id')
+        .eq('id', trainerId)
+        .single();
+
+      if (trainerError || !trainerData) {
+        logger.error('Error fetching trainer:', trainerError, 'SelfWorkoutSession');
+        toast.error('לא נמצא מאמן');
+        setSavingTemplate(false);
+        return;
+      }
+
       const { error } = await supabase
         .from('workout_templates')
         .insert({
-          trainer_id: trainerId,
+          trainer_id: trainerData.id as string, // This should be auth.uid() from trainers table
           trainee_id: traineeId,
           trainee_name: traineeName,
           name: templateName.trim(),
@@ -687,7 +701,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
                       type="button"
                       onClick={() => setInstructionsExercise({
                         name: workoutExercise.exercise.name,
-                        instructions: workoutExercise.exercise.instructions,
+                        instructions: workoutExercise.exercise.instructions || null,
                       })}
                       className="p-1.5 md:p-2 hover:bg-cyan-500/10 text-cyan-400 rounded-lg transition-all"
                       aria-label="איך לבצע"
