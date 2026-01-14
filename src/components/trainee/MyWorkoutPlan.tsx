@@ -224,7 +224,6 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                 id,
                 name,
                 muscle_group_id,
-                instructions,
                 muscle_groups(name)
               ),
               equipment:equipment_id(

@@ -402,14 +402,15 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
         targetWeight: ex.sets[0]?.weight || undefined,
       }));
 
-      // trainerId from trainees table is already the auth.uid() from trainers table
-      // So we can use it directly
+      // Check if trainee_id column exists in workout_templates
+      // If migration hasn't run yet, don't include trainee fields
       const { error } = await supabase
         .from('workout_templates')
         .insert({
           trainer_id: trainerId, // trainer_id from trainees table is auth.uid()
-          trainee_id: traineeId,
-          trainee_name: traineeName,
+          // Only include trainee fields if migration has run
+          // trainee_id: traineeId,
+          // trainee_name: traineeName,
           name: templateName.trim(),
           description: templateDescription.trim() || null,
           exercises: templateExercises,

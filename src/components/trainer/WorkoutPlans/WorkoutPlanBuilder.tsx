@@ -526,8 +526,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             exercise:exercise_id(
               id,
               name,
-              muscle_group_id,
-              instructions
+              muscle_group_id
             ),
             equipment:equipment_id(
               id,
