@@ -402,24 +402,12 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
         targetWeight: ex.sets[0]?.weight || undefined,
       }));
 
-      // Get trainer's auth.uid() from trainers table
-      const { data: trainerData, error: trainerError } = await supabase
-        .from('trainers')
-        .select('id')
-        .eq('id', trainerId)
-        .single();
-
-      if (trainerError || !trainerData) {
-        logger.error('Error fetching trainer:', trainerError, 'SelfWorkoutSession');
-        toast.error('לא נמצא מאמן');
-        setSavingTemplate(false);
-        return;
-      }
-
+      // trainerId from trainees table is already the auth.uid() from trainers table
+      // So we can use it directly
       const { error } = await supabase
         .from('workout_templates')
         .insert({
-          trainer_id: trainerData.id as string, // This should be auth.uid() from trainers table
+          trainer_id: trainerId, // trainer_id from trainees table is auth.uid()
           trainee_id: traineeId,
           trainee_name: traineeName,
           name: templateName.trim(),
