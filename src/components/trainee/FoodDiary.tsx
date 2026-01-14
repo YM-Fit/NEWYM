@@ -59,7 +59,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
   const [waterLogs, setWaterLogs] = useState<Map<string, DailyWaterLog>>(new Map());
   const [diaryEntries, setDiaryEntries] = useState<Map<string, FoodDiaryEntry>>(new Map());
   const [showModal, setShowModal] = useState(false);
-  const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
+  const [editingMeal, setEditingMeal] = useState<TraineeMeal | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [expandedMeals, setExpandedMeals] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -104,7 +104,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
     const { meals: mealsData, waterLogs: waterData, diaryEntries: diaryData } =
       await getWeekDiaryData(traineeId, startDate, endDate);
 
-    const mealsMap = new Map<string, Meal[]>();
+    const mealsMap = new Map<string, TraineeMeal[]>();
     mealsData?.forEach((meal) => {
       const dateKey = meal.meal_date;
       if (!mealsMap.has(dateKey)) {
@@ -113,7 +113,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       mealsMap.get(dateKey)!.push(meal);
     });
 
-    const waterMap = new Map<string, DailyLog>();
+    const waterMap = new Map<string, DailyWaterLog>();
     waterData?.forEach((log) => {
       waterMap.set(log.log_date, log);
     });
@@ -188,15 +188,15 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       meal_time: planMeal.meal_time || '08:00',
       meal_type: mealTypeMap[planMeal.meal_name] || 'breakfast',
       description: planMeal.description || '',
-      calories: planMeal.calories?.toString() || '',
-      protein: planMeal.protein?.toString() || '',
-      carbs: planMeal.carbs?.toString() || '',
-      fat: planMeal.fat?.toString() || '',
+      calories: planMeal.total_calories?.toString() || '',
+      protein: planMeal.total_protein?.toString() || '',
+      carbs: planMeal.total_carbs?.toString() || '',
+      fat: planMeal.total_fat?.toString() || '',
     });
     setShowMealPlanCopy(false);
   };
 
-  const copyMealFromPreviousDay = (meal: Meal) => {
+  const copyMealFromPreviousDay = (meal: TraineeMeal) => {
     setMealForm({
       meal_time: meal.meal_time || '08:00',
       meal_type: meal.meal_type,
@@ -208,7 +208,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
     });
   };
 
-  const openEditMeal = (meal: Meal) => {
+  const openEditMeal = (meal: TraineeMeal) => {
     setSelectedDate(meal.meal_date);
     setEditingMeal(meal);
     setMealForm({
@@ -679,6 +679,18 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                                       {meal.protein}ג'
                                     </span>
                                   )}
+                                  {meal.carbs && (
+                                    <span className="text-xs text-amber-500 flex items-center gap-1 bg-amber-500/15 px-2 py-0.5 rounded-full border border-amber-500/30">
+                                      <Wheat className="w-3 h-3" />
+                                      {meal.carbs}ג'
+                                    </span>
+                                  )}
+                                  {meal.fat && (
+                                    <span className="text-xs text-blue-500 flex items-center gap-1 bg-blue-500/15 px-2 py-0.5 rounded-full border border-blue-500/30">
+                                      <Droplet className="w-3 h-3" />
+                                      {meal.fat}ג'
+                                    </span>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -802,9 +814,9 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                         <div className="text-xs text-[var(--color-text-muted)] line-clamp-1">
                           {planMeal.description}
                         </div>
-                        {planMeal.calories && (
+                        {planMeal.total_calories && (
                           <div className="text-xs text-amber-500 mt-1">
-                            {planMeal.calories} קלוריות
+                            {planMeal.total_calories} קלוריות
                           </div>
                         )}
                       </button>
@@ -997,16 +1009,26 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                   <div className="text-xs text-[var(--color-text-secondary)] mb-2">
                     {planMeal.description}
                   </div>
-                  {(planMeal.calories || planMeal.protein) && (
+                  {(planMeal.total_calories || planMeal.total_protein || planMeal.total_carbs || planMeal.total_fat) && (
                     <div className="flex gap-2 flex-wrap">
-                      {planMeal.calories && (
+                      {planMeal.total_calories && (
                         <span className="text-xs text-amber-500 bg-amber-500/15 px-2 py-1 rounded-lg">
-                          {planMeal.calories} קל'
+                          {planMeal.total_calories} קל'
                         </span>
                       )}
-                      {planMeal.protein && (
+                      {planMeal.total_protein && (
                         <span className="text-xs text-red-500 bg-red-500/15 px-2 py-1 rounded-lg">
-                          {planMeal.protein}ג' חלבון
+                          {planMeal.total_protein}ג' חלבון
+                        </span>
+                      )}
+                      {planMeal.total_carbs && (
+                        <span className="text-xs text-amber-500 bg-amber-500/15 px-2 py-1 rounded-lg">
+                          {planMeal.total_carbs}ג' פחמימות
+                        </span>
+                      )}
+                      {planMeal.total_fat && (
+                        <span className="text-xs text-blue-500 bg-blue-500/15 px-2 py-1 rounded-lg">
+                          {planMeal.total_fat}ג' שומן
                         </span>
                       )}
                     </div>

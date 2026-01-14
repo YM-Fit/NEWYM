@@ -146,47 +146,116 @@ export default function TraineeProfile({
           </div>
 
           {/* Info Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all">
-              <div className="p-2.5 rounded-xl bg-cyan-500/15">
-                <User className="h-5 w-5 text-cyan-400" />
+          {!trainee.is_pair ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all">
+                <div className="p-2.5 rounded-xl bg-cyan-500/15">
+                  <User className="h-5 w-5 text-cyan-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500">גיל</p>
+                  <p className="font-semibold text-white">{trainee.age} שנים</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-zinc-500">גיל</p>
-                <p className="font-semibold text-white">{trainee.age} שנים</p>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all">
-              <div className="p-2.5 rounded-xl bg-emerald-500/15">
-                <Phone className="h-5 w-5 text-emerald-400" />
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all">
+                <div className="p-2.5 rounded-xl bg-emerald-500/15">
+                  <Phone className="h-5 w-5 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500">טלפון</p>
+                  <p className="font-semibold text-white" dir="ltr">{trainee.phone}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-zinc-500">טלפון</p>
-                <p className="font-semibold text-white" dir="ltr">{trainee.phone}</p>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all">
-              <div className="p-2.5 rounded-xl bg-amber-500/15">
-                <Mail className="h-5 w-5 text-amber-400" />
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all">
+                <div className="p-2.5 rounded-xl bg-amber-500/15">
+                  <Mail className="h-5 w-5 text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500">אימייל</p>
+                  <p className="font-semibold text-white text-sm truncate">{trainee.email || '-'}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-zinc-500">אימייל</p>
-                <p className="font-semibold text-white text-sm truncate">{trainee.email || '-'}</p>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all">
-              <div className="p-2.5 rounded-xl bg-teal-500/15">
-                <Calendar className="h-5 w-5 text-teal-400" />
-              </div>
-              <div>
-                <p className="text-xs text-zinc-500">התחיל</p>
-                <p className="font-semibold text-white">{new Date(trainee.startDate).toLocaleDateString('he-IL')}</p>
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all">
+                <div className="p-2.5 rounded-xl bg-teal-500/15">
+                  <Calendar className="h-5 w-5 text-teal-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500">התחיל</p>
+                  <p className="font-semibold text-white">{new Date(trainee.startDate).toLocaleDateString('he-IL')}</p>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="premium-card-static p-5 border-cyan-500/30">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2.5 rounded-xl bg-cyan-500/15">
+                      <User className="h-5 w-5 text-cyan-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-cyan-400">{trainee.pairName1}</h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-xs text-zinc-500">טלפון</p>
+                      <p className="font-semibold text-white text-sm" dir="ltr">{trainee.pairPhone1 || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-500">אימייל</p>
+                      <p className="font-semibold text-white text-sm truncate">{trainee.pairEmail1 || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-500">גובה</p>
+                      <p className="font-semibold text-white">{trainee.pairHeight1 || '-'} ס״מ</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-500">מין</p>
+                      <p className="font-semibold text-white">{trainee.pairGender1 === 'male' ? 'זכר' : 'נקבה'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="premium-card-static p-5 border-amber-500/30">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2.5 rounded-xl bg-amber-500/15">
+                      <User className="h-5 w-5 text-amber-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-amber-400">{trainee.pairName2}</h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-xs text-zinc-500">טלפון</p>
+                      <p className="font-semibold text-white text-sm" dir="ltr">{trainee.pairPhone2 || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-500">אימייל</p>
+                      <p className="font-semibold text-white text-sm truncate">{trainee.pairEmail2 || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-500">גובה</p>
+                      <p className="font-semibold text-white">{trainee.pairHeight2 || '-'} ס״מ</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-500">מין</p>
+                      <p className="font-semibold text-white">{trainee.pairGender2 === 'male' ? 'זכר' : 'נקבה'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30">
+                <div className="p-2.5 rounded-xl bg-teal-500/15">
+                  <Calendar className="h-5 w-5 text-teal-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500">התחיל</p>
+                  <p className="font-semibold text-white">{new Date(trainee.startDate).toLocaleDateString('he-IL')}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Tabs */}
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">

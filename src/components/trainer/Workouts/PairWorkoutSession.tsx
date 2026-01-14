@@ -1,4 +1,4 @@
-import { ArrowRight, Check, X, Plus, Copy, Trash2, Users } from 'lucide-react';
+import { ArrowRight, Check, X, Plus, Copy, Trash2, Users, ArrowLeftRight } from 'lucide-react';
 import { useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -124,6 +124,22 @@ export default function PairWorkoutSession({
     }
   };
 
+  const copyExerciseToOtherMember = (exerciseIndex: number, fromMember: 'member_1' | 'member_2') => {
+    const sourceExercises = fromMember === 'member_1' ? member1Exercises : member2Exercises;
+    const targetExercises = fromMember === 'member_1' ? member2Exercises : member1Exercises;
+    
+    const exerciseToCopy = {
+      ...sourceExercises[exerciseIndex],
+      tempId: Date.now().toString() + Math.random(),
+    };
+
+    if (fromMember === 'member_1') {
+      setMember2Exercises([...targetExercises, exerciseToCopy]);
+    } else {
+      setMember1Exercises([...targetExercises, exerciseToCopy]);
+    }
+  };
+
   const handleSave = async () => {
     if (!user) return;
 
@@ -203,15 +219,27 @@ export default function PairWorkoutSession({
     }
   };
 
-  const renderExerciseColumn = (exercises: WorkoutExercise[], member: 'member_1' | 'member_2', name: string, isBlue: boolean) => (
+  const renderExerciseColumn = (exercises: WorkoutExercise[], member: 'member_1' | 'member_2', name: string, isBlue: boolean) => {
+    const totalVolume = exercises.reduce((sum, ex) => 
+      sum + ex.sets.reduce((setSum, set) => setSum + (set.weight * set.reps), 0), 0
+    );
+    
+    return (
     <div className={`bg-zinc-900 rounded-2xl border ${isBlue ? 'border-cyan-500/30' : 'border-emerald-500/30'} overflow-hidden`}>
       <div className={`${isBlue ? 'bg-cyan-500' : 'bg-emerald-500'} p-5`}>
         <h2 className="text-xl font-bold text-white text-center tracking-wide">
           {name}
         </h2>
-        <p className="text-center text-white/80 text-sm mt-1">
-          {exercises.length} {exercises.length === 1 ? 'תרגיל' : 'תרגילים'}
-        </p>
+        <div className="flex items-center justify-center gap-4 mt-2">
+          <p className="text-center text-white/80 text-sm">
+            {exercises.length} {exercises.length === 1 ? 'תרגיל' : 'תרגילים'}
+          </p>
+          {totalVolume > 0 && (
+            <p className="text-center text-white/90 text-sm font-semibold">
+              {totalVolume.toLocaleString()} ק״ג
+            </p>
+          )}
+        </div>
       </div>
       <div className="p-5 space-y-4">
         {exercises.length === 0 ? (
@@ -224,12 +252,22 @@ export default function PairWorkoutSession({
             <div key={exercise.tempId} className="bg-zinc-800/50 rounded-2xl p-5 border border-zinc-700/50">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-white text-lg">{exercise.exercise.name}</h3>
-                <button
-                  onClick={() => removeExercise(exIdx, member)}
-                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 p-2 rounded-xl transition-all"
-                >
-                  <Trash2 className="h-5 w-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => copyExerciseToOtherMember(exIdx, member)}
+                    className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 p-2 rounded-xl transition-all"
+                    title="העתק לבן הזוג השני"
+                  >
+                    <ArrowLeftRight className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => removeExercise(exIdx, member)}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10 p-2 rounded-xl transition-all"
+                    title="מחק תרגיל"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -316,7 +354,8 @@ export default function PairWorkoutSession({
         </button>
       </div>
     </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-base)] transition-colors duration-300">

@@ -841,6 +841,7 @@ export default function WorkoutSession({
         workoutType={workoutType}
         exercisesCount={exercises.length}
         saving={saving}
+        selectedMember={selectedMember}
         onBack={onBack}
         onSave={handleSave}
         onSaveTemplate={() => setShowSaveTemplateModal(true)}

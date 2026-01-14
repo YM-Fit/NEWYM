@@ -243,9 +243,16 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
   };
 
   const handleSubmit = async () => {
-    if (trainee.isPair && !selectedMember) {
-      alert('יש לבחור מי מהזוג מתשקל/ת');
-      return;
+    // ולידציה למתאמנים זוגיים
+    if (trainee.isPair) {
+      if (!selectedMember || selectedMember === 'both') {
+        alert('יש לבחור בן זוג ספציפי למדידה (member_1 או member_2)');
+        return;
+      }
+      if (selectedMember !== 'member_1' && selectedMember !== 'member_2') {
+        alert('יש לבחור בן זוג תקין למדידה');
+        return;
+      }
     }
 
     const height = trainee.isPair

@@ -5,6 +5,9 @@ import AutoSaveIndicator from '../../common/AutoSaveIndicator';
 interface WorkoutHeaderProps {
   trainee: {
     full_name: string;
+    is_pair?: boolean;
+    pair_name_1?: string;
+    pair_name_2?: string;
   };
   workoutId: string | null;
   totalVolume: number;
@@ -14,6 +17,7 @@ interface WorkoutHeaderProps {
   workoutType: 'personal' | 'pair';
   exercisesCount: number;
   saving: boolean;
+  selectedMember?: 'member_1' | 'member_2' | null;
   onBack: () => void;
   onSave: () => void;
   onSaveTemplate: () => void;
@@ -32,6 +36,7 @@ export const WorkoutHeader = memo(({
   workoutType,
   exercisesCount,
   saving,
+  selectedMember,
   onBack,
   onSave,
   onSaveTemplate,
@@ -75,6 +80,15 @@ export const WorkoutHeader = memo(({
                 {workoutId ? 'עריכת אימון' : 'אימון חדש'}
               </h1>
               <p className="text-sm lg:text-base text-zinc-500">{trainee.full_name}</p>
+              {trainee.is_pair && selectedMember && workoutType === 'personal' && (
+                <p className={`text-xs font-semibold mt-1 px-2 py-0.5 rounded-lg inline-block ${
+                  selectedMember === 'member_1' 
+                    ? 'text-cyan-400 bg-cyan-500/15 border border-cyan-500/30'
+                    : 'text-amber-400 bg-amber-500/15 border border-amber-500/30'
+                }`}>
+                  {selectedMember === 'member_1' ? trainee.pair_name_1 : trainee.pair_name_2}
+                </p>
+              )}
               {exercisesCount > 0 && (
                 <p className="text-sm font-semibold mt-1 text-emerald-400 bg-emerald-500/15 rounded-lg px-2 py-0.5 inline-block">
                   נפח כולל: {totalVolume.toLocaleString()} ק"ג

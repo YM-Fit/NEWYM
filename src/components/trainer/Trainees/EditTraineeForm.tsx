@@ -1,4 +1,4 @@
-import { ArrowRight, Save, Sparkles, User } from 'lucide-react';
+import { ArrowRight, Save, Sparkles, User, Users } from 'lucide-react';
 import { useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 
@@ -9,14 +9,30 @@ interface EditTraineeFormProps {
 }
 
 export default function EditTraineeForm({ trainee, onBack, onSave }: EditTraineeFormProps) {
+  const isPair = trainee.isPair || false;
+
   const [formData, setFormData] = useState({
-    full_name: trainee.name || '',
-    email: trainee.email || '',
-    phone: trainee.phone || '',
-    birth_date: trainee.birthDate || '',
-    gender: trainee.gender || 'male',
-    height: trainee.height || '',
-    notes: trainee.notes || ''
+    // Regular trainee fields
+    full_name: !isPair ? (trainee.name || '') : '',
+    email: !isPair ? (trainee.email || '') : '',
+    phone: !isPair ? (trainee.phone || '') : '',
+    birth_date: !isPair ? (trainee.birthDate || '') : '',
+    gender: !isPair ? (trainee.gender || 'male') : 'male',
+    height: !isPair ? (trainee.height || '') : '',
+    notes: trainee.notes || '',
+    // Pair trainee fields
+    pair_name_1: isPair ? (trainee.pairName1 || '') : '',
+    pair_name_2: isPair ? (trainee.pairName2 || '') : '',
+    pair_phone_1: isPair ? (trainee.pairPhone1 || '') : '',
+    pair_phone_2: isPair ? (trainee.pairPhone2 || '') : '',
+    pair_email_1: isPair ? (trainee.pairEmail1 || '') : '',
+    pair_email_2: isPair ? (trainee.pairEmail2 || '') : '',
+    pair_gender_1: isPair ? (trainee.pairGender1 || 'female') : 'female',
+    pair_gender_2: isPair ? (trainee.pairGender2 || 'female') : 'female',
+    pair_birth_date_1: isPair ? (trainee.pairBirthDate1 || '') : '',
+    pair_birth_date_2: isPair ? (trainee.pairBirthDate2 || '') : '',
+    pair_height_1: isPair ? (trainee.pairHeight1 || '') : '',
+    pair_height_2: isPair ? (trainee.pairHeight2 || '') : '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -25,11 +41,43 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.full_name.trim()) newErrors.full_name = 'שם מלא נדרש';
-    if (!formData.phone.trim()) newErrors.phone = 'מספר טלפון נדרש';
-    if (!formData.height || Number(formData.height) < 1) newErrors.height = 'גובה תקין נדרש';
-    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'כתובת אימייל לא תקינה';
+    if (isPair) {
+      if (!formData.pair_name_1.trim()) newErrors.pair_name_1 = 'שם ראשון נדרש';
+      if (!formData.pair_name_2.trim()) newErrors.pair_name_2 = 'שם שני נדרש';
+      if (!formData.pair_phone_1.trim()) newErrors.pair_phone_1 = 'טלפון ראשון נדרש';
+      if (!formData.pair_phone_2.trim()) newErrors.pair_phone_2 = 'טלפון שני נדרש';
+      if (!formData.pair_height_1 || Number(formData.pair_height_1) < 1 || Number(formData.pair_height_1) > 250) {
+        newErrors.pair_height_1 = 'גובה תקין נדרש (1-250)';
+      }
+      if (!formData.pair_height_2 || Number(formData.pair_height_2) < 1 || Number(formData.pair_height_2) > 250) {
+        newErrors.pair_height_2 = 'גובה תקין נדרש (1-250)';
+      }
+      if (formData.pair_email_1 && !/\S+@\S+\.\S+/.test(formData.pair_email_1)) {
+        newErrors.pair_email_1 = 'כתובת אימייל לא תקינה';
+      }
+      if (formData.pair_email_2 && !/\S+@\S+\.\S+/.test(formData.pair_email_2)) {
+        newErrors.pair_email_2 = 'כתובת אימייל לא תקינה';
+      }
+      // Validate birth dates are in the past
+      if (formData.pair_birth_date_1 && new Date(formData.pair_birth_date_1) > new Date()) {
+        newErrors.pair_birth_date_1 = 'תאריך לידה חייב להיות בעבר';
+      }
+      if (formData.pair_birth_date_2 && new Date(formData.pair_birth_date_2) > new Date()) {
+        newErrors.pair_birth_date_2 = 'תאריך לידה חייב להיות בעבר';
+      }
+    } else {
+      if (!formData.full_name.trim()) newErrors.full_name = 'שם מלא נדרש';
+      if (!formData.phone.trim()) newErrors.phone = 'מספר טלפון נדרש';
+      if (!formData.height || Number(formData.height) < 1 || Number(formData.height) > 250) {
+        newErrors.height = 'גובה תקין נדרש (1-250)';
+      }
+      if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = 'כתובת אימייל לא תקינה';
+      }
+      // Validate birth date is in the past
+      if (formData.birth_date && new Date(formData.birth_date) > new Date()) {
+        newErrors.birth_date = 'תאריך לידה חייב להיות בעבר';
+      }
     }
 
     setErrors(newErrors);
@@ -43,25 +91,71 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
 
     setSaving(true);
 
-    const { error } = await supabase
-      .from('trainees')
-      .update({
-        full_name: formData.full_name.trim(),
-        email: formData.email.trim() || null,
-        phone: formData.phone.trim(),
-        gender: formData.gender,
-        birth_date: formData.birth_date || null,
-        height: formData.height ? Number(formData.height) : null,
-        notes: formData.notes.trim(),
-      })
-      .eq('id', trainee.id);
+    try {
+      if (isPair) {
+        const { error } = await supabase
+          .from('trainees')
+          .update({
+            full_name: `${formData.pair_name_1.trim()} ו${formData.pair_name_2.trim()}`,
+            email: null,
+            phone: null,
+            gender: null,
+            birth_date: null,
+            height: null,
+            notes: formData.notes.trim(),
+            is_pair: true,
+            pair_name_1: formData.pair_name_1.trim(),
+            pair_name_2: formData.pair_name_2.trim(),
+            pair_phone_1: formData.pair_phone_1.trim(),
+            pair_phone_2: formData.pair_phone_2.trim(),
+            pair_email_1: formData.pair_email_1.trim() || null,
+            pair_email_2: formData.pair_email_2.trim() || null,
+            pair_gender_1: formData.pair_gender_1,
+            pair_gender_2: formData.pair_gender_2,
+            pair_birth_date_1: formData.pair_birth_date_1 || null,
+            pair_birth_date_2: formData.pair_birth_date_2 || null,
+            pair_height_1: formData.pair_height_1 ? Number(formData.pair_height_1) : null,
+            pair_height_2: formData.pair_height_2 ? Number(formData.pair_height_2) : null,
+          })
+          .eq('id', trainee.id);
 
-    setSaving(false);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('trainees')
+          .update({
+            full_name: formData.full_name.trim(),
+            email: formData.email.trim() || null,
+            phone: formData.phone.trim(),
+            gender: formData.gender,
+            birth_date: formData.birth_date || null,
+            height: formData.height ? Number(formData.height) : null,
+            notes: formData.notes.trim(),
+            is_pair: false,
+            // Clear pair fields if converting from pair to regular
+            pair_name_1: null,
+            pair_name_2: null,
+            pair_phone_1: null,
+            pair_phone_2: null,
+            pair_email_1: null,
+            pair_email_2: null,
+            pair_gender_1: null,
+            pair_gender_2: null,
+            pair_birth_date_1: null,
+            pair_birth_date_2: null,
+            pair_height_1: null,
+            pair_height_2: null,
+          })
+          .eq('id', trainee.id);
 
-    if (!error) {
+        if (error) throw error;
+      }
+
       onSave();
-    } else {
-      alert('שגיאה בשמירת הפרטים');
+    } catch (error: any) {
+      alert('שגיאה בשמירת הפרטים: ' + (error.message || 'שגיאה לא ידועה'));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -96,114 +190,323 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="premium-card-static p-6 space-y-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 rounded-xl bg-emerald-500/15">
-            <User className="h-5 w-5 text-emerald-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-white">פרטים אישיים</h3>
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {!isPair ? (
+          <div className="premium-card-static p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 rounded-xl bg-emerald-500/15">
+                <User className="h-5 w-5 text-emerald-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">פרטים אישיים</h3>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className={labelClass}>שם מלא *</label>
-            <input
-              type="text"
-              value={formData.full_name}
-              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-              className={inputClass(!!errors.full_name)}
-              placeholder="שם מלא"
-            />
-            {errors.full_name && <p className="text-red-400 text-sm mt-1">{errors.full_name}</p>}
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className={labelClass}>שם מלא *</label>
+                <input
+                  type="text"
+                  value={formData.full_name}
+                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                  className={inputClass(!!errors.full_name)}
+                  placeholder="שם מלא"
+                />
+                {errors.full_name && <p className="text-red-400 text-sm mt-1">{errors.full_name}</p>}
+              </div>
 
-          <div>
-            <label className={labelClass}>טלפון *</label>
-            <input
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className={inputClass(!!errors.phone)}
-              placeholder="050-1234567"
-            />
-            {errors.phone && <p className="text-red-400 text-sm mt-1">{errors.phone}</p>}
-          </div>
+              <div>
+                <label className={labelClass}>טלפון *</label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className={inputClass(!!errors.phone)}
+                  placeholder="050-1234567"
+                />
+                {errors.phone && <p className="text-red-400 text-sm mt-1">{errors.phone}</p>}
+              </div>
 
-          <div>
-            <label className={labelClass}>אימייל</label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className={inputClass(!!errors.email)}
-              placeholder="example@email.com"
-            />
-            {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email}</p>}
-          </div>
+              <div>
+                <label className={labelClass}>אימייל</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className={inputClass(!!errors.email)}
+                  placeholder="example@email.com"
+                />
+                {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email}</p>}
+              </div>
 
-          <div>
-            <label className={labelClass}>גובה (ס״מ) *</label>
-            <input
-              type="number"
-              value={formData.height}
-              onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-              className={inputClass(!!errors.height)}
-              placeholder="175"
-            />
-            {errors.height && <p className="text-red-400 text-sm mt-1">{errors.height}</p>}
-          </div>
+              <div>
+                <label className={labelClass}>גובה (ס״מ) *</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="250"
+                  value={formData.height}
+                  onChange={(e) => setFormData({ ...formData, height: e.target.value })}
+                  className={inputClass(!!errors.height)}
+                  placeholder="175"
+                />
+                {errors.height && <p className="text-red-400 text-sm mt-1">{errors.height}</p>}
+              </div>
 
-          <div>
-            <label className={labelClass}>תאריך לידה</label>
-            <input
-              type="date"
-              value={formData.birth_date}
-              onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
-              className={inputClass(false)}
-            />
-          </div>
+              <div>
+                <label className={labelClass}>תאריך לידה</label>
+                <input
+                  type="date"
+                  max={new Date().toISOString().split('T')[0]}
+                  value={formData.birth_date}
+                  onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
+                  className={inputClass(!!errors.birth_date)}
+                />
+                {errors.birth_date && <p className="text-red-400 text-sm mt-1">{errors.birth_date}</p>}
+              </div>
 
-          <div>
-            <label className={labelClass}>מגדר</label>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, gender: 'male' })}
-                className={`flex-1 p-4 rounded-xl border-2 transition-all ${
-                  formData.gender === 'male'
-                    ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                    : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
-                }`}
-              >
-                זכר
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, gender: 'female' })}
-                className={`flex-1 p-4 rounded-xl border-2 transition-all ${
-                  formData.gender === 'female'
-                    ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                    : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
-                }`}
-              >
-                נקבה
-              </button>
+              <div>
+                <label className={labelClass}>מגדר</label>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, gender: 'male' })}
+                    className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+                      formData.gender === 'male'
+                        ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                        : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                    }`}
+                  >
+                    זכר
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, gender: 'female' })}
+                    className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+                      formData.gender === 'female'
+                        ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                        : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                    }`}
+                  >
+                    נקבה
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="premium-card-static p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 rounded-xl bg-emerald-500/15">
+                <Users className="h-5 w-5 text-emerald-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">פרטי הזוג</h3>
+            </div>
 
-        <div>
-          <label className={labelClass}>הערות</label>
+            <div className="space-y-8">
+              <div className="pb-6 border-b border-zinc-800/50">
+                <h4 className="text-base font-semibold text-cyan-400 mb-4">מתאמן/ת ראשון/ה</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className={labelClass}>שם מלא *</label>
+                    <input
+                      type="text"
+                      value={formData.pair_name_1}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pair_name_1: e.target.value }))}
+                      className={inputClass(!!errors.pair_name_1)}
+                      placeholder="הכנס שם מלא"
+                    />
+                    {errors.pair_name_1 && <p className="text-red-400 text-sm mt-1">{errors.pair_name_1}</p>}
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>מספר טלפון *</label>
+                    <input
+                      type="tel"
+                      value={formData.pair_phone_1}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pair_phone_1: e.target.value }))}
+                      className={inputClass(!!errors.pair_phone_1)}
+                      placeholder="050-1234567"
+                    />
+                    {errors.pair_phone_1 && <p className="text-red-400 text-sm mt-1">{errors.pair_phone_1}</p>}
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>כתובת אימייל</label>
+                    <input
+                      type="email"
+                      value={formData.pair_email_1}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pair_email_1: e.target.value }))}
+                      className={inputClass(!!errors.pair_email_1)}
+                      placeholder="example@email.com"
+                    />
+                    {errors.pair_email_1 && <p className="text-red-400 text-sm mt-1">{errors.pair_email_1}</p>}
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>תאריך לידה</label>
+                    <input
+                      type="date"
+                      max={new Date().toISOString().split('T')[0]}
+                      value={formData.pair_birth_date_1}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pair_birth_date_1: e.target.value }))}
+                      className={inputClass(!!errors.pair_birth_date_1)}
+                    />
+                    {errors.pair_birth_date_1 && <p className="text-red-400 text-sm mt-1">{errors.pair_birth_date_1}</p>}
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>מין *</label>
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, pair_gender_1: 'male' }))}
+                        className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+                          formData.pair_gender_1 === 'male'
+                            ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                            : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                        }`}
+                      >
+                        זכר
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, pair_gender_1: 'female' }))}
+                        className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+                          formData.pair_gender_1 === 'female'
+                            ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                            : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                        }`}
+                      >
+                        נקבה
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>גובה (ס״מ) *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="250"
+                      value={formData.pair_height_1}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pair_height_1: e.target.value }))}
+                      className={inputClass(!!errors.pair_height_1)}
+                      placeholder="165"
+                    />
+                    {errors.pair_height_1 && <p className="text-red-400 text-sm mt-1">{errors.pair_height_1}</p>}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-base font-semibold text-amber-400 mb-4">מתאמן/ת שני/ה</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className={labelClass}>שם מלא *</label>
+                    <input
+                      type="text"
+                      value={formData.pair_name_2}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pair_name_2: e.target.value }))}
+                      className={inputClass(!!errors.pair_name_2)}
+                      placeholder="הכנס שם מלא"
+                    />
+                    {errors.pair_name_2 && <p className="text-red-400 text-sm mt-1">{errors.pair_name_2}</p>}
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>מספר טלפון *</label>
+                    <input
+                      type="tel"
+                      value={formData.pair_phone_2}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pair_phone_2: e.target.value }))}
+                      className={inputClass(!!errors.pair_phone_2)}
+                      placeholder="050-1234567"
+                    />
+                    {errors.pair_phone_2 && <p className="text-red-400 text-sm mt-1">{errors.pair_phone_2}</p>}
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>כתובת אימייל</label>
+                    <input
+                      type="email"
+                      value={formData.pair_email_2}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pair_email_2: e.target.value }))}
+                      className={inputClass(!!errors.pair_email_2)}
+                      placeholder="example@email.com"
+                    />
+                    {errors.pair_email_2 && <p className="text-red-400 text-sm mt-1">{errors.pair_email_2}</p>}
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>תאריך לידה</label>
+                    <input
+                      type="date"
+                      max={new Date().toISOString().split('T')[0]}
+                      value={formData.pair_birth_date_2}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pair_birth_date_2: e.target.value }))}
+                      className={inputClass(!!errors.pair_birth_date_2)}
+                    />
+                    {errors.pair_birth_date_2 && <p className="text-red-400 text-sm mt-1">{errors.pair_birth_date_2}</p>}
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>מין *</label>
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, pair_gender_2: 'male' }))}
+                        className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+                          formData.pair_gender_2 === 'male'
+                            ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                            : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                        }`}
+                      >
+                        זכר
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, pair_gender_2: 'female' }))}
+                        className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+                          formData.pair_gender_2 === 'female'
+                            ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                            : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                        }`}
+                      >
+                        נקבה
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>גובה (ס״מ) *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="250"
+                      value={formData.pair_height_2}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pair_height_2: e.target.value }))}
+                      className={inputClass(!!errors.pair_height_2)}
+                      placeholder="170"
+                    />
+                    {errors.pair_height_2 && <p className="text-red-400 text-sm mt-1">{errors.pair_height_2}</p>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="premium-card-static p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">הערות מאמן</h3>
           <textarea
             value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
             className="w-full p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
             rows={4}
-            placeholder="הערות על המתאמן..."
+            placeholder="הערות כלליות על המתאמן, מטרות, הגבלות רפואיות וכו'..."
           />
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800/50">
+        <div className="flex items-center justify-end gap-3 pt-4">
           <button
             type="button"
             onClick={onBack}

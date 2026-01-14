@@ -40,20 +40,37 @@ export default function AddTraineeForm({ onBack, onSave }: AddTraineeFormProps) 
       if (!formData.pair_name_2.trim()) newErrors.pair_name_2 = 'שם שני נדרש';
       if (!formData.pair_phone_1.trim()) newErrors.pair_phone_1 = 'טלפון ראשון נדרש';
       if (!formData.pair_phone_2.trim()) newErrors.pair_phone_2 = 'טלפון שני נדרש';
-      if (!formData.pair_height_1 || Number(formData.pair_height_1) < 1) newErrors.pair_height_1 = 'גובה תקין נדרש';
-      if (!formData.pair_height_2 || Number(formData.pair_height_2) < 1) newErrors.pair_height_2 = 'גובה תקין נדרש';
+      if (!formData.pair_height_1 || Number(formData.pair_height_1) < 1 || Number(formData.pair_height_1) > 250) {
+        newErrors.pair_height_1 = 'גובה תקין נדרש (1-250 ס״מ)';
+      }
+      if (!formData.pair_height_2 || Number(formData.pair_height_2) < 1 || Number(formData.pair_height_2) > 250) {
+        newErrors.pair_height_2 = 'גובה תקין נדרש (1-250 ס״מ)';
+      }
       if (formData.pair_email_1 && !/\S+@\S+\.\S+/.test(formData.pair_email_1)) {
         newErrors.pair_email_1 = 'כתובת אימייל לא תקינה';
       }
       if (formData.pair_email_2 && !/\S+@\S+\.\S+/.test(formData.pair_email_2)) {
         newErrors.pair_email_2 = 'כתובת אימייל לא תקינה';
       }
+      // Validate birth dates are in the past
+      if (formData.pair_birth_date_1 && new Date(formData.pair_birth_date_1) > new Date()) {
+        newErrors.pair_birth_date_1 = 'תאריך לידה חייב להיות בעבר';
+      }
+      if (formData.pair_birth_date_2 && new Date(formData.pair_birth_date_2) > new Date()) {
+        newErrors.pair_birth_date_2 = 'תאריך לידה חייב להיות בעבר';
+      }
     } else {
       if (!formData.full_name.trim()) newErrors.full_name = 'שם מלא נדרש';
       if (!formData.phone.trim()) newErrors.phone = 'מספר טלפון נדרש';
-      if (!formData.height || Number(formData.height) < 1) newErrors.height = 'גובה תקין נדרש';
+      if (!formData.height || Number(formData.height) < 1 || Number(formData.height) > 250) {
+        newErrors.height = 'גובה תקין נדרש (1-250 ס״מ)';
+      }
       if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
         newErrors.email = 'כתובת אימייל לא תקינה';
+      }
+      // Validate birth date is in the past
+      if (formData.birth_date && new Date(formData.birth_date) > new Date()) {
+        newErrors.birth_date = 'תאריך לידה חייב להיות בעבר';
       }
     }
 
@@ -225,10 +242,12 @@ export default function AddTraineeForm({ onBack, onSave }: AddTraineeFormProps) 
               <label className={labelClass}>תאריך לידה</label>
               <input
                 type="date"
+                max={new Date().toISOString().split('T')[0]}
                 value={formData.birth_date}
                 onChange={(e) => setFormData(prev => ({ ...prev, birth_date: e.target.value }))}
-                className={inputClass(false)}
+                className={inputClass(!!errors.birth_date)}
               />
+              {errors.birth_date && <p className="text-red-400 text-sm mt-1">{errors.birth_date}</p>}
             </div>
 
             <div>
@@ -329,10 +348,12 @@ export default function AddTraineeForm({ onBack, onSave }: AddTraineeFormProps) 
                   <label className={labelClass}>תאריך לידה</label>
                   <input
                     type="date"
+                    max={new Date().toISOString().split('T')[0]}
                     value={formData.pair_birth_date_1}
                     onChange={(e) => setFormData(prev => ({ ...prev, pair_birth_date_1: e.target.value }))}
-                    className={inputClass(false)}
+                    className={inputClass(!!errors.pair_birth_date_1)}
                   />
+                  {errors.pair_birth_date_1 && <p className="text-red-400 text-sm mt-1">{errors.pair_birth_date_1}</p>}
                 </div>
 
                 <div>
@@ -422,10 +443,12 @@ export default function AddTraineeForm({ onBack, onSave }: AddTraineeFormProps) 
                   <label className={labelClass}>תאריך לידה</label>
                   <input
                     type="date"
+                    max={new Date().toISOString().split('T')[0]}
                     value={formData.pair_birth_date_2}
                     onChange={(e) => setFormData(prev => ({ ...prev, pair_birth_date_2: e.target.value }))}
-                    className={inputClass(false)}
+                    className={inputClass(!!errors.pair_birth_date_2)}
                   />
+                  {errors.pair_birth_date_2 && <p className="text-red-400 text-sm mt-1">{errors.pair_birth_date_2}</p>}
                 </div>
 
                 <div>
