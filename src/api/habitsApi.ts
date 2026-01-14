@@ -70,12 +70,24 @@ export const habitsApi = {
       const errorCode = error?.code;
       const errorMessage = error?.message || '';
       const errorDetails = error?.details || '';
+      const errorCause = error?.cause;
+      
+      // Check original error, wrapped error, or cause
+      const originalError = errorCause || error;
+      const originalCode = originalError?.code;
+      const originalMessage = originalError?.message || '';
+      const originalDetails = originalError?.details || '';
       
       if (errorCode === 'PGRST205' || 
+          originalCode === 'PGRST205' ||
           errorMessage.includes('schema cache') || 
           errorMessage.includes('not found') ||
           errorMessage.includes('Could not find the table') ||
-          errorDetails.includes('trainee_habits')) {
+          originalMessage.includes('schema cache') ||
+          originalMessage.includes('not found') ||
+          originalMessage.includes('Could not find the table') ||
+          errorDetails.includes('trainee_habits') ||
+          originalDetails.includes('trainee_habits')) {
         console.warn('trainee_habits table does not exist yet, returning empty array');
         return [];
       }
