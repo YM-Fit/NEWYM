@@ -49,22 +49,33 @@ export const habitsApi = {
 
       // If table doesn't exist (404), return empty array instead of throwing
       if (error) {
-        // Check if it's a 404 error (table not found)
-        if (error.code === 'PGRST205' || error.message?.includes('schema cache') || error.message?.includes('not found')) {
+        // Check if it's a 404 error (table not found) - Supabase returns PostgrestError
+        const errorCode = (error as any).code;
+        const errorMessage = (error as any).message || '';
+        const errorDetails = (error as any).details || '';
+        
+        // PGRST205 is the error code for table not found
+        if (errorCode === 'PGRST205' || 
+            errorMessage.includes('schema cache') || 
+            errorMessage.includes('not found') ||
+            errorDetails.includes('trainee_habits')) {
           console.warn('trainee_habits table does not exist yet, returning empty array');
           return [];
         }
         throw error;
       }
       return data || [];
-    } catch (error) {
+    } catch (error: any) {
       // If it's a table not found error, return empty array
-      if (error && typeof error === 'object' && 'code' in error && error.code === 'PGRST205') {
-        console.warn('trainee_habits table does not exist yet, returning empty array');
-        return [];
-      }
-      // For other errors, check message
-      if (error instanceof Error && (error.message.includes('schema cache') || error.message.includes('not found'))) {
+      const errorCode = error?.code;
+      const errorMessage = error?.message || '';
+      const errorDetails = error?.details || '';
+      
+      if (errorCode === 'PGRST205' || 
+          errorMessage.includes('schema cache') || 
+          errorMessage.includes('not found') ||
+          errorMessage.includes('Could not find the table') ||
+          errorDetails.includes('trainee_habits')) {
         console.warn('trainee_habits table does not exist yet, returning empty array');
         return [];
       }
