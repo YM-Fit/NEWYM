@@ -90,12 +90,12 @@ interface HistoryEntry {
 }
 
 const MEAL_NAMES = [
-  { value: 'breakfast', label: 'Breakfast' },
-  { value: 'morning_snack', label: 'Morning Snack' },
-  { value: 'lunch', label: 'Lunch' },
-  { value: 'afternoon_snack', label: 'Afternoon Snack' },
-  { value: 'dinner', label: 'Dinner' },
-  { value: 'evening_snack', label: 'Evening Snack' },
+  { value: 'breakfast', label: 'ארוחת בוקר', icon: '🌅' },
+  { value: 'morning_snack', label: 'ביניים בוקר', icon: '🍎' },
+  { value: 'lunch', label: 'ארוחת צהריים', icon: '🌞' },
+  { value: 'afternoon_snack', label: 'ביניים אחה"צ', icon: '🥤' },
+  { value: 'dinner', label: 'ארוחת ערב', icon: '🌙' },
+  { value: 'evening_snack', label: 'ביניים ערב', icon: '🍵' },
 ];
 
 const DEFAULT_NOTE_TEMPLATES = [
@@ -163,7 +163,7 @@ export default function MealPlanBuilder({
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast.error('Error loading meal plans');
+      toast.error('שגיאה בטעינת תפריטים');
       return;
     }
 
@@ -183,7 +183,7 @@ export default function MealPlanBuilder({
       .order('order_index', { ascending: true });
 
     if (error) {
-      toast.error('Error loading meals');
+      toast.error('שגיאה בטעינת ארוחות');
       return;
     }
 
@@ -226,7 +226,7 @@ export default function MealPlanBuilder({
 
   const handleCreatePlan = async () => {
     if (!newPlanData.name.trim()) {
-      toast.error('Please enter a plan name');
+      toast.error('נא להזין שם לתפריט');
       return;
     }
 
@@ -251,7 +251,7 @@ export default function MealPlanBuilder({
       .single();
 
     if (error) {
-      toast.error('Error creating meal plan');
+      toast.error('שגיאה ביצירת תפריט');
       setSaving(false);
       return;
     }
@@ -263,7 +263,7 @@ export default function MealPlanBuilder({
       .eq('trainer_id', trainerId)
       .neq('id', data.id);
 
-    toast.success('Meal plan created successfully');
+    toast.success('תפריט נוצר בהצלחה');
     setShowCreateForm(false);
     setNewPlanData({
       name: '',
@@ -291,7 +291,7 @@ export default function MealPlanBuilder({
       .eq('id', activePlan.id);
 
     if (error) {
-      toast.error('Error updating meal plan');
+      toast.error('שגיאה בעדכון תפריט');
       return;
     }
 
@@ -310,21 +310,21 @@ export default function MealPlanBuilder({
       .update({ is_active: true })
       .eq('id', planId);
 
-    toast.success('Plan activated');
+    toast.success('תפריט הופעל');
     await loadPlans();
   };
 
   const handleDeletePlan = async (planId: string) => {
-    if (!confirm('Delete this meal plan? This action cannot be undone.')) return;
+    if (!confirm('האם למחוק את התפריט? פעולה זו תמחק גם את כל הארוחות בתפריט.')) return;
 
     const { error } = await supabase.from('meal_plans').delete().eq('id', planId);
 
     if (error) {
-      toast.error('Error deleting meal plan');
+      toast.error('שגיאה במחיקת תפריט');
       return;
     }
 
-    toast.success('Meal plan deleted');
+    toast.success('תפריט נמחק בהצלחה');
     if (activePlan?.id === planId) {
       setActivePlan(null);
       setMeals([]);
@@ -408,7 +408,7 @@ export default function MealPlanBuilder({
       const { error } = await supabase.from('meal_plan_meals').insert(mealsToInsert);
 
       if (error) {
-        toast.error('Error saving meals');
+        toast.error('שגיאה בשמירת ארוחות');
         setSaving(false);
         return;
       }
@@ -417,7 +417,7 @@ export default function MealPlanBuilder({
     await saveToHistory('Updated meals');
     await handleUpdatePlan({ updated_at: new Date().toISOString() } as any);
 
-    toast.success('Meals saved successfully');
+    toast.success('הארוחות נשמרו בהצלחה');
     await loadMeals(activePlan.id);
     setSaving(false);
   };
@@ -578,7 +578,7 @@ export default function MealPlanBuilder({
                 <UtensilsCrossed className="h-6 w-6 text-emerald-400" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">Meal Plan</h1>
+                <h1 className="text-2xl font-bold text-white">תפריט תזונה</h1>
                 <p className="text-gray-400">{traineeName}</p>
               </div>
             </div>
@@ -593,7 +593,7 @@ export default function MealPlanBuilder({
                   : 'bg-gray-800/60 text-gray-400 hover:bg-gray-700/60 hover:text-white'
               }`}
             >
-              List
+              רשימה
             </button>
             {activePlan && (
               <>
@@ -605,7 +605,7 @@ export default function MealPlanBuilder({
                       : 'bg-gray-800/60 text-gray-400 hover:bg-gray-700/60 hover:text-white'
                   }`}
                 >
-                  Edit
+                  עריכה
                 </button>
                 <button
                   onClick={() => {
@@ -746,14 +746,14 @@ function PlanListView({ plans, activePlan, onActivate, onEdit, onDelete, onCreat
         className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white py-4 rounded-2xl flex items-center justify-center gap-3 font-semibold transition-all duration-300 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/30 hover:scale-[1.01]"
       >
         <Plus className="h-5 w-5" />
-        Create New Meal Plan
+        צור תפריט חדש
       </button>
 
       {activePlan && (
         <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-8 text-white shadow-xl shadow-emerald-500/20">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <span className="bg-white/20 text-xs px-3 py-1.5 rounded-xl font-semibold">Active Plan</span>
+              <span className="bg-white/20 text-xs px-3 py-1.5 rounded-xl font-semibold">תפריט פעיל</span>
               <h3 className="text-2xl font-bold mt-3">{activePlan.name}</h3>
               {activePlan.description && <p className="text-emerald-100 text-sm mt-2">{activePlan.description}</p>}
             </div>
@@ -761,7 +761,7 @@ function PlanListView({ plans, activePlan, onActivate, onEdit, onDelete, onCreat
               onClick={() => onEdit(activePlan)}
               className="bg-white/20 hover:bg-white/30 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 hover:scale-105"
             >
-              Edit
+              ערוך
             </button>
           </div>
 
@@ -771,35 +771,35 @@ function PlanListView({ plans, activePlan, onActivate, onEdit, onDelete, onCreat
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/20 transition-all duration-300">
                   <Flame className="h-6 w-6 mx-auto mb-2" />
                   <p className="text-xl font-bold">{activePlan.daily_calories}</p>
-                  <p className="text-xs text-emerald-200">Calories</p>
+                  <p className="text-xs text-emerald-200">קלוריות</p>
                 </div>
               )}
               {activePlan.protein_grams && (
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/20 transition-all duration-300">
                   <Beef className="h-6 w-6 mx-auto mb-2" />
-                  <p className="text-xl font-bold">{activePlan.protein_grams}g</p>
-                  <p className="text-xs text-emerald-200">Protein</p>
+                  <p className="text-xl font-bold">{activePlan.protein_grams}ג</p>
+                  <p className="text-xs text-emerald-200">חלבון</p>
                 </div>
               )}
               {activePlan.carbs_grams && (
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/20 transition-all duration-300">
                   <Wheat className="h-6 w-6 mx-auto mb-2" />
-                  <p className="text-xl font-bold">{activePlan.carbs_grams}g</p>
-                  <p className="text-xs text-emerald-200">Carbs</p>
+                  <p className="text-xl font-bold">{activePlan.carbs_grams}ג</p>
+                  <p className="text-xs text-emerald-200">פחמימות</p>
                 </div>
               )}
               {activePlan.fat_grams && (
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/20 transition-all duration-300">
                   <Droplet className="h-6 w-6 mx-auto mb-2" />
-                  <p className="text-xl font-bold">{activePlan.fat_grams}g</p>
-                  <p className="text-xs text-emerald-200">Fat</p>
+                  <p className="text-xl font-bold">{activePlan.fat_grams}ג</p>
+                  <p className="text-xs text-emerald-200">שומן</p>
                 </div>
               )}
               {activePlan.daily_water_ml && (
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/20 transition-all duration-300">
                   <Droplets className="h-6 w-6 mx-auto mb-2" />
-                  <p className="text-xl font-bold">{(activePlan.daily_water_ml / 1000).toFixed(1)}L</p>
-                  <p className="text-xs text-emerald-200">Water</p>
+                  <p className="text-xl font-bold">{(activePlan.daily_water_ml / 1000).toFixed(1)} ליטר</p>
+                  <p className="text-xs text-emerald-200">מים</p>
                 </div>
               )}
             </div>
@@ -809,11 +809,11 @@ function PlanListView({ plans, activePlan, onActivate, onEdit, onDelete, onCreat
 
       <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl border border-white/10 shadow-xl overflow-hidden">
         <div className="p-6 border-b border-white/10">
-          <h3 className="font-bold text-white text-lg">Plan History</h3>
+          <h3 className="font-bold text-white text-lg">היסטוריית תפריטים</h3>
         </div>
         <div className="divide-y divide-white/10">
           {plans.filter((p) => p.id !== activePlan?.id).length === 0 ? (
-            <div className="p-12 text-center text-gray-500">No other plans</div>
+            <div className="p-12 text-center text-gray-500">אין תפריטים נוספים</div>
           ) : (
             plans
               .filter((p) => p.id !== activePlan?.id)
@@ -822,7 +822,7 @@ function PlanListView({ plans, activePlan, onActivate, onEdit, onDelete, onCreat
                   <div>
                     <h4 className="font-semibold text-white">{plan.name}</h4>
                     <p className="text-sm text-gray-500">
-                      {new Date(plan.created_at).toLocaleDateString('en-US')}
+                      {new Date(plan.created_at).toLocaleDateString('he-IL')}
                     </p>
                   </div>
                   <div className="flex gap-3">
@@ -830,13 +830,13 @@ function PlanListView({ plans, activePlan, onActivate, onEdit, onDelete, onCreat
                       onClick={() => onActivate(plan.id)}
                       className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-500/30 transition-all duration-300 hover:scale-105"
                     >
-                      Activate
+                      הפעל
                     </button>
                     <button
                       onClick={() => onEdit(plan)}
                       className="px-4 py-2 bg-gray-700/50 text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-700 transition-all duration-300"
                     >
-                      Edit
+                      ערוך
                     </button>
                     <button
                       onClick={() => onDelete(plan.id)}
@@ -902,28 +902,28 @@ function PlanEditorView({
       {/* Plan Settings Card */}
       <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl border border-white/10 shadow-xl p-8">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-bold text-white text-xl">Plan Settings</h3>
+          <h3 className="font-bold text-white text-xl">הגדרות תפריט</h3>
           <div className="flex gap-3">
             <button
               onClick={onLoadTemplate}
               className="flex items-center gap-2 px-4 py-2.5 bg-blue-500/20 text-blue-400 rounded-xl text-sm font-semibold hover:bg-blue-500/30 transition-all duration-300 hover:scale-105"
             >
               <Download className="h-4 w-4" />
-              Load Template
+              טען תבנית
             </button>
             <button
               onClick={onSaveAsTemplate}
               className="flex items-center gap-2 px-4 py-2.5 bg-gray-700/50 text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-700 transition-all duration-300"
             >
               <Upload className="h-4 w-4" />
-              Save as Template
+              שמור כתבנית
             </button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">Plan Name</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">שם התפריט</label>
             <input
               type="text"
               value={plan.name || ''}
@@ -932,13 +932,13 @@ function PlanEditorView({
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">Description</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">תיאור</label>
             <input
               type="text"
               value={plan.description || ''}
               onChange={(e) => onUpdatePlan({ description: e.target.value })}
               className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
-              placeholder="e.g., Weight loss plan"
+              placeholder="לדוגמה: תפריט הורדה במשקל"
             />
           </div>
         </div>
@@ -947,7 +947,7 @@ function PlanEditorView({
           <div>
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <Flame className="h-4 w-4 inline ml-1 text-amber-400" />
-              Calories
+              קלוריות יומיות
             </label>
             <input
               type="number"
@@ -959,7 +959,7 @@ function PlanEditorView({
           <div>
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <Beef className="h-4 w-4 inline ml-1 text-red-400" />
-              Protein (g)
+              חלבון (גרם)
             </label>
             <input
               type="number"
@@ -971,7 +971,7 @@ function PlanEditorView({
           <div>
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <Wheat className="h-4 w-4 inline ml-1 text-amber-500" />
-              Carbs (g)
+              פחמימות (גרם)
             </label>
             <input
               type="number"
@@ -983,7 +983,7 @@ function PlanEditorView({
           <div>
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <Droplet className="h-4 w-4 inline ml-1 text-yellow-400" />
-              Fat (g)
+              שומן (גרם)
             </label>
             <input
               type="number"
@@ -995,7 +995,7 @@ function PlanEditorView({
           <div>
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               <Droplets className="h-4 w-4 inline ml-1 text-blue-400" />
-              Water (ml)
+              מים (מ״ל)
             </label>
             <input
               type="number"
@@ -1008,13 +1008,13 @@ function PlanEditorView({
 
         <div className="mt-6">
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-semibold text-gray-300">General Notes</label>
+            <label className="block text-sm font-semibold text-gray-300">הערות כלליות</label>
             <button
               onClick={onAddNote}
               className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors duration-300"
             >
               <FileText className="h-4 w-4" />
-              Add from template
+              הוסף מתבנית
             </button>
           </div>
           <textarea
@@ -1022,7 +1022,7 @@ function PlanEditorView({
             onChange={(e) => onUpdatePlan({ notes: e.target.value })}
             className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
             rows={3}
-            placeholder="General notes for the plan..."
+            placeholder="הערות כלליות לתפריט..."
           />
         </div>
       </div>
@@ -1030,13 +1030,13 @@ function PlanEditorView({
       {/* Meals Card */}
       <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl border border-white/10 shadow-xl overflow-hidden">
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
-          <h3 className="font-bold text-white text-xl">Meals ({meals.length})</h3>
+          <h3 className="font-bold text-white text-xl">ארוחות ({meals.length})</h3>
           <button
             onClick={onAddMeal}
             className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500/20 text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-500/30 transition-all duration-300 hover:scale-105"
           >
             <Plus className="h-4 w-4" />
-            Add Meal
+            הוסף ארוחה
           </button>
         </div>
 
@@ -1044,11 +1044,20 @@ function PlanEditorView({
           {meals.length === 0 ? (
             <div className="p-12 text-center text-gray-500">
               <AlertCircle className="h-14 w-14 mx-auto mb-4 text-gray-600" />
-              <p className="font-medium">No meals in this plan</p>
-              <p className="text-sm mt-2">Click "Add Meal" to get started</p>
+              <p className="font-medium">אין ארוחות בתפריט זה</p>
+              <p className="text-sm mt-2">לחץ על "הוסף ארוחה" כדי להתחיל</p>
             </div>
           ) : (
-            meals.map((meal, index) => (
+            // Group meals by meal type and sort by order
+            [...meals]
+              .sort((a, b) => {
+                const mealOrder = ['breakfast', 'morning_snack', 'lunch', 'afternoon_snack', 'dinner', 'evening_snack'];
+                const aIndex = mealOrder.indexOf(a.meal_name);
+                const bIndex = mealOrder.indexOf(b.meal_name);
+                if (aIndex !== bIndex) return aIndex - bIndex;
+                return a.order_index - b.order_index;
+              })
+              .map((meal, index) => (
               <div
                 key={index}
                 draggable
@@ -1066,12 +1075,14 @@ function PlanEditorView({
                     <div className="p-2 bg-emerald-500/20 rounded-xl">
                       <Clock className="h-4 w-4 text-emerald-400" />
                     </div>
-                    <span className="font-semibold text-white">{meal.meal_time}</span>
-                    <span className="text-gray-400">{getMealLabel(meal.meal_name)}</span>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-white text-lg">{MEAL_NAMES.find(m => m.value === meal.meal_name)?.icon} {getMealLabel(meal.meal_name)}</span>
+                      <span className="text-gray-400 text-sm">{meal.meal_time}</span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-4">
                     {meal.calories && (
-                      <span className="text-sm text-gray-500 bg-gray-700/50 px-3 py-1 rounded-lg">{meal.calories} cal</span>
+                      <span className="text-sm text-gray-500 bg-gray-700/50 px-3 py-1 rounded-lg">{meal.calories} קל'</span>
                     )}
                     <button
                       onClick={(e) => {
@@ -1094,7 +1105,7 @@ function PlanEditorView({
                   <div className="mt-6 space-y-5 pr-10">
                     <div className="grid grid-cols-2 gap-5">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">Time</label>
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">שעה</label>
                         <input
                           type="time"
                           value={meal.meal_time}
@@ -1103,7 +1114,7 @@ function PlanEditorView({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">Meal Type</label>
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">סוג ארוחה</label>
                         <select
                           value={meal.meal_name}
                           onChange={(e) => onUpdateMeal(index, 'meal_name', e.target.value)}
@@ -1111,7 +1122,7 @@ function PlanEditorView({
                         >
                           {MEAL_NAMES.map((m) => (
                             <option key={m.value} value={m.value}>
-                              {m.label}
+                              {m.icon} {m.label}
                             </option>
                           ))}
                         </select>
@@ -1119,30 +1130,30 @@ function PlanEditorView({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">Food Description</label>
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">תיאור המזון</label>
                       <textarea
                         value={meal.description}
                         onChange={(e) => onUpdateMeal(index, 'description', e.target.value)}
                         className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
                         rows={3}
-                        placeholder="e.g., 2 eggs, 2 slices whole wheat bread, vegetable salad..."
+                        placeholder="לדוגמה: 2 ביצים, 2 פרוסות לחם מלא, סלט ירקות..."
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">Alternatives</label>
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">חלופות</label>
                       <textarea
                         value={meal.alternatives}
                         onChange={(e) => onUpdateMeal(index, 'alternatives', e.target.value)}
                         className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
                         rows={2}
-                        placeholder="Can substitute with..."
+                        placeholder="ניתן להחליף ב..."
                       />
                     </div>
 
                     <div className="grid grid-cols-4 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">Calories</label>
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">קלוריות</label>
                         <input
                           type="number"
                           value={meal.calories || ''}
@@ -1151,7 +1162,7 @@ function PlanEditorView({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">Protein</label>
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">חלבון (גרם)</label>
                         <input
                           type="number"
                           value={meal.protein || ''}
@@ -1160,7 +1171,7 @@ function PlanEditorView({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">Carbs</label>
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">פחמימות (גרם)</label>
                         <input
                           type="number"
                           value={meal.carbs || ''}
@@ -1169,7 +1180,7 @@ function PlanEditorView({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">Fat</label>
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">שומן (גרם)</label>
                         <input
                           type="number"
                           value={meal.fat || ''}
@@ -1180,13 +1191,13 @@ function PlanEditorView({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">Notes</label>
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">הערות</label>
                       <input
                         type="text"
                         value={meal.notes}
                         onChange={(e) => onUpdateMeal(index, 'notes', e.target.value)}
                         className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
-                        placeholder="Additional notes..."
+                        placeholder="הערות נוספות..."
                       />
                     </div>
                   </div>
@@ -1199,12 +1210,12 @@ function PlanEditorView({
         {meals.length > 0 && totals.calories > 0 && (
           <div className="p-5 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-t border-white/10">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-white">Totals from meals:</span>
+              <span className="font-semibold text-white">סיכום מהארוחות:</span>
               <div className="flex gap-6 text-sm">
-                <span className="text-gray-300"><span className="text-emerald-400 font-semibold">{totals.calories}</span> calories</span>
-                <span className="text-gray-300"><span className="text-emerald-400 font-semibold">{totals.protein}g</span> protein</span>
-                <span className="text-gray-300"><span className="text-emerald-400 font-semibold">{totals.carbs}g</span> carbs</span>
-                <span className="text-gray-300"><span className="text-emerald-400 font-semibold">{totals.fat}g</span> fat</span>
+                <span className="text-gray-300"><span className="text-emerald-400 font-semibold">{totals.calories}</span> קלוריות</span>
+                <span className="text-gray-300"><span className="text-emerald-400 font-semibold">{totals.protein}ג</span> חלבון</span>
+                <span className="text-gray-300"><span className="text-emerald-400 font-semibold">{totals.carbs}ג</span> פחמימות</span>
+                <span className="text-gray-300"><span className="text-emerald-400 font-semibold">{totals.fat}ג</span> שומן</span>
               </div>
             </div>
           </div>
@@ -1220,12 +1231,12 @@ function PlanEditorView({
           {saving ? (
             <>
               <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-              Saving...
+              שומר...
             </>
           ) : (
             <>
               <Save className="h-5 w-5" />
-              Save Meal Plan
+              שמור תפריט
             </>
           )}
         </button>
@@ -1243,25 +1254,25 @@ function HistoryView({ history, onRestore }: HistoryViewProps) {
   return (
     <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl border border-white/10 shadow-xl overflow-hidden">
       <div className="p-6 border-b border-white/10">
-        <h3 className="font-bold text-white text-xl">Change History</h3>
+        <h3 className="font-bold text-white text-xl">היסטוריית שינויים</h3>
       </div>
       <div className="divide-y divide-white/10">
         {history.length === 0 ? (
-          <div className="p-12 text-center text-gray-500">No history</div>
+          <div className="p-12 text-center text-gray-500">אין היסטוריה</div>
         ) : (
           history.map((entry) => (
             <div key={entry.id} className="p-5 flex items-center justify-between hover:bg-white/5 transition-all duration-300">
               <div>
                 <p className="font-semibold text-white">{entry.change_description}</p>
                 <p className="text-sm text-gray-500">
-                  {new Date(entry.changed_at).toLocaleString('en-US')}
+                  {new Date(entry.changed_at).toLocaleString('he-IL')}
                 </p>
               </div>
               <button
                 onClick={() => onRestore(entry)}
                 className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-xl text-sm font-semibold hover:bg-blue-500/30 transition-all duration-300 hover:scale-105"
               >
-                Restore Version
+                שחזר גרסה
               </button>
             </div>
           ))
@@ -1284,24 +1295,24 @@ function CreatePlanModal({ data, saving, onChange, onSave, onClose }: CreatePlan
     <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center p-4 z-50">
       <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl border border-white/10 max-w-lg w-full max-h-[90vh] overflow-y-auto animate-fade-in">
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">New Meal Plan</h2>
+          <h2 className="text-xl font-bold text-white">תפריט חדש</h2>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-all duration-300">
             <X className="h-5 w-5 text-gray-400" />
           </button>
         </div>
         <div className="p-6 space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">Plan Name *</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">שם התפריט *</label>
             <input
               type="text"
               value={data.name}
               onChange={(e) => onChange({ ...data, name: e.target.value })}
               className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
-              placeholder="e.g., Weight loss plan"
+              placeholder="לדוגמה: תפריט הורדה במשקל"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">Description</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">תיאור</label>
             <input
               type="text"
               value={data.description}
@@ -1311,7 +1322,7 @@ function CreatePlanModal({ data, saving, onChange, onSave, onClose }: CreatePlan
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">Daily Calories Target</label>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">יעד קלוריות יומי</label>
               <input
                 type="number"
                 value={data.daily_calories}
@@ -1320,7 +1331,7 @@ function CreatePlanModal({ data, saving, onChange, onSave, onClose }: CreatePlan
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">Daily Water (ml)</label>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">מים יומיים (מ״ל)</label>
               <input
                 type="number"
                 value={data.daily_water_ml}
@@ -1331,7 +1342,7 @@ function CreatePlanModal({ data, saving, onChange, onSave, onClose }: CreatePlan
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">Protein (g)</label>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">חלבון (גרם)</label>
               <input
                 type="number"
                 value={data.protein_grams}
@@ -1340,7 +1351,7 @@ function CreatePlanModal({ data, saving, onChange, onSave, onClose }: CreatePlan
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">Carbs (g)</label>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">פחמימות (גרם)</label>
               <input
                 type="number"
                 value={data.carbs_grams}
@@ -1349,7 +1360,7 @@ function CreatePlanModal({ data, saving, onChange, onSave, onClose }: CreatePlan
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">Fat (g)</label>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">שומן (גרם)</label>
               <input
                 type="number"
                 value={data.fat_grams}
@@ -1359,7 +1370,7 @@ function CreatePlanModal({ data, saving, onChange, onSave, onClose }: CreatePlan
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">General Notes</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">הערות כלליות</label>
             <textarea
               value={data.notes}
               onChange={(e) => onChange({ ...data, notes: e.target.value })}
@@ -1374,14 +1385,14 @@ function CreatePlanModal({ data, saving, onChange, onSave, onClose }: CreatePlan
             disabled={saving}
             className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-emerald-500/25"
           >
-            {saving ? 'Creating...' : 'Create Plan'}
+            {saving ? 'יוצר...' : 'צור תפריט'}
           </button>
           <button
             onClick={onClose}
             disabled={saving}
             className="flex-1 bg-gray-700/50 hover:bg-gray-700 text-gray-300 py-3.5 rounded-xl font-semibold transition-all duration-300"
           >
-            Cancel
+            ביטול
           </button>
         </div>
       </div>
