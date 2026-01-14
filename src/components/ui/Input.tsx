@@ -57,6 +57,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               ${success && !error ? 'border-emerald-500/50 focus:border-emerald-500 focus:ring-emerald-500/50' : ''}
               ${!error && !success ? 'focus:ring-emerald-500/50 focus:border-emerald-500/50' : ''}
               ${showPasswordToggle ? 'pr-12' : ''}
+              ${(error || success) && showPasswordToggle ? 'pl-12' : ''}
               ${isFocused ? 'shadow-lg' : ''}
               ${className}
             `}
@@ -74,7 +75,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
             </button>
           )}
-          {(error || success) && (
+          {(error || success) && !showPasswordToggle && (
             <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true">
               {error ? (
                 <AlertCircle className="w-5 h-5 text-red-400" />

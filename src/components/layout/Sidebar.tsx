@@ -98,8 +98,11 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
           )}
           <button
             onClick={() => setIsMinimized(!isMinimized)}
-            className="p-2 rounded-xl text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
+            className="p-2 rounded-xl text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
             title={isMinimized ? 'הרחב' : 'מזער'}
+            aria-label={isMinimized ? 'הרחב תפריט' : 'מזער תפריט'}
+            aria-expanded={!isMinimized}
+            aria-controls="main-navigation"
           >
             {isMinimized ? (
               <ChevronLeft className="h-4 w-4" />
@@ -119,6 +122,8 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pr-10 pl-4 py-2.5 text-sm bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                aria-label="חפש בתפריט"
+                aria-controls="main-navigation"
               />
             </div>
           </div>
@@ -165,9 +170,10 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                   {category.id !== 'main' && (
                     <button
                       onClick={() => toggleCategory(category.id)}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-zinc-500 uppercase tracking-wider hover:text-zinc-400 hover:bg-zinc-800/30 transition-all"
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-zinc-500 uppercase tracking-wider hover:text-zinc-400 hover:bg-zinc-800/30 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                       aria-expanded={isExpanded}
                       aria-controls={`sidebar-category-${category.id}`}
+                      aria-label={`${category.label}, ${isExpanded ? 'מוקפל' : 'מורחב'}`}
                     >
                       <div className="flex items-center gap-2">
                         <CategoryIcon className="h-3.5 w-3.5" />
@@ -189,12 +195,13 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                           <button
                             key={id}
                             onClick={() => handleItemClick(id)}
-                            className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden active:scale-[0.98] ${
+                            className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
                               isActive
                                 ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-500/10 text-emerald-400 shadow-lg shadow-emerald-500/10'
                                 : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
                             }`}
                             aria-current={isActive ? 'page' : undefined}
+                            aria-label={`${label}, ${description}`}
                           >
                             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                             

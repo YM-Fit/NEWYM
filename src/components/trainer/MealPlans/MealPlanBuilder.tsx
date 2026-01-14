@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
+import { createFoodItem, updateFoodItem, deleteFoodItem } from '../../../api/nutritionApi';
+import type { NutritionFoodItem } from '../../../types/nutritionTypes';
 import {
   ArrowRight,
   Plus,
@@ -46,6 +48,7 @@ interface Meal {
   fat: number | null;
   notes: string;
   order_index: number;
+  food_items?: NutritionFoodItem[];
 }
 
 interface MealPlan {
@@ -176,7 +179,7 @@ export default function MealPlanBuilder({
   };
 
   const loadMeals = async (planId: string) => {
-    const { data, error } = await supabase
+    const { data: mealsData, error } = await supabase
       .from('meal_plan_meals')
       .select('*')
       .eq('plan_id', planId)
@@ -187,7 +190,28 @@ export default function MealPlanBuilder({
       return;
     }
 
-    setMeals(data || []);
+    if (!mealsData) {
+      setMeals([]);
+      return;
+    }
+
+    // Load food items for each meal
+    const mealsWithFoodItems = await Promise.all(
+      mealsData.map(async (meal) => {
+        const { data: foodItems } = await supabase
+          .from('meal_plan_food_items')
+          .select('*')
+          .eq('meal_id', meal.id)
+          .order('order_index', { ascending: true });
+
+        return {
+          ...meal,
+          food_items: foodItems || [],
+        };
+      })
+    );
+
+    setMeals(mealsWithFoodItems);
   };
 
   const loadTemplates = async () => {
@@ -661,6 +685,7 @@ export default function MealPlanBuilder({
           onAddNote={() => setShowNoteTemplateModal(true)}
           getMealLabel={getMealLabel}
           calculateTotalMacros={calculateTotalMacros}
+          setMeals={setMeals}
         />
       )}
 
@@ -873,6 +898,7 @@ interface PlanEditorViewProps {
   onAddNote: () => void;
   getMealLabel: (value: string) => string;
   calculateTotalMacros: () => { calories: number; protein: number; carbs: number; fat: number };
+  setMeals: React.Dispatch<React.SetStateAction<Meal[]>>;
 }
 
 function PlanEditorView({
@@ -894,6 +920,7 @@ function PlanEditorView({
   onAddNote,
   getMealLabel,
   calculateTotalMacros,
+  setMeals,
 }: PlanEditorViewProps) {
   const totals = calculateTotalMacros();
 
@@ -1027,10 +1054,10 @@ function PlanEditorView({
         </div>
       </div>
 
-      {/* Meals Card */}
-      <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl border border-white/10 shadow-xl overflow-hidden">
-        <div className="p-6 border-b border-white/10 flex items-center justify-between">
-          <h3 className="font-bold text-white text-xl">ארוחות ({meals.length})</h3>
+      {/* Meals organized by meal type */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-white text-xl">ארוחות יומיות</h3>
           <button
             onClick={onAddMeal}
             className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500/20 text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-500/30 transition-all duration-300 hover:scale-105"
@@ -1040,177 +1067,447 @@ function PlanEditorView({
           </button>
         </div>
 
-        <div className="divide-y divide-white/10">
-          {meals.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">
-              <AlertCircle className="h-14 w-14 mx-auto mb-4 text-gray-600" />
-              <p className="font-medium">אין ארוחות בתפריט זה</p>
-              <p className="text-sm mt-2">לחץ על "הוסף ארוחה" כדי להתחיל</p>
-            </div>
-          ) : (
-            // Group meals by meal type and sort by order
-            [...meals]
-              .sort((a, b) => {
-                const mealOrder = ['breakfast', 'morning_snack', 'lunch', 'afternoon_snack', 'dinner', 'evening_snack'];
-                const aIndex = mealOrder.indexOf(a.meal_name);
-                const bIndex = mealOrder.indexOf(b.meal_name);
-                if (aIndex !== bIndex) return aIndex - bIndex;
-                return a.order_index - b.order_index;
-              })
-              .map((meal, index) => (
+        {meals.length === 0 ? (
+          <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl border border-white/10 shadow-xl p-12 text-center text-gray-500">
+            <AlertCircle className="h-14 w-14 mx-auto mb-4 text-gray-600" />
+            <p className="font-medium">אין ארוחות בתפריט זה</p>
+            <p className="text-sm mt-2">לחץ על "הוסף ארוחה" כדי להתחיל</p>
+          </div>
+        ) : (
+          // Group meals by meal type
+          MEAL_NAMES.map((mealType) => {
+            const mealsForType = meals.filter(m => m.meal_name === mealType.value);
+            if (mealsForType.length === 0) return null;
+
+            const mealTotals = mealsForType.reduce(
+              (acc, m) => ({
+                calories: acc.calories + (m.calories || 0),
+                protein: acc.protein + (m.protein || 0),
+                carbs: acc.carbs + (m.carbs || 0),
+                fat: acc.fat + (m.fat || 0),
+              }),
+              { calories: 0, protein: 0, carbs: 0, fat: 0 }
+            );
+
+            return (
               <div
-                key={index}
-                draggable
-                onDragStart={() => onDragStart(index)}
-                onDragOver={(e) => onDragOver(e, index)}
-                onDragEnd={onDragEnd}
-                className="p-5 hover:bg-white/5 transition-all duration-300"
+                key={mealType.value}
+                className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl border border-white/10 shadow-xl overflow-hidden"
               >
-                <div
-                  className="flex items-center justify-between cursor-pointer"
-                  onClick={() => onToggleMeal(index)}
-                >
-                  <div className="flex items-center gap-4">
-                    <GripVertical className="h-5 w-5 text-gray-500 cursor-grab hover:text-gray-300 transition-colors" />
-                    <div className="p-2 bg-emerald-500/20 rounded-xl">
-                      <Clock className="h-4 w-4 text-emerald-400" />
+                <div className="p-6 border-b border-white/10 bg-gradient-to-r from-emerald-500/10 to-teal-500/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">{mealType.icon}</span>
+                      <div>
+                        <h4 className="font-bold text-white text-xl">{mealType.label}</h4>
+                        <p className="text-sm text-gray-400">{mealsForType.length} {mealsForType.length === 1 ? 'מזון' : 'מזונות'}</p>
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-white text-lg">{MEAL_NAMES.find(m => m.value === meal.meal_name)?.icon} {getMealLabel(meal.meal_name)}</span>
-                      <span className="text-gray-400 text-sm">{meal.meal_time}</span>
+                    <div className="flex items-center gap-4">
+                      {mealTotals.calories > 0 && (
+                        <div className="flex gap-2 text-sm">
+                          {mealTotals.calories > 0 && (
+                            <span className="text-gray-300 bg-gray-700/50 px-3 py-1.5 rounded-lg">
+                              <span className="text-emerald-400 font-semibold">{mealTotals.calories}</span> קל'
+                            </span>
+                          )}
+                          {mealTotals.protein > 0 && (
+                            <span className="text-gray-300 bg-gray-700/50 px-3 py-1.5 rounded-lg">
+                              <span className="text-emerald-400 font-semibold">{mealTotals.protein}ג</span> חלבון
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <button
+                        onClick={() => {
+                          const defaultTimes: Record<string, string> = {
+                            breakfast: '08:00',
+                            morning_snack: '10:00',
+                            lunch: '13:00',
+                            afternoon_snack: '16:00',
+                            dinner: '19:00',
+                            evening_snack: '21:00',
+                          };
+                          const newMeal: Meal = {
+                            meal_time: defaultTimes[mealType.value] || '12:00',
+                            meal_name: mealType.value,
+                            description: '',
+                            alternatives: '',
+                            calories: null,
+                            protein: null,
+                            carbs: null,
+                            fat: null,
+                            notes: '',
+                            order_index: meals.length,
+                          };
+                          onAddMeal();
+                          // Update the new meal to match the meal type
+                          setTimeout(() => {
+                            const lastIndex = meals.length;
+                            onUpdateMeal(lastIndex, 'meal_name', mealType.value);
+                            onUpdateMeal(lastIndex, 'meal_time', newMeal.meal_time);
+                          }, 100);
+                        }}
+                        className="flex items-center gap-2 px-3 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-500/30 transition-all duration-300"
+                      >
+                        <Plus className="h-4 w-4" />
+                        הוסף מזון
+                      </button>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    {meal.calories && (
-                      <span className="text-sm text-gray-500 bg-gray-700/50 px-3 py-1 rounded-lg">{meal.calories} קל'</span>
-                    )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteMeal(index);
-                      }}
-                      className="p-2 text-red-400 hover:bg-red-500/20 rounded-xl transition-all duration-300"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                    {expandedMeals.has(index) ? (
-                      <ChevronUp className="h-5 w-5 text-gray-400" />
-                    ) : (
-                      <ChevronDown className="h-5 w-5 text-gray-400" />
-                    )}
                   </div>
                 </div>
 
-                {expandedMeals.has(index) && (
-                  <div className="mt-6 space-y-5 pr-10">
-                    <div className="grid grid-cols-2 gap-5">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">שעה</label>
-                        <input
-                          type="time"
-                          value={meal.meal_time}
-                          onChange={(e) => onUpdateMeal(index, 'meal_time', e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">סוג ארוחה</label>
-                        <select
-                          value={meal.meal_name}
-                          onChange={(e) => onUpdateMeal(index, 'meal_name', e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
+                <div className="divide-y divide-white/10">
+                  {mealsForType
+                    .sort((a, b) => a.order_index - b.order_index)
+                    .map((meal) => {
+                      const mealIndex = meals.findIndex(m => 
+                        (m.id && meal.id && m.id === meal.id) || 
+                        (!m.id && !meal.id && m.meal_name === meal.meal_name && m.order_index === meal.order_index && m.meal_time === meal.meal_time)
+                      );
+                      const displayIndex = mealIndex >= 0 ? mealIndex : meals.findIndex(m => m.meal_name === meal.meal_name);
+                      
+                      return (
+                        <div
+                          key={meal.id || `${meal.meal_name}-${meal.order_index}-${meal.meal_time}`}
+                          className="p-5 hover:bg-white/5 transition-all duration-300"
                         >
-                          {MEAL_NAMES.map((m) => (
-                            <option key={m.value} value={m.value}>
-                              {m.icon} {m.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
+                          <div
+                            className="flex items-center justify-between cursor-pointer"
+                            onClick={() => onToggleMeal(displayIndex)}
+                          >
+                            <div className="flex items-center gap-4 flex-1">
+                              <div className="p-2 bg-emerald-500/20 rounded-xl">
+                                <Clock className="h-4 w-4 text-emerald-400" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-1">
+                                  <span className="font-semibold text-white">{meal.meal_time}</span>
+                                  {meal.description && (
+                                    <span className="text-gray-400 text-sm line-clamp-1">{meal.description}</span>
+                                  )}
+                                </div>
+                                {meal.calories || meal.protein ? (
+                                  <div className="flex gap-2 text-xs">
+                                    {meal.calories && (
+                                      <span className="text-gray-500 bg-gray-700/50 px-2 py-0.5 rounded">{meal.calories} קל'</span>
+                                    )}
+                                    {meal.protein && (
+                                      <span className="text-gray-500 bg-gray-700/50 px-2 py-0.5 rounded">{meal.protein}ג חלבון</span>
+                                    )}
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDeleteMeal(displayIndex);
+                                }}
+                                className="p-2 text-red-400 hover:bg-red-500/20 rounded-xl transition-all duration-300"
+                                title="מחק מזון"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                              {expandedMeals.has(displayIndex) ? (
+                                <ChevronUp className="h-5 w-5 text-gray-400" />
+                              ) : (
+                                <ChevronDown className="h-5 w-5 text-gray-400" />
+                              )}
+                            </div>
+                          </div>
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">תיאור המזון</label>
-                      <textarea
-                        value={meal.description}
-                        onChange={(e) => onUpdateMeal(index, 'description', e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
-                        rows={3}
-                        placeholder="לדוגמה: 2 ביצים, 2 פרוסות לחם מלא, סלט ירקות..."
-                      />
-                    </div>
+                          {expandedMeals.has(displayIndex) && (
+                            <div className="mt-6 space-y-5 pr-10">
+                              <div className="grid grid-cols-2 gap-5">
+                                <div>
+                                  <label className="block text-sm font-semibold text-gray-300 mb-2">שעה</label>
+                                  <input
+                                    type="time"
+                                    value={meal.meal_time}
+                                    onChange={(e) => onUpdateMeal(displayIndex, 'meal_time', e.target.value)}
+                                    className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold text-gray-300 mb-2">סוג ארוחה</label>
+                                  <select
+                                    value={meal.meal_name}
+                                    onChange={(e) => onUpdateMeal(displayIndex, 'meal_name', e.target.value)}
+                                    className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
+                                  >
+                                    {MEAL_NAMES.map((m) => (
+                                      <option key={m.value} value={m.value}>
+                                        {m.icon} {m.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">חלופות</label>
-                      <textarea
-                        value={meal.alternatives}
-                        onChange={(e) => onUpdateMeal(index, 'alternatives', e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
-                        rows={2}
-                        placeholder="ניתן להחליף ב..."
-                      />
-                    </div>
+                              {/* Food Items List */}
+                              <div>
+                                <div className="flex items-center justify-between mb-3">
+                                  <label className="block text-sm font-semibold text-gray-300">פריטי מזון</label>
+                                  <button
+                                    onClick={async () => {
+                                      if (!meal.id) {
+                                        toast.error('שמור את הארוחה קודם לפני הוספת פריטי מזון');
+                                        return;
+                                      }
+                                      const newItem = await createFoodItem(meal.id, {
+                                        food_name: '',
+                                        quantity: 1,
+                                        unit: 'g',
+                                        calories: null,
+                                        protein: null,
+                                        carbs: null,
+                                        fat: null,
+                                        order_index: (meal.food_items?.length || 0),
+                                      });
+                                      if (newItem) {
+                                        const updatedMeals = [...meals];
+                                        updatedMeals[displayIndex] = {
+                                          ...updatedMeals[displayIndex],
+                                          food_items: [...(updatedMeals[displayIndex].food_items || []), newItem],
+                                        };
+                                        setMeals(updatedMeals);
+                                        toast.success('פריט מזון נוסף');
+                                      }
+                                    }}
+                                    className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs font-semibold hover:bg-emerald-500/30 transition-all"
+                                  >
+                                    <Plus className="h-3 w-3" />
+                                    הוסף פריט מזון
+                                  </button>
+                                </div>
 
-                    <div className="grid grid-cols-4 gap-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">קלוריות</label>
-                        <input
-                          type="number"
-                          value={meal.calories || ''}
-                          onChange={(e) => onUpdateMeal(index, 'calories', e.target.value ? parseInt(e.target.value) : null)}
-                          className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">חלבון (גרם)</label>
-                        <input
-                          type="number"
-                          value={meal.protein || ''}
-                          onChange={(e) => onUpdateMeal(index, 'protein', e.target.value ? parseInt(e.target.value) : null)}
-                          className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">פחמימות (גרם)</label>
-                        <input
-                          type="number"
-                          value={meal.carbs || ''}
-                          onChange={(e) => onUpdateMeal(index, 'carbs', e.target.value ? parseInt(e.target.value) : null)}
-                          className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">שומן (גרם)</label>
-                        <input
-                          type="number"
-                          value={meal.fat || ''}
-                          onChange={(e) => onUpdateMeal(index, 'fat', e.target.value ? parseInt(e.target.value) : null)}
-                          className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
-                        />
-                      </div>
-                    </div>
+                                {meal.food_items && meal.food_items.length > 0 ? (
+                                  <div className="space-y-2">
+                                    {meal.food_items.map((item, itemIndex) => (
+                                      <div
+                                        key={item.id}
+                                        className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50"
+                                      >
+                                        <div className="grid grid-cols-12 gap-3 items-end">
+                                          <div className="col-span-4">
+                                            <label className="block text-xs font-semibold text-gray-400 mb-1">שם מזון</label>
+                                            <input
+                                              type="text"
+                                              value={item.food_name}
+                                              onChange={async (e) => {
+                                                const updated = await updateFoodItem(item.id, { food_name: e.target.value });
+                                                if (updated) {
+                                                  const updatedMeals = [...meals];
+                                                  const updatedItems = [...(updatedMeals[displayIndex].food_items || [])];
+                                                  updatedItems[itemIndex] = updated;
+                                                  updatedMeals[displayIndex] = {
+                                                    ...updatedMeals[displayIndex],
+                                                    food_items: updatedItems,
+                                                  };
+                                                  setMeals(updatedMeals);
+                                                }
+                                              }}
+                                              className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white text-sm focus:ring-2 focus:ring-emerald-500/50"
+                                              placeholder="לדוגמה: ביצה"
+                                            />
+                                          </div>
+                                          <div className="col-span-2">
+                                            <label className="block text-xs font-semibold text-gray-400 mb-1">כמות</label>
+                                            <input
+                                              type="number"
+                                              step="0.1"
+                                              value={item.quantity}
+                                              onChange={async (e) => {
+                                                const updated = await updateFoodItem(item.id, { quantity: parseFloat(e.target.value) || 0 });
+                                                if (updated) {
+                                                  const updatedMeals = [...meals];
+                                                  const updatedItems = [...(updatedMeals[displayIndex].food_items || [])];
+                                                  updatedItems[itemIndex] = updated;
+                                                  updatedMeals[displayIndex] = {
+                                                    ...updatedMeals[displayIndex],
+                                                    food_items: updatedItems,
+                                                  };
+                                                  setMeals(updatedMeals);
+                                                }
+                                              }}
+                                              className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white text-sm focus:ring-2 focus:ring-emerald-500/50"
+                                            />
+                                          </div>
+                                          <div className="col-span-2">
+                                            <label className="block text-xs font-semibold text-gray-400 mb-1">יחידה</label>
+                                            <select
+                                              value={item.unit}
+                                              onChange={async (e) => {
+                                                const updated = await updateFoodItem(item.id, { unit: e.target.value });
+                                                if (updated) {
+                                                  const updatedMeals = [...meals];
+                                                  const updatedItems = [...(updatedMeals[displayIndex].food_items || [])];
+                                                  updatedItems[itemIndex] = updated;
+                                                  updatedMeals[displayIndex] = {
+                                                    ...updatedMeals[displayIndex],
+                                                    food_items: updatedItems,
+                                                  };
+                                                  setMeals(updatedMeals);
+                                                }
+                                              }}
+                                              className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white text-sm focus:ring-2 focus:ring-emerald-500/50"
+                                            >
+                                              <option value="g">גרם</option>
+                                              <option value="unit">יחידה</option>
+                                              <option value="ml">מ"ל</option>
+                                              <option value="cup">כוס</option>
+                                              <option value="tbsp">כף</option>
+                                              <option value="tsp">כפית</option>
+                                            </select>
+                                          </div>
+                                          <div className="col-span-3 flex gap-2">
+                                            <div className="flex-1">
+                                              <label className="block text-xs font-semibold text-gray-400 mb-1">קל'</label>
+                                              <input
+                                                type="number"
+                                                value={item.calories || ''}
+                                                onChange={async (e) => {
+                                                  const updated = await updateFoodItem(item.id, { calories: e.target.value ? parseInt(e.target.value) : null });
+                                                  if (updated) {
+                                                    const updatedMeals = [...meals];
+                                                    const updatedItems = [...(updatedMeals[displayIndex].food_items || [])];
+                                                    updatedItems[itemIndex] = updated;
+                                                    updatedMeals[displayIndex] = {
+                                                      ...updatedMeals[displayIndex],
+                                                      food_items: updatedItems,
+                                                    };
+                                                    setMeals(updatedMeals);
+                                                  }
+                                                }}
+                                                className="w-full px-2 py-2 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white text-xs focus:ring-2 focus:ring-emerald-500/50"
+                                                placeholder="קל'"
+                                              />
+                                            </div>
+                                            <div className="flex-1">
+                                              <label className="block text-xs font-semibold text-gray-400 mb-1">חלבון</label>
+                                              <input
+                                                type="number"
+                                                value={item.protein || ''}
+                                                onChange={async (e) => {
+                                                  const updated = await updateFoodItem(item.id, { protein: e.target.value ? parseInt(e.target.value) : null });
+                                                  if (updated) {
+                                                    const updatedMeals = [...meals];
+                                                    const updatedItems = [...(updatedMeals[displayIndex].food_items || [])];
+                                                    updatedItems[itemIndex] = updated;
+                                                    updatedMeals[displayIndex] = {
+                                                      ...updatedMeals[displayIndex],
+                                                      food_items: updatedItems,
+                                                    };
+                                                    setMeals(updatedMeals);
+                                                  }
+                                                }}
+                                                className="w-full px-2 py-2 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white text-xs focus:ring-2 focus:ring-emerald-500/50"
+                                                placeholder="גרם"
+                                              />
+                                            </div>
+                                          </div>
+                                          <div className="col-span-1">
+                                            <button
+                                              onClick={async () => {
+                                                if (await deleteFoodItem(item.id)) {
+                                                  const updatedMeals = [...meals];
+                                                  updatedMeals[displayIndex] = {
+                                                    ...updatedMeals[displayIndex],
+                                                    food_items: (updatedMeals[displayIndex].food_items || []).filter(fi => fi.id !== item.id),
+                                                  };
+                                                  setMeals(updatedMeals);
+                                                  toast.success('פריט מזון נמחק');
+                                                }
+                                              }}
+                                              className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-all"
+                                              title="מחק"
+                                            >
+                                              <Trash2 className="h-4 w-4" />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-6 text-gray-500 text-sm bg-gray-800/30 rounded-xl border border-dashed border-gray-700">
+                                    אין פריטי מזון. לחץ על "הוסף פריט מזון" כדי להתחיל.
+                                  </div>
+                                )}
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">הערות</label>
-                      <input
-                        type="text"
-                        value={meal.notes}
-                        onChange={(e) => onUpdateMeal(index, 'notes', e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
-                        placeholder="הערות נוספות..."
-                      />
-                    </div>
-                  </div>
-                )}
+                                {/* Meal totals from food items */}
+                                {meal.food_items && meal.food_items.length > 0 && (
+                                  <div className="mt-3 p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                                    <div className="flex items-center justify-between text-sm">
+                                      <span className="text-gray-300 font-semibold">סיכום הארוחה:</span>
+                                      <div className="flex gap-4">
+                                        <span className="text-emerald-400">
+                                          {meal.food_items.reduce((sum, item) => sum + (item.calories || 0), 0)} קל'
+                                        </span>
+                                        <span className="text-emerald-400">
+                                          {meal.food_items.reduce((sum, item) => sum + (item.protein || 0), 0)}ג חלבון
+                                        </span>
+                                        <span className="text-emerald-400">
+                                          {meal.food_items.reduce((sum, item) => sum + (item.carbs || 0), 0)}ג פחמימות
+                                        </span>
+                                        <span className="text-emerald-400">
+                                          {meal.food_items.reduce((sum, item) => sum + (item.fat || 0), 0)}ג שומן
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-semibold text-gray-300 mb-2">הערות כלליות (אופציונלי)</label>
+                                <textarea
+                                  value={meal.description}
+                                  onChange={(e) => onUpdateMeal(displayIndex, 'description', e.target.value)}
+                                  className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
+                                  rows={2}
+                                  placeholder="הערות כלליות על הארוחה..."
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-semibold text-gray-300 mb-2">חלופות</label>
+                                <textarea
+                                  value={meal.alternatives}
+                                  onChange={(e) => onUpdateMeal(displayIndex, 'alternatives', e.target.value)}
+                                  className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
+                                  rows={2}
+                                  placeholder="ניתן להחליף ב..."
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-semibold text-gray-300 mb-2">הערות</label>
+                                <input
+                                  type="text"
+                                  value={meal.notes}
+                                  onChange={(e) => onUpdateMeal(displayIndex, 'notes', e.target.value)}
+                                  className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300"
+                                  placeholder="הערות נוספות..."
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
-            ))
-          )}
-        </div>
+            );
+          })
+        )}
 
         {meals.length > 0 && totals.calories > 0 && (
-          <div className="p-5 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-t border-white/10">
+          <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl border border-white/10 shadow-xl p-5 bg-gradient-to-r from-emerald-500/10 to-teal-500/10">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-white">סיכום מהארוחות:</span>
+              <span className="font-semibold text-white">סיכום יומי כולל:</span>
               <div className="flex gap-6 text-sm">
                 <span className="text-gray-300"><span className="text-emerald-400 font-semibold">{totals.calories}</span> קלוריות</span>
                 <span className="text-gray-300"><span className="text-emerald-400 font-semibold">{totals.protein}ג</span> חלבון</span>

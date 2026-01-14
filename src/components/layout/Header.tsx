@@ -51,9 +51,10 @@ export default function Header({ onLogout, trainerName, onNavigateToTrainee, onT
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl text-zinc-400 hover:text-amber-400 dark:hover:text-amber-400 hover:bg-amber-500/10 transition-all duration-300 border border-transparent hover:border-amber-500/20 active:scale-95 group relative overflow-hidden"
+            className="p-2.5 rounded-xl text-zinc-400 hover:text-amber-400 dark:hover:text-amber-400 hover:bg-amber-500/10 transition-all duration-300 border border-transparent hover:border-amber-500/20 active:scale-95 group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-amber-500/50"
             title={theme === 'dark' ? 'מצב בהיר' : 'מצב כהה'}
             aria-label={theme === 'dark' ? 'עבור למצב בהיר' : 'עבור למצב כהה'}
+            aria-pressed={theme === 'dark'}
           >
             <div className="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
             {theme === 'dark' ? (
@@ -79,7 +80,7 @@ export default function Header({ onLogout, trainerName, onNavigateToTrainee, onT
 
           <button
             onClick={onLogout}
-            className="p-2.5 text-zinc-400 hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all duration-300 border border-transparent hover:border-red-500/20 active:scale-95 group relative overflow-hidden"
+            className="p-2.5 text-zinc-400 hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all duration-300 border border-transparent hover:border-red-500/20 active:scale-95 group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-red-500/50"
             title="התנתק"
             aria-label="התנתק"
           >

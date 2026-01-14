@@ -74,10 +74,10 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
   const calculateTotals = () => {
     return meals.reduce(
       (acc, meal) => ({
-        calories: acc.calories + (meal.calories || 0),
-        protein: acc.protein + (meal.protein || 0),
-        carbs: acc.carbs + (meal.carbs || 0),
-        fat: acc.fat + (meal.fat || 0),
+        calories: acc.calories + (meal.total_calories || 0),
+        protein: acc.protein + (meal.total_protein || 0),
+        carbs: acc.carbs + (meal.total_carbs || 0),
+        fat: acc.fat + (meal.total_fat || 0),
       }),
       { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
@@ -251,8 +251,10 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
                           {formatTime(meal.meal_time)}
                         </span>
                       </div>
-                      {meal.calories && (
-                        <span className="text-xs text-[var(--color-text-muted)]">{meal.calories} קלוריות</span>
+                      {meal.total_calories && (
+                        <span className="text-xs text-[var(--color-text-muted)]">
+                          {meal.total_calories} קלוריות
+                        </span>
                       )}
                     </div>
                   </div>
@@ -265,12 +267,90 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
 
                 {isExpanded && (
                   <div className="px-4 pb-4 space-y-3 border-t border-[var(--color-border)] pt-3">
-                    {meal.description && (
+                    {/* Food Items List */}
+                    {meal.food_items && meal.food_items.length > 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">פריטי מזון:</p>
+                        {meal.food_items.map((item) => (
+                          <div
+                            key={item.id}
+                            className="bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-lg p-3"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <p className="font-semibold text-[var(--color-text-primary)]">
+                                  {item.food_name}
+                                </p>
+                                <p className="text-sm text-[var(--color-text-secondary)] mt-1">
+                                  {item.quantity} {item.unit === 'g' ? 'גרם' : item.unit === 'unit' ? 'יחידה' : item.unit === 'ml' ? 'מ"ל' : item.unit === 'cup' ? 'כוס' : item.unit === 'tbsp' ? 'כף' : item.unit === 'tsp' ? 'כפית' : item.unit}
+                                </p>
+                              </div>
+                              {(item.calories || item.protein || item.carbs || item.fat) && (
+                                <div className="flex gap-2 flex-wrap">
+                                  {item.calories && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/15 border border-emerald-500/30 rounded-full text-xs text-emerald-500">
+                                      {item.calories} קל'
+                                    </span>
+                                  )}
+                                  {item.protein && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-500/15 border border-red-500/30 rounded-full text-xs text-red-500">
+                                      <Beef className="w-3 h-3" />
+                                      {item.protein}ג
+                                    </span>
+                                  )}
+                                  {item.carbs && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-500/15 border border-amber-500/30 rounded-full text-xs text-amber-600">
+                                      <Wheat className="w-3 h-3" />
+                                      {item.carbs}ג
+                                    </span>
+                                  )}
+                                  {item.fat && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-500/15 border border-blue-500/30 rounded-full text-xs text-blue-500">
+                                      <Droplet className="w-3 h-3" />
+                                      {item.fat}ג
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {/* Meal totals from food items */}
+                        {meal.total_calories || meal.total_protein || meal.total_carbs || meal.total_fat ? (
+                          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 mt-3">
+                            <p className="text-sm font-semibold text-emerald-400 mb-2">סיכום הארוחה:</p>
+                            <div className="flex gap-3 flex-wrap">
+                              {meal.total_calories && (
+                                <span className="text-sm text-emerald-300">
+                                  <span className="font-bold">{meal.total_calories}</span> קלוריות
+                                </span>
+                              )}
+                              {meal.total_protein && (
+                                <span className="text-sm text-emerald-300">
+                                  <span className="font-bold">{meal.total_protein}ג</span> חלבון
+                                </span>
+                              )}
+                              {meal.total_carbs && (
+                                <span className="text-sm text-emerald-300">
+                                  <span className="font-bold">{meal.total_carbs}ג</span> פחמימות
+                                </span>
+                              )}
+                              {meal.total_fat && (
+                                <span className="text-sm text-emerald-300">
+                                  <span className="font-bold">{meal.total_fat}ג</span> שומן
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : meal.description ? (
                       <div className="bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-lg p-3">
                         <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-1">מה לאכול:</p>
                         <p className="text-[var(--color-text-primary)] whitespace-pre-wrap">{meal.description}</p>
                       </div>
-                    )}
+                    ) : null}
 
                     {meal.alternatives && (
                       <div className="bg-[var(--color-bg-surface)] rounded-lg p-3 border border-dashed border-[var(--color-border)]">
@@ -279,26 +359,10 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
                       </div>
                     )}
 
-                    {(meal.protein || meal.carbs || meal.fat) && (
-                      <div className="flex gap-2 flex-wrap">
-                        {meal.protein && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-500/15 border border-red-500/30 rounded-full text-xs text-red-500">
-                            <Beef className="w-3 h-3" />
-                            {meal.protein} גרם חלבון
-                          </span>
-                        )}
-                        {meal.carbs && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-500/15 border border-amber-500/30 rounded-full text-xs text-amber-600">
-                            <Wheat className="w-3 h-3" />
-                            {meal.carbs} גרם פחמימות
-                          </span>
-                        )}
-                        {meal.fat && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-500/15 border border-blue-500/30 rounded-full text-xs text-blue-500">
-                            <Droplet className="w-3 h-3" />
-                            {meal.fat} גרם שומן
-                          </span>
-                        )}
+                    {meal.description && meal.food_items && meal.food_items.length > 0 && (
+                      <div className="bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-lg p-3">
+                        <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-1">הערות:</p>
+                        <p className="text-[var(--color-text-secondary)] text-sm whitespace-pre-wrap">{meal.description}</p>
                       </div>
                     )}
 

@@ -15,19 +15,36 @@ export interface MealPlan {
   updated_at: string | null;
 }
 
+export interface NutritionFoodItem {
+  id: string;
+  meal_id: string;
+  food_name: string;
+  quantity: number;
+  unit: string; // 'g' (גרם), 'unit' (יחידות), 'ml' (מיליליטר), 'cup' (כוס), etc.
+  calories: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
+  order_index: number;
+  created_at?: string;
+}
+
 export interface MealPlanMeal {
   id: string;
   plan_id: string;
   meal_time: string;
   meal_name: string;
-  description: string;
+  description: string; // שדה זה ישמש כהערה כללית לארוחה (אופציונלי)
   alternatives?: string;
-  calories: number | null;
-  protein: number | null;
-  carbs: number | null;
-  fat: number | null;
   notes?: string;
   order_index: number;
+  // פריטי המזון יטענו בנפרד
+  food_items?: NutritionFoodItem[];
+  // ערכים תזונתיים כוללים (מחושבים מכל פריטי המזון)
+  total_calories?: number | null;
+  total_protein?: number | null;
+  total_carbs?: number | null;
+  total_fat?: number | null;
 }
 
 export interface TraineeMeal {

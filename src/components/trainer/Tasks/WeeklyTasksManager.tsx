@@ -15,6 +15,35 @@ interface WeeklyTasksManagerProps {
   onBack?: () => void;
 }
 
+// Get Monday of current week (ISO 8601 week start)
+function getCurrentWeekStart(): string {
+  const today = new Date();
+  const dayOfWeek = today.getDay() || 7; // Convert Sunday (0) to 7
+  const daysToMonday = dayOfWeek - 1; // Monday is day 1
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - daysToMonday);
+  startOfWeek.setHours(0, 0, 0, 0);
+  
+  // Return in YYYY-MM-DD format using local date to avoid timezone issues
+  const year = startOfWeek.getFullYear();
+  const month = (startOfWeek.getMonth() + 1).toString().padStart(2, '0');
+  const day = startOfWeek.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getWeekEnd(weekStart: string): string {
+  const [yearStr, monthStr, dayStr] = weekStart.split('-');
+  const start = new Date(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1, parseInt(dayStr, 10));
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  
+  // Return in YYYY-MM-DD format using local date
+  const year = end.getFullYear();
+  const month = (end.getMonth() + 1).toString().padStart(2, '0');
+  const day = end.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export default function WeeklyTasksManager({
   traineeId,
   traineeName,
@@ -41,20 +70,80 @@ export default function WeeklyTasksManager({
     }
   }, [user, traineeId, selectedWeek]);
 
-  function getCurrentWeekStart(): string {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - dayOfWeek);
-    startOfWeek.setHours(0, 0, 0, 0);
-    return startOfWeek.toISOString().split('T')[0];
+
+  // Convert date (YYYY-MM-DD) to week format (YYYY-Www) - ISO 8601 week
+  // ISO 8601: Week starts on Monday, week 1 contains January 4th
+  // Note: date should already be a Monday date (from selectedWeek)
+  function dateToWeekFormat(date: string): string {
+    // Parse date and ensure it's treated as UTC to avoid timezone issues
+    const [yearStr, monthStr, dayStr] = date.split('-');
+    const dateObj = new Date(Date.UTC(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1, parseInt(dayStr, 10)));
+    
+    // Ensure we're working with Monday (convert if needed)
+    const dayOfWeek = dateObj.getUTCDay() || 7;
+    const daysToMonday = dayOfWeek - 1;
+    const monday = new Date(dateObj);
+    monday.setUTCDate(dateObj.getUTCDate() - daysToMonday);
+    
+    const year = monday.getUTCFullYear();
+    
+    // Find Monday of week containing January 4th (week 1)
+    const jan4 = new Date(Date.UTC(year, 0, 4));
+    const jan4Day = jan4.getUTCDay() || 7;
+    const daysToJan4Monday = jan4Day - 1;
+    const jan4Monday = new Date(Date.UTC(year, 0, 4 - daysToJan4Monday));
+    
+    // Calculate week number
+    const daysDiff = Math.floor((monday.getTime() - jan4Monday.getTime()) / (24 * 60 * 60 * 1000));
+    let weekNumber = Math.floor(daysDiff / 7) + 1;
+    let resultYear = year;
+    
+    // Handle year boundaries
+    if (weekNumber < 1) {
+      // Week belongs to previous year
+      resultYear = year - 1;
+      const prevJan4 = new Date(Date.UTC(resultYear, 0, 4));
+      const prevJan4Day = prevJan4.getUTCDay() || 7;
+      const prevJan4Monday = new Date(Date.UTC(resultYear, 0, 4 - (prevJan4Day - 1)));
+      const prevDaysDiff = Math.floor((monday.getTime() - prevJan4Monday.getTime()) / (24 * 60 * 60 * 1000));
+      weekNumber = Math.floor(prevDaysDiff / 7) + 1;
+    } else if (weekNumber >= 53) {
+      // Check if week 53 exists or if it's week 1 of next year
+      const nextJan4 = new Date(Date.UTC(year + 1, 0, 4));
+      const nextJan4Day = nextJan4.getUTCDay() || 7;
+      const nextJan4Monday = new Date(Date.UTC(year + 1, 0, 4 - (nextJan4Day - 1)));
+      if (monday.getTime() >= nextJan4Monday.getTime()) {
+        resultYear = year + 1;
+        weekNumber = 1;
+      }
+    }
+    
+    return `${resultYear}-W${weekNumber.toString().padStart(2, '0')}`;
   }
 
-  function getWeekEnd(weekStart: string): string {
-    const start = new Date(weekStart);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
-    return end.toISOString().split('T')[0];
+  // Convert week format (YYYY-Www) to date (YYYY-MM-DD) - returns Monday of that week (ISO 8601)
+  function weekFormatToDate(weekStr: string): string {
+    const [yearStr, weekNumStr] = weekStr.split('-W');
+    const year = parseInt(yearStr, 10);
+    const week = parseInt(weekNumStr, 10);
+    
+    // Get January 4th of the year (always in week 1 per ISO 8601)
+    const jan4 = new Date(Date.UTC(year, 0, 4));
+    const jan4Day = jan4.getUTCDay() || 7; // Convert Sunday (0) to 7
+    // Calculate days to go back to Monday (Monday is day 1, so subtract 1)
+    const daysToMonday = jan4Day - 1;
+    // Calculate week 1 Monday using UTC to avoid timezone issues
+    const week1Monday = new Date(Date.UTC(year, 0, 4 - daysToMonday));
+    
+    // Add weeks (week 1 starts at week1Monday)
+    const weekStart = new Date(week1Monday);
+    weekStart.setUTCDate(week1Monday.getUTCDate() + (week - 1) * 7);
+    
+    // Return in YYYY-MM-DD format
+    const yearStr2 = weekStart.getUTCFullYear().toString();
+    const monthStr = (weekStart.getUTCMonth() + 1).toString().padStart(2, '0');
+    const dayStr = weekStart.getUTCDate().toString().padStart(2, '0');
+    return `${yearStr2}-${monthStr}-${dayStr}`;
   }
 
   const loadTasks = async () => {
@@ -270,10 +359,13 @@ export default function WeeklyTasksManager({
         <div className="flex items-center gap-2">
           <input
             type="week"
-            value={`${selectedWeek}T00:00`}
+            value={dateToWeekFormat(selectedWeek)}
             onChange={(e) => {
-              const weekStart = e.target.value.split('T')[0];
-              setSelectedWeek(weekStart);
+              const weekValue = e.target.value;
+              if (weekValue) {
+                const weekStart = weekFormatToDate(weekValue);
+                setSelectedWeek(weekStart);
+              }
             }}
             className="px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm"
           />
