@@ -5,7 +5,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { logger } from '../../../utils/logger';
 import ExerciseSelector from './ExerciseSelector';
 import QuickNumericPad from './QuickNumericPad';
-import EquipmentSelector from './EquipmentSelector';
+import EquipmentSelector from '../Equipment/EquipmentSelector';
 
 interface Exercise {
   id: string;
@@ -905,7 +905,7 @@ export default function PairWorkoutSession({
 
       {equipmentSelector && (
         <EquipmentSelector
-          selectedEquipmentId={equipmentSelector.member === 'member_1' 
+          currentEquipmentId={equipmentSelector.member === 'member_1' 
             ? member1Exercises[equipmentSelector.exerciseIndex]?.sets[equipmentSelector.setIndex]?.equipment_id || null
             : member2Exercises[equipmentSelector.exerciseIndex]?.sets[equipmentSelector.setIndex]?.equipment_id || null
           }
@@ -936,7 +936,7 @@ export default function PairWorkoutSession({
 
       {supersetEquipmentSelector && (
         <EquipmentSelector
-          selectedEquipmentId={supersetEquipmentSelector.member === 'member_1'
+          currentEquipmentId={supersetEquipmentSelector.member === 'member_1'
             ? member1Exercises[supersetEquipmentSelector.exerciseIndex]?.sets[supersetEquipmentSelector.setIndex]?.superset_equipment_id || null
             : member2Exercises[supersetEquipmentSelector.exerciseIndex]?.sets[supersetEquipmentSelector.setIndex]?.superset_equipment_id || null
           }
