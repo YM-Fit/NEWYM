@@ -211,23 +211,14 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
       }
 
       if (reading.notes) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:214',message:'Updating scale_readings notes',data:{readingId:reading.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         const { error: notesError } = await supabase
           .from('scale_readings')
           .update({
             notes: reading.notes,
           })
           .eq('id', reading.id);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:220',message:'scale_readings update result',data:{hasError:!!notesError,error:notesError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:223',message:'Updating trainees last_known_weight',data:{traineeId,weight:reading.weight_kg},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
       const { error: traineeUpdateError } = await supabase
         .from('trainees')
         .update({
@@ -235,9 +226,6 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
           last_known_body_fat: reading.body_fat_percent,
         })
         .eq('id', traineeId);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:229',message:'trainees update result',data:{hasError:!!traineeUpdateError,error:traineeUpdateError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
 
       toast.success(`המדידה נשמרה עבור ${traineeName}`);
       return true;
@@ -299,17 +287,10 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const loadUnseenWeightsCounts = useCallback(async () => {
     if (!user) return;
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:288',message:'loadUnseenWeightsCounts entry',data:{userId:user.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     const { data, error } = await supabase
       .from('trainee_self_weights')
       .select('trainee_id')
       .eq('is_seen_by_trainer', false);
-
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:295',message:'loadUnseenWeightsCounts result',data:{hasError:!!error,error:error?.message,dataCount:data?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
 
     if (data) {
       const counts = new Map<string, number>();
@@ -321,18 +302,11 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   }, [user?.id]);
 
   const loadSelfWeights = useCallback(async (traineeId: string) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:305',message:'loadSelfWeights entry',data:{traineeId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     const { data, error } = await supabase
       .from('trainee_self_weights')
       .select('*')
       .eq('trainee_id', traineeId)
       .order('weight_date', { ascending: false });
-
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:312',message:'loadSelfWeights result',data:{hasError:!!error,error:error?.message,dataCount:data?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
 
     if (data) {
       setSelfWeights(data);
@@ -340,18 +314,11 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   }, []);
 
   const loadMeasurements = useCallback(async (traineeId: string) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:317',message:'loadMeasurements entry',data:{traineeId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
     const { data, error } = await supabase
       .from('measurements')
       .select('*')
       .eq('trainee_id', traineeId)
       .order('measurement_date', { ascending: false });
-
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:324',message:'loadMeasurements result',data:{hasError:!!error,error:error?.message,dataCount:data?.length||0,willUpdateUI:!error&&!!data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
 
     if (!error && data) {
       const formattedMeasurements = data.map(m => ({
@@ -559,9 +526,6 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const handleSaveTrainee = async (traineeData: any) => {
     if (!user) return;
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:527',message:'handleSaveTrainee entry',data:{hasUser:!!user,fullName:traineeData.full_name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     const { data, error } = await supabase
       .from('trainees')
       .insert([
@@ -572,10 +536,6 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
       ])
       .select()
       .single();
-
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:541',message:'handleSaveTrainee result',data:{hasError:!!error,error:error?.message,hasData:!!data,willUpdateUI:!error&&!!data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
 
     if (!error && data) {
       setTrainees((prev) => [data, ...prev]);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { createFoodItem, updateFoodItem, deleteFoodItem } from '../../../api/nutritionApi';
@@ -146,6 +146,59 @@ export default function MealPlanBuilder({
     fat_grams: '',
     notes: '',
   });
+
+  // Debounce timers for food item updates
+  const updateTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
+  // Debounced update function for food items
+  const debouncedUpdateFoodItem = useCallback((
+    foodItemId: string,
+    updates: Partial<NutritionFoodItem>,
+    displayIndex: number,
+    itemIndex: number
+  ) => {
+    // Update local state immediately for instant UI feedback
+    setMeals((prevMeals) => {
+      const updatedMeals = [...prevMeals];
+      const updatedItems = [...(updatedMeals[displayIndex].food_items || [])];
+      updatedItems[itemIndex] = { ...updatedItems[itemIndex], ...updates };
+      updatedMeals[displayIndex] = {
+        ...updatedMeals[displayIndex],
+        food_items: updatedItems,
+      };
+      return updatedMeals;
+    });
+
+    // Clear existing timer for this item
+    const existingTimer = updateTimersRef.current.get(foodItemId);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+
+    // Set new timer to save to database after 500ms of inactivity
+    const timer = setTimeout(async () => {
+      try {
+        const updated = await updateFoodItem(foodItemId, updates);
+        if (!updated) {
+          toast.error('שגיאה בעדכון פריט מזון');
+        }
+      } catch (error) {
+        console.error('Error updating food item:', error);
+        toast.error('שגיאה בעדכון פריט מזון');
+      }
+      updateTimersRef.current.delete(foodItemId);
+    }, 500);
+
+    updateTimersRef.current.set(foodItemId, timer);
+  }, [updateFoodItem]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      updateTimersRef.current.forEach((timer) => clearTimeout(timer));
+      updateTimersRef.current.clear();
+    };
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -705,6 +758,7 @@ export default function MealPlanBuilder({
           getMealLabel={getMealLabel}
           calculateTotalMacros={calculateTotalMacros}
           setMeals={setMeals}
+          debouncedUpdateFoodItem={debouncedUpdateFoodItem}
         />
       )}
 
@@ -918,6 +972,7 @@ interface PlanEditorViewProps {
   getMealLabel: (value: string) => string;
   calculateTotalMacros: () => { calories: number; protein: number; carbs: number; fat: number };
   setMeals: React.Dispatch<React.SetStateAction<Meal[]>>;
+  debouncedUpdateFoodItem: (foodItemId: string, updates: Partial<NutritionFoodItem>, displayIndex: number, itemIndex: number) => void;
 }
 
 function PlanEditorView({
@@ -940,6 +995,7 @@ function PlanEditorView({
   getMealLabel,
   calculateTotalMacros,
   setMeals,
+  debouncedUpdateFoodItem,
 }: PlanEditorViewProps) {
   const totals = calculateTotalMacros();
 
@@ -1315,18 +1371,8 @@ function PlanEditorView({
                                             <input
                                               type="text"
                                               value={item.food_name}
-                                              onChange={async (e) => {
-                                                const updated = await updateFoodItem(item.id, { food_name: e.target.value });
-                                                if (updated) {
-                                                  const updatedMeals = [...meals];
-                                                  const updatedItems = [...(updatedMeals[displayIndex].food_items || [])];
-                                                  updatedItems[itemIndex] = updated;
-                                                  updatedMeals[displayIndex] = {
-                                                    ...updatedMeals[displayIndex],
-                                                    food_items: updatedItems,
-                                                  };
-                                                  setMeals(updatedMeals);
-                                                }
+                                              onChange={(e) => {
+                                                debouncedUpdateFoodItem(item.id, { food_name: e.target.value }, displayIndex, itemIndex);
                                               }}
                                               className="glass-input w-full px-3 py-2 text-sm"
                                               placeholder="לדוגמה: ביצה"
@@ -1338,18 +1384,8 @@ function PlanEditorView({
                                               type="number"
                                               step="0.1"
                                               value={item.quantity}
-                                              onChange={async (e) => {
-                                                const updated = await updateFoodItem(item.id, { quantity: parseFloat(e.target.value) || 0 });
-                                                if (updated) {
-                                                  const updatedMeals = [...meals];
-                                                  const updatedItems = [...(updatedMeals[displayIndex].food_items || [])];
-                                                  updatedItems[itemIndex] = updated;
-                                                  updatedMeals[displayIndex] = {
-                                                    ...updatedMeals[displayIndex],
-                                                    food_items: updatedItems,
-                                                  };
-                                                  setMeals(updatedMeals);
-                                                }
+                                              onChange={(e) => {
+                                                debouncedUpdateFoodItem(item.id, { quantity: parseFloat(e.target.value) || 0 }, displayIndex, itemIndex);
                                               }}
                                               className="glass-input w-full px-3 py-2 text-sm"
                                             />
@@ -1358,18 +1394,8 @@ function PlanEditorView({
                                             <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">יחידה</label>
                                             <select
                                               value={item.unit}
-                                              onChange={async (e) => {
-                                                const updated = await updateFoodItem(item.id, { unit: e.target.value });
-                                                if (updated) {
-                                                  const updatedMeals = [...meals];
-                                                  const updatedItems = [...(updatedMeals[displayIndex].food_items || [])];
-                                                  updatedItems[itemIndex] = updated;
-                                                  updatedMeals[displayIndex] = {
-                                                    ...updatedMeals[displayIndex],
-                                                    food_items: updatedItems,
-                                                  };
-                                                  setMeals(updatedMeals);
-                                                }
+                                              onChange={(e) => {
+                                                debouncedUpdateFoodItem(item.id, { unit: e.target.value }, displayIndex, itemIndex);
                                               }}
                                               className="glass-input w-full px-3 py-2 text-sm"
                                             >
@@ -1387,18 +1413,8 @@ function PlanEditorView({
                                               <input
                                                 type="number"
                                                 value={item.calories || ''}
-                                                onChange={async (e) => {
-                                                  const updated = await updateFoodItem(item.id, { calories: e.target.value ? parseInt(e.target.value) : null });
-                                                  if (updated) {
-                                                    const updatedMeals = [...meals];
-                                                    const updatedItems = [...(updatedMeals[displayIndex].food_items || [])];
-                                                    updatedItems[itemIndex] = updated;
-                                                    updatedMeals[displayIndex] = {
-                                                      ...updatedMeals[displayIndex],
-                                                      food_items: updatedItems,
-                                                    };
-                                                    setMeals(updatedMeals);
-                                                  }
+                                                onChange={(e) => {
+                                                  debouncedUpdateFoodItem(item.id, { calories: e.target.value ? parseInt(e.target.value) : null }, displayIndex, itemIndex);
                                                 }}
                                                 className="glass-input w-full px-2 py-2 text-xs"
                                                 placeholder="קל'"
@@ -1409,18 +1425,8 @@ function PlanEditorView({
                                               <input
                                                 type="number"
                                                 value={item.protein || ''}
-                                                onChange={async (e) => {
-                                                  const updated = await updateFoodItem(item.id, { protein: e.target.value ? parseInt(e.target.value) : null });
-                                                  if (updated) {
-                                                    const updatedMeals = [...meals];
-                                                    const updatedItems = [...(updatedMeals[displayIndex].food_items || [])];
-                                                    updatedItems[itemIndex] = updated;
-                                                    updatedMeals[displayIndex] = {
-                                                      ...updatedMeals[displayIndex],
-                                                      food_items: updatedItems,
-                                                    };
-                                                    setMeals(updatedMeals);
-                                                  }
+                                                onChange={(e) => {
+                                                  debouncedUpdateFoodItem(item.id, { protein: e.target.value ? parseInt(e.target.value) : null }, displayIndex, itemIndex);
                                                 }}
                                                 className="glass-input w-full px-2 py-2 text-xs"
                                                 placeholder="גרם"
