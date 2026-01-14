@@ -183,11 +183,17 @@ export type Database = {
           reps: number;
           rpe: number | null;
           set_type: 'regular' | 'superset' | 'dropset';
+          failure: boolean;
           superset_exercise_id: string | null;
           superset_weight: number | null;
           superset_reps: number | null;
+          superset_rpe: number | null;
+          superset_equipment_id: string | null;
+          superset_dropset_weight: number | null;
+          superset_dropset_reps: number | null;
           dropset_weight: number | null;
           dropset_reps: number | null;
+          equipment_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -198,11 +204,17 @@ export type Database = {
           reps?: number;
           rpe?: number | null;
           set_type?: 'regular' | 'superset' | 'dropset';
+          failure?: boolean;
           superset_exercise_id?: string | null;
           superset_weight?: number | null;
           superset_reps?: number | null;
+          superset_rpe?: number | null;
+          superset_equipment_id?: string | null;
+          superset_dropset_weight?: number | null;
+          superset_dropset_reps?: number | null;
           dropset_weight?: number | null;
           dropset_reps?: number | null;
+          equipment_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -213,11 +225,17 @@ export type Database = {
           reps?: number;
           rpe?: number | null;
           set_type?: 'regular' | 'superset' | 'dropset';
+          failure?: boolean;
           superset_exercise_id?: string | null;
           superset_weight?: number | null;
           superset_reps?: number | null;
+          superset_rpe?: number | null;
+          superset_equipment_id?: string | null;
+          superset_dropset_weight?: number | null;
+          superset_dropset_reps?: number | null;
           dropset_weight?: number | null;
           dropset_reps?: number | null;
+          equipment_id?: string | null;
           created_at?: string;
         };
       };

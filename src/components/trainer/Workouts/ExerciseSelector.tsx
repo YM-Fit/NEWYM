@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Search, X, Plus, Clock, PlusCircle, Trash2 } from 'lucide-react';
+import { Search, X, Plus, Clock, PlusCircle, Trash2, Info, Edit2 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
 import ExerciseHistory from './ExerciseHistory';
 import { useExerciseCache } from '../../../hooks/useExerciseCache';
+import ExerciseInstructionsModal from '../../common/ExerciseInstructionsModal';
+import EditExerciseInstructionsModal from './EditExerciseInstructionsModal';
 
 interface Exercise {
   id: string;
@@ -37,6 +39,8 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
   const [newExerciseName, setNewExerciseName] = useState('');
   const [newExerciseInstructions, setNewExerciseInstructions] = useState('');
   const [savingExercise, setSavingExercise] = useState(false);
+  const [viewingInstructions, setViewingInstructions] = useState<Exercise | null>(null);
+  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
 
   const { cachedExercises, isCacheValid, saveToCache } = useExerciseCache();
 
@@ -116,6 +120,14 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
           }
           return group;
         }));
+        // עדכון cache
+        if (cachedExercises) {
+          const updatedExercises = [...cachedExercises, data].sort((a, b) => a.name.localeCompare(b.name));
+          saveToCache(updatedExercises);
+        } else {
+          // אם אין cache, נטען מחדש
+          loadMuscleGroupsAndExercises();
+        }
         setNewExerciseName('');
         setNewExerciseInstructions('');
         setShowAddForm(false);
@@ -146,10 +158,55 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
           ...group,
           exercises: group.exercises.filter(ex => ex.id !== exerciseId),
         })));
+        // עדכון cache
+        if (cachedExercises) {
+          const updatedExercises = cachedExercises.filter(ex => ex.id !== exerciseId);
+          saveToCache(updatedExercises);
+        }
       }
     } catch (error) {
       toast.error('שגיאה במחיקת התרגיל');
       logger.error('Error deleting exercise:', error, 'ExerciseSelector');
+    }
+  };
+
+  const handleSaveInstructions = async (instructions: string) => {
+    if (!editingExercise) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('exercises')
+        .update({ instructions: instructions || null })
+        .eq('id', editingExercise.id)
+        .select()
+        .single();
+
+      if (error) {
+        toast.error('שגיאה בעדכון ההסבר');
+        logger.error('Error updating exercise instructions:', error, 'ExerciseSelector');
+        throw error;
+      } else if (data) {
+        toast.success('ההסבר עודכן בהצלחה');
+        
+        // עדכון state
+        setMuscleGroups(prev => prev.map(group => ({
+          ...group,
+          exercises: group.exercises.map(ex => 
+            ex.id === editingExercise.id ? { ...ex, instructions: data.instructions } : ex
+          ),
+        })));
+
+        // עדכון cache
+        if (cachedExercises) {
+          const updatedExercises = cachedExercises.map(ex =>
+            ex.id === editingExercise.id ? { ...ex, instructions: data.instructions } : ex
+          );
+          saveToCache(updatedExercises);
+        }
+      }
+    } catch (error) {
+      logger.error('Error saving exercise instructions:', error, 'ExerciseSelector');
+      throw error;
     }
   };
 
@@ -295,6 +352,28 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                           )}
 
                           <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setViewingInstructions(exercise);
+                            }}
+                            className="p-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-xl transition-all"
+                            title="הצג הסבר"
+                          >
+                            <Info className="h-5 w-5 text-cyan-400" />
+                          </button>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingExercise(exercise);
+                            }}
+                            className="p-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl transition-all"
+                            title="ערוך הסבר"
+                          >
+                            <Edit2 className="h-5 w-5 text-emerald-400" />
+                          </button>
+
+                          <button
                             onClick={() => {
                               onSelect(exercise);
                               onClose();
@@ -355,6 +434,26 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
           exerciseId={historyExercise.id}
           exerciseName={historyExercise.name}
           onClose={() => setHistoryExercise(null)}
+        />
+      )}
+
+      {viewingInstructions && (
+        <ExerciseInstructionsModal
+          isOpen={!!viewingInstructions}
+          onClose={() => setViewingInstructions(null)}
+          exerciseName={viewingInstructions.name}
+          instructions={viewingInstructions.instructions}
+        />
+      )}
+
+      {editingExercise && (
+        <EditExerciseInstructionsModal
+          isOpen={!!editingExercise}
+          onClose={() => setEditingExercise(null)}
+          exerciseId={editingExercise.id}
+          exerciseName={editingExercise.name}
+          currentInstructions={editingExercise.instructions}
+          onSave={handleSaveInstructions}
         />
       )}
     </div>
