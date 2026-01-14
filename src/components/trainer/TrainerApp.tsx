@@ -59,7 +59,11 @@ interface Trainee {
   pair_height_2?: number;
 }
 
-export default function TrainerApp() {
+interface TrainerAppProps {
+  isTablet?: boolean;
+}
+
+export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const { signOut, user } = useAuth();
   const { handleError } = useErrorHandler();
   const { loadTraineeData } = useTraineeData();
@@ -208,21 +212,33 @@ export default function TrainerApp() {
       }
 
       if (reading.notes) {
-        await supabase
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:214',message:'Updating scale_readings notes',data:{readingId:reading.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+        const { error: notesError } = await supabase
           .from('scale_readings')
           .update({
             notes: reading.notes,
           })
           .eq('id', reading.id);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:220',message:'scale_readings update result',data:{hasError:!!notesError,error:notesError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
       }
 
-      await supabase
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:223',message:'Updating trainees last_known_weight',data:{traineeId,weight:reading.weight_kg},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
+      const { error: traineeUpdateError } = await supabase
         .from('trainees')
         .update({
           last_known_weight: reading.weight_kg,
           last_known_body_fat: reading.body_fat_percent,
         })
         .eq('id', traineeId);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:229',message:'trainees update result',data:{hasError:!!traineeUpdateError,error:traineeUpdateError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
 
       toast.success(`המדידה נשמרה עבור ${traineeName}`);
       return true;
@@ -284,10 +300,17 @@ export default function TrainerApp() {
   const loadUnseenWeightsCounts = useCallback(async () => {
     if (!user) return;
 
-    const { data } = await supabase
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:288',message:'loadUnseenWeightsCounts entry',data:{userId:user.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    const { data, error } = await supabase
       .from('trainee_self_weights')
       .select('trainee_id')
       .eq('is_seen_by_trainer', false);
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:295',message:'loadUnseenWeightsCounts result',data:{hasError:!!error,error:error?.message,dataCount:data?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
 
     if (data) {
       const counts = new Map<string, number>();
@@ -299,11 +322,18 @@ export default function TrainerApp() {
   }, [user?.id]);
 
   const loadSelfWeights = useCallback(async (traineeId: string) => {
-    const { data } = await supabase
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:305',message:'loadSelfWeights entry',data:{traineeId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    const { data, error } = await supabase
       .from('trainee_self_weights')
       .select('*')
       .eq('trainee_id', traineeId)
       .order('weight_date', { ascending: false });
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:312',message:'loadSelfWeights result',data:{hasError:!!error,error:error?.message,dataCount:data?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
 
     if (data) {
       setSelfWeights(data);
@@ -311,11 +341,18 @@ export default function TrainerApp() {
   }, []);
 
   const loadMeasurements = useCallback(async (traineeId: string) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:317',message:'loadMeasurements entry',data:{traineeId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
     const { data, error } = await supabase
       .from('measurements')
       .select('*')
       .eq('trainee_id', traineeId)
       .order('measurement_date', { ascending: false });
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:324',message:'loadMeasurements result',data:{hasError:!!error,error:error?.message,dataCount:data?.length||0,willUpdateUI:!error&&!!data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
 
     if (!error && data) {
       const formattedMeasurements = data.map(m => ({
@@ -523,6 +560,9 @@ export default function TrainerApp() {
   const handleSaveTrainee = async (traineeData: any) => {
     if (!user) return;
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:527',message:'handleSaveTrainee entry',data:{hasUser:!!user,fullName:traineeData.full_name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     const { data, error } = await supabase
       .from('trainees')
       .insert([
@@ -533,6 +573,10 @@ export default function TrainerApp() {
       ])
       .select()
       .single();
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TrainerApp.tsx:541',message:'handleSaveTrainee result',data:{hasError:!!error,error:error?.message,hasData:!!data,willUpdateUI:!error&&!!data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
 
     if (!error && data) {
       setTrainees((prev) => [data, ...prev]);
@@ -912,6 +956,7 @@ export default function TrainerApp() {
           <WorkoutSession
             trainee={convertTraineeToDisplayFormat(selectedTrainee)}
             initialSelectedMember={selectedPairMember}
+            isTablet={isTablet}
             onBack={() => {
               if (selectedWorkout) {
                 setActiveView('workouts-list');
@@ -1092,7 +1137,10 @@ export default function TrainerApp() {
   const showCollapseControls = isWorkoutSession;
 
   return (
-    <div className="min-h-screen flex touch-manipulation" dir="rtl">
+    <div
+      className={`min-h-screen flex touch-manipulation ${isTablet ? 'tablet' : ''}`}
+      dir="rtl"
+    >
       {/* Desktop Sidebar */}
       {!sidebarCollapsed && (
         <Sidebar
@@ -1121,20 +1169,29 @@ export default function TrainerApp() {
           />
         )}
 
-        <main className={`flex-1 overflow-auto ${headerCollapsed ? 'p-2' : 'p-3 md:p-6'}`}>
+        <main 
+          id="main-content"
+          className={`flex-1 overflow-auto ${headerCollapsed ? 'p-2' : 'p-3 md:p-6'}`}
+          role="main"
+          aria-label="תוכן ראשי"
+        >
           {showCollapseControls && (
-            <div className="hidden lg:flex gap-3 mb-4 justify-end">
+            <div className="hidden lg:flex gap-3 mb-4 justify-end" role="toolbar" aria-label="בקרות תצוגה">
               <button
                 type="button"
                 onClick={() => setHeaderCollapsed(!headerCollapsed)}
-                className="btn-glass px-4 py-2 rounded-xl text-sm font-medium"
+                className="btn-glass px-4 py-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                aria-label={headerCollapsed ? 'הצג כותרת' : 'הסתר כותרת'}
+                aria-pressed={!headerCollapsed}
               >
                 {headerCollapsed ? 'הצג כותרת' : 'הסתר כותרת'}
               </button>
               <button
                 type="button"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="btn-glass px-4 py-2 rounded-xl text-sm font-medium"
+                className="btn-glass px-4 py-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                aria-label={sidebarCollapsed ? 'הצג תפריט' : 'הסתר תפריט'}
+                aria-pressed={!sidebarCollapsed}
               >
                 {sidebarCollapsed ? 'הצג תפריט' : 'הסתר תפריט'}
               </button>
@@ -1143,29 +1200,38 @@ export default function TrainerApp() {
           {renderMainContent()}
         </main>
 
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 px-4 pb-4">
+        <nav 
+          id="main-navigation"
+          className="md:hidden fixed bottom-0 left-0 right-0 z-40 px-4 pb-4"
+          role="navigation"
+          aria-label="ניווט ראשי"
+        >
           <div className="glass-card px-2 py-2 rounded-2xl shadow-dark-lg">
             <div className="flex justify-around items-center max-w-lg mx-auto">
               <button
                 onClick={() => handleViewChange('dashboard')}
-                className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${
+                aria-label="דף הבית"
+                aria-current={activeView === 'dashboard' ? 'page' : undefined}
+                className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
                   activeView === 'dashboard'
                     ? 'text-lime-500'
                     : 'text-gray-500 hover:text-gray-300'
                 }`}
               >
-                <Home className={`h-6 w-6 mb-1 ${activeView === 'dashboard' ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} />
+                <Home className={`h-6 w-6 mb-1 ${activeView === 'dashboard' ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} aria-hidden="true" />
                 <span className="text-xs font-medium">בית</span>
               </button>
               <button
                 onClick={() => handleViewChange('trainees')}
-                className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${
+                aria-label="מתאמנים"
+                aria-current={activeView.includes('trainee') ? 'page' : undefined}
+                className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
                   activeView.includes('trainee')
                     ? 'text-lime-500'
                     : 'text-gray-500 hover:text-gray-300'
                 }`}
               >
-                <Users className={`h-6 w-6 mb-1 ${activeView.includes('trainee') ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} />
+                <Users className={`h-6 w-6 mb-1 ${activeView.includes('trainee') ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} aria-hidden="true" />
                 <span className="text-xs font-medium">מתאמנים</span>
               </button>
             </div>

@@ -34,6 +34,8 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
       const mappedTemplates: WorkoutTemplate[] = data.map(t => ({
         id: t.id,
         trainerId: t.trainer_id,
+        traineeId: t.trainee_id || null,
+        traineeName: t.trainee_name || null,
         name: t.name,
         description: t.description || '',
         exercises: t.exercises || [],
@@ -150,7 +152,7 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
                       {template.description && (
                         <p className="text-sm text-zinc-500 mb-2">{template.description}</p>
                       )}
-                      <div className="flex items-center gap-3 text-sm">
+                      <div className="flex items-center gap-3 text-sm flex-wrap">
                         <span className="flex items-center bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded-lg">
                           <Copy className="h-4 w-4 ml-1" />
                           {template.exercises.length} תרגילים
@@ -159,6 +161,11 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
                           <Calendar className="h-4 w-4 ml-1" />
                           {new Date(template.createdAt).toLocaleDateString('he-IL')}
                         </span>
+                        {template.traineeName && (
+                          <span className="flex items-center bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-lg text-xs">
+                            מתאמן: {template.traineeName}
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs mt-2 bg-amber-500/10 text-amber-400 px-2 py-1 rounded-lg inline-block">
                         שימושים: {template.usageCount}

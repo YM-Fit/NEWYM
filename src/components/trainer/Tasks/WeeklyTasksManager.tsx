@@ -60,10 +60,42 @@ export default function WeeklyTasksManager({
   const loadTasks = async () => {
     if (!user) return;
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'WeeklyTasksManager.tsx:60',
+        message: 'loadTasks entry',
+        data: { traineeId, selectedWeek },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'WT1',
+      }),
+    }).catch(() => {});
+    // #endregion
+
     try {
       setLoading(true);
       const data = await tasksApi.getTraineeTasks(traineeId, selectedWeek);
       setTasks(data);
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location: 'WeeklyTasksManager.tsx:66',
+          message: 'loadTasks success',
+          data: { tasksCount: data.length },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'WT1',
+        }),
+      }).catch(() => {});
+      // #endregion
     } catch (error) {
       logger.error('Error loading tasks', error, 'WeeklyTasksManager');
       const errorMessage = error instanceof Error ? error.message : 'שגיאה בטעינת משימות';
@@ -74,6 +106,22 @@ export default function WeeklyTasksManager({
       } else {
         toast.error('שגיאה בטעינת משימות');
       }
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location: 'WeeklyTasksManager.tsx:75',
+          message: 'loadTasks error',
+          data: { errorMessage },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'WT1',
+        }),
+      }).catch(() => {});
+      // #endregion
     } finally {
       setLoading(false);
     }
@@ -84,6 +132,22 @@ export default function WeeklyTasksManager({
       toast.error('נא להזין כותרת למשימה');
       return;
     }
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'WeeklyTasksManager.tsx:82',
+        message: 'handleAddTask entry',
+        data: { traineeId, selectedWeek, title: newTask.task_title },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'WT2',
+      }),
+    }).catch(() => {});
+    // #endregion
 
     try {
       await tasksApi.createTask({
@@ -107,6 +171,22 @@ export default function WeeklyTasksManager({
     } catch (error) {
       logger.error('Error creating task', error, 'WeeklyTasksManager');
       toast.error('שגיאה ביצירת משימה');
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location: 'WeeklyTasksManager.tsx:108',
+          message: 'handleAddTask error',
+          data: {},
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'WT2',
+        }),
+      }).catch(() => {});
+      // #endregion
     }
   };
 

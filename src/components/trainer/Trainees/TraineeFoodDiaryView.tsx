@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../../lib/supabase';
 import {
   ArrowRight,
   ChevronLeft,
@@ -16,36 +15,18 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
+import { getWeekDiaryData } from '../../../api';
+import type {
+  TraineeMeal,
+  DailyWaterLog,
+  FoodDiaryEntry,
+} from '../../../types/nutritionTypes';
+import { supabase } from '../../../lib/supabase';
 
 interface TraineeFoodDiaryViewProps {
   traineeId: string;
   traineeName: string;
   onBack: () => void;
-}
-
-interface Meal {
-  id: string;
-  trainee_id: string;
-  meal_date: string;
-  meal_type: string;
-  meal_time: string | null;
-  description: string | null;
-}
-
-interface DailyLog {
-  id: string;
-  trainee_id: string;
-  log_date: string;
-  water_ml: number;
-}
-
-interface FoodDiaryEntry {
-  id: string;
-  trainee_id: string;
-  diary_date: string;
-  completed: boolean;
-  completed_at: string | null;
-  is_seen_by_trainer: boolean;
 }
 
 const MEAL_TYPES = [
@@ -64,8 +45,8 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
     const diff = today.getDate() - day;
     return new Date(today.setDate(diff));
   });
-  const [meals, setMeals] = useState<Map<string, Meal[]>>(new Map());
-  const [waterLogs, setWaterLogs] = useState<Map<string, DailyLog>>(new Map());
+  const [meals, setMeals] = useState<Map<string, TraineeMeal[]>>(new Map());
+  const [waterLogs, setWaterLogs] = useState<Map<string, DailyWaterLog>>(new Map());
   const [diaryEntries, setDiaryEntries] = useState<Map<string, FoodDiaryEntry>>(new Map());
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'completed' | 'unseen'>('all');
@@ -81,27 +62,8 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
     const startDate = weekDates[0].toISOString().split('T')[0];
     const endDate = weekDates[6].toISOString().split('T')[0];
 
-    const { data: mealsData } = await supabase
-      .from('meals')
-      .select('*')
-      .eq('trainee_id', traineeId)
-      .gte('meal_date', startDate)
-      .lte('meal_date', endDate)
-      .order('meal_time', { ascending: true });
-
-    const { data: waterData } = await supabase
-      .from('daily_log')
-      .select('*')
-      .eq('trainee_id', traineeId)
-      .gte('log_date', startDate)
-      .lte('log_date', endDate);
-
-    const { data: diaryData } = await supabase
-      .from('food_diary')
-      .select('*')
-      .eq('trainee_id', traineeId)
-      .gte('diary_date', startDate)
-      .lte('diary_date', endDate);
+    const { meals: mealsData, waterLogs: waterData, diaryEntries: diaryData } =
+      await getWeekDiaryData(traineeId, startDate, endDate);
 
     const mealsMap = new Map<string, Meal[]>();
     mealsData?.forEach((meal) => {

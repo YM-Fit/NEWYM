@@ -700,6 +700,22 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
     setSaving(true);
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'WorkoutPlanBuilder.tsx:690',
+        message: 'handleSave plan entry',
+        data: { traineeId, hasActivePlanId: !!activePlanId, daysCount: days.length, planName },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'WP1',
+      }),
+    }).catch(() => {});
+    // #endregion
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -754,6 +770,23 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
         if (planError || !plan) {
           toast.error('שגיאה ביצירת תוכנית');
           setSaving(false);
+
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'WorkoutPlanBuilder.tsx:754',
+              message: 'handleSave plan creation failed',
+              data: { hasError: !!planError },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'WP1',
+            }),
+          }).catch(() => {});
+          // #endregion
+
           return;
         }
 
@@ -764,6 +797,23 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
       if (!planId) {
         toast.error('שגיאה בשמירת התוכנית');
         setSaving(false);
+
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'WorkoutPlanBuilder.tsx:764',
+            message: 'handleSave missing planId',
+            data: {},
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'WP1',
+          }),
+        }).catch(() => {});
+        // #endregion
+
         return;
       }
 
@@ -818,6 +868,22 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             });
         }
       }
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/1dd5cb88-736d-47fc-9cba-353896e5dc1e', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location: 'WorkoutPlanBuilder.tsx:822',
+          message: 'handleSave plan success',
+          data: { planId, daysInserted: days.length, wasUpdate: !!activePlanId },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'WP1',
+        }),
+      }).catch(() => {});
+      // #endregion
 
       toast.success(activePlanId ? 'תוכנית עודכנה בהצלחה!' : 'תוכנית נשמרה בהצלחה!');
       onBack();
@@ -1001,9 +1067,10 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                         </button>
                         <button
                           onClick={() => removeExerciseFromDay(exerciseIndex)}
-                          className="p-3 hover:bg-red-50 text-red-600 rounded-xl transition-all duration-300"
+                          className="p-3 hover:bg-red-50 text-red-600 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                          aria-label={`מחק תרגיל ${exercise.exercise.name}`}
                         >
-                          <Trash2 className="h-5 w-5 lg:h-6 lg:w-6" />
+                          <Trash2 className="h-5 w-5 lg:h-6 lg:w-6" aria-hidden="true" />
                         </button>
                       </div>
                     </div>

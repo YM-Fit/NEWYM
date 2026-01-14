@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
 import {
   UtensilsCrossed,
   Flame,
@@ -14,37 +13,11 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
+import { getActiveMealPlanWithMeals } from '../../api';
+import type { MealPlan, MealPlanMeal } from '../../types/nutritionTypes';
 
 interface MyMealPlanProps {
   traineeId: string | null;
-}
-
-interface MealPlan {
-  id: string;
-  name: string;
-  description: string | null;
-  daily_calories: number | null;
-  daily_water_ml: number | null;
-  protein_grams: number | null;
-  carbs_grams: number | null;
-  fat_grams: number | null;
-  notes: string | null;
-  updated_at: string | null;
-  created_at: string;
-}
-
-interface Meal {
-  id: string;
-  meal_time: string;
-  meal_name: string;
-  description: string;
-  alternatives: string;
-  calories: number | null;
-  protein: number | null;
-  carbs: number | null;
-  fat: number | null;
-  notes: string;
-  order_index: number;
 }
 
 const MEAL_CONFIG: Record<string, { label: string; color: string; bgColor: string; icon: string }> = {
@@ -58,7 +31,7 @@ const MEAL_CONFIG: Record<string, { label: string; color: string; bgColor: strin
 
 export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
   const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
-  const [meals, setMeals] = useState<Meal[]>([]);
+  const [meals, setMeals] = useState<MealPlanMeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedMeals, setExpandedMeals] = useState<Set<string>>(new Set());
   const [showNotes, setShowNotes] = useState(true);
@@ -75,28 +48,11 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
 
     setLoading(true);
 
-    const { data: plan } = await supabase
-      .from('meal_plans')
-      .select('*')
-      .eq('trainee_id', traineeId)
-      .eq('is_active', true)
-      .maybeSingle();
+    const { plan, meals } = await getActiveMealPlanWithMeals(traineeId);
 
-    if (plan) {
-      setMealPlan(plan);
-
-      const { data: mealsData } = await supabase
-        .from('meal_plan_meals')
-        .select('*')
-        .eq('plan_id', plan.id)
-        .order('order_index', { ascending: true });
-
-      setMeals(mealsData || []);
-      setExpandedMeals(new Set((mealsData || []).map((m) => m.id)));
-    } else {
-      setMealPlan(null);
-      setMeals([]);
-    }
+    setMealPlan(plan);
+    setMeals(meals);
+    setExpandedMeals(new Set(meals.map((m) => m.id)));
 
     setLoading(false);
   };

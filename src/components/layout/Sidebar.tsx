@@ -81,9 +81,12 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
 
   return (
     <aside
+      id="main-navigation"
       className={`hidden md:flex flex-col glass-card rounded-none border-y-0 border-r-0 transition-all duration-300 ease-out ${
         isMinimized ? 'w-20' : 'w-80'
       }`}
+      role="navigation"
+      aria-label="תפריט ניווט צדדי"
     >
       <div className="flex-1 py-6 overflow-y-auto overflow-x-hidden">
         <div className={`flex items-center justify-between mb-4 ${isMinimized ? 'px-4' : 'px-5'}`}>
@@ -132,6 +135,7 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                   onClick={() => handleItemClick(id)}
                   className="w-full flex items-center justify-center p-3 rounded-xl transition-all duration-300 group relative hover:bg-zinc-800/30 active:scale-95"
                   title={label}
+                  aria-label={label}
                 >
                   {isActive && (
                     <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-l-full shadow-glow-sm" />
@@ -162,6 +166,8 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                     <button
                       onClick={() => toggleCategory(category.id)}
                       className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-zinc-500 uppercase tracking-wider hover:text-zinc-400 hover:bg-zinc-800/30 transition-all"
+                      aria-expanded={isExpanded}
+                      aria-controls={`sidebar-category-${category.id}`}
                     >
                       <div className="flex items-center gap-2">
                         <CategoryIcon className="h-3.5 w-3.5" />
@@ -172,7 +178,10 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                   )}
                   
                   {(category.id === 'main' || isExpanded) && (
-                    <div className="space-y-1">
+                    <div
+                      className="space-y-1"
+                      id={category.id !== 'main' ? `sidebar-category-${category.id}` : undefined}
+                    >
                       {items.map(({ id, label, icon: Icon, description, badge }) => {
                         const isActive = activeView === id || (id === 'trainees' && activeView.includes('trainee'));
 
@@ -185,6 +194,7 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                                 ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-500/10 text-emerald-400 shadow-lg shadow-emerald-500/10'
                                 : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
                             }`}
+                            aria-current={isActive ? 'page' : undefined}
                           >
                             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                             

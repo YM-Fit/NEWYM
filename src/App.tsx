@@ -7,6 +7,8 @@ import ComponentErrorBoundary from './components/common/ComponentErrorBoundary';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
+import SkipLinks from './components/common/SkipLinks';
+import { useIsTablet } from './hooks/useIsTablet';
 
 // Lazy load main app components
 const TrainerApp = lazy(() => import('./components/trainer/TrainerApp'));
@@ -15,6 +17,7 @@ const TraineeApp = lazy(() => import('./components/trainee/TraineeApp'));
 function AppContent() {
   const { user, loading, userType } = useAuth();
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const isTablet = useIsTablet();
 
   if (loading) {
     return (
@@ -63,7 +66,7 @@ function AppContent() {
           </div>
         }
       >
-        <TrainerApp />
+        <TrainerApp isTablet={isTablet} />
       </Suspense>
     </ComponentErrorBoundary>
   );
@@ -74,6 +77,21 @@ export default function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">
         <AuthProvider>
+          <SkipLinks />
+          {/* Aria live region for announcements */}
+          <div 
+            id="aria-live-announcements" 
+            aria-live="polite" 
+            aria-atomic="true" 
+            className="sr-only"
+          />
+          {/* Aria live region for errors */}
+          <div 
+            id="aria-live-errors" 
+            aria-live="assertive" 
+            aria-atomic="true" 
+            className="sr-only"
+          />
           <Toaster
             position="top-center"
             toastOptions={{

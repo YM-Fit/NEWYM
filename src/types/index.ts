@@ -71,6 +71,8 @@ export interface WorkoutTemplateExercise {
 export interface WorkoutTemplate {
   id: string;
   trainerId: string;
+  traineeId?: string | null;
+  traineeName?: string | null;
   name: string;
   description?: string;
   exercises: WorkoutTemplateExercise[];

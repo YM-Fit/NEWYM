@@ -4,6 +4,15 @@
 
 @layer base {
   /* ============================================
+     Accessibility - Focus Indicators
+     ============================================ */
+  *:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+
+  /* ============================================
      Theme CSS Variables
      ============================================ */
   :root {
@@ -1073,6 +1082,25 @@
     color: #1a2e22 !important;
   }
 
+  /* ============================================
+     Trainer Workout Session - Tablet Layout
+     ============================================ */
+
+  .tablet .trainer-workout-session {
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  .tablet .trainer-workout-layout {
+    grid-template-columns: minmax(0, 7fr);
+  }
+
+  @media (min-width: 900px) and (max-width: 1180px) {
+    .tablet .trainer-workout-layout {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    }
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
@@ -1836,6 +1864,48 @@
 }
 
 @layer utilities {
+  /* Screen reader only - visually hidden but accessible to screen readers */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Skip Links */
+  .skip-links-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 100;
+  }
+
+  .skip-link {
+    position: absolute;
+    top: -100px;
+    right: 0;
+    background: var(--color-primary);
+    color: white;
+    padding: 1rem 1.5rem;
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 0 0 0.5rem 0.5rem;
+    transition: top 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  .skip-link:focus,
+  .skip-link-focused {
+    top: 0;
+    outline: 3px solid white;
+    outline-offset: 2px;
+  }
   .touch-manipulation {
     touch-action: manipulation;
   }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Dumbbell, Scale, Target, Flame, TrendingUp, Sparkles, Lightbulb } from 'lucide-react';
+import { Dumbbell, Scale, Target, Flame, TrendingUp, Sparkles, Lightbulb, ClipboardList, CheckCircle2, Activity, CalendarCheck2 } from 'lucide-react';
 import { goalsApi } from '../../api/goalsApi';
 import { habitsApi } from '../../api/habitsApi';
 import { smartRecommendations, Recommendation } from '../../utils/smartRecommendations';
@@ -61,6 +61,10 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
   const [activeGoalsCount, setActiveGoalsCount] = useState(0);
   const [habitsStreak, setHabitsStreak] = useState(0);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [todayWorkoutStatus, setTodayWorkoutStatus] = useState<'none' | 'planned' | 'in_progress' | 'completed'>('none');
+  const [todayFoodStatus, setTodayFoodStatus] = useState<'none' | 'partial' | 'completed'>('none');
+  const [todayHabitsStatus, setTodayHabitsStatus] = useState<'none' | 'partial' | 'completed'>('none');
+  const [todayWeighInStatus, setTodayWeighInStatus] = useState<'none' | 'recent'>('none');
 
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
@@ -131,6 +135,9 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
       const recs = await smartRecommendations.getTraineeRecommendations(traineeId);
       setRecommendations(recs.slice(0, 3)); // Show top 3
 
+      // Load today's checklist statuses
+      await loadTodayStatuses(traineeId);
+
       setStats({
         workoutsThisMonth: workoutsCount || 0,
         lastWeight: lastMeasurement?.weight || null,
@@ -144,6 +151,68 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadTodayStatuses = async (traineeId: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
+
+    // Workout today
+    const { data: todayWorkouts } = await supabase
+      .from('workout_trainees')
+      .select('workouts!inner(id, workout_date, is_completed)')
+      .eq('trainee_id', traineeId)
+      .eq('workouts.workout_date', todayStr);
+
+    if (todayWorkouts && todayWorkouts.length > 0) {
+      const anyCompleted = todayWorkouts.some((w: any) => w.workouts.is_completed);
+      setTodayWorkoutStatus(anyCompleted ? 'completed' : 'planned');
+    } else {
+      setTodayWorkoutStatus('none');
+    }
+
+    // Food diary today (simple: any entries for today)
+    const { data: todayFoodEntries } = await supabase
+      .from('food_diary_entries')
+      .select('id, meal_type')
+      .eq('trainee_id', traineeId)
+      .eq('entry_date', todayStr);
+
+    if (todayFoodEntries && todayFoodEntries.length > 0) {
+      const mealTypes = new Set(todayFoodEntries.map((e: any) => e.meal_type));
+      // heuristic: 3+ meal types => completed, אחרת חלקי
+      setTodayFoodStatus(mealTypes.size >= 3 ? 'completed' : 'partial');
+    } else {
+      setTodayFoodStatus('none');
+    }
+
+    // Habits today: any logged habits for today
+    const { data: todayHabitsLogs } = await supabase
+      .from('habit_logs')
+      .select('id')
+      .eq('trainee_id', traineeId)
+      .eq('log_date', todayStr);
+
+    if (todayHabitsLogs && todayHabitsLogs.length > 0) {
+      // לא יודעים אחוז מדויק, אבל יש ביצוע
+      setTodayHabitsStatus('partial');
+    } else {
+      setTodayHabitsStatus('none');
+    }
+
+    // Recent weigh-in (last 7 days)
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 7);
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+
+    const { data: recentWeights } = await supabase
+      .from('trainee_self_weights')
+      .select('id, weight_date')
+      .eq('trainee_id', traineeId)
+      .gte('weight_date', sevenDaysAgoStr);
+
+    setTodayWeighInStatus(recentWeights && recentWeights.length > 0 ? 'recent' : 'none');
   };
 
   const calculateConsecutiveDays = async (traineeId: string): Promise<number> => {
@@ -255,6 +324,7 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
 
   return (
     <div className="space-y-5 md:space-y-6 pb-4 animate-fade-in">
+      {/* Greeting + date */}
       <div className="premium-card-static p-5 md:p-6 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
@@ -273,6 +343,43 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
         </div>
       </div>
 
+      {/* Today's checklist - what to do today */}
+      <div className="premium-card-static p-4 md:p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <h2 className="font-bold text-[var(--color-text-primary)] text-sm md:text-base">
+            מה הכי חשוב היום?
+          </h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <TodayTile
+            icon={<CalendarCheck2 className="w-5 h-5" />}
+            label="אימון היום"
+            status={todayWorkoutStatus}
+            type="workout"
+          />
+          <TodayTile
+            icon={<Scale className="w-5 h-5" />}
+            label="שקילה / מדידה"
+            status={todayWeighInStatus === 'recent' ? 'completed' : 'none'}
+            type="weigh"
+          />
+          <TodayTile
+            icon={<ClipboardList className="w-5 h-5" />}
+            label="יומן אוכל"
+            status={todayFoodStatus}
+            type="food"
+          />
+          <TodayTile
+            icon={<Activity className="w-5 h-5" />}
+            label="הרגלים"
+            status={todayHabitsStatus}
+            type="habit"
+          />
+        </div>
+      </div>
+
+      {/* Motivational quote */}
       <div
         className={`premium-card-static p-4 md:p-5 border-r-2 border-emerald-500 transition-opacity duration-500 ${
           quoteVisible ? 'opacity-100' : 'opacity-0'
@@ -288,6 +395,7 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
         </div>
       </div>
 
+      {/* Quick stats section */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <StatCard
           icon={<Dumbbell className="w-5 h-5" />}
@@ -453,4 +561,56 @@ function StatCard({ icon, label, value, color, isSmallText }: StatCardProps) {
 function truncateGoal(goal: string): string {
   if (goal.length <= 20) return goal;
   return goal.substring(0, 18) + '...';
+}
+
+interface TodayTileProps {
+  icon: React.ReactNode;
+  label: string;
+  status: 'none' | 'planned' | 'in_progress' | 'completed' | 'partial';
+  type: 'workout' | 'weigh' | 'food' | 'habit';
+}
+
+function TodayTile({ icon, label, status, type }: TodayTileProps) {
+  const getStatusLabel = () => {
+    switch (status) {
+      case 'completed':
+        return '✅ הושלם';
+      case 'in_progress':
+        return 'בתהליך';
+      case 'planned':
+        return type === 'workout' ? 'מתוכנן להיום' : 'לא מולא עדיין';
+      case 'partial':
+        return 'חלקי';
+      default:
+        return 'לא בוצע';
+    }
+  };
+
+  const getStatusClass = () => {
+    if (status === 'completed') {
+      return 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400';
+    }
+    if (status === 'partial' || status === 'planned') {
+      return 'border-amber-500/30 bg-amber-500/5 text-amber-400';
+    }
+    return 'border-[var(--color-border)] bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)]';
+  };
+
+  return (
+    <div className={`stat-card p-3.5 md:p-4 flex flex-col gap-2 border ${getStatusClass()}`}>
+      <div className="flex items-center gap-2">
+        <div className="w-9 h-9 rounded-xl bg-[var(--color-bg-elevated)] flex items-center justify-center">
+          {icon}
+        </div>
+        <div className="flex flex-col">
+          <span className="text-xs font-semibold text-[var(--color-text-primary)]">
+            {label}
+          </span>
+          <span className="text-[10px] text-[var(--color-text-muted)]">
+            {getStatusLabel()}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 }

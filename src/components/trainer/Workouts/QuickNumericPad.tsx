@@ -185,9 +185,10 @@ export default function QuickNumericPad({
           <button
             type="button"
             onClick={onClose}
-            className="p-3 hover:bg-zinc-800 rounded-xl transition-all"
+            className="p-3 hover:bg-zinc-800 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            aria-label="סגור לוח מספרים"
           >
-            <X className="h-7 w-7 lg:h-9 lg:w-9 text-zinc-500" />
+            <X className="h-7 w-7 lg:h-9 lg:w-9 text-zinc-500" aria-hidden="true" />
           </button>
         </div>
 
@@ -205,20 +206,29 @@ export default function QuickNumericPad({
                   e.preventDefault();
                   handleConfirm();
                 }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  onClose();
+                }
               }}
+              aria-label={`${label} - הזן ערך${allowDecimal ? ' בקילוגרמים' : isRpeMode ? ' RPE' : ' בחזרות'}`}
+              aria-describedby="numeric-pad-instructions"
               className="w-full bg-transparent text-6xl lg:text-8xl font-bold text-emerald-400 tabular-nums text-center border-none outline-none focus:ring-0"
               style={{ caretColor: 'transparent' }}
             />
-            <div className="text-xl lg:text-2xl text-zinc-500 mt-2 font-medium">
+            <div className="text-xl lg:text-2xl text-zinc-500 mt-2 font-medium" aria-hidden="true">
               {allowDecimal ? 'kg' : isRpeMode ? 'RPE' : 'reps'}
             </div>
-            <div className="text-sm text-zinc-600 mt-2">
+            <div id="numeric-pad-instructions" className="sr-only">
+              לחץ Enter לאישור, Esc לביטול, או השתמש בחצים למעלה ולמטה לשינוי הערך
+            </div>
+            <div className="text-sm text-zinc-600 mt-2" aria-hidden="true">
               לחץ Enter לאישור • Esc לביטול • חצים למעלה/למטה
             </div>
           </div>
         </div>
 
-        <div className={`grid gap-3 lg:gap-4 mb-6 ${isRpeMode ? 'grid-cols-5' : 'grid-cols-3'}`} dir="rtl">
+        <div className={`grid gap-3 lg:gap-4 mb-6 ${isRpeMode ? 'grid-cols-5' : 'grid-cols-3'}`} dir="rtl" role="group" aria-label="כפתורי מספרים">
           {buttons.map((btn) => (
             <button
               key={btn.label}
@@ -228,18 +238,20 @@ export default function QuickNumericPad({
                 e.stopPropagation();
                 handleAdd(btn.value, btn.isAbsolute);
               }}
+              aria-label={`הוסף ${btn.label}${isRpeMode ? ' RPE' : allowDecimal ? ' קילוגרם' : ' חזרות'}`}
+              aria-pressed={isRpeMode && currentValue === btn.value}
               className={`${
                 isRpeMode && currentValue === btn.value
                   ? 'bg-emerald-500 ring-4 ring-emerald-500/30'
                   : 'bg-cyan-500/15 border border-cyan-500/30 hover:bg-cyan-500/25 text-cyan-400'
-              } ${isRpeMode && currentValue === btn.value ? 'text-white' : ''} ${isRpeMode ? 'py-6 lg:py-8' : 'py-8 lg:py-12'} px-4 rounded-xl text-3xl lg:text-4xl font-bold transition-all active:scale-95 touch-manipulation`}
+              } ${isRpeMode && currentValue === btn.value ? 'text-white' : ''} ${isRpeMode ? 'py-6 lg:py-8' : 'py-8 lg:py-12'} px-4 rounded-xl text-3xl lg:text-4xl font-bold transition-all active:scale-95 touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-500/50`}
             >
               {btn.label}
             </button>
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-4" dir="rtl">
+        <div className="grid grid-cols-2 gap-4" dir="rtl" role="group" aria-label="פעולות">
           <button
             type="button"
             onClick={(e) => {
@@ -247,7 +259,8 @@ export default function QuickNumericPad({
               e.stopPropagation();
               handleReset();
             }}
-            className="bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 text-amber-400 py-6 lg:py-8 px-6 rounded-xl text-2xl lg:text-3xl font-bold transition-all active:scale-95 touch-manipulation"
+            aria-label="איפוס ערך"
+            className="bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 text-amber-400 py-6 lg:py-8 px-6 rounded-xl text-2xl lg:text-3xl font-bold transition-all active:scale-95 touch-manipulation focus:outline-none focus:ring-2 focus:ring-amber-500/50"
           >
             איפוס
           </button>
@@ -258,7 +271,8 @@ export default function QuickNumericPad({
               e.stopPropagation();
               handleConfirm();
             }}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white py-6 lg:py-8 px-6 rounded-xl text-2xl lg:text-3xl font-bold transition-all active:scale-95 touch-manipulation"
+            aria-label={`אישור ערך${allowDecimal ? ' בקילוגרמים' : isRpeMode ? ' RPE' : ' בחזרות'}`}
+            className="bg-emerald-500 hover:bg-emerald-600 text-white py-6 lg:py-8 px-6 rounded-xl text-2xl lg:text-3xl font-bold transition-all active:scale-95 touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
           >
             אישור
           </button>

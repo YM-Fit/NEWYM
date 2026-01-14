@@ -14,13 +14,17 @@ export default function Header({ onLogout, trainerName, onNavigateToTrainee, onT
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-30 glass-card rounded-none border-x-0 border-t-0 px-4 py-3 sm:px-6 sm:py-4 backdrop-blur-xl animate-slide-in-top">
+    <header 
+      role="banner"
+      className="sticky top-0 z-30 glass-card rounded-none border-x-0 border-t-0 px-4 py-3 sm:px-6 sm:py-4 backdrop-blur-xl animate-slide-in-top"
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 sm:gap-4">
           {onToggleSidebar && (
             <button
               onClick={onToggleSidebar}
               className="md:hidden p-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all duration-300 active:scale-95 group"
+              aria-label="פתח תפריט ניווט"
             >
               <Menu className="h-5 w-5 transition-transform group-hover:scale-110" />
             </button>
@@ -77,6 +81,7 @@ export default function Header({ onLogout, trainerName, onNavigateToTrainee, onT
             onClick={onLogout}
             className="p-2.5 text-zinc-400 hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all duration-300 border border-transparent hover:border-red-500/20 active:scale-95 group relative overflow-hidden"
             title="התנתק"
+            aria-label="התנתק"
           >
             <div className="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
             <LogOut className="h-5 w-5 relative z-10 transition-transform group-hover:rotate-12" />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { ArrowRight, Plus, Save, Copy, Trash2, Clock, Dumbbell, CheckCircle, Info } from 'lucide-react';
+import { ArrowRight, Plus, Save, Copy, Trash2, Clock, Dumbbell, CheckCircle, Info, BookMarked, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAutoSave } from '../../hooks/useAutoSave';
 import { useWorkoutSession } from '../../hooks/useWorkoutSession';
@@ -78,6 +78,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
     calculateExerciseVolume,
     toggleMinimizeExercise,
     completeExercise,
+    // getExerciseSummary is used for the summary modal at the end of the workout
     getExerciseSummary,
     toggleCollapseSet,
     completeSetAndMoveNext,
@@ -134,6 +135,11 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
     name: string;
     instructions: string | null;
   } | null>(null);
+  const [showSummary, setShowSummary] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+  const [templateDescription, setTemplateDescription] = useState('');
+  const [savingTemplate, setSavingTemplate] = useState(false);
 
   const workoutData = {
     exercises,
@@ -260,6 +266,170 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
     await handleSave(true);
   };
 
+  const handleLoadLastWorkout = async () => {
+    if (!traineeId) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('יש להתחבר מחדש');
+        return;
+      }
+
+      const { data: workouts, error } = await supabase
+        .from('workouts')
+        .select(`
+          id,
+          workout_date,
+          is_self_recorded,
+          workout_trainees!inner (
+            trainee_id
+          ),
+          workout_exercises (
+            id,
+            order_index,
+            exercise_id,
+            exercises (
+              id,
+              name,
+              muscle_group_id
+            ),
+            exercise_sets (
+              set_number,
+              weight,
+              reps,
+              rpe,
+              set_type,
+              failure,
+              superset_exercise_id,
+              superset_weight,
+              superset_reps,
+              superset_rpe,
+              superset_equipment_id,
+              superset_dropset_weight,
+              superset_dropset_reps,
+              dropset_weight,
+              dropset_reps,
+              equipment_id
+            )
+          )
+        `)
+        .eq('workout_trainees.trainee_id', traineeId)
+        .eq('is_self_recorded', true)
+        .order('workout_date', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        logger.error('Error loading last self workout:', error, 'SelfWorkoutSession');
+        toast.error('שגיאה בטעינת האימון האחרון');
+        return;
+      }
+
+      if (!workouts || workouts.length === 0) {
+        toast.error('לא נמצא אימון עצמאי קודם');
+        return;
+      }
+
+      const lastWorkout = workouts[0] as any;
+      if (!lastWorkout.workout_exercises || lastWorkout.workout_exercises.length === 0) {
+        toast.error('לא נמצאו תרגילים באימון האחרון');
+        return;
+      }
+
+      const loadedExercises: WorkoutExercise[] = lastWorkout.workout_exercises
+        .sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
+        .map((we: any) => ({
+          tempId: `${Date.now()}-${Math.random()}`,
+          exercise: {
+            id: we.exercises.id,
+            name: we.exercises.name,
+            muscle_group_id: we.exercises.muscle_group_id,
+          },
+          sets: (we.exercise_sets || [])
+            .sort((a: any, b: any) => (a.set_number || 0) - (b.set_number || 0))
+            .map((set: any, index: number) => ({
+              id: `temp-${Date.now()}-${index}`,
+              set_number: set.set_number || index + 1,
+              weight: set.weight || 0,
+              reps: set.reps || 0,
+              rpe: set.rpe,
+              set_type: set.set_type || 'regular',
+              failure: set.failure || false,
+              superset_exercise_id: set.superset_exercise_id,
+              superset_exercise_name: undefined,
+              superset_weight: set.superset_weight,
+              superset_reps: set.superset_reps,
+              superset_rpe: set.superset_rpe,
+              superset_equipment_id: set.superset_equipment_id,
+              superset_equipment: null,
+              superset_dropset_weight: set.superset_dropset_weight,
+              superset_dropset_reps: set.superset_dropset_reps,
+              dropset_weight: set.dropset_weight,
+              dropset_reps: set.dropset_reps,
+              equipment_id: set.equipment_id,
+              equipment: null,
+            })),
+        }));
+
+      setExercises(loadedExercises);
+      toast.success('האימון האחרון נטען בהצלחה');
+    } catch (error) {
+      logger.error('Unexpected error loading last self workout:', error, 'SelfWorkoutSession');
+      toast.error('שגיאה בטעינת האימון האחרון');
+    }
+  };
+
+  const handleSaveTemplate = async () => {
+    if (!traineeId || !trainerId) return;
+    if (!templateName.trim() || exercises.length === 0) {
+      toast.error('נא למלא שם תבנית ולהוסיף תרגילים');
+      return;
+    }
+
+    try {
+      setSavingTemplate(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('יש להתחבר מחדש');
+        setSavingTemplate(false);
+        return;
+      }
+
+      const templateExercises = exercises.map(ex => ({
+        exerciseId: ex.exercise.id,
+        exerciseName: ex.exercise.name,
+        setsCount: ex.sets.length,
+        targetReps: ex.sets[0]?.reps || undefined,
+        targetWeight: ex.sets[0]?.weight || undefined,
+      }));
+
+      const { error } = await supabase
+        .from('workout_templates')
+        .insert({
+          trainer_id: trainerId,
+          trainee_id: traineeId,
+          trainee_name: traineeName,
+          name: templateName.trim(),
+          description: templateDescription.trim() || null,
+          exercises: templateExercises,
+        } as any);
+
+      if (error) {
+        logger.error('Error saving trainee template:', error, 'SelfWorkoutSession');
+        toast.error('שגיאה בשמירת התבנית');
+      } else {
+        toast.success('התבנית נשמרה למאמן שלך');
+        setShowTemplateModal(false);
+        setTemplateName('');
+        setTemplateDescription('');
+      }
+    } catch (error) {
+      logger.error('Error saving trainee template:', error, 'SelfWorkoutSession');
+      toast.error('שגיאה בשמירת התבנית');
+    } finally {
+      setSavingTemplate(false);
+    }
+  };
+
   const handleSave = async (isAutoSave = false) => {
     if (exercises.length === 0) return;
 
@@ -281,7 +451,8 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
         return;
       }
 
-      const { data: workoutId, error: workoutError } = await supabase
+      const { data: workoutIdResult, error: workoutError } = await supabase
+        // @ts-ignore - RPC function typed as any in generated types
         .rpc('create_trainee_workout', {
           p_trainer_id: trainerId,
           p_workout_type: 'personal',
@@ -290,23 +461,22 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
           p_is_completed: true,
         });
 
-      if (workoutError || !workoutId) {
+      if (workoutError || !workoutIdResult) {
         logger.error('Workout error:', workoutError, 'SelfWorkoutSession');
         toast.error('שגיאה בשמירת האימון');
         setSaving(false);
         return;
       }
 
-      const newWorkout = { id: workoutId };
+      const newWorkout = { id: workoutIdResult as string };
 
       const { error: traineeError } = await supabase
+        // @ts-ignore - inserting into workout_trainees without generated types
         .from('workout_trainees')
-        .insert([
-          {
-            workout_id: newWorkout.id,
-            trainee_id: traineeId,
-          },
-        ]);
+        .insert({
+          workout_id: newWorkout.id,
+          trainee_id: traineeId,
+        } as any);
 
       if (traineeError) {
         logger.error('Trainee link error:', traineeError, 'SelfWorkoutSession');
@@ -319,16 +489,15 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
         const exercise = exercises[i];
 
         const { data: workoutExercise, error: exerciseError } = await supabase
+          // @ts-ignore - inserting into workout_exercises without generated types
           .from('workout_exercises')
-          .insert([
-            {
-              workout_id: newWorkout.id,
-              trainee_id: traineeId,
-              exercise_id: exercise.exercise.id,
-              order_index: i,
-              pair_member: null,
-            },
-          ])
+          .insert({
+            workout_id: newWorkout.id,
+            trainee_id: traineeId,
+            exercise_id: exercise.exercise.id,
+            order_index: i,
+            pair_member: null,
+          } as any)
           .select()
           .single();
 
@@ -339,29 +508,35 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
           return;
         }
 
-        const setsToInsert = exercise.sets.map((set) => ({
-          workout_exercise_id: workoutExercise.id,
+        // We trust Supabase to return a valid id for workout_exercises; TS typing is looser than runtime
+        const workoutExerciseId = (workoutExercise as any).id as string | null;
+        const setsToInsert: any[] = exercise.sets.map((set) => ({
+          workout_exercise_id: workoutExerciseId,
           set_number: set.set_number,
           weight: set.weight,
           reps: set.reps,
-          rpe: set.rpe >= 1 && set.rpe <= 10 ? set.rpe : null,
+          rpe: set.rpe && set.rpe >= 1 && set.rpe <= 10 ? set.rpe : null,
           set_type: set.set_type,
           failure: set.failure || false,
-          superset_exercise_id: set.superset_exercise_id,
-          superset_weight: set.superset_weight,
-          superset_reps: set.superset_reps,
-          superset_rpe: set.superset_rpe >= 1 && set.superset_rpe <= 10 ? set.superset_rpe : null,
-          superset_equipment_id: set.superset_equipment_id,
-          superset_dropset_weight: set.superset_dropset_weight,
-          superset_dropset_reps: set.superset_dropset_reps,
-          dropset_weight: set.dropset_weight,
-          dropset_reps: set.dropset_reps,
-          equipment_id: set.equipment_id,
+          superset_exercise_id: set.superset_exercise_id || null,
+          superset_weight: set.superset_weight ?? null,
+          superset_reps: set.superset_reps ?? null,
+          superset_rpe:
+            set.superset_rpe && set.superset_rpe >= 1 && set.superset_rpe <= 10
+              ? set.superset_rpe
+              : null,
+          superset_equipment_id: set.superset_equipment_id ?? null,
+          superset_dropset_weight: set.superset_dropset_weight ?? null,
+          superset_dropset_reps: set.superset_dropset_reps ?? null,
+          dropset_weight: set.dropset_weight ?? null,
+          dropset_reps: set.dropset_reps ?? null,
+          equipment_id: set.equipment_id ?? null,
         }));
 
         const { error: setsError } = await supabase
+          // @ts-ignore - inserting into exercise_sets without generated types
           .from('exercise_sets')
-          .insert(setsToInsert);
+          .insert(setsToInsert as any);
 
         if (setsError) {
           logger.error('Sets error:', setsError, 'SelfWorkoutSession');
@@ -372,20 +547,22 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
       }
 
       if (trainerId) {
-        await supabase.from('trainer_notifications').insert({
-          trainer_id: trainerId,
-          trainee_id: traineeId,
-          notification_type: 'self_workout',
-          title: 'אימון עצמאי חדש',
-          message: `${traineeName} סיים אימון עצמאי`,
-          is_read: false,
-        });
+        await supabase
+          // @ts-ignore - inserting into trainer_notifications without generated types
+          .from('trainer_notifications')
+          .insert({
+            trainer_id: trainerId,
+            trainee_id: traineeId,
+            notification_type: 'self_workout',
+            title: 'אימון עצמאי חדש',
+            message: `${traineeName} סיים אימון עצמאי`,
+            is_read: false,
+          } as any);
       }
 
       clearSaved();
       if (!isAutoSave) {
-        toast.success('האימון נשמר בהצלחה!');
-        onSave();
+        setShowSummary(true);
       }
     } catch (error) {
       logger.error('Error saving workout:', error, 'SelfWorkoutSession');
@@ -434,6 +611,30 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
         <div className="flex items-center justify-center bg-white/15 backdrop-blur-sm rounded-lg md:rounded-xl p-2.5 md:p-3">
           <Clock className="h-4 w-4 md:h-5 md:w-5 text-white ml-1.5 md:ml-2" />
           <span className="text-lg md:text-xl font-bold text-white">{formatTime(elapsedTime)}</span>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <div className="flex gap-2">
+            {exercises.length === 0 && (
+              <button
+                type="button"
+                onClick={handleLoadLastWorkout}
+                className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-50 text-xs md:text-sm font-semibold border border-emerald-500/40 hover:bg-emerald-500/30 transition-all"
+              >
+                טען אימון עצמאי אחרון
+              </button>
+            )}
+            {exercises.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowTemplateModal(true)}
+                className="px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-50 text-xs md:text-sm font-semibold border border-amber-500/40 hover:bg-amber-500/30 transition-all flex items-center gap-1.5"
+              >
+                <BookMarked className="h-3.5 w-3.5" />
+                שמור כתבנית
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -941,6 +1142,115 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
           exerciseName={instructionsExercise.name}
           instructions={instructionsExercise.instructions}
         />
+      )}
+      {showTemplateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
+                שמור כתבנית למאמן
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowTemplateModal(false)}
+                className="p-2 rounded-lg hover:bg-[var(--color-bg-surface)]"
+              >
+                <X className="w-4 h-4 text-[var(--color-text-muted)]" />
+              </button>
+            </div>
+            <p className="text-xs text-[var(--color-text-secondary)]">
+              התבנית תישמר למאמן שלך ותופיע אצלו ברשימת התבניות עם השם שלך.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">
+                  שם התבנית *
+                </label>
+                <input
+                  type="text"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  className="glass-input w-full px-3 py-2.5"
+                  placeholder="למשל: אימון עליון קצר"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">
+                  תיאור (אופציונלי)
+                </label>
+                <textarea
+                  value={templateDescription}
+                  onChange={(e) => setTemplateDescription(e.target.value)}
+                  rows={3}
+                  className="glass-input w-full px-3 py-2.5 resize-none"
+                  placeholder="למשל: אימון עליון לימים עמוסים..."
+                />
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleSaveTemplate}
+              disabled={savingTemplate || !templateName.trim() || exercises.length === 0}
+              className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:bg-[var(--color-bg-surface)] disabled:text-[var(--color-text-muted)] text-white font-semibold transition-all"
+            >
+              {savingTemplate ? 'שומר...' : 'שמור כתבנית'}
+            </button>
+          </div>
+        </div>
+      )}
+      {showSummary && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
+                סיכום אימון
+              </h2>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-[var(--color-text-secondary)]">סה\"כ נפח</span>
+                <span className="font-bold text-emerald-400">
+                  {calculateTotalVolume().toLocaleString()} ק\"ג
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-[var(--color-text-secondary)]">משך האימון (משוער)</span>
+                <span className="font-bold text-[var(--color-text-primary)]">
+                  {formatTime(elapsedTime)}
+                </span>
+              </div>
+              <div className="border-t border-[var(--color-border)] pt-3 space-y-2 max-h-40 overflow-y-auto">
+                {exercises.map((ex) => {
+                  const summary = getExerciseSummary(ex);
+                  return (
+                    <div
+                      key={ex.tempId}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <span className="text-[var(--color-text-secondary)] truncate mr-2">
+                        {ex.exercise.name}
+                      </span>
+                      <span className="text-[var(--color-text-muted)] text-xs">
+                        {summary.totalSets} סטים • מקס {summary.maxWeight} ק\"ג
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setShowSummary(false);
+                toast.success('האימון נשמר בהצלחה!');
+                onSave();
+              }}
+              className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition-all"
+            >
+              סיום וחזרה למסך אימונים
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

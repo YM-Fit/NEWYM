@@ -78,7 +78,10 @@ export default function TraineeApp() {
 
   return (
     <div className="min-h-screen bg-gradient-dark transition-colors duration-300" dir="rtl">
-      <header className="sticky top-0 z-30 glass-card rounded-none border-x-0 border-t-0 px-4 py-3 md:py-4">
+      <header 
+        role="banner"
+        className="sticky top-0 z-30 glass-card rounded-none border-x-0 border-t-0 px-4 py-3 md:py-4"
+      >
         <div className="mx-auto max-w-5xl flex justify-between items-center gap-3">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-400 to-teal-500 flex items-center justify-center shadow-glow animate-scale-bounce">
@@ -105,18 +108,28 @@ export default function TraineeApp() {
           </button>
           <button
             onClick={signOut}
-            className="p-2.5 text-[var(--color-text-secondary)] hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all border border-[var(--color-border)] hover:border-red-500/30"
+            className="p-2.5 text-[var(--color-text-secondary)] hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all border border-[var(--color-border)] hover:border-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500/50"
             title="התנתק"
+            aria-label="התנתק"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
       </header>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 px-3 md:px-4 pb-4 safe-bottom">
+      <nav 
+        id="main-navigation"
+        className="fixed bottom-0 left-0 right-0 z-50 px-3 md:px-4 pb-4 safe-bottom"
+        role="navigation"
+        aria-label="ניווט ראשי"
+      >
         <div className="mx-auto max-w-3xl relative">
           {showMoreMenu && (
-            <div className="absolute bottom-full mb-2 left-4 right-4 glass-card p-4 rounded-2xl animate-fade-in border border-[var(--color-border)] shadow-dark-lg z-10">
+            <div 
+              className="absolute bottom-full mb-2 left-4 right-4 glass-card p-4 rounded-2xl animate-fade-in border border-[var(--color-border)] shadow-dark-lg z-10"
+              role="menu"
+              aria-label="תפריט נוסף"
+            >
               <div className="mb-3 pb-3 border-b border-[var(--color-border)]">
                 <h3 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider text-right">
                   תזונה ובריאות
@@ -183,10 +196,11 @@ export default function TraineeApp() {
               <div className="relative -mt-10">
                 <button
                   onClick={() => { setActiveTab('self-workout'); setShowMoreMenu(false); }}
-                  className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow transition-transform hover:scale-105 active:scale-95 border-4 border-[var(--color-bg-base)]"
+                  className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow transition-transform hover:scale-105 active:scale-95 border-4 border-[var(--color-bg-base)] focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  aria-label="התחל אימון חדש"
                   title="אימון חדש"
                 >
-                  <Plus className="w-7 h-7 text-white" />
+                  <Plus className="w-7 h-7 text-white" aria-hidden="true" />
                 </button>
               </div>
 
@@ -210,15 +224,23 @@ export default function TraineeApp() {
       <div className="fixed bottom-24 left-4 z-40">
         <button
           onClick={() => setShowMoreMenu(!showMoreMenu)}
-          className={`glass-card px-4 py-2.5 rounded-xl text-sm font-medium transition-all border shadow-lg ${
+          className={`glass-card px-4 py-2.5 rounded-xl text-sm font-medium transition-all border shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
             showMoreMenu ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10 shadow-emerald-500/20' : 'text-[var(--color-text-secondary)] border-[var(--color-border)] hover:border-emerald-500/30 hover:text-emerald-400'
           }`}
+          aria-label={showMoreMenu ? 'סגור תפריט נוסף' : 'פתח תפריט נוסף'}
+          aria-expanded={showMoreMenu}
+          aria-haspopup="true"
         >
           {showMoreMenu ? 'סגור' : 'עוד...'}
         </button>
       </div>
 
-      <main className="pb-32 px-4 pt-4">
+      <main 
+        id="main-content"
+        className="pb-32 px-4 pt-4"
+        role="main"
+        aria-label="תוכן ראשי"
+      >
         <div className="mx-auto max-w-5xl space-y-4 md:space-y-6">
         {activeTab === 'dashboard' && <TraineeDashboard traineeId={traineeId} traineeName={trainee?.full_name || ''} />}
         {activeTab === 'workout-plan' && <MyWorkoutPlan traineeId={traineeId} />}

@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, useId } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 interface SelectOption {
@@ -16,17 +16,27 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, placeholder, fullWidth = false, className = '', ...props }, ref) => {
+  ({ label, error, options, placeholder, fullWidth = false, className = '', id, required, ...props }, ref) => {
+    const generatedId = useId();
+    const selectId = id || generatedId;
+    const errorId = `${selectId}-error`;
+    
     return (
       <div className={fullWidth ? 'w-full' : ''} dir="rtl">
         {label && (
-          <label className="block text-sm font-medium text-zinc-400 mb-2">
+          <label htmlFor={selectId} className="block text-sm font-medium text-zinc-400 mb-2">
             {label}
+            {required && <span className="text-red-400 ml-1" aria-label="שדה חובה">*</span>}
           </label>
         )}
         <div className="relative">
           <select
             ref={ref}
+            id={selectId}
+            aria-invalid={error ? 'true' : 'false'}
+            aria-describedby={error ? errorId : undefined}
+            aria-required={required}
+            required={required}
             className={`
               w-full px-4 py-3 pr-10
               bg-zinc-800/50 border rounded-xl
@@ -34,7 +44,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50
               transition-all
               appearance-none cursor-pointer
-              ${error ? 'border-red-500/50' : 'border-zinc-700/50'}
+              ${error ? 'border-red-500/50 focus:ring-red-500/50' : 'border-zinc-700/50'}
               ${className}
             `}
             {...props}
@@ -54,12 +64,14 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               </option>
             ))}
           </select>
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true">
             <ChevronDown className="w-5 h-5 text-zinc-500" />
           </div>
         </div>
         {error && (
-          <p className="mt-1 text-sm text-red-400">{error}</p>
+          <p id={errorId} className="mt-1 text-sm text-red-400" role="alert">
+            {error}
+          </p>
         )}
       </div>
     );

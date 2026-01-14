@@ -208,6 +208,13 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
       <button
         onClick={() => setShowDropdown(!showDropdown)}
         className="relative p-2.5 hover:bg-gray-100 rounded-xl transition-all duration-300 hover:scale-105 group"
+        aria-label={
+          unreadCount > 0
+            ? `יש ${unreadCount > 9 ? 'יותר מתשע' : unreadCount} התראות שלא נקראו, פתח התראות`
+            : 'פתח התראות'
+        }
+        aria-haspopup="true"
+        aria-expanded={showDropdown}
       >
         <Bell className="w-6 h-6 text-gray-700 group-hover:text-emerald-600 transition-colors duration-300" />
         {unreadCount > 0 && (
@@ -219,7 +226,11 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
 
       {/* Dropdown */}
       {showDropdown && (
-        <div className="absolute left-0 mt-3 w-[400px] bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 max-h-[600px] flex flex-col overflow-hidden backdrop-blur-sm">
+        <div
+          className="absolute left-0 mt-3 w-[400px] bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 max-h-[600px] flex flex-col overflow-hidden backdrop-blur-sm"
+          role="dialog"
+          aria-label="רשימת התראות"
+        >
           {/* Header */}
           <div className="p-5 bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -270,6 +281,14 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
                         <div
                           className="flex-1 min-w-0"
                           onClick={() => handleNotificationClick(notification)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleNotificationClick(notification);
+                            }
+                          }}
                         >
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-semibold text-sm text-gray-900">{notification.title}</h4>

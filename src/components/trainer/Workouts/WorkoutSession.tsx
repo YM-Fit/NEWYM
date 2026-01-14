@@ -70,9 +70,18 @@ interface WorkoutSessionProps {
     exercises: WorkoutExercise[];
   };
   initialSelectedMember?: 'member_1' | 'member_2' | null;
+  isTablet?: boolean;
 }
 
-export default function WorkoutSession({ trainee, onBack, onSave, previousWorkout, editingWorkout, initialSelectedMember }: WorkoutSessionProps) {
+export default function WorkoutSession({
+  trainee,
+  onBack,
+  onSave,
+  previousWorkout,
+  editingWorkout,
+  initialSelectedMember,
+  isTablet,
+}: WorkoutSessionProps) {
   const { user } = useAuth();
   const { handleError } = useErrorHandler();
   const {
@@ -817,7 +826,11 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
   const totalVolume = useMemo(() => calculateTotalVolume(), [exercises]);
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-base)] p-4 lg:p-6 transition-colors duration-300">
+    <div
+      className={`trainer-workout-session min-h-screen bg-[var(--color-bg-base)] p-4 lg:p-6 transition-colors duration-300 ${
+        isTablet ? 'tablet-padding' : ''
+      }`}
+    >
       <WorkoutHeader
         trainee={trainee}
         workoutId={workoutId}
@@ -836,33 +849,75 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
         onWorkoutTypeChange={setWorkoutType}
       />
 
-      {exercises.map((workoutExercise, exerciseIndex) => (
-        <WorkoutExerciseCard
-          key={workoutExercise.tempId}
-          workoutExercise={workoutExercise}
-          exerciseIndex={exerciseIndex}
-          isMinimized={minimizedExercises.includes(workoutExercise.tempId)}
-          collapsedSets={collapsedSets}
-          summary={getExerciseSummary(workoutExercise)}
-          totalVolume={calculateExerciseVolume(workoutExercise)}
-          onRemove={() => removeExercise(exerciseIndex)}
-          onToggleMinimize={() => toggleMinimizeExercise(workoutExercise.tempId)}
-          onComplete={() => completeExercise(workoutExercise.tempId)}
-          onAddSet={() => addSet(exerciseIndex)}
-          onDuplicateSet={(setIndex) => duplicateSet(exerciseIndex, setIndex)}
-          onRemoveSet={(setIndex) => removeSet(exerciseIndex, setIndex)}
-          onToggleCollapseSet={toggleCollapseSet}
-          onCompleteSet={(setIndex) => completeSetAndMoveNext(exerciseIndex, setIndex)}
-          onOpenNumericPad={(setIndex, field) => openNumericPad(exerciseIndex, setIndex, field, field === 'weight' ? 'משקל (ק״ג)' : field === 'reps' ? 'חזרות' : 'RPE (1-10)')}
-          onOpenEquipmentSelector={(setIndex) => setEquipmentSelector({ exerciseIndex, setIndex })}
-          onOpenSupersetSelector={(setIndex) => setSupersetSelector({ exerciseIndex, setIndex })}
-          onOpenSupersetNumericPad={(setIndex, field) => openSupersetNumericPad(exerciseIndex, setIndex, field, field === 'superset_weight' ? 'משקל סופר-סט (ק״ג)' : field === 'superset_reps' ? 'חזרות סופר-סט' : 'RPE סופר-סט (1-10)')}
-          onOpenSupersetEquipmentSelector={(setIndex) => setSupersetEquipmentSelector({ exerciseIndex, setIndex })}
-          onOpenDropsetNumericPad={(setIndex, field) => openDropsetNumericPad(exerciseIndex, setIndex, field, field === 'dropset_weight' ? 'משקל דרופ-סט (ק״ג)' : 'חזרות דרופ-סט')}
-          onOpenSupersetDropsetNumericPad={(setIndex, field) => openSupersetDropsetNumericPad(exerciseIndex, setIndex, field, field === 'superset_dropset_weight' ? 'משקל דרופ-סט סופר (ק״ג)' : 'חזרות דרופ-סט סופר')}
-          onUpdateSet={(setIndex, field, value) => updateSet(exerciseIndex, setIndex, field, value)}
-        />
-      ))}
+      <div className={isTablet ? 'trainer-workout-layout grid gap-4' : 'space-y-4'}>
+        {exercises.map((workoutExercise, exerciseIndex) => (
+          <WorkoutExerciseCard
+            key={workoutExercise.tempId}
+            workoutExercise={workoutExercise}
+            exerciseIndex={exerciseIndex}
+            isMinimized={minimizedExercises.includes(workoutExercise.tempId)}
+            collapsedSets={collapsedSets}
+            summary={getExerciseSummary(workoutExercise)}
+            totalVolume={calculateExerciseVolume(workoutExercise)}
+            onRemove={() => removeExercise(exerciseIndex)}
+            onToggleMinimize={() => toggleMinimizeExercise(workoutExercise.tempId)}
+            onComplete={() => completeExercise(workoutExercise.tempId)}
+            onAddSet={() => addSet(exerciseIndex)}
+            onDuplicateSet={(setIndex) => duplicateSet(exerciseIndex, setIndex)}
+            onRemoveSet={(setIndex) => removeSet(exerciseIndex, setIndex)}
+            onToggleCollapseSet={toggleCollapseSet}
+            onCompleteSet={(setIndex) => completeSetAndMoveNext(exerciseIndex, setIndex)}
+            onOpenNumericPad={(setIndex, field) =>
+              openNumericPad(
+                exerciseIndex,
+                setIndex,
+                field,
+                field === 'weight'
+                  ? 'משקל (ק״ג)'
+                  : field === 'reps'
+                  ? 'חזרות'
+                  : 'RPE (1-10)'
+              )
+            }
+            onOpenEquipmentSelector={(setIndex) => setEquipmentSelector({ exerciseIndex, setIndex })}
+            onOpenSupersetSelector={(setIndex) => setSupersetSelector({ exerciseIndex, setIndex })}
+            onOpenSupersetNumericPad={(setIndex, field) =>
+              openSupersetNumericPad(
+                exerciseIndex,
+                setIndex,
+                field,
+                field === 'superset_weight'
+                  ? 'משקל סופר-סט (ק״ג)'
+                  : field === 'superset_reps'
+                  ? 'חזרות סופר-סט'
+                  : 'RPE סופר-סט (1-10)'
+              )
+            }
+            onOpenSupersetEquipmentSelector={(setIndex) =>
+              setSupersetEquipmentSelector({ exerciseIndex, setIndex })
+            }
+            onOpenDropsetNumericPad={(setIndex, field) =>
+              openDropsetNumericPad(
+                exerciseIndex,
+                setIndex,
+                field,
+                field === 'dropset_weight' ? 'משקל דרופ-סט (ק״ג)' : 'חזרות דרופ-סט'
+              )
+            }
+            onOpenSupersetDropsetNumericPad={(setIndex, field) =>
+              openSupersetDropsetNumericPad(
+                exerciseIndex,
+                setIndex,
+                field,
+                field === 'superset_dropset_weight'
+                  ? 'משקל דרופ-סט סופר (ק״ג)'
+                  : 'חזרות דרופ-סט סופר'
+              )
+            }
+            onUpdateSet={(setIndex, field, value) => updateSet(exerciseIndex, setIndex, field, value)}
+          />
+        ))}
+      </div>
 
       {exercises.length === 0 && !workoutId && (
         <div className="premium-card-static p-6 mb-4">
@@ -1018,7 +1073,7 @@ export default function WorkoutSession({ trainee, onBack, onSave, previousWorkou
                   onChange={(e) => setTemplateName(e.target.value)}
                   className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="למשל: אימון רגליים מלא"
-                  autoFocus
+                  autoFocus={!isTablet}
                 />
               </div>
 
