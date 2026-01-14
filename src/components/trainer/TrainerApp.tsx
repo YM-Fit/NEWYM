@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { Home, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
@@ -14,24 +14,27 @@ import MobileSidebar from '../layout/MobileSidebar';
 import Dashboard from './Dashboard/Dashboard';
 import TraineesList from './Trainees/TraineesList';
 import TraineeProfile from './Trainees/TraineeProfile';
-import AddTraineeForm from './Trainees/AddTraineeForm';
-import EditTraineeForm from './Trainees/EditTraineeForm';
-import WorkoutSession from './Workouts/WorkoutSession';
-import WorkoutsList from './Workouts/WorkoutsList';
-import WorkoutDetails from './Workouts/WorkoutDetails';
-import WorkoutProgress from './Workouts/WorkoutProgress';
-import WorkoutTypeSelection from './Workouts/WorkoutTypeSelection';
-import PairWorkoutSession from './Workouts/PairWorkoutSession';
-import MeasurementForm from './Measurements/MeasurementForm';
-import MeasurementsView from './Measurements/MeasurementsView';
-import WorkoutPlanBuilder from './WorkoutPlans/WorkoutPlanBuilder';
-import MealPlanBuilder from './MealPlans/MealPlanBuilder';
-import TraineeAccessManager from './Trainees/TraineeAccessManager';
-import MentalToolsEditor from './MentalTools/MentalToolsEditor';
-import ToolsView from './Tools/ToolsView';
-import TraineeFoodDiaryView from './Trainees/TraineeFoodDiaryView';
-import CardioManager from './Cardio/CardioManager';
-import ReportsView from './Reports/ReportsView';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
+
+// Lazy load heavy components
+const AddTraineeForm = lazy(() => import('./Trainees/AddTraineeForm'));
+const EditTraineeForm = lazy(() => import('./Trainees/EditTraineeForm'));
+const WorkoutSession = lazy(() => import('./Workouts/WorkoutSession'));
+const WorkoutsList = lazy(() => import('./Workouts/WorkoutsList'));
+const WorkoutDetails = lazy(() => import('./Workouts/WorkoutDetails'));
+const WorkoutProgress = lazy(() => import('./Workouts/WorkoutProgress'));
+const WorkoutTypeSelection = lazy(() => import('./Workouts/WorkoutTypeSelection'));
+const PairWorkoutSession = lazy(() => import('./Workouts/PairWorkoutSession'));
+const MeasurementForm = lazy(() => import('./Measurements/MeasurementForm'));
+const MeasurementsView = lazy(() => import('./Measurements/MeasurementsView'));
+const WorkoutPlanBuilder = lazy(() => import('./WorkoutPlans/WorkoutPlanBuilder'));
+const MealPlanBuilder = lazy(() => import('./MealPlans/MealPlanBuilder'));
+const TraineeAccessManager = lazy(() => import('./Trainees/TraineeAccessManager'));
+const MentalToolsEditor = lazy(() => import('./MentalTools/MentalToolsEditor'));
+const ToolsView = lazy(() => import('./Tools/ToolsView'));
+const TraineeFoodDiaryView = lazy(() => import('./Trainees/TraineeFoodDiaryView'));
+const CardioManager = lazy(() => import('./Cardio/CardioManager'));
+const ReportsView = lazy(() => import('./Reports/ReportsView'));
 
 interface Trainee {
   id: string;
@@ -868,207 +871,247 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
 
       case 'add-trainee':
         return (
-          <AddTraineeForm
-            onBack={() => setActiveView('trainees')}
-            onSave={handleSaveTrainee}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <AddTraineeForm
+              onBack={() => setActiveView('trainees')}
+              onSave={handleSaveTrainee}
+            />
+          </Suspense>
         );
 
       case 'edit-trainee':
         return selectedTrainee ? (
-          <EditTraineeForm
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            onBack={() => setActiveView('trainee-profile')}
-            onSave={async () => {
-              await loadTrainees();
-              await handleTraineeClick(selectedTrainee);
-              setActiveView('trainee-profile');
-            }}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <EditTraineeForm
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              onBack={() => setActiveView('trainee-profile')}
+              onSave={async () => {
+                await loadTrainees();
+                await handleTraineeClick(selectedTrainee);
+                setActiveView('trainee-profile');
+              }}
+            />
+          </Suspense>
         ) : null;
 
       case 'workout-type-selection':
         return selectedTrainee && selectedTrainee.is_pair ? (
-          <WorkoutTypeSelection
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            onSelectPersonal={handleSelectPersonalWorkout}
-            onSelectPair={handleSelectPairWorkout}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <WorkoutTypeSelection
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              onSelectPersonal={handleSelectPersonalWorkout}
+              onSelectPair={handleSelectPairWorkout}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'pair-workout-session':
         return selectedTrainee && selectedTrainee.is_pair ? (
-          <PairWorkoutSession
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            onBack={() => setActiveView('trainee-profile')}
-            onComplete={async (workoutData) => {
-              await loadWorkouts(selectedTrainee.id);
-              setActiveView('trainee-profile');
-            }}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <PairWorkoutSession
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              onBack={() => setActiveView('trainee-profile')}
+              onComplete={async (workoutData) => {
+                await loadWorkouts(selectedTrainee.id);
+                setActiveView('trainee-profile');
+              }}
+            />
+          </Suspense>
         ) : null;
 
       case 'workout-session':
         return selectedTrainee ? (
-          <WorkoutSession
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            initialSelectedMember={selectedPairMember}
-            isTablet={isTablet}
-            onBack={() => {
-              if (selectedWorkout) {
-                setActiveView('workouts-list');
-              } else {
-                setActiveView('trainee-profile');
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <WorkoutSession
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              initialSelectedMember={selectedPairMember}
+              isTablet={isTablet}
+              onBack={() => {
+                if (selectedWorkout) {
+                  setActiveView('workouts-list');
+                } else {
+                  setActiveView('trainee-profile');
+                }
+                setSelectedPairMember(null);
+              }}
+              onSave={async (workout) => {
+                await loadWorkouts(selectedTrainee.id);
+                setSelectedWorkout(null);
+                setSelectedPairMember(null);
+                if (selectedWorkout) {
+                  setActiveView('workouts-list');
+                } else {
+                  setActiveView('trainee-profile');
+                }
+              }}
+              previousWorkout={undefined}
+              editingWorkout={
+                selectedWorkout
+                  ? {
+                      id: selectedWorkout.id,
+                      exercises: selectedWorkout.exercises || [],
+                    }
+                  : undefined
               }
-              setSelectedPairMember(null);
-            }}
-            onSave={async (workout) => {
-              await loadWorkouts(selectedTrainee.id);
-              setSelectedWorkout(null);
-              setSelectedPairMember(null);
-              if (selectedWorkout) {
-                setActiveView('workouts-list');
-              } else {
-                setActiveView('trainee-profile');
-              }
-            }}
-            previousWorkout={undefined}
-            editingWorkout={
-              selectedWorkout
-                ? {
-                    id: selectedWorkout.id,
-                    exercises: selectedWorkout.exercises || [],
-                  }
-                : undefined
-            }
-          />
+            />
+          </Suspense>
         ) : null;
 
       case 'measurement-form':
         return selectedTrainee ? (
-          <MeasurementForm
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            onBack={() => setActiveView('trainee-profile')}
-            onSave={async (measurement) => {
-              await loadMeasurements(selectedTrainee.id);
-              setEditingMeasurement(null);
-              setActiveView('measurements-view');
-            }}
-            previousMeasurement={undefined}
-            editingMeasurement={editingMeasurement}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <MeasurementForm
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              onBack={() => setActiveView('trainee-profile')}
+              onSave={async (measurement) => {
+                await loadMeasurements(selectedTrainee.id);
+                setEditingMeasurement(null);
+                setActiveView('measurements-view');
+              }}
+              previousMeasurement={undefined}
+              editingMeasurement={editingMeasurement}
+            />
+          </Suspense>
         ) : null;
 
       case 'measurements-view':
         return selectedTrainee ? (
-          <MeasurementsView
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            measurements={measurements}
-            onNewMeasurement={() => handleNewMeasurement(selectedTrainee)}
-            onEditMeasurement={handleEditMeasurement}
-            onMeasurementDeleted={() => loadMeasurements(selectedTrainee.id)}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <MeasurementsView
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              measurements={measurements}
+              onNewMeasurement={() => handleNewMeasurement(selectedTrainee)}
+              onEditMeasurement={handleEditMeasurement}
+              onMeasurementDeleted={() => loadMeasurements(selectedTrainee.id)}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'workouts-list':
         return selectedTrainee ? (
-          <WorkoutsList
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            workouts={workouts}
-            onBack={() => {
-              setActiveView('trainee-profile');
-              handleTraineeClick(selectedTrainee);
-            }}
-            onViewWorkout={handleViewWorkout}
-            onEditWorkout={handleEditWorkout}
-            onDuplicateWorkout={handleDuplicateWorkout}
-            onWorkoutsUpdated={() => loadWorkouts(selectedTrainee.id)}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <WorkoutsList
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              workouts={workouts}
+              onBack={() => {
+                setActiveView('trainee-profile');
+                handleTraineeClick(selectedTrainee);
+              }}
+              onViewWorkout={handleViewWorkout}
+              onEditWorkout={handleEditWorkout}
+              onDuplicateWorkout={handleDuplicateWorkout}
+              onWorkoutsUpdated={() => loadWorkouts(selectedTrainee.id)}
+            />
+          </Suspense>
         ) : null;
 
       case 'workout-details':
         return selectedTrainee && selectedWorkout ? (
-          <WorkoutDetails
-            workoutId={selectedWorkout.id}
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            onBack={() => setActiveView('workouts-list')}
-            onEdit={() => handleEditWorkout(selectedWorkout)}
-            onDuplicate={() => handleDuplicateWorkout(selectedWorkout)}
-            onDelete={() => handleDeleteWorkout(selectedWorkout.id)}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <WorkoutDetails
+              workoutId={selectedWorkout.id}
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              onBack={() => setActiveView('workouts-list')}
+              onEdit={() => handleEditWorkout(selectedWorkout)}
+              onDuplicate={() => handleDuplicateWorkout(selectedWorkout)}
+              onDelete={() => handleDeleteWorkout(selectedWorkout.id)}
+            />
+          </Suspense>
         ) : null;
 
       case 'workout-progress':
         return selectedTrainee ? (
-          <WorkoutProgress
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <WorkoutProgress
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'workout-plans':
         return selectedTrainee ? (
-          <WorkoutPlanBuilder
-            traineeId={selectedTrainee.id}
-            traineeName={selectedTrainee.full_name}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <WorkoutPlanBuilder
+              traineeId={selectedTrainee.id}
+              traineeName={selectedTrainee.full_name}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'meal-plans':
         return selectedTrainee && user ? (
-          <MealPlanBuilder
-            traineeId={selectedTrainee.id}
-            traineeName={selectedTrainee.full_name}
-            trainerId={user.id}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <MealPlanBuilder
+              traineeId={selectedTrainee.id}
+              traineeName={selectedTrainee.full_name}
+              trainerId={user.id}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'trainee-access':
         return selectedTrainee ? (
-          <TraineeAccessManager
-            traineeId={selectedTrainee.id}
-            traineeName={selectedTrainee.full_name}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <TraineeAccessManager
+              traineeId={selectedTrainee.id}
+              traineeName={selectedTrainee.full_name}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'mental-tools':
         return selectedTrainee ? (
-          <MentalToolsEditor
-            traineeId={selectedTrainee.id}
-            traineeName={selectedTrainee.full_name}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <MentalToolsEditor
+              traineeId={selectedTrainee.id}
+              traineeName={selectedTrainee.full_name}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'food-diary':
         return selectedTrainee ? (
-          <TraineeFoodDiaryView
-            traineeId={selectedTrainee.id}
-            traineeName={selectedTrainee.full_name}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <TraineeFoodDiaryView
+              traineeId={selectedTrainee.id}
+              traineeName={selectedTrainee.full_name}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'cardio-manager':
         return selectedTrainee && user ? (
-          <CardioManager
-            traineeId={selectedTrainee.id}
-            trainerId={user.id}
-            traineeName={selectedTrainee.full_name}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <CardioManager
+              traineeId={selectedTrainee.id}
+              trainerId={user.id}
+              traineeName={selectedTrainee.full_name}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'tools':
-        return <ToolsView />;
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <ToolsView />
+          </Suspense>
+        );
 
       case 'reports':
-        return <ReportsView />;
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <ReportsView />
+          </Suspense>
+        );
 
       default:
         return (

@@ -133,7 +133,7 @@ export function useTrainees(trainerId: string | null) {
         .order('full_name');
     },
     [trainerId],
-    { enabled: !!trainerId }
+    { enabled: !!trainerId, cacheTime: 60000 } // Cache for 1 minute
   );
 }
 
@@ -149,7 +149,7 @@ export function useTrainee(traineeId: string | null) {
         .single();
     },
     [traineeId],
-    { enabled: !!traineeId }
+    { enabled: !!traineeId, cacheTime: 60000 } // Cache for 1 minute
   );
 }
 
@@ -165,7 +165,7 @@ export function useMuscleGroups(trainerId: string | null) {
         .order('name');
     },
     [trainerId],
-    { enabled: !!trainerId }
+    { enabled: !!trainerId, cacheTime: 300000 } // Cache for 5 minutes (rarely changes)
   );
 }
 
@@ -187,7 +187,7 @@ export function useMeasurements(traineeId: string | null, limit?: number) {
       return query;
     },
     [traineeId, limit],
-    { enabled: !!traineeId }
+    { enabled: !!traineeId, cacheTime: 30000 } // Cache for 30 seconds
   );
 }
 
@@ -224,6 +224,6 @@ export function useWorkouts(traineeId: string | null, limit?: number) {
       return query;
     },
     [traineeId, limit],
-    { enabled: !!traineeId }
+    { enabled: !!traineeId, cacheTime: 30000 } // Cache for 30 seconds
   );
 }
