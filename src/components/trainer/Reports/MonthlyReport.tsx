@@ -106,12 +106,15 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
 
       if (weekStart > endOfMonth) break;
 
+      // Use the earlier of weekEnd or endOfMonth, converted to ISO string
+      const effectiveEndDate = weekEnd <= endOfMonth ? weekEnd : endOfMonth;
+      
       const { data: weekWorkouts } = await supabase
         .from('workouts')
         .select('id')
         .eq('trainer_id', user.id)
         .gte('workout_date', weekStart.toISOString())
-        .lte('workout_date', Math.min(weekEnd.getTime(), endOfMonth.getTime()));
+        .lte('workout_date', effectiveEndDate.toISOString());
 
       weekly.push({
         week: `שבוע ${week + 1}`,
