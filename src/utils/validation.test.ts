@@ -217,3 +217,45 @@ describe('validateGender', () => {
   });
 });
 
+describe('validateBodyFatInput', () => {
+  it('should accept null/undefined', () => {
+    expect(validateBodyFatInput(null).isValid).toBe(true);
+    expect(validateBodyFatInput(undefined).isValid).toBe(true);
+  });
+
+  it('should accept valid body fat percentages', () => {
+    expect(validateBodyFatInput(10).isValid).toBe(true);
+    expect(validateBodyFatInput(25.5).isValid).toBe(true);
+    expect(validateBodyFatInput(50).isValid).toBe(true);
+  });
+
+  it('should reject negative values', () => {
+    expect(validateBodyFatInput(-1).isValid).toBe(false);
+  });
+
+  it('should reject values over 100', () => {
+    expect(validateBodyFatInput(101).isValid).toBe(false);
+  });
+});
+
+describe('validateHeightInput', () => {
+  it('should accept null/undefined', () => {
+    expect(validateHeightInput(null).isValid).toBe(true);
+    expect(validateHeightInput(undefined).isValid).toBe(true);
+  });
+
+  it('should accept valid heights', () => {
+    expect(validateHeightInput(100).isValid).toBe(true);
+    expect(validateHeightInput(180).isValid).toBe(true);
+    expect(validateHeightInput(250).isValid).toBe(true);
+  });
+
+  it('should reject negative heights', () => {
+    expect(validateHeightInput(-1).isValid).toBe(false);
+  });
+
+  it('should reject heights over 250cm', () => {
+    expect(validateHeightInput(251).isValid).toBe(false);
+  });
+});
+

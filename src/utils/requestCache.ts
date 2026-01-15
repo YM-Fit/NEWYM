@@ -8,7 +8,7 @@ interface CachedRequest<T> {
   promise?: Promise<T>;
 }
 
-class RequestCache {
+export class RequestCache {
   private cache = new Map<string, CachedRequest<any>>();
   private defaultTTL: number;
 
