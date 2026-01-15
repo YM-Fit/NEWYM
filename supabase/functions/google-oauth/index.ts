@@ -52,9 +52,18 @@ const GOOGLE_CALENDAR_SCOPES = [
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("Origin");
+  const referer = req.headers.get("Referer");
   const corsHeaders = getCorsHeaders(origin);
 
+  // Log request for debugging
+  console.log(`[google-oauth] ${req.method} ${req.url}`, {
+    origin,
+    referer,
+    userAgent: req.headers.get("User-Agent"),
+  });
+
   if (req.method === "OPTIONS") {
+    console.log(`[google-oauth] OPTIONS request - returning CORS headers`);
     return new Response(null, {
       status: 200,
       headers: corsHeaders,
@@ -64,9 +73,14 @@ Deno.serve(async (req: Request) => {
   try {
     const url = new URL(req.url);
     const path = url.pathname;
+    
+    console.log(`[google-oauth] Processing request: method=${req.method}, path=${path}`);
 
     // Initiate OAuth flow
-    if (req.method === "GET" && path.endsWith("/google-oauth")) {
+    // Match both /google-oauth and /functions/v1/google-oauth (but not /callback)
+    const isInitiatePath = path.includes("/google-oauth") && !path.includes("/callback") && !path.includes("/disconnect");
+    
+    if (req.method === "GET" && isInitiatePath) {
       const trainerId = url.searchParams.get("trainer_id");
 
       if (!trainerId) {
@@ -99,11 +113,16 @@ Deno.serve(async (req: Request) => {
         `prompt=consent&` +
         `state=${state}`;
 
+      console.log(`[google-oauth] Initiating OAuth flow for trainer ${trainerId}`);
+      console.log(`[google-oauth] Redirect URI: ${REDIRECT_URI}`);
+      console.log(`[google-oauth] Auth URL: ${authUrl.substring(0, 100)}...`);
+
       // Direct redirect to Google OAuth to avoid COEP issues with JSON response
+      // Note: For 302 redirects, we only need the Location header
+      // CORS headers are not needed and might interfere with redirects in some environments
       return new Response(null, {
         status: 302,
         headers: {
-          ...corsHeaders,
           "Location": authUrl,
         },
       });
@@ -111,11 +130,14 @@ Deno.serve(async (req: Request) => {
 
     // OAuth callback - Google redirects here with GET request
     if (req.method === "GET" && path.endsWith("/callback")) {
+      console.log(`[google-oauth] Callback received`);
+      
       const code = url.searchParams.get("code");
       const state = url.searchParams.get("state");
       const error = url.searchParams.get("error");
 
       if (error) {
+        console.error(`[google-oauth] OAuth error: ${error}`);
         return new Response(
           `<!DOCTYPE html><html><head><meta charset="utf-8"><title>שגיאה באימות</title></head><body><h1>שגיאה באימות Google Calendar</h1><p>${error}</p><script>setTimeout(() => window.close(), 3000);</script></body></html>`,
           {
@@ -256,7 +278,31 @@ Deno.serve(async (req: Request) => {
       }
 
       // Redirect back to app
-      const appUrl = Deno.env.get("APP_URL") || "http://localhost:5173";
+      // Try to get the original origin from referer or use default
+      let appUrl = Deno.env.get("APP_URL");
+      
+      // If no APP_URL is set, try to extract from referer
+      if (!appUrl && referer) {
+        try {
+          const refererUrl = new URL(referer);
+          appUrl = `${refererUrl.protocol}//${refererUrl.host}`;
+        } catch (e) {
+          console.warn("Could not parse referer:", referer);
+        }
+      }
+      
+      // Fallback to origin if available
+      if (!appUrl && origin) {
+        appUrl = origin;
+      }
+      
+      // Final fallback
+      if (!appUrl) {
+        appUrl = "http://localhost:5173";
+      }
+
+      console.log(`[google-oauth] Redirecting back to app: ${appUrl}`);
+      
       return new Response(null, {
         status: 302,
         headers: {

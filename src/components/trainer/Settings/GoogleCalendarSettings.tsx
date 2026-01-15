@@ -70,11 +70,16 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
       // Direct redirect to edge function which will redirect to Google OAuth
       // This avoids COEP issues with JSON responses from fetch
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://vqvczpxmvrwfkecpwovc.supabase.co';
-      window.location.href = `${supabaseUrl}/functions/v1/google-oauth?trainer_id=${user.id}`;
+      const redirectUrl = `${supabaseUrl}/functions/v1/google-oauth?trainer_id=${user.id}`;
+      
+      logger.info(`Redirecting to Google OAuth: ${redirectUrl}`, 'GoogleCalendarSettings');
+      
+      // Use window.location.href for full navigation
+      // StackBlitz might have issues with replace, so use href instead
+      window.location.href = redirectUrl;
     } catch (error) {
       logger.error('Error initiating Google OAuth', error, 'GoogleCalendarSettings');
       toast.error('שגיאה בחיבור ל-Google Calendar');
-    } finally {
       setLoading(false);
     }
   };
