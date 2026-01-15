@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Calendar, Phone, TrendingDown, TrendingUp, User, Users, Scale, ChevronLeft, Mail, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, Phone, TrendingDown, TrendingUp, User, Users, Scale, ChevronLeft, Mail, Clock, AlertCircle, Link2 } from 'lucide-react';
 
 interface TraineeCardProps {
   trainee: {
@@ -13,6 +13,8 @@ interface TraineeCardProps {
     lastWorkout?: string;
     notes?: string;
     created_at?: string;
+    google_calendar_client_id?: string;
+    crm_status?: string;
   };
   onClick: () => void;
   unseenWeightsCount?: number;
@@ -68,6 +70,9 @@ function TraineeCard({ trainee, onClick, unseenWeightsCount = 0, viewMode = 'gri
                 </h3>
                 {isInactive && (
                   <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
+                )}
+                {trainee.google_calendar_client_id && (
+                  <Link2 className="h-4 w-4 text-emerald-400 flex-shrink-0" title="מסונכרן עם Google Calendar" />
                 )}
               </div>
               <div className="flex items-center gap-4 text-sm text-zinc-400">
@@ -158,6 +163,9 @@ function TraineeCard({ trainee, onClick, unseenWeightsCount = 0, viewMode = 'gri
               </h3>
               {isInactive && (
                 <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
+              )}
+              {trainee.google_calendar_client_id && (
+                <Link2 className="h-4 w-4 text-emerald-400 flex-shrink-0" title="מסונכרן עם Google Calendar" />
               )}
             </div>
             <p className="text-sm text-zinc-500">

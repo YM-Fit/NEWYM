@@ -295,6 +295,128 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // Sync to Google Calendar if enabled
+    try {
+      const { data: credentials } = await supabase
+        .from('trainer_google_credentials')
+        .select('auto_sync_enabled, default_calendar_id, access_token, refresh_token, token_expires_at')
+        .eq('trainer_id', trainer_id)
+        .eq('auto_sync_enabled', true)
+        .maybeSingle();
+
+      if (credentials) {
+        // Check if already synced
+        const { data: existingSync } = await supabase
+          .from('google_calendar_sync')
+          .select('google_event_id')
+          .eq('workout_id', workout.id)
+          .maybeSingle();
+
+        if (!existingSync) {
+          // Get trainee details
+          const { data: traineeData } = await supabase
+            .from('workout_trainees')
+            .select('trainee_id, trainees!inner(full_name, email)')
+            .eq('workout_id', workout.id)
+            .limit(1)
+            .single();
+
+          if (traineeData?.trainees) {
+            const trainee = traineeData.trainees;
+            const workoutDate = new Date(workout.workout_date);
+            const endDate = new Date(workoutDate);
+            endDate.setHours(workoutDate.getHours() + 1);
+
+            // Check and refresh token if needed
+            let accessToken = credentials.access_token;
+            if (new Date(credentials.token_expires_at) < new Date()) {
+              const refreshResponse = await fetch("https://oauth2.googleapis.com/token", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({
+                  client_id: Deno.env.get("GOOGLE_CLIENT_ID") || "",
+                  client_secret: Deno.env.get("GOOGLE_CLIENT_SECRET") || "",
+                  refresh_token: credentials.refresh_token,
+                  grant_type: "refresh_token",
+                }),
+              });
+
+              if (refreshResponse.ok) {
+                const refreshData = await refreshResponse.json();
+                accessToken = refreshData.access_token;
+                await supabase
+                  .from("trainer_google_credentials")
+                  .update({
+                    access_token: refreshData.access_token,
+                    token_expires_at: new Date(Date.now() + refreshData.expires_in * 1000).toISOString(),
+                  })
+                  .eq("trainer_id", trainer_id);
+              }
+            }
+
+            // Create calendar event
+            const calendarId = credentials.default_calendar_id || 'primary';
+            const eventPayload: any = {
+              summary: `אימון - ${trainee.full_name}`,
+              start: {
+                dateTime: workoutDate.toISOString(),
+                timeZone: 'Asia/Jerusalem',
+              },
+              end: {
+                dateTime: endDate.toISOString(),
+                timeZone: 'Asia/Jerusalem',
+              },
+            };
+
+            if (workout.notes) {
+              eventPayload.description = workout.notes;
+            }
+
+            if (trainee.email) {
+              eventPayload.attendees = [{ email: trainee.email }];
+            }
+
+            const eventResponse = await fetch(
+              `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`,
+              {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(eventPayload),
+              }
+            );
+
+            if (eventResponse.ok) {
+              const event = await eventResponse.json();
+              
+              // Save sync record
+              await supabase
+                .from('google_calendar_sync')
+                .insert({
+                  trainer_id: trainer_id,
+                  trainee_id: traineeData.trainee_id,
+                  workout_id: workout.id,
+                  google_event_id: event.id,
+                  google_calendar_id: calendarId,
+                  sync_status: 'synced',
+                  sync_direction: 'to_google',
+                  event_start_time: workoutDate.toISOString(),
+                  event_end_time: endDate.toISOString(),
+                  event_summary: eventPayload.summary,
+                  event_description: workout.notes || null,
+                  last_synced_at: new Date().toISOString(),
+                });
+            }
+          }
+        }
+      }
+    } catch (calendarError) {
+      // Don't fail the workout save if calendar sync fails
+      console.error('Failed to sync workout to Google Calendar:', calendarError);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

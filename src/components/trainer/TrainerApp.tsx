@@ -31,6 +31,7 @@ const WorkoutPlanBuilder = lazy(() => import('./WorkoutPlans/WorkoutPlanBuilder'
 const MealPlanBuilder = lazy(() => import('./MealPlans/MealPlanBuilder'));
 const TraineeAccessManager = lazy(() => import('./Trainees/TraineeAccessManager'));
 const MentalToolsEditor = lazy(() => import('./MentalTools/MentalToolsEditor'));
+const CalendarView = lazy(() => import('./Calendar/CalendarView'));
 const ToolsView = lazy(() => import('./Tools/ToolsView'));
 const TraineeFoodDiaryView = lazy(() => import('./Trainees/TraineeFoodDiaryView'));
 const CardioManager = lazy(() => import('./Cardio/CardioManager'));
@@ -1098,6 +1099,22 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             />
           </Suspense>
         ) : null;
+
+      case 'calendar':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <CalendarView
+              onEventClick={(event) => {
+                // TODO: Handle event click - could open workout or create new one
+                toast.info(`אירוע: ${event.summary}`);
+              }}
+              onCreateWorkout={() => {
+                setActiveView('trainees');
+                toast.info('בחר מתאמן ליצירת אימון חדש');
+              }}
+            />
+          </Suspense>
+        );
 
       case 'tools':
         return (

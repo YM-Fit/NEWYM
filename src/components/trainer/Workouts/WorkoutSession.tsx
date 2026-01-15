@@ -735,6 +735,18 @@ export default function WorkoutSession({
 
       clearSaved();
 
+      // Sync to Google Calendar if enabled (already handled in save-workout Edge Function)
+      // But we can show a confirmation message
+      try {
+        const { getGoogleCalendarStatus } = await import('../../../api/googleCalendarApi');
+        const statusResult = await getGoogleCalendarStatus(user.id);
+        if (statusResult.success && statusResult.data?.connected) {
+          // Calendar sync is handled automatically by the Edge Function
+        }
+      } catch (error) {
+        // Ignore calendar sync errors - workout is already saved
+      }
+
       const newPRs = await checkAndUpdatePersonalRecords(workoutResult.workout.id);
       setPersonalRecords(newPRs);
       setSavedWorkout(workoutResult.workout);
