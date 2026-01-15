@@ -42,7 +42,23 @@ class Logger {
   error(message: string, error?: any, context?: string) {
     const entry = this.formatMessage('error', message, error, context);
     this.logs.push(entry);
-    console.error(`[${entry.context || 'APP'}]`, message, error || '');
+    
+    // Format error for better console visibility
+    if (error) {
+      if (typeof error === 'object') {
+        // Log error object with expanded details
+        console.error(`[${entry.context || 'APP'}] ${message}:`, {
+          ...error,
+          // Ensure nested objects are visible
+          _stringified: JSON.stringify(error, null, 2),
+        });
+      } else {
+        console.error(`[${entry.context || 'APP'}]`, message, error);
+      }
+    } else {
+      console.error(`[${entry.context || 'APP'}]`, message);
+    }
+    
     this.trimLogs();
     
     // In production, send to error tracking service

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Plus, BookMarked } from 'lucide-react';
-import { supabase } from '../../../lib/supabase';
+import { supabase, logSupabaseError } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useAutoSave } from '../../../hooks/useAutoSave';
 import { useWorkoutSession } from '../../../hooks/useWorkoutSession';
@@ -269,8 +269,12 @@ export default function WorkoutSession({
 
   useEffect(() => {
     const loadMuscleGroups = async () => {
-      const { data } = await supabase.from('muscle_groups').select('id, name');
-      if (data) setMuscleGroups(data);
+      const { data, error } = await supabase.from('muscle_groups').select('id, name');
+      if (error) {
+        logSupabaseError(error, 'WorkoutSession.loadMuscleGroups', { table: 'muscle_groups' });
+      } else if (data) {
+        setMuscleGroups(data);
+      }
     };
     loadMuscleGroups();
   }, []);
@@ -782,7 +786,7 @@ export default function WorkoutSession({
         if (weightRecord) {
           newRecords.push({ exerciseName: ex.exercise.name, type: 'weight', oldValue: weightRecord.weight || 0, newValue: maxWeight });
         }
-        await supabase.from('personal_records').upsert({
+        const { error: weightError } = await supabase.from('personal_records').upsert({
           trainee_id: trainee.id,
           exercise_id: ex.exercise.id,
           record_type: 'max_weight',
@@ -791,13 +795,20 @@ export default function WorkoutSession({
           workout_id: workoutId,
           pair_member: selectedMember || null,
         }, { onConflict: 'trainee_id,exercise_id,record_type,pair_member' });
+        if (weightError) {
+          logSupabaseError(weightError, 'WorkoutSession.savePersonalRecord.max_weight', { 
+            table: 'personal_records',
+            trainee_id: trainee.id,
+            exercise_id: ex.exercise.id,
+          });
+        }
       }
 
       if (!repsRecord || maxReps > (repsRecord.reps || 0)) {
         if (repsRecord) {
           newRecords.push({ exerciseName: ex.exercise.name, type: 'reps', oldValue: repsRecord.reps || 0, newValue: maxReps });
         }
-        await supabase.from('personal_records').upsert({
+        const { error: repsError } = await supabase.from('personal_records').upsert({
           trainee_id: trainee.id,
           exercise_id: ex.exercise.id,
           record_type: 'max_reps',
@@ -806,13 +817,20 @@ export default function WorkoutSession({
           workout_id: workoutId,
           pair_member: selectedMember || null,
         }, { onConflict: 'trainee_id,exercise_id,record_type,pair_member' });
+        if (repsError) {
+          logSupabaseError(repsError, 'WorkoutSession.savePersonalRecord.max_reps', { 
+            table: 'personal_records',
+            trainee_id: trainee.id,
+            exercise_id: ex.exercise.id,
+          });
+        }
       }
 
       if (!volumeRecord || maxVolume > (volumeRecord.volume || 0)) {
         if (volumeRecord) {
           newRecords.push({ exerciseName: ex.exercise.name, type: 'volume', oldValue: volumeRecord.volume || 0, newValue: maxVolume });
         }
-        await supabase.from('personal_records').upsert({
+        const { error: volumeError } = await supabase.from('personal_records').upsert({
           trainee_id: trainee.id,
           exercise_id: ex.exercise.id,
           record_type: 'max_volume',
@@ -821,6 +839,13 @@ export default function WorkoutSession({
           workout_id: workoutId,
           pair_member: selectedMember || null,
         }, { onConflict: 'trainee_id,exercise_id,record_type,pair_member' });
+        if (volumeError) {
+          logSupabaseError(volumeError, 'WorkoutSession.savePersonalRecord.max_volume', { 
+            table: 'personal_records',
+            trainee_id: trainee.id,
+            exercise_id: ex.exercise.id,
+          });
+        }
       }
     }
 

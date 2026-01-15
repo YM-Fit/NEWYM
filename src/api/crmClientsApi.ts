@@ -26,7 +26,7 @@
  * ```
  */
 
-import { supabase } from '../lib/supabase';
+import { supabase, logSupabaseError } from '../lib/supabase';
 import type { ApiResponse } from './types';
 import { CRM_VALIDATION } from '../constants/crmConstants';
 
@@ -106,6 +106,7 @@ export async function getClientsFromCalendar(
       .order('last_event_date', { ascending: false, nullsFirst: false });
 
     if (error) {
+      logSupabaseError(error, 'getClientsFromCalendar', { table: 'google_calendar_clients', trainerId });
       return { error: error.message };
     }
 
@@ -290,6 +291,11 @@ export async function createClientInteraction(
       .single();
 
     if (error) {
+      logSupabaseError(error, 'createClientInteraction', { 
+        table: 'client_interactions',
+        trainee_id: interaction.trainee_id,
+        interaction_type: interaction.interaction_type,
+      });
       return { error: error.message };
     }
 
@@ -322,6 +328,10 @@ export async function getClientInteractions(
       .order('interaction_date', { ascending: false });
 
     if (error) {
+      logSupabaseError(error, 'getClientInteractions', { 
+        table: 'client_interactions',
+        traineeId,
+      });
       return { error: error.message };
     }
 

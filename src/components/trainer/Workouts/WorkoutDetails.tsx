@@ -1,6 +1,7 @@
 import { ArrowRight, Dumbbell, Edit2, Copy, Trash2, TrendingUp, Target, Info } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
+import { logger } from '../../../utils/logger';
 import ExerciseInstructionsModal from '../../common/ExerciseInstructionsModal';
 
 interface WorkoutDetailsProps {
@@ -60,21 +61,30 @@ export default function WorkoutDetails({
   } | null>(null);
 
   useEffect(() => {
-    loadWorkoutDetails();
+    if (workoutId) {
+      loadWorkoutDetails();
+    }
   }, [workoutId]);
 
   const loadWorkoutDetails = async () => {
-    const { data: workoutData } = await supabase
+    if (!workoutId) return;
+    
+    const { data: workoutData, error: workoutError } = await supabase
       .from('workouts')
       .select('*')
       .eq('id', workoutId)
       .single();
+    
+    if (workoutError) {
+      logger.error('Error loading workout', workoutError, 'WorkoutDetails');
+      return;
+    }
 
     if (workoutData) {
       setWorkout(workoutData);
     }
 
-    const { data: exercisesData } = await supabase
+    const { data: exercisesData, error: exercisesError } = await supabase
       .from('workout_exercises')
       .select(`
         id,
@@ -114,6 +124,11 @@ export default function WorkoutDetails({
       `)
       .eq('workout_id', workoutId)
       .order('order_index', { ascending: true });
+    
+    if (exercisesError) {
+      logger.error('Error loading workout exercises', exercisesError, 'WorkoutDetails');
+      return;
+    }
 
     if (exercisesData) {
       const allExerciseIds = new Set<string>();

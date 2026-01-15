@@ -3,7 +3,7 @@
  * שירות ליצירת דוחות ואנליטיקה CRM
  */
 
-import { supabase } from '../lib/supabase';
+import { supabase, logSupabaseError } from '../lib/supabase';
 import { logger } from '../utils/logger';
 import { CRM_STATUS, CRM_ALERTS } from '../constants/crmConstants';
 import type { ApiResponse } from '../api/types';
@@ -119,6 +119,7 @@ export class CrmReportsService {
         .not('contract_value', 'is', null);
 
       if (error) {
+        logSupabaseError(error, 'getRevenueStats', { table: 'trainees', trainerId });
         return { error: error.message };
       }
 
@@ -179,6 +180,7 @@ export class CrmReportsService {
         .eq('trainer_id', trainerId);
 
       if (clientsError) {
+        logSupabaseError(clientsError, 'getActivityStats.clients', { table: 'google_calendar_clients', trainerId });
         return { error: clientsError.message };
       }
 
@@ -188,6 +190,7 @@ export class CrmReportsService {
         .eq('trainer_id', trainerId);
 
       if (traineesError) {
+        logSupabaseError(traineesError, 'getActivityStats.trainees', { table: 'trainees', trainerId });
         return { error: traineesError.message };
       }
 
@@ -273,6 +276,7 @@ export class CrmReportsService {
         .eq('trainer_id', trainerId);
 
       if (clientsError) {
+        logSupabaseError(clientsError, 'getClientsNeedingFollowUp.clients', { table: 'google_calendar_clients', trainerId });
         return { error: clientsError.message };
       }
 
@@ -282,6 +286,7 @@ export class CrmReportsService {
         .eq('trainer_id', trainerId);
 
       if (traineesError) {
+        logSupabaseError(traineesError, 'getClientsNeedingFollowUp.trainees', { table: 'trainees', trainerId });
         return { error: traineesError.message };
       }
 

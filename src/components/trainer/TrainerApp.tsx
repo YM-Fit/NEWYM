@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { Home, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { supabase, logSupabaseError } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
 import { useErrorHandler } from '../../hooks/useErrorHandler';
 import { useGlobalScaleListener, IdentifiedReading } from '../../hooks/useGlobalScaleListener';
@@ -767,7 +767,13 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
           set_type: set.set_type,
         }));
 
-        await supabase.from('exercise_sets').insert(setsToInsert);
+        const { error: setsError } = await supabase.from('exercise_sets').insert(setsToInsert);
+        if (setsError) {
+          logSupabaseError(setsError, 'TrainerApp.duplicateWorkout.exercise_sets', { 
+            table: 'exercise_sets',
+            workoutId: workout.id,
+          });
+        }
       }
     }
 

@@ -92,9 +92,27 @@ export function useSupabaseQuery<T>(
       
       // Log errors with context using the helper function
       if (error) {
-        logSupabaseError(error, 'useSupabaseQuery', {
-          cacheKey: cacheKey.substring(0, 50), // Truncate for logging
+        // Extract query information from dependencies for better context
+        const queryInfo: Record<string, any> = {
+          cacheKey: cacheKey.substring(0, 100),
+          dependencies: depsRef.current,
+        };
+        
+        // Try to extract meaningful info from deps
+        depsRef.current.forEach((dep, idx) => {
+          if (typeof dep === 'string' || typeof dep === 'number') {
+            queryInfo[`dep_${idx}`] = dep;
+          }
         });
+        
+        // Add stack trace to identify the source component
+        const stackTrace = new Error().stack;
+        if (stackTrace) {
+          const stackLines = stackTrace.split('\n').slice(0, 5);
+          queryInfo.stackTrace = stackLines.join('\n');
+        }
+        
+        logSupabaseError(error, `useSupabaseQuery`, queryInfo);
       }
       
       // Cache successful results
@@ -133,11 +151,11 @@ export function useSupabaseQuery<T>(
   }, [enabled, cacheTime]);
 
   useEffect(() => {
-    if (refetchOnMount) {
+    if (refetchOnMount && enabled) {
       execute();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refetchOnMount, ...deps]);
+  }, [refetchOnMount, enabled, ...deps]);
 
   return {
     ...state,
