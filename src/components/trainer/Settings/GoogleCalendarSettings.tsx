@@ -23,6 +23,9 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
   useEffect(() => {
     if (!user) return;
     
+    // Debug: Log trainer ID to console
+    console.log('🔍 Trainer ID:', user.id);
+    
     loadStatus();
     
     // Check if we just returned from OAuth
@@ -67,16 +70,59 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
         return;
       }
 
-      // Direct redirect to edge function which will redirect to Google OAuth
-      // This avoids COEP issues with JSON responses from fetch
+      // Use popup for OAuth to avoid COEP issues with redirects in StackBlitz
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://vqvczpxmvrwfkecpwovc.supabase.co';
       const redirectUrl = `${supabaseUrl}/functions/v1/google-oauth?trainer_id=${user.id}`;
       
-      logger.info(`Redirecting to Google OAuth: ${redirectUrl}`, 'GoogleCalendarSettings');
+      logger.info(`Opening Google OAuth popup: ${redirectUrl}`, 'GoogleCalendarSettings');
       
-      // Use window.location.href for full navigation
-      // StackBlitz might have issues with replace, so use href instead
-      window.location.href = redirectUrl;
+      // Open popup instead of full redirect to avoid COEP blocking
+      const popup = window.open(
+        redirectUrl,
+        'google-oauth',
+        'width=600,height=700,scrollbars=yes,resizable=yes'
+      );
+      
+      if (!popup) {
+        toast.error('חלון הקופץ נחסם. אפשר חלונות קופצים עבור האתר הזה ונסה שוב.');
+        setLoading(false);
+        return;
+      }
+      
+      // Check if popup is closed (OAuth completed)
+      const checkClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkClosed);
+          setLoading(false);
+          // Reload status after a delay to ensure DB is updated
+          setTimeout(() => {
+            loadStatus();
+          }, 1000);
+        }
+      }, 500);
+      
+      // Also listen for message from popup if it sends one
+      const handleMessage = (event: MessageEvent) => {
+        if (event.origin !== supabaseUrl) return;
+        if (event.data === 'google-oauth-completed') {
+          clearInterval(checkClosed);
+          window.removeEventListener('message', handleMessage);
+          setLoading(false);
+          popup.close();
+          loadStatus();
+        }
+      };
+      
+      window.addEventListener('message', handleMessage);
+      
+      // Cleanup after 5 minutes if popup is still open
+      setTimeout(() => {
+        if (!popup.closed) {
+          clearInterval(checkClosed);
+          window.removeEventListener('message', handleMessage);
+          setLoading(false);
+        }
+      }, 5 * 60 * 1000);
     } catch (error) {
       logger.error('Error initiating Google OAuth', error, 'GoogleCalendarSettings');
       toast.error('שגיאה בחיבור ל-Google Calendar');
@@ -191,6 +237,12 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
               חבר את Google Calendar כדי לסנכרן אימונים אוטומטית
             </p>
           </div>
+          {/* Debug: Show trainer ID (remove in production) */}
+          {user && (
+            <div className="text-xs text-zinc-500 mb-4 px-4 py-2 bg-zinc-800/50 rounded">
+              Trainer ID: <code className="text-zinc-400">{user.id}</code>
+            </div>
+          )}
           <button
             onClick={handleConnect}
             disabled={loading}

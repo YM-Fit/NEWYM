@@ -118,12 +118,12 @@ Deno.serve(async (req: Request) => {
       console.log(`[google-oauth] Auth URL: ${authUrl.substring(0, 100)}...`);
 
       // Direct redirect to Google OAuth to avoid COEP issues with JSON response
-      // Note: For 302 redirects, we only need the Location header
-      // CORS headers are not needed and might interfere with redirects in some environments
+      // Note: We need CORP header even for redirects to satisfy COEP requirements in StackBlitz
       return new Response(null, {
         status: 302,
         headers: {
           "Location": authUrl,
+          "Cross-Origin-Resource-Policy": "cross-origin",
         },
       });
     }
@@ -308,6 +308,7 @@ Deno.serve(async (req: Request) => {
         headers: {
           ...corsHeaders,
           "Location": `${appUrl}?google_calendar=connected`,
+          "Cross-Origin-Resource-Policy": "cross-origin",
         },
       });
     }
