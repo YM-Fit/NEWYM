@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Plus, ExternalLink } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { Calendar, ChevronLeft, ChevronRight, Plus, ExternalLink, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getGoogleCalendarEvents } from '../../../api/googleCalendarApi';
 import { getGoogleCalendarStatus } from '../../../api/googleCalendarApi';
@@ -27,6 +27,10 @@ interface CalendarViewProps {
   onCreateWorkout?: () => void;
 }
 
+// Optimized refresh interval - longer to reduce API calls
+const REFRESH_INTERVAL_MS = 120000; // 2 minutes instead of 30 seconds
+const CACHE_DURATION_MS = 60000; // Cache events for 1 minute
+
 export default function CalendarView({ onEventClick, onCreateWorkout }: CalendarViewProps) {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -35,15 +39,12 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
   const [connected, setConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastRefreshRef = useRef<Date | null>(null);
+  const eventsCacheRef = useRef<{ events: CalendarEvent[]; timestamp: number; dateKey: string } | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      checkConnection();
-      loadEvents();
-    }
-  }, [user, currentDate]);
-
-  const checkConnection = async () => {
+  const checkConnection = useCallback(async () => {
     if (!user) return;
     try {
       const result = await getGoogleCalendarStatus(user.id);
@@ -53,36 +54,128 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
     } catch (error) {
       logger.error('Error checking Google Calendar connection', error, 'CalendarView');
     }
-  };
+  }, [user]);
 
-  const loadEvents = async () => {
+  // Memoize date range calculation
+  const dateRange = useMemo(() => {
+    const start = new Date(currentDate);
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(currentDate);
+    end.setMonth(end.getMonth() + 1);
+    end.setDate(0);
+    end.setHours(23, 59, 59, 999);
+
+    return { start, end };
+  }, [currentDate]);
+
+  // Generate cache key for current month
+  const cacheKey = useMemo(() => {
+    return `${currentDate.getFullYear()}-${currentDate.getMonth()}`;
+  }, [currentDate]);
+
+  const loadEvents = useCallback(async (silent: boolean = false, forceRefresh: boolean = false) => {
     if (!user || !connected) {
       setLoading(false);
       return;
     }
 
+    // Check cache first (unless forcing refresh)
+    if (!forceRefresh && eventsCacheRef.current) {
+      const { events: cachedEvents, timestamp, dateKey } = eventsCacheRef.current;
+      const cacheAge = Date.now() - timestamp;
+      
+      if (dateKey === cacheKey && cacheAge < CACHE_DURATION_MS) {
+        setEvents(cachedEvents);
+        setLoading(false);
+        setIsRefreshing(false);
+        return;
+      }
+    }
+
     try {
-      setLoading(true);
-      const start = new Date(currentDate);
-      start.setDate(1);
-      start.setHours(0, 0, 0, 0);
+      if (!silent) {
+        setLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
 
-      const end = new Date(currentDate);
-      end.setMonth(end.getMonth() + 1);
-      end.setDate(0);
-      end.setHours(23, 59, 59, 999);
-
-      const result = await getGoogleCalendarEvents(user.id, { start, end });
+      // Use cached data from sync table first, only fallback to Google API if needed
+      const result = await getGoogleCalendarEvents(
+        user.id, 
+        dateRange,
+        { useCache: true, forceRefresh }
+      );
+      
       if (result.success && result.data) {
         setEvents(result.data);
+        // Update cache
+        eventsCacheRef.current = {
+          events: result.data,
+          timestamp: Date.now(),
+          dateKey: cacheKey,
+        };
+        lastRefreshRef.current = new Date();
+        if (silent) {
+          logger.info('Calendar events refreshed automatically', { eventCount: result.data.length }, 'CalendarView');
+        }
+      } else if (result.error && !silent) {
+        toast.error(result.error);
       }
     } catch (error) {
       logger.error('Error loading calendar events', error, 'CalendarView');
-      toast.error('שגיאה בטעינת אירועים מה-Calendar');
+      if (!silent) {
+        toast.error('שגיאה בטעינת אירועים מה-Calendar');
+      }
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
-  };
+  }, [user, connected, dateRange, cacheKey]);
+
+  const handleManualRefresh = useCallback(async () => {
+    await loadEvents(false, true); // Force refresh on manual
+    toast.success('יומן עודכן');
+  }, [loadEvents]);
+
+  // Check connection when user changes
+  useEffect(() => {
+    if (user) {
+      checkConnection();
+    }
+  }, [user, checkConnection]);
+
+  // Load events when connection is established or date changes
+  useEffect(() => {
+    if (user && connected) {
+      loadEvents();
+    }
+  }, [user, connected, currentDate, loadEvents]);
+
+  // Set up automatic refresh interval
+  useEffect(() => {
+    if (connected && user) {
+      // Clear existing interval if any
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+      }
+
+      // Set up new interval
+      refreshIntervalRef.current = setInterval(() => {
+        if (!loading && !isRefreshing) {
+          loadEvents(true); // Silent refresh
+        }
+      }, REFRESH_INTERVAL_MS);
+
+      return () => {
+        if (refreshIntervalRef.current) {
+          clearInterval(refreshIntervalRef.current);
+          refreshIntervalRef.current = null;
+        }
+      };
+    }
+  }, [connected, user, loading, isRefreshing, loadEvents]);
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
@@ -94,7 +187,8 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
     setCurrentDate(newDate);
   };
 
-  const getDaysInMonth = () => {
+  // Memoize days calculation
+  const days = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const firstDay = new Date(year, month, 1);
@@ -102,30 +196,45 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
 
-    const days = [];
+    const daysArray = [];
     // Add empty cells for days before month starts
     for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
+      daysArray.push(null);
     }
     // Add days of month
     for (let day = 1; day <= daysInMonth; day++) {
-      days.push(day);
+      daysArray.push(day);
     }
-    return days;
-  };
+    return daysArray;
+  }, [currentDate]);
 
-  const getEventsForDay = (day: number) => {
+  // Memoize events by day for better performance
+  const eventsByDay = useMemo(() => {
+    const eventsMap = new Map<string, CalendarEvent[]>();
+    
+    events.forEach(event => {
+      const eventDate = new Date(event.start.dateTime || event.start.date || '');
+      if (isNaN(eventDate.getTime())) return;
+      
+      const dateKey = eventDate.toDateString();
+      if (!eventsMap.has(dateKey)) {
+        eventsMap.set(dateKey, []);
+      }
+      eventsMap.get(dateKey)!.push(event);
+    });
+    
+    return eventsMap;
+  }, [events]);
+
+  const getEventsForDay = useCallback((day: number) => {
     if (!day) return [];
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    return events.filter(event => {
-      const eventDate = new Date(event.start.dateTime || event.start.date || '');
-      return eventDate.toDateString() === date.toDateString();
-    });
-  };
+    return eventsByDay.get(date.toDateString()) || [];
+  }, [currentDate, eventsByDay]);
 
-  const formatMonthYear = () => {
+  const formatMonthYear = useMemo(() => {
     return currentDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
-  };
+  }, [currentDate]);
 
   if (showSettings) {
     return (
@@ -166,7 +275,6 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
     );
   }
 
-  const days = getDaysInMonth();
   const weekDays = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
 
   return (
@@ -182,7 +290,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
               <ChevronRight className="h-5 w-5 text-zinc-400" />
             </button>
             <h2 className="text-xl font-bold text-white">
-              {formatMonthYear()}
+              {formatMonthYear}
             </h2>
             <button
               onClick={() => navigateMonth('next')}
@@ -192,6 +300,15 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
             </button>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleManualRefresh}
+              disabled={loading || isRefreshing}
+              className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              title="רענון יומן"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              רענון
+            </button>
             <button
               onClick={() => setShowSettings(true)}
               className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all"
@@ -243,7 +360,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
 
               return (
                 <div
-                  key={index}
+                  key={`${currentDate.getMonth()}-${day || index}`}
                   className={`min-h-[100px] p-2 border border-zinc-800 rounded-lg ${
                     day
                       ? isToday
@@ -267,13 +384,13 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
                             key={event.id}
                             onClick={() => onEventClick?.(event)}
                             className="text-xs bg-emerald-500/20 text-emerald-300 p-1.5 rounded cursor-pointer hover:bg-emerald-500/30 transition-all truncate"
-                            title={event.summary}
+                            title={`${event.summary}${event.start.dateTime ? ` - ${new Date(event.start.dateTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}` : ''}`}
                           >
                             {event.summary}
                           </div>
                         ))}
                         {dayEvents.length > 3 && (
-                          <div className="text-xs text-zinc-500">
+                          <div className="text-xs text-zinc-500 cursor-pointer hover:text-zinc-400" title={`${dayEvents.length - 3} אירועים נוספים`}>
                             +{dayEvents.length - 3} נוספים
                           </div>
                         )}

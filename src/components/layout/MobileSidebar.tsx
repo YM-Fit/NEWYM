@@ -1,4 +1,4 @@
-import { Home, Users, Calculator, BarChart3, X, Sparkles, Search, ChevronRight, LucideIcon, Calendar } from 'lucide-react';
+import { Home, Users, Calculator, BarChart3, X, Sparkles, Search, ChevronRight, LucideIcon, Calendar, Briefcase } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 
 interface MobileSidebarProps {
@@ -48,6 +48,7 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
     // Main Navigation
     { id: 'dashboard', label: 'דף הבית', icon: Home, description: 'סקירה כללית', category: 'main' },
     { id: 'trainees', label: 'מתאמנים', icon: Users, description: 'ניהול מתאמנים', category: 'main' },
+    { id: 'clients', label: 'כרטיסיות לקוחות', icon: Briefcase, description: 'ניהול לקוחות CRM', category: 'main' },
     { id: 'calendar', label: 'יומן', icon: Calendar, description: 'Google Calendar', category: 'main' },
     
     // Tools & Analytics

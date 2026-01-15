@@ -7,11 +7,21 @@ interface KeyboardShortcutOptions {
   preventDefault?: boolean;
 }
 
+import { useEffect, useCallback, useRef } from 'react';
+
 export function useKeyboardShortcut(
   key: string,
-  callback: () => void,
+  callback: (e?: KeyboardEvent) => void,
+  deps: React.DependencyList = [],
   options: KeyboardShortcutOptions = {}
 ) {
+  const callbackRef = useRef(callback);
+  
+  // Update callback ref when it changes
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback, ...deps]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const {
@@ -30,7 +40,7 @@ export function useKeyboardShortcut(
         if (preventDefault) {
           event.preventDefault();
         }
-        callback();
+        callbackRef.current(event);
       }
     };
 
@@ -39,5 +49,5 @@ export function useKeyboardShortcut(
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [key, callback, options]);
+  }, [key, ...deps]);
 }

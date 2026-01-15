@@ -32,6 +32,7 @@ const MealPlanBuilder = lazy(() => import('./MealPlans/MealPlanBuilder'));
 const TraineeAccessManager = lazy(() => import('./Trainees/TraineeAccessManager'));
 const MentalToolsEditor = lazy(() => import('./MentalTools/MentalToolsEditor'));
 const CalendarView = lazy(() => import('./Calendar/CalendarView'));
+const ClientsListView = lazy(() => import('./Clients/ClientsListView'));
 const ToolsView = lazy(() => import('./Tools/ToolsView'));
 const TraineeFoodDiaryView = lazy(() => import('./Trainees/TraineeFoodDiaryView'));
 const CardioManager = lazy(() => import('./Cardio/CardioManager'));

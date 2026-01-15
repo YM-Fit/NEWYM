@@ -21,7 +21,9 @@ import {
   Droplet,
   Copy,
   BarChart3,
-  Target,
+  Calendar,
+  CalendarDays,
+  CalendarRange,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getActiveMealPlanWithMeals, getWeekDiaryData } from '../../api';
@@ -48,7 +50,11 @@ const MEAL_TYPES = [
 
 const WATER_GOAL = 2000;
 
+type ViewMode = 'day' | 'week' | 'month';
+
 export default function FoodDiary({ traineeId }: FoodDiaryProps) {
+  const [viewMode, setViewMode] = useState<ViewMode>('week');
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
     const today = new Date();
     const day = today.getDay();
@@ -80,10 +86,10 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
 
   useEffect(() => {
     if (traineeId) {
-      loadWeekData();
+      loadData();
       loadMealPlan();
     }
-  }, [traineeId, currentWeekStart]);
+  }, [traineeId, currentDate, currentWeekStart, viewMode]);
 
   const loadMealPlan = async () => {
     if (!traineeId) return;
@@ -93,13 +99,30 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
     setMealPlanMeals(meals);
   };
 
-  const loadWeekData = async () => {
+  const loadData = async () => {
     if (!traineeId) return;
     setLoading(true);
 
-    const weekDates = getWeekDates();
-    const startDate = weekDates[0].toISOString().split('T')[0];
-    const endDate = weekDates[6].toISOString().split('T')[0];
+    let startDate: string;
+    let endDate: string;
+
+    if (viewMode === 'day') {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      startDate = dateStr;
+      endDate = dateStr;
+    } else if (viewMode === 'week') {
+      const weekDates = getWeekDates();
+      startDate = weekDates[0].toISOString().split('T')[0];
+      endDate = weekDates[6].toISOString().split('T')[0];
+    } else {
+      // month view
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      startDate = firstDay.toISOString().split('T')[0];
+      endDate = lastDay.toISOString().split('T')[0];
+    }
 
     const { meals: mealsData, waterLogs: waterData, diaryEntries: diaryData } =
       await getWeekDiaryData(traineeId, startDate, endDate);
@@ -143,6 +166,39 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
     const newStart = new Date(currentWeekStart);
     newStart.setDate(currentWeekStart.getDate() + (direction === 'next' ? 7 : -7));
     setCurrentWeekStart(newStart);
+    setCurrentDate(newStart);
+  };
+
+  const navigateDay = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
+    setCurrentDate(newDate);
+  };
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(currentDate.getMonth() + (direction === 'next' ? 1 : -1));
+    setCurrentDate(newDate);
+  };
+
+  const getMonthDates = (): (Date | null)[] => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startingDayOfWeek = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+
+    const dates: (Date | null)[] = [];
+    // Add empty cells for days before month starts
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      dates.push(null);
+    }
+    // Add days of month
+    for (let day = 1; day <= daysInMonth; day++) {
+      dates.push(new Date(year, month, day));
+    }
+    return dates;
   };
 
   const getHebrewDayName = (date: Date): string => {
@@ -265,7 +321,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
     }
 
     setShowModal(false);
-    loadWeekData();
+    loadData();
   };
 
   const calculateDailyTotals = (dateStr: string) => {
@@ -304,7 +360,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
     }
 
     toast.success('הארוחה נמחקה');
-    loadWeekData();
+    loadData();
   };
 
   const addWater = async (dateStr: string, amount: number) => {
@@ -338,7 +394,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       }
     }
 
-    loadWeekData();
+    loadData();
   };
 
   const toggleMealExpand = (mealId: string) => {
@@ -362,6 +418,21 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
     const start = weekDates[0];
     const end = weekDates[6];
     return `${formatDate(start)} - ${formatDate(end)}`;
+  };
+
+  const getViewTitle = (): string => {
+    if (viewMode === 'day') {
+      return currentDate.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' });
+    } else if (viewMode === 'week') {
+      return getWeekRangeText();
+    } else {
+      return currentDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
+    }
+  };
+
+  const handleDateClick = (date: Date) => {
+    setCurrentDate(date);
+    setViewMode('day');
   };
 
   const completeDay = async (dateStr: string) => {
@@ -442,7 +513,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       toast.success('היום הושלם!');
     }
 
-    loadWeekData();
+    loadData();
   };
 
   if (loading) {
@@ -456,29 +527,486 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
   }
 
   const weekDates = getWeekDates();
+  const monthDates = viewMode === 'month' ? getMonthDates() : [];
+  const weekDays = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+
+  const renderDayView = () => {
+    const dateStr = currentDate.toISOString().split('T')[0];
+    const dayMeals = meals.get(dateStr) || [];
+    const dayWater = waterLogs.get(dateStr);
+    const waterAmount = dayWater?.water_ml || 0;
+    const waterGoal = mealPlan?.daily_water_ml || WATER_GOAL;
+    const waterProgress = Math.min((waterAmount / waterGoal) * 100, 100);
+    const diaryEntry = diaryEntries.get(dateStr);
+    const isCompleted = diaryEntry?.completed || false;
+
+    return (
+      <div
+        key={dateStr}
+        className={`premium-card-static overflow-hidden transition-all duration-300 hover:shadow-card-hover ${
+          isToday(currentDate) ? 'ring-2 ring-emerald-500/50' : ''
+        } ${isCompleted ? 'opacity-75' : ''}`}
+      >
+        {renderDayContent(currentDate, dateStr, dayMeals, waterAmount, waterGoal, waterProgress, isCompleted)}
+      </div>
+    );
+  };
+
+  const renderMonthView = () => {
+    return (
+      <div className="premium-card-static p-4">
+        <div className="grid grid-cols-7 gap-2">
+          {/* Week days header */}
+          {weekDays.map((day, index) => (
+            <div
+              key={index}
+              className="text-center text-sm font-semibold text-[var(--color-text-muted)] py-2"
+            >
+              {day}
+            </div>
+          ))}
+
+          {/* Calendar days */}
+          {monthDates.map((date, index) => {
+            if (!date) {
+              return <div key={index} className="min-h-[80px] p-2" />;
+            }
+
+            const dateStr = date.toISOString().split('T')[0];
+            const dayMeals = meals.get(dateStr) || [];
+            const diaryEntry = diaryEntries.get(dateStr);
+            const isCompleted = diaryEntry?.completed || false;
+            const hasMeals = dayMeals.length > 0;
+            const isCurrentDay = isToday(date);
+
+            return (
+              <div
+                key={index}
+                onClick={() => handleDateClick(date)}
+                className={`min-h-[80px] p-2 border border-[var(--color-border)] rounded-lg cursor-pointer transition-all hover:border-emerald-500/50 ${
+                  isCurrentDay
+                    ? 'bg-emerald-500/10 border-emerald-500/30'
+                    : hasMeals
+                    ? 'bg-zinc-800/30'
+                    : 'bg-transparent'
+                }`}
+              >
+                <div
+                  className={`text-sm font-semibold mb-1 ${
+                    isCurrentDay ? 'text-emerald-400' : 'text-[var(--color-text-primary)]'
+                  }`}
+                >
+                  {date.getDate()}
+                </div>
+                {hasMeals && (
+                  <div className="space-y-1">
+                    <div className="text-xs bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded truncate">
+                      {dayMeals.length} ארוחות
+                    </div>
+                    {isCompleted && (
+                      <div className="text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded">
+                        ✓
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderDayContent = (
+    date: Date,
+    dateStr: string,
+    dayMeals: TraineeMeal[],
+    waterAmount: number,
+    waterGoal: number,
+    waterProgress: number,
+    isCompleted: boolean
+  ) => {
+    return (
+      <>
+        <div
+          className={`px-4 py-4 ${
+            isToday(date) ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white' : isCompleted ? 'bg-emerald-500/10' : 'bg-[var(--color-bg-surface)]'
+          }`}
+        >
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              {isCompleted && (
+                <div className="bg-emerald-500 text-white rounded-full p-1 shadow-md">
+                  <Check className="w-4 h-4" />
+                </div>
+              )}
+              <div>
+                <span className="font-bold text-lg">יום {getHebrewDayName(date)}</span>
+                <span className="text-sm mr-2 opacity-80">{formatDate(date)}</span>
+                {isToday(date) && (
+                  <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full mr-2 font-medium">
+                    היום
+                  </span>
+                )}
+                {isCompleted && (
+                  <span className={`text-xs px-2 py-0.5 rounded-full mr-2 font-medium ${
+                    isToday(date) ? 'bg-white/20' : 'bg-emerald-500 text-white'
+                  }`}>
+                    הושלם
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              {!isCompleted && dayMeals.length > 0 && (
+                <button
+                  onClick={() => completeDay(dateStr)}
+                  className={`px-4 py-2 rounded-xl transition-all duration-300 text-sm font-medium flex items-center gap-1 shadow-md hover:shadow-lg ${
+                    isToday(date)
+                      ? 'bg-white/20 hover:bg-white/30 text-white'
+                      : 'bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white'
+                  }`}
+                >
+                  <Check className="w-4 h-4" />
+                  סיים יום
+                </button>
+              )}
+              <button
+                onClick={() => openAddMeal(dateStr)}
+                disabled={isCompleted}
+                className={`p-2 rounded-xl transition-all duration-300 ${
+                  isCompleted
+                    ? 'opacity-50 cursor-not-allowed bg-[var(--color-bg-surface)] text-[var(--color-text-muted)]'
+                    : isToday(date)
+                    ? 'bg-white/20 hover:bg-white/30 text-white'
+                    : 'bg-emerald-500/15 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-md hover:shadow-lg'
+                }`}
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 border-b bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-[var(--color-border)]">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center shadow-md">
+              <Droplets className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <span className="text-sm font-bold text-[var(--color-text-primary)]">מעקב מים</span>
+              <p className="text-sm text-[var(--color-text-muted)]">
+                {waterAmount} / {waterGoal} מ"ל
+              </p>
+            </div>
+          </div>
+          <div className="h-3 bg-[var(--color-bg-surface)] rounded-full overflow-hidden mb-4 shadow-inner border border-[var(--color-border)]">
+            <div
+              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500 ease-out rounded-full"
+              style={{ width: `${waterProgress}%` }}
+            />
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => addWater(dateStr, 250)}
+              className="flex-1 py-3 text-sm bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 rounded-xl hover:bg-cyan-500/20 transition-all duration-300 font-medium shadow-sm hover:shadow-md hover:scale-[1.02]"
+            >
+              +250 מ"ל
+            </button>
+            <button
+              onClick={() => addWater(dateStr, 500)}
+              className="flex-1 py-3 text-sm bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 rounded-xl hover:bg-cyan-500/20 transition-all duration-300 font-medium shadow-sm hover:shadow-md hover:scale-[1.02]"
+            >
+              +500 מ"ל
+            </button>
+          </div>
+        </div>
+
+        {dayMeals.length > 0 && (
+          <div className="px-4 py-3 border-b border-[var(--color-border)] bg-gradient-to-br from-emerald-500/5 to-teal-500/5">
+            <button
+              onClick={() => toggleDailySummary(dateStr)}
+              className="w-full flex items-center justify-between"
+            >
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-emerald-400" />
+                <span className="text-sm font-bold text-[var(--color-text-primary)]">סיכום יומי</span>
+              </div>
+              {showDailySummary.has(dateStr) ? (
+                <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
+              )}
+            </button>
+            {showDailySummary.has(dateStr) && (
+              <DailySummaryCard
+                dateStr={dateStr}
+                totals={calculateDailyTotals(dateStr)}
+                mealPlan={mealPlan}
+                waterAmount={waterAmount}
+              />
+            )}
+          </div>
+        )}
+
+        <div className="p-4">
+          {dayMeals.length === 0 ? (
+            <div className="text-center py-6">
+              <p className="text-[var(--color-text-muted)] text-sm mb-4">לא נרשמו ארוחות</p>
+              {mealPlanMeals.length > 0 && (
+                <button
+                  onClick={() => {
+                    setSelectedDate(dateStr);
+                    setShowMealPlanCopy(true);
+                  }}
+                  className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center gap-1 mx-auto font-medium"
+                >
+                  <Copy className="w-4 h-4" />
+                  העתק מתפריט
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {dayMeals.map((meal) => {
+                const typeInfo = getMealTypeInfo(meal.meal_type);
+                const Icon = typeInfo.icon;
+                const isExpanded = expandedMeals.has(meal.id);
+                const description = meal.description || '';
+                const shouldTruncate = description.length > 60;
+                const hasNutrition = meal.calories || meal.protein || meal.carbs || meal.fat;
+
+                return (
+                  <div
+                    key={meal.id}
+                    className="border-2 border-[var(--color-border)] rounded-xl p-4 hover:border-emerald-500/50 transition-all duration-300 hover:shadow-lg bg-[var(--color-bg-base)]"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2.5 rounded-xl ${typeInfo.color} shadow-md`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="font-bold text-sm text-[var(--color-text-primary)]">
+                            {typeInfo.label}
+                          </span>
+                          {meal.meal_time && (
+                            <span className="text-xs text-[var(--color-text-muted)] flex items-center gap-1 bg-[var(--color-bg-surface)] px-2 py-0.5 rounded-full border border-[var(--color-border)]">
+                              <Clock className="w-3 h-3" />
+                              {meal.meal_time.slice(0, 5)}
+                            </span>
+                          )}
+                          {hasNutrition && (
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {meal.calories && (
+                                <span className="text-xs text-amber-500 flex items-center gap-1 bg-amber-500/15 px-2 py-0.5 rounded-full border border-amber-500/30">
+                                  <Flame className="w-3 h-3" />
+                                  {meal.calories} קל'
+                                </span>
+                              )}
+                              {meal.protein && (
+                                <span className="text-xs text-red-500 flex items-center gap-1 bg-red-500/15 px-2 py-0.5 rounded-full border border-red-500/30">
+                                  <Beef className="w-3 h-3" />
+                                  {meal.protein}ג'
+                                </span>
+                              )}
+                              {meal.carbs && (
+                                <span className="text-xs text-amber-500 flex items-center gap-1 bg-amber-500/15 px-2 py-0.5 rounded-full border border-amber-500/30">
+                                  <Wheat className="w-3 h-3" />
+                                  {meal.carbs}ג'
+                                </span>
+                              )}
+                              {meal.fat && (
+                                <span className="text-xs text-blue-500 flex items-center gap-1 bg-blue-500/15 px-2 py-0.5 rounded-full border border-blue-500/30">
+                                  <Droplet className="w-3 h-3" />
+                                  {meal.fat}ג'
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <p
+                          className={`text-sm text-[var(--color-text-secondary)] leading-relaxed ${
+                            !isExpanded && shouldTruncate ? 'line-clamp-2' : ''
+                          }`}
+                        >
+                          {description}
+                        </p>
+                        {isExpanded && hasNutrition && (
+                          <div className="flex gap-2 flex-wrap mt-2">
+                            {meal.protein && (
+                              <span className="text-xs text-red-500 bg-red-500/15 px-2 py-1 rounded-lg border border-red-500/30">
+                                חלבון: {meal.protein}ג'
+                              </span>
+                            )}
+                            {meal.carbs && (
+                              <span className="text-xs text-amber-500 bg-amber-500/15 px-2 py-1 rounded-lg border border-amber-500/30">
+                                פחמימות: {meal.carbs}ג'
+                              </span>
+                            )}
+                            {meal.fat && (
+                              <span className="text-xs text-blue-500 bg-blue-500/15 px-2 py-1 rounded-lg border border-blue-500/30">
+                                שומן: {meal.fat}ג'
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {shouldTruncate && (
+                          <button
+                            onClick={() => toggleMealExpand(meal.id)}
+                            className="text-xs text-emerald-400 flex items-center gap-1 mt-2 font-medium hover:text-emerald-300 transition-colors"
+                          >
+                            {isExpanded ? (
+                              <>
+                                <ChevronUp className="w-3 h-3" />
+                                הצג פחות
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="w-3 h-3" />
+                                הצג עוד
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                      {!isCompleted && (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => openEditMeal(meal)}
+                            className="p-2 text-[var(--color-text-muted)] hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all duration-300"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => deleteMeal(meal.id)}
+                            className="p-2 text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-300"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </>
+    );
+  };
 
   return (
     <div className="space-y-4 pb-4">
       <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 shadow-xl sticky top-0 z-10">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => navigateWeek('next')}
-            className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-white"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
-          <div className="text-center text-white">
-            <h2 className="text-2xl font-bold">יומן אכילה</h2>
-            <p className="text-sm text-emerald-100 mt-1">{getWeekRangeText()}</p>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                if (viewMode === 'day') navigateDay('next');
+                else if (viewMode === 'week') navigateWeek('next');
+                else navigateMonth('next');
+              }}
+              className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-white"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+            <div className="text-center text-white flex-1">
+              <h2 className="text-2xl font-bold">יומן אכילה</h2>
+              <p className="text-sm text-emerald-100 mt-1">{getViewTitle()}</p>
+            </div>
+            <button
+              onClick={() => {
+                if (viewMode === 'day') navigateDay('prev');
+                else if (viewMode === 'week') navigateWeek('prev');
+                else navigateMonth('prev');
+              }}
+              className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-white"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
           </div>
+        </div>
+        {/* View Mode Selector */}
+        <div className="flex gap-2 mt-4">
           <button
-            onClick={() => navigateWeek('prev')}
-            className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-white"
+            onClick={() => setViewMode('day')}
+            className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+              viewMode === 'day'
+                ? 'bg-white/20 text-white shadow-lg'
+                : 'bg-white/10 text-white/80 hover:bg-white/15'
+            }`}
           >
-            <ChevronLeft className="w-6 h-6" />
+            <Calendar className="w-4 h-4" />
+            יומי
+          </button>
+          <button
+            onClick={() => setViewMode('week')}
+            className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+              viewMode === 'week'
+                ? 'bg-white/20 text-white shadow-lg'
+                : 'bg-white/10 text-white/80 hover:bg-white/15'
+            }`}
+          >
+            <CalendarRange className="w-4 h-4" />
+            שבועי
+          </button>
+          <button
+            onClick={() => setViewMode('month')}
+            className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+              viewMode === 'month'
+                ? 'bg-white/20 text-white shadow-lg'
+                : 'bg-white/10 text-white/80 hover:bg-white/15'
+            }`}
+          >
+            <CalendarDays className="w-4 h-4" />
+            חודשי
           </button>
         </div>
       </div>
+
+      {/* Content based on view mode */}
+      {viewMode === 'day' && renderDayView()}
+      {viewMode === 'week' && (
+        <>
+          {weekDates.map((date) => {
+            const dateStr = date.toISOString().split('T')[0];
+            const dayMeals = meals.get(dateStr) || [];
+            const dayWater = waterLogs.get(dateStr);
+            const waterAmount = dayWater?.water_ml || 0;
+            const waterGoal = mealPlan?.daily_water_ml || WATER_GOAL;
+            const waterProgress = Math.min((waterAmount / waterGoal) * 100, 100);
+            const diaryEntry = diaryEntries.get(dateStr);
+            const isCompleted = diaryEntry?.completed || false;
+
+            return (
+              <div
+                key={dateStr}
+                className={`premium-card-static overflow-hidden transition-all duration-300 hover:shadow-card-hover ${
+                  isToday(date) ? 'ring-2 ring-emerald-500/50' : ''
+                } ${isCompleted ? 'opacity-75' : ''}`}
+              >
+                {renderDayContent(date, dateStr, dayMeals, waterAmount, waterGoal, waterProgress, isCompleted)}
+              </div>
+            );
+          })}
+        </>
+      )}
+      {viewMode === 'month' && renderMonthView()}
 
       {weekDates.map((date) => {
         const dateStr = date.toISOString().split('T')[0];

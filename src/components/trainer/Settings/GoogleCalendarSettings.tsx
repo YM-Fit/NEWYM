@@ -5,9 +5,14 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { 
   getGoogleCalendarStatus, 
   disconnectGoogleCalendar,
-  syncGoogleCalendar 
+  syncGoogleCalendar,
+  updateGoogleCalendarSyncSettings,
+  getGoogleCalendars,
+  type GoogleCalendar
 } from '../../../api/googleCalendarApi';
 import { logger } from '../../../utils/logger';
+import { Select } from '../../ui/Select';
+import { Checkbox } from '../../ui/Checkbox';
 
 interface GoogleCalendarSettingsProps {
   onClose?: () => void;
@@ -17,14 +22,17 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
   const { user } = useAuth();
   const [connected, setConnected] = useState(false);
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(false);
+  const [syncDirection, setSyncDirection] = useState<'to_google' | 'from_google' | 'bidirectional'>('bidirectional');
+  const [syncFrequency, setSyncFrequency] = useState<'realtime' | 'hourly' | 'daily'>('realtime');
+  const [defaultCalendarId, setDefaultCalendarId] = useState<string>('primary');
+  const [calendars, setCalendars] = useState<GoogleCalendar[]>([]);
+  const [loadingCalendars, setLoadingCalendars] = useState(false);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    
-    // Debug: Log trainer ID to console
-    console.log('🔍 Trainer ID:', user.id);
     
     loadStatus();
     
@@ -50,11 +58,63 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
       if (result.success && result.data) {
         setConnected(result.data.connected);
         setAutoSyncEnabled(result.data.autoSyncEnabled || false);
+        setSyncDirection(result.data.syncDirection || 'bidirectional');
+        setSyncFrequency(result.data.syncFrequency || 'realtime');
+        setDefaultCalendarId(result.data.defaultCalendarId || 'primary');
+        
+        // Load calendars list if connected
+        if (result.data.connected) {
+          await loadCalendars();
+        }
       }
     } catch (error) {
       logger.error('Error loading Google Calendar status', error, 'GoogleCalendarSettings');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCalendars = async () => {
+    if (!user) return;
+
+    try {
+      setLoadingCalendars(true);
+      const result = await getGoogleCalendars(user.id);
+      if (result.success && result.data) {
+        setCalendars(result.data);
+      } else if (result.error) {
+        logger.warn('Error loading calendars list', result.error, 'GoogleCalendarSettings');
+      }
+    } catch (error) {
+      logger.error('Error loading calendars', error, 'GoogleCalendarSettings');
+    } finally {
+      setLoadingCalendars(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (!user) return;
+
+    try {
+      setSaving(true);
+      const result = await updateGoogleCalendarSyncSettings(user.id, {
+        autoSyncEnabled,
+        syncDirection,
+        syncFrequency,
+        defaultCalendarId,
+      });
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success('הגדרות הסנכרון נשמרו בהצלחה');
+    } catch (error) {
+      logger.error('Error saving sync settings', error, 'GoogleCalendarSettings');
+      toast.error('שגיאה בשמירת הגדרות הסנכרון');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -109,7 +169,10 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
           window.removeEventListener('message', handleMessage);
           setLoading(false);
           popup.close();
-          loadStatus();
+          // Load status and calendars after connection
+          setTimeout(() => {
+            loadStatus();
+          }, 1000);
         }
       };
       
@@ -272,17 +335,97 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
             </button>
           </div>
 
-          {/* Sync Status */}
-          <div className="p-4 bg-zinc-800/50 rounded-lg">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold text-white">סנכרון אוטומטי</span>
-              <span className={`text-xs px-2 py-1 rounded ${autoSyncEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-700 text-zinc-400'}`}>
-                {autoSyncEnabled ? 'פעיל' : 'כבוי'}
-              </span>
+          {/* Sync Settings */}
+          <div className="p-4 bg-zinc-800/50 rounded-lg space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-white">הגדרות סנכרון</span>
             </div>
-            <p className="text-xs text-zinc-400 mb-4">
-              אימונים חדשים יתווספו אוטומטית ל-Google Calendar שלך
-            </p>
+            
+            <Checkbox
+              checked={autoSyncEnabled}
+              onChange={(checked) => setAutoSyncEnabled(checked)}
+              label="סנכרון אוטומטי"
+            />
+            
+            <Select
+              label="תדירות סנכרון"
+              value={syncFrequency}
+              onChange={(e) => setSyncFrequency(e.target.value as 'realtime' | 'hourly' | 'daily')}
+              options={[
+                { value: 'realtime', label: 'זמן אמת' },
+                { value: 'hourly', label: 'כל שעה' },
+                { value: 'daily', label: 'יומי' }
+              ]}
+              fullWidth
+            />
+            
+            <Select
+              label="כיוון סנכרון"
+              value={syncDirection}
+              onChange={(e) => setSyncDirection(e.target.value as 'to_google' | 'from_google' | 'bidirectional')}
+              options={[
+                { value: 'to_google', label: 'ממערכת ל-Google' },
+                { value: 'from_google', label: 'מ-Google למערכת' },
+                { value: 'bidirectional', label: 'דו-כיווני' }
+              ]}
+              fullWidth
+            />
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold text-white block">
+                  יומן להצגה
+                </label>
+                <button
+                  type="button"
+                  onClick={loadCalendars}
+                  disabled={loadingCalendars}
+                  className="text-xs text-emerald-400 hover:text-emerald-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  title="רענון רשימת יומנים"
+                >
+                  <RefreshCw className={`h-3 w-3 ${loadingCalendars ? 'animate-spin' : ''}`} />
+                  רענון
+                </button>
+              </div>
+              {loadingCalendars ? (
+                <div className="flex items-center gap-2 text-sm text-zinc-400 py-2">
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  טוען יומנים...
+                </div>
+              ) : calendars.length > 0 ? (
+                <Select
+                  value={defaultCalendarId}
+                  onChange={(e) => setDefaultCalendarId(e.target.value)}
+                  options={calendars.map(cal => ({
+                    value: cal.id,
+                    label: `${cal.summary}${cal.primary ? ' (ברירת מחדל)' : ''}`
+                  }))}
+                  fullWidth
+                />
+              ) : (
+                <div className="text-sm text-zinc-400 py-2">
+                  לא ניתן לטעון רשימת יומנים
+                </div>
+              )}
+              <p className="text-xs text-zinc-500">
+                בחר איזה יומן Google Calendar להציג במערכת
+              </p>
+            </div>
+            
+            <button
+              onClick={handleSaveSettings}
+              disabled={saving || loading}
+              className="w-full btn-secondary flex items-center justify-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  שומר...
+                </>
+              ) : (
+                'שמור הגדרות'
+              )}
+            </button>
           </div>
 
           {/* Manual Sync Button */}

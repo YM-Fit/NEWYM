@@ -74,6 +74,15 @@ async function syncTrainerCalendar(
     throw new Error("No sync credentials found");
   }
 
+  // Only sync from Google if sync_direction is 'from_google' or 'bidirectional'
+  const shouldSyncFromGoogle = credentials.sync_direction === 'from_google' || 
+                                credentials.sync_direction === 'bidirectional';
+  
+  if (!shouldSyncFromGoogle) {
+    // If sync direction is 'to_google' only, we don't sync from Google Calendar
+    return;
+  }
+
   // Check and refresh token if needed
   let accessToken = credentials.access_token;
   if (new Date(credentials.token_expires_at) < new Date()) {
@@ -132,15 +141,62 @@ async function syncTrainerCalendar(
 
     // Extract trainee information
     const traineeName = extractTraineeName(event);
-    if (!traineeName) continue;
+    const traineeEmail = extractEmail(event);
+    
+    if (!traineeName && !traineeEmail) continue;
 
-    // Find trainee
-    const { data: trainee } = await supabase
-      .from("trainees")
-      .select("id")
-      .eq("trainer_id", trainerId)
-      .ilike("full_name", `%${traineeName}%`)
-      .maybeSingle();
+    // Find trainee with improved matching logic
+    let trainee: { id: string } | null = null;
+    
+    // First, try to match by email (most accurate)
+    if (traineeEmail) {
+      const { data: traineeByEmail } = await supabase
+        .from("trainees")
+        .select("id")
+        .eq("trainer_id", trainerId)
+        .eq("email", traineeEmail)
+        .maybeSingle();
+      
+      if (traineeByEmail) {
+        trainee = traineeByEmail;
+        console.log(`Matched trainee by email: ${traineeEmail} -> ${trainee.id}`);
+      }
+    }
+    
+    // If no email match, try name matching
+    if (!trainee && traineeName) {
+      // First try exact match (case insensitive)
+      const { data: exactMatch } = await supabase
+        .from("trainees")
+        .select("id")
+        .eq("trainer_id", trainerId)
+        .ilike("full_name", traineeName)
+        .maybeSingle();
+      
+      if (exactMatch) {
+        trainee = exactMatch;
+        console.log(`Matched trainee by exact name: ${traineeName} -> ${trainee.id}`);
+      } else {
+        // Try partial match, but check for multiple matches
+        const { data: partialMatches } = await supabase
+          .from("trainees")
+          .select("id, full_name")
+          .eq("trainer_id", trainerId)
+          .ilike("full_name", `%${traineeName}%`);
+        
+        if (partialMatches && partialMatches.length === 1) {
+          trainee = partialMatches[0];
+          console.log(`Matched trainee by partial name: ${traineeName} -> ${trainee.id}`);
+        } else if (partialMatches && partialMatches.length > 1) {
+          // Multiple matches found - don't auto-associate to avoid wrong match
+          console.warn(
+            `Multiple trainees found for name "${traineeName}": ${partialMatches.map(t => t.full_name).join(", ")}. ` +
+            `Skipping auto-association to prevent incorrect matching.`
+          );
+          continue; // Skip this event to avoid wrong association
+        }
+      }
+    }
 
     if (!trainee) continue;
 
@@ -190,6 +246,11 @@ async function syncTrainerCalendar(
             trainee_id: trainee.id,
           });
 
+        // Use user's preferred sync direction
+        const syncDirection = credentials.sync_direction === 'bidirectional' 
+          ? 'bidirectional' 
+          : 'from_google';
+        
         await supabase
           .from("google_calendar_sync")
           .insert({
@@ -199,7 +260,7 @@ async function syncTrainerCalendar(
             google_event_id: event.id,
             google_calendar_id: calendarId,
             sync_status: "synced",
-            sync_direction: "from_google",
+            sync_direction: syncDirection,
             event_start_time: startTime.toISOString(),
             event_end_time: endTime.toISOString(),
             event_summary: event.summary,

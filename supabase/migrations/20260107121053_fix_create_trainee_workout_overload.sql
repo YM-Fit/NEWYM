@@ -54,3 +54,6 @@ BEGIN
   RETURN v_workout_id;
 END;
 $$;
+
+-- Grant execute to authenticated users
+GRANT EXECUTE ON FUNCTION create_trainee_workout TO authenticated;

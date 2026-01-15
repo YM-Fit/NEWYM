@@ -299,12 +299,16 @@ Deno.serve(async (req: Request) => {
     try {
       const { data: credentials } = await supabase
         .from('trainer_google_credentials')
-        .select('auto_sync_enabled, default_calendar_id, access_token, refresh_token, token_expires_at')
+        .select('auto_sync_enabled, sync_direction, default_calendar_id, access_token, refresh_token, token_expires_at')
         .eq('trainer_id', trainer_id)
         .eq('auto_sync_enabled', true)
         .maybeSingle();
 
-      if (credentials) {
+      // Only sync to Google if sync_direction is 'to_google' or 'bidirectional'
+      const shouldSyncToGoogle = credentials && 
+        (credentials.sync_direction === 'to_google' || credentials.sync_direction === 'bidirectional');
+
+      if (shouldSyncToGoogle) {
         // Check if already synced
         const { data: existingSync } = await supabase
           .from('google_calendar_sync')
@@ -391,7 +395,11 @@ Deno.serve(async (req: Request) => {
             if (eventResponse.ok) {
               const event = await eventResponse.json();
               
-              // Save sync record
+              // Save sync record with user's preferred sync direction
+              const syncDirection = credentials.sync_direction === 'bidirectional' 
+                ? 'bidirectional' 
+                : 'to_google';
+              
               await supabase
                 .from('google_calendar_sync')
                 .insert({
@@ -401,7 +409,7 @@ Deno.serve(async (req: Request) => {
                   google_event_id: event.id,
                   google_calendar_id: calendarId,
                   sync_status: 'synced',
-                  sync_direction: 'to_google',
+                  sync_direction: syncDirection,
                   event_start_time: workoutDate.toISOString(),
                   event_end_time: endDate.toISOString(),
                   event_summary: eventPayload.summary,

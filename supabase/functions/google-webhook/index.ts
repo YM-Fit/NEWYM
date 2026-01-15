@@ -95,9 +95,26 @@ Deno.serve(async (req: Request) => {
         // Fetch the changed event from Google Calendar
         const { data: creds, error: fetchCredError } = await supabase
           .from("trainer_google_credentials")
-          .select("access_token, refresh_token, token_expires_at, default_calendar_id")
+          .select("access_token, refresh_token, token_expires_at, default_calendar_id, sync_direction, auto_sync_enabled")
           .eq("trainer_id", credentials.trainer_id)
           .single();
+
+        // Only sync from Google if sync_direction is 'from_google' or 'bidirectional' and auto_sync is enabled
+        if (creds && creds.auto_sync_enabled) {
+          const shouldSyncFromGoogle = creds.sync_direction === 'from_google' || 
+                                      creds.sync_direction === 'bidirectional';
+          
+          if (!shouldSyncFromGoogle) {
+            // If sync direction is 'to_google' only, don't process webhook events from Google
+            return new Response(
+              JSON.stringify({ success: true, message: "Sync direction set to 'to_google' only, skipping webhook" }),
+              {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              }
+            );
+          }
+        }
 
         if (fetchCredError || !creds) {
           return new Response(
@@ -159,7 +176,12 @@ Deno.serve(async (req: Request) => {
 
         if (eventsResponse.ok) {
           const eventsData = await eventsResponse.json();
-          await processCalendarEvents(eventsData.items || [], credentials.trainer_id, supabase);
+          await processCalendarEvents(
+            eventsData.items || [], 
+            credentials.trainer_id, 
+            supabase,
+            creds?.sync_direction || 'bidirectional'
+          );
         }
       }
 
@@ -197,7 +219,8 @@ Deno.serve(async (req: Request) => {
 async function processCalendarEvents(
   events: any[],
   trainerId: string,
-  supabase: any
+  supabase: any,
+  syncDirection: 'to_google' | 'from_google' | 'bidirectional' = 'bidirectional'
 ) {
   for (const event of events) {
     // Check if event is already synced
@@ -208,21 +231,63 @@ async function processCalendarEvents(
       .eq("google_calendar_id", event.organizer?.email || "primary")
       .maybeSingle();
 
-    // Extract trainee name from event summary or attendees
+    // Extract trainee name and email from event
     const traineeName = extractTraineeName(event);
-    if (!traineeName) continue;
+    const traineeEmail = extractEmail(event);
+    
+    if (!traineeName && !traineeEmail) continue;
 
-    // Find or create trainee
+    // Find trainee with improved matching logic
     let traineeId: string | null = null;
-    const { data: trainee } = await supabase
-      .from("trainees")
-      .select("id")
-      .eq("trainer_id", trainerId)
-      .ilike("full_name", `%${traineeName}%`)
-      .maybeSingle();
-
-    if (trainee) {
-      traineeId = trainee.id;
+    
+    // First, try to match by email (most accurate)
+    if (traineeEmail) {
+      const { data: traineeByEmail } = await supabase
+        .from("trainees")
+        .select("id")
+        .eq("trainer_id", trainerId)
+        .eq("email", traineeEmail)
+        .maybeSingle();
+      
+      if (traineeByEmail) {
+        traineeId = traineeByEmail.id;
+        console.log(`Matched trainee by email: ${traineeEmail} -> ${traineeId}`);
+      }
+    }
+    
+    // If no email match, try name matching
+    if (!traineeId && traineeName) {
+      // First try exact match (case insensitive)
+      const { data: exactMatch } = await supabase
+        .from("trainees")
+        .select("id")
+        .eq("trainer_id", trainerId)
+        .ilike("full_name", traineeName)
+        .maybeSingle();
+      
+      if (exactMatch) {
+        traineeId = exactMatch.id;
+        console.log(`Matched trainee by exact name: ${traineeName} -> ${traineeId}`);
+      } else {
+        // Try partial match, but check for multiple matches
+        const { data: partialMatches } = await supabase
+          .from("trainees")
+          .select("id, full_name")
+          .eq("trainer_id", trainerId)
+          .ilike("full_name", `%${traineeName}%`);
+        
+        if (partialMatches && partialMatches.length === 1) {
+          traineeId = partialMatches[0].id;
+          console.log(`Matched trainee by partial name: ${traineeName} -> ${traineeId}`);
+        } else if (partialMatches && partialMatches.length > 1) {
+          // Multiple matches found - don't auto-associate to avoid wrong match
+          console.warn(
+            `Multiple trainees found for name "${traineeName}": ${partialMatches.map(t => t.full_name).join(", ")}. ` +
+            `Skipping auto-association to prevent incorrect matching.`
+          );
+          continue; // Skip this event to avoid wrong association
+        }
+      }
     }
 
     const startTime = new Date(event.start.dateTime || event.start.date);
@@ -274,6 +339,11 @@ async function processCalendarEvents(
               trainee_id: traineeId,
             });
 
+          // Use user's preferred sync direction
+          const recordSyncDirection = syncDirection === 'bidirectional' 
+            ? 'bidirectional' 
+            : 'from_google';
+          
           await supabase
             .from("google_calendar_sync")
             .insert({
@@ -283,7 +353,7 @@ async function processCalendarEvents(
               google_event_id: event.id,
               google_calendar_id: event.organizer?.email || "primary",
               sync_status: "synced",
-              sync_direction: "from_google",
+              sync_direction: recordSyncDirection,
               event_start_time: startTime.toISOString(),
               event_end_time: endTime.toISOString(),
               event_summary: event.summary,
