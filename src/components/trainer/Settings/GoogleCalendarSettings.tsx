@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Calendar, CheckCircle2, XCircle, RefreshCw, ExternalLink, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -30,6 +30,9 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const loadingRef = useRef(false);
+  const lastLoadTimeRef = useRef(0);
+  const LOAD_DEBOUNCE_MS = 2000; // Don't load more than once every 2 seconds
 
   useEffect(() => {
     if (!user) return;
@@ -52,8 +55,17 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
   const loadStatus = async () => {
     if (!user) return;
 
+    // Debounce: don't load if already loading or loaded recently
+    const now = Date.now();
+    if (loadingRef.current || (now - lastLoadTimeRef.current < LOAD_DEBOUNCE_MS)) {
+      return;
+    }
+
     try {
+      loadingRef.current = true;
+      lastLoadTimeRef.current = now;
       setLoading(true);
+      
       const result = await getGoogleCalendarStatus(user.id);
       if (result.success && result.data) {
         setConnected(result.data.connected);
@@ -66,11 +78,17 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
         if (result.data.connected) {
           await loadCalendars();
         }
+      } else if (result.error) {
+        // Don't show error for expected errors (missing columns)
+        if (!result.error.includes('does not exist') && !result.error.includes('42703')) {
+          logger.error('Error loading Google Calendar status', result.error, 'GoogleCalendarSettings');
+        }
       }
     } catch (error) {
       logger.error('Error loading Google Calendar status', error, 'GoogleCalendarSettings');
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
   };
 

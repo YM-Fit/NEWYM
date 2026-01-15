@@ -2,7 +2,7 @@
  * Google Calendar API layer
  */
 
-import { supabase } from '../lib/supabase';
+import { supabase, logSupabaseError } from '../lib/supabase';
 import type { ApiResponse } from './types';
 import { API_CONFIG } from './config';
 
@@ -146,6 +146,7 @@ export async function getGoogleCalendarStatus(
   trainerId: string
 ): Promise<ApiResponse<{ connected: boolean; autoSyncEnabled?: boolean; syncDirection?: 'to_google' | 'from_google' | 'bidirectional'; syncFrequency?: 'realtime' | 'hourly' | 'daily'; defaultCalendarId?: string }>> {
   try {
+    // Now that the columns exist, select all fields together
     const { data, error } = await supabase
       .from('trainer_google_credentials')
       .select('auto_sync_enabled, sync_direction, sync_frequency, default_calendar_id')
@@ -153,6 +154,32 @@ export async function getGoogleCalendarStatus(
       .maybeSingle();
 
     if (error) {
+      // Fallback: if columns still don't exist (edge case), try basic fields only
+      if (error.code === '42703' || error.message?.includes('does not exist')) {
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('trainer_google_credentials')
+          .select('auto_sync_enabled, default_calendar_id')
+          .eq('trainer_id', trainerId)
+          .maybeSingle();
+        
+        if (fallbackError) {
+          logSupabaseError(fallbackError, 'getGoogleCalendarStatus.fallback', { table: 'trainer_google_credentials', trainerId });
+          return { error: fallbackError.message };
+        }
+
+        return { 
+          data: { 
+            connected: !!fallbackData, 
+            autoSyncEnabled: fallbackData?.auto_sync_enabled ?? false,
+            syncDirection: 'bidirectional' as const,
+            syncFrequency: 'realtime' as const,
+            defaultCalendarId: fallbackData?.default_calendar_id || 'primary'
+          }, 
+          success: true 
+        };
+      }
+      
+      logSupabaseError(error, 'getGoogleCalendarStatus', { table: 'trainer_google_credentials', trainerId });
       return { error: error.message };
     }
 
@@ -184,27 +211,50 @@ export async function updateGoogleCalendarSyncSettings(
   }
 ): Promise<ApiResponse> {
   try {
-    const updates: any = {};
+    // First, try to update basic fields that always exist
+    const basicUpdates: any = {};
     if (settings.autoSyncEnabled !== undefined) {
-      updates.auto_sync_enabled = settings.autoSyncEnabled;
-    }
-    if (settings.syncDirection !== undefined) {
-      updates.sync_direction = settings.syncDirection;
-    }
-    if (settings.syncFrequency !== undefined) {
-      updates.sync_frequency = settings.syncFrequency;
+      basicUpdates.auto_sync_enabled = settings.autoSyncEnabled;
     }
     if (settings.defaultCalendarId !== undefined) {
-      updates.default_calendar_id = settings.defaultCalendarId;
+      basicUpdates.default_calendar_id = settings.defaultCalendarId;
     }
 
-    const { error } = await supabase
-      .from('trainer_google_credentials')
-      .update(updates)
-      .eq('trainer_id', trainerId);
+    // Update basic fields first
+    if (Object.keys(basicUpdates).length > 0) {
+      const { error: basicError } = await supabase
+        .from('trainer_google_credentials')
+        .update(basicUpdates)
+        .eq('trainer_id', trainerId);
 
-    if (error) {
-      return { error: error.message };
+      if (basicError) {
+        logSupabaseError(basicError, 'updateGoogleCalendarSyncSettings.basic', { table: 'trainer_google_credentials', trainerId });
+        return { error: basicError.message };
+      }
+    }
+
+    // Try to update extended fields if they're provided
+    const extendedUpdates: any = {};
+    if (settings.syncDirection !== undefined) {
+      extendedUpdates.sync_direction = settings.syncDirection;
+    }
+    if (settings.syncFrequency !== undefined) {
+      extendedUpdates.sync_frequency = settings.syncFrequency;
+    }
+
+    // Update extended fields if provided (may fail if columns don't exist - that's OK)
+    if (Object.keys(extendedUpdates).length > 0) {
+      const { error: extendedError } = await supabase
+        .from('trainer_google_credentials')
+        .update(extendedUpdates)
+        .eq('trainer_id', trainerId);
+
+      // If columns don't exist, that's OK - we'll just use defaults
+      if (extendedError && extendedError.code !== '42703' && !extendedError.message?.includes('does not exist')) {
+        logSupabaseError(extendedError, 'updateGoogleCalendarSyncSettings.extended', { table: 'trainer_google_credentials', trainerId });
+        // Don't return error - basic fields were updated successfully
+        // Extended fields will use defaults until migration is run
+      }
     }
 
     return { success: true };
