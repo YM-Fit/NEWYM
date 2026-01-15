@@ -201,21 +201,41 @@ Deno.serve(async (req: Request) => {
     let workout;
 
     // Ensure workout_date includes current time when saving
-    // Parse the incoming workout_date and preserve the date but use current time
+    // Always use the CURRENT time when saving, regardless of what was sent from frontend
+    // The date portion is preserved from user input, but time is always the save time
     const workoutDateObj = new Date(workout_date);
     const now = new Date();
     
-    // Preserve the date from user input (in UTC), but use current time for accurate save timestamp
-    // This ensures the workout date reflects when it was actually saved
-    const finalWorkoutDate = new Date(Date.UTC(
-      workoutDateObj.getUTCFullYear(),
-      workoutDateObj.getUTCMonth(),
-      workoutDateObj.getUTCDate(),
-      now.getUTCHours(),
-      now.getUTCMinutes(),
-      now.getUTCSeconds(),
-      now.getUTCMilliseconds()
-    )).toISOString();
+    // Parse the date from input (could be date-only string or ISO with time)
+    // But ALWAYS use current time for the timestamp portion
+    // This ensures workout_date accurately reflects when it was saved
+    let finalWorkoutDate: string;
+    
+    // If workout_date is just a date string (YYYY-MM-DD), parse it properly
+    if (workout_date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      // Date-only string - use it directly with current time
+      const [year, month, day] = workout_date.split('-').map(Number);
+      finalWorkoutDate = new Date(Date.UTC(
+        year,
+        month - 1, // Month is 0-indexed
+        day,
+        now.getUTCHours(),
+        now.getUTCMinutes(),
+        now.getUTCSeconds(),
+        now.getUTCMilliseconds()
+      )).toISOString();
+    } else {
+      // ISO string with time - preserve date, use current time
+      finalWorkoutDate = new Date(Date.UTC(
+        workoutDateObj.getUTCFullYear(),
+        workoutDateObj.getUTCMonth(),
+        workoutDateObj.getUTCDate(),
+        now.getUTCHours(),
+        now.getUTCMinutes(),
+        now.getUTCSeconds(),
+        now.getUTCMilliseconds()
+      )).toISOString();
+    }
 
     if (workout_id) {
       const { data: existingSets } = await supabase

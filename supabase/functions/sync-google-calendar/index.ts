@@ -5,13 +5,33 @@ import { createClient } from "npm:@supabase/supabase-js@2";
  * Get CORS headers based on request origin
  */
 function getCorsHeaders(origin: string | null): Record<string, string> {
-  const allowedOrigins = Deno.env.get("ALLOWED_ORIGINS")?.split(",") || [
+  const allowedOrigins = Deno.env.get("ALLOWED_ORIGINS")?.split(",").map(o => o.trim()) || [
     "http://localhost:5173",
     "http://localhost:3000",
   ];
 
-  const allowedOrigin =
-    origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+  let allowedOrigin: string = allowedOrigins[0] || "*";
+
+  if (origin) {
+    const originLower = origin.toLowerCase();
+    
+    // Check if origin is in allowed list (exact match)
+    if (allowedOrigins.includes(origin)) {
+      allowedOrigin = origin;
+    } 
+    // Allow StackBlitz/WebContainer origins (case-insensitive check)
+    else if (originLower.includes("webcontainer") || originLower.includes("stackblitz") || originLower.includes("webcontainer-api")) {
+      allowedOrigin = origin;
+    }
+    // Allow localhost variations
+    else if (originLower.includes("localhost") || originLower.startsWith("http://127.0.0.1") || originLower.startsWith("http://0.0.0.0")) {
+      allowedOrigin = origin;
+    }
+    // If no match but origin exists, use it (more permissive for development)
+    else {
+      allowedOrigin = origin;
+    }
+  }
 
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
