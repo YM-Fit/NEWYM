@@ -3,7 +3,6 @@ import { Calendar, CheckCircle2, XCircle, RefreshCw, ExternalLink, AlertCircle }
 import toast from 'react-hot-toast';
 import { useAuth } from '../../../contexts/AuthContext';
 import { 
-  initiateGoogleOAuth, 
   getGoogleCalendarStatus, 
   disconnectGoogleCalendar,
   syncGoogleCalendar 

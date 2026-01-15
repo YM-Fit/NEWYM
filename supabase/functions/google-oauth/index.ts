@@ -5,33 +5,32 @@ import { createClient } from "npm:@supabase/supabase-js@2";
  * Get CORS headers based on request origin
  */
 function getCorsHeaders(origin: string | null): Record<string, string> {
-  const allowedOrigins = Deno.env.get("ALLOWED_ORIGINS")?.split(",") || [
+  const allowedOrigins = Deno.env.get("ALLOWED_ORIGINS")?.split(",").map(o => o.trim()) || [
     "http://localhost:5173",
     "http://localhost:3000",
   ];
 
-  let allowedOrigin: string = "*";
+  let allowedOrigin: string = allowedOrigins[0] || "*";
 
   if (origin) {
-    // Check if origin is in allowed list
+    const originLower = origin.toLowerCase();
+    
+    // Check if origin is in allowed list (exact match)
     if (allowedOrigins.includes(origin)) {
       allowedOrigin = origin;
     } 
-    // Allow StackBlitz/WebContainer origins
-    else if (origin.includes("webcontainer") || origin.includes("stackblitz")) {
+    // Allow StackBlitz/WebContainer origins (case-insensitive check)
+    else if (originLower.includes("webcontainer") || originLower.includes("stackblitz") || originLower.includes("webcontainer-api")) {
       allowedOrigin = origin;
     }
     // Allow localhost variations
-    else if (origin.includes("localhost") || origin.startsWith("http://127.0.0.1")) {
+    else if (originLower.includes("localhost") || originLower.startsWith("http://127.0.0.1") || originLower.startsWith("http://0.0.0.0")) {
       allowedOrigin = origin;
     }
-  }
-
-  // Fallback to first allowed origin or use the request origin if it seems safe
-  if (allowedOrigin === "*" && allowedOrigins.length > 0) {
-    allowedOrigin = allowedOrigins[0];
-  } else if (allowedOrigin === "*" && origin) {
-    allowedOrigin = origin;
+    // If no match but origin exists, use it (more permissive for development)
+    else {
+      allowedOrigin = origin;
+    }
   }
 
   return {
