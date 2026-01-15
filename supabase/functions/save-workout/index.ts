@@ -200,6 +200,23 @@ Deno.serve(async (req: Request) => {
 
     let workout;
 
+    // Ensure workout_date includes current time when saving
+    // Parse the incoming workout_date and preserve the date but use current time
+    const workoutDateObj = new Date(workout_date);
+    const now = new Date();
+    
+    // Preserve the date from user input (in UTC), but use current time for accurate save timestamp
+    // This ensures the workout date reflects when it was actually saved
+    const finalWorkoutDate = new Date(Date.UTC(
+      workoutDateObj.getUTCFullYear(),
+      workoutDateObj.getUTCMonth(),
+      workoutDateObj.getUTCDate(),
+      now.getUTCHours(),
+      now.getUTCMinutes(),
+      now.getUTCSeconds(),
+      now.getUTCMilliseconds()
+    )).toISOString();
+
     if (workout_id) {
       const { data: existingSets } = await supabase
         .from('workout_exercises')
@@ -218,12 +235,13 @@ Deno.serve(async (req: Request) => {
 
       await supabase.from('workout_exercises').delete().eq('workout_id', workout_id);
 
+      // When updating, preserve the date from input but use current time
       const { data: updatedWorkout, error: updateError } = await supabase
         .from('workouts')
         .update({
           notes: notes || null,
           updated_at: new Date().toISOString(),
-          workout_date: workout_date,
+          workout_date: finalWorkoutDate, // Preserve date, use current time
         })
         .eq('id', workout_id)
         .select()
@@ -235,6 +253,7 @@ Deno.serve(async (req: Request) => {
 
       workout = updatedWorkout;
     } else {
+      // When creating new workout, use the date from input but with current time
       const { data: newWorkout, error: workoutError } = await supabase
         .from('workouts')
         .insert([
@@ -242,7 +261,7 @@ Deno.serve(async (req: Request) => {
             trainer_id,
             workout_type,
             notes,
-            workout_date,
+            workout_date: finalWorkoutDate,
           },
         ])
         .select()

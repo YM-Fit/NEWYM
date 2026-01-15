@@ -191,15 +191,26 @@ export async function getGoogleCalendarStatus(
     let syncDirection: 'to_google' | 'from_google' | 'bidirectional' = 'bidirectional';
     let syncFrequency: 'realtime' | 'hourly' | 'daily' = 'realtime';
 
-    const { data: extendedData, error: extendedError } = await supabase
-      .from('trainer_google_credentials')
-      .select('sync_direction, sync_frequency')
-      .eq('trainer_id', trainerId)
-      .maybeSingle();
+    try {
+      const { data: extendedData, error: extendedError } = await supabase
+        .from('trainer_google_credentials')
+        .select('sync_direction, sync_frequency')
+        .eq('trainer_id', trainerId)
+        .maybeSingle();
 
-    if (!extendedError && extendedData) {
-      syncDirection = (extendedData?.sync_direction as 'to_google' | 'from_google' | 'bidirectional') || 'bidirectional';
-      syncFrequency = (extendedData?.sync_frequency as 'realtime' | 'hourly' | 'daily') || 'realtime';
+      // If columns don't exist (42703), that's OK - use defaults
+      if (extendedError && extendedError.code !== '42703' && !extendedError.message?.includes('does not exist')) {
+        // Only log if it's not a "column doesn't exist" error
+        logSupabaseError(extendedError, 'getGoogleCalendarStatus.extended', { table: 'trainer_google_credentials', trainerId });
+      }
+
+      if (!extendedError && extendedData) {
+        syncDirection = (extendedData?.sync_direction as 'to_google' | 'from_google' | 'bidirectional') || 'bidirectional';
+        syncFrequency = (extendedData?.sync_frequency as 'realtime' | 'hourly' | 'daily') || 'realtime';
+      }
+    } catch (extendedErr) {
+      // If extended fields query fails, use defaults - this is OK
+      // Fields might not exist in all database versions
     }
 
     return { 
