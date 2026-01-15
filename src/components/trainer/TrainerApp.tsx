@@ -1113,11 +1113,11 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             <CalendarView
               onEventClick={(event) => {
                 // TODO: Handle event click - could open workout or create new one
-                toast.info(`אירוע: ${event.summary}`);
+                toast(`אירוע: ${event.summary}`, { icon: '📅' });
               }}
               onCreateWorkout={() => {
                 setActiveView('trainees');
-                toast.info('בחר מתאמן ליצירת אימון חדש');
+                toast('בחר מתאמן ליצירת אימון חדש', { icon: '💪' });
               }}
             />
           </Suspense>

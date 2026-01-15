@@ -360,7 +360,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
 
               return (
                 <div
-                  key={`${currentDate.getMonth()}-${day || index}`}
+                  key={`day-${currentDate.getFullYear()}-${currentDate.getMonth()}-${day !== null ? day : `empty-${index}`}`}
                   className={`min-h-[100px] p-2 border border-zinc-800 rounded-lg ${
                     day
                       ? isToday
