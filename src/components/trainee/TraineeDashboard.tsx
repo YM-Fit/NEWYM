@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Dumbbell, Scale, Target, Flame, TrendingUp, Sparkles, Lightbulb, ClipboardList, CheckCircle2, Activity, CalendarCheck2 } from 'lucide-react';
-import { goalsApi } from '../../api/goalsApi';
+import { Dumbbell, Scale, Flame, TrendingUp, Sparkles, Lightbulb, ClipboardList, CheckCircle2, Activity, CalendarCheck2 } from 'lucide-react';
 import { habitsApi } from '../../api/habitsApi';
 import { smartRecommendations, Recommendation } from '../../utils/smartRecommendations';
 import { logger } from '../../utils/logger';
@@ -58,7 +57,6 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
   const [currentQuote, setCurrentQuote] = useState('');
   const [quoteVisible, setQuoteVisible] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [activeGoalsCount, setActiveGoalsCount] = useState(0);
   const [habitsStreak, setHabitsStreak] = useState(0);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [todayWorkoutStatus, setTodayWorkoutStatus] = useState<'none' | 'planned' | 'in_progress' | 'completed'>('none');
@@ -116,11 +114,6 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
       const consecutiveDays = await calculateConsecutiveDays(traineeId);
 
       const weekWorkouts = await loadWeekWorkouts(traineeId);
-
-      // Load goals count
-      const goals = await goalsApi.getTraineeGoals(traineeId);
-      const activeGoals = goals.filter(g => g.status === 'active');
-      setActiveGoalsCount(activeGoals.length);
 
       // Load habits streak (if table exists)
       try {
@@ -433,12 +426,6 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
           value={habitsStreak > 0 ? `${habitsStreak} ימים` : '0'}
           color="amber"
           isSmallText={habitsStreak > 0}
-        />
-        <StatCard
-          icon={<Target className="w-5 h-5" />}
-          label="יעדים פעילים"
-          value={activeGoalsCount.toString()}
-          color="teal"
         />
       </div>
 

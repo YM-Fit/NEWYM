@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { supabase } from '../../lib/supabase';
-import { Home, Dumbbell, Scale, LogOut, ClipboardList, Calendar, Brain, Utensils, Activity, Plus, Sun, Moon, Target } from 'lucide-react';
+import { Home, Dumbbell, Scale, LogOut, ClipboardList, Calendar, Brain, Utensils, Activity, Plus, Sun, Moon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import TraineeDashboard from './TraineeDashboard';
 import MyMeasurements from './MyMeasurements';
@@ -13,7 +13,6 @@ import MyMentalTools from './MyMentalTools';
 import FoodDiary from './FoodDiary';
 import SelfWorkoutSession from './SelfWorkoutSession';
 import MyCardio from './MyCardio';
-import MyGoals from './MyGoals';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 
@@ -161,18 +160,12 @@ export default function TraineeApp() {
                   התפתחות אישית
                 </h3>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 <MoreMenuItem
                   icon={Brain}
                   label="מנטלי"
                   onClick={() => { setActiveTab('mental'); setShowMoreMenu(false); }}
                   active={activeTab === 'mental'}
-                />
-                <MoreMenuItem
-                  icon={Target}
-                  label="מטרות"
-                  onClick={() => { setActiveTab('goals'); setShowMoreMenu(false); }}
-                  active={activeTab === 'goals'}
                 />
               </div>
             </div>
@@ -250,7 +243,6 @@ export default function TraineeApp() {
         {activeTab === 'mental' && <MyMentalTools traineeId={traineeId} />}
         {activeTab === 'diary' && <FoodDiary traineeId={traineeId} />}
         {activeTab === 'cardio' && <MyCardio traineeId={traineeId} />}
-        {activeTab === 'goals' && <MyGoals traineeId={traineeId || ''} />}
         {activeTab === 'self-workout' && trainee && (
           <SelfWorkoutSession
             traineeId={trainee.id}
