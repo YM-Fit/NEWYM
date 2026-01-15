@@ -10,6 +10,9 @@ import { LoadingSpinner } from './components/ui/LoadingSpinner';
 import SkipLinks from './components/common/SkipLinks';
 import { useIsTablet } from './hooks/useIsTablet';
 
+// Import Supabase debug utility (runs health check in development)
+import './utils/supabaseDebug';
+
 // Lazy load main app components
 const TrainerApp = lazy(() => import('./components/trainer/TrainerApp'));
 const TraineeApp = lazy(() => import('./components/trainee/TraineeApp'));

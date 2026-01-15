@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, logSupabaseError } from '../lib/supabase';
 import { PostgrestError } from '@supabase/supabase-js';
+import { logger } from '../utils/logger';
 
 interface QueryState<T> {
   data: T | null;
@@ -89,6 +90,13 @@ export function useSupabaseQuery<T>(
     try {
       const { data, error } = await queryFnRef.current();
       
+      // Log errors with context using the helper function
+      if (error) {
+        logSupabaseError(error, 'useSupabaseQuery', {
+          cacheKey: cacheKey.substring(0, 50), // Truncate for logging
+        });
+      }
+      
       // Cache successful results
       if (!error && cacheTime > 0) {
         queryCache.set(cacheKey, {
@@ -100,10 +108,26 @@ export function useSupabaseQuery<T>(
       
       setState({ data, loading: false, error });
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unexpected error';
+      logger.error(
+        'Supabase query exception',
+        {
+          error: err,
+          message: errorMessage,
+          cacheKey: cacheKey.substring(0, 50),
+        },
+        'useSupabaseQuery'
+      );
+      
       setState({
         data: null,
         loading: false,
-        error: { message: 'Unexpected error', details: '', hint: '', code: 'UNKNOWN' } as PostgrestError,
+        error: { 
+          message: errorMessage, 
+          details: '', 
+          hint: '', 
+          code: 'UNKNOWN' 
+        } as PostgrestError,
       });
     }
   }, [enabled, cacheTime]);
