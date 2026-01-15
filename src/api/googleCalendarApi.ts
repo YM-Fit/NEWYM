@@ -146,54 +146,74 @@ export async function getGoogleCalendarStatus(
   trainerId: string
 ): Promise<ApiResponse<{ connected: boolean; autoSyncEnabled?: boolean; syncDirection?: 'to_google' | 'from_google' | 'bidirectional'; syncFrequency?: 'realtime' | 'hourly' | 'daily'; defaultCalendarId?: string }>> {
   try {
-    // Now that the columns exist, select all fields together
-    const { data, error } = await supabase
+    // Start with basic fields that should always exist
+    const { data: basicData, error: basicError } = await supabase
       .from('trainer_google_credentials')
-      .select('auto_sync_enabled, sync_direction, sync_frequency, default_calendar_id')
+      .select('auto_sync_enabled, default_calendar_id')
       .eq('trainer_id', trainerId)
       .maybeSingle();
 
-    if (error) {
-      // Fallback: if columns still don't exist (edge case), try basic fields only
-      if (error.code === '42703' || error.message?.includes('does not exist')) {
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('trainer_google_credentials')
-          .select('auto_sync_enabled, default_calendar_id')
-          .eq('trainer_id', trainerId)
-          .maybeSingle();
-        
-        if (fallbackError) {
-          logSupabaseError(fallbackError, 'getGoogleCalendarStatus.fallback', { table: 'trainer_google_credentials', trainerId });
-          return { error: fallbackError.message };
-        }
-
+    if (basicError) {
+      // If basic query fails, check if it's a "not found" vs actual error
+      if (basicError.code === 'PGRST116') {
+        // No rows found - user not connected
         return { 
           data: { 
-            connected: !!fallbackData, 
-            autoSyncEnabled: fallbackData?.auto_sync_enabled ?? false,
+            connected: false,
+            autoSyncEnabled: false,
             syncDirection: 'bidirectional' as const,
             syncFrequency: 'realtime' as const,
-            defaultCalendarId: fallbackData?.default_calendar_id || 'primary'
+            defaultCalendarId: 'primary'
           }, 
           success: true 
         };
       }
       
-      logSupabaseError(error, 'getGoogleCalendarStatus', { table: 'trainer_google_credentials', trainerId });
-      return { error: error.message };
+      logSupabaseError(basicError, 'getGoogleCalendarStatus.basic', { table: 'trainer_google_credentials', trainerId });
+      return { error: basicError.message };
+    }
+
+    // If no data found, return not connected
+    if (!basicData) {
+      return { 
+        data: { 
+          connected: false,
+          autoSyncEnabled: false,
+          syncDirection: 'bidirectional' as const,
+          syncFrequency: 'realtime' as const,
+          defaultCalendarId: 'primary'
+        }, 
+        success: true 
+      };
+    }
+
+    // Try to get extended fields (may not exist in all schemas)
+    let syncDirection: 'to_google' | 'from_google' | 'bidirectional' = 'bidirectional';
+    let syncFrequency: 'realtime' | 'hourly' | 'daily' = 'realtime';
+
+    const { data: extendedData, error: extendedError } = await supabase
+      .from('trainer_google_credentials')
+      .select('sync_direction, sync_frequency')
+      .eq('trainer_id', trainerId)
+      .maybeSingle();
+
+    if (!extendedError && extendedData) {
+      syncDirection = (extendedData?.sync_direction as 'to_google' | 'from_google' | 'bidirectional') || 'bidirectional';
+      syncFrequency = (extendedData?.sync_frequency as 'realtime' | 'hourly' | 'daily') || 'realtime';
     }
 
     return { 
       data: { 
-        connected: !!data, 
-        autoSyncEnabled: data?.auto_sync_enabled ?? false,
-        syncDirection: (data?.sync_direction as 'to_google' | 'from_google' | 'bidirectional') || 'bidirectional',
-        syncFrequency: (data?.sync_frequency as 'realtime' | 'hourly' | 'daily') || 'realtime',
-        defaultCalendarId: data?.default_calendar_id || 'primary'
+        connected: true, 
+        autoSyncEnabled: basicData?.auto_sync_enabled ?? false,
+        syncDirection,
+        syncFrequency,
+        defaultCalendarId: basicData?.default_calendar_id || 'primary'
       }, 
       success: true 
     };
   } catch (err: any) {
+    logSupabaseError(err, 'getGoogleCalendarStatus', { table: 'trainer_google_credentials', trainerId });
     return { error: err.message || 'שגיאה בבדיקת סטטוס Google Calendar' };
   }
 }
