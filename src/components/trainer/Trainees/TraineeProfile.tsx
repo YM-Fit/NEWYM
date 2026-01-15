@@ -1,9 +1,8 @@
-import { ArrowRight, CreditCard as Edit, Calendar, Scale, BarChart3, User, Phone, Mail, Trash2, TrendingUp, ClipboardList, UtensilsCrossed, Key, Home, CheckCircle, Brain, BookOpen, Calculator, Sparkles, Users, Activity, History, Target, FileText, CalendarDays, Bell, TrendingDown } from 'lucide-react';
+import { ArrowRight, CreditCard as Edit, Calendar, Scale, BarChart3, User, Phone, Mail, Trash2, TrendingUp, ClipboardList, UtensilsCrossed, Key, Home, CheckCircle, Brain, BookOpen, Calculator, Sparkles, Users, Activity, History, FileText, CalendarDays, Bell, TrendingDown } from 'lucide-react';
 import { Trainee, BodyMeasurement, Workout } from '../../../types';
 import React, { useState } from 'react';
 import TDEECalculator from '../Tools/TDEECalculator';
 import TraineeTimeline from './TraineeTimeline';
-import TraineeGoals from './TraineeGoals';
 import TraineeNotes from './TraineeNotes';
 
 interface SelfWeight {
@@ -66,7 +65,6 @@ export default function TraineeProfile({
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [showTDEE, setShowTDEE] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
-  const [showGoals, setShowGoals] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
 
   const latestMeasurement = measurements[0];
@@ -500,16 +498,6 @@ export default function TraineeProfile({
               <History className="h-5 w-5" />
             </div>
             <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">ציר זמן</span>
-          </button>
-
-          <button
-            onClick={() => setShowGoals(true)}
-            className="action-btn group"
-          >
-            <div className="p-3 rounded-xl bg-yellow-500/15 text-yellow-400 mb-2 group-hover:bg-yellow-500/25 transition-all">
-              <Target className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">יעדים</span>
           </button>
 
           <button
@@ -973,16 +961,6 @@ export default function TraineeProfile({
               <p className="text-sm text-zinc-400">היסטוריית פעילות</p>
             </button>
             <button
-              onClick={() => setShowGoals(true)}
-              className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-yellow-500/50 transition-all text-right"
-            >
-              <div className="p-3 rounded-xl bg-yellow-500/15 text-yellow-400 mb-3 w-fit">
-                <Target className="h-5 w-5" />
-              </div>
-              <h4 className="font-semibold text-white mb-1">יעדים</h4>
-              <p className="text-sm text-zinc-400">ניהול יעדים</p>
-            </button>
-            <button
               onClick={() => setShowNotes(true)}
               className="p-5 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-orange-500/50 transition-all text-right"
             >
@@ -1011,14 +989,6 @@ export default function TraineeProfile({
           traineeId={trainee.id}
           traineeName={trainee.name}
           onClose={() => setShowTimeline(false)}
-        />
-      )}
-
-      {showGoals && (
-        <TraineeGoals
-          traineeId={trainee.id}
-          traineeName={trainee.name}
-          onClose={() => setShowGoals(false)}
         />
       )}
 
