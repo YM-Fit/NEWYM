@@ -10,8 +10,29 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
     "http://localhost:3000",
   ];
 
-  const allowedOrigin =
-    origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+  let allowedOrigin: string = "*";
+
+  if (origin) {
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      allowedOrigin = origin;
+    } 
+    // Allow StackBlitz/WebContainer origins
+    else if (origin.includes("webcontainer") || origin.includes("stackblitz")) {
+      allowedOrigin = origin;
+    }
+    // Allow localhost variations
+    else if (origin.includes("localhost") || origin.startsWith("http://127.0.0.1")) {
+      allowedOrigin = origin;
+    }
+  }
+
+  // Fallback to first allowed origin or use the request origin if it seems safe
+  if (allowedOrigin === "*" && allowedOrigins.length > 0) {
+    allowedOrigin = allowedOrigins[0];
+  } else if (allowedOrigin === "*" && origin) {
+    allowedOrigin = origin;
+  }
 
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
