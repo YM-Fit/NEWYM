@@ -100,13 +100,14 @@ Deno.serve(async (req: Request) => {
         `prompt=consent&` +
         `state=${state}`;
 
-      return new Response(
-        JSON.stringify({ authUrl }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      // Direct redirect to Google OAuth to avoid COEP issues with JSON response
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          "Location": authUrl,
+        },
+      });
     }
 
     // OAuth callback - Google redirects here with GET request

@@ -68,15 +68,10 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
         return;
       }
 
-      const result = await initiateGoogleOAuth(user.id, session.access_token);
-      
-      if (result.error || !result.data) {
-        toast.error(result.error || 'שגיאה בחיבור ל-Google Calendar');
-        return;
-      }
-
-      // Redirect to Google OAuth
-      window.location.href = result.data;
+      // Direct redirect to edge function which will redirect to Google OAuth
+      // This avoids COEP issues with JSON responses from fetch
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://vqvczpxmvrwfkecpwovc.supabase.co';
+      window.location.href = `${supabaseUrl}/functions/v1/google-oauth?trainer_id=${user.id}`;
     } catch (error) {
       logger.error('Error initiating Google OAuth', error, 'GoogleCalendarSettings');
       toast.error('שגיאה בחיבור ל-Google Calendar');
