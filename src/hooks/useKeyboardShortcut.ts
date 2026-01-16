@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface KeyboardShortcutOptions {
   ctrlKey?: boolean;
@@ -7,12 +7,9 @@ interface KeyboardShortcutOptions {
   preventDefault?: boolean;
 }
 
-import { useEffect, useCallback, useRef } from 'react';
-
 export function useKeyboardShortcut(
   key: string,
   callback: (e?: KeyboardEvent) => void,
-  deps: React.DependencyList = [],
   options: KeyboardShortcutOptions = {}
 ) {
   const callbackRef = useRef(callback);
@@ -20,7 +17,7 @@ export function useKeyboardShortcut(
   // Update callback ref when it changes
   useEffect(() => {
     callbackRef.current = callback;
-  }, [callback, ...deps]);
+  }, [callback]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -49,5 +46,5 @@ export function useKeyboardShortcut(
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [key, ...deps]);
+  }, [key, options.ctrlKey, options.shiftKey, options.altKey, options.preventDefault]);
 }

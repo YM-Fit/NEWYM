@@ -10,6 +10,18 @@ import * as googleCalendarApi from '../api/googleCalendarApi';
 // Mock dependencies
 vi.mock('../api/crmClientsApi');
 vi.mock('../api/googleCalendarApi');
+vi.mock('../lib/supabase', () => ({
+  supabase: {
+    from: vi.fn(),
+  },
+  logSupabaseError: vi.fn(),
+}));
+vi.mock('../api/config', () => ({
+  API_CONFIG: {
+    SUPABASE_URL: 'https://test.supabase.co',
+    SUPABASE_ANON_KEY: 'test-anon-key',
+  },
+}));
 
 describe('CrmService', () => {
   beforeEach(() => {
@@ -163,10 +175,15 @@ describe('CrmService', () => {
   });
 
   describe('cache management', () => {
-    it('should clear cache', () => {
+    it('should clear cache', async () => {
       CrmService.clearCache();
-      // Cache should be empty
-      expect(CrmService.getClients('trainer-1', true)).resolves.toBeDefined();
+      // Cache should be empty - set up mock for the call
+      (crmClientsApi.getClientsFromCalendar as any).mockResolvedValue({
+        success: true,
+        data: [],
+      });
+      const result = await CrmService.getClients('trainer-1', true);
+      expect(result).toBeDefined();
     });
 
     it('should invalidate cache by pattern', async () => {

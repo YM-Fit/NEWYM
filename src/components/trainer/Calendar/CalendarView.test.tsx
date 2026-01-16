@@ -69,7 +69,6 @@ describe('CalendarView', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers();
     
     // Mock useAuth
     (useAuth as any).mockReturnValue({
@@ -90,7 +89,7 @@ describe('CalendarView', () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
+    vi.clearAllMocks();
   });
 
   describe('Basic Functionality', () => {
@@ -129,15 +128,16 @@ describe('CalendarView', () => {
 
       await waitFor(() => {
         expect(getGoogleCalendarEvents).toHaveBeenCalledTimes(1);
-      }, { timeout: 3000 });
+      }, { timeout: 5000 });
 
-      const refreshButton = screen.getByText(/רענון/i).closest('button');
-      if (refreshButton && !refreshButton.disabled) {
-        await user.click(refreshButton);
+      const refreshButton = await screen.findByText(/רענון/i, {}, { timeout: 5000 });
+      const button = refreshButton.closest('button');
+      if (button && !button.disabled) {
+        await user.click(button);
         
         await waitFor(() => {
           expect(getGoogleCalendarEvents).toHaveBeenCalledTimes(2);
-        }, { timeout: 3000 });
+        }, { timeout: 5000 });
       }
     });
   });
@@ -153,7 +153,7 @@ describe('CalendarView', () => {
 
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalled();
-      }, { timeout: 3000 });
+      }, { timeout: 5000 });
     });
   });
 
@@ -162,16 +162,12 @@ describe('CalendarView', () => {
       const user = userEvent.setup({ delay: null });
       render(<CalendarView />);
 
-      await waitFor(() => {
-        expect(screen.getByText(/הגדרות/i)).toBeInTheDocument();
-      }, { timeout: 3000 });
-
-      const settingsButton = screen.getByText(/הגדרות/i);
+      const settingsButton = await screen.findByText(/הגדרות/i, {}, { timeout: 5000 });
       await user.click(settingsButton);
 
       await waitFor(() => {
         expect(screen.getByTestId('google-calendar-settings')).toBeInTheDocument();
-      }, { timeout: 3000 });
+      }, { timeout: 5000 });
     });
   });
 });

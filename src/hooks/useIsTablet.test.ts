@@ -96,7 +96,7 @@ describe('useIsTablet', () => {
     expect(result.current).toBe(false);
   });
 
-  it('should toggle tablet class on body', () => {
+  it('should toggle tablet class on body', async () => {
     const mediaQuery = {
       matches: true,
       addEventListener: vi.fn(),
@@ -109,9 +109,9 @@ describe('useIsTablet', () => {
     // The hook calls handleChange immediately in useEffect which calls toggle
     // handleChange is called synchronously on mount, so toggle should be called
     // We need to wait a bit for useEffect to run
-    setTimeout(() => {
-      expect(toggleSpy).toHaveBeenCalled();
-    }, 0);
+    await new Promise(resolve => setTimeout(resolve, 10));
+    
+    expect(toggleSpy).toHaveBeenCalled();
   });
 
   it('should use addListener fallback for Safari < 14', () => {

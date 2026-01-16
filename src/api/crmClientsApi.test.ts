@@ -14,6 +14,7 @@ vi.mock('../lib/supabase', () => ({
   supabase: {
     from: vi.fn(),
   },
+  logSupabaseError: vi.fn(),
 }));
 
 describe('crmClientsApi', () => {
@@ -71,6 +72,7 @@ describe('crmClientsApi', () => {
 
       expect(result.error).toBe('Database error');
       expect(result.success).toBeUndefined();
+      expect(result.data).toBeUndefined();
     });
 
     it('should validate trainerId', async () => {

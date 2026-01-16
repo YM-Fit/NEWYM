@@ -412,6 +412,352 @@ export type Database = {
           created_at?: string;
         };
       };
+      // CRM Tables
+      pipeline_movements: {
+        Row: {
+          id: string;
+          trainee_id: string;
+          trainer_id: string;
+          from_status: string | null;
+          to_status: string;
+          reason: string | null;
+          moved_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          trainee_id: string;
+          trainer_id: string;
+          from_status?: string | null;
+          to_status: string;
+          reason?: string | null;
+          moved_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          trainee_id?: string;
+          trainer_id?: string;
+          from_status?: string | null;
+          to_status?: string;
+          reason?: string | null;
+          moved_at?: string;
+          created_at?: string;
+        };
+      };
+      crm_automation_rules: {
+        Row: {
+          id: string;
+          trainer_id: string;
+          rule_type: 'reminder' | 'alert' | 'workflow' | 'notification';
+          name: string;
+          description: string | null;
+          enabled: boolean;
+          conditions: any;
+          actions: any;
+          schedule: any | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trainer_id: string;
+          rule_type: 'reminder' | 'alert' | 'workflow' | 'notification';
+          name: string;
+          description?: string | null;
+          enabled?: boolean;
+          conditions?: any;
+          actions?: any;
+          schedule?: any | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trainer_id?: string;
+          rule_type?: 'reminder' | 'alert' | 'workflow' | 'notification';
+          name?: string;
+          description?: string | null;
+          enabled?: boolean;
+          conditions?: any;
+          actions?: any;
+          schedule?: any | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      crm_automation_tasks: {
+        Row: {
+          id: string;
+          rule_id: string | null;
+          trainee_id: string;
+          trainer_id: string;
+          task_type: string;
+          due_date: string;
+          completed: boolean;
+          completed_at: string | null;
+          metadata: any;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          rule_id?: string | null;
+          trainee_id: string;
+          trainer_id: string;
+          task_type: string;
+          due_date: string;
+          completed?: boolean;
+          completed_at?: string | null;
+          metadata?: any;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          rule_id?: string | null;
+          trainee_id?: string;
+          trainer_id?: string;
+          task_type?: string;
+          due_date?: string;
+          completed?: boolean;
+          completed_at?: string | null;
+          metadata?: any;
+          created_at?: string;
+        };
+      };
+      crm_communication_templates: {
+        Row: {
+          id: string;
+          trainer_id: string;
+          template_type: 'email' | 'sms' | 'whatsapp';
+          name: string;
+          subject: string | null;
+          body: string;
+          variables: string[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trainer_id: string;
+          template_type: 'email' | 'sms' | 'whatsapp';
+          name: string;
+          subject?: string | null;
+          body: string;
+          variables?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trainer_id?: string;
+          template_type?: 'email' | 'sms' | 'whatsapp';
+          name?: string;
+          subject?: string | null;
+          body?: string;
+          variables?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      crm_communication_messages: {
+        Row: {
+          id: string;
+          trainee_id: string;
+          trainer_id: string;
+          message_type: 'email' | 'sms' | 'whatsapp' | 'in_app';
+          subject: string | null;
+          body: string;
+          sent_at: string;
+          status: 'sent' | 'failed' | 'pending';
+          error_message: string | null;
+          template_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          trainee_id: string;
+          trainer_id: string;
+          message_type: 'email' | 'sms' | 'whatsapp' | 'in_app';
+          subject?: string | null;
+          body: string;
+          sent_at?: string;
+          status?: 'sent' | 'failed' | 'pending';
+          error_message?: string | null;
+          template_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          trainee_id?: string;
+          trainer_id?: string;
+          message_type?: 'email' | 'sms' | 'whatsapp' | 'in_app';
+          subject?: string | null;
+          body?: string;
+          sent_at?: string;
+          status?: 'sent' | 'failed' | 'pending';
+          error_message?: string | null;
+          template_id?: string | null;
+          created_at?: string;
+        };
+      };
+      crm_contracts: {
+        Row: {
+          id: string;
+          trainee_id: string;
+          trainer_id: string;
+          contract_type: 'monthly' | 'package' | 'session' | 'trial';
+          start_date: string;
+          end_date: string | null;
+          value: number;
+          terms: string | null;
+          status: 'active' | 'expired' | 'cancelled';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trainee_id: string;
+          trainer_id: string;
+          contract_type: 'monthly' | 'package' | 'session' | 'trial';
+          start_date: string;
+          end_date?: string | null;
+          value: number;
+          terms?: string | null;
+          status?: 'active' | 'expired' | 'cancelled';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trainee_id?: string;
+          trainer_id?: string;
+          contract_type?: 'monthly' | 'package' | 'session' | 'trial';
+          start_date?: string;
+          end_date?: string | null;
+          value?: number;
+          terms?: string | null;
+          status?: 'active' | 'expired' | 'cancelled';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      crm_payments: {
+        Row: {
+          id: string;
+          contract_id: string | null;
+          trainee_id: string;
+          trainer_id: string;
+          amount: number;
+          due_date: string;
+          paid_date: string | null;
+          payment_method: 'cash' | 'credit_card' | 'bank_transfer' | 'other' | null;
+          status: 'pending' | 'paid' | 'overdue' | 'cancelled';
+          notes: string | null;
+          invoice_number: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          contract_id?: string | null;
+          trainee_id: string;
+          trainer_id: string;
+          amount: number;
+          due_date: string;
+          paid_date?: string | null;
+          payment_method?: 'cash' | 'credit_card' | 'bank_transfer' | 'other' | null;
+          status?: 'pending' | 'paid' | 'overdue' | 'cancelled';
+          notes?: string | null;
+          invoice_number?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          contract_id?: string | null;
+          trainee_id?: string;
+          trainer_id?: string;
+          amount?: number;
+          due_date?: string;
+          paid_date?: string | null;
+          payment_method?: 'cash' | 'credit_card' | 'bank_transfer' | 'other' | null;
+          status?: 'pending' | 'paid' | 'overdue' | 'cancelled';
+          notes?: string | null;
+          invoice_number?: string | null;
+          created_at?: string;
+        };
+      };
+      crm_segments: {
+        Row: {
+          id: string;
+          trainer_id: string;
+          name: string;
+          description: string | null;
+          filter_criteria: any;
+          auto_update: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trainer_id: string;
+          name: string;
+          description?: string | null;
+          filter_criteria?: any;
+          auto_update?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trainer_id?: string;
+          name?: string;
+          description?: string | null;
+          filter_criteria?: any;
+          auto_update?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      crm_documents: {
+        Row: {
+          id: string;
+          trainee_id: string;
+          trainer_id: string;
+          file_name: string;
+          file_path: string;
+          file_size: number;
+          file_type: string;
+          category: 'contract' | 'photo' | 'before_after' | 'other';
+          description: string | null;
+          metadata: any;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          trainee_id: string;
+          trainer_id: string;
+          file_name: string;
+          file_path: string;
+          file_size: number;
+          file_type: string;
+          category?: 'contract' | 'photo' | 'before_after' | 'other';
+          description?: string | null;
+          metadata?: any;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          trainee_id?: string;
+          trainer_id?: string;
+          file_name?: string;
+          file_path?: string;
+          file_size?: number;
+          file_type?: string;
+          category?: 'contract' | 'photo' | 'before_after' | 'other';
+          description?: string | null;
+          metadata?: any;
+          created_at?: string;
+        };
+      };
     };
   };
 };

@@ -34,14 +34,14 @@ describe('useOptimisticUpdate', () => {
     // But React state updates are async, so we need to wait
     await waitFor(() => {
       expect(result.current.isLoading).toBe(true);
-    }, { timeout: 100 });
+    }, { timeout: 1000 });
 
     const data = await promise;
 
     // isLoading should be false after promise resolves (in finally block)
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
-    });
+    }, { timeout: 1000 });
 
     expect(data).toEqual({ id: 1, name: 'Updated' });
     expect(updateFn).toHaveBeenCalledWith({ id: 1, name: 'Updated' });

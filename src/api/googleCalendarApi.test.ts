@@ -506,15 +506,25 @@ describe('googleCalendarApi', () => {
 
   describe('updateGoogleCalendarSyncSettings', () => {
     it('should update sync settings', async () => {
-      const mockUpdate = vi.fn().mockReturnValue({
+      const mockBasicUpdate = vi.fn().mockReturnValue({
         eq: vi.fn().mockResolvedValue({
           error: null,
         }),
       });
 
-      (supabase.from as any).mockReturnValue({
-        update: mockUpdate,
+      const mockExtendedUpdate = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
+          error: null,
+        }),
       });
+
+      (supabase.from as any)
+        .mockReturnValueOnce({
+          update: mockBasicUpdate,
+        })
+        .mockReturnValueOnce({
+          update: mockExtendedUpdate,
+        });
 
       const result = await updateGoogleCalendarSyncSettings('trainer-123', {
         autoSyncEnabled: true,
@@ -523,8 +533,10 @@ describe('googleCalendarApi', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(mockUpdate).toHaveBeenCalledWith({
+      expect(mockBasicUpdate).toHaveBeenCalledWith({
         auto_sync_enabled: true,
+      });
+      expect(mockExtendedUpdate).toHaveBeenCalledWith({
         sync_direction: 'bidirectional',
         sync_frequency: 'hourly',
       });

@@ -707,146 +707,133 @@ function renderDayCard(
   };
 
   return (
-    <>
-              {/* Day Header */}
-              <div
-                className={`px-5 py-4 transition-all duration-300 ${
-                  !isSeen && isCompleted
-                    ? 'bg-gradient-to-br from-red-50 to-rose-100'
+    <div>
+      {/* Day Header */}
+      <div
+        className={`px-5 py-4 transition-all duration-300 ${
+          !isSeen && isCompleted
+            ? 'bg-gradient-to-br from-red-50 to-rose-100'
+            : isToday(date)
+            ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white'
+            : isCompleted
+            ? 'bg-gradient-to-br from-emerald-50 to-teal-50'
+            : 'bg-gradient-to-br from-gray-50 to-gray-100'
+        }`}
+      >
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            {isCompleted && (
+              <div className={`rounded-full p-1.5 shadow-md transition-all duration-300 ${
+                isToday(date) ? 'bg-white/20' : 'bg-gradient-to-br from-emerald-500 to-teal-600'
+              }`}>
+                <Check className={`w-4 h-4 ${isToday(date) ? 'text-white' : 'text-white'}`} />
+              </div>
+            )}
+            <div>
+              <span className={`font-bold text-lg ${!isSeen && isCompleted && !isToday(date) ? 'text-gray-900' : ''}`}>
+                יום {getHebrewDayName(date)}
+              </span>
+              <span className={`text-sm mr-2 opacity-80 ${!isSeen && isCompleted && !isToday(date) ? 'text-gray-700' : ''}`}>
+                {formatDate(date)}
+              </span>
+              {isToday(date) && (
+                <span className="text-xs bg-white/20 px-3 py-1 rounded-full mr-2 font-semibold">
+                  היום
+                </span>
+              )}
+              {isCompleted && (
+                <span className={`text-xs px-3 py-1 rounded-full mr-2 font-semibold transition-all duration-300 ${
+                  !isSeen
+                    ? 'bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-md'
                     : isToday(date)
-                    ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white'
-                    : isCompleted
-                    ? 'bg-gradient-to-br from-emerald-50 to-teal-50'
-                    : 'bg-gradient-to-br from-gray-50 to-gray-100'
-                }`}
-              >
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    {isCompleted && (
-                      <div className={`rounded-full p-1.5 shadow-md transition-all duration-300 ${
-                        isToday(date) ? 'bg-white/20' : 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                      }`}>
-                        <Check className={`w-4 h-4 ${isToday(date) ? 'text-white' : 'text-white'}`} />
-                      </div>
-                    )}
-                    <div>
-                      <span className={`font-bold text-lg ${!isSeen && isCompleted && !isToday(date) ? 'text-gray-900' : ''}`}>
-                        יום {getHebrewDayName(date)}
-                      </span>
-                      <span className={`text-sm mr-2 opacity-80 ${!isSeen && isCompleted && !isToday(date) ? 'text-gray-700' : ''}`}>
-                        {formatDate(date)}
-                      </span>
-                      {isToday(date) && (
-                        <span className="text-xs bg-white/20 px-3 py-1 rounded-full mr-2 font-semibold">
-                          היום
-                        </span>
-                      )}
-                      {isCompleted && (
-                        <span className={`text-xs px-3 py-1 rounded-full mr-2 font-semibold transition-all duration-300 ${
-                          !isSeen
-                            ? 'bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-md'
-                            : isToday(date)
-                            ? 'bg-white/20'
-                            : 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md'
-                        }`}>
-                          {isSeen ? 'נצפה' : 'חדש'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  {isCompleted && !isSeen && (
-                    <button
-                      onClick={() => markAsSeen(dateStr)}
-                      className={`px-4 py-2 rounded-xl transition-all duration-300 text-sm font-semibold flex items-center gap-2 shadow-md hover:shadow-lg hover:scale-105 ${
-                        isToday(date)
-                          ? 'bg-white/20 hover:bg-white/30 text-white'
-                          : 'bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white'
-                      }`}
-                    >
-                      <Eye className="w-4 h-4" />
-                      סמן כנצפה
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Water Tracking */}
-              <div className="p-4 border-b bg-gradient-to-br from-blue-50/50 to-sky-50/50 transition-all duration-300">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-sky-500 rounded-xl flex items-center justify-center shadow-md">
-                    <Droplets className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-sm font-semibold text-gray-700">מעקב מים</span>
-                  <span className="text-sm text-gray-500 font-medium">
-                    {waterAmount} / {WATER_GOAL} מ"ל
-                  </span>
-                </div>
-                <div className="h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-400 to-sky-500 transition-all duration-500 rounded-full"
-                    style={{ width: `${waterProgress}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Meals */}
-              <div className="p-4">
-                {dayMeals.length === 0 ? (
-                  <p className="text-center text-gray-400 text-sm py-6">
-                    לא נרשמו ארוחות
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {dayMeals.map((meal) => {
-                      const typeInfo = getMealTypeInfo(meal.meal_type);
-                      const Icon = typeInfo.icon;
-                      const description = meal.description || '';
-
-                      return (
-                        <div
-                          key={meal.id}
-                          className={`${typeInfo.color} rounded-2xl p-4 transition-all duration-300 hover:shadow-lg hover:scale-[1.01]`}
-                        >
-                          <div className="flex items-start gap-4">
-                            <div className={`${typeInfo.iconBg} p-3 rounded-xl shadow-md`}>
-                              <Icon className="w-5 h-5 text-white" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="font-bold text-base">
-                                  {typeInfo.label}
-                                </span>
-                                {meal.meal_time && (
-                                  <span className="text-xs text-gray-500 flex items-center gap-1 bg-white/50 px-2 py-1 rounded-lg">
-                                    <Clock className="w-3 h-3" />
-                                    {meal.meal_time.slice(0, 5)}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                                {description}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                    ? 'bg-white/20'
+                    : 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md'
+                }`}>
+                  {isSeen ? 'נצפה' : 'חדש'}
+                </span>
+              )}
             </div>
-          );
-        })}
+          </div>
+          {isCompleted && !isSeen && (
+            <button
+              onClick={() => markAsSeen(dateStr)}
+              className={`px-4 py-2 rounded-xl transition-all duration-300 text-sm font-semibold flex items-center gap-2 shadow-md hover:shadow-lg hover:scale-105 ${
+                isToday(date)
+                  ? 'bg-white/20 hover:bg-white/30 text-white'
+                  : 'bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white'
+              }`}
+            >
+              <Eye className="w-4 h-4" />
+              סמן כנצפה
+            </button>
+          )}
+        </div>
       </div>
 
-      {weekDates.filter((date) => shouldShowDay(date.toISOString().split('T')[0])).length === 0 && (
-        <div className="bg-white rounded-2xl shadow-xl p-10 text-center transition-all duration-300">
-          <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <BookOpen className="w-10 h-10 text-gray-400" />
+      {/* Water Tracking */}
+      <div className="p-4 border-b bg-gradient-to-br from-blue-50/50 to-sky-50/50 transition-all duration-300">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-sky-500 rounded-xl flex items-center justify-center shadow-md">
+            <Droplets className="w-5 h-5 text-white" />
           </div>
-          <p className="text-gray-500 text-lg font-medium">אין ימים להצגה בפילטר הנוכחי</p>
+          <span className="text-sm font-semibold text-gray-700">מעקב מים</span>
+          <span className="text-sm text-gray-500 font-medium">
+            {waterAmount} / {WATER_GOAL} מ"ל
+          </span>
         </div>
-      )}
+        <div className="h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+          <div
+            className="h-full bg-gradient-to-r from-blue-400 to-sky-500 transition-all duration-500 rounded-full"
+            style={{ width: `${waterProgress}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Meals */}
+      <div className="p-4">
+        {dayMeals.length === 0 ? (
+          <p className="text-center text-gray-400 text-sm py-6">
+            לא נרשמו ארוחות
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {dayMeals.map((meal) => {
+              const typeInfo = getMealTypeInfo(meal.meal_type);
+              const Icon = typeInfo.icon;
+              const description = meal.description || '';
+
+              return (
+                <div
+                  key={meal.id}
+                  className={`${typeInfo.color} rounded-2xl p-4 transition-all duration-300 hover:shadow-lg hover:scale-[1.01]`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={`${typeInfo.iconBg} p-3 rounded-xl shadow-md`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-bold text-base">
+                          {typeInfo.label}
+                        </span>
+                        {meal.meal_time && (
+                          <span className="text-xs text-gray-500 flex items-center gap-1 bg-white/50 px-2 py-1 rounded-lg">
+                            <Clock className="w-3 h-3" />
+                            {meal.meal_time.slice(0, 5)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                        {description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
