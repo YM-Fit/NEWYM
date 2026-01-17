@@ -9,21 +9,29 @@ import * as Sentry from '@sentry/react';
  * Initialize Sentry error tracking
  * Should be called once at application startup
  */
+// Track if Sentry is initialized
+let isSentryInitialized = false;
+
 export function initSentry(): void {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   const environment = import.meta.env.MODE || 'development';
   const release = import.meta.env.VITE_APP_VERSION || 'unknown';
 
-  // Only initialize Sentry in production or if DSN is provided
-  if (!dsn && import.meta.env.PROD) {
-    console.warn('[Sentry] DSN not provided, error tracking disabled');
+  // Don't initialize Sentry if DSN is not provided
+  if (!dsn) {
+    if (import.meta.env.DEV) {
+      console.log('[Sentry] DSN not provided, error tracking disabled');
+    } else {
+      console.warn('[Sentry] DSN not provided, error tracking disabled');
+    }
     return;
   }
 
-  Sentry.init({
-    dsn,
-    environment,
-    release,
+  try {
+    Sentry.init({
+      dsn,
+      environment,
+      release,
 
     // Performance monitoring
     integrations: [
@@ -99,68 +107,129 @@ export function initSentry(): void {
       }
       return breadcrumb;
     },
-  });
+    });
+    isSentryInitialized = true;
+  } catch (error) {
+    console.error('[Sentry] Failed to initialize:', error);
+    isSentryInitialized = false;
+  }
 }
 
 /**
  * Capture exception manually
  */
 export function captureException(error: Error, context?: Record<string, any>): void {
-  Sentry.captureException(error, {
-    tags: context,
-    level: 'error',
-  });
+  if (!isSentryInitialized) return;
+  try {
+    Sentry.captureException(error, {
+      tags: context,
+      level: 'error',
+    });
+  } catch (e) {
+    // Silently fail if Sentry is not available
+    if (import.meta.env.DEV) {
+      console.warn('[Sentry] Failed to capture exception:', e);
+    }
+  }
 }
 
 /**
  * Capture message manually
  */
 export function captureMessage(message: string, level: Sentry.SeverityLevel = 'info'): void {
-  Sentry.captureMessage(message, level);
+  if (!isSentryInitialized) return;
+  try {
+    Sentry.captureMessage(message, level);
+  } catch (e) {
+    // Silently fail if Sentry is not available
+    if (import.meta.env.DEV) {
+      console.warn('[Sentry] Failed to capture message:', e);
+    }
+  }
 }
 
 /**
  * Set user context for error tracking
  */
 export function setUserContext(userId: string, email?: string, metadata?: Record<string, any>): void {
-  Sentry.setUser({
-    id: userId,
-    email,
-    ...metadata,
-  });
+  if (!isSentryInitialized) return;
+  try {
+    Sentry.setUser({
+      id: userId,
+      email,
+      ...metadata,
+    });
+  } catch (e) {
+    // Silently fail if Sentry is not available
+    if (import.meta.env.DEV) {
+      console.warn('[Sentry] Failed to set user context:', e);
+    }
+  }
 }
 
 /**
  * Clear user context (e.g., on logout)
  */
 export function clearUserContext(): void {
-  Sentry.setUser(null);
+  if (!isSentryInitialized) return;
+  try {
+    Sentry.setUser(null);
+  } catch (e) {
+    // Silently fail if Sentry is not available
+    if (import.meta.env.DEV) {
+      console.warn('[Sentry] Failed to clear user context:', e);
+    }
+  }
 }
 
 /**
  * Add breadcrumb for debugging
  */
 export function addBreadcrumb(message: string, category?: string, data?: Record<string, any>): void {
-  Sentry.addBreadcrumb({
-    message,
-    category: category || 'custom',
-    data,
-    level: 'info',
-  });
+  if (!isSentryInitialized) return;
+  try {
+    Sentry.addBreadcrumb({
+      message,
+      category: category || 'custom',
+      data,
+      level: 'info',
+    });
+  } catch (e) {
+    // Silently fail if Sentry is not available
+    if (import.meta.env.DEV) {
+      console.warn('[Sentry] Failed to add breadcrumb:', e);
+    }
+  }
 }
 
 /**
  * Set additional context (tags, extra data)
  */
 export function setContext(key: string, context: Record<string, any>): void {
-  Sentry.setContext(key, context);
+  if (!isSentryInitialized) return;
+  try {
+    Sentry.setContext(key, context);
+  } catch (e) {
+    // Silently fail if Sentry is not available
+    if (import.meta.env.DEV) {
+      console.warn('[Sentry] Failed to set context:', e);
+    }
+  }
 }
 
 /**
  * Set tag for filtering errors
  */
 export function setTag(key: string, value: string): void {
-  Sentry.setTag(key, value);
+  if (!isSentryInitialized) return;
+  try {
+    Sentry.setTag(key, value);
+  } catch (e) {
+    // Silently fail if Sentry is not available
+    if (import.meta.env.DEV) {
+      console.warn('[Sentry] Failed to set tag:', e);
+    }
+  }
 }
 
 /**
@@ -168,17 +237,33 @@ export function setTag(key: string, value: string): void {
  * Note: configureScope is deprecated in newer Sentry versions, using withScope instead
  */
 export function configureScope(callback: (scope: Sentry.Scope) => void): void {
-  Sentry.withScope(callback);
+  if (!isSentryInitialized) return;
+  try {
+    Sentry.withScope(callback);
+  } catch (e) {
+    // Silently fail if Sentry is not available
+    if (import.meta.env.DEV) {
+      console.warn('[Sentry] Failed to configure scope:', e);
+    }
+  }
 }
 
 /**
  * Capture unhandled promise rejection
  */
 export function captureUnhandledRejection(reason: any): void {
-  Sentry.captureException(reason instanceof Error ? reason : new Error(String(reason)), {
-    level: 'error',
-    tags: {
-      type: 'unhandledRejection',
-    },
-  });
+  if (!isSentryInitialized) return;
+  try {
+    Sentry.captureException(reason instanceof Error ? reason : new Error(String(reason)), {
+      level: 'error',
+      tags: {
+        type: 'unhandledRejection',
+      },
+    });
+  } catch (e) {
+    // Silently fail if Sentry is not available
+    if (import.meta.env.DEV) {
+      console.warn('[Sentry] Failed to capture unhandled rejection:', e);
+    }
+  }
 }
