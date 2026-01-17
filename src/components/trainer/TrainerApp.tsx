@@ -33,6 +33,17 @@ const TraineeAccessManager = lazy(() => import('./Trainees/TraineeAccessManager'
 const MentalToolsEditor = lazy(() => import('./MentalTools/MentalToolsEditor'));
 const CalendarView = lazy(() => import('./Calendar/CalendarView'));
 const ClientsListView = lazy(() => import('./Clients/ClientsListView'));
+const ClientsListViewEnhanced = lazy(() => import('./Clients/ClientsListViewEnhanced'));
+const PipelineView = lazy(() => import('./Clients/PipelineView'));
+const CrmDashboard = lazy(() => import('./Dashboard/CrmDashboard'));
+const AdvancedAnalytics = lazy(() => import('./Analytics/AdvancedAnalytics'));
+const CrmReportsView = lazy(() => import('./Clients/CrmReportsView'));
+const ClientDetailView = lazy(() => import('./Clients/ClientDetailView'));
+const ContractManager = lazy(() => import('./Clients/ContractManager'));
+const PaymentTracker = lazy(() => import('./Clients/PaymentTracker'));
+const CommunicationCenter = lazy(() => import('./Clients/CommunicationCenter'));
+const AdvancedFilters = lazy(() => import('./Clients/AdvancedFilters'));
+const DocumentManager = lazy(() => import('./Clients/DocumentManager'));
 const ToolsView = lazy(() => import('./Tools/ToolsView'));
 const TraineeFoodDiaryView = lazy(() => import('./Trainees/TraineeFoodDiaryView'));
 const CardioManager = lazy(() => import('./Cardio/CardioManager'));
@@ -86,6 +97,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [selfWeights, setSelfWeights] = useState<any[]>([]);
   const [unseenWeightsCounts, setUnseenWeightsCounts] = useState<Map<string, number>>(new Map());
+  const [selectedClient, setSelectedClient] = useState<any | null>(null);
 
   const handleScaleReading = useCallback((reading: IdentifiedReading) => {
     const weight = reading.reading.weight_kg?.toFixed(1);
@@ -1136,6 +1148,125 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             <ReportsView />
           </Suspense>
         );
+
+      case 'clients':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <ClientsListViewEnhanced
+              onClientClick={(client) => {
+                if (client.trainee_id) {
+                  const trainee = trainees.find(t => t.id === client.trainee_id);
+                  if (trainee) {
+                    setSelectedClient(trainee);
+                    setActiveView('client-detail');
+                  }
+                }
+              }}
+              onViewChange={handleViewChange}
+            />
+          </Suspense>
+        );
+
+      case 'crm-dashboard':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <CrmDashboard onViewChange={handleViewChange} />
+          </Suspense>
+        );
+
+      case 'crm-pipeline':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <PipelineView
+              onClientClick={(trainee) => {
+                setSelectedClient(trainee);
+                setActiveView('client-detail');
+              }}
+            />
+          </Suspense>
+        );
+
+      case 'crm-analytics':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <AdvancedAnalytics />
+          </Suspense>
+        );
+
+      case 'crm-reports':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <CrmReportsView />
+          </Suspense>
+        );
+
+      case 'client-detail':
+        return selectedClient ? (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <ClientDetailView
+              trainee={selectedClient}
+              onClose={() => {
+                setSelectedClient(null);
+                setActiveView('clients');
+              }}
+              onEdit={(trainee) => {
+                setSelectedTrainee(trainee);
+                setActiveView('edit-trainee');
+              }}
+            />
+          </Suspense>
+        ) : null;
+
+      case 'contracts':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <ContractManager
+              traineeId={selectedClient?.id}
+              onClose={() => setActiveView(selectedClient ? 'client-detail' : 'clients')}
+            />
+          </Suspense>
+        );
+
+      case 'payments':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <PaymentTracker
+              traineeId={selectedClient?.id}
+              onClose={() => setActiveView(selectedClient ? 'client-detail' : 'clients')}
+            />
+          </Suspense>
+        );
+
+      case 'communication':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <CommunicationCenter
+              traineeId={selectedClient?.id}
+              onClose={() => setActiveView(selectedClient ? 'client-detail' : 'clients')}
+            />
+          </Suspense>
+        );
+
+      case 'filters':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <AdvancedFilters
+              onFilteredClients={(clients) => {
+                // Handle filtered clients
+              }}
+            />
+          </Suspense>
+        );
+
+      case 'documents':
+        return selectedClient ? (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <DocumentManager
+              traineeId={selectedClient.id}
+              onClose={() => setActiveView('client-detail')}
+            />
+          </Suspense>
+        ) : null;
 
       default:
         return (

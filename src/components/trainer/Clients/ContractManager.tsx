@@ -10,7 +10,7 @@ import { PaymentService, type Contract } from '../../../services/paymentService'
 import { getTrainees } from '../../../api/traineeApi';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
-import Modal from '../../ui/Modal';
+import { Modal } from '../../ui/Modal';
 import { CONTRACT_TYPE, CONTRACT_TYPE_LABELS } from '../../../constants/crmConstants';
 
 interface ContractManagerProps {

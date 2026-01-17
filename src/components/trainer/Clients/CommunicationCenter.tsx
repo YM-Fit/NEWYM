@@ -10,7 +10,7 @@ import { CommunicationService, type CommunicationTemplate, type CommunicationMes
 import { getTrainees } from '../../../api/traineeApi';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
-import Modal from '../../ui/Modal';
+import { Modal } from '../../ui/Modal';
 
 interface CommunicationCenterProps {
   traineeId?: string;

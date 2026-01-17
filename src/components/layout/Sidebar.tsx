@@ -1,4 +1,4 @@
-import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3, Search, LucideIcon, Calendar, Briefcase } from 'lucide-react';
+import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3, Search, LucideIcon, Calendar, Briefcase, TrendingUp, MessageSquare, FileText, DollarSign, Filter, FolderOpen } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { getFromStorage, setToStorage, STORAGE_KEYS } from '../../utils/storage';
 
@@ -35,6 +35,12 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
     { id: 'clients', label: 'כרטיסיות לקוחות', icon: Briefcase, description: 'ניהול לקוחות CRM', category: 'main' },
     { id: 'calendar', label: 'יומן', icon: Calendar, description: 'Google Calendar', category: 'main' },
     
+    // CRM Navigation
+    { id: 'crm-dashboard', label: 'CRM Dashboard', icon: BarChart3, description: 'סקירה כללית CRM', category: 'crm' },
+    { id: 'crm-pipeline', label: 'Pipeline', icon: TrendingUp, description: 'ניהול Pipeline', category: 'crm' },
+    { id: 'crm-analytics', label: 'אנליטיקה', icon: BarChart3, description: 'אנליטיקה מתקדמת', category: 'crm' },
+    { id: 'crm-reports', label: 'דוחות CRM', icon: FileText, description: 'דוחות ואנליטיקה', category: 'crm' },
+    
     // Tools & Analytics
     { id: 'tools', label: 'כלים', icon: Calculator, description: 'מחשבונים וכלים', category: 'tools' },
     { id: 'reports', label: 'דוחות', icon: BarChart3, description: 'סטטיסטיקות ונתונים', category: 'tools' },
@@ -42,6 +48,7 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
 
   const categories = useMemo(() => [
     { id: 'main', label: 'ניווט ראשי', icon: Home },
+    { id: 'crm', label: 'CRM', icon: Briefcase },
     { id: 'tools', label: 'כלים וניתוח', icon: Calculator },
   ], []);
 

@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
-import { Users, RefreshCw, Search, Keyboard, Download, FileText, Wifi, WifiOff } from 'lucide-react';
+import { Users, RefreshCw, Search, Keyboard, Download, FileText, Wifi, WifiOff, TrendingUp, BarChart3 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { CrmService } from '../../../services/crmService';
 import { linkTraineeToCalendarClient, type CalendarClient } from '../../../api/crmClientsApi';
@@ -20,9 +20,10 @@ const ClientCard = lazy(() => import('./ClientCard'));
 
 interface ClientsListViewEnhancedProps {
   onClientClick?: (client: CalendarClient) => void;
+  onViewChange?: (view: string) => void;
 }
 
-export default function ClientsListViewEnhanced({ onClientClick }: ClientsListViewEnhancedProps) {
+export default function ClientsListViewEnhanced({ onClientClick, onViewChange }: ClientsListViewEnhancedProps) {
   const { user } = useAuth();
   const [clients, setClients] = useState<CalendarClient[]>([]);
   const [trainees, setTrainees] = useState<any[]>([]);
@@ -256,6 +257,39 @@ export default function ClientsListViewEnhanced({ onClientClick }: ClientsListVi
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Navigation buttons */}
+            {onViewChange && (
+              <>
+                <button
+                  onClick={() => onViewChange('crm-pipeline')}
+                  className="px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-all text-sm flex items-center gap-2"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  Pipeline
+                </button>
+                <button
+                  onClick={() => onViewChange('crm-dashboard')}
+                  className="px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-all text-sm flex items-center gap-2"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => onViewChange('crm-analytics')}
+                  className="px-3 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 rounded-lg transition-all text-sm flex items-center gap-2"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  אנליטיקה
+                </button>
+                <button
+                  onClick={() => onViewChange('crm-reports')}
+                  className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-all text-sm flex items-center gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  דוחות
+                </button>
+              </>
+            )}
             {/* Real-time status indicator */}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800/50">
               {isConnected ? (
@@ -279,6 +313,36 @@ export default function ClientsListViewEnhanced({ onClientClick }: ClientsListVi
             </button>
           </div>
         </div>
+
+        {/* Quick Navigation Tabs */}
+        {onViewChange && (
+          <div className="flex gap-2 mb-6 border-b border-zinc-800">
+            <button
+              onClick={() => onViewChange('crm-pipeline')}
+              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent hover:border-blue-500 transition-all"
+            >
+              Pipeline
+            </button>
+            <button
+              onClick={() => onViewChange('crm-dashboard')}
+              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent hover:border-purple-500 transition-all"
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={() => onViewChange('crm-analytics')}
+              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent hover:border-yellow-500 transition-all"
+            >
+              אנליטיקה
+            </button>
+            <button
+              onClick={() => onViewChange('crm-reports')}
+              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent hover:border-emerald-500 transition-all"
+            >
+              דוחות
+            </button>
+          </div>
+        )}
 
         {/* Statistics */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">

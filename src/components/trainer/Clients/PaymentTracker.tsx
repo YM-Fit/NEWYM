@@ -10,7 +10,7 @@ import { PaymentService, type Payment } from '../../../services/paymentService';
 import { getTrainees } from '../../../api/traineeApi';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
-import Modal from '../../ui/Modal';
+import { Modal } from '../../ui/Modal';
 import { PAYMENT_STATUS, PAYMENT_STATUS_LABELS } from '../../../constants/crmConstants';
 
 interface PaymentTrackerProps {

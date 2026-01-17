@@ -9,7 +9,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { DocumentService, type Document } from '../../../services/documentService';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
-import Modal from '../../ui/Modal';
+import { Modal } from '../../ui/Modal';
 
 interface DocumentManagerProps {
   traineeId: string;

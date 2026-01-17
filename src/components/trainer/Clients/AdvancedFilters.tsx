@@ -11,7 +11,7 @@ import { getTrainees } from '../../../api/traineeApi';
 import { exportClientsToCSV } from '../../../utils/exportUtils';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
-import Modal from '../../ui/Modal';
+import { Modal } from '../../ui/Modal';
 import type { Trainee } from '../../../types';
 
 interface AdvancedFiltersProps {
