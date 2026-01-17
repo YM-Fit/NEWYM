@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { Home, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
+import { CrmProvider } from '../../contexts/CrmContext';
 import { supabase, logSupabaseError } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
 import { useErrorHandler } from '../../hooks/useErrorHandler';
@@ -32,18 +33,20 @@ const MealPlanBuilder = lazy(() => import('./MealPlans/MealPlanBuilder'));
 const TraineeAccessManager = lazy(() => import('./Trainees/TraineeAccessManager'));
 const MentalToolsEditor = lazy(() => import('./MentalTools/MentalToolsEditor'));
 const CalendarView = lazy(() => import('./Calendar/CalendarView'));
-const ClientsListView = lazy(() => import('./Clients/ClientsListView'));
-const ClientsListViewEnhanced = lazy(() => import('./Clients/ClientsListViewEnhanced'));
-const PipelineView = lazy(() => import('./Clients/PipelineView'));
-const CrmDashboard = lazy(() => import('./Dashboard/CrmDashboard'));
-const AdvancedAnalytics = lazy(() => import('./Analytics/AdvancedAnalytics'));
-const CrmReportsView = lazy(() => import('./Clients/CrmReportsView'));
-const ClientDetailView = lazy(() => import('./Clients/ClientDetailView'));
-const ContractManager = lazy(() => import('./Clients/ContractManager'));
-const PaymentTracker = lazy(() => import('./Clients/PaymentTracker'));
-const CommunicationCenter = lazy(() => import('./Clients/CommunicationCenter'));
-const AdvancedFilters = lazy(() => import('./Clients/AdvancedFilters'));
-const DocumentManager = lazy(() => import('./Clients/DocumentManager'));
+// CRM Components - using new unified structure
+const CrmLayout = lazy(() => import('./crm/CrmLayout'));
+const ClientsListView = lazy(() => import('./crm/clients/ClientsListView'));
+const PipelineView = lazy(() => import('./crm/pipeline/PipelineView'));
+const CrmDashboard = lazy(() => import('./crm/dashboard/CrmDashboard'));
+const AdvancedAnalytics = lazy(() => import('./crm/analytics/AdvancedAnalytics'));
+const CrmReportsView = lazy(() => import('./crm/reports/CrmReportsView'));
+const ClientDetailView = lazy(() => import('./crm/clients/ClientDetailView'));
+// Shared CRM components - moved to crm/shared
+const ContractManager = lazy(() => import('./crm/shared/ContractManager'));
+const PaymentTracker = lazy(() => import('./crm/shared/PaymentTracker'));
+const CommunicationCenter = lazy(() => import('./crm/shared/CommunicationCenter'));
+const AdvancedFilters = lazy(() => import('./crm/clients/AdvancedFilters'));
+const DocumentManager = lazy(() => import('./crm/shared/DocumentManager'));
 const ToolsView = lazy(() => import('./Tools/ToolsView'));
 const TraineeFoodDiaryView = lazy(() => import('./Trainees/TraineeFoodDiaryView'));
 const CardioManager = lazy(() => import('./Cardio/CardioManager'));
@@ -1149,71 +1152,116 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
           </Suspense>
         );
 
-      case 'clients':
+      case 'crm-clients':
         return (
-          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <ClientsListViewEnhanced
-              onClientClick={(client) => {
-                if (client.trainee_id) {
-                  const trainee = trainees.find(t => t.id === client.trainee_id);
-                  if (trainee) {
-                    setSelectedClient(trainee);
-                    setActiveView('client-detail');
-                  }
-                }
-              }}
-              onViewChange={handleViewChange}
-            />
-          </Suspense>
+          <CrmProvider onViewChange={handleViewChange}>
+            <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+              <CrmLayout 
+                activeView={activeView} 
+                onViewChange={handleViewChange}
+              >
+                <ClientsListViewEnhanced
+                  onClientClick={(client) => {
+                    if (client.trainee_id) {
+                      const trainee = trainees.find(t => t.id === client.trainee_id);
+                      if (trainee) {
+                        setSelectedClient(trainee);
+                        setActiveView('client-detail');
+                      }
+                    }
+                  }}
+                  onViewChange={handleViewChange}
+                />
+              </CrmLayout>
+            </Suspense>
+          </CrmProvider>
         );
+      
+      // Legacy support for old 'clients' view - redirect to crm-clients
 
       case 'crm-dashboard':
         return (
           <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <CrmDashboard onViewChange={handleViewChange} />
+            <CrmLayout 
+              activeView={activeView} 
+              onViewChange={handleViewChange}
+              breadcrumbs={[{ label: 'Dashboard' }]}
+            >
+              <CrmDashboard onViewChange={handleViewChange} />
+            </CrmLayout>
           </Suspense>
         );
 
       case 'crm-pipeline':
         return (
-          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <PipelineView
-              onClientClick={(trainee) => {
-                setSelectedClient(trainee);
-                setActiveView('client-detail');
-              }}
-            />
-          </Suspense>
+          <CrmProvider onViewChange={handleViewChange}>
+            <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+              <CrmLayout 
+                activeView={activeView} 
+                onViewChange={handleViewChange}
+              >
+                <PipelineView
+                  onClientClick={(trainee) => {
+                    setSelectedClient(trainee);
+                    setActiveView('client-detail');
+                  }}
+                />
+              </CrmLayout>
+            </Suspense>
+          </CrmProvider>
         );
 
       case 'crm-analytics':
         return (
-          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <AdvancedAnalytics />
-          </Suspense>
+          <CrmProvider onViewChange={handleViewChange}>
+            <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+              <CrmLayout 
+                activeView={activeView} 
+                onViewChange={handleViewChange}
+              >
+                <AdvancedAnalytics />
+              </CrmLayout>
+            </Suspense>
+          </CrmProvider>
         );
 
       case 'crm-reports':
         return (
-          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <CrmReportsView />
-          </Suspense>
+          <CrmProvider onViewChange={handleViewChange}>
+            <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+              <CrmLayout 
+                activeView={activeView} 
+                onViewChange={handleViewChange}
+              >
+                <CrmReportsView />
+              </CrmLayout>
+            </Suspense>
+          </CrmProvider>
         );
 
       case 'client-detail':
         return selectedClient ? (
           <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <ClientDetailView
-              trainee={selectedClient}
-              onClose={() => {
-                setSelectedClient(null);
-                setActiveView('clients');
-              }}
-              onEdit={(trainee) => {
-                setSelectedTrainee(trainee);
-                setActiveView('edit-trainee');
-              }}
-            />
+            <CrmLayout 
+              activeView={activeView} 
+              onViewChange={handleViewChange}
+              breadcrumbs={[
+                { label: 'לקוחות', onClick: () => setActiveView('crm-clients') },
+                { label: selectedClient.full_name }
+              ]}
+            >
+              <ClientDetailView
+                trainee={selectedClient}
+                onClose={() => {
+                  setSelectedClient(null);
+                  setActiveView('crm-clients');
+                }}
+                onEdit={(trainee) => {
+                  setSelectedTrainee(trainee);
+                  setActiveView('edit-trainee');
+                }}
+              />
+            </CrmLayout>
           </Suspense>
         ) : null;
 
@@ -1222,7 +1270,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
           <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
             <ContractManager
               traineeId={selectedClient?.id}
-              onClose={() => setActiveView(selectedClient ? 'client-detail' : 'clients')}
+              onClose={() => setActiveView(selectedClient ? 'client-detail' : 'crm-clients')}
             />
           </Suspense>
         );
@@ -1232,7 +1280,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
           <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
             <PaymentTracker
               traineeId={selectedClient?.id}
-              onClose={() => setActiveView(selectedClient ? 'client-detail' : 'clients')}
+              onClose={() => setActiveView(selectedClient ? 'client-detail' : 'crm-clients')}
             />
           </Suspense>
         );
@@ -1242,7 +1290,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
           <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
             <CommunicationCenter
               traineeId={selectedClient?.id}
-              onClose={() => setActiveView(selectedClient ? 'client-detail' : 'clients')}
+              onClose={() => setActiveView(selectedClient ? 'client-detail' : 'crm-clients')}
             />
           </Suspense>
         );
@@ -1284,107 +1332,109 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const showCollapseControls = isWorkoutSession;
 
   return (
-    <div
-      className={`min-h-screen flex touch-manipulation ${isTablet ? 'tablet' : ''}`}
-      dir="rtl"
-    >
-      {/* Desktop Sidebar */}
-      {!sidebarCollapsed && (
-        <Sidebar
-          activeView={activeView}
-          onViewChange={handleViewChange}
-          collapsed={sidebarCollapsed}
-        />
-      )}
-
-      {/* Mobile Sidebar */}
-      <MobileSidebar
-        isOpen={mobileSidebarOpen}
-        onClose={() => setMobileSidebarOpen(false)}
-        activeView={activeView}
-        onViewChange={handleViewChange}
-      />
-
-      <div className="flex-1 flex flex-col pb-20 md:pb-0">
-        {!headerCollapsed && (
-          <Header
-            onLogout={signOut}
-            trainerName={trainerName}
-            collapsed={headerCollapsed}
-            onNavigateToTrainee={handleNavigateToTrainee}
-            onToggleSidebar={toggleMobileSidebar}
+    <CrmProvider onViewChange={handleViewChange}>
+      <div
+        className={`min-h-screen flex touch-manipulation ${isTablet ? 'tablet' : ''}`}
+        dir="rtl"
+      >
+        {/* Desktop Sidebar */}
+        {!sidebarCollapsed && (
+          <Sidebar
+            activeView={activeView}
+            onViewChange={handleViewChange}
+            collapsed={sidebarCollapsed}
           />
         )}
 
-        <main 
-          id="main-content"
-          className={`flex-1 overflow-auto ${headerCollapsed ? 'p-2' : 'p-3 md:p-6'}`}
-          role="main"
-          aria-label="תוכן ראשי"
-        >
-          {showCollapseControls && (
-            <div className="hidden lg:flex gap-3 mb-4 justify-end" role="toolbar" aria-label="בקרות תצוגה">
-              <button
-                type="button"
-                onClick={() => setHeaderCollapsed(!headerCollapsed)}
-                className="btn-glass px-4 py-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                aria-label={headerCollapsed ? 'הצג כותרת' : 'הסתר כותרת'}
-                aria-pressed={!headerCollapsed}
-              >
-                {headerCollapsed ? 'הצג כותרת' : 'הסתר כותרת'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="btn-glass px-4 py-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                aria-label={sidebarCollapsed ? 'הצג תפריט' : 'הסתר תפריט'}
-                aria-pressed={!sidebarCollapsed}
-              >
-                {sidebarCollapsed ? 'הצג תפריט' : 'הסתר תפריט'}
-              </button>
-            </div>
-          )}
-          {renderMainContent()}
-        </main>
+        {/* Mobile Sidebar */}
+        <MobileSidebar
+          isOpen={mobileSidebarOpen}
+          onClose={() => setMobileSidebarOpen(false)}
+          activeView={activeView}
+          onViewChange={handleViewChange}
+        />
 
-        <nav 
-          id="main-navigation"
-          className="md:hidden fixed bottom-0 left-0 right-0 z-40 px-4 pb-4"
-          role="navigation"
-          aria-label="ניווט ראשי"
-        >
-          <div className="glass-card px-2 py-2 rounded-2xl shadow-dark-lg">
-            <div className="flex justify-around items-center max-w-lg mx-auto">
-              <button
-                onClick={() => handleViewChange('dashboard')}
-                aria-label="דף הבית"
-                aria-current={activeView === 'dashboard' ? 'page' : undefined}
-                className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
-                  activeView === 'dashboard'
-                    ? 'text-lime-500'
-                    : 'text-gray-500 hover:text-gray-300'
-                }`}
-              >
-                <Home className={`h-6 w-6 mb-1 ${activeView === 'dashboard' ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} aria-hidden="true" />
-                <span className="text-xs font-medium">בית</span>
-              </button>
-              <button
-                onClick={() => handleViewChange('trainees')}
-                aria-label="מתאמנים"
-                aria-current={activeView.includes('trainee') ? 'page' : undefined}
-                className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
-                  activeView.includes('trainee')
-                    ? 'text-lime-500'
-                    : 'text-gray-500 hover:text-gray-300'
-                }`}
-              >
-                <Users className={`h-6 w-6 mb-1 ${activeView.includes('trainee') ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} aria-hidden="true" />
-                <span className="text-xs font-medium">מתאמנים</span>
-              </button>
+        <div className="flex-1 flex flex-col pb-20 md:pb-0">
+          {!headerCollapsed && (
+            <Header
+              onLogout={signOut}
+              trainerName={trainerName}
+              collapsed={headerCollapsed}
+              onNavigateToTrainee={handleNavigateToTrainee}
+              onToggleSidebar={toggleMobileSidebar}
+            />
+          )}
+
+          <main 
+            id="main-content"
+            className={`flex-1 overflow-auto ${headerCollapsed ? 'p-2' : 'p-3 md:p-6'}`}
+            role="main"
+            aria-label="תוכן ראשי"
+          >
+            {showCollapseControls && (
+              <div className="hidden lg:flex gap-3 mb-4 justify-end" role="toolbar" aria-label="בקרות תצוגה">
+                <button
+                  type="button"
+                  onClick={() => setHeaderCollapsed(!headerCollapsed)}
+                  className="btn-glass px-4 py-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  aria-label={headerCollapsed ? 'הצג כותרת' : 'הסתר כותרת'}
+                  aria-pressed={!headerCollapsed}
+                >
+                  {headerCollapsed ? 'הצג כותרת' : 'הסתר כותרת'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="btn-glass px-4 py-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  aria-label={sidebarCollapsed ? 'הצג תפריט' : 'הסתר תפריט'}
+                  aria-pressed={!sidebarCollapsed}
+                >
+                  {sidebarCollapsed ? 'הצג תפריט' : 'הסתר תפריט'}
+                </button>
+              </div>
+            )}
+            {renderMainContent()}
+          </main>
+
+          <nav 
+            id="main-navigation"
+            className="md:hidden fixed bottom-0 left-0 right-0 z-40 px-4 pb-4"
+            role="navigation"
+            aria-label="ניווט ראשי"
+          >
+            <div className="glass-card px-2 py-2 rounded-2xl shadow-dark-lg">
+              <div className="flex justify-around items-center max-w-lg mx-auto">
+                <button
+                  onClick={() => handleViewChange('dashboard')}
+                  aria-label="דף הבית"
+                  aria-current={activeView === 'dashboard' ? 'page' : undefined}
+                  className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
+                    activeView === 'dashboard'
+                      ? 'text-lime-500'
+                      : 'text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  <Home className={`h-6 w-6 mb-1 ${activeView === 'dashboard' ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} aria-hidden="true" />
+                  <span className="text-xs font-medium">בית</span>
+                </button>
+                <button
+                  onClick={() => handleViewChange('trainees')}
+                  aria-label="מתאמנים"
+                  aria-current={activeView.includes('trainee') ? 'page' : undefined}
+                  className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
+                    activeView.includes('trainee')
+                      ? 'text-lime-500'
+                      : 'text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  <Users className={`h-6 w-6 mb-1 ${activeView.includes('trainee') ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} aria-hidden="true" />
+                  <span className="text-xs font-medium">מתאמנים</span>
+                </button>
+              </div>
             </div>
-          </div>
-        </nav>
+          </nav>
+        </div>
       </div>
-    </div>
+    </CrmProvider>
   );
 }

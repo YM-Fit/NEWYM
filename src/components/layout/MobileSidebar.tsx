@@ -1,4 +1,4 @@
-import { Home, Users, Calculator, BarChart3, X, Sparkles, Search, ChevronRight, LucideIcon, Calendar, Briefcase } from 'lucide-react';
+import { Home, Users, Calculator, BarChart3, X, Sparkles, Search, ChevronRight, LucideIcon, Calendar, Briefcase, TrendingUp, FileText } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 
 interface MobileSidebarProps {
@@ -48,8 +48,14 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
     // Main Navigation
     { id: 'dashboard', label: 'דף הבית', icon: Home, description: 'סקירה כללית', category: 'main' },
     { id: 'trainees', label: 'מתאמנים', icon: Users, description: 'ניהול מתאמנים', category: 'main' },
-    { id: 'clients', label: 'כרטיסיות לקוחות', icon: Briefcase, description: 'ניהול לקוחות CRM', category: 'main' },
     { id: 'calendar', label: 'יומן', icon: Calendar, description: 'Google Calendar', category: 'main' },
+    
+    // CRM Navigation - כל CRM תחת קטגוריה אחת
+    { id: 'crm-dashboard', label: 'Dashboard', icon: Home, description: 'סקירה כללית CRM', category: 'crm' },
+    { id: 'crm-clients', label: 'לקוחות', icon: Users, description: 'ניהול לקוחות', category: 'crm' },
+    { id: 'crm-pipeline', label: 'Pipeline', icon: TrendingUp, description: 'ניהול Pipeline', category: 'crm' },
+    { id: 'crm-analytics', label: 'אנליטיקה', icon: BarChart3, description: 'אנליטיקה מתקדמת', category: 'crm' },
+    { id: 'crm-reports', label: 'דוחות', icon: FileText, description: 'דוחות ואנליטיקה', category: 'crm' },
     
     // Tools & Analytics
     { id: 'tools', label: 'כלים', icon: Calculator, description: 'מחשבונים וכלים', category: 'tools' },
@@ -58,6 +64,7 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
 
   const categories = useMemo(() => [
     { id: 'main', label: 'ניווט ראשי', icon: Home },
+    { id: 'crm', label: 'CRM', icon: Briefcase },
     { id: 'tools', label: 'כלים וניתוח', icon: Calculator },
   ], []);
 
@@ -181,7 +188,10 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
                     id={category.id !== 'main' ? `mobile-sidebar-category-${category.id}` : undefined}
                   >
                     {items.map(({ id, label, icon: Icon, description, badge }) => {
-                      const isActive = activeView === id || (id === 'trainees' && activeView.includes('trainee'));
+                      const isActive = activeView === id || 
+                        (id === 'trainees' && activeView.includes('trainee')) ||
+                        (id === 'crm-clients' && (activeView === 'clients' || activeView === 'client-detail')) ||
+                        (id.startsWith('crm-') && activeView === id);
 
                       return (
                         <button

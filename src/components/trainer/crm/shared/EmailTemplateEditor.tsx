@@ -5,11 +5,11 @@
 
 import { useState } from 'react';
 import { Save, X } from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { CommunicationService, type CommunicationTemplate } from '../../../services/communicationService';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { CommunicationService, type CommunicationTemplate } from '../../../../services/communicationService';
 import toast from 'react-hot-toast';
-import { logger } from '../../../utils/logger';
-import { Modal } from '../../ui/Modal';
+import { logger } from '../../../../utils/logger';
+import { Modal } from '../../../ui/Modal';
 
 interface EmailTemplateEditorProps {
   template?: CommunicationTemplate;

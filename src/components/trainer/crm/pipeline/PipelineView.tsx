@@ -13,13 +13,13 @@ import {
   ChevronRight,
   BarChart3
 } from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { CrmPipelineService, type PipelineStage, type PipelineStats } from '../../../services/crmPipelineService';
-import { CRM_STATUS, CRM_STATUS_LABELS } from '../../../constants/crmConstants';
-import { getTrainees } from '../../../api/traineeApi';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { CrmPipelineService, type PipelineStage, type PipelineStats } from '../../../../services/crmPipelineService';
+import { CRM_STATUS, CRM_STATUS_LABELS } from '../../../../constants/crmConstants';
+import { getTrainees } from '../../../../api/traineeApi';
 import toast from 'react-hot-toast';
-import { logger } from '../../../utils/logger';
-import type { Trainee } from '../../../types';
+import { logger } from '../../../../utils/logger';
+import type { Trainee } from '../../../../types';
 
 interface PipelineViewProps {
   onClientClick?: (trainee: Trainee) => void;

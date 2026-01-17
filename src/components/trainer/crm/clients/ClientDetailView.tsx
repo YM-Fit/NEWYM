@@ -16,20 +16,20 @@ import {
   Edit,
   X
 } from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { getTrainees } from '../../../api/traineeApi';
-import { CommunicationService } from '../../../services/communicationService';
-import { PaymentService } from '../../../services/paymentService';
-import { DocumentService } from '../../../services/documentService';
-import { CrmService } from '../../../services/crmService';
-import CommunicationCenter from './CommunicationCenter';
-import PaymentTracker from './PaymentTracker';
-import ContractManager from './ContractManager';
-import DocumentManager from './DocumentManager';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { getTrainees } from '../../../../api/traineeApi';
+import { CommunicationService } from '../../../../services/communicationService';
+import { PaymentService } from '../../../../services/paymentService';
+import { DocumentService } from '../../../../services/documentService';
+import { CrmService } from '../../../../services/crmService';
+import CommunicationCenter from '../shared/CommunicationCenter';
+import PaymentTracker from '../shared/PaymentTracker';
+import ContractManager from '../shared/ContractManager';
+import DocumentManager from '../shared/DocumentManager';
 import toast from 'react-hot-toast';
-import { logger } from '../../../utils/logger';
-import type { Trainee } from '../../../types';
-import { CRM_STATUS_LABELS, PAYMENT_STATUS_LABELS } from '../../../constants/crmConstants';
+import { logger } from '../../../../utils/logger';
+import type { Trainee } from '../../../../types';
+import { CRM_STATUS_LABELS, PAYMENT_STATUS_LABELS } from '../../../../constants/crmConstants';
 
 interface ClientDetailViewProps {
   trainee: Trainee;

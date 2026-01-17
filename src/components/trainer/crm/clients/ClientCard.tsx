@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import { Mail, Phone, User, Link2, Clock, CheckCircle2 } from 'lucide-react';
-import type { CalendarClient } from '../../../api/crmClientsApi';
+import type { CalendarClient } from '../../../../api/crmClientsApi';
 import { format, isValid, parseISO } from 'date-fns';
 import { he } from 'date-fns/locale';
 

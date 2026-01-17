@@ -15,14 +15,14 @@ import {
   BarChart3,
   RefreshCw
 } from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { CrmReportsService } from '../../../services/crmReportsService';
-import { PaymentService } from '../../../services/paymentService';
-import { CrmAutomationService } from '../../../services/crmAutomationService';
-import { CrmPipelineService } from '../../../services/crmPipelineService';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { CrmReportsService } from '../../../../services/crmReportsService';
+import { PaymentService } from '../../../../services/paymentService';
+import { CrmAutomationService } from '../../../../services/crmAutomationService';
+import { CrmPipelineService } from '../../../../services/crmPipelineService';
 import toast from 'react-hot-toast';
-import { logger } from '../../../utils/logger';
-import type { ClientPipelineStats, RevenueStats, ActivityStats } from '../../../services/crmReportsService';
+import { logger } from '../../../../utils/logger';
+import type { ClientPipelineStats, RevenueStats, ActivityStats } from '../../../../services/crmReportsService';
 
 interface CrmDashboardProps {
   onViewChange?: (view: string) => void;
@@ -156,7 +156,7 @@ export default function CrmDashboard({ onViewChange }: CrmDashboardProps) {
       {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <button
-          onClick={() => onViewChange?.('pipeline')}
+          onClick={() => onViewChange?.('crm-pipeline')}
           className="premium-card p-6 text-left hover:scale-[1.02] transition-all cursor-pointer"
         >
           <div className="flex items-center gap-3 mb-3">
@@ -169,7 +169,7 @@ export default function CrmDashboard({ onViewChange }: CrmDashboardProps) {
         </button>
 
         <button
-          onClick={() => onViewChange?.('clients')}
+          onClick={() => onViewChange?.('crm-clients')}
           className="premium-card p-6 text-left hover:scale-[1.02] transition-all cursor-pointer"
         >
           <div className="flex items-center gap-3 mb-3">
@@ -182,20 +182,20 @@ export default function CrmDashboard({ onViewChange }: CrmDashboardProps) {
         </button>
 
         <button
-          onClick={() => onViewChange?.('payments')}
+          onClick={() => onViewChange?.('crm-reports')}
           className="premium-card p-6 text-left hover:scale-[1.02] transition-all cursor-pointer"
         >
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-purple-500/20 rounded-lg">
               <DollarSign className="h-5 w-5 text-purple-400" />
             </div>
-            <h3 className="font-semibold text-white">תשלומים</h3>
+            <h3 className="font-semibold text-white">דוחות</h3>
           </div>
-          <p className="text-sm text-zinc-400">מעקב תשלומים</p>
+          <p className="text-sm text-zinc-400">דוחות ותשלומים</p>
         </button>
 
         <button
-          onClick={() => onViewChange?.('analytics')}
+          onClick={() => onViewChange?.('crm-analytics')}
           className="premium-card p-6 text-left hover:scale-[1.02] transition-all cursor-pointer"
         >
           <div className="flex items-center gap-3 mb-3">

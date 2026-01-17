@@ -4,16 +4,16 @@
 
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { Users, RefreshCw, Search, Keyboard, Download, FileText, Wifi, WifiOff, TrendingUp, BarChart3 } from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { CrmService } from '../../../services/crmService';
-import { linkTraineeToCalendarClient, type CalendarClient } from '../../../api/crmClientsApi';
-import { getTrainees } from '../../../api/traineeApi';
-import { useCrmRealtime } from '../../../hooks/useCrmRealtime';
-import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
-import { exportClientsToCSV, exportClientsToPDF } from '../../../utils/exportUtils';
-import VirtualList from '../../common/VirtualList';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { CrmService } from '../../../../services/crmService';
+import { linkTraineeToCalendarClient, type CalendarClient } from '../../../../api/crmClientsApi';
+import { getTrainees } from '../../../../api/traineeApi';
+import { useCrmRealtime } from '../../../../hooks/useCrmRealtime';
+import { useKeyboardShortcut } from '../../../../hooks/useKeyboardShortcut';
+import { exportClientsToCSV, exportClientsToPDF } from '../../../../utils/exportUtils';
+import VirtualList from '../../../common/VirtualList';
 import toast from 'react-hot-toast';
-import { logger } from '../../../utils/logger';
+import { logger } from '../../../../utils/logger';
 
 // Lazy load ClientCard for better performance
 const ClientCard = lazy(() => import('./ClientCard'));

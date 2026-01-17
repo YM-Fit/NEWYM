@@ -32,14 +32,14 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
     // Main Navigation
     { id: 'dashboard', label: 'דף הבית', icon: Home, description: 'סקירה כללית', category: 'main' },
     { id: 'trainees', label: 'מתאמנים', icon: Users, description: 'ניהול מתאמנים', category: 'main' },
-    { id: 'clients', label: 'כרטיסיות לקוחות', icon: Briefcase, description: 'ניהול לקוחות CRM', category: 'main' },
     { id: 'calendar', label: 'יומן', icon: Calendar, description: 'Google Calendar', category: 'main' },
     
-    // CRM Navigation
-    { id: 'crm-dashboard', label: 'CRM Dashboard', icon: BarChart3, description: 'סקירה כללית CRM', category: 'crm' },
+    // CRM Navigation - כל CRM תחת קטגוריה אחת
+    { id: 'crm-dashboard', label: 'Dashboard', icon: Home, description: 'סקירה כללית CRM', category: 'crm' },
+    { id: 'crm-clients', label: 'לקוחות', icon: Users, description: 'ניהול לקוחות', category: 'crm' },
     { id: 'crm-pipeline', label: 'Pipeline', icon: TrendingUp, description: 'ניהול Pipeline', category: 'crm' },
     { id: 'crm-analytics', label: 'אנליטיקה', icon: BarChart3, description: 'אנליטיקה מתקדמת', category: 'crm' },
-    { id: 'crm-reports', label: 'דוחות CRM', icon: FileText, description: 'דוחות ואנליטיקה', category: 'crm' },
+    { id: 'crm-reports', label: 'דוחות', icon: FileText, description: 'דוחות ואנליטיקה', category: 'crm' },
     
     // Tools & Analytics
     { id: 'tools', label: 'כלים', icon: Calculator, description: 'מחשבונים וכלים', category: 'tools' },

@@ -5,13 +5,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { DollarSign, Plus, CheckCircle2, Clock, AlertCircle, Download } from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { PaymentService, type Payment } from '../../../services/paymentService';
-import { getTrainees } from '../../../api/traineeApi';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { PaymentService, type Payment } from '../../../../services/paymentService';
+import { getTrainees } from '../../../../api/traineeApi';
 import toast from 'react-hot-toast';
-import { logger } from '../../../utils/logger';
-import { Modal } from '../../ui/Modal';
-import { PAYMENT_STATUS, PAYMENT_STATUS_LABELS } from '../../../constants/crmConstants';
+import { logger } from '../../../../utils/logger';
+import { Modal } from '../../../ui/Modal';
+import { PAYMENT_STATUS, PAYMENT_STATUS_LABELS } from '../../../../constants/crmConstants';
 
 interface PaymentTrackerProps {
   traineeId?: string;

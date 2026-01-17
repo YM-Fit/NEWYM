@@ -5,11 +5,11 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { FileText, Upload, Trash2, Download, Image, File } from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { DocumentService, type Document } from '../../../services/documentService';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { DocumentService, type Document } from '../../../../services/documentService';
 import toast from 'react-hot-toast';
-import { logger } from '../../../utils/logger';
-import { Modal } from '../../ui/Modal';
+import { logger } from '../../../../utils/logger';
+import { Modal } from '../../../ui/Modal';
 
 interface DocumentManagerProps {
   traineeId: string;

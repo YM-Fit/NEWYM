@@ -5,12 +5,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Mail, MessageSquare, Send, History, FileText, Plus } from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { CommunicationService, type CommunicationTemplate, type CommunicationMessage } from '../../../services/communicationService';
-import { getTrainees } from '../../../api/traineeApi';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { CommunicationService, type CommunicationTemplate, type CommunicationMessage } from '../../../../services/communicationService';
+import { getTrainees } from '../../../../api/traineeApi';
 import toast from 'react-hot-toast';
-import { logger } from '../../../utils/logger';
-import { Modal } from '../../ui/Modal';
+import { logger } from '../../../../utils/logger';
+import { Modal } from '../../../ui/Modal';
 
 interface CommunicationCenterProps {
   traineeId?: string;

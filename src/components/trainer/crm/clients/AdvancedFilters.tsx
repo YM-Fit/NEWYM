@@ -5,14 +5,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Filter, Plus, Save, Trash2, Users, Download } from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { SegmentationService, type FilterCondition, type Segment } from '../../../services/segmentationService';
-import { getTrainees } from '../../../api/traineeApi';
-import { exportClientsToCSV } from '../../../utils/exportUtils';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { SegmentationService, type FilterCondition, type Segment } from '../../../../services/segmentationService';
+import { getTrainees } from '../../../../api/traineeApi';
+import { exportClientsToCSV } from '../../../../utils/exportUtils';
 import toast from 'react-hot-toast';
-import { logger } from '../../../utils/logger';
-import { Modal } from '../../ui/Modal';
-import type { Trainee } from '../../../types';
+import { logger } from '../../../../utils/logger';
+import { Modal } from '../../../ui/Modal';
+import type { Trainee } from '../../../../types';
 
 interface AdvancedFiltersProps {
   onFilteredClients?: (clients: Trainee[]) => void;

@@ -5,16 +5,16 @@
 
 import { useState, useEffect } from 'react';
 import { BarChart3, TrendingUp, Users, AlertCircle, DollarSign } from 'lucide-react';
-import { CrmReportsService } from '../../../services/crmReportsService';
-import { useAuth } from '../../../contexts/AuthContext';
-import { logger } from '../../../utils/logger';
+import { CrmReportsService } from '../../../../services/crmReportsService';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { logger } from '../../../../utils/logger';
 import toast from 'react-hot-toast';
 import type { 
   ClientPipelineStats, 
   RevenueStats, 
   ActivityStats,
   ClientReport 
-} from '../../../services/crmReportsService';
+} from '../../../../services/crmReportsService';
 
 export default function CrmReportsView() {
   const { user } = useAuth();
