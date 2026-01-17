@@ -6,8 +6,12 @@ import { initSentry, captureUnhandledRejection } from './utils/sentry';
 import { registerServiceWorker } from './utils/serviceWorker';
 import { measureWebVitals } from './utils/performanceMonitor';
 
-// Initialize Sentry error tracking
-initSentry();
+// Initialize Sentry error tracking (async, don't block app startup)
+initSentry().catch((error) => {
+  if (import.meta.env.DEV) {
+    console.warn('[Sentry] Initialization failed:', error);
+  }
+});
 
 // Capture unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {

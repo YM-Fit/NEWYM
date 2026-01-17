@@ -3,16 +3,15 @@
  * Centralized Sentry initialization and configuration
  */
 
-import * as Sentry from '@sentry/react';
+// Track if Sentry is initialized
+let isSentryInitialized = false;
+let Sentry: typeof import('@sentry/react') | null = null;
 
 /**
  * Initialize Sentry error tracking
  * Should be called once at application startup
  */
-// Track if Sentry is initialized
-let isSentryInitialized = false;
-
-export function initSentry(): void {
+export async function initSentry(): Promise<void> {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   const environment = import.meta.env.MODE || 'development';
   const release = import.meta.env.VITE_APP_VERSION || 'unknown';
@@ -28,6 +27,12 @@ export function initSentry(): void {
   }
 
   try {
+    // Dynamic import to avoid loading Sentry if DSN is not provided
+    if (!Sentry) {
+      const sentryModule = await import('@sentry/react');
+      Sentry = sentryModule;
+    }
+
     Sentry.init({
       dsn,
       environment,
@@ -119,7 +124,7 @@ export function initSentry(): void {
  * Capture exception manually
  */
 export function captureException(error: Error, context?: Record<string, any>): void {
-  if (!isSentryInitialized) return;
+  if (!isSentryInitialized || !Sentry) return;
   try {
     Sentry.captureException(error, {
       tags: context,
@@ -136,8 +141,8 @@ export function captureException(error: Error, context?: Record<string, any>): v
 /**
  * Capture message manually
  */
-export function captureMessage(message: string, level: Sentry.SeverityLevel = 'info'): void {
-  if (!isSentryInitialized) return;
+export function captureMessage(message: string, level: any = 'info'): void {
+  if (!isSentryInitialized || !Sentry) return;
   try {
     Sentry.captureMessage(message, level);
   } catch (e) {
@@ -152,7 +157,7 @@ export function captureMessage(message: string, level: Sentry.SeverityLevel = 'i
  * Set user context for error tracking
  */
 export function setUserContext(userId: string, email?: string, metadata?: Record<string, any>): void {
-  if (!isSentryInitialized) return;
+  if (!isSentryInitialized || !Sentry) return;
   try {
     Sentry.setUser({
       id: userId,
@@ -171,7 +176,7 @@ export function setUserContext(userId: string, email?: string, metadata?: Record
  * Clear user context (e.g., on logout)
  */
 export function clearUserContext(): void {
-  if (!isSentryInitialized) return;
+  if (!isSentryInitialized || !Sentry) return;
   try {
     Sentry.setUser(null);
   } catch (e) {
@@ -186,7 +191,7 @@ export function clearUserContext(): void {
  * Add breadcrumb for debugging
  */
 export function addBreadcrumb(message: string, category?: string, data?: Record<string, any>): void {
-  if (!isSentryInitialized) return;
+  if (!isSentryInitialized || !Sentry) return;
   try {
     Sentry.addBreadcrumb({
       message,
@@ -206,7 +211,7 @@ export function addBreadcrumb(message: string, category?: string, data?: Record<
  * Set additional context (tags, extra data)
  */
 export function setContext(key: string, context: Record<string, any>): void {
-  if (!isSentryInitialized) return;
+  if (!isSentryInitialized || !Sentry) return;
   try {
     Sentry.setContext(key, context);
   } catch (e) {
@@ -221,7 +226,7 @@ export function setContext(key: string, context: Record<string, any>): void {
  * Set tag for filtering errors
  */
 export function setTag(key: string, value: string): void {
-  if (!isSentryInitialized) return;
+  if (!isSentryInitialized || !Sentry) return;
   try {
     Sentry.setTag(key, value);
   } catch (e) {
@@ -236,8 +241,8 @@ export function setTag(key: string, value: string): void {
  * Configure scope for error tracking
  * Note: configureScope is deprecated in newer Sentry versions, using withScope instead
  */
-export function configureScope(callback: (scope: Sentry.Scope) => void): void {
-  if (!isSentryInitialized) return;
+export function configureScope(callback: (scope: any) => void): void {
+  if (!isSentryInitialized || !Sentry) return;
   try {
     Sentry.withScope(callback);
   } catch (e) {
@@ -252,7 +257,7 @@ export function configureScope(callback: (scope: Sentry.Scope) => void): void {
  * Capture unhandled promise rejection
  */
 export function captureUnhandledRejection(reason: any): void {
-  if (!isSentryInitialized) return;
+  if (!isSentryInitialized || !Sentry) return;
   try {
     Sentry.captureException(reason instanceof Error ? reason : new Error(String(reason)), {
       level: 'error',
