@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { handleApiError } from './config';
+import { rateLimiter } from '../utils/rateLimiter';
 
 export interface TraineeGoal {
   id: string;
@@ -31,8 +32,17 @@ export interface CreateGoalInput {
   pair_member?: string | null;
 }
 
+// Rate limiting helper for goals API
+function checkGoalsRateLimit(key: string, maxRequests: number = 100): void {
+  const rateLimitResult = rateLimiter.check(key, maxRequests, 60000);
+  if (!rateLimitResult.allowed) {
+    throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+  }
+}
+
 export const goalsApi = {
   async getTraineeGoals(traineeId: string): Promise<TraineeGoal[]> {
+    checkGoalsRateLimit(`getTraineeGoals:${traineeId}`, 100);
     try {
       const { data, error } = await supabase
         .from('trainee_goals')
@@ -48,6 +58,7 @@ export const goalsApi = {
   },
 
   async createGoal(input: CreateGoalInput): Promise<TraineeGoal> {
+    checkGoalsRateLimit(`createGoal:${input.trainee_id}`, 50);
     try {
       const { data, error } = await supabase
         .from('trainee_goals')
@@ -63,6 +74,7 @@ export const goalsApi = {
   },
 
   async updateGoal(goalId: string, updates: Partial<CreateGoalInput>): Promise<TraineeGoal> {
+    checkGoalsRateLimit(`updateGoal:${goalId}`, 50);
     try {
       const { data, error } = await supabase
         .from('trainee_goals')
@@ -79,6 +91,7 @@ export const goalsApi = {
   },
 
   async deleteGoal(goalId: string): Promise<void> {
+    checkGoalsRateLimit(`deleteGoal:${goalId}`, 20);
     try {
       const { error } = await supabase
         .from('trainee_goals')
@@ -92,6 +105,7 @@ export const goalsApi = {
   },
 
   async updateGoalProgress(goalId: string, currentValue: number): Promise<TraineeGoal> {
+    checkGoalsRateLimit(`updateGoalProgress:${goalId}`, 100);
     try {
       const { data, error } = await supabase
         .from('trainee_goals')

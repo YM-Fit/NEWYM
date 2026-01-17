@@ -25,8 +25,17 @@ export interface CreateWorkoutFeedbackInput {
   notes?: string | null;
 }
 
+// Rate limiting helper for workout feedback API
+function checkWorkoutFeedbackRateLimit(key: string, maxRequests: number = 100): void {
+  const rateLimitResult = rateLimiter.check(key, maxRequests, 60000);
+  if (!rateLimitResult.allowed) {
+    throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+  }
+}
+
 export const workoutFeedbackApi = {
   async getWorkoutFeedback(workoutId: string, traineeId: string): Promise<WorkoutFeedback | null> {
+    checkWorkoutFeedbackRateLimit(`getWorkoutFeedback:${workoutId}:${traineeId}`, 100);
     try {
       const { data, error } = await supabase
         .from('workout_feedback')
@@ -43,6 +52,7 @@ export const workoutFeedbackApi = {
   },
 
   async submitFeedback(input: CreateWorkoutFeedbackInput): Promise<WorkoutFeedback> {
+    checkWorkoutFeedbackRateLimit(`submitFeedback:${input.workout_id}:${input.trainee_id}`, 50);
     try {
       const { data, error } = await supabase
         .from('workout_feedback')

@@ -15,6 +15,8 @@ export interface CommunicationTemplate {
   trainer_id: string;
   template_type: 'email' | 'sms' | 'whatsapp';
   name: string;
+  description?: string;
+  category?: string;
   subject?: string;
   body: string;
   variables: string[];

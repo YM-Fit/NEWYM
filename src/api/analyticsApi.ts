@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { handleApiError } from './config';
 import { logger } from '../utils/logger';
+import { rateLimiter } from '../utils/rateLimiter';
 
 export interface AdherenceMetrics {
   trainee_id: string;
@@ -26,8 +27,17 @@ export interface TraineeAnalytics {
   streak_days: number;
 }
 
+// Rate limiting helper for analytics API
+function checkAnalyticsRateLimit(key: string, maxRequests: number = 100): void {
+  const rateLimitResult = rateLimiter.check(key, maxRequests, 60000);
+  if (!rateLimitResult.allowed) {
+    throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+  }
+}
+
 export const analyticsApi = {
   async getTraineeAdherence(trainerId: string): Promise<AdherenceMetrics[]> {
+    checkAnalyticsRateLimit(`getTraineeAdherence:${trainerId}`, 100);
     try {
       // Get all trainees
       const { data: trainees, error: traineesError } = await supabase
@@ -38,13 +48,17 @@ export const analyticsApi = {
       if (traineesError) throw traineesError;
       if (!trainees || trainees.length === 0) return [];
 
+      // Type assertion for TypeScript
+      type TraineeRow = { id: string; full_name: string };
+      const typedTrainees = trainees as TraineeRow[];
+
       const now = new Date();
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const weekAgoStr = weekAgo.toISOString().split('T')[0];
 
       const metrics: AdherenceMetrics[] = [];
 
-      for (const trainee of trainees) {
+      for (const trainee of typedTrainees) {
         // Get workouts in the last 7 days
         const { data: workouts, error: workoutsError } = await supabase
           .from('workout_trainees')
@@ -62,8 +76,15 @@ export const analyticsApi = {
           continue;
         }
 
-        const completedWorkouts = workouts?.filter(
-          (w: any) => w.workouts?.is_completed === true
+        type WorkoutTraineeRow = {
+          workouts: {
+            workout_date: string;
+            is_completed: boolean;
+          };
+        };
+        
+        const completedWorkouts = (workouts as WorkoutTraineeRow[] | null)?.filter(
+          (w) => w.workouts?.is_completed === true
         ) || [];
 
         // Get last workout date
@@ -81,7 +102,7 @@ export const analyticsApi = {
           .limit(1)
           .maybeSingle();
 
-        const lastWorkoutDate = lastWorkout?.workouts?.workout_date || null;
+        const lastWorkoutDate = (lastWorkout as WorkoutTraineeRow | null)?.workouts?.workout_date || null;
         let daysSinceLastWorkout: number | null = null;
         if (lastWorkoutDate) {
           const lastDate = new Date(lastWorkoutDate);
@@ -128,6 +149,7 @@ export const analyticsApi = {
   },
 
   async getTraineeAnalytics(traineeId: string): Promise<TraineeAnalytics> {
+    checkAnalyticsRateLimit(`getTraineeAnalytics:${traineeId}`, 100);
     try {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -162,6 +184,11 @@ export const analyticsApi = {
         .gte('workouts.workout_date', startOfWeekStr);
 
       // Last measurement
+      type MeasurementRow = {
+        measurement_date: string;
+        weight: number;
+      };
+      
       const { data: lastMeasurement } = await supabase
         .from('measurements')
         .select('measurement_date, weight')
@@ -170,12 +197,14 @@ export const analyticsApi = {
         .order('measurement_date', { ascending: false })
         .limit(2)
         .maybeSingle();
+      
+      const typedLastMeasurement = lastMeasurement as MeasurementRow | null;
 
       let daysSinceLastMeasurement: number | null = null;
       let weightTrend: 'up' | 'down' | 'stable' | 'unknown' = 'unknown';
       
-      if (lastMeasurement) {
-        const lastDate = new Date(lastMeasurement.measurement_date);
+      if (typedLastMeasurement) {
+        const lastDate = new Date(typedLastMeasurement.measurement_date);
         daysSinceLastMeasurement = Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
         
         // Get previous measurement for trend
@@ -184,13 +213,16 @@ export const analyticsApi = {
           .select('weight')
           .eq('trainee_id', traineeId)
           .not('weight', 'is', null)
-          .lt('measurement_date', lastMeasurement.measurement_date)
+          .lt('measurement_date', typedLastMeasurement.measurement_date)
           .order('measurement_date', { ascending: false })
           .limit(1)
           .maybeSingle();
+        
+        type PreviousMeasurementRow = { weight: number };
+        const typedPreviousMeasurement = previousMeasurement as PreviousMeasurementRow | null;
 
-        if (previousMeasurement && lastMeasurement.weight && previousMeasurement.weight) {
-          const diff = lastMeasurement.weight - previousMeasurement.weight;
+        if (typedPreviousMeasurement && typedLastMeasurement.weight && typedPreviousMeasurement.weight) {
+          const diff = typedLastMeasurement.weight - typedPreviousMeasurement.weight;
           if (Math.abs(diff) < 0.5) {
             weightTrend = 'stable';
           } else if (diff > 0) {
@@ -229,7 +261,7 @@ export const analyticsApi = {
         workouts_this_month: workoutsThisMonth || 0,
         workouts_this_week: workoutsThisWeek || 0,
         average_weekly_workouts: averageWeeklyWorkouts,
-        last_measurement_date: lastMeasurement?.measurement_date || null,
+        last_measurement_date: typedLastMeasurement?.measurement_date || null,
         days_since_last_measurement: daysSinceLastMeasurement,
         weight_trend: weightTrend,
         adherence_percentage: Math.min(adherencePercentage, 100),
@@ -241,6 +273,7 @@ export const analyticsApi = {
   },
 
   async calculateStreak(traineeId: string): Promise<number> {
+    checkAnalyticsRateLimit(`calculateStreak:${traineeId}`, 100);
     try {
       const { data: workouts } = await supabase
         .from('workout_trainees')
@@ -279,6 +312,7 @@ export const analyticsApi = {
   },
 
   async getInactiveTrainees(trainerId: string, daysThreshold: number = 7): Promise<AdherenceMetrics[]> {
+    checkAnalyticsRateLimit(`getInactiveTrainees:${trainerId}`, 100);
     try {
       const adherence = await this.getTraineeAdherence(trainerId);
       return adherence.filter(

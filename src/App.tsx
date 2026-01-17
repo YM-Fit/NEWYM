@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy } from 'react';
+import { useState, Suspense, lazy, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -9,6 +9,8 @@ import RegisterForm from './components/auth/RegisterForm';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
 import SkipLinks from './components/common/SkipLinks';
 import { useIsTablet } from './hooks/useIsTablet';
+import { trackWebVitals, trackBundlePerformance } from './utils/performance';
+import { initIndexedDB } from './utils/indexedDb';
 
 // Import Supabase debug utility (runs health check in development)
 import './utils/supabaseDebug';
@@ -19,6 +21,46 @@ const TraineeApp = lazy(() => import('./components/trainee/TraineeApp'));
 
 function AppContent() {
   const { user, loading, userType } = useAuth();
+
+  // Track Web Vitals and performance metrics
+  useEffect(() => {
+    // Initialize IndexedDB for offline caching
+    if ('indexedDB' in window) {
+      initIndexedDB().catch((error) => {
+        console.warn('[IndexedDB] Failed to initialize:', error);
+      });
+    }
+
+    // Register Service Worker for caching
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch((error) => {
+        console.warn('[Service Worker] Failed to register:', error);
+      });
+    }
+
+    // Track Web Vitals
+    trackWebVitals((metric) => {
+      console.log('[Web Vitals]', metric);
+      // Send to analytics if available
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', metric.name.toLowerCase(), {
+          value: Math.round(metric.value),
+          metric_id: metric.id,
+          metric_value: metric.value,
+          metric_delta: metric.delta,
+        });
+      }
+    });
+
+    // Track bundle performance after load
+    if (document.readyState === 'complete') {
+      trackBundlePerformance();
+    } else {
+      window.addEventListener('load', () => {
+        setTimeout(trackBundlePerformance, 0);
+      });
+    }
+  }, []);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const isTablet = useIsTablet();
 

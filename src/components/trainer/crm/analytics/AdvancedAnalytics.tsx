@@ -20,6 +20,8 @@ import {
   type ConversionFunnel,
   type RevenueForecast
 } from '../../../../services/advancedAnalyticsService';
+import { usePagination } from '../../../../hooks/usePagination';
+import { Pagination } from '../../../ui/Pagination';
 import toast from 'react-hot-toast';
 import { logger } from '../../../../utils/logger';
 
@@ -31,6 +33,18 @@ export default function AdvancedAnalytics() {
   const [revenueForecast, setRevenueForecast] = useState<RevenueForecast[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'clv' | 'churn' | 'funnel' | 'forecast'>('clv');
+
+  // Pagination for CLV data
+  const clvPagination = usePagination(clvData, {
+    initialPage: 1,
+    initialPageSize: 10
+  });
+
+  // Pagination for revenue forecast
+  const forecastPagination = usePagination(revenueForecast, {
+    initialPage: 1,
+    initialPageSize: 6
+  });
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -141,7 +155,7 @@ export default function AdvancedAnalytics() {
             Client Lifetime Value
           </h2>
           <div className="space-y-3">
-            {clvData.slice(0, 10).map((client) => (
+            {clvPagination.paginatedData.map((client) => (
               <div key={client.traineeId} className="premium-card p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -185,6 +199,26 @@ export default function AdvancedAnalytics() {
               </div>
             )}
           </div>
+          
+          {/* Pagination for CLV */}
+          {clvPagination.totalPages > 1 && (
+            <div className="mt-4">
+              <Pagination
+                currentPage={clvPagination.currentPage}
+                totalPages={clvPagination.totalPages}
+                totalItems={clvPagination.totalItems}
+                startIndex={clvPagination.startIndex}
+                endIndex={clvPagination.endIndex}
+                hasNextPage={clvPagination.hasNextPage}
+                hasPrevPage={clvPagination.hasPrevPage}
+                onNextPage={clvPagination.nextPage}
+                onPrevPage={clvPagination.prevPage}
+                onGoToPage={clvPagination.goToPage}
+                showItemCount={true}
+                compact={true}
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -275,7 +309,7 @@ export default function AdvancedAnalytics() {
             Revenue Forecast
           </h2>
           <div className="space-y-3">
-            {revenueForecast.map((forecast) => (
+            {forecastPagination.paginatedData.map((forecast) => (
               <div key={forecast.month} className="premium-card p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -298,6 +332,26 @@ export default function AdvancedAnalytics() {
               </div>
             ))}
           </div>
+          
+          {/* Pagination for forecast */}
+          {forecastPagination.totalPages > 1 && (
+            <div className="mt-4">
+              <Pagination
+                currentPage={forecastPagination.currentPage}
+                totalPages={forecastPagination.totalPages}
+                totalItems={forecastPagination.totalItems}
+                startIndex={forecastPagination.startIndex}
+                endIndex={forecastPagination.endIndex}
+                hasNextPage={forecastPagination.hasNextPage}
+                hasPrevPage={forecastPagination.hasPrevPage}
+                onNextPage={forecastPagination.nextPage}
+                onPrevPage={forecastPagination.prevPage}
+                onGoToPage={forecastPagination.goToPage}
+                showItemCount={true}
+                compact={true}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

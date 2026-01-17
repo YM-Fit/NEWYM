@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import type { ApiResponse, TraineeLoginRequest, TraineeLoginResponse } from './types';
 import { API_CONFIG } from './config';
 import { logger } from '../utils/logger';
+import { rateLimiter } from '../utils/rateLimiter';
 
 /**
  * Sign in trainer with email and password
@@ -14,6 +15,13 @@ export async function signInTrainer(
   email: string,
   password: string
 ): Promise<ApiResponse<{ user: any; session: any }>> {
+  // Rate limiting: 5 login attempts per minute per email (security)
+  const rateLimitKey = `signInTrainer:${email}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 5, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי ניסיונות התחברות. נסה שוב בעוד דקה.' };
+  }
+
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -38,6 +46,13 @@ export async function signUpTrainer(
   password: string,
   fullName: string
 ): Promise<ApiResponse<{ user: any }>> {
+  // Rate limiting: 3 signup attempts per minute per email (security)
+  const rateLimitKey = `signUpTrainer:${email}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 3, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי ניסיונות הרשמה. נסה שוב בעוד דקה.' };
+  }
+
   try {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -81,6 +96,13 @@ export async function signInTrainee(
   phone: string,
   password: string
 ): Promise<ApiResponse<TraineeLoginResponse>> {
+  // Rate limiting: 5 login attempts per minute per phone (security)
+  const rateLimitKey = `signInTrainee:${phone}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 5, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי ניסיונות התחברות. נסה שוב בעוד דקה.' };
+  }
+
   try {
     const response = await fetch(
       `${API_CONFIG.SUPABASE_URL}/functions/v1/trainee-login`,

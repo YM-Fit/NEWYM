@@ -111,6 +111,35 @@ Deno.serve(async (req: Request) => {
       }
     );
 
+    // Apply security middleware (CSRF + Rate Limiting)
+    try {
+      const { applySecurityMiddleware } = await import("./_shared/middleware.ts");
+      const allowedOrigins = Deno.env.get("ALLOWED_ORIGINS")?.split(",").map(o => o.trim()) || [];
+      const middlewareResult = await applySecurityMiddleware(
+        req,
+        supabase,
+        {
+          allowedOrigins: allowedOrigins.length > 0 ? allowedOrigins : undefined,
+          rateLimitConfig: { maxRequests: 50, windowMs: 60000 }, // 50 requests per minute for save-workout
+          skipCSRF: false, // Enable CSRF for state-changing operations
+        }
+      );
+
+      if (!middlewareResult.allowed) {
+        return new Response(
+          JSON.stringify({ error: middlewareResult.error }),
+          {
+            status: middlewareResult.status || 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    } catch (middlewareError) {
+      // Graceful degradation: if middleware fails, log but continue
+      console.warn("Security middleware error:", middlewareError);
+      // Continue with request for now (in production, you might want to fail)
+    }
+
     // Verify user is authenticated
     const {
       data: { user },

@@ -3,9 +3,10 @@
  * Layout wrapper עם sub-navigation, breadcrumbs דינמיים ו-Quick Actions
  */
 
-import { ReactNode, useMemo } from 'react';
+import { ReactNode, useMemo, useEffect } from 'react';
 import { ChevronRight, Home, Plus, Search, Filter } from 'lucide-react';
 import { useCrm } from '../../../contexts/CrmContext';
+import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
 import CrmNavigation from './CrmNavigation';
 
 interface CrmLayoutProps {
@@ -97,61 +98,68 @@ export default function CrmLayout({
       
       {/* Breadcrumbs & Quick Actions */}
       {(finalBreadcrumbs.length > 0 || (showQuickActions && quickActions.length > 0)) && (
-        <div className="px-6 py-3 bg-zinc-900/50 border-b border-zinc-800 flex items-center justify-between">
+        <header className="px-6 py-3 bg-zinc-900/50 border-b border-zinc-800 flex items-center justify-between" role="toolbar" aria-label="פעולות מהירות">
           {/* Breadcrumbs */}
           {finalBreadcrumbs.length > 0 && (
-            <nav className="flex items-center gap-2 text-sm text-zinc-400">
-              <button
-                onClick={() => onViewChange('crm-dashboard')}
-                className="flex items-center gap-1 hover:text-white transition-colors"
-              >
-                <Home className="h-4 w-4" />
-                <span>CRM</span>
-              </button>
-              {finalBreadcrumbs.map((crumb, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <ChevronRight className="h-4 w-4" />
-                  {crumb.onClick ? (
-                    <button
-                      onClick={crumb.onClick}
-                      className="hover:text-white transition-colors"
-                    >
-                      {crumb.label}
-                    </button>
-                  ) : (
-                    <span className="text-zinc-500">{crumb.label}</span>
-                  )}
-                </div>
-              ))}
+            <nav className="flex items-center gap-2 text-sm text-zinc-400" aria-label="ניווט דרך">
+              <ol className="flex items-center gap-2 list-none">
+                <li>
+                  <button
+                    onClick={() => onViewChange('crm-dashboard')}
+                    className="flex items-center gap-1 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900 rounded"
+                    aria-label="חזור ל-CRM Dashboard"
+                  >
+                    <Home className="h-4 w-4" aria-hidden="true" />
+                    <span>CRM</span>
+                  </button>
+                </li>
+                {finalBreadcrumbs.map((crumb, index) => (
+                  <li key={index} className="flex items-center gap-2">
+                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                    {crumb.onClick ? (
+                      <button
+                        onClick={crumb.onClick}
+                        className="hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900 rounded"
+                        aria-label={`עבור ל-${crumb.label}`}
+                      >
+                        {crumb.label}
+                      </button>
+                    ) : (
+                      <span className="text-zinc-500" aria-current="page">{crumb.label}</span>
+                    )}
+                  </li>
+                ))}
+              </ol>
             </nav>
           )}
           
           {/* Quick Actions */}
           {showQuickActions && quickActions.length > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" role="group" aria-label="פעולות מהירות">
               {quickActions.map((action, index) => {
                 const Icon = action.icon;
                 return (
                   <button
                     key={index}
                     onClick={action.onClick}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all"
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+                    aria-label={action.label}
                     title={action.label}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-4 w-4" aria-hidden="true" />
                     <span className="hidden md:inline">{action.label}</span>
                   </button>
                 );
               })}
             </div>
           )}
-        </div>
+        </header>
       )}
       
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto" aria-label="תוכן CRM">
         {children}
-      </div>
+      </main>
     </div>
   );
 }

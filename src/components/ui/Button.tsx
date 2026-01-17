@@ -25,7 +25,7 @@ const sizeStyles: Record<ButtonSize, string> = {
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = 'primary', size = 'md', loading, icon, children, className = '', disabled, ripple = true, onClick, ...props }, ref) => {
+  ({ variant = 'primary', size = 'md', loading, icon, children, className = '', disabled, ripple = true, onClick, 'aria-label': ariaLabel, ...props }, ref) => {
     const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([]);
 
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -43,15 +43,22 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       onClick?.(e);
     };
 
+    // Determine ARIA label
+    const finalAriaLabel = ariaLabel || (loading ? `${children || 'טוען'}...` : undefined);
+
     return (
       <button
         ref={ref}
         disabled={disabled || loading}
         onClick={handleClick}
+        aria-label={finalAriaLabel}
+        aria-busy={loading}
+        aria-disabled={disabled || loading}
         className={`
           relative inline-flex items-center justify-center gap-2 font-semibold transition-all duration-300
           disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
           active:scale-[0.98]
+          focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900
           ${variantStyles[variant]}
           ${sizeStyles[size]}
           ${className}

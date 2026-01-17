@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database';
 import { logger } from '../utils/logger';
 import type { PostgrestError } from '@supabase/supabase-js';
+import { initializeCSRF } from '../utils/csrf';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -19,11 +20,15 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw error;
 }
 
+// Initialize CSRF token
+const csrfToken = initializeCSRF();
+
 // Create Supabase client with enhanced configuration
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   global: {
     headers: {
       'x-client-info': 'newym-app',
+      'x-csrf-token': csrfToken, // Add CSRF token to all requests
     },
   },
   auth: {

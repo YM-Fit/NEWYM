@@ -6,6 +6,24 @@ vi.mock('../lib/supabase', () => ({
   supabase: {
     from: vi.fn(),
   },
+  logSupabaseError: vi.fn(),
+}));
+
+vi.mock('../utils/rateLimiter', () => ({
+  rateLimiter: {
+    check: vi.fn().mockReturnValue({ allowed: true, remaining: 59, resetTime: Date.now() + 60000 }),
+  },
+}));
+
+const mockGetValidAccessToken = vi.fn().mockResolvedValue({
+  success: true,
+  data: 'valid-access-token',
+});
+
+vi.mock('../services/oauthTokenService', () => ({
+  OAuthTokenService: {
+    getValidAccessToken: mockGetValidAccessToken,
+  },
 }));
 
 vi.mock('./config', () => ({
@@ -19,6 +37,16 @@ vi.mock('../utils/logger', () => ({
   logger: {
     warn: vi.fn(),
     error: vi.fn(),
+  },
+}));
+
+vi.mock('../utils/rateLimiter', () => ({
+  rateLimiter: {
+    check: vi.fn().mockReturnValue({
+      allowed: true,
+      remaining: 100,
+      resetTime: Date.now() + 60000,
+    }),
   },
 }));
 
@@ -173,6 +201,11 @@ describe('googleCalendarApi', () => {
         ],
       };
 
+      mockGetValidAccessToken.mockResolvedValue({
+        success: true,
+        data: 'valid-access-token',
+      });
+
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: async () => mockGoogleEvents,
@@ -190,6 +223,11 @@ describe('googleCalendarApi', () => {
     });
 
     it('should use Google API when forceRefresh is true', async () => {
+      mockGetValidAccessToken.mockResolvedValue({
+        success: true,
+        data: 'valid-access-token',
+      });
+
       const mockCredentialsSelect = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({
@@ -205,6 +243,11 @@ describe('googleCalendarApi', () => {
 
       (supabase.from as any).mockReturnValue({
         select: mockCredentialsSelect,
+      });
+
+      mockGetValidAccessToken.mockResolvedValue({
+        success: true,
+        data: 'valid-access-token',
       });
 
       const mockGoogleEvents = {
@@ -265,6 +308,11 @@ describe('googleCalendarApi', () => {
         return { select: vi.fn() };
       });
 
+      mockGetValidAccessToken.mockResolvedValue({
+        success: true,
+        data: 'valid-access-token',
+      });
+
       const mockGoogleEvents = { items: [] };
       (global.fetch as any).mockResolvedValue({
         ok: true,
@@ -313,6 +361,12 @@ describe('googleCalendarApi', () => {
     });
 
     it('should return error when token is expired', async () => {
+      const oauthService = await import('../services/oauthTokenService');
+      (oauthService.OAuthTokenService.getValidAccessToken as any).mockResolvedValue({
+        success: false,
+        error: 'נדרש אימות מחדש ל-Google Calendar',
+      });
+
       const mockSelect = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnThis(),
         gte: vi.fn().mockReturnThis(),
@@ -440,6 +494,11 @@ describe('googleCalendarApi', () => {
           return { select: mockCredentialsSelect };
         }
         return { select: vi.fn() };
+      });
+
+      mockGetValidAccessToken.mockResolvedValue({
+        success: true,
+        data: 'valid-access-token',
       });
 
       (global.fetch as any).mockResolvedValue({

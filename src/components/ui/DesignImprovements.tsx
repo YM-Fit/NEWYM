@@ -418,7 +418,7 @@ export function DesignImprovementsDemo() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <AnimatedStatCard
               value={125}
-              label="סה\"כ מתאמנים"
+              label="סה&quot;כ מתאמנים"
               icon={Users}
               trend={12}
               color="emerald"

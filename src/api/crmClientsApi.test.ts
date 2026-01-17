@@ -376,5 +376,237 @@ describe('crmClientsApi', () => {
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockInteractions);
     });
+
+    it('should handle empty interactions', async () => {
+      const mockChain = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({
+          data: [],
+          error: null,
+        }),
+      };
+
+      (supabase.from as any).mockReturnValue(mockChain);
+
+      const result = await getClientInteractions('trainee-1');
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual([]);
+    });
+
+    it('should handle database errors', async () => {
+      const mockChain = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'Database error' },
+        }),
+      };
+
+      (supabase.from as any).mockReturnValue(mockChain);
+
+      const result = await getClientInteractions('trainee-1');
+
+      expect(result.success).toBeUndefined();
+      expect(result.error).toBe('Database error');
+    });
+  });
+
+  describe('getClientsFromCalendar with pagination', () => {
+    it('should support page-based pagination', async () => {
+      const mockClients = Array.from({ length: 10 }, (_, i) => ({
+        id: `client-${i}`,
+        trainer_id: 'trainer-1',
+        google_client_identifier: `client-${i}@example.com`,
+        client_name: `Client ${i}`,
+        total_events_count: 5,
+        upcoming_events_count: 2,
+        completed_events_count: 3,
+        crm_data: {},
+      }));
+
+      const mockChain = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        range: vi.fn().mockResolvedValue({
+          data: mockClients.slice(0, 5),
+          error: null,
+          count: 10,
+        }),
+      };
+
+      (supabase.from as any).mockReturnValue(mockChain);
+
+      const result = await getClientsFromCalendar('trainer-1', { page: 1, pageSize: 5 });
+
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+    });
+
+    it('should support cursor-based pagination', async () => {
+      const mockClients = Array.from({ length: 6 }, (_, i) => ({
+        id: `client-${i}`,
+        trainer_id: 'trainer-1',
+        google_client_identifier: `client-${i}@example.com`,
+        client_name: `Client ${i}`,
+        total_events_count: 5,
+        upcoming_events_count: 2,
+        completed_events_count: 3,
+        crm_data: {},
+      }));
+
+      const mockChain = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        lt: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue({
+          data: mockClients,
+          error: null,
+        }),
+      };
+
+      (supabase.from as any).mockReturnValue(mockChain);
+
+      const result = await getClientsFromCalendar('trainer-1', { cursor: 'client-10', pageSize: 5 });
+
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+    });
+  });
+
+  describe('getClientCalendarStats edge cases', () => {
+    it('should handle client with no events', async () => {
+      const mockClient = {
+        id: '1',
+        trainer_id: 'trainer-1',
+        total_events_count: 0,
+        upcoming_events_count: 0,
+        completed_events_count: 0,
+        first_event_date: null,
+        last_event_date: null,
+      };
+
+      const mockChain = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: mockClient,
+          error: null,
+        }),
+      };
+
+      (supabase.from as any).mockReturnValue(mockChain);
+
+      const result = await getClientCalendarStats('client-1');
+
+      expect(result.success).toBe(true);
+      expect(result.data?.totalEvents).toBe(0);
+      expect(result.data?.workoutFrequency).toBeUndefined();
+    });
+
+    it('should calculate workout frequency correctly', async () => {
+      const firstDate = new Date('2024-01-01');
+      const lastDate = new Date('2024-01-29'); // 28 days = 4 weeks
+      const mockClient = {
+        id: '1',
+        trainer_id: 'trainer-1',
+        total_events_count: 8, // 8 events in 4 weeks = 2 per week
+        upcoming_events_count: 2,
+        completed_events_count: 6,
+        first_event_date: firstDate.toISOString(),
+        last_event_date: lastDate.toISOString(),
+      };
+
+      const mockChain = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: mockClient,
+          error: null,
+        }),
+      };
+
+      (supabase.from as any).mockReturnValue(mockChain);
+
+      const result = await getClientCalendarStats('client-1');
+
+      expect(result.success).toBe(true);
+      expect(result.data?.workoutFrequency).toBeCloseTo(2, 1); // ~2 events per week
+    });
+  });
+
+  describe('createClientInteraction edge cases', () => {
+    it('should handle interaction with all optional fields', async () => {
+      const interaction = {
+        trainee_id: 'trainee-1',
+        trainer_id: 'trainer-1',
+        interaction_type: 'meeting' as const,
+        subject: 'Test Subject',
+        description: 'Test Description',
+        outcome: 'positive',
+        next_action: 'Follow up',
+        next_action_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        google_event_id: 'event-1',
+      };
+
+      const mockInteraction = {
+        id: '1',
+        ...interaction,
+        interaction_date: new Date().toISOString(),
+      };
+
+      const insertChain = {
+        insert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: mockInteraction,
+          error: null,
+        }),
+      };
+
+      const updateChain = {
+        update: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({
+          error: null,
+        }),
+      };
+
+      (supabase.from as any)
+        .mockReturnValueOnce(insertChain)
+        .mockReturnValueOnce(updateChain);
+
+      const result = await createClientInteraction(interaction);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(mockInteraction);
+    });
+
+    it('should handle interaction creation errors', async () => {
+      const interaction = {
+        trainee_id: 'trainee-1',
+        trainer_id: 'trainer-1',
+        interaction_type: 'call' as const,
+      };
+
+      const insertChain = {
+        insert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'Insert failed' },
+        }),
+      };
+
+      (supabase.from as any).mockReturnValue(insertChain);
+
+      const result = await createClientInteraction(interaction);
+
+      expect(result.success).toBeUndefined();
+      expect(result.error).toBe('Insert failed');
+    });
   });
 });

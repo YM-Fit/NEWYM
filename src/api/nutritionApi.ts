@@ -5,10 +5,18 @@ import type {
   NutritionFoodItem,
   WeekDiaryData,
 } from '../types/nutritionTypes';
+import { rateLimiter } from '../utils/rateLimiter';
 
 export async function getActiveMealPlanWithMeals(
   traineeId: string
 ): Promise<{ plan: MealPlan | null; meals: MealPlanMeal[] }> {
+  // Rate limiting: 100 requests per minute per trainee
+  const rateLimitKey = `getActiveMealPlan:${traineeId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 100, 60000);
+  if (!rateLimitResult.allowed) {
+    throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+  }
+
   if (!traineeId) {
     return { plan: null, meals: [] };
   }
@@ -72,6 +80,13 @@ export async function createFoodItem(
   mealId: string,
   foodItem: Omit<NutritionFoodItem, 'id' | 'meal_id' | 'created_at'>
 ): Promise<NutritionFoodItem | null> {
+  // Rate limiting: 50 requests per minute per meal
+  const rateLimitKey = `createFoodItem:${mealId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 50, 60000);
+  if (!rateLimitResult.allowed) {
+    throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+  }
+
   const { data, error } = await supabase
     .from('meal_plan_food_items')
     .insert({
@@ -93,6 +108,13 @@ export async function updateFoodItem(
   foodItemId: string,
   updates: Partial<Omit<NutritionFoodItem, 'id' | 'meal_id' | 'created_at'>>
 ): Promise<NutritionFoodItem | null> {
+  // Rate limiting: 50 requests per minute per food item
+  const rateLimitKey = `updateFoodItem:${foodItemId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 50, 60000);
+  if (!rateLimitResult.allowed) {
+    throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+  }
+
   const { data, error } = await supabase
     .from('meal_plan_food_items')
     .update(updates)
@@ -109,6 +131,13 @@ export async function updateFoodItem(
 }
 
 export async function deleteFoodItem(foodItemId: string): Promise<boolean> {
+  // Rate limiting: 20 requests per minute per food item
+  const rateLimitKey = `deleteFoodItem:${foodItemId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 20, 60000);
+  if (!rateLimitResult.allowed) {
+    throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+  }
+
   const { error } = await supabase
     .from('meal_plan_food_items')
     .delete()
@@ -127,6 +156,13 @@ export async function getWeekDiaryData(
   startDate: string,
   endDate: string
 ): Promise<WeekDiaryData> {
+  // Rate limiting: 100 requests per minute per trainee
+  const rateLimitKey = `getWeekDiaryData:${traineeId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 100, 60000);
+  if (!rateLimitResult.allowed) {
+    throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+  }
+
   if (!traineeId) {
     return { meals: [], waterLogs: [], diaryEntries: [] };
   }

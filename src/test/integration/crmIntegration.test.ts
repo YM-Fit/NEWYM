@@ -228,4 +228,243 @@ describe('CRM Integration Tests', () => {
       expect(crmClientsApi.getClientsFromCalendar).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('Pipeline Flow Integration', () => {
+    it('should complete pipeline status change flow', async () => {
+      const trainerId = 'trainer-123';
+      const traineeId = 'trainee-1';
+
+      // Mock trainee fetch
+      const mockTrainee = {
+        id: traineeId,
+        trainer_id: trainerId,
+        crm_status: 'lead',
+      };
+
+      const fetchQueryBuilder = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: mockTrainee,
+          error: null,
+        }),
+      };
+
+      const updateQueryBuilder = {
+        update: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({
+          data: null,
+          error: null,
+        }),
+      };
+
+      (supabase.from as any).mockImplementation((table: string) => {
+        if (table === 'trainees') {
+          return {
+            select: vi.fn().mockReturnValue(fetchQueryBuilder),
+            update: vi.fn().mockReturnValue(updateQueryBuilder),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn(),
+          };
+        }
+        return { select: vi.fn().mockReturnThis(), eq: vi.fn() };
+      });
+
+      // Import CrmPipelineService
+      const { CrmPipelineService } = await import('../../services/crmPipelineService');
+
+      // Change status from lead to qualified
+      const result = await CrmPipelineService.updateClientStatus(
+        traineeId,
+        'qualified' as any,
+        'Initial qualification'
+      );
+
+      expect(result.success).toBe(true);
+      expect(updateQueryBuilder.update).toHaveBeenCalledWith({ crm_status: 'qualified' });
+    });
+
+    it('should handle pipeline movement logging', async () => {
+      const trainerId = 'trainer-123';
+      const traineeId = 'trainee-1';
+
+      const mockTrainee = {
+        id: traineeId,
+        trainer_id: trainerId,
+        crm_status: 'lead',
+      };
+
+      const fetchQueryBuilder = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: mockTrainee,
+          error: null,
+        }),
+      };
+
+      const updateQueryBuilder = {
+        update: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({
+          data: null,
+          error: null,
+        }),
+      };
+
+      (supabase.from as any).mockImplementation((table: string) => {
+        if (table === 'trainees') {
+          return {
+            select: vi.fn().mockReturnValue(fetchQueryBuilder),
+            update: vi.fn().mockReturnValue(updateQueryBuilder),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn(),
+          };
+        }
+        return { select: vi.fn().mockReturnThis(), eq: vi.fn() };
+      });
+
+      const { CrmPipelineService } = await import('../../services/crmPipelineService');
+
+      const result = await CrmPipelineService.updateClientStatus(
+        traineeId,
+        'active' as any,
+        'Converted to active client'
+      );
+
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('Interaction Flow Integration', () => {
+    it('should complete interaction creation flow', async () => {
+      const trainerId = 'trainer-123';
+      const traineeId = 'trainee-1';
+
+      const interaction = {
+        trainee_id: traineeId,
+        trainer_id: trainerId,
+        interaction_type: 'call' as const,
+        subject: 'Follow-up call',
+        description: 'Discussed progress',
+        outcome: 'positive',
+        next_action: 'Schedule next session',
+        next_action_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+
+      const mockInteraction = {
+        id: 'interaction-1',
+        ...interaction,
+        interaction_date: new Date().toISOString(),
+      };
+
+      const insertChain = {
+        insert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: mockInteraction,
+          error: null,
+        }),
+      };
+
+      const updateChain = {
+        update: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({
+          error: null,
+        }),
+      };
+
+      (supabase.from as any)
+        .mockReturnValueOnce(insertChain)
+        .mockReturnValueOnce(updateChain);
+
+      const result = await CrmService.createInteraction(interaction);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(mockInteraction);
+    });
+
+    it('should invalidate cache after interaction creation', async () => {
+      const trainerId = 'trainer-123';
+      const traineeId = 'trainee-1';
+
+      const interaction = {
+        trainee_id: traineeId,
+        trainer_id: trainerId,
+        interaction_type: 'email' as const,
+        subject: 'Test email',
+      };
+
+      const mockInteraction = {
+        id: 'interaction-1',
+        ...interaction,
+        interaction_date: new Date().toISOString(),
+      };
+
+      const insertChain = {
+        insert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: mockInteraction,
+          error: null,
+        }),
+      };
+
+      const updateChain = {
+        update: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({
+          error: null,
+        }),
+      };
+
+      (crmClientsApi.createClientInteraction as any).mockResolvedValue({
+        success: true,
+        data: mockInteraction,
+      });
+
+      (supabase.from as any)
+        .mockReturnValueOnce(insertChain)
+        .mockReturnValueOnce(updateChain);
+
+      await CrmService.createInteraction(interaction);
+
+      // Cache should be invalidated
+      const clientsResult = await CrmService.getClients(trainerId, true);
+      // Should fetch fresh data
+      expect(crmClientsApi.getClientsFromCalendar).toHaveBeenCalled();
+    });
+  });
+
+  describe('Real-time Updates Integration', () => {
+    it('should sync state with real-time updates', async () => {
+      const trainerId = 'trainer-123';
+      const mockClients = [
+        { id: 'client-1', trainer_id: trainerId, client_name: 'Client 1' },
+      ];
+
+      (crmClientsApi.getClientsFromCalendar as any).mockResolvedValue({
+        success: true,
+        data: mockClients,
+      });
+
+      // Initial load
+      const initialResult = await CrmService.getClients(trainerId);
+      expect(initialResult.success).toBe(true);
+      expect(initialResult.data).toEqual(mockClients);
+
+      // Simulate real-time update
+      const updatedClient = { ...mockClients[0], client_name: 'Updated Client 1' };
+      
+      // Invalidate cache to simulate real-time update
+      CrmService.invalidateCache('clients:');
+
+      (crmClientsApi.getClientsFromCalendar as any).mockResolvedValue({
+        success: true,
+        data: [updatedClient],
+      });
+
+      // Next call should get updated data
+      const updatedResult = await CrmService.getClients(trainerId, false);
+      expect(updatedResult.data?.[0].client_name).toBe('Updated Client 1');
+    });
+  });
 });

@@ -4,11 +4,19 @@
 
 import { supabase } from '../lib/supabase';
 import type { ApiResponse } from './types';
+import { rateLimiter } from '../utils/rateLimiter';
 
 /**
  * Get trainee by ID
  */
 export async function getTrainee(traineeId: string): Promise<ApiResponse<any>> {
+  // Rate limiting: 100 requests per minute per trainee
+  const rateLimitKey = `getTrainee:${traineeId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 100, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const { data, error } = await supabase
       .from('trainees')
@@ -30,6 +38,13 @@ export async function getTrainee(traineeId: string): Promise<ApiResponse<any>> {
  * Get all trainees for a trainer
  */
 export async function getTrainees(trainerId: string): Promise<ApiResponse<any[]>> {
+  // Rate limiting: 100 requests per minute per trainer
+  const rateLimitKey = `getTrainees:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 100, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const { data, error } = await supabase
       .from('trainees')
@@ -54,6 +69,13 @@ export async function createTrainee(
   trainerId: string,
   traineeData: any
 ): Promise<ApiResponse<any>> {
+  // Rate limiting: 20 create requests per minute per trainer
+  const rateLimitKey = `createTrainee:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 20, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const { data, error } = await supabase
       .from('trainees')
@@ -83,6 +105,13 @@ export async function updateTrainee(
   traineeId: string,
   traineeData: any
 ): Promise<ApiResponse<any>> {
+  // Rate limiting: 50 update requests per minute per trainee
+  const rateLimitKey = `updateTrainee:${traineeId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 50, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const { data, error } = await supabase
       .from('trainees')
@@ -105,6 +134,13 @@ export async function updateTrainee(
  * Delete trainee
  */
 export async function deleteTrainee(traineeId: string): Promise<ApiResponse> {
+  // Rate limiting: 5 delete requests per minute per trainee (security)
+  const rateLimitKey = `deleteTrainee:${traineeId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 5, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const { error } = await supabase
       .from('trainees')

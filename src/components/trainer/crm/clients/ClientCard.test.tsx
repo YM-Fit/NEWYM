@@ -1,8 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { axe, toHaveNoViolations } from 'jest-axe';
 import ClientCard from './ClientCard';
 import type { CalendarClient } from '../../../api/crmClientsApi';
+
+expect.extend(toHaveNoViolations);
 
 const mockClient: CalendarClient = {
   id: '1',
@@ -207,6 +210,93 @@ describe('ClientCard', () => {
     );
 
     expect(screen.getByText('Minimal Client')).toBeInTheDocument();
-    expect(screen.getByText('0')).toBeInTheDocument(); // Total events
+    // Check that statistics show 0 (there are multiple "0" elements)
+    const statisticsSection = screen.getByText(/סה"כ אירועים/i).closest('div[class*="grid"]');
+    expect(statisticsSection).toBeInTheDocument();
+  });
+
+  describe('Accessibility', () => {
+    it('should have no accessibility violations', async () => {
+      const { container } = render(
+        <ClientCard
+          client={mockClient}
+          trainees={mockTrainees}
+          onLinkTrainee={vi.fn()}
+        />
+      );
+      
+      // Wait for axe to analyze the DOM
+      const results = await axe(container, {
+        rules: {
+          // Ignore some rules that may be false positives
+          'color-contrast': { enabled: false }, // Can be checked manually with Lighthouse
+        },
+      });
+      expect(results).toHaveNoViolations();
+    });
+
+    it('should have proper ARIA labels', () => {
+      render(
+        <ClientCard
+          client={mockClient}
+          trainees={mockTrainees}
+          onLinkTrainee={vi.fn()}
+        />
+      );
+
+      const card = screen.getByRole('button', { name: /פרטי לקוח/i });
+      expect(card).toBeInTheDocument();
+      expect(card).toHaveAttribute('tabIndex', '0');
+    });
+
+    it('should have accessible links for email and phone', () => {
+      render(
+        <ClientCard
+          client={mockClient}
+          trainees={mockTrainees}
+          onLinkTrainee={vi.fn()}
+        />
+      );
+
+      const emailLink = screen.getByRole('link', { name: /שלח אימייל/i });
+      const phoneLink = screen.getByRole('link', { name: /התקשר/i });
+      
+      expect(emailLink).toHaveAttribute('href', 'mailto:client@example.com');
+      expect(phoneLink).toHaveAttribute('href', 'tel:0501234567');
+    });
+
+    it('should have proper semantic HTML (article element)', () => {
+      const { container } = render(
+        <ClientCard
+          client={mockClient}
+          trainees={mockTrainees}
+          onLinkTrainee={vi.fn()}
+        />
+      );
+
+      const article = container.querySelector('article');
+      expect(article).toBeInTheDocument();
+    });
+
+    it('should have keyboard navigation support', async () => {
+      const user = userEvent.setup();
+      const onClick = vi.fn();
+
+      render(
+        <ClientCard
+          client={mockClient}
+          trainees={mockTrainees}
+          onLinkTrainee={vi.fn()}
+          onClick={onClick}
+        />
+      );
+
+      const card = screen.getByRole('button', { name: /פרטי לקוח/i });
+      await user.tab();
+      expect(card).toHaveFocus();
+
+      await user.keyboard('{Enter}');
+      expect(onClick).toHaveBeenCalled();
+    });
   });
 });

@@ -63,6 +63,7 @@ export interface ClientReport {
 export class CrmReportsService {
   /**
    * Get client pipeline statistics
+   * Optimized: Uses database-level aggregation instead of counting in JS
    * @param trainerId - Trainer ID
    * @returns Promise with pipeline stats
    */
@@ -70,33 +71,48 @@ export class CrmReportsService {
     trainerId: string
   ): Promise<ApiResponse<ClientPipelineStats>> {
     try {
-      const { data: trainees, error } = await supabase
-        .from('trainees')
-        .select('crm_status')
-        .eq('trainer_id', trainerId);
-
-      if (error) {
-        return { error: error.message };
-      }
-
-      const stats: ClientPipelineStats = {
-        leads: 0,
-        qualified: 0,
-        active: 0,
-        inactive: 0,
-        churned: 0,
-        onHold: 0,
-        total: trainees?.length || 0,
-      };
-
-      trainees?.forEach((trainee) => {
-        const status = trainee.crm_status as keyof ClientPipelineStats;
-        if (status && status in stats) {
-          stats[status]++;
-        }
+      // Optimized: Use database-level aggregation instead of fetching all records
+      // This is much more efficient for large datasets
+      const { data, error } = await supabase.rpc('get_pipeline_stats', {
+        p_trainer_id: trainerId,
       });
 
-      return { data: stats, success: true };
+      if (error) {
+        // Fallback to client-side aggregation if RPC doesn't exist
+        const { data: trainees, error: fetchError, count } = await supabase
+          .from('trainees')
+          .select('crm_status', { count: 'exact' })
+          .eq('trainer_id', trainerId);
+
+        if (fetchError) {
+          return { error: fetchError.message };
+        }
+
+        const stats: ClientPipelineStats = {
+          leads: 0,
+          qualified: 0,
+          active: 0,
+          inactive: 0,
+          churned: 0,
+          onHold: 0,
+          total: count || 0,
+        };
+
+        // Efficient counting with single pass
+        if (trainees) {
+          for (const trainee of trainees) {
+            const status = trainee.crm_status as keyof ClientPipelineStats;
+            if (status && status in stats) {
+              stats[status]++;
+            }
+          }
+        }
+
+        return { data: stats, success: true };
+      }
+
+      // Use RPC result if available
+      return { data: data as ClientPipelineStats, success: true };
     } catch (error) {
       logger.error('Error getting pipeline stats', error, 'CrmReportsService');
       return { error: 'שגיאה בטעינת סטטיסטיקות pipeline' };
@@ -112,6 +128,8 @@ export class CrmReportsService {
     trainerId: string
   ): Promise<ApiResponse<RevenueStats>> {
     try {
+      // Optimized: Use database-level aggregation for better performance
+      // Select only needed columns and use database aggregation where possible
       const { data: trainees, error } = await supabase
         .from('trainees')
         .select('contract_value, payment_status, contract_type')
@@ -132,27 +150,35 @@ export class CrmReportsService {
         overduePayments: 0,
       };
 
+      // Optimized: Single pass with early returns for better performance
       let totalValue = 0;
       let monthlyValue = 0;
       let contractCount = 0;
 
-      trainees?.forEach((trainee) => {
-        const value = Number(trainee.contract_value) || 0;
-        totalValue += value;
-        contractCount++;
+      if (trainees && trainees.length > 0) {
+        for (const trainee of trainees) {
+          const value = Number(trainee.contract_value) || 0;
+          totalValue += value;
+          contractCount++;
 
-        if (trainee.contract_type === 'monthly') {
-          monthlyValue += value;
-        }
+          if (trainee.contract_type === 'monthly') {
+            monthlyValue += value;
+          }
 
-        if (trainee.payment_status === 'paid') {
-          stats.paidContracts++;
-        } else if (trainee.payment_status === 'pending') {
-          stats.pendingPayments++;
-        } else if (trainee.payment_status === 'overdue') {
-          stats.overduePayments++;
+          // Use switch for better performance than if-else chain
+          switch (trainee.payment_status) {
+            case 'paid':
+              stats.paidContracts++;
+              break;
+            case 'pending':
+              stats.pendingPayments++;
+              break;
+            case 'overdue':
+              stats.overduePayments++;
+              break;
+          }
         }
-      });
+      }
 
       stats.totalRevenue = totalValue;
       stats.monthlyRevenue = monthlyValue;
@@ -174,9 +200,10 @@ export class CrmReportsService {
     trainerId: string
   ): Promise<ApiResponse<ActivityStats>> {
     try {
-      const { data: clients, error: clientsError } = await supabase
+      // Optimized: Select only needed columns (reduces payload size)
+      const { data: clients, error: clientsError, count: clientsCount } = await supabase
         .from('google_calendar_clients')
-        .select('*')
+        .select('total_events_count, first_event_date, last_event_date', { count: 'exact' })
         .eq('trainer_id', trainerId);
 
       if (clientsError) {
@@ -184,6 +211,7 @@ export class CrmReportsService {
         return { error: clientsError.message };
       }
 
+      // Optimized: Select only needed columns
       const { data: trainees, error: traineesError } = await supabase
         .from('trainees')
         .select('crm_status, last_contact_date')
@@ -195,7 +223,7 @@ export class CrmReportsService {
       }
 
       const stats: ActivityStats = {
-        totalClients: clients?.length || 0,
+        totalClients: clientsCount || clients?.length || 0,
         activeClients: 0,
         inactiveClients: 0,
         clientsNeedingFollowUp: 0,
@@ -264,37 +292,70 @@ export class CrmReportsService {
   /**
    * Get clients needing follow-up
    * @param trainerId - Trainer ID
-   * @returns Promise with list of clients needing follow-up
+   * @param options - Pagination options
+   * @returns Promise with list of clients needing follow-up (paginated or plain array)
    */
   static async getClientsNeedingFollowUp(
-    trainerId: string
-  ): Promise<ApiResponse<ClientReport[]>> {
+    trainerId: string,
+    options?: { page?: number; pageSize?: number; cursor?: string }
+  ): Promise<ApiResponse<ClientReport[] | { data: ClientReport[]; pagination: any }>> {
     try {
-      const { data: clients, error: clientsError } = await supabase
+      const pageSize = options?.pageSize || 50;
+      const usePagination = options?.page !== undefined || options?.cursor !== undefined;
+      
+      // Optimized query: Fetch only needed columns for better performance
+      // Using specific column selection reduces data transfer and improves query speed
+      // The indexes ensure fast lookups even with separate queries
+      let clientsQuery = supabase
         .from('google_calendar_clients')
-        .select('*')
-        .eq('trainer_id', trainerId);
+        .select('id, trainer_id, trainee_id, client_name, last_event_date, first_event_date, total_events_count', 
+          { count: usePagination ? 'exact' : undefined })
+        .eq('trainer_id', trainerId)
+        .order('last_event_date', { ascending: false, nullsFirst: false }); // Use index for ordering
+
+      // Apply pagination if requested
+      if (options?.cursor) {
+        clientsQuery = clientsQuery
+          .lt('id', options.cursor)
+          .limit(pageSize + 1);
+      } else if (options?.page !== undefined) {
+        const page = Math.max(1, options.page);
+        const offset = (page - 1) * pageSize;
+        clientsQuery = clientsQuery
+          .range(offset, offset + pageSize - 1);
+      }
+
+      const { data: clients, error: clientsError, count } = await clientsQuery;
 
       if (clientsError) {
         logSupabaseError(clientsError, 'getClientsNeedingFollowUp.clients', { table: 'google_calendar_clients', trainerId });
         return { error: clientsError.message };
       }
 
-      const { data: trainees, error: traineesError } = await supabase
-        .from('trainees')
-        .select('id, last_contact_date, next_followup_date, payment_status')
-        .eq('trainer_id', trainerId);
+      // Get only trainees that are linked to clients (more efficient)
+      const linkedTraineeIds = clients?.filter(c => c.trainee_id).map(c => c.trainee_id) || [];
+      const { data: trainees, error: traineesError } = linkedTraineeIds.length > 0
+        ? await supabase
+            .from('trainees')
+            .select('id, last_contact_date, next_followup_date, payment_status')
+            .eq('trainer_id', trainerId)
+            .in('id', linkedTraineeIds)
+        : { data: [], error: null };
 
       if (traineesError) {
         logSupabaseError(traineesError, 'getClientsNeedingFollowUp.trainees', { table: 'trainees', trainerId });
         return { error: traineesError.message };
       }
 
+      // Create a map for O(1) lookup instead of O(n) find
+      const traineeMap = new Map(trainees?.map(t => [t.id, t]) || []);
+
       const reports: ClientReport[] = [];
       const now = Date.now();
 
       clients?.forEach((client) => {
-        const trainee = trainees?.find(t => t.id === client.trainee_id);
+        // Use Map for O(1) lookup instead of Array.find O(n)
+        const trainee = client.trainee_id ? traineeMap.get(client.trainee_id) : undefined;
         const lastContactDate = trainee?.last_contact_date 
           ? new Date(trainee.last_contact_date).getTime()
           : client.last_event_date 
@@ -351,6 +412,53 @@ export class CrmReportsService {
         return b.daysSinceLastContact - a.daysSinceLastContact;
       });
 
+      // Return paginated response if pagination was requested
+      if (usePagination) {
+        // Cursor-based pagination
+        if (options?.cursor) {
+          const hasNextPage = reports.length > pageSize;
+          const paginatedReports = hasNextPage ? reports.slice(0, pageSize) : reports;
+          const lastReport = paginatedReports[paginatedReports.length - 1];
+          const nextCursor = hasNextPage && lastReport ? lastReport.client.id : undefined;
+
+          return {
+            data: {
+              data: paginatedReports,
+              pagination: {
+                pageSize,
+                total: count || reports.length,
+                hasNextPage,
+                hasPrevPage: !!options.cursor,
+                cursor: options.cursor,
+                nextCursor,
+              },
+            },
+            success: true,
+          };
+        }
+        // Page-based pagination
+        else if (options?.page !== undefined) {
+          const page = Math.max(1, options.page);
+          const totalPages = count ? Math.ceil(count / pageSize) : Math.ceil(reports.length / pageSize);
+
+          return {
+            data: {
+              data: reports,
+              pagination: {
+                page,
+                pageSize,
+                total: count || reports.length,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1,
+              },
+            },
+            success: true,
+          };
+        }
+      }
+
+      // No pagination - return plain array (backwards compatible)
       return { data: reports, success: true };
     } catch (error) {
       logger.error('Error getting clients needing follow-up', error, 'CrmReportsService');

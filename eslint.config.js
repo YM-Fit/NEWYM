@@ -23,6 +23,24 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+      // TypeScript strict rules
+      '@typescript-eslint/no-explicit-any': 'error',
+      // Note: unsafe-* rules require type information and may not work for all files
+      // They're disabled for now to avoid configuration issues
+      '@typescript-eslint/explicit-function-return-type': 'off', // Too strict for React
+      '@typescript-eslint/explicit-module-boundary-types': 'off', // Too strict for React
+      // Code quality rules
+      'max-lines-per-function': ['warn', { max: 50, skipBlankLines: true, skipComments: true }],
+      'complexity': ['warn', 15],
+      'max-depth': ['warn', 4],
+      'max-params': ['warn', 5],
+      // Best practices
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'prefer-const': 'error',
+      'no-var': 'error',
+      'object-shorthand': 'warn',
+      'prefer-arrow-callback': 'warn',
+      'prefer-template': 'warn',
     },
   }
 );

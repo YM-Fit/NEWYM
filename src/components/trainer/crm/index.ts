@@ -20,11 +20,14 @@ export { default as AdvancedAnalytics } from './analytics/AdvancedAnalytics';
 export { default as CrmReportsView } from './reports/CrmReportsView';
 
 // Clients
-export { default as ClientsListView } from './clients/ClientsListView';
 export { default as ClientsListViewEnhanced } from './clients/ClientsListViewEnhanced';
 export { default as ClientCard } from './clients/ClientCard';
 export { default as ClientDetailView } from './clients/ClientDetailView';
 export { default as AdvancedFilters } from './clients/AdvancedFilters';
+
+// Automation
+export { default as AutomationRulesView } from './automation/AutomationRulesView';
+export { default as VisualRuleBuilder } from './automation/VisualRuleBuilder';
 
 // Shared Components
 export * from './shared';

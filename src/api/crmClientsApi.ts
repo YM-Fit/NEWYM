@@ -29,6 +29,8 @@
 import { supabase, logSupabaseError } from '../lib/supabase';
 import type { ApiResponse } from './types';
 import { CRM_VALIDATION } from '../constants/crmConstants';
+import { handleApiError } from '../utils/apiErrorHandler';
+import { rateLimiter } from '../utils/rateLimiter';
 
 export interface CalendarClient {
   id: string;
@@ -43,7 +45,7 @@ export interface CalendarClient {
   total_events_count: number;
   upcoming_events_count: number;
   completed_events_count: number;
-  crm_data: Record<string, any>;
+  crm_data: Record<string, unknown>;
 }
 
 export interface ClientInteraction {
@@ -69,6 +71,26 @@ export interface ClientCalendarStats {
   workoutFrequency?: number; // events per week
 }
 
+export interface PaginationOptions {
+  page?: number;
+  pageSize?: number;
+  cursor?: string; // For cursor-based pagination
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination?: {
+    page?: number;
+    pageSize: number;
+    total?: number;
+    totalPages?: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+    cursor?: string;
+    nextCursor?: string;
+  };
+}
+
 /**
  * Get clients from Google Calendar
  * 
@@ -92,27 +114,119 @@ export interface ClientCalendarStats {
  * Clients are ordered by last_event_date in descending order (most recent first).
  */
 export async function getClientsFromCalendar(
-  trainerId: string
-): Promise<ApiResponse<CalendarClient[]>> {
+  trainerId: string,
+  options?: PaginationOptions
+): Promise<ApiResponse<CalendarClient[] | PaginatedResponse<CalendarClient>>> {
   if (!trainerId || typeof trainerId !== 'string') {
     return { error: 'trainerId הוא חובה' };
   }
 
+  // Rate limiting: 100 requests per minute per trainer
+  const rateLimitKey = `getClients:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 100, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
-    const { data, error } = await supabase
+    const pageSize = options?.pageSize || 50;
+    const usePagination = options?.page !== undefined || options?.cursor !== undefined;
+    
+    let query = supabase
       .from('google_calendar_clients')
-      .select('*')
-      .eq('trainer_id', trainerId)
-      .order('last_event_date', { ascending: false, nullsFirst: false });
+      .select('*', { count: usePagination ? 'exact' : undefined })
+      .eq('trainer_id', trainerId);
+
+    // Cursor-based pagination (more efficient for large datasets)
+    if (options?.cursor) {
+      // Use ID-based cursor for more reliable pagination
+      const cursorId = options.cursor;
+      
+      query = query
+        .order('last_event_date', { ascending: false, nullsFirst: false })
+        .order('id', { ascending: false }) // Secondary sort for consistency
+        .lt('id', cursorId) // Use ID-based cursor for more reliable pagination
+        .limit(pageSize + 1); // Fetch one extra to determine if there's a next page
+    }
+    // Page-based pagination
+    else if (options?.page !== undefined) {
+      const page = Math.max(1, options.page);
+      const offset = (page - 1) * pageSize;
+      
+      query = query
+        .order('last_event_date', { ascending: false, nullsFirst: false })
+        .order('id', { ascending: false }) // Secondary sort for consistency
+        .range(offset, offset + pageSize - 1);
+    }
+    // No pagination - default ordering only
+    else {
+      query = query.order('last_event_date', { ascending: false, nullsFirst: false });
+    }
+
+    const { data, error, count } = await query;
 
     if (error) {
       logSupabaseError(error, 'getClientsFromCalendar', { table: 'google_calendar_clients', trainerId });
       return { error: error.message };
     }
 
-    return { data: data || [], success: true };
-  } catch (err: any) {
-    return { error: err.message || 'שגיאה בטעינת לקוחות מה-Calendar' };
+    const clients = data || [];
+
+    // Return paginated response if pagination was requested
+    if (usePagination) {
+      // Cursor-based pagination
+      if (options?.cursor) {
+        const hasNextPage = clients.length > pageSize;
+        const paginatedClients = hasNextPage ? clients.slice(0, pageSize) : clients;
+        const lastClient = paginatedClients[paginatedClients.length - 1];
+        const nextCursor = hasNextPage && lastClient ? lastClient.id : undefined;
+
+        return {
+          data: {
+            data: paginatedClients,
+            pagination: {
+              pageSize,
+              total: count,
+              hasNextPage,
+              hasPrevPage: !!options.cursor,
+              cursor: options.cursor,
+              nextCursor,
+            },
+          },
+          success: true,
+        };
+      }
+      // Page-based pagination
+      else if (options?.page !== undefined) {
+        const page = Math.max(1, options.page);
+        const totalPages = count ? Math.ceil(count / pageSize) : 0;
+
+        return {
+          data: {
+            data: clients,
+            pagination: {
+              page,
+              pageSize,
+              total: count || 0,
+              totalPages,
+              hasNextPage: page < totalPages,
+              hasPrevPage: page > 1,
+            },
+          },
+          success: true,
+        };
+      }
+    }
+
+    // No pagination - return plain array (backwards compatible)
+    return { data: clients, success: true };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בטעינת לקוחות מה-Calendar',
+      context: 'getClientsFromCalendar',
+      additionalInfo: { trainerId },
+    });
+    return { error: errorMessage };
   }
 }
 
@@ -135,9 +249,24 @@ export async function getClientsFromCalendar(
  * Calculates statistics including total events, upcoming events, completed events,
  * and workout frequency (events per week) based on first and last event dates.
  */
+// Rate limiting helper for CRM API
+function checkRateLimit(key: string, maxRequests: number = 100, windowMs: number = 60000): { allowed: boolean; error?: string } {
+  const rateLimitResult = rateLimiter.check(key, maxRequests, windowMs);
+  if (!rateLimitResult.allowed) {
+    return { allowed: false, error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+  return { allowed: true };
+}
+
 export async function getClientCalendarStats(
   clientId: string
 ): Promise<ApiResponse<ClientCalendarStats>> {
+  // Rate limiting: 100 requests per minute per client
+  const rateLimitCheck = checkRateLimit(`getClientCalendarStats:${clientId}`, 100, 60000);
+  if (!rateLimitCheck.allowed) {
+    return { error: rateLimitCheck.error || 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const { data: client, error: clientError } = await supabase
       .from('google_calendar_clients')
@@ -171,18 +300,40 @@ export async function getClientCalendarStats(
     };
 
     return { data: stats, success: true };
-  } catch (err: any) {
-    return { error: err.message || 'שגיאה בחישוב סטטיסטיקות לקוח' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בחישוב סטטיסטיקות לקוח',
+      context: 'getClientCalendarStats',
+      additionalInfo: { clientId },
+    });
+    return { error: errorMessage };
   }
 }
 
 /**
  * Get client upcoming events
  */
+export interface GoogleCalendarSyncEvent {
+  id: string;
+  trainer_id: string;
+  event_id: string;
+  event_start_time: string;
+  event_end_time: string;
+  event_summary?: string;
+  sync_status: string;
+  [key: string]: unknown;
+}
+
 export async function getClientUpcomingEvents(
   clientId: string,
   trainerId: string
-): Promise<ApiResponse<any[]>> {
+): Promise<ApiResponse<GoogleCalendarSyncEvent[]>> {
+  // Rate limiting: 100 requests per minute per trainer
+  const rateLimitCheck = checkRateLimit(`getClientUpcomingEvents:${trainerId}`, 100, 60000);
+  if (!rateLimitCheck.allowed) {
+    return { error: rateLimitCheck.error || 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const { data: client, error: clientError } = await supabase
       .from('google_calendar_clients')
@@ -214,8 +365,13 @@ export async function getClientUpcomingEvents(
     }) || [];
 
     return { data: upcoming, success: true };
-  } catch (err: any) {
-    return { error: err.message || 'שגיאה בטעינת אירועים קרובים' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בטעינת אירועים קרובים',
+      context: 'getClientUpcomingEvents',
+      additionalInfo: { clientId, trainerId },
+    });
+    return { error: errorMessage };
   }
 }
 
@@ -226,12 +382,23 @@ export async function syncClientFromCalendar(
   clientId: string,
   trainerId: string
 ): Promise<ApiResponse> {
+  // Rate limiting: 20 sync requests per minute per trainer
+  const rateLimitCheck = checkRateLimit(`syncClientFromCalendar:${trainerId}`, 20, 60000);
+  if (!rateLimitCheck.allowed) {
+    return { error: rateLimitCheck.error || 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     // This would trigger a sync for this specific client
     // For now, we'll just return success as the periodic sync will handle it
     return { success: true };
-  } catch (err: any) {
-    return { error: err.message || 'שגיאה בסנכרון לקוח' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בסנכרון לקוח',
+      context: 'syncClientFromCalendar',
+      additionalInfo: { clientId, trainerId },
+    });
+    return { error: errorMessage };
   }
 }
 
@@ -272,6 +439,13 @@ export async function syncClientFromCalendar(
 export async function createClientInteraction(
   interaction: Omit<ClientInteraction, 'id' | 'created_at'>
 ): Promise<ApiResponse<ClientInteraction>> {
+  // Rate limiting: 50 requests per minute per trainer
+  const rateLimitKey = `createInteraction:${interaction.trainer_id}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 50, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const { data, error } = await supabase
       .from('client_interactions')
@@ -309,8 +483,16 @@ export async function createClientInteraction(
       .eq('id', interaction.trainee_id);
 
     return { data, success: true };
-  } catch (err: any) {
-    return { error: err.message || 'שגיאה ביצירת אינטראקציה' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה ביצירת אינטראקציה',
+      context: 'createClientInteraction',
+      additionalInfo: { 
+        trainee_id: interaction.trainee_id,
+        interaction_type: interaction.interaction_type,
+      },
+    });
+    return { error: errorMessage };
   }
 }
 
@@ -318,14 +500,49 @@ export async function createClientInteraction(
  * Get client interactions
  */
 export async function getClientInteractions(
-  traineeId: string
-): Promise<ApiResponse<ClientInteraction[]>> {
+  traineeId: string,
+  options?: PaginationOptions
+): Promise<ApiResponse<ClientInteraction[] | PaginatedResponse<ClientInteraction>>> {
+  // Rate limiting: 100 requests per minute per trainee
+  const rateLimitKey = `getClientInteractions:${traineeId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 100, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
-    const { data, error } = await supabase
+    const pageSize = options?.pageSize || 50;
+    const usePagination = options?.page !== undefined || options?.cursor !== undefined;
+    
+    let query = supabase
       .from('client_interactions')
-      .select('*')
-      .eq('trainee_id', traineeId)
-      .order('interaction_date', { ascending: false });
+      .select('*', { count: usePagination ? 'exact' : undefined })
+      .eq('trainee_id', traineeId);
+
+    // Cursor-based pagination (more efficient for large datasets)
+    if (options?.cursor) {
+      query = query
+        .order('interaction_date', { ascending: false })
+        .order('id', { ascending: false })
+        .lt('id', options.cursor)
+        .limit(pageSize + 1);
+    }
+    // Page-based pagination
+    else if (options?.page !== undefined) {
+      const page = Math.max(1, options.page);
+      const offset = (page - 1) * pageSize;
+      
+      query = query
+        .order('interaction_date', { ascending: false })
+        .order('id', { ascending: false })
+        .range(offset, offset + pageSize - 1);
+    }
+    // No pagination - default ordering only
+    else {
+      query = query.order('interaction_date', { ascending: false });
+    }
+
+    const { data, error, count } = await query;
 
     if (error) {
       logSupabaseError(error, 'getClientInteractions', { 
@@ -335,9 +552,63 @@ export async function getClientInteractions(
       return { error: error.message };
     }
 
-    return { data: data || [], success: true };
-  } catch (err: any) {
-    return { error: err.message || 'שגיאה בטעינת אינטראקציות' };
+    const interactions = data || [];
+
+    // Return paginated response if pagination was requested
+    if (usePagination) {
+      // Cursor-based pagination
+      if (options?.cursor) {
+        const hasNextPage = interactions.length > pageSize;
+        const paginatedInteractions = hasNextPage ? interactions.slice(0, pageSize) : interactions;
+        const lastInteraction = paginatedInteractions[paginatedInteractions.length - 1];
+        const nextCursor = hasNextPage && lastInteraction ? lastInteraction.id : undefined;
+
+        return {
+          data: {
+            data: paginatedInteractions,
+            pagination: {
+              pageSize,
+              total: count,
+              hasNextPage,
+              hasPrevPage: !!options.cursor,
+              cursor: options.cursor,
+              nextCursor,
+            },
+          },
+          success: true,
+        };
+      }
+      // Page-based pagination
+      else if (options?.page !== undefined) {
+        const page = Math.max(1, options.page);
+        const totalPages = count ? Math.ceil(count / pageSize) : 0;
+
+        return {
+          data: {
+            data: interactions,
+            pagination: {
+              page,
+              pageSize,
+              total: count || 0,
+              totalPages,
+              hasNextPage: page < totalPages,
+              hasPrevPage: page > 1,
+            },
+          },
+          success: true,
+        };
+      }
+    }
+
+    // No pagination - return plain array (backwards compatible)
+    return { data: interactions, success: true };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בטעינת אינטראקציות',
+      context: 'getClientInteractions',
+      additionalInfo: { traineeId },
+    });
+    return { error: errorMessage };
   }
 }
 
@@ -386,6 +657,12 @@ export async function linkTraineeToCalendarClient(
   }
   if (!trainerId || typeof trainerId !== 'string') {
     return { error: 'trainerId הוא חובה' };
+  }
+
+  // Rate limiting: 20 link requests per minute per trainer
+  const rateLimitCheck = checkRateLimit(`linkTraineeToCalendarClient:${trainerId}`, 20, 60000);
+  if (!rateLimitCheck.allowed) {
+    return { error: rateLimitCheck.error || 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
   }
 
   try {
@@ -444,7 +721,12 @@ export async function linkTraineeToCalendarClient(
     }
 
     return { success: true };
-  } catch (err: any) {
-    return { error: err.message || 'שגיאה בקישור מתאמן ללקוח' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בקישור מתאמן ללקוח',
+      context: 'linkTraineeToCalendarClient',
+      additionalInfo: { traineeId, clientId, trainerId },
+    });
+    return { error: errorMessage };
   }
 }

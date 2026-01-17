@@ -1,57 +1,67 @@
 import { useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { logger } from '../utils/logger';
+import { retryWithBackoff, RetryOptions } from '../utils/retry';
+import { errorTracking, ErrorSeverity } from '../utils/errorTracking';
 
 interface ErrorHandlerOptions {
   showToast?: boolean;
   logError?: boolean;
   retry?: () => Promise<any>;
-  maxRetries?: number;
+  retryOptions?: RetryOptions;
   customMessage?: string;
+  severity?: ErrorSeverity;
 }
 
 export function useErrorHandler() {
-  const handleError = useCallback((
-    error: unknown,
-    context: string,
-    options: ErrorHandlerOptions = {}
-  ): Promise<any> => {
-    const {
-      showToast = true,
-      logError = true,
-      retry,
-      maxRetries = 3,
-      customMessage,
-    } = options;
+  const handleError = useCallback(
+    (error: unknown, context: string, options: ErrorHandlerOptions = {}): Promise<any> => {
+      const {
+        showToast = true,
+        logError = true,
+        retry,
+        retryOptions,
+        customMessage,
+        severity = ErrorSeverity.MEDIUM,
+      } = options;
 
-    // Extract error message
-    let errorMessage = 'שגיאה לא ידועה';
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    } else if (typeof error === 'string') {
-      errorMessage = error;
-    } else if (error && typeof error === 'object' && 'message' in error) {
-      errorMessage = String((error as { message: unknown }).message);
-    }
+      // Extract error message
+      let errorMessage = 'שגיאה לא ידועה';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = String((error as { message: unknown }).message);
+      }
 
-    // Log error
-    if (logError) {
-      logger.error(`Error in ${context}:`, error, context);
-    }
+      // Track error
+      const errorObj = error instanceof Error ? error : new Error(String(error));
+      errorTracking.track(errorObj, severity, {
+        component: context,
+        action: 'handleError',
+      });
 
-    // Show toast
-    if (showToast) {
-      const userMessage = customMessage || getUserFriendlyMessage(errorMessage);
-      toast.error(userMessage);
-    }
+      // Log error
+      if (logError) {
+        logger.error(`Error in ${context}:`, error, context);
+      }
 
-    // Retry logic
-    if (retry && maxRetries > 0) {
-      return retryWithBackoff(retry, maxRetries);
-    }
+      // Show toast
+      if (showToast) {
+        const userMessage = customMessage || getUserFriendlyMessage(errorMessage);
+        toast.error(userMessage);
+      }
 
-    return Promise.reject(error);
-  }, []);
+      // Retry logic with advanced options
+      if (retry) {
+        return retryWithBackoff(retry, retryOptions || {});
+      }
+
+      return Promise.reject(error);
+    },
+    []
+  );
 
   return { handleError };
 }
@@ -77,20 +87,3 @@ function getUserFriendlyMessage(errorMessage: string): string {
   return 'אירעה שגיאה. נסה שוב מאוחר יותר';
 }
 
-async function retryWithBackoff(
-  fn: () => Promise<any>,
-  maxRetries: number,
-  delay = 1000
-): Promise<any> {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await fn();
-    } catch (error) {
-      if (i === maxRetries - 1) {
-        throw error;
-      }
-      await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
-    }
-  }
-  throw new Error('Max retries exceeded');
-}

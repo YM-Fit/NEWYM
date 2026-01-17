@@ -3,10 +3,12 @@
  * תצוגת דוחות ואנליטיקה CRM
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 import { BarChart3, TrendingUp, Users, AlertCircle, DollarSign } from 'lucide-react';
 import { CrmReportsService } from '../../../../services/crmReportsService';
 import { useAuth } from '../../../../contexts/AuthContext';
+import { usePagination } from '../../../../hooks/usePagination';
+import { Pagination } from '../../../ui/Pagination';
 import { logger } from '../../../../utils/logger';
 import toast from 'react-hot-toast';
 import type { 
@@ -23,6 +25,18 @@ export default function CrmReportsView() {
   const [revenueStats, setRevenueStats] = useState<RevenueStats | null>(null);
   const [activityStats, setActivityStats] = useState<ActivityStats | null>(null);
   const [clientsNeedingFollowUp, setClientsNeedingFollowUp] = useState<ClientReport[]>([]);
+  const [followUpPaginationState, setFollowUpPaginationState] = useState({
+    page: 1,
+    pageSize: 10,
+    total: 0,
+    totalPages: 0,
+  });
+
+  // Pagination for clients needing follow-up (client-side fallback)
+  const followUpPagination = usePagination(clientsNeedingFollowUp, {
+    initialPage: 1,
+    initialPageSize: 10
+  });
 
   useEffect(() => {
     if (user) {
@@ -40,7 +54,10 @@ export default function CrmReportsView() {
         CrmReportsService.getPipelineStats(user.id),
         CrmReportsService.getRevenueStats(user.id),
         CrmReportsService.getActivityStats(user.id),
-        CrmReportsService.getClientsNeedingFollowUp(user.id),
+        CrmReportsService.getClientsNeedingFollowUp(user.id, {
+          page: followUpPaginationState.page,
+          pageSize: followUpPaginationState.pageSize,
+        }),
       ]);
 
       if (pipelineResult.success && pipelineResult.data) {
@@ -65,7 +82,22 @@ export default function CrmReportsView() {
       }
 
       if (followUpResult.success && followUpResult.data) {
-        setClientsNeedingFollowUp(followUpResult.data);
+        // Handle paginated response
+        if (followUpResult.data && typeof followUpResult.data === 'object' && 'data' in followUpResult.data) {
+          const paginatedData = followUpResult.data as { data: ClientReport[]; pagination: any };
+          setClientsNeedingFollowUp(paginatedData.data);
+          if (paginatedData.pagination) {
+            setFollowUpPaginationState({
+              page: paginatedData.pagination.page || 1,
+              pageSize: paginatedData.pagination.pageSize || 10,
+              total: paginatedData.pagination.total || 0,
+              totalPages: paginatedData.pagination.totalPages || 0,
+            });
+          }
+        } else {
+          // Plain array (backwards compatible)
+          setClientsNeedingFollowUp(followUpResult.data as ClientReport[]);
+        }
       } else if (followUpResult.error) {
         logger.error('Error loading follow-up clients', followUpResult.error, 'CrmReportsView');
         toast.error(followUpResult.error);
@@ -231,7 +263,7 @@ export default function CrmReportsView() {
             לקוחות הזקוקים למעקב ({clientsNeedingFollowUp.length})
           </h2>
           <div className="space-y-3">
-            {clientsNeedingFollowUp.slice(0, 10).map((report) => (
+            {followUpPagination.paginatedData.map((report) => (
               <div
                 key={report.client.id}
                 className={`p-4 rounded-lg border ${
@@ -264,12 +296,27 @@ export default function CrmReportsView() {
                 </div>
               </div>
             ))}
-            {clientsNeedingFollowUp.length > 10 && (
-              <p className="text-sm text-zinc-400 text-center pt-2">
-                ועוד {clientsNeedingFollowUp.length - 10} לקוחות...
-              </p>
-            )}
           </div>
+          
+          {/* Pagination for follow-up clients */}
+          {followUpPagination.totalPages > 1 && (
+            <div className="mt-4">
+              <Pagination
+                currentPage={followUpPagination.currentPage}
+                totalPages={followUpPagination.totalPages}
+                totalItems={followUpPagination.totalItems}
+                startIndex={followUpPagination.startIndex}
+                endIndex={followUpPagination.endIndex}
+                hasNextPage={followUpPagination.hasNextPage}
+                hasPrevPage={followUpPagination.hasPrevPage}
+                onNextPage={followUpPagination.nextPage}
+                onPrevPage={followUpPagination.prevPage}
+                onGoToPage={followUpPagination.goToPage}
+                showItemCount={true}
+                compact={true}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -90,10 +90,10 @@ export default function CrmDashboard({ onViewChange }: CrmDashboardProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="premium-card p-6">
+      <header className="premium-card p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500/20 rounded-lg">
+            <div className="p-2 bg-emerald-500/20 rounded-lg" aria-hidden="true">
               <BarChart3 className="h-6 w-6 text-emerald-400" />
             </div>
             <div>
@@ -111,23 +111,23 @@ export default function CrmDashboard({ onViewChange }: CrmDashboardProps) {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-4" aria-label="סטטיסטיקות מהירות">
           {pipelineStats && (
             <>
-              <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/20">
+              <article className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/20" role="status" aria-label={`סה"כ לקוחות: ${pipelineStats.total}`}>
                 <div className="flex items-center gap-2 mb-2">
-                  <Users className="h-5 w-5 text-blue-400" />
+                  <Users className="h-5 w-5 text-blue-400" aria-hidden="true" />
                   <div className="text-sm text-zinc-400">סה"כ לקוחות</div>
                 </div>
                 <div className="text-2xl font-bold text-blue-400">{pipelineStats.total}</div>
-              </div>
-              <div className="bg-emerald-500/10 rounded-lg p-4 border border-emerald-500/20">
+              </article>
+              <article className="bg-emerald-500/10 rounded-lg p-4 border border-emerald-500/20" role="status" aria-label={`לקוחות פעילים: ${pipelineStats.active}`}>
                 <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="h-5 w-5 text-emerald-400" />
+                  <TrendingUp className="h-5 w-5 text-emerald-400" aria-hidden="true" />
                   <div className="text-sm text-zinc-400">לקוחות פעילים</div>
                 </div>
                 <div className="text-2xl font-bold text-emerald-400">{pipelineStats.active}</div>
-              </div>
+              </article>
             </>
           )}
           {revenueStats && (
@@ -150,8 +150,8 @@ export default function CrmDashboard({ onViewChange }: CrmDashboardProps) {
               </div>
             </>
           )}
-        </div>
-      </div>
+        </section>
+      </header>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

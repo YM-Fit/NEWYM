@@ -3,6 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { setSecureSession, getSecureSession, removeSecureSession } from '../utils/secureSession';
 import { signInTrainer, signInTrainee as apiSignInTrainee, signUpTrainer, signOut as apiSignOut } from '../api/authApi';
+import { setUserContext, clearUserContext, setTag } from '../utils/sentry';
 
 interface TraineeSession {
   trainee_id: string;
@@ -104,6 +105,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTraineeId,
         setTraineeSession
       );
+      
+      // Set Sentry user context
+      if (session?.user) {
+        setUserContext(session.user.id, session.user.email, {
+          userType: session.user.user_metadata?.is_trainee ? 'trainee' : 'trainer',
+        });
+        setTag('user_type', session.user.user_metadata?.is_trainee ? 'trainee' : 'trainer');
+      } else {
+        clearUserContext();
+      }
+      
       setLoading(false);
     });
 
@@ -116,6 +128,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTraineeId,
         setTraineeSession
       );
+      
+      // Update Sentry user context
+      if (session?.user) {
+        setUserContext(session.user.id, session.user.email, {
+          userType: session.user.user_metadata?.is_trainee ? 'trainee' : 'trainer',
+        });
+        setTag('user_type', session.user.user_metadata?.is_trainee ? 'trainee' : 'trainer');
+      } else {
+        clearUserContext();
+      }
+      
       setLoading(false);
     });
 
@@ -162,6 +185,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    // Clear Sentry user context on logout
+    clearUserContext();
+    
     await apiSignOut();
     await supabase.auth.signOut();
 

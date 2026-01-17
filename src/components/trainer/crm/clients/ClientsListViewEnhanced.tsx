@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
-import { Users, RefreshCw, Search, Keyboard, Download, FileText, Wifi, WifiOff, TrendingUp, BarChart3 } from 'lucide-react';
+import { Users, RefreshCw, Search, Keyboard, Download, FileText, Wifi, WifiOff, TrendingUp, BarChart3, CheckSquare, Square } from 'lucide-react';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { useCrm } from '../../../../contexts/CrmContext';
 import { CrmService } from '../../../../services/crmService';
@@ -12,7 +12,10 @@ import { getTrainees } from '../../../../api/traineeApi';
 import { useCrmRealtime } from '../../../../hooks/useCrmRealtime';
 import { useCrmEvents } from '../../../../hooks/useCrmEvents';
 import { useKeyboardShortcut } from '../../../../hooks/useKeyboardShortcut';
+import { usePagination } from '../../../../hooks/usePagination';
+import { Pagination } from '../../../ui/Pagination';
 import { exportClientsToCSV, exportClientsToPDF } from '../../../../utils/exportUtils';
+import BulkActionsPanel from './BulkActionsPanel';
 import VirtualList from '../../../common/VirtualList';
 import toast from 'react-hot-toast';
 import { logger } from '../../../../utils/logger';
@@ -36,6 +39,8 @@ export default function ClientsListViewEnhanced({ onClientClick, onViewChange }:
   const [linkingClient, setLinkingClient] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [useVirtualScrolling, setUseVirtualScrolling] = useState(false);
+  const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set());
+  const [showBulkActions, setShowBulkActions] = useState(false);
 
   // Sync with context clients
   useEffect(() => {
@@ -123,15 +128,30 @@ export default function ClientsListViewEnhanced({ onClientClick, onViewChange }:
     }
   }, [loadData, loading]);
 
+  // Focus search input with / or Ctrl+K / Cmd+K
   useKeyboardShortcut('/', (e) => {
     if (e) {
       e.preventDefault();
     }
-    const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+    const searchInput = document.getElementById('client-search-input') as HTMLInputElement;
     if (searchInput) {
       searchInput.focus();
     }
   }, [], { preventDefault: true });
+
+  useKeyboardShortcut('k', () => {
+    const searchInput = document.getElementById('client-search-input') as HTMLInputElement;
+    if (searchInput) {
+      searchInput.focus();
+    }
+  }, [], { ctrlKey: true, preventDefault: true });
+
+  // New client with Ctrl+N / Cmd+N
+  useKeyboardShortcut('n', () => {
+    // TODO: Open add client form
+    // For now, just show a toast message
+    toast('פתיחת טופס הוספת לקוח', { icon: '➕' });
+  }, [], { ctrlKey: true, preventDefault: true });
 
   // Export functions
   const handleExportCSV = useCallback(async () => {
@@ -169,6 +189,33 @@ export default function ClientsListViewEnhanced({ onClientClick, onViewChange }:
       setExporting(false);
     }
   }, [clients]);
+
+  // Bulk selection handlers
+  const handleToggleSelect = useCallback((clientId: string) => {
+    setSelectedClients(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(clientId)) {
+        newSet.delete(clientId);
+      } else {
+        newSet.add(clientId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    if (selectedClients.size === filteredClients.length) {
+      setSelectedClients(new Set());
+    } else {
+      setSelectedClients(new Set(filteredClients.map(c => c.id)));
+    }
+  }, [filteredClients, selectedClients]);
+
+  const handleBulkActionsSuccess = useCallback(() => {
+    setSelectedClients(new Set());
+    setShowBulkActions(false);
+    loadData();
+  }, [loadData]);
 
   const handleLinkTrainee = async (clientId: string, traineeId: string) => {
     if (!user) return;
@@ -240,6 +287,12 @@ export default function ClientsListViewEnhanced({ onClientClick, onViewChange }:
     });
   }, [clients, searchQuery, filterStatus]);
 
+  // Pagination hook
+  const pagination = usePagination(filteredClients, { 
+    initialPage: 1, 
+    initialPageSize: 20 
+  });
+
   const stats = useMemo(() => ({
     total: clients.length,
     linked: clients.filter(c => c.trainee_id).length,
@@ -283,86 +336,101 @@ export default function ClientsListViewEnhanced({ onClientClick, onViewChange }:
               <>
                 <button
                   onClick={() => onViewChange('crm-pipeline')}
-                  className="px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-all text-sm flex items-center gap-2"
+                  className="px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-all text-sm flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+                  aria-label="עבור ל-Pipeline"
                 >
-                  <TrendingUp className="h-4 w-4" />
+                  <TrendingUp className="h-4 w-4" aria-hidden="true" />
                   Pipeline
                 </button>
                 <button
                   onClick={() => onViewChange('crm-dashboard')}
-                  className="px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-all text-sm flex items-center gap-2"
+                  className="px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-all text-sm flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+                  aria-label="עבור ל-Dashboard"
                 >
-                  <BarChart3 className="h-4 w-4" />
+                  <BarChart3 className="h-4 w-4" aria-hidden="true" />
                   Dashboard
                 </button>
                 <button
                   onClick={() => onViewChange('crm-analytics')}
-                  className="px-3 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 rounded-lg transition-all text-sm flex items-center gap-2"
+                  className="px-3 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 rounded-lg transition-all text-sm flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+                  aria-label="עבור לאנליטיקה"
                 >
-                  <BarChart3 className="h-4 w-4" />
+                  <BarChart3 className="h-4 w-4" aria-hidden="true" />
                   אנליטיקה
                 </button>
                 <button
                   onClick={() => onViewChange('crm-reports')}
-                  className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-all text-sm flex items-center gap-2"
+                  className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-all text-sm flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+                  aria-label="עבור לדוחות"
                 >
-                  <FileText className="h-4 w-4" />
+                  <FileText className="h-4 w-4" aria-hidden="true" />
                   דוחות
                 </button>
               </>
             )}
             {/* Real-time status indicator */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800/50">
+            <div 
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800/50"
+              role="status"
+              aria-live="polite"
+              aria-label={isConnected ? "מחובר לעדכונים בזמן אמת" : "מנותק מעדכונים בזמן אמת"}
+            >
               {isConnected ? (
                 <>
-                  <Wifi className="h-4 w-4 text-emerald-400" />
+                  <Wifi className="h-4 w-4 text-emerald-400" aria-hidden="true" />
                   <span className="text-xs text-emerald-400">מחובר</span>
                 </>
               ) : (
                 <>
-                  <WifiOff className="h-4 w-4 text-yellow-400" />
+                  <WifiOff className="h-4 w-4 text-yellow-400" aria-hidden="true" />
                   <span className="text-xs text-yellow-400">מנותק</span>
                 </>
               )}
             </div>
             <button
               onClick={loadData}
-              className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-              aria-label="רענן"
+              className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+              aria-label="רענן רשימת לקוחות"
+              disabled={loading}
+              aria-busy={loading}
             >
-              <RefreshCw className="h-5 w-5" />
+              <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
             </button>
           </div>
         </div>
 
         {/* Quick Navigation Tabs */}
         {onViewChange && (
-          <div className="flex gap-2 mb-6 border-b border-zinc-800">
+          <nav className="flex gap-2 mb-6 border-b border-zinc-800" role="navigation" aria-label="ניווט מהיר CRM">
             <button
               onClick={() => onViewChange('crm-pipeline')}
-              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent hover:border-blue-500 transition-all"
+              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent hover:border-blue-500 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+              aria-label="עבור ל-Pipeline"
             >
               Pipeline
             </button>
             <button
               onClick={() => onViewChange('crm-dashboard')}
-              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent hover:border-purple-500 transition-all"
+              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent hover:border-purple-500 transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+              aria-label="עבור ל-Dashboard"
             >
               Dashboard
             </button>
             <button
               onClick={() => onViewChange('crm-analytics')}
-              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent hover:border-yellow-500 transition-all"
+              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent hover:border-yellow-500 transition-all focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+              aria-label="עבור לאנליטיקה"
             >
               אנליטיקה
             </button>
             <button
               onClick={() => onViewChange('crm-reports')}
-              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent hover:border-emerald-500 transition-all"
+              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent hover:border-emerald-500 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+              aria-label="עבור לדוחות"
             >
               דוחות
             </button>
-          </div>
+          </nav>
         )}
 
         {/* Statistics */}
@@ -391,21 +459,56 @@ export default function ClientsListViewEnhanced({ onClientClick, onViewChange }:
 
         {/* Filters and Actions */}
         <div className="flex flex-col sm:flex-row gap-4">
+          {/* Select All Checkbox */}
+          {filteredClients.length > 0 && (
+            <button
+              onClick={handleSelectAll}
+              className="px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded-lg transition-all flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              aria-label={selectedClients.size === filteredClients.length ? 'בטל בחירה' : 'בחר הכל'}
+            >
+              {selectedClients.size === filteredClients.length ? (
+                <CheckSquare className="h-5 w-5 text-emerald-400" />
+              ) : (
+                <Square className="h-5 w-5" />
+              )}
+              <span className="hidden sm:inline">בחר הכל</span>
+            </button>
+          )}
+          {/* Bulk Actions Button */}
+          {selectedClients.size > 0 && (
+            <button
+              onClick={() => setShowBulkActions(true)}
+              className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-all flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <CheckSquare className="h-4 w-4" />
+              פעולות מרובות ({selectedClients.size})
+            </button>
+          )}
           <div className="flex-1 relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
+            <label htmlFor="client-search-input" className="sr-only">
+              חיפוש לקוח
+            </label>
             <input
-              type="text"
+              id="client-search-input"
+              type="search"
               placeholder="חפש לקוח לפי שם, אימייל או טלפון..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pr-10 pl-4 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-              aria-label="חיפוש לקוח"
+              aria-label="חיפוש לקוח לפי שם, אימייל או טלפון"
+              aria-describedby="client-search-description"
             />
+            <span id="client-search-description" className="sr-only">
+              לחץ / לחיפוש מהיר או הקלד לחיפוש
+            </span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2" role="group" aria-label="סינון לקוחות">
             <button
               onClick={() => setFilterStatus('all')}
-              className={`px-4 py-2 rounded-lg transition-all ${
+              aria-pressed={filterStatus === 'all'}
+              aria-label="הצג את כל הלקוחות"
+              className={`px-4 py-2 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900 ${
                 filterStatus === 'all'
                   ? 'bg-emerald-500 text-white'
                   : 'bg-zinc-800/50 text-zinc-400 hover:text-white'
@@ -415,7 +518,9 @@ export default function ClientsListViewEnhanced({ onClientClick, onViewChange }:
             </button>
             <button
               onClick={() => setFilterStatus('linked')}
-              className={`px-4 py-2 rounded-lg transition-all ${
+              aria-pressed={filterStatus === 'linked'}
+              aria-label="הצג לקוחות מקושרים"
+              className={`px-4 py-2 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900 ${
                 filterStatus === 'linked'
                   ? 'bg-emerald-500 text-white'
                   : 'bg-zinc-800/50 text-zinc-400 hover:text-white'
@@ -425,7 +530,9 @@ export default function ClientsListViewEnhanced({ onClientClick, onViewChange }:
             </button>
             <button
               onClick={() => setFilterStatus('unlinked')}
-              className={`px-4 py-2 rounded-lg transition-all ${
+              aria-pressed={filterStatus === 'unlinked'}
+              aria-label="הצג לקוחות לא מקושרים"
+              className={`px-4 py-2 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900 ${
                 filterStatus === 'unlinked'
                   ? 'bg-yellow-500 text-white'
                   : 'bg-zinc-800/50 text-zinc-400 hover:text-white'
@@ -439,19 +546,21 @@ export default function ClientsListViewEnhanced({ onClientClick, onViewChange }:
             <button
               onClick={handleExportCSV}
               disabled={exporting || clients.length === 0}
-              className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              aria-label="ייצא CSV"
+              className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+              aria-label="ייצא רשימת לקוחות ל-CSV"
+              aria-busy={exporting}
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-4 w-4" aria-hidden="true" />
               <span className="hidden sm:inline">CSV</span>
             </button>
             <button
               onClick={handleExportPDF}
               disabled={exporting || clients.length === 0}
-              className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              aria-label="ייצא PDF"
+              className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+              aria-label="ייצא רשימת לקוחות ל-PDF"
+              aria-busy={exporting}
             >
-              <FileText className="h-4 w-4" />
+              <FileText className="h-4 w-4" aria-hidden="true" />
               <span className="hidden sm:inline">PDF</span>
             </button>
           </div>
@@ -515,25 +624,58 @@ export default function ClientsListViewEnhanced({ onClientClick, onViewChange }:
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Suspense fallback={
-            <div className="premium-card p-6 animate-pulse">
-              <div className="h-4 bg-zinc-700 rounded w-3/4 mb-2"></div>
-              <div className="h-4 bg-zinc-700 rounded w-1/2"></div>
-            </div>
-          }>
-            {filteredClients.map((client) => (
-              <ClientCard
-                key={client.id}
-                client={client}
-                trainees={trainees}
-                onLinkTrainee={(traineeId) => handleLinkTrainee(client.id, traineeId)}
-                onClick={() => onClientClick?.(client)}
-                isLinking={linkingClient === client.id}
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Suspense fallback={
+              <div className="premium-card p-6 animate-pulse">
+                <div className="h-4 bg-zinc-700 rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-zinc-700 rounded w-1/2"></div>
+              </div>
+            }>
+              {pagination.paginatedData.map((client) => (
+                <ClientCard
+                  key={client.id}
+                  client={client}
+                  trainees={trainees}
+                  onLinkTrainee={(traineeId) => handleLinkTrainee(client.id, traineeId)}
+                  onClick={() => onClientClick?.(client)}
+                  isLinking={linkingClient === client.id}
+                  isSelected={selectedClients.has(client.id)}
+                  onToggleSelect={() => handleToggleSelect(client.id)}
+                />
+              ))}
+            </Suspense>
+          </div>
+          
+          {/* Pagination */}
+          {pagination.totalPages > 1 && (
+            <div className="premium-card p-4">
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems}
+                startIndex={pagination.startIndex}
+                endIndex={pagination.endIndex}
+                hasNextPage={pagination.hasNextPage}
+                hasPrevPage={pagination.hasPrevPage}
+                onNextPage={pagination.nextPage}
+                onPrevPage={pagination.prevPage}
+                onGoToPage={pagination.goToPage}
+                showItemCount={true}
               />
-            ))}
-          </Suspense>
-        </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Bulk Actions Panel */}
+      {showBulkActions && selectedClients.size > 0 && (
+        <BulkActionsPanel
+          selectedClients={Array.from(selectedClients)}
+          clients={clients}
+          onClose={() => setShowBulkActions(false)}
+          onSuccess={handleBulkActionsSuccess}
+        />
       )}
     </div>
   );

@@ -12,12 +12,12 @@ import { useTraineeData } from '../../hooks/useTraineeData';
 import Header from '../layout/Header';
 import Sidebar from '../layout/Sidebar';
 import MobileSidebar from '../layout/MobileSidebar';
-import Dashboard from './Dashboard/Dashboard';
-import TraineesList from './Trainees/TraineesList';
-import TraineeProfile from './Trainees/TraineeProfile';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-// Lazy load heavy components
+// Lazy load heavy components - including main views for better code splitting
+const Dashboard = lazy(() => import('./Dashboard/Dashboard'));
+const TraineesList = lazy(() => import('./Trainees/TraineesList'));
+const TraineeProfile = lazy(() => import('./Trainees/TraineeProfile'));
 const AddTraineeForm = lazy(() => import('./Trainees/AddTraineeForm'));
 const EditTraineeForm = lazy(() => import('./Trainees/EditTraineeForm'));
 const WorkoutSession = lazy(() => import('./Workouts/WorkoutSession'));
@@ -35,7 +35,6 @@ const MentalToolsEditor = lazy(() => import('./MentalTools/MentalToolsEditor'));
 const CalendarView = lazy(() => import('./Calendar/CalendarView'));
 // CRM Components - using new unified structure
 const CrmLayout = lazy(() => import('./crm/CrmLayout'));
-const ClientsListView = lazy(() => import('./crm/clients/ClientsListView'));
 const PipelineView = lazy(() => import('./crm/pipeline/PipelineView'));
 const CrmDashboard = lazy(() => import('./crm/dashboard/CrmDashboard'));
 const AdvancedAnalytics = lazy(() => import('./crm/analytics/AdvancedAnalytics'));
@@ -51,6 +50,12 @@ const ToolsView = lazy(() => import('./Tools/ToolsView'));
 const TraineeFoodDiaryView = lazy(() => import('./Trainees/TraineeFoodDiaryView'));
 const CardioManager = lazy(() => import('./Cardio/CardioManager'));
 const ReportsView = lazy(() => import('./Reports/ReportsView'));
+// Settings & Management Components
+const HealthCheckView = lazy(() => import('../settings/HealthCheckView'));
+const EmailTemplatesManager = lazy(() => import('./crm/templates/EmailTemplatesManager'));
+const ScheduledExportsManager = lazy(() => import('./crm/export/ScheduledExportsManager'));
+const DataImportManager = lazy(() => import('./crm/import/DataImportManager'));
+const ErrorReportingSettings = lazy(() => import('../settings/ErrorReportingSettings'));
 
 interface Trainee {
   id: string;
@@ -837,7 +842,8 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
     switch (activeView) {
       case 'dashboard':
         return (
-          <Dashboard
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <Dashboard
             onViewChange={handleViewChange}
             trainees={trainees}
             trainerName={trainerName}
@@ -853,21 +859,25 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             }}
             onSaveMeasurement={handleSaveScaleMeasurement}
           />
+          </Suspense>
         );
 
       case 'trainees':
         return (
-          <TraineesList
-            trainees={trainees}
-            onTraineeClick={handleTraineeClick}
-            onAddTrainee={handleAddTrainee}
-            unseenWeightsCounts={unseenWeightsCounts}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <TraineesList
+              trainees={trainees}
+              onTraineeClick={handleTraineeClick}
+              onAddTrainee={handleAddTrainee}
+              unseenWeightsCounts={unseenWeightsCounts}
+            />
+          </Suspense>
         );
 
       case 'trainee-profile':
         return selectedTrainee ? (
-          <TraineeProfile
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <TraineeProfile
             trainee={convertTraineeToDisplayFormat(selectedTrainee)}
             workouts={workouts}
             measurements={measurements}
@@ -890,6 +900,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             onViewMentalTools={() => setActiveView('mental-tools')}
             onViewCardio={() => setActiveView('cardio-manager')}
           />
+          </Suspense>
         ) : null;
 
       case 'add-trainee':
@@ -1315,6 +1326,42 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             />
           </Suspense>
         ) : null;
+
+      // Settings & Management Views
+      case 'health-check':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <HealthCheckView />
+          </Suspense>
+        );
+
+      case 'email-templates':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <EmailTemplatesManager />
+          </Suspense>
+        );
+
+      case 'scheduled-exports':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <ScheduledExportsManager />
+          </Suspense>
+        );
+
+      case 'data-import':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <DataImportManager />
+          </Suspense>
+        );
+
+      case 'error-reporting':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <ErrorReportingSettings />
+          </Suspense>
+        );
 
       default:
         return (

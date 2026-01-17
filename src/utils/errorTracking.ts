@@ -4,6 +4,7 @@
  */
 
 import { logger } from './logger';
+import { captureException, addBreadcrumb } from './sentry';
 
 /**
  * Error severity levels
@@ -89,18 +90,52 @@ class ErrorTrackingService {
     context: ErrorContext;
     timestamp: Date;
   }): void {
-    // Integration with Sentry, LogRocket, etc.
-    // Example:
-    // if (window.Sentry) {
-    //   window.Sentry.captureException(errorEntry.error, {
-    //     level: errorEntry.severity,
-    //     tags: errorEntry.context,
-    //   });
-    // }
+    // Send to Sentry if available
+    try {
+      // Note: sentryLevel could be used for more granular Sentry logging
+      captureException(errorEntry.error, {
+        severity: errorEntry.severity,
+        component: errorEntry.context.component,
+        action: errorEntry.context.action,
+        userId: errorEntry.context.userId,
+        trainerId: errorEntry.context.trainerId,
+        ...errorEntry.context.metadata,
+      });
 
-    // For now, just log to console in production
-    if (import.meta.env.DEV) {
-      console.error('Error tracked:', errorEntry);
+      // Add breadcrumb for context
+      addBreadcrumb(
+        `Error: ${errorEntry.error.message}`,
+        'error',
+        {
+          severity: errorEntry.severity,
+          ...errorEntry.context,
+        }
+      );
+    } catch (sentryError) {
+      // Fallback to console if Sentry fails
+      if (import.meta.env.DEV) {
+        console.error('Error sending to Sentry:', sentryError);
+        console.error('Original error tracked:', errorEntry);
+      }
+    }
+  }
+
+  /**
+   * Convert ErrorSeverity to Sentry level
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _getSentryLevel(severity: ErrorSeverity): 'debug' | 'info' | 'warning' | 'error' | 'fatal' {
+    switch (severity) {
+      case ErrorSeverity.LOW:
+        return 'warning';
+      case ErrorSeverity.MEDIUM:
+        return 'error';
+      case ErrorSeverity.HIGH:
+        return 'error';
+      case ErrorSeverity.CRITICAL:
+        return 'fatal';
+      default:
+        return 'error';
     }
   }
 

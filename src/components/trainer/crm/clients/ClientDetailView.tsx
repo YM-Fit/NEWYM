@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useKeyboardShortcut } from '../../../../hooks/useKeyboardShortcut';
 import { 
   User, 
   Mail, 
@@ -26,6 +27,8 @@ import CommunicationCenter from '../shared/CommunicationCenter';
 import PaymentTracker from '../shared/PaymentTracker';
 import ContractManager from '../shared/ContractManager';
 import DocumentManager from '../shared/DocumentManager';
+import { usePagination } from '../../../../hooks/usePagination';
+import { Pagination } from '../../../ui/Pagination';
 import toast from 'react-hot-toast';
 import { logger } from '../../../../utils/logger';
 import type { Trainee } from '../../../../types';
@@ -44,6 +47,12 @@ export default function ClientDetailView({ trainee, onClose, onEdit }: ClientDet
   const [payments, setPayments] = useState<any[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Pagination for interactions
+  const interactionsPagination = usePagination(interactions, {
+    initialPage: 1,
+    initialPageSize: 10
+  });
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -81,6 +90,11 @@ export default function ClientDetailView({ trainee, onClose, onEdit }: ClientDet
     }
   }, [user, loadData]);
 
+  // Keyboard shortcut: Escape to close
+  useKeyboardShortcut('Escape', () => {
+    onClose();
+  }, [onClose], { preventDefault: true });
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -114,18 +128,18 @@ export default function ClientDetailView({ trainee, onClose, onEdit }: ClientDet
             {onEdit && (
               <button
                 onClick={() => onEdit(trainee)}
-                className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-                aria-label="ערוך"
+                className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+                aria-label="ערוך פרטי לקוח"
               >
-                <Edit className="h-5 w-5" />
+                <Edit className="h-5 w-5" aria-hidden="true" />
               </button>
             )}
             <button
               onClick={onClose}
-              className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-              aria-label="סגור"
+              className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+              aria-label="סגור תצוגת לקוח"
             >
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -164,7 +178,11 @@ export default function ClientDetailView({ trainee, onClose, onEdit }: ClientDet
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 border-b border-zinc-800">
+        <div 
+          className="flex gap-2 border-b border-zinc-800" 
+          role="tablist" 
+          aria-label="טאבים של פרטי לקוח"
+        >
           {[
             { id: 'overview' as const, label: 'סקירה', icon: User },
             { id: 'communication' as const, label: 'תקשורת', icon: MessageSquare },
@@ -175,13 +193,17 @@ export default function ClientDetailView({ trainee, onClose, onEdit }: ClientDet
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 flex items-center gap-2 transition-all ${
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              aria-controls={`tabpanel-${tab.id}`}
+              id={`tab-${tab.id}`}
+              className={`px-4 py-2 flex items-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900 rounded-t ${
                 activeTab === tab.id
                   ? 'border-b-2 border-emerald-500 text-emerald-400'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
-              <tab.icon className="h-4 w-4" />
+              <tab.icon className="h-4 w-4" aria-hidden="true" />
               {tab.label}
             </button>
           ))}
@@ -190,16 +212,21 @@ export default function ClientDetailView({ trainee, onClose, onEdit }: ClientDet
 
       {/* Tab Content */}
       {activeTab === 'overview' && (
-        <div className="premium-card p-6">
+        <div 
+          className="premium-card p-6"
+          role="tabpanel"
+          id="tabpanel-overview"
+          aria-labelledby="tab-overview"
+        >
           <h2 className="text-xl font-semibold text-white mb-4">סקירה כללית</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                 <History className="h-5 w-5 text-emerald-400" />
-                אינטראקציות אחרונות
+                אינטראקציות ({interactions.length})
               </h3>
               <div className="space-y-2">
-                {interactions.slice(0, 5).map((interaction) => (
+                {interactionsPagination.paginatedData.map((interaction) => (
                   <div key={interaction.id} className="premium-card p-3">
                     <div className="flex items-center justify-between">
                       <div>
@@ -215,6 +242,25 @@ export default function ClientDetailView({ trainee, onClose, onEdit }: ClientDet
                   <div className="text-center py-4 text-zinc-500">אין אינטראקציות</div>
                 )}
               </div>
+              {/* Pagination for interactions */}
+              {interactionsPagination.totalPages > 1 && (
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={interactionsPagination.currentPage}
+                    totalPages={interactionsPagination.totalPages}
+                    totalItems={interactionsPagination.totalItems}
+                    startIndex={interactionsPagination.startIndex}
+                    endIndex={interactionsPagination.endIndex}
+                    hasNextPage={interactionsPagination.hasNextPage}
+                    hasPrevPage={interactionsPagination.hasPrevPage}
+                    onNextPage={interactionsPagination.nextPage}
+                    onPrevPage={interactionsPagination.prevPage}
+                    onGoToPage={interactionsPagination.goToPage}
+                    showItemCount={true}
+                    compact={true}
+                  />
+                </div>
+              )}
             </div>
 
             <div>
@@ -255,19 +301,43 @@ export default function ClientDetailView({ trainee, onClose, onEdit }: ClientDet
       )}
 
       {activeTab === 'communication' && (
-        <CommunicationCenter traineeId={trainee.id} onClose={onClose} />
+        <div 
+          role="tabpanel"
+          id="tabpanel-communication"
+          aria-labelledby="tab-communication"
+        >
+          <CommunicationCenter traineeId={trainee.id} onClose={onClose} />
+        </div>
       )}
 
       {activeTab === 'payments' && (
-        <PaymentTracker traineeId={trainee.id} onClose={onClose} />
+        <div 
+          role="tabpanel"
+          id="tabpanel-payments"
+          aria-labelledby="tab-payments"
+        >
+          <PaymentTracker traineeId={trainee.id} onClose={onClose} />
+        </div>
       )}
 
       {activeTab === 'contracts' && (
-        <ContractManager traineeId={trainee.id} onClose={onClose} />
+        <div 
+          role="tabpanel"
+          id="tabpanel-contracts"
+          aria-labelledby="tab-contracts"
+        >
+          <ContractManager traineeId={trainee.id} onClose={onClose} />
+        </div>
       )}
 
       {activeTab === 'documents' && (
-        <DocumentManager traineeId={trainee.id} onClose={onClose} />
+        <div 
+          role="tabpanel"
+          id="tabpanel-documents"
+          aria-labelledby="tab-documents"
+        >
+          <DocumentManager traineeId={trainee.id} onClose={onClose} />
+        </div>
       )}
     </div>
   );

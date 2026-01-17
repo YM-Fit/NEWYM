@@ -1,5 +1,6 @@
 import { useEffect, useRef, useId } from 'react';
 import { X } from 'lucide-react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface ModalProps {
   isOpen: boolean;
@@ -30,9 +31,16 @@ export function Modal({
 }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
-  const previousActiveElementRef = useRef<HTMLElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   const modalId = useId();
+
+  // Use focus trap hook
+  useFocusTrap(modalRef, {
+    enabled: isOpen,
+    returnFocusOnDeactivate: true,
+    initialFocus: closeButtonRef,
+  });
 
   // Focus management and keyboard handling
   useEffect(() => {
@@ -43,73 +51,18 @@ export function Modal({
     };
 
     if (isOpen) {
-      // Store the previously focused element
-      previousActiveElementRef.current = document.activeElement as HTMLElement;
-      
       // Lock body scroll
       document.body.style.overflow = 'hidden';
       
       // Add escape handler
       document.addEventListener('keydown', handleEscape);
-      
-      // Focus trap: focus the modal when it opens
-      setTimeout(() => {
-        const firstFocusable = modalRef.current?.querySelector<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        if (firstFocusable) {
-          firstFocusable.focus();
-        } else if (modalRef.current) {
-          modalRef.current.focus();
-        }
-      }, 0);
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = '';
-      
-      // Return focus to the previously focused element
-      if (previousActiveElementRef.current) {
-        previousActiveElementRef.current.focus();
-      }
     };
   }, [isOpen, onClose]);
-
-  // Focus trap: keep focus within modal
-  useEffect(() => {
-    if (!isOpen || !modalRef.current) return;
-
-    const handleTabKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-
-      const focusableElements = modalRef.current?.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      
-      if (!focusableElements || focusableElements.length === 0) return;
-
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
-
-      if (e.shiftKey) {
-        // Shift + Tab
-        if (document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement.focus();
-        }
-      } else {
-        // Tab
-        if (document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement.focus();
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleTabKey);
-    return () => document.removeEventListener('keydown', handleTabKey);
-  }, [isOpen]);
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === overlayRef.current) onClose();
@@ -143,6 +96,7 @@ export function Modal({
             )}
             {showCloseButton && (
               <button
+                ref={closeButtonRef}
                 onClick={onClose}
                 className="p-2 hover:bg-zinc-800 rounded-xl transition-all text-zinc-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 aria-label="סגור דיאלוג"

@@ -73,3 +73,27 @@ export type {
   Segment,
   SegmentCriteria
 } from '../segmentationService';
+
+// Data Management Services
+export { DataExportService } from '../dataExportService';
+export { DataImportService } from '../dataImportService';
+export { DataRetentionService } from '../dataRetentionService';
+export { ConflictResolutionService } from '../conflictResolutionService';
+export type {
+  ExportOptions,
+  ExportResult
+} from '../dataExportService';
+export type {
+  ImportOptions,
+  ImportResult,
+  ValidationResult
+} from '../dataImportService';
+export type {
+  RetentionPolicy,
+  ArchiveResult,
+  DataRetentionConfig
+} from '../dataRetentionService';
+export type {
+  Conflict,
+  ConflictResolution
+} from '../conflictResolutionService';

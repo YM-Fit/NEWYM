@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { handleApiError } from './config';
+import { rateLimiter } from '../utils/rateLimiter';
 
 export interface TrainerTraineeMessage {
   id: string;
@@ -25,6 +26,13 @@ export interface CreateMessageInput {
 
 export const messagesApi = {
   async getMessages(traineeId: string, trainerId: string): Promise<TrainerTraineeMessage[]> {
+    // Rate limiting: 100 requests per minute per conversation
+    const rateLimitKey = `getMessages:${traineeId}:${trainerId}`;
+    const rateLimitResult = rateLimiter.check(rateLimitKey, 100, 60000);
+    if (!rateLimitResult.allowed) {
+      throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+    }
+
     try {
       const { data, error } = await supabase
         .from('trainer_trainee_messages')
@@ -41,6 +49,13 @@ export const messagesApi = {
   },
 
   async sendMessage(input: CreateMessageInput): Promise<TrainerTraineeMessage> {
+    // Rate limiting: 50 send requests per minute per conversation
+    const rateLimitKey = `sendMessage:${input.trainee_id}:${input.trainer_id}`;
+    const rateLimitResult = rateLimiter.check(rateLimitKey, 50, 60000);
+    if (!rateLimitResult.allowed) {
+      throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+    }
+
     try {
       const { data, error } = await supabase
         .from('trainer_trainee_messages')
@@ -56,6 +71,13 @@ export const messagesApi = {
   },
 
   async markAsRead(messageId: string): Promise<void> {
+    // Rate limiting: 100 mark as read requests per minute
+    const rateLimitKey = `markAsRead:${messageId}`;
+    const rateLimitResult = rateLimiter.check(rateLimitKey, 100, 60000);
+    if (!rateLimitResult.allowed) {
+      throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+    }
+
     try {
       const { error } = await supabase
         .from('trainer_trainee_messages')
@@ -72,6 +94,13 @@ export const messagesApi = {
   },
 
   async getUnreadCount(traineeId: string, trainerId: string, userType: 'trainer' | 'trainee'): Promise<number> {
+    // Rate limiting: 100 requests per minute per conversation
+    const rateLimitKey = `getUnreadCount:${traineeId}:${trainerId}`;
+    const rateLimitResult = rateLimiter.check(rateLimitKey, 100, 60000);
+    if (!rateLimitResult.allowed) {
+      throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+    }
+
     try {
       const senderType = userType === 'trainer' ? 'trainee' : 'trainer';
       

@@ -5,6 +5,9 @@
 import { supabase, logSupabaseError } from '../lib/supabase';
 import type { ApiResponse } from './types';
 import { API_CONFIG } from './config';
+import { handleApiError } from '../utils/apiErrorHandler';
+import { rateLimiter } from '../utils/rateLimiter';
+import { rateLimiter } from '../utils/rateLimiter';
 
 export interface GoogleCalendarEvent {
   id: string;
@@ -51,6 +54,13 @@ export async function initiateGoogleOAuth(
   trainerId: string,
   accessToken: string
 ): Promise<ApiResponse<string>> {
+  // Rate limiting: 5 OAuth initiations per minute per trainer (security)
+  const rateLimitKey = `initiateGoogleOAuth:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 5, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const response = await fetch(
       `${API_CONFIG.SUPABASE_URL}/functions/v1/google-oauth?trainer_id=${trainerId}`,
@@ -69,8 +79,13 @@ export async function initiateGoogleOAuth(
     }
 
     return { data: result.authUrl, success: true };
-  } catch (err: any) {
-    return { error: err.message || 'שגיאה ביצירת OAuth URL' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה ביצירת OAuth URL',
+      context: 'initiateGoogleOAuth',
+      additionalInfo: { trainerId },
+    });
+    return { error: errorMessage };
   }
 }
 
@@ -82,6 +97,13 @@ export async function handleGoogleOAuthCallback(
   state: string,
   accessToken: string
 ): Promise<ApiResponse> {
+  // Rate limiting: 5 OAuth callbacks per minute (security)
+  const rateLimitKey = `handleGoogleOAuthCallback:${state}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 5, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const response = await fetch(
       `${API_CONFIG.SUPABASE_URL}/functions/v1/google-oauth/callback`,
@@ -102,8 +124,12 @@ export async function handleGoogleOAuthCallback(
     }
 
     return { success: true };
-  } catch (err: any) {
-    return { error: err.message || 'שגיאה באימות Google Calendar' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה באימות Google Calendar',
+      context: 'handleGoogleOAuthCallback',
+    });
+    return { error: errorMessage };
   }
 }
 
@@ -114,6 +140,13 @@ export async function disconnectGoogleCalendar(
   trainerId: string,
   accessToken: string
 ): Promise<ApiResponse> {
+  // Rate limiting: 5 disconnect requests per minute per trainer (security)
+  const rateLimitKey = `disconnectGoogleCalendar:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 5, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const response = await fetch(
       `${API_CONFIG.SUPABASE_URL}/functions/v1/google-oauth/disconnect`,
@@ -134,8 +167,13 @@ export async function disconnectGoogleCalendar(
     }
 
     return { success: true };
-  } catch (err: any) {
-    return { error: err.message || 'שגיאה בניתוק Google Calendar' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בניתוק Google Calendar',
+      context: 'disconnectGoogleCalendar',
+      additionalInfo: { trainerId },
+    });
+    return { error: errorMessage };
   }
 }
 
@@ -223,9 +261,13 @@ export async function getGoogleCalendarStatus(
       }, 
       success: true 
     };
-  } catch (err: any) {
-    logSupabaseError(err, 'getGoogleCalendarStatus', { table: 'trainer_google_credentials', trainerId });
-    return { error: err.message || 'שגיאה בבדיקת סטטוס Google Calendar' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בבדיקת סטטוס Google Calendar',
+      context: 'getGoogleCalendarStatus',
+      additionalInfo: { trainerId },
+    });
+    return { error: errorMessage };
   }
 }
 
@@ -241,9 +283,16 @@ export async function updateGoogleCalendarSyncSettings(
     defaultCalendarId?: string;
   }
 ): Promise<ApiResponse> {
+  // Rate limiting: 20 update requests per minute per trainer
+  const rateLimitKey = `updateGoogleCalendarSyncSettings:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 20, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     // First, try to update basic fields that always exist
-    const basicUpdates: any = {};
+    const basicUpdates: Record<string, unknown> = {};
     if (settings.autoSyncEnabled !== undefined) {
       basicUpdates.auto_sync_enabled = settings.autoSyncEnabled;
     }
@@ -265,7 +314,7 @@ export async function updateGoogleCalendarSyncSettings(
     }
 
     // Try to update extended fields if they're provided
-    const extendedUpdates: any = {};
+    const extendedUpdates: Record<string, unknown> = {};
     if (settings.syncDirection !== undefined) {
       extendedUpdates.sync_direction = settings.syncDirection;
     }
@@ -289,8 +338,13 @@ export async function updateGoogleCalendarSyncSettings(
     }
 
     return { success: true };
-  } catch (err: any) {
-    return { error: err.message || 'שגיאה בעדכון הגדרות סנכרון' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בעדכון הגדרות סנכרון',
+      context: 'updateGoogleCalendarSyncSettings',
+      additionalInfo: { trainerId },
+    });
+    return { error: errorMessage };
   }
 }
 
@@ -300,6 +354,13 @@ export async function updateGoogleCalendarSyncSettings(
 export async function getGoogleCalendars(
   trainerId: string
 ): Promise<ApiResponse<GoogleCalendar[]>> {
+  // Rate limiting: 60 requests per minute per trainer
+  const rateLimitKey = `getGoogleCalendars:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 60, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const { data: credentials, error: credError } = await supabase
       .from('trainer_google_credentials')
@@ -311,11 +372,15 @@ export async function getGoogleCalendars(
       return { error: 'Google Calendar לא מחובר' };
     }
 
-    // Check if token needs refresh
-    let accessToken = credentials.access_token;
-    if (new Date(credentials.token_expires_at) < new Date()) {
-      return { error: 'נדרש אימות מחדש ל-Google Calendar' };
+    // Get valid access token (refresh if needed)
+    const { OAuthTokenService } = await import('../services/oauthTokenService');
+    const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
+    
+    if (!tokenResult.success || !tokenResult.data) {
+      return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
     }
+    
+    const accessToken = tokenResult.data;
 
     const response = await fetch(
       'https://www.googleapis.com/calendar/v3/users/me/calendarList',
@@ -333,7 +398,14 @@ export async function getGoogleCalendars(
     }
 
     const data = await response.json();
-    const calendars: GoogleCalendar[] = (data.items || []).map((cal: any) => ({
+    interface GoogleCalendarApiItem {
+      id: string;
+      summary?: string;
+      description?: string;
+      primary?: boolean;
+      accessRole?: string;
+    }
+    const calendars: GoogleCalendar[] = (data.items || []).map((cal: GoogleCalendarApiItem) => ({
       id: cal.id,
       summary: cal.summary || cal.id,
       description: cal.description,
@@ -342,10 +414,13 @@ export async function getGoogleCalendars(
     }));
 
     return { data: calendars, success: true };
-  } catch (err: any) {
-    const { logger } = await import('../utils/logger');
-    logger.error('Error in getGoogleCalendars', err, 'googleCalendarApi');
-    return { error: err.message || 'שגיאה בטעינת יומנים מ-Google Calendar' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בטעינת יומנים מ-Google Calendar',
+      context: 'getGoogleCalendars',
+      additionalInfo: { trainerId },
+    });
+    return { error: errorMessage };
   }
 }
 
@@ -357,6 +432,13 @@ export async function getGoogleCalendarEvents(
   dateRange: { start: Date; end: Date },
   options?: { useCache?: boolean; forceRefresh?: boolean }
 ): Promise<ApiResponse<GoogleCalendarEvent[]>> {
+  // Rate limiting: 60 requests per minute per trainer
+  const rateLimitKey = `getGoogleCalendarEvents:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 60, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     // Validate inputs
     if (!trainerId || typeof trainerId !== 'string') {
@@ -446,7 +528,7 @@ export async function getGoogleCalendarEvents(
           const { logger } = await import('../utils/logger');
           logger.warn('Cache query error (falling back to API)', cacheError, 'getGoogleCalendarEvents');
         }
-      } catch (cacheErr: any) {
+      } catch (cacheErr: unknown) {
         // Log cache errors but continue to Google API fallback
         const { logger } = await import('../utils/logger');
         logger.warn('Cache query exception (falling back to API)', cacheErr, 'getGoogleCalendarEvents');
@@ -464,12 +546,15 @@ export async function getGoogleCalendarEvents(
       return { error: 'Google Calendar לא מחובר' };
     }
 
-    // Check if token needs refresh
-    let accessToken = credentials.access_token;
-    if (new Date(credentials.token_expires_at) < new Date()) {
-      // Token expired - would need to refresh via backend
-      return { error: 'נדרש אימות מחדש ל-Google Calendar' };
+    // Check if token needs refresh and refresh if needed
+    const { OAuthTokenService } = await import('../services/oauthTokenService');
+    const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
+    
+    if (!tokenResult.success || !tokenResult.data) {
+      return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
     }
+    
+    const accessToken = tokenResult.data;
 
     const calendarId = credentials.default_calendar_id || 'primary';
     const timeMin = dateRange.start.toISOString();
@@ -501,10 +586,13 @@ export async function getGoogleCalendarEvents(
 
     const data = await response.json();
     return { data: data.items || [], success: true };
-  } catch (err: any) {
-    const { logger } = await import('../utils/logger');
-    logger.error('Error in getGoogleCalendarEvents', err, 'googleCalendarApi');
-    return { error: err.message || 'שגיאה בטעינת אירועים מ-Google Calendar' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בטעינת אירועים מ-Google Calendar',
+      context: 'getGoogleCalendarEvents',
+      additionalInfo: { trainerId },
+    });
+    return { error: errorMessage };
   }
 }
 
@@ -516,6 +604,13 @@ export async function createGoogleCalendarEvent(
   eventData: CreateEventData,
   accessToken: string
 ): Promise<ApiResponse<string>> {
+  // Rate limiting: 50 create requests per minute per trainer
+  const rateLimitKey = `createGoogleCalendarEvent:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 50, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     // Get credentials to find calendar ID
     const { data: credentials, error: credError } = await supabase
@@ -528,16 +623,27 @@ export async function createGoogleCalendarEvent(
       return { error: 'Google Calendar לא מחובר' };
     }
 
-    let accessTokenToUse = accessToken || credentials.access_token;
+    // Get valid access token (refresh if needed)
+    const { OAuthTokenService } = await import('../services/oauthTokenService');
+    const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
     
-    // Check if token needs refresh
-    if (new Date(credentials.token_expires_at) < new Date()) {
-      return { error: 'נדרש אימות מחדש ל-Google Calendar' };
+    if (!tokenResult.success || !tokenResult.data) {
+      return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
     }
+    
+    const accessTokenToUse = accessToken || tokenResult.data;
 
     const calendarId = credentials.default_calendar_id || 'primary';
     
-    const eventPayload: any = {
+    interface GoogleCalendarEventPayload {
+      summary: string;
+      start: { dateTime: string; timeZone: string };
+      end: { dateTime: string; timeZone: string };
+      description?: string;
+      location?: string;
+      attendees?: Array<{ email: string }>;
+    }
+    const eventPayload: GoogleCalendarEventPayload = {
       summary: eventData.summary,
       start: {
         dateTime: eventData.startTime.toISOString(),
@@ -578,10 +684,15 @@ export async function createGoogleCalendarEvent(
       return { error: error.error?.message || 'שגיאה ביצירת אירוע ב-Google Calendar' };
     }
 
-    const event = await response.json();
+    const event = await response.json() as { id: string };
     return { data: event.id, success: true };
-  } catch (err: any) {
-    return { error: err.message || 'שגיאה ביצירת אירוע ב-Google Calendar' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה ביצירת אירוע ב-Google Calendar',
+      context: 'createGoogleCalendarEvent',
+      additionalInfo: { trainerId },
+    });
+    return { error: errorMessage };
   }
 }
 
@@ -594,6 +705,13 @@ export async function updateGoogleCalendarEvent(
   updates: Partial<CreateEventData>,
   accessToken: string
 ): Promise<ApiResponse> {
+  // Rate limiting: 50 update requests per minute per trainer
+  const rateLimitKey = `updateGoogleCalendarEvent:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 50, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const { data: credentials, error: credError } = await supabase
       .from('trainer_google_credentials')
@@ -606,7 +724,16 @@ export async function updateGoogleCalendarEvent(
     }
 
     const calendarId = credentials.default_calendar_id || 'primary';
-    const accessTokenToUse = accessToken || credentials.access_token;
+    
+    // Get valid access token (refresh if needed)
+    const { OAuthTokenService } = await import('../services/oauthTokenService');
+    const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
+    
+    if (!tokenResult.success || !tokenResult.data) {
+      return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
+    }
+    
+    const accessTokenToUse = accessToken || tokenResult.data;
 
     // Get existing event first
     const getResponse = await fetch(
@@ -622,10 +749,10 @@ export async function updateGoogleCalendarEvent(
       return { error: 'שגיאה בטעינת אירוע מ-Google Calendar' };
     }
 
-    const existingEvent = await getResponse.json();
+    const existingEvent = await getResponse.json() as GoogleCalendarEvent;
 
     // Merge updates
-    const updatedEvent: any = { ...existingEvent };
+    const updatedEvent: GoogleCalendarEvent = { ...existingEvent };
     if (updates.summary) updatedEvent.summary = updates.summary;
     if (updates.description !== undefined) updatedEvent.description = updates.description;
     if (updates.location !== undefined) updatedEvent.location = updates.location;
@@ -663,8 +790,13 @@ export async function updateGoogleCalendarEvent(
     }
 
     return { success: true };
-  } catch (err: any) {
-    return { error: err.message || 'שגיאה בעדכון אירוע ב-Google Calendar' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בעדכון אירוע ב-Google Calendar',
+      context: 'updateGoogleCalendarEvent',
+      additionalInfo: { trainerId, eventId },
+    });
+    return { error: errorMessage };
   }
 }
 
@@ -676,6 +808,13 @@ export async function deleteGoogleCalendarEvent(
   eventId: string,
   accessToken: string
 ): Promise<ApiResponse> {
+  // Rate limiting: 30 delete requests per minute per trainer
+  const rateLimitKey = `deleteGoogleCalendarEvent:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 30, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const { data: credentials, error: credError } = await supabase
       .from('trainer_google_credentials')
@@ -688,7 +827,16 @@ export async function deleteGoogleCalendarEvent(
     }
 
     const calendarId = credentials.default_calendar_id || 'primary';
-    const accessTokenToUse = accessToken || credentials.access_token;
+    
+    // Get valid access token (refresh if needed)
+    const { OAuthTokenService } = await import('../services/oauthTokenService');
+    const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
+    
+    if (!tokenResult.success || !tokenResult.data) {
+      return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
+    }
+    
+    const accessTokenToUse = accessToken || tokenResult.data;
 
     const response = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`,
@@ -705,8 +853,13 @@ export async function deleteGoogleCalendarEvent(
     }
 
     return { success: true };
-  } catch (err: any) {
-    return { error: err.message || 'שגיאה במחיקת אירוע ב-Google Calendar' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה במחיקת אירוע ב-Google Calendar',
+      context: 'deleteGoogleCalendarEvent',
+      additionalInfo: { trainerId, eventId },
+    });
+    return { error: errorMessage };
   }
 }
 
@@ -717,6 +870,13 @@ export async function syncGoogleCalendar(
   trainerId: string,
   accessToken: string
 ): Promise<ApiResponse> {
+  // Rate limiting: 10 sync requests per minute per trainer (expensive operation)
+  const rateLimitKey = `syncGoogleCalendar:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 10, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const response = await fetch(
       `${API_CONFIG.SUPABASE_URL}/functions/v1/sync-google-calendar`,
@@ -737,7 +897,12 @@ export async function syncGoogleCalendar(
     }
 
     return { success: true };
-  } catch (err: any) {
-    return { error: err.message || 'שגיאה בסנכרון Google Calendar' };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בסנכרון Google Calendar',
+      context: 'syncGoogleCalendar',
+      additionalInfo: { trainerId },
+    });
+    return { error: errorMessage };
   }
 }

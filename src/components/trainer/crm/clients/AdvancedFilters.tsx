@@ -4,9 +4,10 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Filter, Plus, Save, Trash2, Users, Download } from 'lucide-react';
+import { Filter, Plus, Save, Trash2, Users, Download, Star, Search } from 'lucide-react';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { SegmentationService, type FilterCondition, type Segment } from '../../../../services/segmentationService';
+import { FilterPresetsService, type FilterPreset } from '../../../../services/filterPresetsService';
 import { getTrainees } from '../../../../api/traineeApi';
 import { exportClientsToCSV } from '../../../../utils/exportUtils';
 import toast from 'react-hot-toast';
@@ -23,7 +24,9 @@ export default function AdvancedFilters({ onFilteredClients }: AdvancedFiltersPr
   const [trainees, setTrainees] = useState<Trainee[]>([]);
   const [filteredClients, setFilteredClients] = useState<Trainee[]>([]);
   const [segments, setSegments] = useState<Segment[]>([]);
+  const [presets, setPresets] = useState<FilterPreset[]>([]);
   const [conditions, setConditions] = useState<FilterCondition[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [showSegmentEditor, setShowSegmentEditor] = useState(false);
   const [selectedSegment, setSelectedSegment] = useState<Segment | null>(null);
@@ -33,9 +36,10 @@ export default function AdvancedFilters({ onFilteredClients }: AdvancedFiltersPr
 
     try {
       setLoading(true);
-      const [traineesResult, segmentsResult] = await Promise.all([
+      const [traineesResult, segmentsResult, presetsResult] = await Promise.all([
         getTrainees(user.id),
         SegmentationService.getSegments(user.id),
+        FilterPresetsService.getPresets(user.id),
       ]);
 
       if (traineesResult.success && traineesResult.data) {
@@ -45,6 +49,10 @@ export default function AdvancedFilters({ onFilteredClients }: AdvancedFiltersPr
 
       if (segmentsResult.success && segmentsResult.data) {
         setSegments(segmentsResult.data);
+      }
+
+      if (presetsResult.success && presetsResult.data) {
+        setPresets(presetsResult.data);
       }
     } catch (error) {
       logger.error('Error loading data', error, 'AdvancedFilters');
@@ -62,24 +70,49 @@ export default function AdvancedFilters({ onFilteredClients }: AdvancedFiltersPr
 
   useEffect(() => {
     applyFilters();
-  }, [conditions, trainees]);
+  }, [conditions, trainees, searchQuery]);
 
   const applyFilters = async () => {
-    if (!user || conditions.length === 0) {
+    if (!user) {
       setFilteredClients(trainees);
       onFilteredClients?.(trainees);
       return;
     }
 
     try {
-      const result = await SegmentationService.filterClients(user.id, conditions);
-      if (result.success && result.data) {
-        setFilteredClients(result.data);
-        onFilteredClients?.(result.data);
+      let filtered = trainees;
+
+      // Apply filter conditions
+      if (conditions.length > 0) {
+        const result = await SegmentationService.filterClients(user.id, conditions);
+        if (result.success && result.data) {
+          filtered = result.data;
+        }
       }
+
+      // Apply search query
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter((client) => {
+          return (
+            client.full_name?.toLowerCase().includes(query) ||
+            client.email?.toLowerCase().includes(query) ||
+            client.phone?.includes(query)
+          );
+        });
+      }
+
+      setFilteredClients(filtered);
+      onFilteredClients?.(filtered);
     } catch (error) {
       logger.error('Error applying filters', error, 'AdvancedFilters');
     }
+  };
+
+  const handleLoadPreset = async (preset: FilterPreset) => {
+    setConditions(preset.filter_criteria);
+    await FilterPresetsService.recordUsage(preset.id);
+    toast.success(`נטען preset: ${preset.name}`);
   };
 
   const addCondition = () => {
@@ -200,6 +233,54 @@ export default function AdvancedFilters({ onFilteredClients }: AdvancedFiltersPr
             </button>
           </div>
         </div>
+
+        {/* Search */}
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="חפש לפי שם, אימייל או טלפון..."
+              className="w-full pr-10 pl-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
+
+        {/* Filter Presets */}
+        {presets.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Star className="h-5 w-5 text-yellow-400" />
+              Presets
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              {presets.map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => handleLoadPreset(preset)}
+                  className={`premium-card p-4 text-right hover:scale-[1.02] transition-all ${
+                    preset.is_system_preset ? 'border-yellow-500/30' : ''
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-white">{preset.name}</h3>
+                    {preset.is_system_preset && (
+                      <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                    )}
+                  </div>
+                  {preset.description && (
+                    <p className="text-xs text-zinc-400 mb-2">{preset.description}</p>
+                  )}
+                  <div className="text-xs text-zinc-500">
+                    שימוש: {preset.usage_count}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Saved Segments */}
         {segments.length > 0 && (

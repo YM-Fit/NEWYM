@@ -74,22 +74,27 @@ export class AdvancedAnalyticsService {
     trainerId: string
   ): Promise<ApiResponse<ClientLifetimeValue[]>> {
     try {
-      // Get all trainees with payments
+      // Get all trainees with payments - optimized query
       const { data: trainees, error: traineesError } = await supabase
         .from('trainees')
         .select('id, full_name, client_since')
-        .eq('trainer_id', trainerId);
+        .eq('trainer_id', trainerId)
+        .not('client_since', 'is', null); // Only trainees with client_since
 
       if (traineesError) {
         logSupabaseError(traineesError, 'calculateCLV.trainees', { table: 'trainees', trainerId });
         return { error: traineesError.message };
       }
 
+      // Optimized query: Use composite index for faster lookups
+      // Index: idx_crm_payments_trainer_trainee_paid covers this query
       const { data: payments, error: paymentsError } = await supabase
         .from('crm_payments')
         .select('trainee_id, amount, paid_date, status')
         .eq('trainer_id', trainerId)
-        .eq('status', 'paid');
+        .eq('status', 'paid')
+        .not('paid_date', 'is', null) // Only paid payments with dates
+        .order('paid_date', { ascending: false }); // Use index for ordering
 
       if (paymentsError) {
         logSupabaseError(paymentsError, 'calculateCLV.payments', { table: 'crm_payments', trainerId });
@@ -259,12 +264,14 @@ export class AdvancedAnalyticsService {
     months: number = 6
   ): Promise<ApiResponse<RevenueForecast[]>> {
     try {
-      // Get historical payment data
+      // Get historical payment data - optimized with index
+      // Index: idx_crm_payments_trainer_paid_date covers this query
       const { data: payments, error } = await supabase
         .from('crm_payments')
         .select('amount, paid_date, status')
         .eq('trainer_id', trainerId)
         .eq('status', 'paid')
+        .not('paid_date', 'is', null) // Only payments with dates
         .order('paid_date', { ascending: false })
         .limit(100);
 

@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { handleApiError } from './config';
+import { rateLimiter } from '../utils/rateLimiter';
 
 export interface TraineeHabit {
   id: string;
@@ -37,8 +38,17 @@ export interface CreateHabitLogInput {
   notes?: string | null;
 }
 
+// Rate limiting helper for habits API
+function checkHabitsRateLimit(key: string, maxRequests: number = 100): void {
+  const rateLimitResult = rateLimiter.check(key, maxRequests, 60000);
+  if (!rateLimitResult.allowed) {
+    throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+  }
+}
+
 export const habitsApi = {
   async getTraineeHabits(traineeId: string): Promise<TraineeHabit[]> {
+    checkHabitsRateLimit(`getTraineeHabits:${traineeId}`, 100);
     try {
       const { data, error } = await supabase
         .from('trainee_habits')
@@ -96,6 +106,7 @@ export const habitsApi = {
   },
 
   async createHabit(input: CreateHabitInput): Promise<TraineeHabit> {
+    checkHabitsRateLimit(`createHabit:${input.trainee_id}`, 50);
     try {
       const { data, error } = await supabase
         .from('trainee_habits')
@@ -111,6 +122,7 @@ export const habitsApi = {
   },
 
   async updateHabit(habitId: string, updates: Partial<CreateHabitInput>): Promise<TraineeHabit> {
+    checkHabitsRateLimit(`updateHabit:${habitId}`, 50);
     try {
       const { data, error } = await supabase
         .from('trainee_habits')
@@ -127,6 +139,7 @@ export const habitsApi = {
   },
 
   async deleteHabit(habitId: string): Promise<void> {
+    checkHabitsRateLimit(`deleteHabit:${habitId}`, 20);
     try {
       const { error } = await supabase
         .from('trainee_habits')
@@ -140,6 +153,7 @@ export const habitsApi = {
   },
 
   async getHabitLogs(habitId: string, startDate?: string, endDate?: string): Promise<HabitLog[]> {
+    checkHabitsRateLimit(`getHabitLogs:${habitId}`, 100);
     try {
       let query = supabase
         .from('habit_logs')
@@ -164,6 +178,7 @@ export const habitsApi = {
   },
 
   async logHabit(input: CreateHabitLogInput): Promise<HabitLog> {
+    checkHabitsRateLimit(`logHabit:${input.habit_id}`, 100);
     try {
       const { data, error } = await supabase
         .from('habit_logs')
@@ -179,6 +194,7 @@ export const habitsApi = {
   },
 
   async getHabitStreak(habitId: string): Promise<number> {
+    checkHabitsRateLimit(`getHabitStreak:${habitId}`, 100);
     try {
       const { data, error } = await supabase
         .from('habit_logs')

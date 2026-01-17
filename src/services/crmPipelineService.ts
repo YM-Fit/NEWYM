@@ -6,6 +6,7 @@
 import { supabase, logSupabaseError } from '../lib/supabase';
 import { logger } from '../utils/logger';
 import { CRM_STATUS } from '../constants/crmConstants';
+import { AuditService } from './auditService';
 import type { ApiResponse } from '../api/types';
 import type { Trainee } from '../types';
 
@@ -153,10 +154,10 @@ export class CrmPipelineService {
     reason?: string
   ): Promise<ApiResponse> {
     try {
-      // Get current status
+      // Get current status and trainer_id
       const { data: trainee, error: fetchError } = await supabase
         .from('trainees')
-        .select('crm_status')
+        .select('crm_status, trainer_id')
         .eq('id', traineeId)
         .single();
 
@@ -165,6 +166,7 @@ export class CrmPipelineService {
       }
 
       const oldStatus = trainee.crm_status;
+      const trainerId = trainee.trainer_id;
 
       // Update status
       const { error: updateError } = await supabase
@@ -177,8 +179,19 @@ export class CrmPipelineService {
         return { error: updateError.message };
       }
 
-      // Log pipeline movement
+      // Log pipeline movement (internal logging)
       await this.logPipelineMovement(traineeId, oldStatus || 'active', newStatus, reason);
+
+      // Log audit event
+      if (trainerId) {
+        await AuditService.logPipelineMovement(
+          trainerId,
+          traineeId,
+          oldStatus || 'active',
+          newStatus,
+          reason
+        ).catch(err => logger.error('Failed to log audit event', err, 'CrmPipelineService'));
+      }
 
       return { success: true };
     } catch (error) {
@@ -375,9 +388,21 @@ export class CrmPipelineService {
    */
   static async bulkUpdateStatus(
     traineeIds: string[],
-    newStatus: typeof CRM_STATUS[keyof typeof CRM_STATUS]
+    newStatus: typeof CRM_STATUS[keyof typeof CRM_STATUS],
+    trainerId?: string
   ): Promise<ApiResponse> {
     try {
+      // Get trainer_id from first trainee if not provided
+      let actualTrainerId = trainerId;
+      if (!actualTrainerId && traineeIds.length > 0) {
+        const { data: firstTrainee } = await supabase
+          .from('trainees')
+          .select('trainer_id')
+          .eq('id', traineeIds[0])
+          .single();
+        actualTrainerId = firstTrainee?.trainer_id;
+      }
+
       const { error } = await supabase
         .from('trainees')
         .update({ crm_status: newStatus })
@@ -388,11 +413,11 @@ export class CrmPipelineService {
         return { error: error.message };
       }
 
-      // Log movements
+      // Log movements and audit events
       for (const traineeId of traineeIds) {
         const { data: trainee } = await supabase
           .from('trainees')
-          .select('crm_status')
+          .select('crm_status, trainer_id')
           .eq('id', traineeId)
           .single();
         
@@ -403,7 +428,33 @@ export class CrmPipelineService {
             newStatus,
             'Bulk update'
           );
+
+          // Log audit event
+          if (trainee.trainer_id) {
+            await AuditService.logPipelineMovement(
+              trainee.trainer_id,
+              traineeId,
+              trainee.crm_status || 'active',
+              newStatus,
+              'Bulk update'
+            ).catch(err => logger.error('Failed to log audit event', err, 'CrmPipelineService'));
+          }
         }
+      }
+
+      // Log bulk action audit event
+      if (actualTrainerId) {
+        await AuditService.logBulkAction(
+          actualTrainerId,
+          'trainees',
+          'bulk_action',
+          {
+            action: 'bulk_status_update',
+            trainee_ids: traineeIds,
+            new_status: newStatus,
+            count: traineeIds.length,
+          }
+        ).catch(err => logger.error('Failed to log bulk action audit', err, 'CrmPipelineService'));
       }
 
       return { success: true };

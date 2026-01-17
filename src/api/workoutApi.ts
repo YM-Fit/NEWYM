@@ -5,6 +5,7 @@
 import { supabase } from '../lib/supabase';
 import type { ApiResponse, SaveWorkoutRequest, SaveWorkoutResponse } from './types';
 import { API_CONFIG } from './config';
+import { rateLimiter } from '../utils/rateLimiter';
 
 /**
  * Save workout (create or update)
@@ -13,6 +14,14 @@ export async function saveWorkout(
   workoutData: SaveWorkoutRequest,
   accessToken: string
 ): Promise<ApiResponse<SaveWorkoutResponse>> {
+  // Rate limiting: 50 requests per minute per user
+  const userId = workoutData.trainee_id || workoutData.trainer_id || 'anonymous';
+  const rateLimitKey = `saveWorkout:${userId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 50, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const response = await fetch(
       `${API_CONFIG.SUPABASE_URL}/functions/v1/save-workout`,
@@ -44,6 +53,13 @@ export async function saveWorkout(
 export async function getTraineeWorkouts(
   traineeId: string
 ): Promise<ApiResponse<any[]>> {
+  // Rate limiting: 100 requests per minute per trainee
+  const rateLimitKey = `getTraineeWorkouts:${traineeId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 100, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const { data, error } = await supabase
       .from('workout_trainees')
@@ -92,6 +108,13 @@ export async function getTraineeWorkouts(
 export async function getWorkoutDetails(
   workoutId: string
 ): Promise<ApiResponse<any>> {
+  // Rate limiting: 100 requests per minute per workout
+  const rateLimitKey = `getWorkoutDetails:${workoutId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 100, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const { data, error } = await supabase
       .from('workout_exercises')
@@ -137,6 +160,13 @@ export async function getWorkoutDetails(
 export async function deleteWorkout(
   workoutId: string
 ): Promise<ApiResponse> {
+  // Rate limiting: 20 requests per minute per workout
+  const rateLimitKey = `deleteWorkout:${workoutId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 20, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const { error } = await supabase
       .from('workouts')
@@ -161,6 +191,13 @@ export async function syncWorkoutToCalendar(
   trainerId: string,
   accessToken: string
 ): Promise<ApiResponse<string>> {
+  // Rate limiting: 20 sync requests per minute per trainer
+  const rateLimitKey = `syncWorkoutToCalendar:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 20, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     // Get workout details
     const { data: workout, error: workoutError } = await supabase
@@ -253,6 +290,13 @@ export async function getWorkoutsFromCalendar(
   trainerId: string,
   dateRange: { start: Date; end: Date }
 ): Promise<ApiResponse<any[]>> {
+  // Rate limiting: 60 requests per minute per trainer
+  const rateLimitKey = `getWorkoutsFromCalendar:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 60, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
   try {
     const { getGoogleCalendarEvents } = await import('./googleCalendarApi');
     

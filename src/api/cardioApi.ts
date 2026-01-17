@@ -4,6 +4,7 @@
 
 import { supabase } from '../lib/supabase';
 import { handleApiError } from './config';
+import { rateLimiter } from '../utils/rateLimiter';
 
 export interface CardioType {
   id: string;
@@ -130,11 +131,20 @@ function validateCardioActivity(input: CreateCardioActivityInput | UpdateCardioA
   }
 }
 
+// Rate limiting helper for cardio API
+function checkCardioRateLimit(key: string, maxRequests: number = 100): void {
+  const rateLimitResult = rateLimiter.check(key, maxRequests, 60000);
+  if (!rateLimitResult.allowed) {
+    throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+  }
+}
+
 export const cardioApi = {
   /**
    * Get all cardio activities for a trainee
    */
   async getTraineeActivities(traineeId: string): Promise<CardioActivity[]> {
+    checkCardioRateLimit(`getTraineeActivities:${traineeId}`, 100);
     try {
       const { data, error } = await supabase
         .from('cardio_activities')
@@ -153,6 +163,7 @@ export const cardioApi = {
    * Get cardio activity by ID
    */
   async getActivityById(activityId: string): Promise<CardioActivity> {
+    checkCardioRateLimit(`getActivityById:${activityId}`, 100);
     try {
       const { data, error } = await supabase
         .from('cardio_activities')
@@ -172,6 +183,7 @@ export const cardioApi = {
    * Get latest cardio activity for a trainee
    */
   async getLatestActivity(traineeId: string): Promise<CardioActivity | null> {
+    checkCardioRateLimit(`getLatestActivity:${traineeId}`, 100);
     try {
       const { data, error } = await supabase
         .from('cardio_activities')
@@ -198,6 +210,7 @@ export const cardioApi = {
    * Create a new cardio activity
    */
   async createActivity(input: CreateCardioActivityInput): Promise<CardioActivity> {
+    checkCardioRateLimit(`createActivity:${input.trainee_id}`, 50);
     try {
       validateCardioActivity(input);
       
@@ -226,6 +239,7 @@ export const cardioApi = {
    * Update a cardio activity
    */
   async updateActivity(activityId: string, updates: UpdateCardioActivityInput): Promise<CardioActivity> {
+    checkCardioRateLimit(`updateActivity:${activityId}`, 50);
     try {
       validateCardioActivity(updates);
       
@@ -247,6 +261,7 @@ export const cardioApi = {
    * Delete a cardio activity
    */
   async deleteActivity(activityId: string): Promise<void> {
+    checkCardioRateLimit(`deleteActivity:${activityId}`, 20);
     try {
       const { error } = await supabase
         .from('cardio_activities')
@@ -263,6 +278,7 @@ export const cardioApi = {
    * Get all cardio types for a trainer
    */
   async getCardioTypes(trainerId: string): Promise<CardioType[]> {
+    checkCardioRateLimit(`getCardioTypes:${trainerId}`, 100);
     try {
       const { data, error } = await supabase
         .from('cardio_types')
@@ -281,6 +297,7 @@ export const cardioApi = {
    * Create a new cardio type
    */
   async createCardioType(input: CreateCardioTypeInput): Promise<CardioType> {
+    checkCardioRateLimit(`createCardioType:${input.trainer_id}`, 20);
     try {
       if (!input.name.trim()) {
         throw new Error('שם סוג אירובי לא יכול להיות ריק');
@@ -303,6 +320,7 @@ export const cardioApi = {
    * Update a cardio type
    */
   async updateCardioType(typeId: string, name: string): Promise<CardioType> {
+    checkCardioRateLimit(`updateCardioType:${typeId}`, 20);
     try {
       if (!name.trim()) {
         throw new Error('שם סוג אירובי לא יכול להיות ריק');
@@ -326,6 +344,7 @@ export const cardioApi = {
    * Delete a cardio type
    */
   async deleteCardioType(typeId: string): Promise<void> {
+    checkCardioRateLimit(`deleteCardioType:${typeId}`, 10);
     try {
       const { error } = await supabase
         .from('cardio_types')
@@ -342,6 +361,7 @@ export const cardioApi = {
    * Get cardio statistics for a trainee
    */
   async getCardioStats(traineeId: string): Promise<CardioStats> {
+    checkCardioRateLimit(`getCardioStats:${traineeId}`, 100);
     try {
       const activities = await this.getTraineeActivities(traineeId);
       
@@ -415,6 +435,7 @@ export const cardioApi = {
    * Get cardio trends (weekly/monthly)
    */
   async getCardioTrends(traineeId: string, period: 'week' | 'month' = 'week'): Promise<CardioTrend[]> {
+    checkCardioRateLimit(`getCardioTrends:${traineeId}`, 100);
     try {
       const activities = await this.getTraineeActivities(traineeId);
       
@@ -477,6 +498,7 @@ export const cardioApi = {
     startDate: string,
     endDate: string
   ): Promise<CardioActivity[]> {
+    checkCardioRateLimit(`getActivitiesInRange:${traineeId}`, 100);
     try {
       const { data, error } = await supabase
         .from('cardio_activities')

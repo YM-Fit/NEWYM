@@ -17,6 +17,8 @@ import { useAuth } from '../../../../contexts/AuthContext';
 import { CrmPipelineService, type PipelineStage, type PipelineStats } from '../../../../services/crmPipelineService';
 import { CRM_STATUS, CRM_STATUS_LABELS } from '../../../../constants/crmConstants';
 import { getTrainees } from '../../../../api/traineeApi';
+import { usePagination } from '../../../../hooks/usePagination';
+import { Pagination } from '../../../ui/Pagination';
 import toast from 'react-hot-toast';
 import { logger } from '../../../../utils/logger';
 import type { Trainee } from '../../../../types';
@@ -32,6 +34,7 @@ export default function PipelineView({ onClientClick }: PipelineViewProps) {
   const [loading, setLoading] = useState(true);
   const [draggedClient, setDraggedClient] = useState<{ traineeId: string; stage: string } | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [stagePagination, setStagePagination] = useState<Record<string, { page: number; pageSize: number }>>({});
 
   const loadPipeline = useCallback(async () => {
     if (!user) return;
@@ -230,7 +233,16 @@ export default function PipelineView({ onClientClick }: PipelineViewProps) {
 
             {/* Clients List */}
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {stage.clients.map((client) => (
+              {(() => {
+                const pagination = stagePagination[stage.status] || { page: 1, pageSize: 10 };
+                const startIndex = (pagination.page - 1) * pagination.pageSize;
+                const endIndex = startIndex + pagination.pageSize;
+                const paginatedClients = stage.clients.slice(startIndex, endIndex);
+                const totalPages = Math.ceil(stage.clients.length / pagination.pageSize);
+
+                return (
+                  <>
+                    {paginatedClients.map((client) => (
                 <div
                   key={client.id}
                   draggable={!updatingStatus || updatingStatus !== client.id}
@@ -260,12 +272,48 @@ export default function PipelineView({ onClientClick }: PipelineViewProps) {
                     )}
                   </div>
                 </div>
-              ))}
-              {stage.clients.length === 0 && (
-                <div className="text-center py-8 text-zinc-500 text-sm">
-                  אין לקוחות בשלב זה
-                </div>
-              )}
+                    ))}
+                    {stage.clients.length === 0 && (
+                      <div className="text-center py-8 text-zinc-500 text-sm">
+                        אין לקוחות בשלב זה
+                      </div>
+                    )}
+                    {totalPages > 1 && (
+                      <div className="mt-4 pt-4 border-t border-zinc-700">
+                        <Pagination
+                          currentPage={pagination.page}
+                          totalPages={totalPages}
+                          totalItems={stage.clients.length}
+                          startIndex={startIndex + 1}
+                          endIndex={Math.min(endIndex, stage.clients.length)}
+                          hasNextPage={pagination.page < totalPages}
+                          hasPrevPage={pagination.page > 1}
+                          onNextPage={() => {
+                            setStagePagination(prev => ({
+                              ...prev,
+                              [stage.status]: { ...pagination, page: pagination.page + 1 }
+                            }));
+                          }}
+                          onPrevPage={() => {
+                            setStagePagination(prev => ({
+                              ...prev,
+                              [stage.status]: { ...pagination, page: Math.max(1, pagination.page - 1) }
+                            }));
+                          }}
+                          onGoToPage={(page) => {
+                            setStagePagination(prev => ({
+                              ...prev,
+                              [stage.status]: { ...pagination, page }
+                            }));
+                          }}
+                          showItemCount={true}
+                          compact={true}
+                        />
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         ))}
