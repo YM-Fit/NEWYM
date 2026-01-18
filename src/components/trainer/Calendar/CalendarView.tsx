@@ -19,12 +19,11 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
-  SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-  verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -560,7 +559,22 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
+            onDragStart={() => {
+              // Drag started - visual feedback handled by DraggableEvent component
+            }}
             onDragEnd={handleDragEnd}
+            onDragOver={(event) => {
+              const overId = event.over?.id as string;
+              if (overId && overId.startsWith('day-')) {
+                const match = overId.match(/day-\d+-\d+-(\d+)/);
+                if (match) {
+                  setTargetDay(parseInt(match[1]));
+                }
+              }
+            }}
+            onDragCancel={() => {
+              setTargetDay(null);
+            }}
           >
             <div className="grid grid-cols-7 gap-2">
               {/* Week days header */}
@@ -591,15 +605,22 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
 
                 const isDropTarget = targetDay === day;
 
+                // Day droppable component
+                function DayDroppable({ children }: { children: React.ReactNode }) {
+                  const { setNodeRef } = useDroppable({
+                    id: dayId,
+                  });
+
+                  return (
+                    <div ref={setNodeRef}>
+                      {children}
+                    </div>
+                  );
+                }
+
                 return (
-                  <SortableContext
-                    key={dayId}
-                    id={dayId}
-                    items={dayEvents.map(e => e.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
+                  <DayDroppable key={dayId}>
                     <div
-                      id={dayId}
                       onClick={() => day && handleDayClick(day)}
                       className={`min-h-[100px] p-2 border border-zinc-800 rounded-lg transition-all ${
                         day
@@ -610,17 +631,6 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
                             : 'bg-zinc-800/30 hover:bg-zinc-800/50 cursor-pointer'
                           : 'bg-transparent border-transparent'
                       }`}
-                      onDragOver={(e) => {
-                        if (day) {
-                          e.preventDefault();
-                          setTargetDay(day);
-                        }
-                      }}
-                      onDragLeave={() => {
-                        if (day === targetDay) {
-                          setTargetDay(null);
-                        }
-                      }}
                     >
                       {day && (
                         <>
@@ -663,7 +673,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
                         </>
                       )}
                     </div>
-                  </SortableContext>
+                  </DayDroppable>
                 );
               })}
             </div>

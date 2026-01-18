@@ -20,7 +20,7 @@
 
 ### 1. מבנה CRM עיקרי
 
-המערכת מאורגנת תחת קטגוריית "CRM" ב-Sidebar:
+המערכת מאורגנת תחת קטגוריית "CRM" ב-Sidebar, וכוללת גם **אינטגרציה עם Google Calendar** לסנכרון לקוחות ואירועים:
 
 #### 1.1 CRM Dashboard (`crm-dashboard`)
 - **מיקום:** `src/components/trainer/crm/dashboard/CrmDashboard.tsx`
@@ -58,6 +58,29 @@
 - **תיאור:** דוחות ואנליטיקה CRM
 - **סטטוס:** ✅ פעיל ומוטמע
 - **Routes:** `case 'crm-reports'`
+
+### 1.6 יומן Google Calendar (`calendar`) - אינטגרציה עם CRM
+- **מיקום:** `src/components/trainer/Calendar/CalendarView.tsx`
+- **תיאור:** תצוגת יומן Google Calendar עם סנכרון לקוחות
+- **קשר ל-CRM:** 
+  - סנכרון אוטומטי של אירועים עם לקוחות
+  - מיפוי לקוחות מ-Google Calendar (`google_calendar_clients`)
+  - יצירת אירועים מתוך CRM
+  - מעקב אירועים ולקוחות
+- **תכונות:**
+  - תצוגת אירועי Google Calendar
+  - Drag & Drop לניהול אירועים
+  - סנכרון דו-כיווני עם Google Calendar
+  - קישור בין אירועים ולקוחות
+  - הגדרות סנכרון (GoogleCalendarSettings)
+- **API:** `src/api/googleCalendarApi.ts`
+- **מסד נתונים:**
+  - `trainer_google_credentials` - OAuth credentials
+  - `google_calendar_sync` - סנכרון אירועים
+  - `google_calendar_clients` - כרטיסיות לקוחות
+- **סטטוס:** ✅ פעיל ומוטמע
+- **Routes:** `case 'calendar'`
+- **הערה:** היומן הוא חלק מרכזי במערכת ה-CRM ומאפשר סנכרון לקוחות עם Google Calendar
 
 ### 2. רכיבים משותפים (Shared Components)
 
@@ -350,7 +373,7 @@
 
 ## 📝 סיכום
 
-### תכונות CRM פעילות: ✅ 17 דפים/תצוגות
+### תכונות CRM פעילות: ✅ 18 דפים/תצוגות
 
 1. CRM Dashboard
 2. Clients List (Enhanced)
@@ -358,17 +381,18 @@
 4. Analytics
 5. Reports CRM
 6. Client Detail
-7. Contracts
-8. Payments
-9. Communication
-10. Documents
-11. Email Templates Manager
-12. Scheduled Exports
-13. Data Import
-14. Health Check
-15. Error Reporting
-16. Advanced Filters (route קיים, לא ב-Sidebar)
-17. Automation Rules (קיים אבל לא בשימוש)
+7. **Google Calendar / יומן** - סנכרון לקוחות ואירועים
+8. Contracts
+9. Payments
+10. Communication
+11. Documents
+12. Email Templates Manager
+13. Scheduled Exports
+14. Data Import
+15. Health Check
+16. Error Reporting
+17. Advanced Filters (route קיים, לא ב-Sidebar)
+18. Automation Rules (קיים אבל לא בשימוש)
 
 ### כפילויות מזוהות: ⚠️ 1 כפילות
 
