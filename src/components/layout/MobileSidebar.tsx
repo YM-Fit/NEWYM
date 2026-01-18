@@ -181,9 +181,7 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
                   >
                     {items.map(({ id, label, icon: Icon, description, badge }) => {
                       const isActive = activeView === id || 
-                        (id === 'trainees' && activeView.includes('trainee')) ||
-                        (id === 'crm-clients' && (activeView === 'clients' || activeView === 'client-detail')) ||
-                        (id.startsWith('crm-') && activeView === id);
+                        (id === 'trainees' && activeView.includes('trainee'));
 
                       return (
                         <button
