@@ -12,13 +12,6 @@ export interface UserDataExport {
     trainer?: any;
     trainee?: any;
   };
-  crm_data: {
-    clients?: any[];
-    interactions?: any[];
-    contracts?: any[];
-    payments?: any[];
-    documents?: any[];
-  };
   training_data: {
     workouts?: any[];
     workout_plans?: any[];

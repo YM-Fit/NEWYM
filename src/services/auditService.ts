@@ -1,6 +1,6 @@
 /**
  * Audit Service
- * Service for logging all CRM actions for security and compliance
+ * Service for logging all application actions for security and compliance
  */
 
 import { supabase, logSupabaseError } from '../lib/supabase';
@@ -179,10 +179,6 @@ export class AuditService {
   ): Promise<void> {
     const actionMap: Record<string, AuditAction> = {
       'google_calendar_clients': 'create_client',
-      'client_interactions': 'create_interaction',
-      'crm_contracts': 'create_contract',
-      'crm_payments': 'create_payment',
-      'crm_documents': 'create_document',
     };
 
     const action = actionMap[tableName] || ('create_client' as AuditAction);
@@ -208,10 +204,6 @@ export class AuditService {
   ): Promise<void> {
     const actionMap: Record<string, AuditAction> = {
       'google_calendar_clients': 'update_client',
-      'client_interactions': 'update_interaction',
-      'crm_contracts': 'update_contract',
-      'crm_payments': 'update_payment',
-      'crm_documents': 'update_document',
     };
 
     const action = actionMap[tableName] || ('update_client' as AuditAction);
@@ -237,10 +229,6 @@ export class AuditService {
   ): Promise<void> {
     const actionMap: Record<string, AuditAction> = {
       'google_calendar_clients': 'delete_client',
-      'client_interactions': 'delete_interaction',
-      'crm_contracts': 'delete_contract',
-      'crm_payments': 'delete_payment',
-      'crm_documents': 'delete_document',
     };
 
     const action = actionMap[tableName] || ('delete_client' as AuditAction);

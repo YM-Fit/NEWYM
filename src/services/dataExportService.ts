@@ -3,18 +3,17 @@
  * שירות ייצוא נתונים - CSV, JSON, Excel
  * 
  * @module dataExportService
- * @description Provides data export functionality for CRM data including clients, 
+ * @description Provides data export functionality for application data 
  * interactions, and reports. Supports CSV, JSON, and Excel formats.
  */
 
 import * as XLSX from 'xlsx';
 import { logger } from '../utils/logger';
 import type { ApiResponse } from '../api/types';
-import type { CalendarClient, ClientInteraction } from '../api/crmClientsApi';
 import { supabase } from '../lib/supabase';
 
 export type ExportFormat = 'csv' | 'json' | 'excel';
-export type ExportDataType = 'clients' | 'interactions' | 'reports' | 'all';
+export type ExportDataType = 'reports' | 'all';
 
 export interface ExportOptions {
   format: ExportFormat;
@@ -52,12 +51,6 @@ export class DataExportService {
 
       // Fetch data based on type
       switch (options.dataType) {
-        case 'clients':
-          data = await this.fetchClientsData(options);
-          break;
-        case 'interactions':
-          data = await this.fetchInteractionsData(options);
-          break;
         case 'reports':
           data = await this.fetchReportsData(options);
           break;
@@ -99,60 +92,11 @@ export class DataExportService {
   }
 
   /**
-   * Fetch clients data
-   * @param options - Export options
-   * @returns Promise with clients data
-   */
-  private static async fetchClientsData(options: ExportOptions): Promise<any[]> {
-    let query = supabase
-      .from('trainees')
-      .select('*')
-      .eq('trainer_id', options.trainerId);
-
-    const { data, error } = await query;
-
-    if (error) {
-      logger.error('Error fetching clients data', error, 'DataExportService');
-      return [];
-    }
-
-    return data || [];
-  }
-
-  /**
-   * Fetch interactions data
-   * @param options - Export options
-   * @returns Promise with interactions data
-   */
-  private static async fetchInteractionsData(options: ExportOptions): Promise<any[]> {
-    let query = supabase
-      .from('client_interactions')
-      .select('*')
-      .eq('trainer_id', options.trainerId);
-
-    if (options.filters?.dateRange) {
-      query = query
-        .gte('interaction_date', options.filters.dateRange.start)
-        .lte('interaction_date', options.filters.dateRange.end);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      logger.error('Error fetching interactions data', error, 'DataExportService');
-      return [];
-    }
-
-    return data || [];
-  }
-
-  /**
    * Fetch reports data (placeholder - would need actual reports service)
    * @param options - Export options
    * @returns Promise with reports data
    */
   private static async fetchReportsData(options: ExportOptions): Promise<any[]> {
-    // This would integrate with crmReportsService
     logger.warn('Reports export not fully implemented', { options }, 'DataExportService');
     return [];
   }
@@ -163,13 +107,8 @@ export class DataExportService {
    * @returns Promise with all data
    */
   private static async fetchAllData(options: ExportOptions): Promise<any[]> {
-    const clients = await this.fetchClientsData(options);
-    const interactions = await this.fetchInteractionsData(options);
-
-    return [
-      ...clients.map((c: any) => ({ ...c, _type: 'client' })),
-      ...interactions.map((i: any) => ({ ...i, _type: 'interaction' })),
-    ];
+    const reports = await this.fetchReportsData(options);
+    return reports.map((r: any) => ({ ...r, _type: 'report' }));
   }
 
   /**
@@ -183,19 +122,6 @@ export class DataExportService {
 
     let filtered = [...data];
 
-    if (filters.status && filters.status.length > 0) {
-      filtered = filtered.filter((item) => {
-        const status = item.crm_status || item.status;
-        return status && filters.status?.includes(status);
-      });
-    }
-
-    if (filters.clientIds && filters.clientIds.length > 0) {
-      filtered = filtered.filter((item) => {
-        const id = item.id || item.trainee_id || item.client_id;
-        return id && filters.clientIds?.includes(id);
-      });
-    }
 
     return filtered;
   }
@@ -361,7 +287,7 @@ export class DataExportService {
   private static generateFilename(options: ExportOptions, extension: string): string {
     const timestamp = new Date().toISOString().split('T')[0];
     const dataTypeLabel = options.dataType === 'all' ? 'all-data' : options.dataType;
-    return `crm-${dataTypeLabel}-${timestamp}.${extension}`;
+    return `${dataTypeLabel}-${timestamp}.${extension}`;
   }
 
   /**

@@ -1,6 +1,6 @@
 /**
  * Service Worker Registration for Offline Caching
- * Provides offline support and improved caching for CRM data
+ * Provides offline support and improved caching for application data
  */
 
 /**

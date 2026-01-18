@@ -6,13 +6,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as workoutApi from '../../api/workoutApi';
 import * as nutritionApi from '../../api/nutritionApi';
-import * as crmClientsApi from '../../api/crmClientsApi';
-import { CrmService } from '../../services/crmService';
-
 // Mock dependencies
 vi.mock('../../api/workoutApi');
 vi.mock('../../api/nutritionApi');
-vi.mock('../../api/crmClientsApi');
 
 describe('Performance Integration Tests', () => {
   const mockTrainerId = 'trainer-123';
@@ -20,7 +16,6 @@ describe('Performance Integration Tests', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    CrmService.clearCache();
   });
 
   describe('API Response Time', () => {
@@ -76,51 +71,6 @@ describe('Performance Integration Tests', () => {
     });
   });
 
-  describe('Cache Performance', () => {
-    it('should use cache for repeated CRM client queries', async () => {
-      const mockClients = [{ id: 'client-1', trainer_id: mockTrainerId }];
-
-      (crmClientsApi.getClientsFromCalendar as any).mockResolvedValue({
-        success: true,
-        data: mockClients,
-      });
-
-      const startTime = performance.now();
-
-      // First call - should fetch from API
-      await CrmService.getClients(mockTrainerId, true);
-      const firstCallTime = performance.now() - startTime;
-
-      // Second call - should use cache (much faster)
-      const cacheStartTime = performance.now();
-      await CrmService.getClients(mockTrainerId, true);
-      const cacheCallTime = performance.now() - cacheStartTime;
-
-      // Cache call should be significantly faster
-      expect(cacheCallTime).toBeLessThan(firstCallTime);
-      expect(crmClientsApi.getClientsFromCalendar).toHaveBeenCalledTimes(1);
-    });
-
-    it('should handle cache invalidation efficiently', async () => {
-      const mockClients = [{ id: 'client-1' }];
-
-      (crmClientsApi.getClientsFromCalendar as any).mockResolvedValue({
-        success: true,
-        data: mockClients,
-      });
-
-      // Fill cache
-      await CrmService.getClients(mockTrainerId, true);
-      expect(crmClientsApi.getClientsFromCalendar).toHaveBeenCalledTimes(1);
-
-      // Invalidate
-      CrmService.invalidateCache('clients:');
-
-      // Should fetch again
-      await CrmService.getClients(mockTrainerId, true);
-      expect(crmClientsApi.getClientsFromCalendar).toHaveBeenCalledTimes(2);
-    });
-  });
 
   describe('Large Dataset Handling', () => {
     it('should handle large workout history efficiently', async () => {
@@ -221,17 +171,11 @@ describe('Performance Integration Tests', () => {
         data: { total_calories: 2000 },
       });
 
-      (crmClientsApi.getClientsFromCalendar as any).mockResolvedValue({
-        success: true,
-        data: [],
-      });
-
       const startTime = performance.now();
 
       const promises = [
         ...Array(20).fill(null).map(() => workoutApi.getTraineeWorkouts(mockTraineeId)),
         ...Array(20).fill(null).map(() => nutritionApi.getDailyNutrition(mockTraineeId, '2024-01-01')),
-        ...Array(20).fill(null).map(() => CrmService.getClients(mockTrainerId)),
       ];
 
       await Promise.all(promises);

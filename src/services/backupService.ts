@@ -52,13 +52,6 @@ export async function createBackup(
     const backupDate = new Date().toISOString();
     const tablesToBackup = tables.length > 0 ? tables : [
       'google_calendar_clients',
-      'client_interactions',
-      'crm_contracts',
-      'crm_payments',
-      'crm_documents',
-      'pipeline_movements',
-      'crm_automation_rules',
-      'crm_communication_messages',
     ];
 
     let totalRecords = 0;

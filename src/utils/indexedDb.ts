@@ -1,20 +1,12 @@
 /**
  * IndexedDB utilities for offline caching
- * Provides persistent storage for CRM data
+ * Provides persistent storage for application data
  */
 
-const DB_NAME = 'crm-db';
+const DB_NAME = 'app-db';
 const DB_VERSION = 1;
 
 interface DBSchema {
-  clients: {
-    key: string; // trainerId
-    value: any[]; // CalendarClient[]
-  };
-  interactions: {
-    key: string; // traineeId
-    value: any[]; // ClientInteraction[]
-  };
   stats: {
     key: string; // trainerId:type
     value: any; // Stats data

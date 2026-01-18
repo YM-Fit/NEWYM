@@ -6,10 +6,7 @@
 import { supabase, logSupabaseError } from '../lib/supabase';
 import { logger } from '../utils/logger';
 import { SegmentationService } from './segmentationService';
-import { CrmPipelineService } from './crmPipelineService';
 import { EmailTemplateService } from './emailTemplateService';
-import { exportClientsToCSV, exportClientsToPDF } from '../utils/exportUtils';
-import { CRM_STATUS, type CrmStatus } from '../constants/crmConstants';
 import type { ApiResponse } from '../api/types';
 import type { Trainee } from '../types';
 
@@ -26,7 +23,6 @@ export interface BulkActionResult {
  * Bulk Update Options
  */
 export interface BulkUpdateOptions {
-  crm_status?: CrmStatus;
   payment_status?: string;
   contract_type?: string;
   contract_value?: number;
@@ -62,9 +58,6 @@ export class BulkActionsService {
       // Prepare update data
       const updateData: any = {};
 
-      if (updates.crm_status) {
-        updateData.crm_status = updates.crm_status;
-      }
       if (updates.payment_status) {
         updateData.payment_status = updates.payment_status;
       }
@@ -86,11 +79,6 @@ export class BulkActionsService {
 
       if (updateResult.success) {
         result.success = traineeIds.length;
-        
-        // If status was updated, log pipeline movements
-        if (updates.crm_status) {
-          await CrmPipelineService.bulkUpdateStatus(traineeIds, updates.crm_status);
-        }
       } else {
         result.failed = traineeIds.length;
         result.errors.push({
@@ -180,50 +168,6 @@ export class BulkActionsService {
     }
   }
 
-  /**
-   * Bulk update status
-   * @param traineeIds - Array of trainee IDs
-   * @param newStatus - New CRM status
-   * @returns Promise with bulk update result
-   */
-  static async bulkUpdateStatus(
-    traineeIds: string[],
-    newStatus: CrmStatus
-  ): Promise<ApiResponse<BulkActionResult>> {
-    try {
-      if (!traineeIds || traineeIds.length === 0) {
-        return { error: 'לא נבחרו לקוחות' };
-      }
-
-      const result = await CrmPipelineService.bulkUpdateStatus(traineeIds, newStatus);
-
-      if (result.success) {
-        return {
-          data: {
-            success: traineeIds.length,
-            failed: 0,
-            errors: [],
-          },
-          success: true,
-        };
-      }
-
-      return {
-        data: {
-          success: 0,
-          failed: traineeIds.length,
-          errors: [{
-            traineeId: 'all',
-            error: result.error || 'שגיאה בעדכון סטטוס',
-          }],
-        },
-        success: false,
-      };
-    } catch (error) {
-      logger.error('Error bulk updating status', error, 'BulkActionsService');
-      return { error: 'שגיאה בעדכון סטטוסים' };
-    }
-  }
 
   /**
    * Bulk export clients
@@ -270,7 +214,7 @@ export class BulkActionsService {
         return { error: 'אין לקוחות לייצוא' };
       }
 
-      // Convert trainees to CalendarClient format if needed
+      // Export trainees data
       const clients = trainees.map(t => ({
         id: t.id,
         client_name: t.full_name || '',

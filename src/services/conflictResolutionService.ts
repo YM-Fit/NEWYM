@@ -110,7 +110,7 @@ export class ConflictResolutionService {
     }
 
     // Compare key fields
-    const keyFields = ['full_name', 'email', 'phone', 'crm_status', 'payment_status'];
+    const keyFields = ['full_name', 'email', 'phone'];
     for (const field of keyFields) {
       if (clientData[field] !== serverData[field]) {
         return true;
