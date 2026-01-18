@@ -82,104 +82,72 @@ export class OAuthTokenService {
 
   /**
    * Refresh access token using refresh token
+   * Always uses Edge Function for security (client_secret stays on server)
    * @param trainerId - Trainer ID
-   * @param refreshToken - Refresh token
+   * @param refreshToken - Refresh token (optional, Edge Function will get it from DB)
    * @returns Promise with new access token info
    */
   static async refreshAccessToken(
     trainerId: string,
-    refreshToken: string
+    _refreshToken?: string // Not used - Edge Function gets it from DB
   ): Promise<ApiResponse<TokenRefreshResult>> {
     try {
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      const clientSecret = import.meta.env.VITE_GOOGLE_CLIENT_SECRET;
-
-      if (!clientId || !clientSecret) {
-        // Try to refresh via Edge Function instead
-        logger.info('OAuth credentials not configured locally, trying Edge Function refresh', { trainerId }, 'OAuthTokenService');
-        
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session?.access_token) {
-            return { error: 'נדרשת התחברות מחדש' };
-          }
-          
-          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-          const response = await fetch(`${supabaseUrl}/functions/v1/google-oauth/refresh`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ trainer_id: trainerId }),
-          });
-          
-          if (!response.ok) {
-            // If Edge Function refresh also fails, ask user to reconnect
-            return { error: 'Token פג תוקף - נדרש חיבור מחדש ל-Google Calendar' };
-          }
-          
-          const data = await response.json();
-          if (data.error) {
-            return { error: data.error };
-          }
-          
-          return {
-            data: {
-              access_token: data.access_token,
-              expires_at: data.expires_at,
-              expires_in: data.expires_in || 3600,
-            },
-            success: true,
-          };
-        } catch (edgeFnError) {
-          logger.warn('Edge Function refresh failed', edgeFnError, 'OAuthTokenService');
-          return { error: 'Token פג תוקף - נדרש חיבור מחדש ל-Google Calendar' };
-        }
+      // Always use Edge Function for token refresh (more secure - secrets stay on server)
+      logger.info('Refreshing token via Edge Function', { trainerId }, 'OAuthTokenService');
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        return { error: 'נדרשת התחברות מחדש למערכת' };
       }
-
-      const response = await fetch('https://oauth2.googleapis.com/token', {
+      
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (!supabaseUrl) {
+        logger.error('VITE_SUPABASE_URL not configured', null, 'OAuthTokenService');
+        return { error: 'שגיאת תצורה - אנא פנה לתמיכה' };
+      }
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/google-oauth/refresh`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
         },
-        body: new URLSearchParams({
-          client_id: clientId,
-          client_secret: clientSecret,
-          refresh_token: refreshToken,
-          grant_type: 'refresh_token',
-        }),
+        body: JSON.stringify({ trainer_id: trainerId }),
       });
-
+      
+      const responseData = await response.json().catch(() => ({}));
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        logger.error('Failed to refresh token', { status: response.status, error: errorData }, 'OAuthTokenService');
-        return { error: 'שגיאה בחידוש token' };
+        logger.error('Edge Function refresh failed', { 
+          status: response.status, 
+          error: responseData 
+        }, 'OAuthTokenService');
+        
+        // Provide specific error messages
+        if (response.status === 401) {
+          return { error: 'נדרשת התחברות מחדש למערכת' };
+        }
+        if (response.status === 400 && responseData.error?.includes('reconnect')) {
+          return { error: 'נדרש חיבור מחדש ל-Google Calendar' };
+        }
+        if (response.status === 500 && responseData.error?.includes('not configured')) {
+          return { error: 'Google Calendar לא מוגדר בשרת - פנה למנהל המערכת' };
+        }
+        
+        return { error: responseData.error || 'שגיאה ברענון ההרשאה' };
       }
-
-      const data = await response.json();
-      const expiresAt = new Date(Date.now() + (data.expires_in * 1000)).toISOString();
-
-      // Update database with new token
-      const { error: updateError } = await supabase
-        .from('trainer_google_credentials')
-        .update({
-          access_token: data.access_token,
-          token_expires_at: expiresAt,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('trainer_id', trainerId);
-
-      if (updateError) {
-        logSupabaseError(updateError, 'refreshAccessToken', { table: 'trainer_google_credentials', trainerId });
-        return { error: 'שגיאה בעדכון token' };
+      
+      if (responseData.error) {
+        return { error: responseData.error };
       }
-
+      
+      logger.info('Token refreshed successfully', { trainerId }, 'OAuthTokenService');
+      
       return {
         data: {
-          access_token: data.access_token,
-          expires_at: expiresAt,
-          expires_in: data.expires_in,
+          access_token: responseData.access_token,
+          expires_at: responseData.expires_at,
+          expires_in: responseData.expires_in || 3600,
         },
         success: true,
       };
@@ -329,6 +297,7 @@ export class OAuthTokenService {
 
   /**
    * Store tokens in Vault (requires Vault extension to be enabled)
+   * Note: These are advanced features that require additional Supabase setup
    * @param trainerId - Trainer ID
    * @param accessToken - Access token
    * @param refreshToken - Refresh token
@@ -343,8 +312,8 @@ export class OAuthTokenService {
   ): Promise<ApiResponse<string>> {
     try {
       // Call Edge Function or RPC to store in Vault
-      // For now, use RPC function if available
-      const { data, error } = await supabase.rpc('store_google_tokens_in_vault', {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).rpc('store_google_tokens_in_vault', {
         p_trainer_id: trainerId,
         p_access_token: accessToken,
         p_refresh_token: refreshToken,
@@ -357,7 +326,8 @@ export class OAuthTokenService {
       }
 
       // Update credentials table with vault_secret_name
-      const { error: updateError } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: updateError } = await (supabase as any)
         .from('trainer_google_credentials')
         .update({ vault_secret_name: data })
         .eq('trainer_id', trainerId);
@@ -381,7 +351,8 @@ export class OAuthTokenService {
    */
   static async getTokensFromVault(trainerId: string): Promise<ApiResponse<OAuthTokenInfo>> {
     try {
-      const { data, error } = await supabase.rpc('get_google_tokens_from_vault', {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).rpc('get_google_tokens_from_vault', {
         p_trainer_id: trainerId,
       });
 
@@ -413,10 +384,12 @@ export class OAuthTokenService {
    * @param trainerId - Trainer ID (optional, if not provided migrates all)
    * @returns Promise with migration results
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static async migrateTokensToVault(trainerId?: string): Promise<ApiResponse<any>> {
     try {
       // Call migration function
-      let query = supabase.rpc('migrate_tokens_to_vault');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const query = (supabase as any).rpc('migrate_tokens_to_vault');
       
       if (trainerId) {
         // Filter by trainer_id if provided
@@ -427,6 +400,7 @@ export class OAuthTokenService {
           return { error: 'שגיאה בהעברת tokens ל-Vault' };
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const trainerResult = data?.find((r: any) => r.trainer_id === trainerId);
         return {
           data: trainerResult || { message: 'No tokens to migrate' },
@@ -443,7 +417,9 @@ export class OAuthTokenService {
 
       return {
         data: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           migrated: data?.filter((r: any) => r.migrated).length || 0,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           failed: data?.filter((r: any) => !r.migrated).length || 0,
           results: data,
         },

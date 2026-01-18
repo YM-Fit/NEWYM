@@ -600,6 +600,37 @@ export async function getGoogleCalendarEvents(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      
+      // Handle 401 - Token expired or invalid
+      if (response.status === 401) {
+        // Try to refresh token and retry once
+        const { OAuthTokenService } = await import('../services/oauthTokenService');
+        const refreshResult = await OAuthTokenService.refreshAccessToken(
+          trainerId, 
+          credentials.refresh_token
+        );
+        
+        if (refreshResult.success && refreshResult.data?.access_token) {
+          // Retry with new token
+          const retryResponse = await fetch(
+            `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${queryParams.toString()}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${refreshResult.data.access_token}`,
+              },
+            }
+          );
+          
+          if (retryResponse.ok) {
+            const data = await retryResponse.json();
+            return { data: data.items || [], success: true };
+          }
+        }
+        
+        // If refresh failed or retry failed, ask user to reconnect
+        return { error: 'הרשאת Google Calendar פגה - נדרש חיבור מחדש בהגדרות' };
+      }
+      
       const errorMessage = errorData?.error?.message || 'שגיאה בטעינת אירועים מ-Google Calendar';
       return { error: errorMessage };
     }
@@ -805,7 +836,13 @@ export async function updateGoogleCalendarEvent(
     );
 
     if (!updateResponse.ok) {
-      const error = await updateResponse.json();
+      const error = await updateResponse.json().catch(() => ({}));
+      
+      // Handle 401 - Token expired
+      if (updateResponse.status === 401) {
+        return { error: 'הרשאת Google Calendar פגה - נדרש חיבור מחדש בהגדרות' };
+      }
+      
       return { error: error.error?.message || 'שגיאה בעדכון אירוע ב-Google Calendar' };
     }
 
@@ -869,6 +906,47 @@ export async function deleteGoogleCalendarEvent(
     );
 
     if (!response.ok) {
+      // Handle 401 - Token expired or invalid
+      if (response.status === 401) {
+        // Get refresh token and try to refresh
+        const { data: fullCreds } = await supabase
+          .from('trainer_google_credentials')
+          .select('refresh_token')
+          .eq('trainer_id', trainerId)
+          .single() as { data: { refresh_token: string } | null; error: unknown };
+        
+        if (fullCreds?.refresh_token) {
+          const refreshResult = await OAuthTokenService.refreshAccessToken(
+            trainerId, 
+            fullCreds.refresh_token
+          );
+          
+          if (refreshResult.success && refreshResult.data?.access_token) {
+            // Retry with new token
+            const retryResponse = await fetch(
+              `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`,
+              {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': `Bearer ${refreshResult.data.access_token}`,
+                },
+              }
+            );
+            
+            if (retryResponse.ok || retryResponse.status === 204) {
+              return { success: true };
+            }
+          }
+        }
+        
+        return { error: 'הרשאת Google Calendar פגה - נדרש חיבור מחדש בהגדרות' };
+      }
+      
+      // Handle 404 - Event not found (already deleted)
+      if (response.status === 404) {
+        return { success: true }; // Consider it deleted
+      }
+      
       return { error: 'שגיאה במחיקת אירוע ב-Google Calendar' };
     }
 

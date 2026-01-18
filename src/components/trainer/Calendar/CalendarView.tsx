@@ -95,6 +95,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
   const [showSettings, setShowSettings] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastRefreshRef = useRef<Date | null>(null);
   const eventsCacheRef = useRef<{ events: CalendarEvent[]; timestamp: number; dateKey: string } | null>(null);
@@ -165,6 +166,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
       
       if (result.success && result.data) {
         setEvents(result.data);
+        setAuthError(null); // Clear any previous auth error
         // Update cache
         eventsCacheRef.current = {
           events: result.data,
@@ -175,8 +177,23 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
         if (silent) {
           logger.info('Calendar events refreshed automatically', { eventCount: result.data.length }, 'CalendarView');
         }
-      } else if (result.error && !silent) {
-        toast.error(result.error);
+      } else if (result.error) {
+        // Check if it's an auth/permission error
+        const isAuthError = result.error.includes('הרשאה') || 
+                           result.error.includes('חיבור מחדש') || 
+                           result.error.includes('פג') ||
+                           result.error.includes('Token') ||
+                           result.error.includes('OAuth');
+        
+        if (isAuthError) {
+          setAuthError(result.error);
+          // Don't show toast for silent refreshes on auth errors
+          if (!silent) {
+            toast.error('נדרש חיבור מחדש ל-Google Calendar');
+          }
+        } else if (!silent) {
+          toast.error(result.error);
+        }
       }
     } catch (error) {
       logger.error('Error loading calendar events', error, 'CalendarView');
@@ -381,6 +398,45 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
         >
           הגדר Google Calendar
         </button>
+      </div>
+    );
+  }
+
+  // Show auth error with reconnect option
+  if (authError) {
+    return (
+      <div className="premium-card p-8 text-center space-y-6">
+        <div className="mx-auto w-20 h-20 bg-amber-500/20 rounded-full flex items-center justify-center">
+          <Calendar className="h-10 w-10 text-amber-400" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-white mb-2">
+            נדרש חיבור מחדש
+          </h3>
+          <p className="text-zinc-400 mb-2">
+            ההרשאה ל-Google Calendar פגה
+          </p>
+          <p className="text-zinc-500 text-sm mb-6">
+            {authError}
+          </p>
+        </div>
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={() => setShowSettings(true)}
+            className="btn-primary"
+          >
+            חבר מחדש
+          </button>
+          <button
+            onClick={() => {
+              setAuthError(null);
+              loadEvents(false, true);
+            }}
+            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg transition-all"
+          >
+            נסה שוב
+          </button>
+        </div>
       </div>
     );
   }
