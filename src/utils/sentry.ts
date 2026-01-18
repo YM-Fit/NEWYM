@@ -37,23 +37,28 @@ export async function initSentry(): Promise<void> {
       dsn,
       environment,
       release,
-
-    // Performance monitoring
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration({
-        // Session Replay can be expensive, only enable on errors
-        maskAllText: false,
-        blockAllMedia: false,
-      }),
-    ],
+      // Disable automatic session tracking in development
+      autoSessionTracking: import.meta.env.PROD,
+      // Disable automatic performance monitoring in development
+      enableTracing: import.meta.env.PROD,
+      // Performance monitoring
+      integrations: [
+        ...(import.meta.env.PROD ? [
+          Sentry.browserTracingIntegration(),
+          Sentry.replayIntegration({
+            // Session Replay can be expensive, only enable on errors
+            maskAllText: false,
+            blockAllMedia: false,
+          }),
+        ] : []),
+      ],
 
     // Performance monitoring sample rate
-    tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0, // 10% in production, 100% in dev
+    tracesSampleRate: import.meta.env.PROD ? 0.1 : 0, // 10% in production, 0% in dev to avoid unnecessary requests
 
     // Session Replay sample rate
-    replaysSessionSampleRate: 0.1, // 10% of sessions
-    replaysOnErrorSampleRate: 1.0, // 100% when an error occurs
+    replaysSessionSampleRate: import.meta.env.PROD ? 0.1 : 0, // 10% of sessions in prod, 0% in dev
+    replaysOnErrorSampleRate: import.meta.env.PROD ? 1.0 : 0, // 100% when an error occurs in prod, 0% in dev
 
     // Before send hook to filter or modify events
     beforeSend(event, hint) {
@@ -64,6 +69,22 @@ export async function initSentry(): Promise<void> {
         return import.meta.env.VITE_SENTRY_ENABLED === 'true' ? event : null;
       }
 
+      // Filter out StackBlitz/WebContainer related errors
+      const errorMessage = event.exception?.values?.[0]?.value || '';
+      const errorUrl = event.request?.url || '';
+      if (
+        errorMessage.includes('chmln') ||
+        errorMessage.includes('messo') ||
+        errorMessage.includes('staticblitz') ||
+        errorMessage.includes('webcontainer') ||
+        errorMessage.includes('Cannot read properties of undefined') ||
+        errorUrl.includes('/api/supabase/functions/') ||
+        errorUrl.includes('staticblitz.com') ||
+        errorUrl.includes('webcontainer')
+      ) {
+        return null; // Don't send StackBlitz errors
+      }
+
       // Filter out expected errors (like 404s, validation errors)
       if (event.exception) {
         const error = hint.originalException;
@@ -72,7 +93,9 @@ export async function initSentry(): Promise<void> {
           if (
             error.message.includes('Validation') ||
             error.message.includes('404') ||
-            error.message.includes('Not found')
+            error.message.includes('Not found') ||
+            error.message.includes('ERR_BLOCKED_BY_CLIENT') ||
+            error.message.includes('ERR_ABORTED')
           ) {
             return null;
           }
@@ -98,9 +121,19 @@ export async function initSentry(): Promise<void> {
       'NetworkError',
       'Network request failed',
       'Failed to fetch',
+      'ERR_BLOCKED_BY_CLIENT',
+      'ERR_ABORTED',
       // Chrome extensions
       'chrome-extension://',
       'moz-extension://',
+      // StackBlitz/WebContainer errors
+      'chmln',
+      'messo',
+      'staticblitz',
+      'webcontainer',
+      'Cannot read properties of undefined',
+      // Supabase function deployment errors (from StackBlitz)
+      '/api/supabase/functions/',
     ],
 
     // Don't send personal data

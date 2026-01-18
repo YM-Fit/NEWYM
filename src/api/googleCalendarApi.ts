@@ -7,7 +7,6 @@ import type { ApiResponse } from './types';
 import { API_CONFIG } from './config';
 import { handleApiError } from '../utils/apiErrorHandler';
 import { rateLimiter } from '../utils/rateLimiter';
-import { rateLimiter } from '../utils/rateLimiter';
 
 export interface GoogleCalendarEvent {
   id: string;
@@ -902,6 +901,223 @@ export async function syncGoogleCalendar(
       defaultMessage: 'שגיאה בסנכרון Google Calendar',
       context: 'syncGoogleCalendar',
       additionalInfo: { trainerId },
+    });
+    return { error: errorMessage };
+  }
+}
+
+/**
+ * Update calendar event with bidirectional sync
+ * Updates both Google Calendar and local workout if synced
+ */
+export async function updateCalendarEventBidirectional(
+  trainerId: string,
+  eventId: string,
+  updates: {
+    startTime?: Date;
+    endTime?: Date;
+    summary?: string;
+    description?: string;
+  },
+  accessToken: string
+): Promise<ApiResponse> {
+  // Rate limiting: 30 update requests per minute per trainer
+  const rateLimitKey = `updateCalendarEventBidirectional:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 30, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
+  try {
+    // Find sync record to check if we need to update workout
+    const { data: syncRecord } = await supabase
+      .from('google_calendar_sync')
+      .select('workout_id, sync_direction, trainee_id')
+      .eq('trainer_id', trainerId)
+      .eq('google_event_id', eventId)
+      .maybeSingle();
+
+    // Update Google Calendar event
+    const { data: credentials } = await supabase
+      .from('trainer_google_credentials')
+      .select('default_calendar_id')
+      .eq('trainer_id', trainerId)
+      .maybeSingle();
+
+    if (credentials) {
+      const updateResult = await updateGoogleCalendarEvent(
+        trainerId,
+        eventId,
+        {
+          startTime: updates.startTime,
+          endTime: updates.endTime,
+          summary: updates.summary,
+          description: updates.description,
+        },
+        accessToken
+      );
+
+      if (updateResult.error) {
+        return updateResult;
+      }
+    }
+
+    // Update local workout if synced and sync_direction allows it
+    if (syncRecord?.workout_id && syncRecord.sync_direction !== 'to_google') {
+      const workoutUpdates: { workout_date?: string; notes?: string | null } = {};
+      
+      if (updates.startTime) {
+        workoutUpdates.workout_date = updates.startTime.toISOString().split('T')[0];
+      }
+      if (updates.description !== undefined) {
+        workoutUpdates.notes = updates.description || null;
+      }
+
+      if (Object.keys(workoutUpdates).length > 0) {
+        const { error: workoutError } = await supabase
+          .from('workouts')
+          .update(workoutUpdates)
+          .eq('id', syncRecord.workout_id)
+          .eq('trainer_id', trainerId);
+
+        if (workoutError) {
+          return { error: workoutError.message };
+        }
+      }
+    }
+
+    // Update sync record metadata
+    if (syncRecord && (updates.startTime || updates.endTime || updates.summary || updates.description !== undefined)) {
+      const syncUpdates: {
+        event_start_time?: string;
+        event_end_time?: string;
+        event_summary?: string;
+        event_description?: string | null;
+        last_synced_at?: string;
+      } = {
+        last_synced_at: new Date().toISOString(),
+      };
+
+      if (updates.startTime) {
+        syncUpdates.event_start_time = updates.startTime.toISOString();
+      }
+      if (updates.endTime) {
+        syncUpdates.event_end_time = updates.endTime.toISOString();
+      }
+      if (updates.summary) {
+        syncUpdates.event_summary = updates.summary;
+      }
+      if (updates.description !== undefined) {
+        syncUpdates.event_description = updates.description || null;
+      }
+
+      await supabase
+        .from('google_calendar_sync')
+        .update(syncUpdates)
+        .eq('trainer_id', trainerId)
+        .eq('google_event_id', eventId);
+    }
+
+    return { success: true };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בעדכון אירוע',
+      context: 'updateCalendarEventBidirectional',
+      additionalInfo: { trainerId, eventId },
+    });
+    return { error: errorMessage };
+  }
+}
+
+/**
+ * Delete calendar event with bidirectional sync
+ * Deletes both Google Calendar event and local workout if synced
+ */
+export async function deleteCalendarEventBidirectional(
+  trainerId: string,
+  eventId: string,
+  accessToken: string
+): Promise<ApiResponse> {
+  // Rate limiting: 20 delete requests per minute per trainer
+  const rateLimitKey = `deleteCalendarEventBidirectional:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 20, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
+  try {
+    // Find sync record to check if we need to delete workout
+    const { data: syncRecord } = await supabase
+      .from('google_calendar_sync')
+      .select('workout_id, sync_direction')
+      .eq('trainer_id', trainerId)
+      .eq('google_event_id', eventId)
+      .maybeSingle();
+
+    // Delete from Google Calendar
+    const deleteResult = await deleteGoogleCalendarEvent(trainerId, eventId, accessToken);
+    if (deleteResult.error) {
+      return deleteResult;
+    }
+
+    // Delete local workout if synced and sync_direction allows it
+    if (syncRecord?.workout_id && syncRecord.sync_direction !== 'to_google') {
+      const { error: workoutError } = await supabase
+        .from('workouts')
+        .delete()
+        .eq('id', syncRecord.workout_id)
+        .eq('trainer_id', trainerId);
+
+      if (workoutError) {
+        // Log error but don't fail - Google Calendar event is already deleted
+        const { logger } = await import('../utils/logger');
+        logger.error('Error deleting workout after calendar event deletion', workoutError, 'deleteCalendarEventBidirectional');
+      }
+    }
+
+    // Delete sync record
+    await supabase
+      .from('google_calendar_sync')
+      .delete()
+      .eq('trainer_id', trainerId)
+      .eq('google_event_id', eventId);
+
+    return { success: true };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה במחיקת אירוע',
+      context: 'deleteCalendarEventBidirectional',
+      additionalInfo: { trainerId, eventId },
+    });
+    return { error: errorMessage };
+  }
+}
+
+/**
+ * Get sync record for a calendar event
+ */
+export async function getSyncRecordForEvent(
+  trainerId: string,
+  eventId: string
+): Promise<ApiResponse<{ workout_id: string | null; trainee_id: string | null; sync_direction: string } | null>> {
+  try {
+    const { data, error } = await supabase
+      .from('google_calendar_sync')
+      .select('workout_id, trainee_id, sync_direction')
+      .eq('trainer_id', trainerId)
+      .eq('google_event_id', eventId)
+      .maybeSingle();
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { data: data || null, success: true };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בטעינת רשומת סנכרון',
+      context: 'getSyncRecordForEvent',
+      additionalInfo: { trainerId, eventId },
     });
     return { error: errorMessage };
   }
