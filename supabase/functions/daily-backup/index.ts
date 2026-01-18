@@ -66,11 +66,6 @@ Deno.serve(async (req: Request) => {
     const results: BackupResult[] = [];
     const tablesToBackup = [
       'google_calendar_clients',
-      'client_interactions',
-      'crm_contracts',
-      'crm_payments',
-      'crm_documents',
-      'pipeline_movements',
     ];
 
     // Create backup for each trainer

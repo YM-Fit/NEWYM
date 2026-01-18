@@ -7,7 +7,6 @@ import React, { ReactElement } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { AuthProvider } from '../../contexts/AuthContext';
 import { ThemeProvider } from '../../contexts/ThemeContext';
-import { CrmProvider } from '../../contexts/CrmContext';
 
 /**
  * All providers wrapper for testing
@@ -16,9 +15,7 @@ function AllProviders({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <CrmProvider>
-          {children}
-        </CrmProvider>
+        {children}
       </AuthProvider>
     </ThemeProvider>
   );

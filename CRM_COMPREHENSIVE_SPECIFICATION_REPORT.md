@@ -19,12 +19,36 @@
 
 - **תכונות:**
   - תצוגת אירועי Google Calendar
-  - Drag & Drop לניהול אירועים
+  - Drag & Drop לניהול אירועים (עם @dnd-kit)
   - סנכרון דו-כיווני עם Google Calendar
   - קישור בין אירועים ומתאמנים
   - הגדרות סנכרון (GoogleCalendarSettings)
+  - Caching של אירועים לביצועים מיטביים
+  - Rate limiting להגנה מפני abuse
+  - אופטימיזציה לשאילתות עם אינדקסים מותאמים
+  - תמיכה ב-Vault לאחסון מוצפן של OAuth tokens
 
-- **API:** `src/api/googleCalendarApi.ts`
+- **API:** `src/api/googleCalendarApi.ts` (14 פונקציות עיקריות)
+  - `initiateGoogleOAuth()` - התחלת תהליך OAuth
+  - `handleGoogleOAuthCallback()` - טיפול ב-callback מ-OAuth
+  - `disconnectGoogleCalendar()` - ניתוק Google Calendar
+  - `getGoogleCalendarStatus()` - בדיקת סטטוס חיבור
+  - `updateGoogleCalendarSyncSettings()` - עדכון הגדרות סנכרון
+  - `getGoogleCalendars()` - קבלת רשימת יומנים
+  - `getGoogleCalendarEvents()` - קבלת אירועים (עם caching)
+  - `createGoogleCalendarEvent()` - יצירת אירוע חדש
+  - `updateGoogleCalendarEvent()` - עדכון אירוע
+  - `deleteGoogleCalendarEvent()` - מחיקת אירוע
+  - `syncGoogleCalendar()` - סנכרון ידני
+  - `updateCalendarEventBidirectional()` - עדכון דו-כיווני
+  - `deleteCalendarEventBidirectional()` - מחיקה דו-כיוונית
+  - `getSyncRecordForEvent()` - קבלת רשומת סנכרון
+
+- **TypeScript Types:**
+  - `GoogleCredentialsRow` - Type alias ל-credentials
+  - `GoogleCalendarSyncRow` - Type alias ל-sync records
+  - Type safety מלא עם Database types
+  - Type assertions לביצועים מיטביים
 
 - **מסד נתונים:**
   - `trainer_google_credentials` - OAuth credentials
@@ -33,6 +57,17 @@
 
 - **סטטוס:** ✅ פעיל ומוטמע
 - **Routes:** `case 'calendar'`
+
+- **אופטימיזציות:**
+  - **Caching:** Cache של אירועים למשך 1 דקה (CACHE_DURATION_MS = 60000)
+  - **Refresh Interval:** רענון אוטומטי כל 2 דקות (REFRESH_INTERVAL_MS = 120000)
+  - **Rate Limiting:** הגבלת בקשות לפי סוג פעולה:
+    - OAuth: 5 בקשות לדקה
+    - Get Events: 60 בקשות לדקה
+    - Create Event: 50 בקשות לדקה
+    - Sync: 10 בקשות לדקה (פעולה יקרה)
+  - **Query Optimization:** שימוש ב-cached sync data לפני קריאה ל-Google API
+  - **Type Safety:** TypeScript types מלאים עם Database types
 
 ---
 
@@ -202,6 +237,64 @@
 
 **Triggers:**
 - כל הטבלאות כוללות triggers לעדכון אוטומטי של `updated_at` בעת שינויים
+
+---
+
+## 🔧 תכונות טכניות מתקדמות
+
+### TypeScript & Type Safety
+
+המערכת משתמשת ב-TypeScript types מלאים:
+- **Database Types:** שימוש ב-`Database['public']['Tables']` ל-type safety מלא
+- **Type Aliases:** `GoogleCredentialsRow`, `GoogleCalendarSyncRow` ל-clean code
+- **Type Assertions:** Type assertions מדויקים לביצועים מיטביים
+- **Re-exports:** Types זמינים לשימוש בקבצים אחרים
+
+### Caching & Performance
+
+1. **Event Caching:**
+   - Cache של אירועים למשך 60 שניות
+   - Cache key מבוסס על חודש ושנה
+   - Fallback ל-Google API במקרה של cache miss
+
+2. **Query Optimization:**
+   - שימוש ב-`google_calendar_sync` table לפני קריאה ל-Google API
+   - Partial indexes עם WHERE clauses לביצועים מיטביים
+   - Composite indexes לשאילתות מורכבות
+
+3. **Rate Limiting:**
+   - הגנה מפני abuse
+   - Limits שונים לפי סוג פעולה
+   - הודעות שגיאה ברורות בעברית
+
+### Bidirectional Sync
+
+המערכת תומכת בסנכרון דו-כיווני מלא:
+- **to_google:** סנכרון מהמערכת ל-Google Calendar
+- **from_google:** סנכרון מ-Google Calendar למערכת
+- **bidirectional:** סנכרון דו-כיווני (ברירת מחדל)
+
+### OAuth & Security
+
+1. **OAuth Flow:**
+   - תמיכה ב-Google OAuth 2.0
+   - Edge Function לניהול OAuth (`supabase/functions/google-oauth`)
+   - Token refresh אוטומטי
+
+2. **Token Security:**
+   - תמיכה ב-Supabase Vault לאחסון מוצפן
+   - פונקציות לניהול tokens ב-Vault
+   - התראות על פקיעת tokens
+
+### UI Components
+
+**CalendarView Component:**
+- תצוגת חודש עם grid layout
+- Drag & Drop עם @dnd-kit
+- Context menu למחיקת אירועים
+- רענון ידני ואוטומטי
+- הגדרות סנכרון
+- טיפול בשגיאות עם toast notifications
 
 ---
 

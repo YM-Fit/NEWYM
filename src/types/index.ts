@@ -25,13 +25,9 @@ export interface Trainee {
   pair_birth_date_2?: string;
   pair_height_1?: number;
   pair_height_2?: number;
-  // CRM fields
+  // Calendar integration fields
   google_calendar_client_id?: string;
-  crm_status?: 'lead' | 'qualified' | 'active' | 'inactive' | 'churned' | 'on_hold';
   client_since?: string;
-  last_contact_date?: string;
-  next_followup_date?: string;
-  contract_type?: 'monthly' | 'package' | 'session' | 'trial';
   contract_value?: number;
   payment_status?: 'paid' | 'pending' | 'overdue' | 'free';
   tags?: string[];

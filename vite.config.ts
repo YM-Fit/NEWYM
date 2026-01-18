@@ -57,30 +57,8 @@ export default defineConfig({
             // Other vendor libraries - split by size
             return 'vendor';
           }
-          // Split CRM components by feature
-          if (id.includes('/crm/')) {
-            if (id.includes('/crm/clients/')) {
-              return 'crm-clients';
-            }
-            if (id.includes('/crm/analytics/') || id.includes('/crm/reports/')) {
-              return 'crm-analytics';
-            }
-            if (id.includes('/crm/pipeline/') || id.includes('/crm/dashboard/')) {
-              return 'crm-pipeline';
-            }
-            if (id.includes('/crm/shared/')) {
-              return 'crm-shared';
-            }
-            if (id.includes('/crm/automation/')) {
-              return 'crm-automation';
-            }
-            return 'crm-core';
-          }
           // Split services by domain
           if (id.includes('/services/')) {
-            if (id.includes('crm')) {
-              return 'services-crm';
-            }
             if (id.includes('analytics')) {
               return 'services-analytics';
             }
@@ -88,9 +66,6 @@ export default defineConfig({
           }
           // Split hooks
           if (id.includes('/hooks/')) {
-            if (id.includes('crm')) {
-              return 'hooks-crm';
-            }
             return 'hooks-other';
           }
           // Utils chunk

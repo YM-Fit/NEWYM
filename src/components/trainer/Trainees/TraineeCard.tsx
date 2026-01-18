@@ -14,7 +14,6 @@ interface TraineeCardProps {
     notes?: string;
     created_at?: string;
     google_calendar_client_id?: string;
-    crm_status?: string;
   };
   onClick: () => void;
   unseenWeightsCount?: number;

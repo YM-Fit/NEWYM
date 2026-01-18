@@ -3,7 +3,12 @@
  * פונקציות ולידציה מרכזיות
  */
 
-import { CRM_VALIDATION } from '../constants/crmConstants';
+// Validation constants
+const MAX_EMAIL_LENGTH = 254;
+const MAX_PHONE_LENGTH = 20;
+const MIN_NAME_LENGTH = 2;
+const MAX_NAME_LENGTH = 100;
+const MAX_NOTES_LENGTH = 5000;
 
 /**
  * Validate email format
@@ -12,7 +17,7 @@ import { CRM_VALIDATION } from '../constants/crmConstants';
  */
 export function isValidEmail(email: string): boolean {
   if (!email || typeof email !== 'string') return false;
-  if (email.length > CRM_VALIDATION.MAX_EMAIL_LENGTH) return false;
+  if (email.length > MAX_EMAIL_LENGTH) return false;
   
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email.trim());
@@ -25,7 +30,7 @@ export function isValidEmail(email: string): boolean {
  */
 export function isValidPhone(phone: string): boolean {
   if (!phone || typeof phone !== 'string') return false;
-  if (phone.length > CRM_VALIDATION.MAX_PHONE_LENGTH) return false;
+  if (phone.length > MAX_PHONE_LENGTH) return false;
   
   // Remove common phone formatting characters
   const cleaned = phone.replace(/[\s\-\(\)\+]/g, '');
@@ -47,17 +52,17 @@ export function validateClientName(name: string): { isValid: boolean; error?: st
 
   const trimmed = name.trim();
   
-  if (trimmed.length < CRM_VALIDATION.MIN_CLIENT_NAME_LENGTH) {
+  if (trimmed.length < MIN_NAME_LENGTH) {
     return {
       isValid: false,
-      error: `שם לקוח חייב להכיל לפחות ${CRM_VALIDATION.MIN_CLIENT_NAME_LENGTH} תווים`,
+      error: `שם לקוח חייב להכיל לפחות ${MIN_NAME_LENGTH} תווים`,
     };
   }
 
-  if (trimmed.length > CRM_VALIDATION.MAX_CLIENT_NAME_LENGTH) {
+  if (trimmed.length > MAX_NAME_LENGTH) {
     return {
       isValid: false,
-      error: `שם לקוח לא יכול להכיל יותר מ-${CRM_VALIDATION.MAX_CLIENT_NAME_LENGTH} תווים`,
+      error: `שם לקוח לא יכול להכיל יותר מ-${MAX_NAME_LENGTH} תווים`,
     };
   }
 
@@ -72,7 +77,7 @@ export function validateClientName(name: string): { isValid: boolean; error?: st
  */
 export function validateTextLength(
   text: string,
-  maxLength: number = CRM_VALIDATION.MAX_NOTES_LENGTH
+  maxLength: number = MAX_NOTES_LENGTH
 ): { isValid: boolean; error?: string } {
   if (!text || typeof text !== 'string') {
     return { isValid: true }; // Empty text is valid

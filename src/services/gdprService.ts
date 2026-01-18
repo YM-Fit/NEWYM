@@ -12,6 +12,9 @@ export interface UserDataExport {
     trainer?: any;
     trainee?: any;
   };
+  calendar_data: {
+    clients?: any[];
+  };
   training_data: {
     workouts?: any[];
     workout_plans?: any[];
@@ -50,7 +53,7 @@ export async function exportUserData(
     const exportDate = new Date().toISOString();
     const exportData: UserDataExport = {
       personal_info: {},
-      crm_data: {},
+      calendar_data: {},
       training_data: {},
       nutrition_data: {},
       metadata: {
@@ -72,50 +75,14 @@ export async function exportUserData(
         exportData.personal_info.trainer = trainer;
       }
 
-      // Get CRM data
+      // Get calendar clients data
       const { data: clients } = await supabase
         .from('google_calendar_clients')
         .select('*')
         .eq('trainer_id', userId);
 
       if (clients) {
-        exportData.crm_data.clients = clients;
-      }
-
-      const { data: interactions } = await supabase
-        .from('client_interactions')
-        .select('*')
-        .eq('trainer_id', userId);
-
-      if (interactions) {
-        exportData.crm_data.interactions = interactions;
-      }
-
-      const { data: contracts } = await supabase
-        .from('crm_contracts')
-        .select('*')
-        .eq('trainer_id', userId);
-
-      if (contracts) {
-        exportData.crm_data.contracts = contracts;
-      }
-
-      const { data: payments } = await supabase
-        .from('crm_payments')
-        .select('*')
-        .eq('trainer_id', userId);
-
-      if (payments) {
-        exportData.crm_data.payments = payments;
-      }
-
-      const { data: documents } = await supabase
-        .from('crm_documents')
-        .select('*')
-        .eq('trainer_id', userId);
-
-      if (documents) {
-        exportData.crm_data.documents = documents;
+        exportData.calendar_data.clients = clients;
       }
     } else {
       // Get trainee personal info

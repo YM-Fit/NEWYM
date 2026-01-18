@@ -268,7 +268,7 @@ export class EmailTemplateService {
         contract_value: trainee.contract_value?.toString() || '0',
         payment_date: trainee.next_payment_date || '',
         next_appointment: trainee.next_appointment_date || '',
-        client_status: trainee.crm_status || 'פעיל',
+        client_status: 'פעיל',
         ...customVariables,
       };
 

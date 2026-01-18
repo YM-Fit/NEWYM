@@ -1,10 +1,10 @@
 /**
- * Service Worker for CRM Offline Caching
+ * Service Worker for Offline Caching
  * Implements stale-while-revalidate caching strategy
  */
 
-const CACHE_NAME = 'crm-cache-v1';
-const API_CACHE_NAME = 'crm-api-cache-v1';
+const CACHE_NAME = 'app-cache-v1';
+const API_CACHE_NAME = 'app-api-cache-v1';
 
 // Assets to cache on install
 const STATIC_ASSETS = [

@@ -88,8 +88,8 @@ CREATE TABLE IF NOT EXISTS google_calendar_clients (
   upcoming_events_count INT DEFAULT 0,
   completed_events_count INT DEFAULT 0,
   
-  -- CRM data
-  crm_data JSONB DEFAULT '{}',
+  -- Additional data
+  extra_data JSONB DEFAULT '{}',
   
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),

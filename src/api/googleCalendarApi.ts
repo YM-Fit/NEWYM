@@ -4,9 +4,17 @@
 
 import { supabase, logSupabaseError } from '../lib/supabase';
 import type { ApiResponse } from './types';
+import type { Database } from '../types/database';
 import { API_CONFIG } from './config';
 import { handleApiError } from '../utils/apiErrorHandler';
 import { rateLimiter } from '../utils/rateLimiter';
+
+// Type aliases for cleaner code
+type GoogleCredentialsRow = Database['public']['Tables']['trainer_google_credentials']['Row'];
+type GoogleCalendarSyncRow = Database['public']['Tables']['google_calendar_sync']['Row'];
+
+// Re-export for use in other files
+export type { GoogleCredentialsRow, GoogleCalendarSyncRow };
 
 export interface GoogleCalendarEvent {
   id: string;
@@ -188,7 +196,7 @@ export async function getGoogleCalendarStatus(
       .from('trainer_google_credentials')
       .select('auto_sync_enabled, default_calendar_id')
       .eq('trainer_id', trainerId)
-      .maybeSingle();
+      .maybeSingle() as { data: Pick<GoogleCredentialsRow, 'auto_sync_enabled' | 'default_calendar_id'> | null; error: { code?: string; message: string } | null };
 
     if (basicError) {
       // If basic query fails, check if it's a "not found" vs actual error
@@ -206,7 +214,7 @@ export async function getGoogleCalendarStatus(
         };
       }
       
-      logSupabaseError(basicError, 'getGoogleCalendarStatus.basic', { table: 'trainer_google_credentials', trainerId });
+      logSupabaseError(basicError as Parameters<typeof logSupabaseError>[0], 'getGoogleCalendarStatus.basic', { table: 'trainer_google_credentials', trainerId });
       return { error: basicError.message };
     }
 
@@ -233,17 +241,17 @@ export async function getGoogleCalendarStatus(
         .from('trainer_google_credentials')
         .select('sync_direction, sync_frequency')
         .eq('trainer_id', trainerId)
-        .maybeSingle();
+        .maybeSingle() as { data: Pick<GoogleCredentialsRow, 'sync_direction' | 'sync_frequency'> | null; error: { code?: string; message?: string } | null };
 
       // If columns don't exist (42703), that's OK - use defaults
       if (extendedError && extendedError.code !== '42703' && !extendedError.message?.includes('does not exist')) {
         // Only log if it's not a "column doesn't exist" error
-        logSupabaseError(extendedError, 'getGoogleCalendarStatus.extended', { table: 'trainer_google_credentials', trainerId });
+        logSupabaseError(extendedError as Parameters<typeof logSupabaseError>[0], 'getGoogleCalendarStatus.extended', { table: 'trainer_google_credentials', trainerId });
       }
 
       if (!extendedError && extendedData) {
-        syncDirection = (extendedData?.sync_direction as 'to_google' | 'from_google' | 'bidirectional') || 'bidirectional';
-        syncFrequency = (extendedData?.sync_frequency as 'realtime' | 'hourly' | 'daily') || 'realtime';
+        syncDirection = extendedData.sync_direction || 'bidirectional';
+        syncFrequency = extendedData.sync_frequency || 'realtime';
       }
     } catch (extendedErr) {
       // If extended fields query fails, use defaults - this is OK
@@ -253,10 +261,10 @@ export async function getGoogleCalendarStatus(
     return { 
       data: { 
         connected: true, 
-        autoSyncEnabled: basicData?.auto_sync_enabled ?? false,
+        autoSyncEnabled: basicData.auto_sync_enabled ?? false,
         syncDirection,
         syncFrequency,
-        defaultCalendarId: basicData?.default_calendar_id || 'primary'
+        defaultCalendarId: basicData.default_calendar_id || 'primary'
       }, 
       success: true 
     };
@@ -301,7 +309,8 @@ export async function updateGoogleCalendarSyncSettings(
 
     // Update basic fields first
     if (Object.keys(basicUpdates).length > 0) {
-      const { error: basicError } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: basicError } = await (supabase as any)
         .from('trainer_google_credentials')
         .update(basicUpdates)
         .eq('trainer_id', trainerId);
@@ -323,7 +332,8 @@ export async function updateGoogleCalendarSyncSettings(
 
     // Update extended fields if provided (may fail if columns don't exist - that's OK)
     if (Object.keys(extendedUpdates).length > 0) {
-      const { error: extendedError } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: extendedError } = await (supabase as any)
         .from('trainer_google_credentials')
         .update(extendedUpdates)
         .eq('trainer_id', trainerId);
@@ -463,6 +473,17 @@ export async function getGoogleCalendarEvents(
         const queryStart = new Date(dateRange.start);
         queryStart.setDate(queryStart.getDate() - 1); // Include events that might start before but end in range
         
+        // Type for the cached events query result
+        type CachedEventRow = {
+          google_event_id: string;
+          event_start_time: string;
+          event_end_time: string | null;
+          event_summary: string | null;
+          event_description: string | null;
+          sync_status: string;
+          trainees: { full_name: string; email: string | null } | { full_name: string; email: string | null }[] | null;
+        };
+        
         const { data: cachedEvents, error: cacheError } = await supabase
           .from('google_calendar_sync')
           .select(`
@@ -478,7 +499,7 @@ export async function getGoogleCalendarEvents(
           .eq('sync_status', 'synced')
           .gte('event_start_time', queryStart.toISOString())
           .lte('event_start_time', dateRange.end.toISOString())
-          .order('event_start_time', { ascending: true });
+          .order('event_start_time', { ascending: true }) as { data: CachedEventRow[] | null; error: { message: string } | null };
 
         // If we have cached data and no error, use it
         if (!cacheError && cachedEvents && cachedEvents.length > 0) {
@@ -539,7 +560,7 @@ export async function getGoogleCalendarEvents(
       .from('trainer_google_credentials')
       .select('access_token, refresh_token, token_expires_at, default_calendar_id')
       .eq('trainer_id', trainerId)
-      .maybeSingle();
+      .maybeSingle() as { data: Pick<GoogleCredentialsRow, 'access_token' | 'refresh_token' | 'token_expires_at' | 'default_calendar_id'> | null; error: { message: string } | null };
 
     if (credError || !credentials) {
       return { error: 'Google Calendar לא מחובר' };
@@ -616,7 +637,7 @@ export async function createGoogleCalendarEvent(
       .from('trainer_google_credentials')
       .select('access_token, refresh_token, token_expires_at, default_calendar_id')
       .eq('trainer_id', trainerId)
-      .single();
+      .single() as { data: Pick<GoogleCredentialsRow, 'access_token' | 'refresh_token' | 'token_expires_at' | 'default_calendar_id'> | null; error: { message: string } | null };
 
     if (credError || !credentials) {
       return { error: 'Google Calendar לא מחובר' };
@@ -716,7 +737,7 @@ export async function updateGoogleCalendarEvent(
       .from('trainer_google_credentials')
       .select('access_token, default_calendar_id')
       .eq('trainer_id', trainerId)
-      .single();
+      .single() as { data: Pick<GoogleCredentialsRow, 'access_token' | 'default_calendar_id'> | null; error: { message: string } | null };
 
     if (credError || !credentials) {
       return { error: 'Google Calendar לא מחובר' };
@@ -819,7 +840,7 @@ export async function deleteGoogleCalendarEvent(
       .from('trainer_google_credentials')
       .select('access_token, default_calendar_id')
       .eq('trainer_id', trainerId)
-      .single();
+      .single() as { data: Pick<GoogleCredentialsRow, 'access_token' | 'default_calendar_id'> | null; error: { message: string } | null };
 
     if (credError || !credentials) {
       return { error: 'Google Calendar לא מחובר' };
@@ -935,14 +956,14 @@ export async function updateCalendarEventBidirectional(
       .select('workout_id, sync_direction, trainee_id')
       .eq('trainer_id', trainerId)
       .eq('google_event_id', eventId)
-      .maybeSingle();
+      .maybeSingle() as { data: Pick<GoogleCalendarSyncRow, 'workout_id' | 'sync_direction' | 'trainee_id'> | null; error: { message: string } | null };
 
     // Update Google Calendar event
     const { data: credentials } = await supabase
       .from('trainer_google_credentials')
       .select('default_calendar_id')
       .eq('trainer_id', trainerId)
-      .maybeSingle();
+      .maybeSingle() as { data: Pick<GoogleCredentialsRow, 'default_calendar_id'> | null; error: { message: string } | null };
 
     if (credentials) {
       const updateResult = await updateGoogleCalendarEvent(
@@ -974,7 +995,8 @@ export async function updateCalendarEventBidirectional(
       }
 
       if (Object.keys(workoutUpdates).length > 0) {
-        const { error: workoutError } = await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: workoutError } = await (supabase as any)
           .from('workouts')
           .update(workoutUpdates)
           .eq('id', syncRecord.workout_id)
@@ -1011,7 +1033,8 @@ export async function updateCalendarEventBidirectional(
         syncUpdates.event_description = updates.description || null;
       }
 
-      await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
         .from('google_calendar_sync')
         .update(syncUpdates)
         .eq('trainer_id', trainerId)
@@ -1052,7 +1075,7 @@ export async function deleteCalendarEventBidirectional(
       .select('workout_id, sync_direction')
       .eq('trainer_id', trainerId)
       .eq('google_event_id', eventId)
-      .maybeSingle();
+      .maybeSingle() as { data: Pick<GoogleCalendarSyncRow, 'workout_id' | 'sync_direction'> | null; error: { message: string } | null };
 
     // Delete from Google Calendar
     const deleteResult = await deleteGoogleCalendarEvent(trainerId, eventId, accessToken);
@@ -1065,7 +1088,7 @@ export async function deleteCalendarEventBidirectional(
       const { error: workoutError } = await supabase
         .from('workouts')
         .delete()
-        .eq('id', syncRecord.workout_id)
+        .eq('id', syncRecord.workout_id!)
         .eq('trainer_id', trainerId);
 
       if (workoutError) {
