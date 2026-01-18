@@ -8,6 +8,7 @@ import type { Database } from '../types/database';
 import { API_CONFIG } from './config';
 import { handleApiError } from '../utils/apiErrorHandler';
 import { rateLimiter } from '../utils/rateLimiter';
+import { logger } from '../utils/logger';
 
 // Type aliases for cleaner code
 type GoogleCredentialsRow = Database['public']['Tables']['trainer_google_credentials']['Row'];
@@ -754,7 +755,7 @@ export async function updateGoogleCalendarEvent(
   trainerId: string,
   eventId: string,
   updates: Partial<CreateEventData>,
-  accessToken: string
+  _accessToken?: string // Not used - we always get fresh token from service
 ): Promise<ApiResponse> {
   // Rate limiting: 50 update requests per minute per trainer
   const rateLimitKey = `updateGoogleCalendarEvent:${trainerId}`;
@@ -784,66 +785,99 @@ export async function updateGoogleCalendarEvent(
       return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
     }
     
-    const accessTokenToUse = accessToken || tokenResult.data;
+    let currentToken = tokenResult.data;
 
-    // Get existing event first
-    const getResponse = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessTokenToUse}`,
-        },
+    // Helper function to perform the update
+    const performUpdate = async (token: string): Promise<{ success: boolean; error?: string; needsRetry?: boolean }> => {
+      // Get existing event first
+      const getResponse = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!getResponse.ok) {
+        if (getResponse.status === 401) {
+          return { success: false, needsRetry: true };
+        }
+        if (getResponse.status === 404 || getResponse.status === 410) {
+          return { success: false, error: 'האירוע לא נמצא ב-Google Calendar' };
+        }
+        return { success: false, error: 'שגיאה בטעינת אירוע מ-Google Calendar' };
       }
-    );
 
-    if (!getResponse.ok) {
-      return { error: 'שגיאה בטעינת אירוע מ-Google Calendar' };
-    }
+      const existingEvent = await getResponse.json() as GoogleCalendarEvent;
 
-    const existingEvent = await getResponse.json() as GoogleCalendarEvent;
-
-    // Merge updates
-    const updatedEvent: GoogleCalendarEvent = { ...existingEvent };
-    if (updates.summary) updatedEvent.summary = updates.summary;
-    if (updates.description !== undefined) updatedEvent.description = updates.description;
-    if (updates.location !== undefined) updatedEvent.location = updates.location;
-    if (updates.startTime) {
-      updatedEvent.start = {
-        dateTime: updates.startTime.toISOString(),
-        timeZone: 'Asia/Jerusalem',
-      };
-    }
-    if (updates.endTime) {
-      updatedEvent.end = {
-        dateTime: updates.endTime.toISOString(),
-        timeZone: 'Asia/Jerusalem',
-      };
-    }
-    if (updates.attendees) {
-      updatedEvent.attendees = updates.attendees.map(email => ({ email }));
-    }
-
-    const updateResponse = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`,
-      {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${accessTokenToUse}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedEvent),
+      // Merge updates
+      const updatedEvent: GoogleCalendarEvent = { ...existingEvent };
+      if (updates.summary) updatedEvent.summary = updates.summary;
+      if (updates.description !== undefined) updatedEvent.description = updates.description;
+      if (updates.location !== undefined) updatedEvent.location = updates.location;
+      if (updates.startTime) {
+        updatedEvent.start = {
+          dateTime: updates.startTime.toISOString(),
+          timeZone: 'Asia/Jerusalem',
+        };
       }
-    );
+      if (updates.endTime) {
+        updatedEvent.end = {
+          dateTime: updates.endTime.toISOString(),
+          timeZone: 'Asia/Jerusalem',
+        };
+      }
+      if (updates.attendees) {
+        updatedEvent.attendees = updates.attendees.map(email => ({ email }));
+      }
 
-    if (!updateResponse.ok) {
-      const error = await updateResponse.json().catch(() => ({}));
+      const updateResponse = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updatedEvent),
+        }
+      );
+
+      if (!updateResponse.ok) {
+        if (updateResponse.status === 401) {
+          return { success: false, needsRetry: true };
+        }
+        const error = await updateResponse.json().catch(() => ({}));
+        return { success: false, error: error.error?.message || 'שגיאה בעדכון אירוע ב-Google Calendar' };
+      }
+
+      return { success: true };
+    };
+
+    // First attempt
+    let result = await performUpdate(currentToken);
+    
+    // If 401, refresh token and retry
+    if (result.needsRetry) {
+      logger.info('Update got 401, refreshing token and retrying...', { trainerId, eventId }, 'updateGoogleCalendarEvent');
       
-      // Handle 401 - Token expired
-      if (updateResponse.status === 401) {
-        return { error: 'הרשאת Google Calendar פגה - נדרש חיבור מחדש בהגדרות' };
-      }
+      const refreshResult = await OAuthTokenService.refreshAccessToken(trainerId);
       
-      return { error: error.error?.message || 'שגיאה בעדכון אירוע ב-Google Calendar' };
+      if (refreshResult.success && refreshResult.data?.access_token) {
+        currentToken = refreshResult.data.access_token;
+        result = await performUpdate(currentToken);
+        
+        if (result.needsRetry) {
+          return { error: 'הרשאת Google Calendar פגה - נדרש חיבור מחדש בהגדרות' };
+        }
+      } else {
+        return { error: refreshResult.error || 'נדרש חיבור מחדש ל-Google Calendar' };
+      }
+    }
+
+    if (!result.success) {
+      return { error: result.error || 'שגיאה בעדכון אירוע ב-Google Calendar' };
     }
 
     return { success: true };
@@ -933,7 +967,7 @@ export async function deleteGoogleCalendarEvent(
               }
             );
             
-            if (retryResponse.ok || retryResponse.status === 204) {
+            if (retryResponse.ok || retryResponse.status === 204 || retryResponse.status === 404 || retryResponse.status === 410) {
               return { success: true };
             }
           }
@@ -942,8 +976,9 @@ export async function deleteGoogleCalendarEvent(
         return { error: 'הרשאת Google Calendar פגה - נדרש חיבור מחדש בהגדרות' };
       }
       
-      // Handle 404 - Event not found (already deleted)
-      if (response.status === 404) {
+      // Handle 404/410 - Event not found or already deleted
+      if (response.status === 404 || response.status === 410) {
+        logger.info('Event already deleted or not found', { trainerId, eventId, status: response.status }, 'deleteGoogleCalendarEvent');
         return { success: true }; // Consider it deleted
       }
       
