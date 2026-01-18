@@ -422,4 +422,513 @@
 
 ---
 
+## 🗄️ מבנה מסד נתונים (Database Schema)
+
+### טבלאות CRM עיקריות
+
+#### 1. Google Calendar Integration
+
+##### `trainer_google_credentials`
+**תיאור:** אחסון OAuth credentials למאמנים לסנכרון עם Google Calendar
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `id` | UUID | Primary key |
+| `trainer_id` | UUID | Foreign key → `trainers(id)` (UNIQUE) |
+| `access_token` | TEXT | OAuth access token (מוצפן ב-Production) |
+| `refresh_token` | TEXT | OAuth refresh token |
+| `token_expires_at` | TIMESTAMPTZ | תאריך פקיעת טוקן |
+| `primary_calendar_id` | TEXT | מזהה יומן ראשי |
+| `default_calendar_id` | TEXT | מזהה יומן ברירת מחדל |
+| `auto_sync_enabled` | BOOLEAN | סנכרון אוטומטי (default: true) |
+| `sync_frequency` | TEXT | תדירות: 'realtime', 'hourly', 'daily' (default: 'realtime') |
+| `sync_direction` | TEXT | כיוון: 'to_google', 'from_google', 'bidirectional' |
+| `created_at` | TIMESTAMPTZ | תאריך יצירה |
+| `updated_at` | TIMESTAMPTZ | תאריך עדכון אחרון |
+
+**Indexes:**
+- `idx_google_credentials_trainer` on `trainer_id`
+
+**RLS:** מאמנים יכולים לנהל את האישורים שלהם בלבד
+
+---
+
+##### `google_calendar_sync`
+**תיאור:** מעקב סנכרון בין אימונים לאירועי Google Calendar
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `id` | UUID | Primary key |
+| `trainer_id` | UUID | Foreign key → `trainers(id)` |
+| `trainee_id` | UUID | Foreign key → `trainees(id)` (nullable) |
+| `workout_id` | UUID | Foreign key → `workouts(id)` (nullable, UNIQUE) |
+| `google_event_id` | TEXT | מזהה אירוע ב-Google Calendar |
+| `google_calendar_id` | TEXT | מזהה יומן |
+| `sync_status` | TEXT | 'synced', 'pending', 'failed', 'conflict' (default: 'synced') |
+| `sync_direction` | TEXT | 'to_google', 'from_google', 'bidirectional' (default: 'bidirectional') |
+| `last_synced_at` | TIMESTAMPTZ | תאריך סנכרון אחרון |
+| `event_start_time` | TIMESTAMPTZ | שעת התחלת אירוע |
+| `event_end_time` | TIMESTAMPTZ | שעת סיום אירוע |
+| `event_summary` | TEXT | סיכום אירוע |
+| `event_description` | TEXT | תיאור אירוע |
+| `conflict_resolution` | TEXT | 'system_wins', 'google_wins', 'manual' |
+| `created_at` | TIMESTAMPTZ | תאריך יצירה |
+| `updated_at` | TIMESTAMPTZ | תאריך עדכון אחרון |
+
+**Constraints:**
+- `UNIQUE(google_event_id, google_calendar_id)`
+- `UNIQUE(workout_id)`
+
+**Indexes:**
+- `idx_calendar_sync_trainer` on `trainer_id`
+- `idx_calendar_sync_trainee` on `trainee_id`
+- `idx_calendar_sync_workout` on `workout_id`
+- `idx_calendar_sync_status` on `sync_status`
+- `idx_calendar_sync_event_id` on `(google_event_id, google_calendar_id)`
+
+**RLS:** מאמנים יכולים לנהל סנכרון עבור הנתונים שלהם בלבד
+
+---
+
+##### `google_calendar_clients`
+**תיאור:** כרטיסיות לקוחות שנוצרות מסנכרון Google Calendar
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `id` | UUID | Primary key |
+| `trainer_id` | UUID | Foreign key → `trainers(id)` |
+| `trainee_id` | UUID | Foreign key → `trainees(id)` (nullable, ON DELETE SET NULL) |
+| `google_client_identifier` | TEXT | מזהה לקוח ב-Google Calendar (אימייל או שם) |
+| `client_name` | TEXT | שם מלא של הלקוח |
+| `client_email` | TEXT | אימייל (nullable) |
+| `client_phone` | TEXT | טלפון (nullable) |
+| `first_event_date` | DATE | תאריך האירוע הראשון עם הלקוח |
+| `last_event_date` | DATE | תאריך האירוע האחרון |
+| `total_events_count` | INT | סך כל האירועים (default: 0) |
+| `upcoming_events_count` | INT | מספר אירועים עתידיים (default: 0) |
+| `completed_events_count` | INT | מספר אירועים הושלמו (default: 0) |
+| `crm_data` | JSONB | נתוני CRM נוספים (default: '{}') |
+| `created_at` | TIMESTAMPTZ | תאריך יצירה |
+| `updated_at` | TIMESTAMPTZ | תאריך עדכון אחרון |
+
+**Constraints:**
+- `UNIQUE(trainer_id, google_client_identifier)`
+
+**Indexes:**
+- `idx_calendar_clients_trainer` on `trainer_id`
+- `idx_calendar_clients_trainee` on `trainee_id`
+- `idx_calendar_clients_identifier` on `google_client_identifier`
+- `idx_calendar_clients_trainer_last_event_desc` on `(trainer_id, last_event_date DESC)`
+- `idx_calendar_clients_trainer_trainee` on `(trainer_id, trainee_id)`
+
+**RLS:** מאמנים יכולים לנהל לקוחות יומן שלהם בלבד
+
+---
+
+#### 2. CRM Core Tables
+
+##### `trainees` (Extended with CRM fields)
+**תיאור:** טבלת מתאמנים הורחבה עם שדות CRM
+
+**שדות CRM נוספים:**
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `google_calendar_client_id` | UUID | Foreign key → `google_calendar_clients(id)` (nullable) |
+| `crm_status` | TEXT | 'lead', 'qualified', 'active', 'inactive', 'churned', 'on_hold' (default: 'active') |
+| `client_since` | DATE | תאריך הפך ללקוח (default: CURRENT_DATE) |
+| `last_contact_date` | TIMESTAMPTZ | תאריך יצירת קשר אחרון |
+| `next_followup_date` | DATE | תאריך מעקב הבא |
+| `contract_type` | TEXT | 'monthly', 'package', 'session', 'trial' |
+| `contract_value` | DECIMAL(10,2) | ערך חוזה |
+| `payment_status` | TEXT | 'paid', 'pending', 'overdue', 'free' (default: 'pending') |
+| `tags` | TEXT[] | מערך תגיות |
+| `notes_history` | JSONB | היסטוריית הערות (default: '[]') |
+
+**Indexes CRM:**
+- `idx_trainees_crm_status` on `crm_status`
+- `idx_trainees_google_client` on `google_calendar_client_id`
+- `idx_trainees_next_followup` on `next_followup_date` (WHERE next_followup_date IS NOT NULL)
+- `idx_trainees_last_contact` on `last_contact_date DESC` (WHERE last_contact_date IS NOT NULL)
+- `idx_trainees_trainer_crm_payment` on `(trainer_id, crm_status, payment_status)`
+- `idx_trainees_active_clients` on `(trainer_id, client_since)` (WHERE crm_status = 'active')
+
+---
+
+##### `client_interactions`
+**תיאור:** מעקב אינטראקציות עם לקוחות (שיחות, אימיילים, SMS, וכו')
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `id` | UUID | Primary key |
+| `trainee_id` | UUID | Foreign key → `trainees(id)` |
+| `trainer_id` | UUID | Foreign key → `trainers(id)` |
+| `interaction_type` | TEXT | 'call', 'email', 'sms', 'meeting', 'workout', 'message', 'note' |
+| `interaction_date` | TIMESTAMPTZ | תאריך אינטראקציה (default: NOW()) |
+| `subject` | TEXT | נושא |
+| `description` | TEXT | תיאור |
+| `outcome` | TEXT | תוצאה |
+| `next_action` | TEXT | פעולה הבאה |
+| `next_action_date` | DATE | תאריך פעולה הבאה |
+| `google_event_id` | TEXT | קישור לאירוע Google Calendar (nullable) |
+| `created_at` | TIMESTAMPTZ | תאריך יצירה |
+
+**Indexes:**
+- `idx_client_interactions_trainee` on `(trainee_id, interaction_date DESC)`
+- `idx_client_interactions_trainer` on `(trainer_id, interaction_date DESC)`
+- `idx_client_interactions_date` on `interaction_date DESC`
+- `idx_client_interactions_type` on `interaction_type`
+- `idx_client_interactions_next_action` on `next_action_date` (WHERE next_action_date IS NOT NULL)
+
+**RLS:** מאמנים יכולים לנהל אינטראקציות עבור המתאמנים שלהם בלבד
+
+---
+
+#### 3. CRM Contracts & Payments
+
+##### `crm_contracts`
+**תיאור:** חוזים עם לקוחות
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `id` | UUID | Primary key |
+| `trainee_id` | UUID | Foreign key → `trainees(id)` |
+| `trainer_id` | UUID | Foreign key → `trainers(id)` |
+| `contract_type` | TEXT | 'monthly', 'package', 'session', 'trial' |
+| `start_date` | DATE | תאריך התחלה |
+| `end_date` | DATE | תאריך סיום (nullable) |
+| `value` | DECIMAL(10,2) | ערך חוזה |
+| `terms` | TEXT | תנאים |
+| `status` | TEXT | 'active', 'expired', 'cancelled' (default: 'active') |
+| `created_at` | TIMESTAMPTZ | תאריך יצירה |
+| `updated_at` | TIMESTAMPTZ | תאריך עדכון אחרון |
+
+**Indexes:**
+- `idx_contracts_trainee` on `(trainee_id, status)`
+- `idx_contracts_trainer` on `(trainer_id, status)`
+- `idx_contracts_dates` on `(start_date, end_date)`
+
+**RLS:** מאמנים יכולים לנהל חוזים שלהם בלבד
+
+---
+
+##### `crm_payments`
+**תיאור:** רשומות תשלומים
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `id` | UUID | Primary key |
+| `contract_id` | UUID | Foreign key → `crm_contracts(id)` (nullable, ON DELETE SET NULL) |
+| `trainee_id` | UUID | Foreign key → `trainees(id)` |
+| `trainer_id` | UUID | Foreign key → `trainers(id)` |
+| `amount` | DECIMAL(10,2) | סכום |
+| `due_date` | DATE | תאריך תשלום |
+| `paid_date` | DATE | תאריך תשלום בפועל (nullable) |
+| `payment_method` | TEXT | 'cash', 'credit_card', 'bank_transfer', 'other' |
+| `status` | TEXT | 'pending', 'paid', 'overdue', 'cancelled' (default: 'pending') |
+| `notes` | TEXT | הערות |
+| `invoice_number` | TEXT | מספר חשבונית (UNIQUE) |
+| `created_at` | TIMESTAMPTZ | תאריך יצירה |
+
+**Triggers:**
+- `check_overdue_payments()` - מסמן תשלומים שפג תוקפם
+- `update_trainee_payment_status()` - מעדכן סטטוס תשלום במתאמן אוטומטית
+
+**Indexes:**
+- `idx_payments_trainee` on `(trainee_id, status)`
+- `idx_payments_trainer` on `(trainer_id, status)`
+- `idx_payments_due_date` on `(due_date, status)`
+- `idx_payments_invoice` on `invoice_number`
+- `idx_crm_payments_trainer_date` on `(trainer_id, paid_date DESC)`
+
+**RLS:** מאמנים יכולים לצפות ולנהל תשלומים שלהם בלבד
+
+---
+
+#### 4. CRM Communication
+
+##### `crm_communication_templates`
+**תיאור:** תבניות תקשורת (אימייל/SMS/WhatsApp)
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `id` | UUID | Primary key |
+| `trainer_id` | UUID | Foreign key → `trainers(id)` |
+| `template_type` | TEXT | 'email', 'sms', 'whatsapp' |
+| `name` | TEXT | שם תבנית |
+| `subject` | TEXT | נושא (למיילים) |
+| `body` | TEXT | תוכן התבנית |
+| `variables` | TEXT[] | משתנים זמינים (default: '{}') |
+| `created_at` | TIMESTAMPTZ | תאריך יצירה |
+| `updated_at` | TIMESTAMPTZ | תאריך עדכון אחרון |
+
+**Constraints:**
+- `UNIQUE(trainer_id, name)`
+
+**Indexes:**
+- `idx_communication_templates_trainer` on `(trainer_id, template_type)`
+
+**RLS:** מאמנים יכולים לנהל תבניות שלהם בלבד
+
+---
+
+##### `crm_communication_messages`
+**תיאור:** היסטוריית תקשורת
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `id` | UUID | Primary key |
+| `trainee_id` | UUID | Foreign key → `trainees(id)` |
+| `trainer_id` | UUID | Foreign key → `trainers(id)` |
+| `message_type` | TEXT | 'email', 'sms', 'whatsapp', 'in_app' |
+| `subject` | TEXT | נושא |
+| `body` | TEXT | תוכן ההודעה |
+| `sent_at` | TIMESTAMPTZ | תאריך שליחה (default: NOW()) |
+| `status` | TEXT | 'sent', 'failed', 'pending' (default: 'pending') |
+| `error_message` | TEXT | הודעת שגיאה (nullable) |
+| `template_id` | UUID | Foreign key → `crm_communication_templates(id)` (nullable) |
+| `created_at` | TIMESTAMPTZ | תאריך יצירה |
+
+**Indexes:**
+- `idx_communication_messages_trainee` on `(trainee_id, sent_at DESC)`
+- `idx_communication_messages_trainer` on `(trainer_id, sent_at DESC)`
+- `idx_communication_messages_type` on `message_type`
+- `idx_communication_messages_status` on `status`
+
+**RLS:** מאמנים יכולים לנהל הודעות שלהם בלבד
+
+---
+
+#### 5. CRM Documents
+
+##### `crm_documents`
+**תיאור:** מטה-דאטה למסמכים (המסמכים עצמם ב-Storage)
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `id` | UUID | Primary key |
+| `trainee_id` | UUID | Foreign key → `trainees(id)` |
+| `trainer_id` | UUID | Foreign key → `trainers(id)` |
+| `name` | TEXT | שם מסמך |
+| `file_path` | TEXT | נתיב קובץ ב-Storage |
+| `file_type` | TEXT | סוג קובץ |
+| `file_size` | BIGINT | גודל קובץ (בבתים) |
+| `category` | TEXT | קטגוריה |
+| `description` | TEXT | תיאור |
+| `created_at` | TIMESTAMPTZ | תאריך יצירה |
+
+**Indexes:**
+- `idx_documents_trainee` on `(trainee_id, created_at DESC)`
+- `idx_documents_trainer` on `(trainer_id, created_at DESC)`
+- `idx_documents_category` on `category`
+
+**RLS:** מאמנים יכולים לצפות ולנהל מסמכים שלהם בלבד
+
+**Storage:** קבצים נשמרים ב-bucket `crm-documents` עם גישה פרטית
+
+---
+
+#### 6. CRM Automation
+
+##### `crm_automation_rules`
+**תיאור:** הגדרות כללי אוטומציה
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `id` | UUID | Primary key |
+| `trainer_id` | UUID | Foreign key → `trainers(id)` |
+| `rule_type` | TEXT | 'reminder', 'alert', 'workflow', 'notification' |
+| `name` | TEXT | שם כלל |
+| `description` | TEXT | תיאור |
+| `enabled` | BOOLEAN | מופעל (default: true) |
+| `conditions` | JSONB | תנאים (default: '[]') |
+| `actions` | JSONB | פעולות (default: '[]') |
+| `schedule` | JSONB | לוח זמנים (nullable) |
+| `created_at` | TIMESTAMPTZ | תאריך יצירה |
+| `updated_at` | TIMESTAMPTZ | תאריך עדכון אחרון |
+
+**Indexes:**
+- `idx_automation_rules_trainer` on `(trainer_id, enabled)`
+- `idx_automation_rules_type` on `rule_type`
+
+**RLS:** מאמנים יכולים לנהל כללי אוטומציה שלהם בלבד
+
+---
+
+##### `crm_automation_tasks`
+**תיאור:** משימות שנוצרו על ידי אוטומציה
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `id` | UUID | Primary key |
+| `rule_id` | UUID | Foreign key → `crm_automation_rules(id)` (nullable) |
+| `trainee_id` | UUID | Foreign key → `trainees(id)` |
+| `trainer_id` | UUID | Foreign key → `trainers(id)` |
+| `task_type` | TEXT | סוג משימה |
+| `due_date` | TIMESTAMPTZ | תאריך יעד |
+| `completed` | BOOLEAN | הושלמה (default: false) |
+| `completed_at` | TIMESTAMPTZ | תאריך השלמה (nullable) |
+| `metadata` | JSONB | מטה-דאטה נוספת (default: '{}') |
+| `created_at` | TIMESTAMPTZ | תאריך יצירה |
+
+**Indexes:**
+- `idx_automation_tasks_trainer` on `(trainer_id, completed, due_date)`
+- `idx_automation_tasks_trainee` on `(trainee_id, completed)`
+- `idx_automation_tasks_due_date` on `due_date` (WHERE completed = false)
+
+**RLS:** מאמנים יכולים לצפות ולנהל משימות שלהם בלבד
+
+---
+
+#### 7. CRM Segments
+
+##### `crm_segments`
+**תיאור:** קטעים (סטטוסים) של לקוחות - מסננים שמורים
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `id` | UUID | Primary key |
+| `trainer_id` | UUID | Foreign key → `trainers(id)` |
+| `name` | TEXT | שם קטע |
+| `description` | TEXT | תיאור |
+| `filter_criteria` | JSONB | קריטריוני סינון (default: '[]') |
+| `auto_update` | BOOLEAN | עדכון אוטומטי (default: false) |
+| `created_at` | TIMESTAMPTZ | תאריך יצירה |
+| `updated_at` | TIMESTAMPTZ | תאריך עדכון אחרון |
+
+**Constraints:**
+- `UNIQUE(trainer_id, name)`
+
+**Indexes:**
+- `idx_segments_trainer` on `trainer_id`
+- `idx_segments_auto_update` on `(trainer_id, auto_update)` (WHERE auto_update = true)
+
+**RLS:** מאמנים יכולים לנהל קטעים שלהם בלבד
+
+---
+
+#### 8. CRM Pipeline Tracking
+
+##### `pipeline_movements`
+**תיאור:** מעקב Pipeline - תנועות ושינויים בסטטוס CRM
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `id` | UUID | Primary key |
+| `trainee_id` | UUID | Foreign key → `trainees(id)` |
+| `trainer_id` | UUID | Foreign key → `trainers(id)` |
+| `from_status` | TEXT | סטטוס קודם: 'lead', 'qualified', 'active', 'inactive', 'churned', 'on_hold' |
+| `to_status` | TEXT | סטטוס חדש: 'lead', 'qualified', 'active', 'inactive', 'churned', 'on_hold' |
+| `reason` | TEXT | סיבת שינוי |
+| `moved_at` | TIMESTAMPTZ | תאריך מעבר לשלב (default: NOW()) |
+| `created_at` | TIMESTAMPTZ | תאריך יצירה |
+
+**Triggers:**
+- `log_pipeline_movement()` - רושם אוטומטית תנועות כאשר `crm_status` משתנה ב-`trainees`
+
+**Indexes:**
+- `idx_pipeline_movements_trainee` on `(trainee_id, moved_at DESC)`
+- `idx_pipeline_movements_trainer` on `(trainer_id, moved_at DESC)`
+- `idx_pipeline_movements_status` on `(to_status, moved_at DESC)`
+- `idx_pipeline_movements_date` on `moved_at DESC`
+
+**RLS:** מאמנים יכולים לצפות וליצור תנועות Pipeline שלהם בלבד
+
+---
+
+#### 9. Audit & Logging
+
+##### `audit_log`
+**תיאור:** יומן ביקורת לכל פעולות CRM
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `id` | UUID | Primary key |
+| `trainer_id` | UUID | Foreign key → `trainers(id)` |
+| `action_type` | TEXT | סוג פעולה (create_client, update_client, delete_client, etc.) |
+| `entity_type` | TEXT | סוג ישות (trainee, contract, payment, etc.) |
+| `entity_id` | UUID | מזהה ישות |
+| `old_values` | JSONB | ערכים ישנים (nullable) |
+| `new_values` | JSONB | ערכים חדשים (nullable) |
+| `ip_address` | INET | כתובת IP |
+| `user_agent` | TEXT | User Agent |
+| `created_at` | TIMESTAMPTZ | תאריך יצירה |
+
+**Indexes:**
+- `idx_audit_log_trainer` on `(trainer_id, created_at DESC)`
+- `idx_audit_log_entity` on `(entity_type, entity_id)`
+- `idx_audit_log_action` on `action_type`
+
+**RLS:** מאמנים יכולים לצפות ביומן הביקורת שלהם בלבד
+
+---
+
+##### `backup_log`
+**תיאור:** יומן גיבויים מתוזמנים
+
+| שדה | סוג | תיאור |
+|-----|-----|-------|
+| `id` | UUID | Primary key |
+| `trainer_id` | UUID | Foreign key → `trainers(id)` |
+| `backup_type` | TEXT | 'full', 'incremental', 'manual' |
+| `backup_date` | TIMESTAMPTZ | תאריך גיבוי (default: NOW()) |
+| `data_size` | BIGINT | גודל נתונים (בבתים) |
+| `record_count` | INTEGER | מספר רשומות שגובו (default: 0) |
+| `status` | TEXT | 'completed', 'failed', 'in_progress' (default: 'in_progress') |
+| `error_message` | TEXT | הודעת שגיאה (nullable) |
+| `tables_included` | TEXT[] | רשימת טבלאות שגובו |
+| `created_at` | TIMESTAMPTZ | תאריך יצירה |
+
+**Indexes:**
+- `idx_backup_log_trainer` on `(trainer_id, backup_date DESC)`
+- `idx_backup_log_date` on `backup_date DESC`
+- `idx_backup_log_status` on `status`
+
+**Functions:**
+- `create_trainer_backup(p_trainer_id, p_backup_type)` - יצירת גיבוי מתוזמן
+
+**RLS:** מאמנים יכולים לצפות ביומן הגיבויים שלהם בלבד
+
+---
+
+### סיכום טבלאות CRM
+
+| טבלה | מטרה | מספר שדות | סטטוס |
+|------|------|-----------|-------|
+| `trainer_google_credentials` | OAuth Google Calendar | 10 | ✅ פעיל |
+| `google_calendar_sync` | סנכרון אירועים | 13 | ✅ פעיל |
+| `google_calendar_clients` | כרטיסיות לקוחות | 13 | ✅ פעיל |
+| `trainees` (CRM fields) | מתאמנים מורחבים | +9 CRM fields | ✅ פעיל |
+| `client_interactions` | אינטראקציות | 11 | ✅ פעיל |
+| `crm_contracts` | חוזים | 9 | ✅ פעיל |
+| `crm_payments` | תשלומים | 11 | ✅ פעיל |
+| `crm_communication_templates` | תבניות תקשורת | 9 | ✅ פעיל |
+| `crm_communication_messages` | הודעות | 10 | ✅ פעיל |
+| `crm_documents` | מסמכים | 9 | ✅ פעיל |
+| `crm_automation_rules` | כללי אוטומציה | 11 | ✅ פעיל |
+| `crm_automation_tasks` | משימות אוטומציה | 9 | ✅ פעיל |
+| `crm_segments` | קטעים | 7 | ✅ פעיל |
+| `pipeline_movements` | מעקב Pipeline | 8 | ✅ פעיל |
+| `audit_log` | יומן ביקורת | 10 | ✅ פעיל |
+| `backup_log` | יומן גיבויים | 8 | ✅ פעיל |
+
+**סה"כ: 16 טבלאות CRM** (+ שדות CRM ב-`trainees`)
+
+---
+
+### Indexes ו-Optimizations
+
+המערכת כוללת **Indexes מותאמים** לביצועים:
+- Composite indexes לשאילתות מורכבות
+- Partial indexes לשדות עם תנאים
+- Indexes על foreign keys
+- Indexes על שדות תאריך למיון
+
+**מיגרציות אופטימיזציה:**
+- `20260128000008_add_performance_indexes_crm.sql`
+- `20260129000000_optimize_crm_queries_performance.sql`
+- `20260131000000_optimize_crm_analytics_queries.sql`
+
+---
+
 **סיום הדוח**
