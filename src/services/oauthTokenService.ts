@@ -95,7 +95,47 @@ export class OAuthTokenService {
       const clientSecret = import.meta.env.VITE_GOOGLE_CLIENT_SECRET;
 
       if (!clientId || !clientSecret) {
-        return { error: 'פרטי OAuth לא מוגדרים' };
+        // Try to refresh via Edge Function instead
+        logger.info('OAuth credentials not configured locally, trying Edge Function refresh', { trainerId }, 'OAuthTokenService');
+        
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.access_token) {
+            return { error: 'נדרשת התחברות מחדש' };
+          }
+          
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const response = await fetch(`${supabaseUrl}/functions/v1/google-oauth/refresh`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ trainer_id: trainerId }),
+          });
+          
+          if (!response.ok) {
+            // If Edge Function refresh also fails, ask user to reconnect
+            return { error: 'Token פג תוקף - נדרש חיבור מחדש ל-Google Calendar' };
+          }
+          
+          const data = await response.json();
+          if (data.error) {
+            return { error: data.error };
+          }
+          
+          return {
+            data: {
+              access_token: data.access_token,
+              expires_at: data.expires_at,
+              expires_in: data.expires_in || 3600,
+            },
+            success: true,
+          };
+        } catch (edgeFnError) {
+          logger.warn('Edge Function refresh failed', edgeFnError, 'OAuthTokenService');
+          return { error: 'Token פג תוקף - נדרש חיבור מחדש ל-Google Calendar' };
+        }
       }
 
       const response = await fetch('https://oauth2.googleapis.com/token', {

@@ -77,8 +77,8 @@ Deno.serve(async (req: Request) => {
     console.log(`[google-oauth] Processing request: method=${req.method}, path=${path}`);
 
     // Initiate OAuth flow
-    // Match both /google-oauth and /functions/v1/google-oauth (but not /callback)
-    const isInitiatePath = path.includes("/google-oauth") && !path.includes("/callback") && !path.includes("/disconnect");
+    // Match both /google-oauth and /functions/v1/google-oauth (but not /callback, /disconnect, /refresh)
+    const isInitiatePath = path.includes("/google-oauth") && !path.includes("/callback") && !path.includes("/disconnect") && !path.includes("/refresh");
     
     if (req.method === "GET" && isInitiatePath) {
       const trainerId = url.searchParams.get("trainer_id");
@@ -311,6 +311,144 @@ Deno.serve(async (req: Request) => {
           "Cross-Origin-Resource-Policy": "cross-origin",
         },
       });
+    }
+
+    // Refresh token
+    if (req.method === "POST" && path.endsWith("/refresh")) {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) {
+        return new Response(
+          JSON.stringify({ error: "Missing authorization header" }),
+          {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        {
+          global: {
+            headers: { Authorization: authHeader },
+          },
+        }
+      );
+
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      const { trainer_id } = await req.json();
+      if (trainer_id !== user.id) {
+        return new Response(
+          JSON.stringify({ error: "Trainer ID mismatch" }),
+          {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // Get current refresh token from database
+      const serviceSupabase = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      );
+
+      const { data: credentials, error: credError } = await serviceSupabase
+        .from("trainer_google_credentials")
+        .select("refresh_token")
+        .eq("trainer_id", trainer_id)
+        .single();
+
+      if (credError || !credentials?.refresh_token) {
+        return new Response(
+          JSON.stringify({ error: "No refresh token found - reconnect required" }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+        return new Response(
+          JSON.stringify({ error: "Google OAuth not configured on server" }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // Refresh the token
+      const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id: GOOGLE_CLIENT_ID,
+          client_secret: GOOGLE_CLIENT_SECRET,
+          refresh_token: credentials.refresh_token,
+          grant_type: "refresh_token",
+        }),
+      });
+
+      if (!tokenResponse.ok) {
+        const error = await tokenResponse.json();
+        console.error("Token refresh error:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to refresh token - reconnect required" }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      const tokens = await tokenResponse.json();
+      const expiresAt = new Date(Date.now() + (tokens.expires_in * 1000));
+
+      // Update database with new token
+      const { error: updateError } = await serviceSupabase
+        .from("trainer_google_credentials")
+        .update({
+          access_token: tokens.access_token,
+          token_expires_at: expiresAt.toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("trainer_id", trainer_id);
+
+      if (updateError) {
+        console.error("Token update error:", updateError);
+        return new Response(
+          JSON.stringify({ error: "Failed to save new token" }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          access_token: tokens.access_token,
+          expires_at: expiresAt.toISOString(),
+          expires_in: tokens.expires_in,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     // Disconnect
