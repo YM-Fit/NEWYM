@@ -4,28 +4,12 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { 
   getGoogleCalendarEvents, 
   getGoogleCalendarStatus,
-  updateCalendarEventBidirectional,
   deleteCalendarEventBidirectional
 } from '../../../api/googleCalendarApi';
 import { supabase } from '../../../lib/supabase';
 import GoogleCalendarSettings from '../Settings/GoogleCalendarSettings';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  useDroppable,
-} from '@dnd-kit/core';
-import {
-  sortableKeyboardCoordinates,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
 interface CalendarEvent {
   id: string;
@@ -47,7 +31,7 @@ interface CalendarViewProps {
   onCreateWorkout?: () => void;
 }
 
-interface DraggableEventProps {
+interface EventItemProps {
   event: CalendarEvent;
   onEventClick?: (event: CalendarEvent) => void;
   onDelete?: (eventId: string) => void;
@@ -57,42 +41,9 @@ interface DraggableEventProps {
 const REFRESH_INTERVAL_MS = 120000; // 2 minutes instead of 30 seconds
 const CACHE_DURATION_MS = 60000; // Cache events for 1 minute
 
-// Day Droppable Component
-function DayDroppable({ 
-  id, 
-  children 
-}: { 
-  id: string; 
-  children: React.ReactNode;
-}) {
-  const { setNodeRef } = useDroppable({
-    id,
-  });
-
-  return (
-    <div ref={setNodeRef}>
-      {children}
-    </div>
-  );
-}
-
-// Draggable Event Component
-function DraggableEvent({ event, onEventClick, onDelete }: DraggableEventProps) {
+// Event Item Component (simplified without drag)
+function EventItem({ event, onEventClick, onDelete }: EventItemProps) {
   const [showDelete, setShowDelete] = useState(false);
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging: isDraggingThis,
-  } = useSortable({ id: event.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDraggingThis ? 0.5 : 1,
-  };
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -107,18 +58,17 @@ function DraggableEvent({ event, onEventClick, onDelete }: DraggableEventProps) 
     setShowDelete(false);
   };
 
+  const handleClickOutside = () => {
+    setShowDelete(false);
+  };
+
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
       onClick={() => onEventClick?.(event)}
       onContextMenu={handleContextMenu}
-      className={`text-xs bg-emerald-500/20 text-emerald-300 p-1.5 rounded cursor-move hover:bg-emerald-500/30 transition-all truncate relative group ${
-        isDraggingThis ? 'z-50' : ''
-      }`}
-      title={`${event.summary}${event.start.dateTime ? ` - ${new Date(event.start.dateTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}` : ''} (לחץ וגרור להעברה, לחץ ימני למחיקה)`}
+      onBlur={handleClickOutside}
+      className="text-xs bg-emerald-500/20 text-emerald-300 p-1.5 rounded cursor-pointer hover:bg-emerald-500/30 transition-all truncate relative group"
+      title={`${event.summary}${event.start.dateTime ? ` - ${new Date(event.start.dateTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}` : ''} (לחץ ימני למחיקה)`}
     >
       {event.summary}
       {showDelete && (
@@ -144,18 +94,10 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
   const [connected, setConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [targetDay, setTargetDay] = useState<number | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastRefreshRef = useRef<Date | null>(null);
   const eventsCacheRef = useRef<{ events: CalendarEvent[]; timestamp: number; dateKey: string } | null>(null);
-  
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   const checkConnection = useCallback(async () => {
     if (!user) return;
@@ -349,77 +291,6 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
     return currentDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
   }, [currentDate]);
 
-  // Handle drag end - move event to new date
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    if (!over || !user) return;
-
-    const draggedEventId = active.id as string;
-    const targetDayStr = over.id as string;
-    
-    // Check if dropped on a day slot
-    if (!targetDayStr.startsWith('day-')) return;
-    
-    const dayMatch = targetDayStr.match(/day-(\d+)-(\d+)-(\d+)/);
-    if (!dayMatch) return;
-    
-    const [, year, month, day] = dayMatch;
-    const targetDate = new Date(parseInt(year), parseInt(month), parseInt(day));
-    
-    // Find the event being dragged
-    const eventToMove = events.find(e => e.id === draggedEventId);
-    if (!eventToMove) return;
-
-    setIsUpdating(true);
-    try {
-      const currentStart = new Date(eventToMove.start.dateTime || eventToMove.start.date || '');
-      const currentEnd = new Date(eventToMove.end.dateTime || eventToMove.end.date || '');
-      const duration = currentEnd.getTime() - currentStart.getTime();
-
-      // Calculate new start time (keep same time of day)
-      const newStart = new Date(targetDate);
-      newStart.setHours(currentStart.getHours(), currentStart.getMinutes(), currentStart.getSeconds());
-      
-      // Calculate new end time (same duration)
-      const newEnd = new Date(newStart.getTime() + duration);
-
-      // Get access token
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        toast.error('נדרשת הרשאה לעדכון');
-        return;
-      }
-
-      // Update event in Google Calendar and database
-      const updateResult = await updateCalendarEventBidirectional(
-        user.id,
-        draggedEventId,
-        {
-          startTime: newStart,
-          endTime: newEnd,
-        },
-        session.access_token
-      );
-
-      if (updateResult.error) {
-        toast.error(updateResult.error);
-        return;
-      }
-
-      toast.success('אירוע הועבר בהצלחה');
-      
-      // Refresh events
-      await loadEvents(false, true);
-    } catch (error) {
-      logger.error('Error moving event', error, 'CalendarView');
-      toast.error('שגיאה בהעברת אירוע');
-    } finally {
-      setIsUpdating(false);
-      setTargetDay(null);
-    }
-  };
-
   // Handle delete event
   const handleDeleteEvent = async (eventId: string) => {
     if (!user) return;
@@ -472,7 +343,6 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
     }
 
     // Otherwise, show a message to use the create workout button
-    // In the future, we can add a modal to create calendar events directly
     toast.success('לצורך יצירת אירוע חדש, השתמש בכפתור "אימון חדש"');
   };
 
@@ -575,115 +445,89 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-400"></div>
           </div>
         ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={() => {
-              // Drag started - visual feedback handled by DraggableEvent component
-            }}
-            onDragEnd={handleDragEnd}
-            onDragOver={(event) => {
-              const overId = event.over?.id as string;
-              if (overId && overId.startsWith('day-')) {
-                const match = overId.match(/day-\d+-\d+-(\d+)/);
-                if (match) {
-                  setTargetDay(parseInt(match[1]));
-                }
-              }
-            }}
-            onDragCancel={() => {
-              setTargetDay(null);
-            }}
-          >
-            <div className="grid grid-cols-7 gap-2">
-              {/* Week days header */}
-              {weekDays.map((day, index) => (
+          <div className="grid grid-cols-7 gap-2">
+            {/* Week days header */}
+            {weekDays.map((day, index) => (
+              <div
+                key={index}
+                className="text-center text-sm font-semibold text-zinc-400 py-2"
+              >
+                {day}
+              </div>
+            ))}
+
+            {/* Calendar days */}
+            {days.map((day, index) => {
+              const dayEvents = day ? getEventsForDay(day) : [];
+              const isToday =
+                day &&
+                new Date().toDateString() ===
+                  new Date(
+                    currentDate.getFullYear(),
+                    currentDate.getMonth(),
+                    day
+                  ).toDateString();
+
+              const dayId = day
+                ? `day-${currentDate.getFullYear()}-${currentDate.getMonth()}-${day}`
+                : `empty-${index}`;
+
+              return (
                 <div
-                  key={index}
-                  className="text-center text-sm font-semibold text-zinc-400 py-2"
+                  key={dayId}
+                  onClick={() => day && handleDayClick(day)}
+                  className={`min-h-[100px] p-2 border border-zinc-800 rounded-lg transition-all ${
+                    day
+                      ? isToday
+                        ? 'bg-emerald-500/10 border-emerald-500/30'
+                        : 'bg-zinc-800/30 hover:bg-zinc-800/50 cursor-pointer'
+                      : 'bg-transparent border-transparent'
+                  }`}
                 >
-                  {day}
-                </div>
-              ))}
-
-              {/* Calendar days */}
-              {days.map((day, index) => {
-                const dayEvents = day ? getEventsForDay(day) : [];
-                const isToday =
-                  day &&
-                  new Date().toDateString() ===
-                    new Date(
-                      currentDate.getFullYear(),
-                      currentDate.getMonth(),
-                      day
-                    ).toDateString();
-
-                const dayId = day
-                  ? `day-${currentDate.getFullYear()}-${currentDate.getMonth()}-${day}`
-                  : `empty-${index}`;
-
-                const isDropTarget = targetDay === day;
-
-                return (
-                  <DayDroppable key={dayId} id={dayId}>
-                    <div
-                      onClick={() => day && handleDayClick(day)}
-                      className={`min-h-[100px] p-2 border border-zinc-800 rounded-lg transition-all ${
-                        day
-                          ? isToday
-                            ? 'bg-emerald-500/10 border-emerald-500/30'
-                            : isDropTarget
-                            ? 'bg-emerald-500/20 border-emerald-500/50'
-                            : 'bg-zinc-800/30 hover:bg-zinc-800/50 cursor-pointer'
-                          : 'bg-transparent border-transparent'
-                      }`}
-                    >
-                      {day && (
-                        <>
-                          <div
-                            className={`text-sm font-semibold mb-2 ${
-                              isToday ? 'text-emerald-400' : 'text-zinc-300'
-                            }`}
+                  {day && (
+                    <>
+                      <div
+                        className={`text-sm font-semibold mb-2 ${
+                          isToday ? 'text-emerald-400' : 'text-zinc-300'
+                        }`}
+                      >
+                        {day}
+                      </div>
+                      <div className="space-y-1">
+                        {dayEvents.slice(0, 3).map((event) => (
+                          <EventItem
+                            key={event.id}
+                            event={event}
+                            onEventClick={onEventClick}
+                            onDelete={handleDeleteEvent}
+                          />
+                        ))}
+                        {dayEvents.length > 3 && (
+                          <div 
+                            className="text-xs text-zinc-500 cursor-pointer hover:text-zinc-400" 
+                            title={`${dayEvents.length - 3} אירועים נוספים`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Show all events for this day
+                              const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                              toast.success(`${dayEvents.length} אירועים ב-${dayDate.toLocaleDateString('he-IL')}`);
+                            }}
                           >
-                            {day}
+                            +{dayEvents.length - 3} נוספים
                           </div>
-                          <div className="space-y-1">
-                            {dayEvents.slice(0, 3).map((event) => (
-                              <DraggableEvent
-                                key={event.id}
-                                event={event}
-                                onEventClick={onEventClick}
-                                onDelete={handleDeleteEvent}
-                              />
-                            ))}
-                            {dayEvents.length > 3 && (
-                              <div 
-                                className="text-xs text-zinc-500 cursor-pointer hover:text-zinc-400" 
-                                title={`${dayEvents.length - 3} אירועים נוספים`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // Show all events for this day
-                                  const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-                                  toast.success(`${dayEvents.length} אירועים ב-${dayDate.toLocaleDateString('he-IL')}`);
-                                }}
-                              >
-                                +{dayEvents.length - 3} נוספים
-                              </div>
-                            )}
-                            {dayEvents.length === 0 && (
-                              <div className="text-xs text-zinc-600 opacity-50 mt-4 text-center">
-                                לחץ להוספת אירוע
-                              </div>
-                            )}
+                        )}
+                        {dayEvents.length === 0 && (
+                          <div className="text-xs text-zinc-600 opacity-50 mt-4 text-center">
+                            לחץ להוספת אירוע
                           </div>
-                        </>
-                      )}
-                    </div>
-                  </DayDroppable>
-                );
-              })}
-            </div>
-          </DndContext>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
