@@ -57,6 +57,25 @@ interface DraggableEventProps {
 const REFRESH_INTERVAL_MS = 120000; // 2 minutes instead of 30 seconds
 const CACHE_DURATION_MS = 60000; // Cache events for 1 minute
 
+// Day Droppable Component
+function DayDroppable({ 
+  id, 
+  children 
+}: { 
+  id: string; 
+  children: React.ReactNode;
+}) {
+  const { setNodeRef } = useDroppable({
+    id,
+  });
+
+  return (
+    <div ref={setNodeRef}>
+      {children}
+    </div>
+  );
+}
+
 // Draggable Event Component
 function DraggableEvent({ event, onEventClick, onDelete }: DraggableEventProps) {
   const [showDelete, setShowDelete] = useState(false);
@@ -605,21 +624,8 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
 
                 const isDropTarget = targetDay === day;
 
-                // Day droppable component
-                function DayDroppable({ children }: { children: React.ReactNode }) {
-                  const { setNodeRef } = useDroppable({
-                    id: dayId,
-                  });
-
-                  return (
-                    <div ref={setNodeRef}>
-                      {children}
-                    </div>
-                  );
-                }
-
                 return (
-                  <DayDroppable key={dayId}>
+                  <DayDroppable key={dayId} id={dayId}>
                     <div
                       onClick={() => day && handleDayClick(day)}
                       className={`min-h-[100px] p-2 border border-zinc-800 rounded-lg transition-all ${
