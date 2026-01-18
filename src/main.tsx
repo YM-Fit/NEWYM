@@ -34,7 +34,10 @@ if (import.meta.env.PROD) {
 // Measure Web Vitals
 measureWebVitals((metric) => {
   if (import.meta.env.DEV) {
-    console.log('[Performance]', metric.name, `${metric.value.toFixed(2)}ms`, `(${metric.rating})`);
+    const value = typeof metric.value === 'number' && !isNaN(metric.value) 
+      ? metric.value.toFixed(2) 
+      : 'N/A';
+    console.log('[Performance]', metric.name, `${value}ms`, `(${metric.rating || 'N/A'})`);
   }
   // In production, send to analytics
 });

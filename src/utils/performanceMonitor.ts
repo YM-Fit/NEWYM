@@ -53,15 +53,18 @@ export function measureWebVitals(onReport?: (metric: PerformanceMetric) => void)
       const lastEntry = entries[entries.length - 1] as any;
       
       if (lastEntry) {
-        const metric: PerformanceMetric = {
-          name: 'LCP',
-          value: lastEntry.renderTime || lastEntry.loadTime,
-          rating: getRating('lcp', lastEntry.renderTime || lastEntry.loadTime),
-          timestamp: Date.now(),
-        };
-        
-        onReport?.(metric);
-        logPerformanceMetric(metric);
+        const value = lastEntry.renderTime || lastEntry.loadTime || 0;
+        if (typeof value === 'number' && !isNaN(value)) {
+          const metric: PerformanceMetric = {
+            name: 'LCP',
+            value,
+            rating: getRating('lcp', value),
+            timestamp: Date.now(),
+          };
+          
+          onReport?.(metric);
+          logPerformanceMetric(metric);
+        }
       }
     });
 
@@ -77,15 +80,18 @@ export function measureWebVitals(onReport?: (metric: PerformanceMetric) => void)
       const firstEntry = entries[0] as any;
       
       if (firstEntry) {
-        const metric: PerformanceMetric = {
-          name: 'FCP',
-          value: firstEntry.renderTime || firstEntry.loadTime,
-          rating: getRating('fcp', firstEntry.renderTime || firstEntry.loadTime),
-          timestamp: Date.now(),
-        };
-        
-        onReport?.(metric);
-        logPerformanceMetric(metric);
+        const value = firstEntry.renderTime || firstEntry.loadTime || 0;
+        if (typeof value === 'number' && !isNaN(value)) {
+          const metric: PerformanceMetric = {
+            name: 'FCP',
+            value,
+            rating: getRating('fcp', value),
+            timestamp: Date.now(),
+          };
+          
+          onReport?.(metric);
+          logPerformanceMetric(metric);
+        }
       }
     });
 
@@ -99,20 +105,22 @@ export function measureWebVitals(onReport?: (metric: PerformanceMetric) => void)
     let clsValue = 0;
     const clsObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries() as any[]) {
-        if (!entry.hadRecentInput) {
-          clsValue += entry.value;
+        if (!entry.hadRecentInput && entry.value) {
+          clsValue += typeof entry.value === 'number' ? entry.value : 0;
         }
       }
 
-      const metric: PerformanceMetric = {
-        name: 'CLS',
-        value: clsValue,
-        rating: getRating('cls', clsValue),
-        timestamp: Date.now(),
-      };
-      
-      onReport?.(metric);
-      logPerformanceMetric(metric);
+      if (typeof clsValue === 'number' && !isNaN(clsValue)) {
+        const metric: PerformanceMetric = {
+          name: 'CLS',
+          value: clsValue,
+          rating: getRating('cls', clsValue),
+          timestamp: Date.now(),
+        };
+        
+        onReport?.(metric);
+        logPerformanceMetric(metric);
+      }
     });
 
     clsObserver.observe({ entryTypes: ['layout-shift'] });
@@ -127,15 +135,20 @@ export function measureWebVitals(onReport?: (metric: PerformanceMetric) => void)
       const firstEntry = entries[0] as any;
       
       if (firstEntry) {
-        const metric: PerformanceMetric = {
-          name: 'FID',
-          value: firstEntry.processingStart - firstEntry.startTime,
-          rating: getRating('fid', firstEntry.processingStart - firstEntry.startTime),
-          timestamp: Date.now(),
-        };
-        
-        onReport?.(metric);
-        logPerformanceMetric(metric);
+        const value = firstEntry.processingStart && firstEntry.startTime
+          ? firstEntry.processingStart - firstEntry.startTime
+          : 0;
+        if (typeof value === 'number' && !isNaN(value)) {
+          const metric: PerformanceMetric = {
+            name: 'FID',
+            value,
+            rating: getRating('fid', value),
+            timestamp: Date.now(),
+          };
+          
+          onReport?.(metric);
+          logPerformanceMetric(metric);
+        }
       }
     });
 
@@ -147,17 +160,19 @@ export function measureWebVitals(onReport?: (metric: PerformanceMetric) => void)
   // Measure TTFB (Time to First Byte)
   try {
     const navigationEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-    if (navigationEntry) {
+    if (navigationEntry && navigationEntry.responseStart && navigationEntry.requestStart) {
       const ttfb = navigationEntry.responseStart - navigationEntry.requestStart;
-      const metric: PerformanceMetric = {
-        name: 'TTFB',
-        value: ttfb,
-        rating: getRating('ttfb', ttfb),
-        timestamp: Date.now(),
-      };
-      
-      onReport?.(metric);
-      logPerformanceMetric(metric);
+      if (typeof ttfb === 'number' && !isNaN(ttfb)) {
+        const metric: PerformanceMetric = {
+          name: 'TTFB',
+          value: ttfb,
+          rating: getRating('ttfb', ttfb),
+          timestamp: Date.now(),
+        };
+        
+        onReport?.(metric);
+        logPerformanceMetric(metric);
+      }
     }
   } catch (e) {
     // TTFB measurement failed
@@ -169,7 +184,10 @@ export function measureWebVitals(onReport?: (metric: PerformanceMetric) => void)
  */
 function logPerformanceMetric(metric: PerformanceMetric): void {
   if (process.env.NODE_ENV === 'development') {
-    console.log(`[Performance] ${metric.name}: ${metric.value.toFixed(2)}ms (${metric.rating})`);
+    const value = typeof metric.value === 'number' && !isNaN(metric.value)
+      ? metric.value.toFixed(2)
+      : 'N/A';
+    console.log(`[Performance] ${metric.name}: ${value}ms (${metric.rating || 'N/A'})`);
   }
 
   // In production, send to analytics/monitoring service
@@ -222,19 +240,25 @@ export function getPerformanceMetrics(): PerformanceMetric[] {
   try {
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
     if (navigation) {
-      metrics.push({
-        name: 'DOMContentLoaded',
-        value: navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
-        rating: 'good',
-        timestamp: Date.now(),
-      });
+      const domContentLoadedValue = navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart;
+      if (typeof domContentLoadedValue === 'number' && !isNaN(domContentLoadedValue)) {
+        metrics.push({
+          name: 'DOMContentLoaded',
+          value: domContentLoadedValue,
+          rating: 'good',
+          timestamp: Date.now(),
+        });
+      }
 
-      metrics.push({
-        name: 'Load',
-        value: navigation.loadEventEnd - navigation.loadEventStart,
-        rating: 'good',
-        timestamp: Date.now(),
-      });
+      const loadValue = navigation.loadEventEnd - navigation.loadEventStart;
+      if (typeof loadValue === 'number' && !isNaN(loadValue)) {
+        metrics.push({
+          name: 'Load',
+          value: loadValue,
+          rating: 'good',
+          timestamp: Date.now(),
+        });
+      }
     }
   } catch (e) {
     // Navigation timing not supported

@@ -34,27 +34,18 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
     { id: 'trainees', label: 'מתאמנים', icon: Users, description: 'ניהול מתאמנים', category: 'main' },
     { id: 'calendar', label: 'יומן', icon: Calendar, description: 'Google Calendar', category: 'main' },
     
-    // CRM Navigation - כל CRM תחת קטגוריה אחת
-    { id: 'crm-dashboard', label: 'Dashboard', icon: Home, description: 'סקירה כללית CRM', category: 'crm' },
-    { id: 'crm-clients', label: 'לקוחות', icon: Users, description: 'ניהול לקוחות', category: 'crm' },
-    { id: 'crm-pipeline', label: 'Pipeline', icon: TrendingUp, description: 'ניהול Pipeline', category: 'crm' },
-    { id: 'crm-analytics', label: 'אנליטיקה', icon: BarChart3, description: 'אנליטיקה מתקדמת', category: 'crm' },
-    { id: 'crm-reports', label: 'דוחות', icon: FileText, description: 'דוחות ואנליטיקה', category: 'crm' },
-    
     // Tools & Analytics
     { id: 'tools', label: 'כלים', icon: Calculator, description: 'מחשבונים וכלים', category: 'tools' },
     { id: 'reports', label: 'דוחות', icon: BarChart3, description: 'סטטיסטיקות ונתונים', category: 'tools' },
     
     // Settings & Management
     { id: 'health-check', label: 'בדיקת בריאות', icon: Activity, description: 'מצב המערכת', category: 'settings' },
-    { id: 'email-templates', label: 'תבניות אימייל', icon: MessageSquare, description: 'ניהול תבניות', category: 'settings' },
     { id: 'scheduled-exports', label: 'ייצואים מתוזמנים', icon: Calendar, description: 'ניהול ייצואים', category: 'settings' },
     { id: 'data-import', label: 'ייבוא נתונים', icon: FileText, description: 'ייבוא CSV/JSON', category: 'settings' },
   ], []);
 
   const categories = useMemo(() => [
     { id: 'main', label: 'ניווט ראשי', icon: Home },
-    { id: 'crm', label: 'CRM', icon: Briefcase },
     { id: 'tools', label: 'כלים וניתוח', icon: Calculator },
     { id: 'settings', label: 'הגדרות וניהול', icon: Settings },
   ], []);

@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { Home, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
-import { CrmProvider } from '../../contexts/CrmContext';
 import { supabase, logSupabaseError } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
 import { useErrorHandler } from '../../hooks/useErrorHandler';
@@ -33,28 +32,12 @@ const MealPlanBuilder = lazy(() => import('./MealPlans/MealPlanBuilder'));
 const TraineeAccessManager = lazy(() => import('./Trainees/TraineeAccessManager'));
 const MentalToolsEditor = lazy(() => import('./MentalTools/MentalToolsEditor'));
 const CalendarView = lazy(() => import('./Calendar/CalendarView'));
-// CRM Components - using new unified structure
-const CrmLayout = lazy(() => import('./crm/CrmLayout'));
-const PipelineView = lazy(() => import('./crm/pipeline/PipelineView'));
-const CrmDashboard = lazy(() => import('./crm/dashboard/CrmDashboard'));
-const AdvancedAnalytics = lazy(() => import('./crm/analytics/AdvancedAnalytics'));
-const CrmReportsView = lazy(() => import('./crm/reports/CrmReportsView'));
-const ClientDetailView = lazy(() => import('./crm/clients/ClientDetailView'));
-// Shared CRM components - moved to crm/shared
-const ContractManager = lazy(() => import('./crm/shared/ContractManager'));
-const PaymentTracker = lazy(() => import('./crm/shared/PaymentTracker'));
-const CommunicationCenter = lazy(() => import('./crm/shared/CommunicationCenter'));
-const AdvancedFilters = lazy(() => import('./crm/clients/AdvancedFilters'));
-const DocumentManager = lazy(() => import('./crm/shared/DocumentManager'));
 const ToolsView = lazy(() => import('./Tools/ToolsView'));
 const TraineeFoodDiaryView = lazy(() => import('./Trainees/TraineeFoodDiaryView'));
 const CardioManager = lazy(() => import('./Cardio/CardioManager'));
 const ReportsView = lazy(() => import('./Reports/ReportsView'));
 // Settings & Management Components
 const HealthCheckView = lazy(() => import('../settings/HealthCheckView'));
-const EmailTemplatesManager = lazy(() => import('./crm/templates/EmailTemplatesManager'));
-const ScheduledExportsManager = lazy(() => import('./crm/export/ScheduledExportsManager'));
-const DataImportManager = lazy(() => import('./crm/import/DataImportManager'));
 const ErrorReportingSettings = lazy(() => import('../settings/ErrorReportingSettings'));
 
 interface Trainee {
@@ -105,7 +88,6 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [selfWeights, setSelfWeights] = useState<any[]>([]);
   const [unseenWeightsCounts, setUnseenWeightsCounts] = useState<Map<string, number>>(new Map());
-  const [selectedClient, setSelectedClient] = useState<any | null>(null);
 
   const handleScaleReading = useCallback((reading: IdentifiedReading) => {
     const weight = reading.reading.weight_kg?.toFixed(1);
@@ -1163,196 +1145,11 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
           </Suspense>
         );
 
-      case 'crm-clients':
-        return (
-          <CrmProvider onViewChange={handleViewChange}>
-            <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-              <CrmLayout 
-                activeView={activeView} 
-                onViewChange={handleViewChange}
-              >
-                <ClientsListViewEnhanced
-                  onClientClick={(client) => {
-                    if (client.trainee_id) {
-                      const trainee = trainees.find(t => t.id === client.trainee_id);
-                      if (trainee) {
-                        setSelectedClient(trainee);
-                        setActiveView('client-detail');
-                      }
-                    }
-                  }}
-                  onViewChange={handleViewChange}
-                />
-              </CrmLayout>
-            </Suspense>
-          </CrmProvider>
-        );
-      
-      // Legacy support for old 'clients' view - redirect to crm-clients
-
-      case 'crm-dashboard':
-        return (
-          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <CrmLayout 
-              activeView={activeView} 
-              onViewChange={handleViewChange}
-              breadcrumbs={[{ label: 'Dashboard' }]}
-            >
-              <CrmDashboard onViewChange={handleViewChange} />
-            </CrmLayout>
-          </Suspense>
-        );
-
-      case 'crm-pipeline':
-        return (
-          <CrmProvider onViewChange={handleViewChange}>
-            <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-              <CrmLayout 
-                activeView={activeView} 
-                onViewChange={handleViewChange}
-              >
-                <PipelineView
-                  onClientClick={(trainee) => {
-                    setSelectedClient(trainee);
-                    setActiveView('client-detail');
-                  }}
-                />
-              </CrmLayout>
-            </Suspense>
-          </CrmProvider>
-        );
-
-      case 'crm-analytics':
-        return (
-          <CrmProvider onViewChange={handleViewChange}>
-            <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-              <CrmLayout 
-                activeView={activeView} 
-                onViewChange={handleViewChange}
-              >
-                <AdvancedAnalytics />
-              </CrmLayout>
-            </Suspense>
-          </CrmProvider>
-        );
-
-      case 'crm-reports':
-        return (
-          <CrmProvider onViewChange={handleViewChange}>
-            <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-              <CrmLayout 
-                activeView={activeView} 
-                onViewChange={handleViewChange}
-              >
-                <CrmReportsView />
-              </CrmLayout>
-            </Suspense>
-          </CrmProvider>
-        );
-
-      case 'client-detail':
-        return selectedClient ? (
-          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <CrmLayout 
-              activeView={activeView} 
-              onViewChange={handleViewChange}
-              breadcrumbs={[
-                { label: 'לקוחות', onClick: () => setActiveView('crm-clients') },
-                { label: selectedClient.full_name }
-              ]}
-            >
-              <ClientDetailView
-                trainee={selectedClient}
-                onClose={() => {
-                  setSelectedClient(null);
-                  setActiveView('crm-clients');
-                }}
-                onEdit={(trainee) => {
-                  setSelectedTrainee(trainee);
-                  setActiveView('edit-trainee');
-                }}
-              />
-            </CrmLayout>
-          </Suspense>
-        ) : null;
-
-      case 'contracts':
-        return (
-          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <ContractManager
-              traineeId={selectedClient?.id}
-              onClose={() => setActiveView(selectedClient ? 'client-detail' : 'crm-clients')}
-            />
-          </Suspense>
-        );
-
-      case 'payments':
-        return (
-          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <PaymentTracker
-              traineeId={selectedClient?.id}
-              onClose={() => setActiveView(selectedClient ? 'client-detail' : 'crm-clients')}
-            />
-          </Suspense>
-        );
-
-      case 'communication':
-        return (
-          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <CommunicationCenter
-              traineeId={selectedClient?.id}
-              onClose={() => setActiveView(selectedClient ? 'client-detail' : 'crm-clients')}
-            />
-          </Suspense>
-        );
-
-      case 'filters':
-        return (
-          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <AdvancedFilters
-              onFilteredClients={(clients) => {
-                // Handle filtered clients
-              }}
-            />
-          </Suspense>
-        );
-
-      case 'documents':
-        return selectedClient ? (
-          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <DocumentManager
-              traineeId={selectedClient.id}
-              onClose={() => setActiveView('client-detail')}
-            />
-          </Suspense>
-        ) : null;
-
       // Settings & Management Views
       case 'health-check':
         return (
           <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
             <HealthCheckView />
-          </Suspense>
-        );
-
-      case 'email-templates':
-        return (
-          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <EmailTemplatesManager />
-          </Suspense>
-        );
-
-      case 'scheduled-exports':
-        return (
-          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <ScheduledExportsManager />
-          </Suspense>
-        );
-
-      case 'data-import':
-        return (
-          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
-            <DataImportManager />
           </Suspense>
         );
 
@@ -1379,7 +1176,6 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const showCollapseControls = isWorkoutSession;
 
   return (
-    <CrmProvider onViewChange={handleViewChange}>
       <div
         className={`min-h-screen flex touch-manipulation ${isTablet ? 'tablet' : ''}`}
         dir="rtl"
@@ -1482,6 +1278,5 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
           </nav>
         </div>
       </div>
-    </CrmProvider>
   );
 }
