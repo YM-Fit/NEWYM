@@ -198,41 +198,38 @@ export default function QuickNumericPad({
 
         <div className={compact ? 'mb-4' : 'mb-8'}>
           <div className={`bg-zinc-800/50 border-4 border-emerald-500/50 rounded-2xl ${compact ? 'p-4' : 'p-8'} text-center`}>
-            <input
-              ref={inputRef}
-              type="text"
-              inputMode={isTablet ? "none" : "decimal"}
-              value={inputValue}
-              onChange={handleInputChange}
-              onBlur={handleInputBlur}
-              readOnly={isTablet}
-              tabIndex={isTablet ? -1 : 0}
-              onFocus={(e) => {
-                if (isTablet) {
-                  e.target.blur();
-                  e.preventDefault();
-                }
-              }}
-              onTouchStart={(e) => {
-                if (isTablet) {
-                  e.preventDefault();
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleConfirm();
-                }
-                if (e.key === 'Escape') {
-                  e.preventDefault();
-                  onClose();
-                }
-              }}
-              aria-label={`${label} - הזן ערך${allowDecimal ? ' בקילוגרמים' : isRpeMode ? ' RPE' : ' בחזרות'}`}
-              aria-describedby="numeric-pad-instructions"
-              className={`w-full bg-transparent font-bold text-emerald-400 tabular-nums text-center border-none outline-none focus:ring-0 ${compact ? 'text-4xl' : 'text-6xl lg:text-8xl'}`}
-              style={{ caretColor: 'transparent', pointerEvents: isTablet ? 'none' : 'auto' }}
-            />
+            {isTablet ? (
+              // On tablet, use div instead of input to prevent keyboard
+              <div
+                className={`w-full bg-transparent font-bold text-emerald-400 tabular-nums text-center ${compact ? 'text-4xl' : 'text-6xl lg:text-8xl'}`}
+                aria-label={`${label} - ${inputValue}${allowDecimal ? ' קילוגרמים' : isRpeMode ? ' RPE' : ' חזרות'}`}
+              >
+                {inputValue}
+              </div>
+            ) : (
+              <input
+                ref={inputRef}
+                type="text"
+                inputMode="decimal"
+                value={inputValue}
+                onChange={handleInputChange}
+                onBlur={handleInputBlur}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleConfirm();
+                  }
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    onClose();
+                  }
+                }}
+                aria-label={`${label} - הזן ערך${allowDecimal ? ' בקילוגרמים' : isRpeMode ? ' RPE' : ' בחזרות'}`}
+                aria-describedby="numeric-pad-instructions"
+                className={`w-full bg-transparent font-bold text-emerald-400 tabular-nums text-center border-none outline-none focus:ring-0 ${compact ? 'text-4xl' : 'text-6xl lg:text-8xl'}`}
+                style={{ caretColor: 'transparent' }}
+              />
+            )}
             <div className={`text-zinc-500 mt-2 font-medium ${compact ? 'text-base' : 'text-xl lg:text-2xl'}`} aria-hidden="true">
               {allowDecimal ? 'kg' : isRpeMode ? 'RPE' : 'reps'}
             </div>
@@ -241,7 +238,7 @@ export default function QuickNumericPad({
             </div>
             {!compact && (
               <div className="text-sm text-zinc-600 mt-2" aria-hidden="true">
-                לחץ Enter לאישור • Esc לביטול • חצים למעלה/למטה
+                {isTablet ? 'השתמש בכפתורים למטה' : 'לחץ Enter לאישור • Esc לביטול • חצים למעלה/למטה'}
               </div>
             )}
           </div>
