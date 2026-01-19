@@ -22,6 +22,7 @@ import { supabase } from '../../../lib/supabase';
 import { 
   matchEventsToTrainees, 
   groupEventsByName,
+  getAllTraineesForSelection,
   type MatchedEvent,
   type MatchResult
 } from '../../../utils/nameMatching';
@@ -517,9 +518,39 @@ export default function CalendarSyncModal({
                             </div>
                           )}
 
+                          {/* Manual Selection - Always show for linking to any trainee */}
+                          <div className="space-y-2">
+                            <div className="text-xs text-zinc-400 font-medium">
+                              {firstEvent.matches.length > 0 ? 'או בחר ידנית:' : 'בחר מתאמן לקישור:'}
+                            </div>
+                            <select
+                              value={decision?.traineeId || ''}
+                              onChange={(e) => {
+                                const selectedId = e.target.value;
+                                if (selectedId) {
+                                  events.forEach(ev => {
+                                    handleSelectTrainee(
+                                      ev.event.id,
+                                      selectedId,
+                                      ev.event.extractedName || ev.event.summary
+                                    );
+                                  });
+                                }
+                              }}
+                              className="w-full p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg text-white focus:border-emerald-500/50 focus:outline-none"
+                            >
+                              <option value="">-- בחר מתאמן --</option>
+                              {getAllTraineesForSelection(trainees || []).map(({ trainee }) => (
+                                <option key={trainee.id} value={trainee.id}>
+                                  {trainee.full_name} {trainee.phone ? `(${trainee.phone})` : ''}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
                           {/* Action buttons */}
                           <div className="flex gap-2 pt-2">
-                            {firstEvent.status === 'new' && onCreateTrainee && (
+                            {onCreateTrainee && (
                               <button
                                 onClick={() => {
                                   events.forEach(e => {
