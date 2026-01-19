@@ -265,17 +265,47 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const loadTrainees = useCallback(async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('trainees')
-      .select('*')
-      .eq('trainer_id', user.id)
-      .order('created_at', { ascending: false });
+    // Load trainees and their Google Calendar client links
+    const [traineesResult, clientsResult] = await Promise.all([
+      supabase
+        .from('trainees')
+        .select('*')
+        .eq('trainer_id', user.id)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('google_calendar_clients')
+        .select('id, trainee_id')
+        .eq('trainer_id', user.id)
+        .not('trainee_id', 'is', null)
+    ]);
 
-    if (!error && data) {
-      setTrainees(data);
-    } else if (error) {
-      logger.error('Error loading trainees:', error, 'TrainerApp');
+    if (traineesResult.error) {
+      logger.error('Error loading trainees:', traineesResult.error, 'TrainerApp');
+      return;
     }
+
+    if (!traineesResult.data) {
+      setTrainees([]);
+      return;
+    }
+
+    // Create a map of trainee_id -> client_id
+    const clientMap = new Map<string, string>();
+    if (clientsResult.data) {
+      clientsResult.data.forEach((client: any) => {
+        if (client.trainee_id) {
+          clientMap.set(client.trainee_id, client.id);
+        }
+      });
+    }
+
+    // Map trainees to include google_calendar_client_id
+    const traineesWithClients = traineesResult.data.map((trainee: any) => ({
+      ...trainee,
+      google_calendar_client_id: clientMap.get(trainee.id) || null
+    }));
+
+    setTrainees(traineesWithClients);
   }, [user?.id]);
 
   const loadTrainerProfile = useCallback(async () => {

@@ -168,11 +168,39 @@ export function useTrainees(trainerId: string | null) {
     async () => {
       if (!trainerId) return { data: [], error: null };
 
-      return supabase
-        .from('trainees')
-        .select('*')
-        .eq('trainer_id', trainerId)
-        .order('full_name');
+      // Load trainees and their Google Calendar client links in parallel
+      const [traineesResult, clientsResult] = await Promise.all([
+        supabase
+          .from('trainees')
+          .select('*')
+          .eq('trainer_id', trainerId)
+          .order('full_name'),
+        supabase
+          .from('google_calendar_clients')
+          .select('id, trainee_id')
+          .eq('trainer_id', trainerId)
+          .not('trainee_id', 'is', null)
+      ]);
+
+      if (traineesResult.error) return { data: null, error: traineesResult.error };
+      
+      // Create a map of trainee_id -> client_id
+      const clientMap = new Map<string, string>();
+      if (clientsResult.data) {
+        clientsResult.data.forEach((client: any) => {
+          if (client.trainee_id) {
+            clientMap.set(client.trainee_id, client.id);
+          }
+        });
+      }
+
+      // Map trainees to include google_calendar_client_id
+      const mappedData = (traineesResult.data || []).map((trainee: any) => ({
+        ...trainee,
+        google_calendar_client_id: clientMap.get(trainee.id) || null
+      }));
+
+      return { data: mappedData, error: null };
     },
     [trainerId],
     { enabled: !!trainerId, cacheTime: 60000 } // Cache for 1 minute

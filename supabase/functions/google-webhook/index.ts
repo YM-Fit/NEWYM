@@ -400,7 +400,7 @@ async function updateCalendarClient(
 
   const { data: existingClient } = await supabase
     .from("google_calendar_clients")
-    .select("id, total_events_count")
+    .select("id, total_events_count, trainee_id")
     .eq("trainer_id", trainerId)
     .eq("google_client_identifier", clientIdentifier)
     .maybeSingle();
@@ -409,17 +409,28 @@ async function updateCalendarClient(
   const isUpcoming = eventDate >= new Date();
 
   if (existingClient) {
+    // Update client stats and trainee_id if:
+    // 1. traineeId is provided and existing client has no trainee_id, OR
+    // 2. traineeId is provided and we want to update it
+    const updateData: any = {
+      last_event_date: eventDate.toISOString().split("T")[0],
+      total_events_count: (existingClient.total_events_count || 0) + 1,
+      upcoming_events_count: isUpcoming
+        ? (existingClient.upcoming_events_count || 0) + 1
+        : existingClient.upcoming_events_count || 0,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Only update trainee_id if:
+    // - We have a traineeId to link, AND
+    // - Either the client has no trainee_id OR we want to update it
+    if (traineeId && (!existingClient.trainee_id || existingClient.trainee_id !== traineeId)) {
+      updateData.trainee_id = traineeId;
+    }
+
     await supabase
       .from("google_calendar_clients")
-      .update({
-        last_event_date: eventDate.toISOString().split("T")[0],
-        total_events_count: (existingClient.total_events_count || 0) + 1,
-        upcoming_events_count: isUpcoming
-          ? (existingClient.upcoming_events_count || 0) + 1
-          : existingClient.upcoming_events_count || 0,
-        trainee_id: traineeId || existingClient.trainee_id,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq("id", existingClient.id);
   } else {
     await supabase
