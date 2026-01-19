@@ -265,75 +265,18 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const loadTrainees = useCallback(async () => {
     if (!user) return;
 
-    // Load trainees and their Google Calendar client links
-    const [traineesResult, clientsResult] = await Promise.all([
-      supabase
-        .from('trainees')
-        .select('*')
-        .eq('trainer_id', user.id)
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('google_calendar_clients')
-        .select('id, trainee_id')
-        .eq('trainer_id', user.id)
-        .not('trainee_id', 'is', null)
-    ]);
+    const { data, error } = await supabase
+      .from('trainees')
+      .select('*')
+      .eq('trainer_id', user.id)
+      .order('created_at', { ascending: false });
 
-    if (traineesResult.error) {
-      logger.error('Error loading trainees:', traineesResult.error, 'TrainerApp');
-      return;
+    if (!error && data) {
+      setTrainees(data);
+    } else if (error) {
+      logger.error('Error loading trainees:', error, 'TrainerApp');
     }
-
-    if (!traineesResult.data) {
-      setTrainees([]);
-      return;
-    }
-
-    // Create a map of trainee_id -> client_id
-    const clientMap = new Map<string, string>();
-    if (clientsResult.data) {
-      clientsResult.data.forEach((client: any) => {
-        if (client.trainee_id) {
-          clientMap.set(client.trainee_id, client.id);
-        }
-      });
-    }
-
-    // Map trainees to include google_calendar_client_id
-    const traineesWithClients = traineesResult.data.map((trainee: any) => ({
-      ...trainee,
-      google_calendar_client_id: clientMap.get(trainee.id) || null
-    }));
-
-    setTrainees(traineesWithClients);
   }, [user?.id]);
-
-  // Subscribe to changes in google_calendar_clients to auto-refresh trainee list
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('calendar_clients_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'google_calendar_clients',
-          filter: `trainer_id=eq.${user.id}`
-        },
-        (payload) => {
-          // Refresh trainees list when calendar clients change
-          logger.info('Calendar client changed, refreshing trainees', payload, 'TrainerApp');
-          loadTrainees();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, loadTrainees]);
 
   const loadTrainerProfile = useCallback(async () => {
     if (!user) return;

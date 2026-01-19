@@ -46,41 +46,17 @@ export async function getTrainees(trainerId: string): Promise<ApiResponse<any[]>
   }
 
   try {
-    // Load trainees and their Google Calendar client links in parallel
-    const [traineesResult, clientsResult] = await Promise.all([
-      supabase
-        .from('trainees')
-        .select('*')
-        .eq('trainer_id', trainerId)
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('google_calendar_clients')
-        .select('id, trainee_id')
-        .eq('trainer_id', trainerId)
-        .not('trainee_id', 'is', null)
-    ]);
+    const { data, error } = await supabase
+      .from('trainees')
+      .select('*')
+      .eq('trainer_id', trainerId)
+      .order('created_at', { ascending: false });
 
-    if (traineesResult.error) {
-      return { error: traineesResult.error.message };
+    if (error) {
+      return { error: error.message };
     }
 
-    // Create a map of trainee_id -> client_id
-    const clientMap = new Map<string, string>();
-    if (clientsResult.data) {
-      clientsResult.data.forEach((client: any) => {
-        if (client.trainee_id) {
-          clientMap.set(client.trainee_id, client.id);
-        }
-      });
-    }
-
-    // Map trainees to include google_calendar_client_id
-    const mappedData = (traineesResult.data || []).map((trainee: any) => ({
-      ...trainee,
-      google_calendar_client_id: clientMap.get(trainee.id) || null
-    }));
-
-    return { data: mappedData, success: true };
+    return { data: data || [], success: true };
   } catch (err: any) {
     return { error: err.message || 'שגיאה בטעינת המתאמנים' };
   }

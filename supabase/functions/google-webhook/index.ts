@@ -234,33 +234,14 @@ async function processCalendarEvents(
     // Extract trainee name and email from event
     const traineeName = extractTraineeName(event);
     const traineeEmail = extractEmail(event);
-    const clientIdentifier = extractClientIdentifier(event);
     
-    if (!traineeName && !traineeEmail && !clientIdentifier) continue;
+    if (!traineeName && !traineeEmail) continue;
 
     // Find trainee with improved matching logic
     let traineeId: string | null = null;
     
-    // FIRST: Check if this calendar client is already linked to a trainee
-    // This allows automatic linking of future events after manual link once
-    if (clientIdentifier) {
-      const { data: existingClient } = await supabase
-        .from("google_calendar_clients")
-        .select("trainee_id")
-        .eq("trainer_id", trainerId)
-        .eq("google_client_identifier", clientIdentifier)
-        .not("trainee_id", "is", null)
-        .maybeSingle();
-      
-      if (existingClient && existingClient.trainee_id) {
-        // Use the already linked trainee
-        traineeId = existingClient.trainee_id;
-        console.log(`Using previously linked trainee for client: ${clientIdentifier} -> ${traineeId}`);
-      }
-    }
-    
-    // If not found via existing client link, try to match by email (most accurate)
-    if (!traineeId && traineeEmail) {
+    // First, try to match by email (most accurate)
+    if (traineeEmail) {
       const { data: traineeByEmail } = await supabase
         .from("trainees")
         .select("id")
@@ -304,8 +285,6 @@ async function processCalendarEvents(
             `Multiple trainees found for name "${traineeName}": ${partialMatches.map(t => t.full_name).join(", ")}. ` +
             `Skipping auto-association to prevent incorrect matching.`
           );
-          // Update calendar client without trainee_id for manual linking
-          await updateCalendarClient(trainerId, null, event, supabase);
           continue; // Skip this event to avoid wrong association
         }
       }
@@ -339,8 +318,6 @@ async function processCalendarEvents(
       }
     } else if (!event.status || event.status !== "cancelled") {
       // Create new workout
-      // Mark as completed if the event date is in the past (event already happened)
-      const isPastEvent = startTime < new Date();
       if (traineeId) {
         const { data: newWorkout } = await supabase
           .from("workouts")
@@ -349,7 +326,7 @@ async function processCalendarEvents(
             workout_type: "personal",
             workout_date: startTime.toISOString().split("T")[0],
             notes: event.description || null,
-            is_completed: isPastEvent,
+            is_completed: false,
           })
           .select()
           .single();
@@ -423,7 +400,7 @@ async function updateCalendarClient(
 
   const { data: existingClient } = await supabase
     .from("google_calendar_clients")
-    .select("id, total_events_count, trainee_id")
+    .select("id, total_events_count")
     .eq("trainer_id", trainerId)
     .eq("google_client_identifier", clientIdentifier)
     .maybeSingle();
@@ -432,28 +409,17 @@ async function updateCalendarClient(
   const isUpcoming = eventDate >= new Date();
 
   if (existingClient) {
-    // Update client stats and trainee_id if:
-    // 1. traineeId is provided and existing client has no trainee_id, OR
-    // 2. traineeId is provided and we want to update it
-    const updateData: any = {
-      last_event_date: eventDate.toISOString().split("T")[0],
-      total_events_count: (existingClient.total_events_count || 0) + 1,
-      upcoming_events_count: isUpcoming
-        ? (existingClient.upcoming_events_count || 0) + 1
-        : existingClient.upcoming_events_count || 0,
-      updated_at: new Date().toISOString(),
-    };
-
-    // Only update trainee_id if:
-    // - We have a traineeId to link, AND
-    // - Either the client has no trainee_id OR we want to update it
-    if (traineeId && (!existingClient.trainee_id || existingClient.trainee_id !== traineeId)) {
-      updateData.trainee_id = traineeId;
-    }
-
     await supabase
       .from("google_calendar_clients")
-      .update(updateData)
+      .update({
+        last_event_date: eventDate.toISOString().split("T")[0],
+        total_events_count: (existingClient.total_events_count || 0) + 1,
+        upcoming_events_count: isUpcoming
+          ? (existingClient.upcoming_events_count || 0) + 1
+          : existingClient.upcoming_events_count || 0,
+        trainee_id: traineeId || existingClient.trainee_id,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", existingClient.id);
   } else {
     await supabase

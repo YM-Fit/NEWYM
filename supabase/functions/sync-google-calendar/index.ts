@@ -162,33 +162,14 @@ async function syncTrainerCalendar(
     // Extract trainee information
     const traineeName = extractTraineeName(event);
     const traineeEmail = extractEmail(event);
-    const clientIdentifier = extractClientIdentifier(event);
     
-    if (!traineeName && !traineeEmail && !clientIdentifier) continue;
+    if (!traineeName && !traineeEmail) continue;
 
     // Find trainee with improved matching logic
     let trainee: { id: string } | null = null;
     
-    // FIRST: Check if this calendar client is already linked to a trainee
-    // This allows automatic linking of future events after manual link once
-    if (clientIdentifier) {
-      const { data: existingClient } = await supabase
-        .from("google_calendar_clients")
-        .select("trainee_id")
-        .eq("trainer_id", trainerId)
-        .eq("google_client_identifier", clientIdentifier)
-        .not("trainee_id", "is", null)
-        .maybeSingle();
-      
-      if (existingClient && existingClient.trainee_id) {
-        // Use the already linked trainee
-        trainee = { id: existingClient.trainee_id };
-        console.log(`Using previously linked trainee for client: ${clientIdentifier} -> ${trainee.id}`);
-      }
-    }
-    
-    // If not found via existing client link, try to match by email (most accurate)
-    if (!trainee && traineeEmail) {
+    // First, try to match by email (most accurate)
+    if (traineeEmail) {
       const { data: traineeByEmail } = await supabase
         .from("trainees")
         .select("id")
@@ -228,24 +209,16 @@ async function syncTrainerCalendar(
           console.log(`Matched trainee by partial name: ${traineeName} -> ${trainee.id}`);
         } else if (partialMatches && partialMatches.length > 1) {
           // Multiple matches found - don't auto-associate to avoid wrong match
-          // But still create/update the calendar client for manual linking later
           console.warn(
             `Multiple trainees found for name "${traineeName}": ${partialMatches.map(t => t.full_name).join(", ")}. ` +
-            `Skipping auto-association to prevent incorrect matching. Creating unlinked client.`
+            `Skipping auto-association to prevent incorrect matching.`
           );
-          // Create/update calendar client without trainee_id so user can link manually
-          await updateCalendarClientStats(trainerId, null, event, supabase);
-          continue; // Skip workout creation but client is created
+          continue; // Skip this event to avoid wrong association
         }
       }
     }
 
-    // Create/update calendar client even if no trainee match (for manual linking)
-    // If trainee exists, it will be linked; if not, client will be unlinked for manual linking
-    if (!trainee) {
-      await updateCalendarClientStats(trainerId, null, event, supabase);
-      continue; // Skip workout creation but client is created/updated
-    }
+    if (!trainee) continue;
 
     if (existingSync) {
       // Update existing sync record
@@ -257,7 +230,6 @@ async function syncTrainerCalendar(
           event_summary: event.summary,
           event_description: event.description,
           sync_status: "synced",
-          trainee_id: trainee.id, // Update trainee_id in case it was null
           last_synced_at: new Date().toISOString(),
         })
         .eq("id", existingSync.id);
@@ -272,13 +244,8 @@ async function syncTrainerCalendar(
           })
           .eq("id", existingSync.workout_id);
       }
-
-      // Update calendar client stats (important: also updates trainee_id if it was null)
-      await updateCalendarClientStats(trainerId, trainee.id, event, supabase);
     } else {
       // Create new workout and sync record
-      // Mark as completed if the event date is in the past (event already happened)
-      const isPastEvent = startTime < new Date();
       const { data: newWorkout } = await supabase
         .from("workouts")
         .insert({
@@ -286,7 +253,7 @@ async function syncTrainerCalendar(
           workout_type: "personal",
           workout_date: startTime.toISOString().split("T")[0],
           notes: event.description || null,
-          is_completed: isPastEvent,
+          is_completed: false,
         })
         .select()
         .single();
@@ -333,7 +300,7 @@ async function syncTrainerCalendar(
 
 async function updateCalendarClientStats(
   trainerId: string,
-  traineeId: string | null,
+  traineeId: string,
   event: any,
   supabase: any
 ) {
@@ -345,34 +312,22 @@ async function updateCalendarClientStats(
 
   const { data: existingClient } = await supabase
     .from("google_calendar_clients")
-    .select("id, total_events_count, trainee_id")
+    .select("id, total_events_count")
     .eq("trainer_id", trainerId)
     .eq("google_client_identifier", clientIdentifier)
     .maybeSingle();
 
   if (existingClient) {
-    // Update client stats and trainee_id if:
-    // 1. traineeId is provided and existing client has no trainee_id, OR
-    // 2. traineeId is provided and we want to update it
-    const updateData: any = {
-      last_event_date: eventDate.toISOString().split("T")[0],
-      total_events_count: (existingClient.total_events_count || 0) + 1,
-      upcoming_events_count: isUpcoming
-        ? (existingClient.upcoming_events_count || 0) + 1
-        : existingClient.upcoming_events_count || 0,
-      updated_at: new Date().toISOString(),
-    };
-
-    // Only update trainee_id if:
-    // - We have a traineeId to link, AND
-    // - Either the client has no trainee_id OR we want to update it
-    if (traineeId && (!existingClient.trainee_id || existingClient.trainee_id !== traineeId)) {
-      updateData.trainee_id = traineeId;
-    }
-
     await supabase
       .from("google_calendar_clients")
-      .update(updateData)
+      .update({
+        last_event_date: eventDate.toISOString().split("T")[0],
+        total_events_count: (existingClient.total_events_count || 0) + 1,
+        upcoming_events_count: isUpcoming
+          ? (existingClient.upcoming_events_count || 0) + 1
+          : existingClient.upcoming_events_count || 0,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", existingClient.id);
   } else {
     await supabase

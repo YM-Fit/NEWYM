@@ -261,184 +261,17 @@ export default function CalendarSyncModal({
         }
       }
 
-      // Save links to database and create workouts
-      let workoutsCreated = 0;
+      // Save links to database
       if (linksToSave.length > 0) {
-        // First, create workouts for each linked event and prepare sync records
-        const syncRecordsWithWorkouts: Array<{
-          trainer_id: string;
-          trainee_id: string;
-          workout_id: string;
-          google_event_id: string;
-          google_calendar_id: string;
-          sync_status: 'synced';
-          sync_direction: 'from_google';
-          event_start_time: string;
-          event_end_time: string | null;
-          event_summary: string;
-          event_description: string | null;
-          last_synced_at: string;
-        }> = [];
-
-        for (const link of linksToSave) {
-          // Get event details
-          const matchedEvent = matchedEvents.find(e => e.event.id === link.google_event_id);
-          if (!matchedEvent) continue;
-
-          const startTime = new Date(matchedEvent.event.start?.dateTime || matchedEvent.event.start?.date || new Date());
-          const endTime = matchedEvent.event.end?.dateTime || matchedEvent.event.end?.date || null;
-          const eventDate = new Date(startTime);
-          const isPastEvent = eventDate < new Date();
-
-          // Check if workout already exists for this event
-          const { data: existingSync } = await supabase
-            .from('google_calendar_sync')
-            .select('workout_id')
-            .eq('google_event_id', link.google_event_id)
-            .eq('google_calendar_id', link.google_calendar_id)
-            .maybeSingle();
-
-          let workoutId = existingSync?.workout_id;
-
-          if (!workoutId) {
-            // Create new workout for this event
-            // Mark as completed if the event date is in the past (event already happened)
-            const { data: newWorkout, error: workoutError } = await supabase
-              .from('workouts')
-              .insert({
-                trainer_id: user.id,
-                workout_type: 'personal',
-                workout_date: startTime.toISOString().split('T')[0],
-                notes: matchedEvent.event.description || null,
-                is_completed: isPastEvent, // Mark as completed if the event date is in the past
-              })
-              .select()
-              .single();
-
-            if (workoutError || !newWorkout) {
-              logger.error('Error creating workout for calendar event', workoutError, 'CalendarSyncModal');
-              continue;
-            }
-
-            workoutId = newWorkout.id;
-            workoutsCreated++;
-
-            // Link workout to trainee
-            await supabase
-              .from('workout_trainees')
-              .insert({
-                workout_id: newWorkout.id,
-                trainee_id: link.trainee_id,
-              });
-          } else {
-            // Workout already exists - update is_completed if event is in the past
-            if (isPastEvent) {
-              await supabase
-                .from('workouts')
-                .update({ is_completed: true })
-                .eq('id', workoutId);
-            }
-          }
-
-          syncRecordsWithWorkouts.push({
-            trainer_id: link.trainer_id,
-            trainee_id: link.trainee_id,
-            workout_id: workoutId,
-            google_event_id: link.google_event_id,
-            google_calendar_id: link.google_calendar_id,
-            sync_status: 'synced',
-            sync_direction: 'from_google',
-            event_start_time: startTime.toISOString(),
-            event_end_time: endTime ? new Date(endTime).toISOString() : null,
-            event_summary: link.event_summary,
-            event_description: matchedEvent.event.description || null,
-            last_synced_at: new Date().toISOString(),
+        const { error: insertError } = await supabase
+          .from('google_calendar_sync')
+          .upsert(linksToSave, { 
+            onConflict: 'google_event_id,google_calendar_id',
+            ignoreDuplicates: false 
           });
-        }
 
-        // Save sync records with workout_ids
-        if (syncRecordsWithWorkouts.length > 0) {
-          const { error: insertError } = await supabase
-            .from('google_calendar_sync')
-            .upsert(syncRecordsWithWorkouts, { 
-              onConflict: 'google_event_id,google_calendar_id',
-              ignoreDuplicates: false 
-            });
-
-          if (insertError) {
-            throw new Error(insertError.message);
-          }
-        }
-
-        // Update google_calendar_clients for each linked event
-        const clientUpdates = new Map<string, { traineeId: string; eventIds: string[] }>();
-        
-        for (const link of linksToSave) {
-          const matchedEvent = matchedEvents.find(e => e.event.id === link.google_event_id);
-          if (!matchedEvent) continue;
-
-          const clientIdentifier = matchedEvent.event.attendees?.find((a: any) => !a.organizer)?.email 
-            || matchedEvent.event.attendees?.find((a: any) => !a.organizer)?.displayName
-            || matchedEvent.event.extractedName
-            || matchedEvent.event.summary;
-
-          if (clientIdentifier) {
-            const key = `${user.id}:${clientIdentifier}`;
-            if (!clientUpdates.has(key)) {
-              clientUpdates.set(key, { traineeId: link.trainee_id, eventIds: [] });
-            }
-            clientUpdates.get(key)!.eventIds.push(link.google_event_id);
-          }
-        }
-
-        // Update google_calendar_clients for each client
-        for (const [key, { traineeId, eventIds }] of clientUpdates.entries()) {
-          const [, clientIdentifier] = key.split(':');
-          
-          const { data: existingClient } = await supabase
-            .from('google_calendar_clients')
-            .select('id, trainee_id')
-            .eq('trainer_id', user.id)
-            .eq('google_client_identifier', clientIdentifier)
-            .maybeSingle();
-
-          if (existingClient) {
-            if (!existingClient.trainee_id) {
-              await supabase
-                .from('google_calendar_clients')
-                .update({ trainee_id: traineeId })
-                .eq('id', existingClient.id);
-            }
-          } else {
-            const firstEvent = matchedEvents.find(e => eventIds.includes(e.event.id));
-            if (firstEvent) {
-              const eventDate = new Date(firstEvent.event.start?.dateTime || firstEvent.event.start?.date || new Date());
-              await supabase
-                .from('google_calendar_clients')
-                .insert({
-                  trainer_id: user.id,
-                  trainee_id: traineeId,
-                  google_client_identifier: clientIdentifier,
-                  client_name: firstEvent.event.extractedName || firstEvent.event.summary || clientIdentifier,
-                  client_email: firstEvent.event.attendees?.find((a: any) => !a.organizer)?.email || null,
-                  first_event_date: eventDate.toISOString().split('T')[0],
-                  last_event_date: eventDate.toISOString().split('T')[0],
-                  total_events_count: eventIds.length,
-                  upcoming_events_count: eventIds.filter(id => {
-                    const e = matchedEvents.find(ev => ev.event.id === id);
-                    if (!e) return false;
-                    const eventDate = new Date(e.event.start?.dateTime || e.event.start?.date || new Date());
-                    return eventDate >= new Date();
-                  }).length,
-                  completed_events_count: eventIds.filter(id => {
-                    const e = matchedEvents.find(ev => ev.event.id === id);
-                    if (!e) return false;
-                    const eventDate = new Date(e.event.start?.dateTime || e.event.start?.date || new Date());
-                    return eventDate < new Date();
-                  }).length,
-                });
-            }
-          }
+        if (insertError) {
+          throw new Error(insertError.message);
         }
       }
 
@@ -452,17 +285,10 @@ export default function CalendarSyncModal({
       const savedCount = linksToSave.length;
       const createCount = traineesToCreate.length;
       
-      if (savedCount > 0 || createCount > 0 || workoutsCreated > 0) {
+      if (savedCount > 0 || createCount > 0) {
         let message = '';
-        if (savedCount > 0) {
-          message += `${savedCount} אירועים קושרו`;
-          if (workoutsCreated > 0) {
-            message += ` (${workoutsCreated} אימונים נוצרו)`;
-          }
-        }
-        if (createCount > 0) {
-          message += `${message ? ', ' : ''}${createCount} מתאמנים חדשים להוספה`;
-        }
+        if (savedCount > 0) message += `${savedCount} אירועים קושרו`;
+        if (createCount > 0) message += `${message ? ', ' : ''}${createCount} מתאמנים חדשים להוספה`;
         toast.success(message);
       }
 

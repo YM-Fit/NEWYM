@@ -997,6 +997,7 @@ export default function WorkoutSession({
           onSelect={handleAddExerciseWithAutoFill}
           onClose={() => setShowExerciseSelector(false)}
           loadingExerciseId={loadingExercise}
+          isTablet={isTablet}
         />
       )}
 
@@ -1026,6 +1027,7 @@ export default function WorkoutSession({
         <ExerciseSelector
           onSelect={handleSupersetExerciseSelect}
           onClose={() => setSupersetSelector(null)}
+          isTablet={isTablet}
         />
       )}
 

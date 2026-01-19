@@ -27,9 +27,10 @@ interface ExerciseSelectorProps {
   onSelect: (exercise: Exercise) => void;
   onClose: () => void;
   loadingExerciseId?: string | null;
+  isTablet?: boolean;
 }
 
-export default function ExerciseSelector({ traineeId, traineeName, onSelect, onClose, loadingExerciseId }: ExerciseSelectorProps) {
+export default function ExerciseSelector({ traineeId, traineeName, onSelect, onClose, loadingExerciseId, isTablet }: ExerciseSelectorProps) {
   const [muscleGroups, setMuscleGroups] = useState<MuscleGroup[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -296,7 +297,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                             onChange={(e) => setNewExerciseName(e.target.value)}
                             className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                             placeholder="הזן שם תרגיל..."
-                            autoFocus
+                            autoFocus={!isTablet}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' && e.ctrlKey) handleAddExercise();
                             }}
