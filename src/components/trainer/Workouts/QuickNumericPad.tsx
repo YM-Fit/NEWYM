@@ -29,13 +29,6 @@ export default function QuickNumericPad({
   const [inputValue, setInputValue] = useState(value.toString());
   const inputRef = useRef<HTMLInputElement>(null);
   const isRpeMode = maxValue === 10 && minValue === 1;
-  
-  // Debug: Log tablet detection
-  useEffect(() => {
-    if (isTablet !== undefined) {
-      console.log('[QuickNumericPad] isTablet:', isTablet, 'window.innerWidth:', window.innerWidth);
-    }
-  }, [isTablet]);
 
   useEffect(() => {
     setCurrentValue(value);
@@ -206,10 +199,14 @@ export default function QuickNumericPad({
         <div className={compact ? 'mb-4' : 'mb-8'}>
           <div className={`bg-zinc-800/50 border-4 border-emerald-500/50 rounded-2xl ${compact ? 'p-4' : 'p-8'} text-center`}>
             {isTablet ? (
-              // On tablet, use div instead of input to prevent keyboard
+              // On tablet, use div instead of input to completely prevent keyboard
               <div
                 className={`w-full bg-transparent font-bold text-emerald-400 tabular-nums text-center ${compact ? 'text-4xl' : 'text-6xl lg:text-8xl'}`}
                 aria-label={`${label} - ${inputValue}${allowDecimal ? ' קילוגרמים' : isRpeMode ? ' RPE' : ' חזרות'}`}
+                role="textbox"
+                tabIndex={-1}
+                onTouchStart={(e) => e.preventDefault()}
+                onTouchEnd={(e) => e.preventDefault()}
               >
                 {inputValue}
               </div>
