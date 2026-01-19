@@ -241,10 +241,23 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pr-12 pl-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
               readOnly={isTablet}
-              onClick={(e) => {
-                if (isTablet && e.currentTarget.hasAttribute('readonly')) {
+              tabIndex={isTablet ? -1 : 0}
+              onFocus={(e) => {
+                if (isTablet) {
+                  e.target.blur();
+                  e.preventDefault();
+                } else {
                   e.currentTarget.removeAttribute('readonly');
-                  e.currentTarget.focus();
+                }
+              }}
+              onTouchStart={(e) => {
+                if (isTablet) {
+                  e.preventDefault();
+                  const input = e.currentTarget;
+                  setTimeout(() => {
+                    input.removeAttribute('readonly');
+                    input.focus();
+                  }, 100);
                 }
               }}
             />

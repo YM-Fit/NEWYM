@@ -206,10 +206,16 @@ export default function QuickNumericPad({
               onChange={handleInputChange}
               onBlur={handleInputBlur}
               readOnly={isTablet}
-              onClick={(e) => {
-                if (isTablet && e.currentTarget.hasAttribute('readonly')) {
-                  e.currentTarget.removeAttribute('readonly');
-                  e.currentTarget.focus();
+              tabIndex={isTablet ? -1 : 0}
+              onFocus={(e) => {
+                if (isTablet) {
+                  e.target.blur();
+                  e.preventDefault();
+                }
+              }}
+              onTouchStart={(e) => {
+                if (isTablet) {
+                  e.preventDefault();
                 }
               }}
               onKeyDown={(e) => {
@@ -225,7 +231,7 @@ export default function QuickNumericPad({
               aria-label={`${label} - הזן ערך${allowDecimal ? ' בקילוגרמים' : isRpeMode ? ' RPE' : ' בחזרות'}`}
               aria-describedby="numeric-pad-instructions"
               className={`w-full bg-transparent font-bold text-emerald-400 tabular-nums text-center border-none outline-none focus:ring-0 ${compact ? 'text-4xl' : 'text-6xl lg:text-8xl'}`}
-              style={{ caretColor: 'transparent' }}
+              style={{ caretColor: 'transparent', pointerEvents: isTablet ? 'none' : 'auto' }}
             />
             <div className={`text-zinc-500 mt-2 font-medium ${compact ? 'text-base' : 'text-xl lg:text-2xl'}`} aria-hidden="true">
               {allowDecimal ? 'kg' : isRpeMode ? 'RPE' : 'reps'}

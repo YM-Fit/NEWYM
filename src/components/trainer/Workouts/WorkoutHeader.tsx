@@ -159,10 +159,21 @@ export const WorkoutHeader = memo(({
           onChange={(e) => onDateChange(new Date(e.target.value))}
           className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
           readOnly={isTablet}
-          onClick={(e) => {
-            if (isTablet && e.currentTarget.hasAttribute('readonly')) {
-              e.currentTarget.removeAttribute('readonly');
-              // Date picker will open on click
+          tabIndex={isTablet ? -1 : 0}
+          onFocus={(e) => {
+            if (isTablet) {
+              e.target.blur();
+              e.preventDefault();
+            }
+          }}
+          onTouchStart={(e) => {
+            if (isTablet) {
+              e.preventDefault();
+              const input = e.currentTarget;
+              setTimeout(() => {
+                input.removeAttribute('readonly');
+                input.showPicker?.();
+              }, 100);
             }
           }}
         />
