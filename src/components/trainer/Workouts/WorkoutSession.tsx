@@ -885,6 +885,7 @@ export default function WorkoutSession({
         onLoadPrevious={handleLoadPrevious}
         onDateChange={setWorkoutDate}
         onWorkoutTypeChange={setWorkoutType}
+        isTablet={isTablet}
       />
 
       <div className={isTablet ? 'trainer-workout-layout grid gap-4' : 'space-y-4'}>

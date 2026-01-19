@@ -26,6 +26,7 @@ interface WorkoutHeaderProps {
   onLoadPrevious: () => void;
   onDateChange: (date: Date) => void;
   onWorkoutTypeChange: (type: 'personal' | 'pair') => void;
+  isTablet?: boolean;
 }
 
 export const WorkoutHeader = memo(({
@@ -45,6 +46,7 @@ export const WorkoutHeader = memo(({
   onLoadPrevious,
   onDateChange,
   onWorkoutTypeChange,
+  isTablet,
 }: WorkoutHeaderProps) => {
   const handlePersonalClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -156,6 +158,13 @@ export const WorkoutHeader = memo(({
           value={workoutDate.toISOString().split('T')[0]}
           onChange={(e) => onDateChange(new Date(e.target.value))}
           className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+          readOnly={isTablet}
+          onClick={(e) => {
+            if (isTablet && e.currentTarget.hasAttribute('readonly')) {
+              e.currentTarget.removeAttribute('readonly');
+              // Date picker will open on click
+            }
+          }}
         />
       </div>
 

@@ -240,6 +240,13 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pr-12 pl-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              readOnly={isTablet}
+              onClick={(e) => {
+                if (isTablet && e.currentTarget.hasAttribute('readonly')) {
+                  e.currentTarget.removeAttribute('readonly');
+                  e.currentTarget.focus();
+                }
+              }}
             />
           </div>
         </div>
