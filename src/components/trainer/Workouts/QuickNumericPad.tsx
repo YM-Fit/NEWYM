@@ -11,6 +11,7 @@ interface QuickNumericPadProps {
   minValue?: number;
   maxValue?: number;
   compact?: boolean; // גרסה קטנה יותר לאימון זוגי
+  isTablet?: boolean;
 }
 
 export default function QuickNumericPad({
@@ -21,7 +22,8 @@ export default function QuickNumericPad({
   allowDecimal = false,
   minValue,
   maxValue,
-  compact = false
+  compact = false,
+  isTablet
 }: QuickNumericPadProps) {
   const [currentValue, setCurrentValue] = useState(value);
   const [inputValue, setInputValue] = useState(value.toString());
@@ -34,12 +36,12 @@ export default function QuickNumericPad({
   }, [value]);
 
   useEffect(() => {
-    // Focus input on mount
-    if (inputRef.current) {
+    // Focus input on mount only if not tablet
+    if (inputRef.current && !isTablet) {
       inputRef.current.focus();
       inputRef.current.select();
     }
-  }, []);
+  }, [isTablet]);
 
   const handleAdd = useCallback((amount: number, isAbsolute: boolean = false) => {
     setCurrentValue(prev => {
@@ -199,10 +201,17 @@ export default function QuickNumericPad({
             <input
               ref={inputRef}
               type="text"
-              inputMode="decimal"
+              inputMode={isTablet ? "none" : "decimal"}
               value={inputValue}
               onChange={handleInputChange}
               onBlur={handleInputBlur}
+              readOnly={isTablet}
+              onClick={(e) => {
+                if (isTablet && e.currentTarget.hasAttribute('readonly')) {
+                  e.currentTarget.removeAttribute('readonly');
+                  e.currentTarget.focus();
+                }
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();

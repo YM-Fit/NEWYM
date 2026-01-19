@@ -1011,6 +1011,7 @@ export default function WorkoutSession({
           allowDecimal={numericPad.field === 'weight'}
           minValue={numericPad.field === 'rpe' ? 1 : undefined}
           maxValue={numericPad.field === 'rpe' ? 10 : undefined}
+          isTablet={isTablet}
         />
       )}
 
@@ -1041,6 +1042,7 @@ export default function WorkoutSession({
           allowDecimal={supersetNumericPad.field === 'superset_weight'}
           minValue={supersetNumericPad.field === 'superset_rpe' ? 1 : undefined}
           maxValue={supersetNumericPad.field === 'superset_rpe' ? 10 : undefined}
+          isTablet={isTablet}
         />
       )}
 
@@ -1061,6 +1063,7 @@ export default function WorkoutSession({
           onConfirm={handleDropsetNumericPadConfirm}
           onClose={() => setDropsetNumericPad(null)}
           allowDecimal={dropsetNumericPad.field === 'dropset_weight'}
+          isTablet={isTablet}
         />
       )}
 
@@ -1071,6 +1074,7 @@ export default function WorkoutSession({
           onConfirm={handleSupersetDropsetNumericPadConfirm}
           onClose={() => setSupersetDropsetNumericPad(null)}
           allowDecimal={supersetDropsetNumericPad.field === 'superset_dropset_weight'}
+          isTablet={isTablet}
         />
       )}
 
