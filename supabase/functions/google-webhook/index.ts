@@ -318,6 +318,8 @@ async function processCalendarEvents(
       }
     } else if (!event.status || event.status !== "cancelled") {
       // Create new workout
+      // Mark as completed if the event date is in the past (event already happened)
+      const isPastEvent = startTime < new Date();
       if (traineeId) {
         const { data: newWorkout } = await supabase
           .from("workouts")
@@ -326,7 +328,7 @@ async function processCalendarEvents(
             workout_type: "personal",
             workout_date: startTime.toISOString().split("T")[0],
             notes: event.description || null,
-            is_completed: false,
+            is_completed: isPastEvent,
           })
           .select()
           .single();

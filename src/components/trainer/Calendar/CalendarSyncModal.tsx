@@ -261,29 +261,114 @@ export default function CalendarSyncModal({
         }
       }
 
-      // Save links to database
+      // Save links to database and create workouts
+      let workoutsCreated = 0;
       if (linksToSave.length > 0) {
-        const { error: insertError } = await supabase
-          .from('google_calendar_sync')
-          .upsert(linksToSave, { 
-            onConflict: 'google_event_id,google_calendar_id',
-            ignoreDuplicates: false 
-          });
+        // First, create workouts for each linked event and prepare sync records
+        const syncRecordsWithWorkouts: Array<{
+          trainer_id: string;
+          trainee_id: string;
+          workout_id: string;
+          google_event_id: string;
+          google_calendar_id: string;
+          sync_status: 'synced';
+          sync_direction: 'from_google';
+          event_start_time: string;
+          event_end_time: string | null;
+          event_summary: string;
+          event_description: string | null;
+          last_synced_at: string;
+        }> = [];
 
-        if (insertError) {
-          throw new Error(insertError.message);
-        }
-
-        // Update google_calendar_clients for each linked event
-        // Group by trainee_id to update all events for the same client
-        const clientUpdates = new Map<string, { traineeId: string; eventIds: string[] }>();
-        
         for (const link of linksToSave) {
-          // Get event details to extract client identifier
+          // Get event details
           const matchedEvent = matchedEvents.find(e => e.event.id === link.google_event_id);
           if (!matchedEvent) continue;
 
-          // Extract client identifier (email or name)
+          const startTime = new Date(matchedEvent.event.start?.dateTime || matchedEvent.event.start?.date || new Date());
+          const endTime = matchedEvent.event.end?.dateTime || matchedEvent.event.end?.date || null;
+          const eventDate = new Date(startTime);
+          const isPastEvent = eventDate < new Date();
+
+          // Check if workout already exists for this event
+          const { data: existingSync } = await supabase
+            .from('google_calendar_sync')
+            .select('workout_id')
+            .eq('google_event_id', link.google_event_id)
+            .eq('google_calendar_id', link.google_calendar_id)
+            .maybeSingle();
+
+          let workoutId = existingSync?.workout_id;
+
+          if (!workoutId) {
+            // Create new workout for this event
+            // Mark as completed if the event date is in the past (event already happened)
+            const { data: newWorkout, error: workoutError } = await supabase
+              .from('workouts')
+              .insert({
+                trainer_id: user.id,
+                workout_type: 'personal',
+                workout_date: startTime.toISOString().split('T')[0],
+                notes: matchedEvent.event.description || null,
+                is_completed: isPastEvent, // Mark as completed if the event date is in the past
+              })
+              .select()
+              .single();
+
+            if (workoutError || !newWorkout) {
+              logger.error('Error creating workout for calendar event', workoutError, 'CalendarSyncModal');
+              continue;
+            }
+
+            workoutId = newWorkout.id;
+            workoutsCreated++;
+
+            // Link workout to trainee
+            await supabase
+              .from('workout_trainees')
+              .insert({
+                workout_id: newWorkout.id,
+                trainee_id: link.trainee_id,
+              });
+          }
+
+          syncRecordsWithWorkouts.push({
+            trainer_id: link.trainer_id,
+            trainee_id: link.trainee_id,
+            workout_id: workoutId,
+            google_event_id: link.google_event_id,
+            google_calendar_id: link.google_calendar_id,
+            sync_status: 'synced',
+            sync_direction: 'from_google',
+            event_start_time: startTime.toISOString(),
+            event_end_time: endTime ? new Date(endTime).toISOString() : null,
+            event_summary: link.event_summary,
+            event_description: matchedEvent.event.description || null,
+            last_synced_at: new Date().toISOString(),
+          });
+        }
+
+        // Save sync records with workout_ids
+        if (syncRecordsWithWorkouts.length > 0) {
+          const { error: insertError } = await supabase
+            .from('google_calendar_sync')
+            .upsert(syncRecordsWithWorkouts, { 
+              onConflict: 'google_event_id,google_calendar_id',
+              ignoreDuplicates: false 
+            });
+
+          if (insertError) {
+            throw new Error(insertError.message);
+          }
+        }
+
+        // Update google_calendar_clients for each linked event
+        const clientUpdates = new Map<string, { traineeId: string; eventIds: string[] }>();
+        
+        for (const link of linksToSave) {
+          const matchedEvent = matchedEvents.find(e => e.event.id === link.google_event_id);
+          if (!matchedEvent) continue;
+
           const clientIdentifier = matchedEvent.event.attendees?.find((a: any) => !a.organizer)?.email 
             || matchedEvent.event.attendees?.find((a: any) => !a.organizer)?.displayName
             || matchedEvent.event.extractedName
@@ -302,7 +387,6 @@ export default function CalendarSyncModal({
         for (const [key, { traineeId, eventIds }] of clientUpdates.entries()) {
           const [, clientIdentifier] = key.split(':');
           
-          // Find existing client or create new one
           const { data: existingClient } = await supabase
             .from('google_calendar_clients')
             .select('id, trainee_id')
@@ -311,7 +395,6 @@ export default function CalendarSyncModal({
             .maybeSingle();
 
           if (existingClient) {
-            // Update existing client with trainee_id if not set
             if (!existingClient.trainee_id) {
               await supabase
                 .from('google_calendar_clients')
@@ -319,7 +402,6 @@ export default function CalendarSyncModal({
                 .eq('id', existingClient.id);
             }
           } else {
-            // Create new client
             const firstEvent = matchedEvents.find(e => eventIds.includes(e.event.id));
             if (firstEvent) {
               const eventDate = new Date(firstEvent.event.start?.dateTime || firstEvent.event.start?.date || new Date());
@@ -362,10 +444,17 @@ export default function CalendarSyncModal({
       const savedCount = linksToSave.length;
       const createCount = traineesToCreate.length;
       
-      if (savedCount > 0 || createCount > 0) {
+      if (savedCount > 0 || createCount > 0 || workoutsCreated > 0) {
         let message = '';
-        if (savedCount > 0) message += `${savedCount} אירועים קושרו`;
-        if (createCount > 0) message += `${message ? ', ' : ''}${createCount} מתאמנים חדשים להוספה`;
+        if (savedCount > 0) {
+          message += `${savedCount} אירועים קושרו`;
+          if (workoutsCreated > 0) {
+            message += ` (${workoutsCreated} אימונים נוצרו)`;
+          }
+        }
+        if (createCount > 0) {
+          message += `${message ? ', ' : ''}${createCount} מתאמנים חדשים להוספה`;
+        }
         toast.success(message);
       }
 
