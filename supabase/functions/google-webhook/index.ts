@@ -234,14 +234,33 @@ async function processCalendarEvents(
     // Extract trainee name and email from event
     const traineeName = extractTraineeName(event);
     const traineeEmail = extractEmail(event);
+    const clientIdentifier = extractClientIdentifier(event);
     
-    if (!traineeName && !traineeEmail) continue;
+    if (!traineeName && !traineeEmail && !clientIdentifier) continue;
 
     // Find trainee with improved matching logic
     let traineeId: string | null = null;
     
-    // First, try to match by email (most accurate)
-    if (traineeEmail) {
+    // FIRST: Check if this calendar client is already linked to a trainee
+    // This allows automatic linking of future events after manual link once
+    if (clientIdentifier) {
+      const { data: existingClient } = await supabase
+        .from("google_calendar_clients")
+        .select("trainee_id")
+        .eq("trainer_id", trainerId)
+        .eq("google_client_identifier", clientIdentifier)
+        .not("trainee_id", "is", null)
+        .maybeSingle();
+      
+      if (existingClient && existingClient.trainee_id) {
+        // Use the already linked trainee
+        traineeId = existingClient.trainee_id;
+        console.log(`Using previously linked trainee for client: ${clientIdentifier} -> ${traineeId}`);
+      }
+    }
+    
+    // If not found via existing client link, try to match by email (most accurate)
+    if (!traineeId && traineeEmail) {
       const { data: traineeByEmail } = await supabase
         .from("trainees")
         .select("id")
@@ -285,6 +304,8 @@ async function processCalendarEvents(
             `Multiple trainees found for name "${traineeName}": ${partialMatches.map(t => t.full_name).join(", ")}. ` +
             `Skipping auto-association to prevent incorrect matching.`
           );
+          // Update calendar client without trainee_id for manual linking
+          await updateCalendarClient(trainerId, null, event, supabase);
           continue; // Skip this event to avoid wrong association
         }
       }

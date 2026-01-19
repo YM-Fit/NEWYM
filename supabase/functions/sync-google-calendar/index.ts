@@ -162,14 +162,33 @@ async function syncTrainerCalendar(
     // Extract trainee information
     const traineeName = extractTraineeName(event);
     const traineeEmail = extractEmail(event);
+    const clientIdentifier = extractClientIdentifier(event);
     
-    if (!traineeName && !traineeEmail) continue;
+    if (!traineeName && !traineeEmail && !clientIdentifier) continue;
 
     // Find trainee with improved matching logic
     let trainee: { id: string } | null = null;
     
-    // First, try to match by email (most accurate)
-    if (traineeEmail) {
+    // FIRST: Check if this calendar client is already linked to a trainee
+    // This allows automatic linking of future events after manual link once
+    if (clientIdentifier) {
+      const { data: existingClient } = await supabase
+        .from("google_calendar_clients")
+        .select("trainee_id")
+        .eq("trainer_id", trainerId)
+        .eq("google_client_identifier", clientIdentifier)
+        .not("trainee_id", "is", null)
+        .maybeSingle();
+      
+      if (existingClient && existingClient.trainee_id) {
+        // Use the already linked trainee
+        trainee = { id: existingClient.trainee_id };
+        console.log(`Using previously linked trainee for client: ${clientIdentifier} -> ${trainee.id}`);
+      }
+    }
+    
+    // If not found via existing client link, try to match by email (most accurate)
+    if (!trainee && traineeEmail) {
       const { data: traineeByEmail } = await supabase
         .from("trainees")
         .select("id")
