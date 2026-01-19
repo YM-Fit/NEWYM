@@ -78,25 +78,40 @@ export default function CalendarSyncModal({
       end.setDate(0);
       end.setHours(23, 59, 59, 999);
 
-      // Fetch events
-      const result = await getGoogleCalendarEvents(user.id, { start, end });
+      // Fetch events DIRECTLY from Google Calendar (not from cache)
+      // This ensures we see ALL events including ones not yet synced
+      const result = await getGoogleCalendarEvents(user.id, { start, end }, { 
+        useCache: false, 
+        forceRefresh: true 
+      });
+      
+      console.log('📅 CalendarSync - Events from Google:', result.data?.length || 0, result.data?.map(e => e.summary));
       
       if (!result.success || !result.data) {
         setError(result.error || 'שגיאה בטעינת אירועים');
         return;
       }
 
-      // Get existing synced events to avoid re-processing
+      // Get existing synced events - we only filter out events that ALREADY have a trainee linked
       const { data: existingSyncs } = await supabase
         .from('google_calendar_sync')
         .select('google_event_id, trainee_id')
         .eq('trainer_id', user.id)
         .in('google_event_id', result.data.map(e => e.id));
 
-      const syncedEventIds = new Set(existingSyncs?.map(s => s.google_event_id) || []);
+      console.log('📅 CalendarSync - Existing syncs with trainee:', existingSyncs?.filter(s => s.trainee_id).length || 0);
 
-      // Filter out already-synced events
-      const unprocessedEvents = result.data.filter(e => !syncedEventIds.has(e.id));
+      // Only filter out events that already have a trainee_id assigned
+      const linkedEventIds = new Set(
+        (existingSyncs || [])
+          .filter(s => s.trainee_id !== null)
+          .map(s => s.google_event_id)
+      );
+
+      // Show events that don't have a trainee linked yet
+      const unprocessedEvents = result.data.filter(e => !linkedEventIds.has(e.id));
+
+      console.log('📅 CalendarSync - Unprocessed events:', unprocessedEvents.length, unprocessedEvents.map(e => e.summary));
 
       if (unprocessedEvents.length === 0) {
         setMatchedEvents([]);
