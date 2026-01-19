@@ -1,35 +1,44 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { Home, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { supabase, logSupabaseError } from '../../lib/supabase';
+import { logger } from '../../utils/logger';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
 import { useGlobalScaleListener, IdentifiedReading } from '../../hooks/useGlobalScaleListener';
 import { ScaleReading } from '../../hooks/useScaleListener';
+import { useTraineeData } from '../../hooks/useTraineeData';
 import Header from '../layout/Header';
 import Sidebar from '../layout/Sidebar';
 import MobileSidebar from '../layout/MobileSidebar';
-import Dashboard from './Dashboard/Dashboard';
-import TraineesList from './Trainees/TraineesList';
-import TraineeProfile from './Trainees/TraineeProfile';
-import AddTraineeForm from './Trainees/AddTraineeForm';
-import EditTraineeForm from './Trainees/EditTraineeForm';
-import WorkoutSession from './Workouts/WorkoutSession';
-import WorkoutsList from './Workouts/WorkoutsList';
-import WorkoutDetails from './Workouts/WorkoutDetails';
-import WorkoutProgress from './Workouts/WorkoutProgress';
-import WorkoutTypeSelection from './Workouts/WorkoutTypeSelection';
-import PairWorkoutSession from './Workouts/PairWorkoutSession';
-import MeasurementForm from './Measurements/MeasurementForm';
-import MeasurementsView from './Measurements/MeasurementsView';
-import WorkoutPlanBuilder from './WorkoutPlans/WorkoutPlanBuilder';
-import MealPlanBuilder from './MealPlans/MealPlanBuilder';
-import TraineeAccessManager from './Trainees/TraineeAccessManager';
-import MentalToolsEditor from './MentalTools/MentalToolsEditor';
-import ToolsView from './Tools/ToolsView';
-import TraineeFoodDiaryView from './Trainees/TraineeFoodDiaryView';
-import CardioManager from './Cardio/CardioManager';
-import ReportsView from './Reports/ReportsView';
-import WeeklyTasksManager from './Tasks/WeeklyTasksManager';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
+
+// Lazy load heavy components - including main views for better code splitting
+const Dashboard = lazy(() => import('./Dashboard/Dashboard'));
+const TraineesList = lazy(() => import('./Trainees/TraineesList'));
+const TraineeProfile = lazy(() => import('./Trainees/TraineeProfile'));
+const AddTraineeForm = lazy(() => import('./Trainees/AddTraineeForm'));
+const EditTraineeForm = lazy(() => import('./Trainees/EditTraineeForm'));
+const WorkoutSession = lazy(() => import('./Workouts/WorkoutSession'));
+const WorkoutsList = lazy(() => import('./Workouts/WorkoutsList'));
+const WorkoutDetails = lazy(() => import('./Workouts/WorkoutDetails'));
+const WorkoutProgress = lazy(() => import('./Workouts/WorkoutProgress'));
+const WorkoutTypeSelection = lazy(() => import('./Workouts/WorkoutTypeSelection'));
+const PairWorkoutSession = lazy(() => import('./Workouts/PairWorkoutSession'));
+const MeasurementForm = lazy(() => import('./Measurements/MeasurementForm'));
+const MeasurementsView = lazy(() => import('./Measurements/MeasurementsView'));
+const WorkoutPlanBuilder = lazy(() => import('./WorkoutPlans/WorkoutPlanBuilder'));
+const MealPlanBuilder = lazy(() => import('./MealPlans/MealPlanBuilder'));
+const TraineeAccessManager = lazy(() => import('./Trainees/TraineeAccessManager'));
+const MentalToolsEditor = lazy(() => import('./MentalTools/MentalToolsEditor'));
+const CalendarView = lazy(() => import('./Calendar/CalendarView'));
+const ToolsView = lazy(() => import('./Tools/ToolsView'));
+const TraineeFoodDiaryView = lazy(() => import('./Trainees/TraineeFoodDiaryView'));
+const CardioManager = lazy(() => import('./Cardio/CardioManager'));
+const ReportsView = lazy(() => import('./Reports/ReportsView'));
+// Settings & Management Components
+const HealthCheckView = lazy(() => import('../settings/HealthCheckView'));
+const ErrorReportingSettings = lazy(() => import('../settings/ErrorReportingSettings'));
 
 interface Trainee {
   id: string;
@@ -39,7 +48,6 @@ interface Trainee {
   gender: 'male' | 'female' | null;
   birth_date: string | null;
   height: number | null;
-  status: 'active' | 'inactive' | 'vacation' | 'new';
   start_date: string;
   notes: string;
   is_pair?: boolean;
@@ -57,14 +65,21 @@ interface Trainee {
   pair_height_2?: number;
 }
 
-export default function TrainerApp() {
+interface TrainerAppProps {
+  isTablet?: boolean;
+}
+
+export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const { signOut, user } = useAuth();
+  const { handleError } = useErrorHandler();
+  const { loadTraineeData } = useTraineeData();
   const [activeView, setActiveView] = useState('dashboard');
   const [selectedTrainee, setSelectedTrainee] = useState<Trainee | null>(null);
   const [selectedWorkout, setSelectedWorkout] = useState<any | null>(null);
   const [editingMeasurement, setEditingMeasurement] = useState<any | null>(null);
   const [selectedPairMember, setSelectedPairMember] = useState<'member_1' | 'member_2' | null>(null);
   const [trainees, setTrainees] = useState<Trainee[]>([]);
+  const [initialTraineeName, setInitialTraineeName] = useState<string | undefined>(undefined);
   const [measurements, setMeasurements] = useState<any[]>([]);
   const [workouts, setWorkouts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -198,13 +213,13 @@ export default function TrainerApp() {
         });
 
       if (measurementError) {
-        console.error('Error saving measurement:', measurementError);
+        logger.error('Error saving measurement:', measurementError, 'TrainerApp');
         toast.error('שגיאה בשמירת המדידה');
         return false;
       }
 
       if (reading.notes) {
-        await supabase
+        const { error: notesError } = await supabase
           .from('scale_readings')
           .update({
             notes: reading.notes,
@@ -212,7 +227,7 @@ export default function TrainerApp() {
           .eq('id', reading.id);
       }
 
-      await supabase
+      const { error: traineeUpdateError } = await supabase
         .from('trainees')
         .update({
           last_known_weight: reading.weight_kg,
@@ -223,7 +238,7 @@ export default function TrainerApp() {
       toast.success(`המדידה נשמרה עבור ${traineeName}`);
       return true;
     } catch (err) {
-      console.error('Error in handleSaveScaleMeasurement:', err);
+      logger.error('Error in handleSaveScaleMeasurement:', err, 'TrainerApp');
       toast.error('שגיאה בשמירת המדידה');
       return false;
     }
@@ -259,7 +274,7 @@ export default function TrainerApp() {
     if (!error && data) {
       setTrainees(data);
     } else if (error) {
-      console.error('Error loading trainees:', error);
+      logger.error('Error loading trainees:', error, 'TrainerApp');
     }
   }, [user?.id]);
 
@@ -280,7 +295,7 @@ export default function TrainerApp() {
   const loadUnseenWeightsCounts = useCallback(async () => {
     if (!user) return;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('trainee_self_weights')
       .select('trainee_id')
       .eq('is_seen_by_trainer', false);
@@ -295,7 +310,7 @@ export default function TrainerApp() {
   }, [user?.id]);
 
   const loadSelfWeights = useCallback(async (traineeId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('trainee_self_weights')
       .select('*')
       .eq('trainee_id', traineeId)
@@ -305,187 +320,6 @@ export default function TrainerApp() {
       setSelfWeights(data);
     }
   }, []);
-
-  const markSelfWeightsSeen = async () => {
-    if (!selectedTrainee) return;
-
-    await supabase
-      .from('trainee_self_weights')
-      .update({ is_seen_by_trainer: true })
-      .eq('trainee_id', selectedTrainee.id)
-      .eq('is_seen_by_trainer', false);
-
-    await loadSelfWeights(selectedTrainee.id);
-    await loadUnseenWeightsCounts();
-  };
-
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
-
-  const toggleHeader = () => {
-    setHeaderCollapsed(!headerCollapsed);
-  };
-
-  const toggleMobileSidebar = () => {
-    setMobileSidebarOpen(!mobileSidebarOpen);
-  };
-
-  const convertTraineeToDisplayFormat = useCallback((trainee: Trainee) => {
-    return {
-      id: trainee.id,
-      name: trainee.full_name,
-      email: trainee.email || '',
-      phone: trainee.phone || '',
-      age: trainee.birth_date ? new Date().getFullYear() - new Date(trainee.birth_date).getFullYear() : 0,
-      gender: (trainee.gender || 'male') as 'male' | 'female',
-      height: trainee.height || 0,
-      startDate: trainee.start_date,
-      status: trainee.status,
-      notes: trainee.notes || '',
-      isPair: trainee.is_pair || false,
-      pairName1: trainee.pair_name_1,
-      pairName2: trainee.pair_name_2,
-      pairPhone1: trainee.pair_phone_1,
-      pairPhone2: trainee.pair_phone_2,
-      pairEmail1: trainee.pair_email_1,
-      pairEmail2: trainee.pair_email_2,
-      pairGender1: trainee.pair_gender_1,
-      pairGender2: trainee.pair_gender_2,
-      pairBirthDate1: trainee.pair_birth_date_1,
-      pairBirthDate2: trainee.pair_birth_date_2,
-      pairHeight1: trainee.pair_height_1,
-      pairHeight2: trainee.pair_height_2,
-    };
-  }, []);
-
-  const handleViewChange = (view: string) => {
-    setActiveView(view);
-    if (!['trainee-profile', 'workout-session', 'measurement-form', 'measurements-view'].includes(view)) {
-      setSelectedTrainee(null);
-    }
-  };
-
-  const handleTraineeClick = useCallback(async (trainee: Trainee) => {
-    setSelectedTrainee(trainee);
-    setActiveView('trainee-profile');
-    // Load all data in parallel for better performance
-    await Promise.all([
-      loadMeasurements(trainee.id),
-      loadWorkouts(trainee.id),
-      loadSelfWeights(trainee.id),
-    ]);
-  }, [loadMeasurements, loadWorkouts, loadSelfWeights]);
-
-  const handleNavigateToTrainee = useCallback(async (traineeId: string, tab?: string) => {
-    const trainee = trainees.find(t => t.id === traineeId);
-    if (!trainee) return;
-
-    setSelectedTrainee(trainee);
-    // Load all data in parallel for better performance
-    await Promise.all([
-      loadMeasurements(trainee.id),
-      loadWorkouts(trainee.id),
-      loadSelfWeights(trainee.id),
-    ]);
-
-    if (tab === 'food_diary') {
-      setActiveView('food-diary');
-    } else {
-      setActiveView('trainee-profile');
-    }
-  }, [trainees, loadMeasurements, loadWorkouts, loadSelfWeights]);
-
-  const handleAddTrainee = () => {
-    setActiveView('add-trainee');
-  };
-
-  const handleSaveTrainee = async (traineeData: any) => {
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('trainees')
-      .insert([
-        {
-          trainer_id: user.id,
-          ...traineeData,
-        },
-      ])
-      .select()
-      .single();
-
-    if (!error && data) {
-      setTrainees((prev) => [data, ...prev]);
-      setActiveView('trainees');
-    }
-  };
-
-  const handleDeleteTrainee = async (traineeId: string) => {
-    // Use a more professional confirmation dialog
-    const confirmed = window.confirm('האם אתה בטוח שברצונך למחוק מתאמן זה? הפעולה אינה ניתנת לביטול!');
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('trainees')
-        .delete()
-        .eq('id', traineeId);
-
-      if (!error) {
-        setTrainees((prev) => prev.filter(t => t.id !== traineeId));
-        setActiveView('trainees');
-        setSelectedTrainee(null);
-        toast.success('המתאמן נמחק בהצלחה');
-      } else {
-        throw error;
-      }
-    } catch (err) {
-      console.error('Error deleting trainee:', err);
-      toast.error('שגיאה במחיקת המתאמן');
-    }
-  };
-
-  const handleNewWorkout = (trainee: Trainee) => {
-    setSelectedTrainee(trainee);
-    if (trainee.is_pair) {
-      setActiveView('workout-type-selection');
-    } else {
-      setActiveView('workout-session');
-    }
-  };
-
-  const handleSelectPersonalWorkout = (memberIndex: 1 | 2) => {
-    setSelectedPairMember(memberIndex === 1 ? 'member_1' : 'member_2');
-    setActiveView('workout-session');
-  };
-
-  const handleSelectPairWorkout = () => {
-    setActiveView('pair-workout-session');
-  };
-
-  const handleNewMeasurement = (trainee: Trainee) => {
-    setSelectedTrainee(trainee);
-    setEditingMeasurement(null);
-    setActiveView('measurement-form');
-  };
-
-  const handleEditMeasurement = (measurement: any) => {
-    setEditingMeasurement(measurement);
-    setActiveView('measurement-form');
-  };
-
-  const handleViewMeasurements = async (trainee: Trainee) => {
-    setSelectedTrainee(trainee);
-    setActiveView('measurements-view');
-    await loadMeasurements(trainee.id);
-  };
-
-  const handleViewProgress = (trainee: Trainee) => {
-    setSelectedTrainee(trainee);
-    setActiveView('workout-progress');
-  };
 
   const loadMeasurements = useCallback(async (traineeId: string) => {
     const { data, error } = await supabase
@@ -603,6 +437,186 @@ export default function TrainerApp() {
       setWorkouts([]);
     }
   }, []);
+
+  const markSelfWeightsSeen = async () => {
+    if (!selectedTrainee) return;
+
+    await supabase
+      .from('trainee_self_weights')
+      .update({ is_seen_by_trainer: true })
+      .eq('trainee_id', selectedTrainee.id)
+      .eq('is_seen_by_trainer', false);
+
+    await loadSelfWeights(selectedTrainee.id);
+    await loadUnseenWeightsCounts();
+  };
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
+
+  const toggleHeader = () => {
+    setHeaderCollapsed(!headerCollapsed);
+  };
+
+  const toggleMobileSidebar = () => {
+    setMobileSidebarOpen(!mobileSidebarOpen);
+  };
+
+  const convertTraineeToDisplayFormat = useCallback((trainee: Trainee) => {
+    return {
+      id: trainee.id,
+      name: trainee.full_name,
+      email: trainee.email || '',
+      phone: trainee.phone || '',
+      age: trainee.birth_date ? new Date().getFullYear() - new Date(trainee.birth_date).getFullYear() : 0,
+      gender: (trainee.gender || 'male') as 'male' | 'female',
+      height: trainee.height || 0,
+      startDate: trainee.start_date,
+      notes: trainee.notes || '',
+      isPair: trainee.is_pair || false,
+      pairName1: trainee.pair_name_1,
+      pairName2: trainee.pair_name_2,
+      pairPhone1: trainee.pair_phone_1,
+      pairPhone2: trainee.pair_phone_2,
+      pairEmail1: trainee.pair_email_1,
+      pairEmail2: trainee.pair_email_2,
+      pairGender1: trainee.pair_gender_1,
+      pairGender2: trainee.pair_gender_2,
+      pairBirthDate1: trainee.pair_birth_date_1,
+      pairBirthDate2: trainee.pair_birth_date_2,
+      pairHeight1: trainee.pair_height_1,
+      pairHeight2: trainee.pair_height_2,
+    };
+  }, []);
+
+  const handleViewChange = (view: string) => {
+    setActiveView(view);
+    if (!['trainee-profile', 'workout-session', 'measurement-form', 'measurements-view'].includes(view)) {
+      setSelectedTrainee(null);
+    }
+  };
+
+  const handleTraineeClick = useCallback(async (trainee: Trainee) => {
+    setSelectedTrainee(trainee);
+    setActiveView('trainee-profile');
+    // Load all data in parallel for better performance
+    await Promise.all([
+      loadMeasurements(trainee.id),
+      loadWorkouts(trainee.id),
+      loadSelfWeights(trainee.id),
+    ]);
+  }, [loadMeasurements, loadWorkouts, loadSelfWeights]);
+
+  const handleNavigateToTrainee = useCallback(async (traineeId: string, tab?: string) => {
+    const trainee = trainees.find(t => t.id === traineeId);
+    if (!trainee) return;
+
+    setSelectedTrainee(trainee);
+    // Load all data in parallel for better performance
+    await Promise.all([
+      loadMeasurements(trainee.id),
+      loadWorkouts(trainee.id),
+      loadSelfWeights(trainee.id),
+    ]);
+
+    if (tab === 'food_diary') {
+      setActiveView('food-diary');
+    } else {
+      setActiveView('trainee-profile');
+    }
+  }, [trainees, loadMeasurements, loadWorkouts, loadSelfWeights]);
+
+  const handleAddTrainee = () => {
+    setActiveView('add-trainee');
+  };
+
+  const handleSaveTrainee = async (traineeData: any) => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('trainees')
+      .insert([
+        {
+          trainer_id: user.id,
+          ...traineeData,
+        },
+      ])
+      .select()
+      .single();
+
+    if (!error && data) {
+      setTrainees((prev) => [data, ...prev]);
+      setActiveView('trainees');
+    }
+  };
+
+  const handleDeleteTrainee = async (traineeId: string) => {
+    // Use a more professional confirmation dialog
+    const confirmed = window.confirm('האם אתה בטוח שברצונך למחוק מתאמן זה? הפעולה אינה ניתנת לביטול!');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('trainees')
+        .delete()
+        .eq('id', traineeId);
+
+      if (!error) {
+        setTrainees((prev) => prev.filter(t => t.id !== traineeId));
+        setActiveView('trainees');
+        setSelectedTrainee(null);
+        toast.success('המתאמן נמחק בהצלחה');
+      } else {
+        throw error;
+      }
+    } catch (err) {
+      logger.error('Error deleting trainee:', err, 'TrainerApp');
+      toast.error('שגיאה במחיקת המתאמן');
+    }
+  };
+
+  const handleNewWorkout = (trainee: Trainee) => {
+    setSelectedTrainee(trainee);
+    if (trainee.is_pair) {
+      setActiveView('workout-type-selection');
+    } else {
+      setActiveView('workout-session');
+    }
+  };
+
+  const handleSelectPersonalWorkout = (memberIndex: 1 | 2) => {
+    setSelectedPairMember(memberIndex === 1 ? 'member_1' : 'member_2');
+    setActiveView('workout-session');
+  };
+
+  const handleSelectPairWorkout = () => {
+    setActiveView('pair-workout-session');
+  };
+
+  const handleNewMeasurement = (trainee: Trainee) => {
+    setSelectedTrainee(trainee);
+    setEditingMeasurement(null);
+    setActiveView('measurement-form');
+  };
+
+  const handleEditMeasurement = (measurement: any) => {
+    setEditingMeasurement(measurement);
+    setActiveView('measurement-form');
+  };
+
+  const handleViewMeasurements = async (trainee: Trainee) => {
+    setSelectedTrainee(trainee);
+    setActiveView('measurements-view');
+    await loadMeasurements(trainee.id);
+  };
+
+  const handleViewProgress = (trainee: Trainee) => {
+    setSelectedTrainee(trainee);
+    setActiveView('workout-progress');
+  };
 
   const handleBack = () => {
     setSelectedTrainee(null);
@@ -756,7 +770,13 @@ export default function TrainerApp() {
           set_type: set.set_type,
         }));
 
-        await supabase.from('exercise_sets').insert(setsToInsert);
+        const { error: setsError } = await supabase.from('exercise_sets').insert(setsToInsert);
+        if (setsError) {
+          logSupabaseError(setsError, 'TrainerApp.duplicateWorkout.exercise_sets', { 
+            table: 'exercise_sets',
+            workoutId: workout.id,
+          });
+        }
       }
     }
 
@@ -783,7 +803,7 @@ export default function TrainerApp() {
         throw error;
       }
     } catch (err) {
-      console.error('Error deleting workout:', err);
+      logger.error('Error deleting workout:', err, 'TrainerApp');
       toast.error('שגיאה במחיקת האימון');
     }
   };
@@ -805,7 +825,8 @@ export default function TrainerApp() {
     switch (activeView) {
       case 'dashboard':
         return (
-          <Dashboard
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <Dashboard
             onViewChange={handleViewChange}
             trainees={trainees}
             trainerName={trainerName}
@@ -821,21 +842,25 @@ export default function TrainerApp() {
             }}
             onSaveMeasurement={handleSaveScaleMeasurement}
           />
+          </Suspense>
         );
 
       case 'trainees':
         return (
-          <TraineesList
-            trainees={trainees}
-            onTraineeClick={handleTraineeClick}
-            onAddTrainee={handleAddTrainee}
-            unseenWeightsCounts={unseenWeightsCounts}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <TraineesList
+              trainees={trainees}
+              onTraineeClick={handleTraineeClick}
+              onAddTrainee={handleAddTrainee}
+              unseenWeightsCounts={unseenWeightsCounts}
+            />
+          </Suspense>
         );
 
       case 'trainee-profile':
         return selectedTrainee ? (
-          <TraineeProfile
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <TraineeProfile
             trainee={convertTraineeToDisplayFormat(selectedTrainee)}
             workouts={workouts}
             measurements={measurements}
@@ -857,221 +882,296 @@ export default function TrainerApp() {
             onMarkSelfWeightsSeen={markSelfWeightsSeen}
             onViewMentalTools={() => setActiveView('mental-tools')}
             onViewCardio={() => setActiveView('cardio-manager')}
-            onViewWeeklyTasks={() => setActiveView('weekly-tasks')}
           />
+          </Suspense>
         ) : null;
 
       case 'add-trainee':
         return (
-          <AddTraineeForm
-            onBack={() => setActiveView('trainees')}
-            onSave={handleSaveTrainee}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <AddTraineeForm
+              onBack={() => {
+                setInitialTraineeName(undefined);
+                setActiveView('trainees');
+              }}
+              onSave={(trainee) => {
+                setInitialTraineeName(undefined);
+                handleSaveTrainee(trainee);
+              }}
+              initialName={initialTraineeName}
+            />
+          </Suspense>
         );
 
       case 'edit-trainee':
         return selectedTrainee ? (
-          <EditTraineeForm
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            onBack={() => setActiveView('trainee-profile')}
-            onSave={async () => {
-              await loadTrainees();
-              await handleTraineeClick(selectedTrainee);
-              setActiveView('trainee-profile');
-            }}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <EditTraineeForm
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              onBack={() => setActiveView('trainee-profile')}
+              onSave={async () => {
+                await loadTrainees();
+                await handleTraineeClick(selectedTrainee);
+                setActiveView('trainee-profile');
+              }}
+            />
+          </Suspense>
         ) : null;
 
       case 'workout-type-selection':
         return selectedTrainee && selectedTrainee.is_pair ? (
-          <WorkoutTypeSelection
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            onSelectPersonal={handleSelectPersonalWorkout}
-            onSelectPair={handleSelectPairWorkout}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <WorkoutTypeSelection
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              onSelectPersonal={handleSelectPersonalWorkout}
+              onSelectPair={handleSelectPairWorkout}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'pair-workout-session':
         return selectedTrainee && selectedTrainee.is_pair ? (
-          <PairWorkoutSession
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            onBack={() => setActiveView('trainee-profile')}
-            onComplete={async (workoutData) => {
-              await loadWorkouts(selectedTrainee.id);
-              setActiveView('trainee-profile');
-            }}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <PairWorkoutSession
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              onBack={() => setActiveView('trainee-profile')}
+              onComplete={async (workoutData) => {
+                await loadWorkouts(selectedTrainee.id);
+                setActiveView('trainee-profile');
+              }}
+            />
+          </Suspense>
         ) : null;
 
       case 'workout-session':
         return selectedTrainee ? (
-          <WorkoutSession
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            initialSelectedMember={selectedPairMember}
-            onBack={() => {
-              if (selectedWorkout) {
-                setActiveView('workouts-list');
-              } else {
-                setActiveView('trainee-profile');
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <WorkoutSession
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              initialSelectedMember={selectedPairMember}
+              isTablet={isTablet}
+              onBack={() => {
+                if (selectedWorkout) {
+                  setActiveView('workouts-list');
+                } else {
+                  setActiveView('trainee-profile');
+                }
+                setSelectedPairMember(null);
+              }}
+              onSave={async (workout) => {
+                await loadWorkouts(selectedTrainee.id);
+                setSelectedWorkout(null);
+                setSelectedPairMember(null);
+                if (selectedWorkout) {
+                  setActiveView('workouts-list');
+                } else {
+                  setActiveView('trainee-profile');
+                }
+              }}
+              previousWorkout={undefined}
+              editingWorkout={
+                selectedWorkout
+                  ? {
+                      id: selectedWorkout.id,
+                      exercises: selectedWorkout.exercises || [],
+                    }
+                  : undefined
               }
-              setSelectedPairMember(null);
-            }}
-            onSave={async (workout) => {
-              await loadWorkouts(selectedTrainee.id);
-              setSelectedWorkout(null);
-              setSelectedPairMember(null);
-              if (selectedWorkout) {
-                setActiveView('workouts-list');
-              } else {
-                setActiveView('trainee-profile');
-              }
-            }}
-            previousWorkout={undefined}
-            editingWorkout={
-              selectedWorkout
-                ? {
-                    id: selectedWorkout.id,
-                    exercises: selectedWorkout.exercises || [],
-                  }
-                : undefined
-            }
-          />
+            />
+          </Suspense>
         ) : null;
 
       case 'measurement-form':
         return selectedTrainee ? (
-          <MeasurementForm
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            onBack={() => setActiveView('trainee-profile')}
-            onSave={async (measurement) => {
-              await loadMeasurements(selectedTrainee.id);
-              setEditingMeasurement(null);
-              setActiveView('measurements-view');
-            }}
-            previousMeasurement={undefined}
-            editingMeasurement={editingMeasurement}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <MeasurementForm
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              onBack={() => setActiveView('trainee-profile')}
+              onSave={async (measurement) => {
+                await loadMeasurements(selectedTrainee.id);
+                setEditingMeasurement(null);
+                setActiveView('measurements-view');
+              }}
+              previousMeasurement={undefined}
+              editingMeasurement={editingMeasurement}
+            />
+          </Suspense>
         ) : null;
 
       case 'measurements-view':
         return selectedTrainee ? (
-          <MeasurementsView
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            measurements={measurements}
-            onNewMeasurement={() => handleNewMeasurement(selectedTrainee)}
-            onEditMeasurement={handleEditMeasurement}
-            onMeasurementDeleted={() => loadMeasurements(selectedTrainee.id)}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <MeasurementsView
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              measurements={measurements}
+              onNewMeasurement={() => handleNewMeasurement(selectedTrainee)}
+              onEditMeasurement={handleEditMeasurement}
+              onMeasurementDeleted={() => loadMeasurements(selectedTrainee.id)}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'workouts-list':
         return selectedTrainee ? (
-          <WorkoutsList
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            workouts={workouts}
-            onBack={() => {
-              setActiveView('trainee-profile');
-              handleTraineeClick(selectedTrainee);
-            }}
-            onViewWorkout={handleViewWorkout}
-            onEditWorkout={handleEditWorkout}
-            onDuplicateWorkout={handleDuplicateWorkout}
-            onWorkoutsUpdated={() => loadWorkouts(selectedTrainee.id)}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <WorkoutsList
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              workouts={workouts}
+              onBack={() => {
+                setActiveView('trainee-profile');
+                handleTraineeClick(selectedTrainee);
+              }}
+              onViewWorkout={handleViewWorkout}
+              onEditWorkout={handleEditWorkout}
+              onDuplicateWorkout={handleDuplicateWorkout}
+              onWorkoutsUpdated={() => loadWorkouts(selectedTrainee.id)}
+            />
+          </Suspense>
         ) : null;
 
       case 'workout-details':
         return selectedTrainee && selectedWorkout ? (
-          <WorkoutDetails
-            workoutId={selectedWorkout.id}
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            onBack={() => setActiveView('workouts-list')}
-            onEdit={() => handleEditWorkout(selectedWorkout)}
-            onDuplicate={() => handleDuplicateWorkout(selectedWorkout)}
-            onDelete={() => handleDeleteWorkout(selectedWorkout.id)}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <WorkoutDetails
+              workoutId={selectedWorkout.id}
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              onBack={() => setActiveView('workouts-list')}
+              onEdit={() => handleEditWorkout(selectedWorkout)}
+              onDuplicate={() => handleDuplicateWorkout(selectedWorkout)}
+              onDelete={() => handleDeleteWorkout(selectedWorkout.id)}
+            />
+          </Suspense>
         ) : null;
 
       case 'workout-progress':
         return selectedTrainee ? (
-          <WorkoutProgress
-            trainee={convertTraineeToDisplayFormat(selectedTrainee)}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <WorkoutProgress
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'workout-plans':
         return selectedTrainee ? (
-          <WorkoutPlanBuilder
-            traineeId={selectedTrainee.id}
-            traineeName={selectedTrainee.full_name}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <WorkoutPlanBuilder
+              traineeId={selectedTrainee.id}
+              traineeName={selectedTrainee.full_name}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'meal-plans':
         return selectedTrainee && user ? (
-          <MealPlanBuilder
-            traineeId={selectedTrainee.id}
-            traineeName={selectedTrainee.full_name}
-            trainerId={user.id}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <MealPlanBuilder
+              traineeId={selectedTrainee.id}
+              traineeName={selectedTrainee.full_name}
+              trainerId={user.id}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'trainee-access':
         return selectedTrainee ? (
-          <TraineeAccessManager
-            traineeId={selectedTrainee.id}
-            traineeName={selectedTrainee.full_name}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <TraineeAccessManager
+              traineeId={selectedTrainee.id}
+              traineeName={selectedTrainee.full_name}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'mental-tools':
         return selectedTrainee ? (
-          <MentalToolsEditor
-            traineeId={selectedTrainee.id}
-            traineeName={selectedTrainee.full_name}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <MentalToolsEditor
+              traineeId={selectedTrainee.id}
+              traineeName={selectedTrainee.full_name}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'food-diary':
         return selectedTrainee ? (
-          <TraineeFoodDiaryView
-            traineeId={selectedTrainee.id}
-            traineeName={selectedTrainee.full_name}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <TraineeFoodDiaryView
+              traineeId={selectedTrainee.id}
+              traineeName={selectedTrainee.full_name}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
 
       case 'cardio-manager':
         return selectedTrainee && user ? (
-          <CardioManager
-            traineeId={selectedTrainee.id}
-            trainerId={user.id}
-            traineeName={selectedTrainee.full_name}
-            onBack={() => setActiveView('trainee-profile')}
-          />
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <CardioManager
+              traineeId={selectedTrainee.id}
+              trainerId={user.id}
+              traineeName={selectedTrainee.full_name}
+              onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
         ) : null;
+
+      case 'calendar':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <CalendarView
+              onEventClick={(event) => {
+                // TODO: Handle event click - could open workout or create new one
+                toast(`אירוע: ${event.summary}`, { icon: '📅' });
+              }}
+              onCreateWorkout={() => {
+                setActiveView('trainees');
+                toast('בחר מתאמן ליצירת אימון חדש', { icon: '💪' });
+              }}
+              onCreateTrainee={(name) => {
+                setInitialTraineeName(name);
+                setActiveView('add-trainee');
+                toast(`יוצר כרטיס מתאמן חדש: ${name}`, { icon: '👤' });
+              }}
+            />
+          </Suspense>
+        );
 
       case 'tools':
-        return <ToolsView />;
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <ToolsView />
+          </Suspense>
+        );
 
       case 'reports':
-        return <ReportsView />;
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <ReportsView />
+          </Suspense>
+        );
 
-      case 'weekly-tasks':
-        return selectedTrainee && user ? (
-          <WeeklyTasksManager
-            traineeId={selectedTrainee.id}
-            traineeName={selectedTrainee.full_name}
-            onBack={() => setActiveView('trainee-profile')}
-          />
-        ) : null;
+      // Settings & Management Views
+      case 'health-check':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <HealthCheckView />
+          </Suspense>
+        );
+
+      case 'error-reporting':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <ErrorReportingSettings />
+          </Suspense>
+        );
 
       default:
         return (
@@ -1089,86 +1189,107 @@ export default function TrainerApp() {
   const showCollapseControls = isWorkoutSession;
 
   return (
-    <div className="min-h-screen flex touch-manipulation" dir="rtl">
-      {/* Desktop Sidebar */}
-      {!sidebarCollapsed && (
-        <Sidebar
-          activeView={activeView}
-          onViewChange={handleViewChange}
-          collapsed={sidebarCollapsed}
-        />
-      )}
-
-      {/* Mobile Sidebar */}
-      <MobileSidebar
-        isOpen={mobileSidebarOpen}
-        onClose={() => setMobileSidebarOpen(false)}
-        activeView={activeView}
-        onViewChange={handleViewChange}
-      />
-
-      <div className="flex-1 flex flex-col pb-20 md:pb-0">
-        {!headerCollapsed && (
-          <Header
-            onLogout={signOut}
-            trainerName={trainerName}
-            collapsed={headerCollapsed}
-            onNavigateToTrainee={handleNavigateToTrainee}
-            onToggleSidebar={toggleMobileSidebar}
+      <div
+        className={`min-h-screen flex touch-manipulation ${isTablet ? 'tablet' : ''}`}
+        dir="rtl"
+      >
+        {/* Desktop Sidebar */}
+        {!sidebarCollapsed && (
+          <Sidebar
+            activeView={activeView}
+            onViewChange={handleViewChange}
+            collapsed={sidebarCollapsed}
           />
         )}
 
-        <main className={`flex-1 overflow-auto ${headerCollapsed ? 'p-2' : 'p-3 md:p-6'}`}>
-          {showCollapseControls && (
-            <div className="hidden lg:flex gap-3 mb-4 justify-end">
-              <button
-                type="button"
-                onClick={() => setHeaderCollapsed(!headerCollapsed)}
-                className="btn-glass px-4 py-2 rounded-xl text-sm font-medium"
-              >
-                {headerCollapsed ? 'הצג כותרת' : 'הסתר כותרת'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="btn-glass px-4 py-2 rounded-xl text-sm font-medium"
-              >
-                {sidebarCollapsed ? 'הצג תפריט' : 'הסתר תפריט'}
-              </button>
-            </div>
-          )}
-          {renderMainContent()}
-        </main>
+        {/* Mobile Sidebar */}
+        <MobileSidebar
+          isOpen={mobileSidebarOpen}
+          onClose={() => setMobileSidebarOpen(false)}
+          activeView={activeView}
+          onViewChange={handleViewChange}
+        />
 
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 px-4 pb-4">
-          <div className="glass-card px-2 py-2 rounded-2xl shadow-dark-lg">
-            <div className="flex justify-around items-center max-w-lg mx-auto">
-              <button
-                onClick={() => handleViewChange('dashboard')}
-                className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${
-                  activeView === 'dashboard'
-                    ? 'text-lime-500'
-                    : 'text-gray-500 hover:text-gray-300'
-                }`}
-              >
-                <Home className={`h-6 w-6 mb-1 ${activeView === 'dashboard' ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} />
-                <span className="text-xs font-medium">בית</span>
-              </button>
-              <button
-                onClick={() => handleViewChange('trainees')}
-                className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${
-                  activeView.includes('trainee')
-                    ? 'text-lime-500'
-                    : 'text-gray-500 hover:text-gray-300'
-                }`}
-              >
-                <Users className={`h-6 w-6 mb-1 ${activeView.includes('trainee') ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} />
-                <span className="text-xs font-medium">מתאמנים</span>
-              </button>
+        <div className="flex-1 flex flex-col pb-20 md:pb-0">
+          {!headerCollapsed && (
+            <Header
+              onLogout={signOut}
+              trainerName={trainerName}
+              collapsed={headerCollapsed}
+              onNavigateToTrainee={handleNavigateToTrainee}
+              onToggleSidebar={toggleMobileSidebar}
+            />
+          )}
+
+          <main 
+            id="main-content"
+            className={`flex-1 overflow-auto ${headerCollapsed ? 'p-2' : 'p-3 md:p-6'}`}
+            role="main"
+            aria-label="תוכן ראשי"
+          >
+            {showCollapseControls && (
+              <div className="hidden lg:flex gap-3 mb-4 justify-end" role="toolbar" aria-label="בקרות תצוגה">
+                <button
+                  type="button"
+                  onClick={() => setHeaderCollapsed(!headerCollapsed)}
+                  className="btn-glass px-4 py-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  aria-label={headerCollapsed ? 'הצג כותרת' : 'הסתר כותרת'}
+                  aria-pressed={!headerCollapsed}
+                >
+                  {headerCollapsed ? 'הצג כותרת' : 'הסתר כותרת'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="btn-glass px-4 py-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  aria-label={sidebarCollapsed ? 'הצג תפריט' : 'הסתר תפריט'}
+                  aria-pressed={!sidebarCollapsed}
+                >
+                  {sidebarCollapsed ? 'הצג תפריט' : 'הסתר תפריט'}
+                </button>
+              </div>
+            )}
+            {renderMainContent()}
+          </main>
+
+          <nav 
+            id="main-navigation"
+            className="md:hidden fixed bottom-0 left-0 right-0 z-40 px-4 pb-4"
+            role="navigation"
+            aria-label="ניווט ראשי"
+          >
+            <div className="glass-card px-2 py-2 rounded-2xl shadow-dark-lg">
+              <div className="flex justify-around items-center max-w-lg mx-auto">
+                <button
+                  onClick={() => handleViewChange('dashboard')}
+                  aria-label="דף הבית"
+                  aria-current={activeView === 'dashboard' ? 'page' : undefined}
+                  className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
+                    activeView === 'dashboard'
+                      ? 'text-lime-500'
+                      : 'text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  <Home className={`h-6 w-6 mb-1 ${activeView === 'dashboard' ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} aria-hidden="true" />
+                  <span className="text-xs font-medium">בית</span>
+                </button>
+                <button
+                  onClick={() => handleViewChange('trainees')}
+                  aria-label="מתאמנים"
+                  aria-current={activeView.includes('trainee') ? 'page' : undefined}
+                  className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
+                    activeView.includes('trainee')
+                      ? 'text-lime-500'
+                      : 'text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  <Users className={`h-6 w-6 mb-1 ${activeView.includes('trainee') ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} aria-hidden="true" />
+                  <span className="text-xs font-medium">מתאמנים</span>
+                </button>
+              </div>
             </div>
-          </div>
-        </nav>
+          </nav>
+        </div>
       </div>
-    </div>
   );
 }

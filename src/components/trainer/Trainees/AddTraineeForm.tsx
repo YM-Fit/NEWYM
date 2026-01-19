@@ -4,12 +4,13 @@ import { useState } from 'react';
 interface AddTraineeFormProps {
   onBack: () => void;
   onSave: (trainee: any) => void;
+  initialName?: string;
 }
 
-export default function AddTraineeForm({ onBack, onSave }: AddTraineeFormProps) {
+export default function AddTraineeForm({ onBack, onSave, initialName }: AddTraineeFormProps) {
   const [isPair, setIsPair] = useState(false);
   const [formData, setFormData] = useState({
-    full_name: '',
+    full_name: initialName || '',
     email: '',
     phone: '',
     birth_date: '',
