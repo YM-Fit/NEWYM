@@ -330,6 +330,14 @@ export default function CalendarSyncModal({
                 workout_id: newWorkout.id,
                 trainee_id: link.trainee_id,
               });
+          } else {
+            // Workout already exists - update is_completed if event is in the past
+            if (isPastEvent) {
+              await supabase
+                .from('workouts')
+                .update({ is_completed: true })
+                .eq('id', workoutId);
+            }
           }
 
           syncRecordsWithWorkouts.push({
