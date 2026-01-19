@@ -79,6 +79,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const [editingMeasurement, setEditingMeasurement] = useState<any | null>(null);
   const [selectedPairMember, setSelectedPairMember] = useState<'member_1' | 'member_2' | null>(null);
   const [trainees, setTrainees] = useState<Trainee[]>([]);
+  const [initialTraineeName, setInitialTraineeName] = useState<string | undefined>(undefined);
   const [measurements, setMeasurements] = useState<any[]>([]);
   const [workouts, setWorkouts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -889,8 +890,15 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
         return (
           <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
             <AddTraineeForm
-              onBack={() => setActiveView('trainees')}
-              onSave={handleSaveTrainee}
+              onBack={() => {
+                setInitialTraineeName(undefined);
+                setActiveView('trainees');
+              }}
+              onSave={(trainee) => {
+                setInitialTraineeName(undefined);
+                handleSaveTrainee(trainee);
+              }}
+              initialName={initialTraineeName}
             />
           </Suspense>
         );
@@ -1126,6 +1134,11 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
               onCreateWorkout={() => {
                 setActiveView('trainees');
                 toast('בחר מתאמן ליצירת אימון חדש', { icon: '💪' });
+              }}
+              onCreateTrainee={(name) => {
+                setInitialTraineeName(name);
+                setActiveView('add-trainee');
+                toast(`יוצר כרטיס מתאמן חדש: ${name}`, { icon: '👤' });
               }}
             />
           </Suspense>

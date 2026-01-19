@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import TDEECalculator from '../Tools/TDEECalculator';
 import TraineeTimeline from './TraineeTimeline';
 import TraineeNotes from './TraineeNotes';
+import CalendarSyncHistory from './CalendarSyncHistory';
 
 interface SelfWeight {
   id: string;
@@ -693,53 +694,61 @@ export default function TraineeProfile({
       )}
 
       {activeTab === 'workouts' && (
-        <div className="premium-card-static p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-emerald-400" />
-              אימונים
-            </h3>
-            <button
-              onClick={onNewWorkout}
-              className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl hover:bg-emerald-500/30 transition-all text-sm font-medium flex items-center gap-2"
-            >
-              <Calendar className="h-4 w-4" />
-              אימון חדש
-            </button>
-          </div>
-          {workouts.length > 0 ? (
-            <div className="space-y-3">
-              {workouts.map((workout, index) => (
-                <div
-                  key={workout.id}
-                  className="flex items-center justify-between p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all"
-                >
-                  <div>
-                    <p className="font-medium text-white">{new Date(workout.date).toLocaleDateString('he-IL')}</p>
-                    <p className="text-sm text-zinc-500">{workout.exercises.length} תרגילים</p>
-                  </div>
-                  <div className="text-left">
-                    <p className="text-lg font-bold text-emerald-400">{workout.totalVolume.toLocaleString()}</p>
-                    <p className="text-xs text-zinc-500">ק״ג נפח</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
-                <Calendar className="h-8 w-8 text-zinc-600" />
-              </div>
-              <p className="text-zinc-500 mb-4">אין אימונים עדיין</p>
+        <>
+          <div className="premium-card-static p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-emerald-400" />
+                אימונים
+              </h3>
               <button
                 onClick={onNewWorkout}
-                className="px-6 py-3 bg-emerald-500/20 text-emerald-400 rounded-xl hover:bg-emerald-500/30 transition-all font-medium"
+                className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl hover:bg-emerald-500/30 transition-all text-sm font-medium flex items-center gap-2"
               >
-                הוסף אימון ראשון
+                <Calendar className="h-4 w-4" />
+                אימון חדש
               </button>
             </div>
-          )}
-        </div>
+            {workouts.length > 0 ? (
+              <div className="space-y-3">
+                {workouts.map((workout, index) => (
+                  <div
+                    key={workout.id}
+                    className="flex items-center justify-between p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all"
+                  >
+                    <div>
+                      <p className="font-medium text-white">{new Date(workout.date).toLocaleDateString('he-IL')}</p>
+                      <p className="text-sm text-zinc-500">{workout.exercises.length} תרגילים</p>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-lg font-bold text-emerald-400">{workout.totalVolume.toLocaleString()}</p>
+                      <p className="text-xs text-zinc-500">ק״ג נפח</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="h-8 w-8 text-zinc-600" />
+                </div>
+                <p className="text-zinc-500 mb-4">אין אימונים עדיין</p>
+                <button
+                  onClick={onNewWorkout}
+                  className="px-6 py-3 bg-emerald-500/20 text-emerald-400 rounded-xl hover:bg-emerald-500/30 transition-all font-medium"
+                >
+                  הוסף אימון ראשון
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Calendar Sync History */}
+          <CalendarSyncHistory 
+            traineeId={trainee.id} 
+            trainerId={trainee.trainerId} 
+          />
+        </>
       )}
 
       {activeTab === 'measurements' && (

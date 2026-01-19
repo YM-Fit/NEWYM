@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Plus, RefreshCw, Trash2, GripVertical } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Plus, RefreshCw, Trash2, GripVertical, Users } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { 
   getGoogleCalendarEvents, 
@@ -9,6 +9,7 @@ import {
 } from '../../../api/googleCalendarApi';
 import { supabase } from '../../../lib/supabase';
 import GoogleCalendarSettings from '../Settings/GoogleCalendarSettings';
+import CalendarSyncModal from './CalendarSyncModal';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -32,6 +33,7 @@ interface CalendarEvent {
 interface CalendarViewProps {
   onEventClick?: (event: CalendarEvent) => void;
   onCreateWorkout?: () => void;
+  onCreateTrainee?: (name: string, eventId?: string) => void;
 }
 
 interface EventItemProps {
@@ -232,13 +234,14 @@ function DroppableDayCell({
   );
 }
 
-export default function CalendarView({ onEventClick, onCreateWorkout }: CalendarViewProps) {
+export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTrainee }: CalendarViewProps) {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showSyncModal, setShowSyncModal] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -760,6 +763,14 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setShowSyncModal(true)}
+              className="px-4 py-2 text-sm bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-all flex items-center gap-2 border border-emerald-500/30"
+              title="סנכרון מתאמנים מהיומן"
+            >
+              <Users className="h-4 w-4" />
+              סנכרון מתאמנים
+            </button>
+            <button
               onClick={handleManualRefresh}
               disabled={loading || isRefreshing}
               className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -860,6 +871,18 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
           </div>
         )}
       </div>
+
+      {/* Sync Modal */}
+      <CalendarSyncModal
+        isOpen={showSyncModal}
+        onClose={() => {
+          setShowSyncModal(false);
+          // Refresh events after sync
+          loadEvents(false, true);
+        }}
+        onCreateTrainee={onCreateTrainee}
+        currentDate={currentDate}
+      />
     </div>
   );
 }
