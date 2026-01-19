@@ -1,15 +1,18 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Plus, RefreshCw, Trash2, GripVertical } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { 
   getGoogleCalendarEvents, 
   getGoogleCalendarStatus,
-  deleteCalendarEventBidirectional
+  deleteCalendarEventBidirectional,
+  updateCalendarEventBidirectional
 } from '../../../api/googleCalendarApi';
 import { supabase } from '../../../lib/supabase';
 import GoogleCalendarSettings from '../Settings/GoogleCalendarSettings';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 
 interface CalendarEvent {
   id: string;
@@ -35,14 +38,31 @@ interface EventItemProps {
   event: CalendarEvent;
   onEventClick?: (event: CalendarEvent) => void;
   onDelete?: (eventId: string) => void;
+  isDragging?: boolean;
+}
+
+interface DraggableEventItemProps extends EventItemProps {
+  day: number;
+}
+
+interface DroppableDayCellProps {
+  day: number | null;
+  index: number;
+  isToday: boolean;
+  dayEvents: CalendarEvent[];
+  onEventClick?: (event: CalendarEvent) => void;
+  onDelete?: (eventId: string) => void;
+  onDayClick: (day: number) => void;
+  currentDate: Date;
+  activeEventId: string | null;
 }
 
 // Optimized refresh interval - longer to reduce API calls
 const REFRESH_INTERVAL_MS = 120000; // 2 minutes instead of 30 seconds
 const CACHE_DURATION_MS = 60000; // Cache events for 1 minute
 
-// Event Item Component (simplified without drag)
-function EventItem({ event, onEventClick, onDelete }: EventItemProps) {
+// Event Item Component (base display component)
+function EventItem({ event, onEventClick, onDelete, isDragging }: EventItemProps) {
   const [showDelete, setShowDelete] = useState(false);
 
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -67,8 +87,10 @@ function EventItem({ event, onEventClick, onDelete }: EventItemProps) {
       onClick={() => onEventClick?.(event)}
       onContextMenu={handleContextMenu}
       onBlur={handleClickOutside}
-      className="text-xs bg-emerald-500/20 text-emerald-300 p-1.5 rounded cursor-pointer hover:bg-emerald-500/30 transition-all truncate relative group"
-      title={`${event.summary}${event.start.dateTime ? ` - ${new Date(event.start.dateTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}` : ''} (לחץ ימני למחיקה)`}
+      className={`text-xs bg-emerald-500/20 text-emerald-300 p-1.5 rounded cursor-pointer hover:bg-emerald-500/30 transition-all truncate relative group ${
+        isDragging ? 'opacity-50' : ''
+      }`}
+      title={`${event.summary}${event.start.dateTime ? ` - ${new Date(event.start.dateTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}` : ''} (גרור להעברה, לחץ ימני למחיקה)`}
     >
       {event.summary}
       {showDelete && (
@@ -86,6 +108,130 @@ function EventItem({ event, onEventClick, onDelete }: EventItemProps) {
   );
 }
 
+// Draggable Event Item Component
+function DraggableEventItem({ event, onEventClick, onDelete, day }: DraggableEventItemProps) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `event-${event.id}`,
+    data: {
+      event,
+      sourceDay: day,
+    },
+  });
+
+  const style = transform ? {
+    transform: CSS.Translate.toString(transform),
+    zIndex: isDragging ? 100 : undefined,
+  } : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative ${isDragging ? 'z-50' : ''}`}
+    >
+      <div
+        {...listeners}
+        {...attributes}
+        className="absolute right-0 top-0 bottom-0 w-6 flex items-center justify-center cursor-grab active:cursor-grabbing z-10 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity"
+        title="גרור להעברה"
+      >
+        <GripVertical className="h-3 w-3 text-emerald-400" />
+      </div>
+      <EventItem
+        event={event}
+        onEventClick={onEventClick}
+        onDelete={onDelete}
+        isDragging={isDragging}
+      />
+    </div>
+  );
+}
+
+// Droppable Day Cell Component
+function DroppableDayCell({
+  day,
+  index,
+  isToday,
+  dayEvents,
+  onEventClick,
+  onDelete,
+  onDayClick,
+  currentDate,
+  activeEventId,
+}: DroppableDayCellProps) {
+  const dayId = day
+    ? `day-${currentDate.getFullYear()}-${currentDate.getMonth()}-${day}`
+    : `empty-${index}`;
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: dayId,
+    data: {
+      day,
+      year: currentDate.getFullYear(),
+      month: currentDate.getMonth(),
+    },
+    disabled: !day,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      onClick={() => day && onDayClick(day)}
+      className={`min-h-[100px] p-2 border rounded-lg transition-all ${
+        day
+          ? isOver
+            ? 'bg-emerald-500/20 border-emerald-500/50 ring-2 ring-emerald-500/30'
+            : isToday
+              ? 'bg-emerald-500/10 border-emerald-500/30'
+              : 'bg-zinc-800/30 hover:bg-zinc-800/50 cursor-pointer border-zinc-800'
+          : 'bg-transparent border-transparent'
+      }`}
+    >
+      {day && (
+        <>
+          <div
+            className={`text-sm font-semibold mb-2 ${
+              isToday ? 'text-emerald-400' : 'text-zinc-300'
+            }`}
+          >
+            {day}
+          </div>
+          <div className="space-y-1">
+            {dayEvents.slice(0, 3).map((event) => (
+              <div key={event.id} className="group">
+                <DraggableEventItem
+                  event={event}
+                  day={day}
+                  onEventClick={onEventClick}
+                  onDelete={activeEventId === event.id ? undefined : onDelete}
+                />
+              </div>
+            ))}
+            {dayEvents.length > 3 && (
+              <div
+                className="text-xs text-zinc-500 cursor-pointer hover:text-zinc-400"
+                title={`${dayEvents.length - 3} אירועים נוספים`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                  toast.success(`${dayEvents.length} אירועים ב-${dayDate.toLocaleDateString('he-IL')}`);
+                }}
+              >
+                +{dayEvents.length - 3} נוספים
+              </div>
+            )}
+            {dayEvents.length === 0 && (
+              <div className="text-xs text-zinc-600 opacity-50 mt-4 text-center">
+                לחץ להוספת אירוע
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function CalendarView({ onEventClick, onCreateWorkout }: CalendarViewProps) {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -96,9 +242,19 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [activeEvent, setActiveEvent] = useState<CalendarEvent | null>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastRefreshRef = useRef<Date | null>(null);
   const eventsCacheRef = useRef<{ events: CalendarEvent[]; timestamp: number; dateKey: string } | null>(null);
+
+  // Configure drag sensors with activation constraints to prevent accidental drags
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px movement before starting drag
+      },
+    })
+  );
 
   const checkConnection = useCallback(async () => {
     if (!user) return;
@@ -363,6 +519,143 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
     toast.success('לצורך יצירת אירוע חדש, השתמש בכפתור "אימון חדש"');
   };
 
+  // Handle drag start
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const { active } = event;
+    const draggedEvent = active.data.current?.event as CalendarEvent | undefined;
+    if (draggedEvent) {
+      setActiveEvent(draggedEvent);
+    }
+  }, []);
+
+  // Handle drag end - update event date
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveEvent(null);
+
+    if (!over || !user) return;
+
+    const draggedEvent = active.data.current?.event as CalendarEvent | undefined;
+    const sourceDay = active.data.current?.sourceDay as number | undefined;
+    const targetDay = over.data.current?.day as number | undefined;
+    const targetYear = over.data.current?.year as number | undefined;
+    const targetMonth = over.data.current?.month as number | undefined;
+
+    if (!draggedEvent || !sourceDay || !targetDay || targetYear === undefined || targetMonth === undefined) {
+      return;
+    }
+
+    // Don't do anything if dropped on the same day
+    const sourceDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), sourceDay);
+    const targetDate = new Date(targetYear, targetMonth, targetDay);
+    
+    if (sourceDate.toDateString() === targetDate.toDateString()) {
+      return;
+    }
+
+    // Get the original event time
+    const originalStartTime = draggedEvent.start.dateTime 
+      ? new Date(draggedEvent.start.dateTime) 
+      : new Date(draggedEvent.start.date || '');
+    
+    const originalEndTime = draggedEvent.end.dateTime 
+      ? new Date(draggedEvent.end.dateTime) 
+      : new Date(draggedEvent.end.date || '');
+
+    // Calculate the duration
+    const duration = originalEndTime.getTime() - originalStartTime.getTime();
+
+    // Create new start time keeping the same time of day
+    const newStartTime = new Date(targetDate);
+    newStartTime.setHours(
+      originalStartTime.getHours(),
+      originalStartTime.getMinutes(),
+      originalStartTime.getSeconds(),
+      originalStartTime.getMilliseconds()
+    );
+
+    // Create new end time
+    const newEndTime = new Date(newStartTime.getTime() + duration);
+
+    setIsUpdating(true);
+    try {
+      // Get access token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error('נדרשת הרשאה לעדכון');
+        return;
+      }
+
+      // Update event in Google Calendar
+      const updateResult = await updateCalendarEventBidirectional(
+        user.id,
+        draggedEvent.id,
+        {
+          startTime: newStartTime,
+          endTime: newEndTime,
+        },
+        session.access_token
+      );
+
+      if (updateResult.error) {
+        toast.error(updateResult.error);
+        return;
+      }
+
+      // Optimistically update local state
+      setEvents(prevEvents => 
+        prevEvents.map(e => {
+          if (e.id === draggedEvent.id) {
+            return {
+              ...e,
+              start: {
+                ...e.start,
+                dateTime: newStartTime.toISOString(),
+              },
+              end: {
+                ...e.end,
+                dateTime: newEndTime.toISOString(),
+              },
+            };
+          }
+          return e;
+        })
+      );
+
+      // Update cache
+      if (eventsCacheRef.current) {
+        eventsCacheRef.current = {
+          ...eventsCacheRef.current,
+          events: eventsCacheRef.current.events.map(e => {
+            if (e.id === draggedEvent.id) {
+              return {
+                ...e,
+                start: {
+                  ...e.start,
+                  dateTime: newStartTime.toISOString(),
+                },
+                end: {
+                  ...e.end,
+                  dateTime: newEndTime.toISOString(),
+                },
+              };
+            }
+            return e;
+          }),
+        };
+      }
+
+      toast.success(`האירוע הועבר ל-${targetDate.toLocaleDateString('he-IL')}`);
+    } catch (error) {
+      logger.error('Error moving event', error, 'CalendarView');
+      toast.error('שגיאה בהעברת אירוע');
+      // Refresh to sync with server state
+      await loadEvents(false, true);
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [user, currentDate, loadEvents]);
+
   if (showSettings) {
     return (
       <div className="space-y-4">
@@ -496,93 +789,74 @@ export default function CalendarView({ onEventClick, onCreateWorkout }: Calendar
 
       {/* Calendar Grid */}
       <div className="premium-card p-4">
-        {loading || isUpdating ? (
+        {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-400"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-7 gap-2">
-            {/* Week days header */}
-            {weekDays.map((day, index) => (
-              <div
-                key={index}
-                className="text-center text-sm font-semibold text-zinc-400 py-2"
-              >
-                {day}
-              </div>
-            ))}
-
-            {/* Calendar days */}
-            {days.map((day, index) => {
-              const dayEvents = day ? getEventsForDay(day) : [];
-              const isToday =
-                day &&
-                new Date().toDateString() ===
-                  new Date(
-                    currentDate.getFullYear(),
-                    currentDate.getMonth(),
-                    day
-                  ).toDateString();
-
-              const dayId = day
-                ? `day-${currentDate.getFullYear()}-${currentDate.getMonth()}-${day}`
-                : `empty-${index}`;
-
-              return (
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className={`grid grid-cols-7 gap-2 ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}>
+              {/* Week days header */}
+              {weekDays.map((day, index) => (
                 <div
-                  key={dayId}
-                  onClick={() => day && handleDayClick(day)}
-                  className={`min-h-[100px] p-2 border border-zinc-800 rounded-lg transition-all ${
-                    day
-                      ? isToday
-                        ? 'bg-emerald-500/10 border-emerald-500/30'
-                        : 'bg-zinc-800/30 hover:bg-zinc-800/50 cursor-pointer'
-                      : 'bg-transparent border-transparent'
-                  }`}
+                  key={index}
+                  className="text-center text-sm font-semibold text-zinc-400 py-2"
                 >
-                  {day && (
-                    <>
-                      <div
-                        className={`text-sm font-semibold mb-2 ${
-                          isToday ? 'text-emerald-400' : 'text-zinc-300'
-                        }`}
-                      >
-                        {day}
-                      </div>
-                      <div className="space-y-1">
-                        {dayEvents.slice(0, 3).map((event) => (
-                          <EventItem
-                            key={event.id}
-                            event={event}
-                            onEventClick={onEventClick}
-                            onDelete={handleDeleteEvent}
-                          />
-                        ))}
-                        {dayEvents.length > 3 && (
-                          <div 
-                            className="text-xs text-zinc-500 cursor-pointer hover:text-zinc-400" 
-                            title={`${dayEvents.length - 3} אירועים נוספים`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Show all events for this day
-                              const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-                              toast.success(`${dayEvents.length} אירועים ב-${dayDate.toLocaleDateString('he-IL')}`);
-                            }}
-                          >
-                            +{dayEvents.length - 3} נוספים
-                          </div>
-                        )}
-                        {dayEvents.length === 0 && (
-                          <div className="text-xs text-zinc-600 opacity-50 mt-4 text-center">
-                            לחץ להוספת אירוע
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
+                  {day}
                 </div>
-              );
-            })}
+              ))}
+
+              {/* Calendar days */}
+              {days.map((day, index) => {
+                const dayEvents = day ? getEventsForDay(day) : [];
+                const isToday =
+                  day !== null &&
+                  new Date().toDateString() ===
+                    new Date(
+                      currentDate.getFullYear(),
+                      currentDate.getMonth(),
+                      day
+                    ).toDateString();
+
+                return (
+                  <DroppableDayCell
+                    key={day ? `day-${currentDate.getFullYear()}-${currentDate.getMonth()}-${day}` : `empty-${index}`}
+                    day={day}
+                    index={index}
+                    isToday={isToday}
+                    dayEvents={dayEvents}
+                    onEventClick={onEventClick}
+                    onDelete={handleDeleteEvent}
+                    onDayClick={handleDayClick}
+                    currentDate={currentDate}
+                    activeEventId={activeEvent?.id || null}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Drag Overlay - shows floating preview of dragged event */}
+            <DragOverlay>
+              {activeEvent ? (
+                <div className="text-xs bg-emerald-500/40 text-emerald-200 p-1.5 rounded shadow-lg border border-emerald-500/50 truncate max-w-[120px]">
+                  {activeEvent.summary}
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        )}
+
+        {/* Updating indicator */}
+        {isUpdating && (
+          <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/50 rounded-lg">
+            <div className="flex items-center gap-2 bg-zinc-800 px-4 py-2 rounded-lg">
+              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-emerald-400"></div>
+              <span className="text-sm text-zinc-300">מעביר אירוע...</span>
+            </div>
           </div>
         )}
       </div>
