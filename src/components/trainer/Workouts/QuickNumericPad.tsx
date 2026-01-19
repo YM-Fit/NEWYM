@@ -29,6 +29,13 @@ export default function QuickNumericPad({
   const [inputValue, setInputValue] = useState(value.toString());
   const inputRef = useRef<HTMLInputElement>(null);
   const isRpeMode = maxValue === 10 && minValue === 1;
+  
+  // Debug: Log tablet detection
+  useEffect(() => {
+    if (isTablet !== undefined) {
+      console.log('[QuickNumericPad] isTablet:', isTablet, 'window.innerWidth:', window.innerWidth);
+    }
+  }, [isTablet]);
 
   useEffect(() => {
     setCurrentValue(value);
