@@ -121,55 +121,102 @@ export function calculateNameSimilarity(name1: string, name2: string): number {
 }
 
 /**
+ * Check if first name matches (common in Hebrew calendars where only first name is used)
+ */
+function firstNameMatches(eventName: string, traineeName: string): boolean {
+  const eventFirst = normalizeName(eventName).split(' ')[0];
+  const traineeFirst = normalizeName(traineeName).split(' ')[0];
+  
+  // Exact first name match
+  if (eventFirst === traineeFirst) return true;
+  
+  // Check if event name is contained in trainee first name or vice versa
+  if (eventFirst.length >= 2 && traineeFirst.length >= 2) {
+    if (traineeFirst.startsWith(eventFirst) || eventFirst.startsWith(traineeFirst)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
  * Find best matches for an event name among trainees
  * Returns matches sorted by score (highest first)
+ * Now prioritizes first name matching for better Hebrew name support
  */
 export function findBestMatches(
   eventName: string,
   trainees: Trainee[],
-  minScore: number = 60
+  minScore: number = 40 // Lowered threshold for better matching
 ): MatchResult[] {
   const matches: MatchResult[] = [];
   
   for (const trainee of trainees) {
-    // Check main name
-    const mainScore = calculateNameSimilarity(eventName, trainee.full_name);
+    let bestScore = 0;
+    let matchType: 'exact' | 'close' | 'partial' = 'partial';
     
-    if (mainScore >= minScore) {
-      matches.push({
-        trainee,
-        score: mainScore,
-        matchType: mainScore === 100 ? 'exact' : mainScore >= 80 ? 'close' : 'partial'
-      });
-      continue;
+    // Check full name similarity
+    const fullNameScore = calculateNameSimilarity(eventName, trainee.full_name);
+    bestScore = fullNameScore;
+    
+    // IMPORTANT: Check first name match - very common in Hebrew calendars
+    if (firstNameMatches(eventName, trainee.full_name)) {
+      // First name exact match gets high score
+      bestScore = Math.max(bestScore, 90);
+      matchType = 'close';
     }
     
     // For pairs, check individual names
     if (trainee.is_pair) {
-      let bestPairScore = mainScore;
-      
       if (trainee.pair_name_1) {
         const score1 = calculateNameSimilarity(eventName, trainee.pair_name_1);
-        bestPairScore = Math.max(bestPairScore, score1);
+        if (score1 > bestScore) bestScore = score1;
+        if (firstNameMatches(eventName, trainee.pair_name_1)) {
+          bestScore = Math.max(bestScore, 90);
+          matchType = 'close';
+        }
       }
       
       if (trainee.pair_name_2) {
         const score2 = calculateNameSimilarity(eventName, trainee.pair_name_2);
-        bestPairScore = Math.max(bestPairScore, score2);
+        if (score2 > bestScore) bestScore = score2;
+        if (firstNameMatches(eventName, trainee.pair_name_2)) {
+          bestScore = Math.max(bestScore, 90);
+          matchType = 'close';
+        }
       }
-      
-      if (bestPairScore >= minScore) {
-        matches.push({
-          trainee,
-          score: bestPairScore,
-          matchType: bestPairScore === 100 ? 'exact' : bestPairScore >= 80 ? 'close' : 'partial'
-        });
-      }
+    }
+    
+    // Determine match type based on score
+    if (bestScore === 100) {
+      matchType = 'exact';
+    } else if (bestScore >= 80) {
+      matchType = 'close';
+    }
+    
+    if (bestScore >= minScore) {
+      matches.push({
+        trainee,
+        score: bestScore,
+        matchType
+      });
     }
   }
   
   // Sort by score (highest first)
   return matches.sort((a, b) => b.score - a.score);
+}
+
+/**
+ * Get all trainees for manual selection (used when no automatic match found)
+ */
+export function getAllTraineesForSelection(trainees: Trainee[]): MatchResult[] {
+  return trainees.map(trainee => ({
+    trainee,
+    score: 0,
+    matchType: 'partial' as const
+  })).sort((a, b) => a.trainee.full_name.localeCompare(b.trainee.full_name, 'he'));
 }
 
 /**
