@@ -273,6 +273,83 @@ export default function CalendarSyncModal({
         if (insertError) {
           throw new Error(insertError.message);
         }
+
+        // Update google_calendar_clients for each linked event
+        // Group by trainee_id to update all events for the same client
+        const clientUpdates = new Map<string, { traineeId: string; eventIds: string[] }>();
+        
+        for (const link of linksToSave) {
+          // Get event details to extract client identifier
+          const matchedEvent = matchedEvents.find(e => e.event.id === link.google_event_id);
+          if (!matchedEvent) continue;
+
+          // Extract client identifier (email or name)
+          const clientIdentifier = matchedEvent.event.attendees?.find((a: any) => !a.organizer)?.email 
+            || matchedEvent.event.attendees?.find((a: any) => !a.organizer)?.displayName
+            || matchedEvent.event.extractedName
+            || matchedEvent.event.summary;
+
+          if (clientIdentifier) {
+            const key = `${user.id}:${clientIdentifier}`;
+            if (!clientUpdates.has(key)) {
+              clientUpdates.set(key, { traineeId: link.trainee_id, eventIds: [] });
+            }
+            clientUpdates.get(key)!.eventIds.push(link.google_event_id);
+          }
+        }
+
+        // Update google_calendar_clients for each client
+        for (const [key, { traineeId, eventIds }] of clientUpdates.entries()) {
+          const [, clientIdentifier] = key.split(':');
+          
+          // Find existing client or create new one
+          const { data: existingClient } = await supabase
+            .from('google_calendar_clients')
+            .select('id, trainee_id')
+            .eq('trainer_id', user.id)
+            .eq('google_client_identifier', clientIdentifier)
+            .maybeSingle();
+
+          if (existingClient) {
+            // Update existing client with trainee_id if not set
+            if (!existingClient.trainee_id) {
+              await supabase
+                .from('google_calendar_clients')
+                .update({ trainee_id: traineeId })
+                .eq('id', existingClient.id);
+            }
+          } else {
+            // Create new client
+            const firstEvent = matchedEvents.find(e => eventIds.includes(e.event.id));
+            if (firstEvent) {
+              const eventDate = new Date(firstEvent.event.start?.dateTime || firstEvent.event.start?.date || new Date());
+              await supabase
+                .from('google_calendar_clients')
+                .insert({
+                  trainer_id: user.id,
+                  trainee_id: traineeId,
+                  google_client_identifier: clientIdentifier,
+                  client_name: firstEvent.event.extractedName || firstEvent.event.summary || clientIdentifier,
+                  client_email: firstEvent.event.attendees?.find((a: any) => !a.organizer)?.email || null,
+                  first_event_date: eventDate.toISOString().split('T')[0],
+                  last_event_date: eventDate.toISOString().split('T')[0],
+                  total_events_count: eventIds.length,
+                  upcoming_events_count: eventIds.filter(id => {
+                    const e = matchedEvents.find(ev => ev.event.id === id);
+                    if (!e) return false;
+                    const eventDate = new Date(e.event.start?.dateTime || e.event.start?.date || new Date());
+                    return eventDate >= new Date();
+                  }).length,
+                  completed_events_count: eventIds.filter(id => {
+                    const e = matchedEvents.find(ev => ev.event.id === id);
+                    if (!e) return false;
+                    const eventDate = new Date(e.event.start?.dateTime || e.event.start?.date || new Date());
+                    return eventDate < new Date();
+                  }).length,
+                });
+            }
+          }
+        }
       }
 
       // Trigger trainee creation for each new person

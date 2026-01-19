@@ -308,6 +308,33 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
     setTrainees(traineesWithClients);
   }, [user?.id]);
 
+  // Subscribe to changes in google_calendar_clients to auto-refresh trainee list
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('calendar_clients_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'google_calendar_clients',
+          filter: `trainer_id=eq.${user.id}`
+        },
+        (payload) => {
+          // Refresh trainees list when calendar clients change
+          logger.info('Calendar client changed, refreshing trainees', payload, 'TrainerApp');
+          loadTrainees();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, loadTrainees]);
+
   const loadTrainerProfile = useCallback(async () => {
     if (!user) return;
 
