@@ -940,6 +940,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
                 await loadWorkouts(selectedTrainee.id);
                 setActiveView('trainee-profile');
               }}
+              isTablet={isTablet}
             />
           </Suspense>
         ) : null;

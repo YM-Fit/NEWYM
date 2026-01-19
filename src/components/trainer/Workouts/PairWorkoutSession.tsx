@@ -52,12 +52,14 @@ interface PairWorkoutSessionProps {
   trainee: any;
   onBack: () => void;
   onComplete: (workoutData: any) => void;
+  isTablet?: boolean;
 }
 
 export default function PairWorkoutSession({
   trainee,
   onBack,
-  onComplete
+  onComplete,
+  isTablet
 }: PairWorkoutSessionProps) {
   const { user } = useAuth();
   const [member1Exercises, setMember1Exercises] = useState<WorkoutExercise[]>([]);
@@ -900,6 +902,7 @@ export default function PairWorkoutSession({
           minValue={numericPad.field === 'rpe' ? 1 : undefined}
           maxValue={numericPad.field === 'rpe' ? 10 : undefined}
           compact={true}
+          isTablet={isTablet}
         />
       )}
 
@@ -931,6 +934,7 @@ export default function PairWorkoutSession({
           minValue={supersetNumericPad.field === 'superset_rpe' ? 1 : undefined}
           maxValue={supersetNumericPad.field === 'superset_rpe' ? 10 : undefined}
           compact={true}
+          isTablet={isTablet}
         />
       )}
 
@@ -953,6 +957,7 @@ export default function PairWorkoutSession({
           onClose={() => setDropsetNumericPad(null)}
           allowDecimal={dropsetNumericPad.field === 'dropset_weight'}
           compact={true}
+          isTablet={isTablet}
         />
       )}
 
@@ -964,6 +969,7 @@ export default function PairWorkoutSession({
           onClose={() => setSupersetDropsetNumericPad(null)}
           allowDecimal={supersetDropsetNumericPad.field === 'superset_dropset_weight'}
           compact={true}
+          isTablet={isTablet}
         />
       )}
     </div>
