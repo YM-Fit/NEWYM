@@ -40,6 +40,7 @@ export default function RecentScaleReadings({
   const [loadingNotes, setLoadingNotes] = useState(false);
   
   // Advanced filtering and bulk operations
+  const [hiddenReadings, setHiddenReadings] = useState<Set<string>>(new Set());
   const [selectedReadings, setSelectedReadings] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [filterSource, setFilterSource] = useState<'all' | 'identified' | 'unidentified'>('all');
@@ -54,9 +55,19 @@ export default function RecentScaleReadings({
     }
   }, [activeTab]);
 
+  const getReadingKey = (readingId: number, traineeId: string) => `${readingId}-${traineeId}`;
+
   // Filtered and sorted readings
   const filteredReadings = useMemo(() => {
-    let filtered = [...readings];
+    let filtered = readings
+      // הסתרת שקילות שכבר נשמרו כמדידה – אין צורך להציג אותן בדשבורד
+      .filter(r => {
+        if (!r.bestMatch) {
+          return true;
+        }
+        const key = getReadingKey(r.reading.id, r.bestMatch.traineeId);
+        return !hiddenReadings.has(key);
+      });
 
     // Filter by source
     if (filterSource === 'identified') {
@@ -137,9 +148,17 @@ export default function RecentScaleReadings({
     for (const item of readingsToSave) {
       if (item.bestMatch) {
         const readingDate = new Date(item.reading.created_at).toISOString().split('T')[0];
-        await onSaveMeasurement(item.bestMatch.traineeId, item.bestMatch.traineeName, item.reading, readingDate);
+        const success = await onSaveMeasurement(
+          item.bestMatch.traineeId,
+          item.bestMatch.traineeName,
+          item.reading,
+          readingDate
+        );
         const key = `${item.reading.id}-${item.bestMatch.traineeId}`;
-        setSavedReadings(prev => new Set(prev).add(key));
+        if (success) {
+          setSavedReadings(prev => new Set(prev).add(key));
+          setHiddenReadings(prev => new Set(prev).add(key));
+        }
       }
     }
 
@@ -257,9 +276,9 @@ export default function RecentScaleReadings({
       next.delete(readingKey);
       return next;
     });
-
     if (success) {
       setSavedReadings(prev => new Set(prev).add(readingKey));
+      setHiddenReadings(prev => new Set(prev).add(readingKey));
       if (activeTab === 'notes') {
         fetchSavedNotes();
       }
@@ -271,8 +290,6 @@ export default function RecentScaleReadings({
     setSelectedDate('');
     setNotesInput('');
   };
-
-  const getReadingKey = (readingId: number, traineeId: string) => `${readingId}-${traineeId}`;
 
   const renderSaveButton = (reading: ScaleReading, match: TraineeMatch) => {
     const readingKey = getReadingKey(reading.id, match.traineeId);

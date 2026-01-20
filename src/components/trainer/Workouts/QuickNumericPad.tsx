@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useIsTouchDevice } from '../../../hooks/useIsTouchDevice';
 
 interface QuickNumericPadProps {
   value: number;
@@ -28,11 +29,79 @@ export default function QuickNumericPad({
   const [currentValue, setCurrentValue] = useState(value);
   const [inputValue, setInputValue] = useState(value.toString());
   const isRpeMode = maxValue === 10 && minValue === 1;
+  const isTouchDevice = useIsTouchDevice();
+  const preventKeyboard = isTablet || isTouchDevice;
+  const padRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setCurrentValue(value);
     setInputValue(value.toString());
   }, [value]);
+
+  // Prevent keyboard from opening on touch devices - disable all inputs when pad is open
+  useEffect(() => {
+    if (!preventKeyboard) return;
+
+    // Disable all inputs/textarea/contentEditable elements in the document
+    const disableInputs = () => {
+      const inputs = document.querySelectorAll('input, textarea, [contenteditable="true"]');
+      inputs.forEach((input) => {
+        if (input instanceof HTMLElement) {
+          input.setAttribute('readonly', 'true');
+          input.setAttribute('inputmode', 'none');
+          input.style.pointerEvents = 'none';
+          input.setAttribute('data-numeric-pad-disabled', 'true');
+        }
+      });
+    };
+
+    // Re-enable inputs when pad closes
+    const enableInputs = () => {
+      const inputs = document.querySelectorAll('[data-numeric-pad-disabled="true"]');
+      inputs.forEach((input) => {
+        if (input instanceof HTMLElement) {
+          input.removeAttribute('readonly');
+          input.removeAttribute('inputmode');
+          input.style.pointerEvents = '';
+          input.removeAttribute('data-numeric-pad-disabled');
+        }
+      });
+    };
+
+    // Prevent focus on any element when pad is open
+    const handleFocus = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && padRef.current && !padRef.current.contains(target)) {
+        // If focus is outside the pad, blur it
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true') {
+          target.blur();
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    };
+
+    // Prevent touch events that might trigger keyboard
+    const handleTouchStart = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && padRef.current && !padRef.current.contains(target)) {
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true') {
+          e.preventDefault();
+          target.blur();
+        }
+      }
+    };
+
+    disableInputs();
+    document.addEventListener('focusin', handleFocus, true);
+    document.addEventListener('touchstart', handleTouchStart, { passive: false, capture: true });
+
+    return () => {
+      enableInputs();
+      document.removeEventListener('focusin', handleFocus, true);
+      document.removeEventListener('touchstart', handleTouchStart, { capture: true });
+    };
+  }, [preventKeyboard]);
 
 
   const handleAdd = useCallback((amount: number, isAbsolute: boolean = false) => {
@@ -81,7 +150,9 @@ export default function QuickNumericPad({
             const newValue = prev * 10 + num;
             const clamped = minValue !== undefined && newValue < minValue ? minValue :
                           maxValue !== undefined && newValue > maxValue ? maxValue : newValue;
-            return allowDecimal ? Math.round(clamped * 10) / 10 : Math.round(clamped);
+            const finalValue = allowDecimal ? Math.round(clamped * 10) / 10 : Math.round(clamped);
+            setInputValue(finalValue.toString());
+            return finalValue;
           });
         }
       }
@@ -127,60 +198,108 @@ export default function QuickNumericPad({
     setInputValue(resetValue.toString());
   }, [minValue]);
 
+  // Tablet-optimized sizes
+  const isTabletMode = isTablet && !compact;
+  const displaySize = isTabletMode ? 'text-7xl md:text-8xl' : compact ? 'text-4xl' : 'text-6xl lg:text-8xl';
+  const buttonSize = isTabletMode ? 'text-4xl md:text-5xl py-8 md:py-10' : compact ? (isRpeMode ? 'py-3 text-xl' : 'py-4 text-xl') : (isRpeMode ? 'py-6 lg:py-8 text-3xl lg:text-4xl' : 'py-8 lg:py-12 text-3xl lg:text-4xl');
+  const containerPadding = isTabletMode ? 'p-8 md:p-10' : compact ? 'p-4' : 'p-6 lg:p-10';
+  const displayPadding = isTabletMode ? 'p-10 md:p-12' : compact ? 'p-4' : 'p-8';
+  const titleSize = isTabletMode ? 'text-3xl md:text-4xl' : compact ? 'text-xl' : 'text-2xl lg:text-4xl';
+
   return (
     <div
-      className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-[9999] p-4"
       onClick={onClose}
+      onTouchStart={(e) => {
+        // Prevent any touch events from bubbling to inputs
+        if (preventKeyboard && e.target !== e.currentTarget) {
+          const target = e.target as HTMLElement;
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }
+      }}
     >
       <div
-        className={`bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl ${compact ? 'max-w-md w-full p-4' : 'max-w-2xl w-full p-6 lg:p-10'} transition-all`}
+        ref={padRef}
+        className={`bg-zinc-900 border-2 border-zinc-800 rounded-3xl shadow-2xl ${compact ? 'max-w-md w-full' : isTabletMode ? 'max-w-3xl w-full' : 'max-w-2xl w-full'} ${containerPadding} transition-all`}
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
       >
-        <div className={`flex items-center justify-between ${compact ? 'mb-4' : 'mb-6'}`}>
-          <h2 className={`font-bold text-emerald-400 ${compact ? 'text-xl' : 'text-2xl lg:text-4xl'}`}>
+        <div className={`flex items-center justify-between ${compact ? 'mb-4' : isTabletMode ? 'mb-8' : 'mb-6'}`}>
+          <h2 className={`font-bold text-emerald-400 ${titleSize} select-none`}>
             {label}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-3 hover:bg-zinc-800 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className={`${isTabletMode ? 'p-4' : 'p-3'} hover:bg-zinc-800 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 touch-manipulation`}
             aria-label="סגור לוח מספרים"
           >
-            <X className="h-7 w-7 lg:h-9 lg:w-9 text-zinc-500" aria-hidden="true" />
+            <X className={`${isTabletMode ? 'h-8 w-8 md:h-10 md:w-10' : 'h-7 w-7 lg:h-9 lg:w-9'} text-zinc-500`} aria-hidden="true" />
           </button>
         </div>
 
-        <div className={compact ? 'mb-4' : 'mb-8'}>
-          <div className={`bg-zinc-800/50 border-4 border-emerald-500/50 rounded-2xl ${compact ? 'p-4' : 'p-8'} text-center`}>
+        <div className={compact ? 'mb-4' : isTabletMode ? 'mb-10' : 'mb-8'}>
+          <div className={`bg-gradient-to-br from-zinc-800/80 to-zinc-800/50 border-4 border-emerald-500/60 rounded-3xl ${displayPadding} text-center shadow-inner`}>
             {/* Always use div to prevent keyboard - use virtual buttons below */}
             <div
-              className={`w-full bg-transparent font-bold text-emerald-400 tabular-nums text-center ${compact ? 'text-4xl' : 'text-6xl lg:text-8xl'}`}
+              className={`w-full bg-transparent font-bold text-emerald-400 tabular-nums text-center ${displaySize} select-none ${isTabletMode ? 'leading-tight' : ''}`}
               aria-label={`${label} - ${inputValue}${allowDecimal ? ' קילוגרמים' : isRpeMode ? ' RPE' : ' חזרות'}`}
               role="textbox"
               aria-readonly="true"
               tabIndex={-1}
-              onTouchStart={(e) => e.preventDefault()}
-              onTouchEnd={(e) => e.preventDefault()}
-              onClick={(e) => e.preventDefault()}
-              onFocus={(e) => e.preventDefault()}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onTouchMove={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onFocus={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                (e.target as HTMLElement).blur();
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              style={{
+                WebkitUserSelect: 'none',
+                userSelect: 'none',
+                WebkitTouchCallout: 'none',
+                touchAction: 'none',
+              }}
             >
               {inputValue}
             </div>
-            <div className={`text-zinc-500 mt-2 font-medium ${compact ? 'text-base' : 'text-xl lg:text-2xl'}`} aria-hidden="true">
-              {allowDecimal ? 'kg' : isRpeMode ? 'RPE' : 'reps'}
+            <div className={`text-zinc-400 mt-3 font-semibold ${compact ? 'text-base' : isTabletMode ? 'text-2xl md:text-3xl' : 'text-xl lg:text-2xl'} select-none`} aria-hidden="true">
+              {allowDecimal ? 'ק״ג' : isRpeMode ? 'RPE' : 'חזרות'}
             </div>
             <div id="numeric-pad-instructions" className="sr-only">
               לחץ Enter לאישור, Esc לביטול, או השתמש בחצים למעלה ולמטה לשינוי הערך
             </div>
             {!compact && (
-              <div className="text-sm text-zinc-600 mt-2" aria-hidden="true">
+              <div className={`text-zinc-500 mt-3 font-medium ${isTabletMode ? 'text-base md:text-lg' : 'text-sm'} select-none`} aria-hidden="true">
                 השתמש בכפתורים למטה
               </div>
             )}
           </div>
         </div>
 
-        <div className={`grid ${compact ? 'gap-2 mb-4' : 'gap-3 lg:gap-4 mb-6'} ${isRpeMode ? 'grid-cols-5' : 'grid-cols-3'}`} dir="rtl" role="group" aria-label="כפתורי מספרים">
+        <div className={`grid ${compact ? 'gap-2 mb-4' : isTabletMode ? 'gap-4 md:gap-5 mb-8' : 'gap-3 lg:gap-4 mb-6'} ${isRpeMode ? 'grid-cols-5' : 'grid-cols-3'}`} dir="rtl" role="group" aria-label="כפתורי מספרים">
           {buttons.map((btn) => (
             <button
               key={btn.label}
@@ -190,20 +309,30 @@ export default function QuickNumericPad({
                 e.stopPropagation();
                 handleAdd(btn.value, btn.isAbsolute);
               }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+              }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+              }}
               aria-label={`הוסף ${btn.label}${isRpeMode ? ' RPE' : allowDecimal ? ' קילוגרם' : ' חזרות'}`}
               aria-pressed={isRpeMode && currentValue === btn.value}
               className={`${
                 isRpeMode && currentValue === btn.value
-                  ? 'bg-emerald-500 ring-4 ring-emerald-500/30'
-                  : 'bg-cyan-500/15 border border-cyan-500/30 hover:bg-cyan-500/25 text-cyan-400'
-              } ${isRpeMode && currentValue === btn.value ? 'text-white' : ''} ${compact ? (isRpeMode ? 'py-3' : 'py-4') : (isRpeMode ? 'py-6 lg:py-8' : 'py-8 lg:py-12')} px-4 rounded-xl ${compact ? 'text-xl' : 'text-3xl lg:text-4xl'} font-bold transition-all active:scale-95 touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-500/50`}
+                  ? 'bg-emerald-500 ring-4 ring-emerald-500/40 shadow-lg shadow-emerald-500/30'
+                  : 'bg-cyan-500/15 border-2 border-cyan-500/30 hover:bg-cyan-500/25 hover:border-cyan-500/50 text-cyan-400'
+              } ${isRpeMode && currentValue === btn.value ? 'text-white' : ''} ${buttonSize} px-4 md:px-6 rounded-2xl font-bold transition-all active:scale-[0.95] touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-500/50 select-none`}
+              style={{
+                WebkitTapHighlightColor: 'transparent',
+                touchAction: 'manipulation',
+              }}
             >
               {btn.label}
             </button>
           ))}
         </div>
 
-        <div className={`grid grid-cols-2 ${compact ? 'gap-2' : 'gap-4'}`} dir="rtl" role="group" aria-label="פעולות">
+        <div className={`grid grid-cols-2 ${compact ? 'gap-2' : isTabletMode ? 'gap-4 md:gap-5' : 'gap-4'}`} dir="rtl" role="group" aria-label="פעולות">
           <button
             type="button"
             onClick={(e) => {
@@ -211,8 +340,18 @@ export default function QuickNumericPad({
               e.stopPropagation();
               handleReset();
             }}
+            onTouchStart={(e) => {
+              e.stopPropagation();
+            }}
+            onTouchEnd={(e) => {
+              e.stopPropagation();
+            }}
             aria-label="איפוס ערך"
-            className={`bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 text-amber-400 ${compact ? 'py-3 px-4 rounded-xl text-lg' : 'py-6 lg:py-8 px-6 rounded-xl text-2xl lg:text-3xl'} font-bold transition-all active:scale-95 touch-manipulation focus:outline-none focus:ring-2 focus:ring-amber-500/50`}
+            className={`bg-amber-500/15 border-2 border-amber-500/30 hover:bg-amber-500/25 hover:border-amber-500/50 text-amber-400 ${compact ? 'py-3 px-4 rounded-xl text-lg' : isTabletMode ? 'py-8 md:py-10 px-6 rounded-2xl text-3xl md:text-4xl' : 'py-6 lg:py-8 px-6 rounded-xl text-2xl lg:text-3xl'} font-bold transition-all active:scale-[0.95] touch-manipulation focus:outline-none focus:ring-2 focus:ring-amber-500/50 select-none`}
+            style={{
+              WebkitTapHighlightColor: 'transparent',
+              touchAction: 'manipulation',
+            }}
           >
             איפוס
           </button>
@@ -223,8 +362,18 @@ export default function QuickNumericPad({
               e.stopPropagation();
               handleConfirm();
             }}
+            onTouchStart={(e) => {
+              e.stopPropagation();
+            }}
+            onTouchEnd={(e) => {
+              e.stopPropagation();
+            }}
             aria-label={`אישור ערך${allowDecimal ? ' בקילוגרמים' : isRpeMode ? ' RPE' : ' בחזרות'}`}
-            className={`bg-emerald-500 hover:bg-emerald-600 text-white ${compact ? 'py-3 px-4 rounded-xl text-lg' : 'py-6 lg:py-8 px-6 rounded-xl text-2xl lg:text-3xl'} font-bold transition-all active:scale-95 touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-500/50`}
+            className={`bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/30 ${compact ? 'py-3 px-4 rounded-xl text-lg' : isTabletMode ? 'py-8 md:py-10 px-6 rounded-2xl text-3xl md:text-4xl' : 'py-6 lg:py-8 px-6 rounded-xl text-2xl lg:text-3xl'} font-bold transition-all active:scale-[0.95] touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-500/50 select-none`}
+            style={{
+              WebkitTapHighlightColor: 'transparent',
+              touchAction: 'manipulation',
+            }}
           >
             אישור
           </button>

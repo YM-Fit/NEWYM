@@ -76,6 +76,30 @@ const HOUR_START = 6;
 const HOUR_END = 22;
 const HOURS_PER_DAY = HOUR_END - HOUR_START + 1;
 
+// Helper function to extract trainee name from event
+function extractTraineeName(event: CalendarEvent): string {
+  // First try to get from attendees
+  if (event.attendees && event.attendees.length > 0) {
+    const attendee = event.attendees[0];
+    if (attendee.displayName) {
+      return attendee.displayName;
+    }
+  }
+  
+  // Then try from summary pattern "אימון - שם"
+  const match = event.summary.match(/אימון\s*-\s*(.+)/);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  
+  // If it contains a dash, use the part after it
+  if (event.summary.includes(' - ')) {
+    return event.summary.split(' - ').pop() || event.summary;
+  }
+  
+  return event.summary;
+}
+
 // Event Item Component (base display component)
 function EventItem({ event, onEventClick, onDelete, isDragging }: EventItemProps) {
   const [showDelete, setShowDelete] = useState(false);
@@ -101,40 +125,15 @@ function EventItem({ event, onEventClick, onDelete, isDragging }: EventItemProps
     ? new Date(event.start.dateTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
     : null;
 
-  // Extract trainee name from summary or attendees
-  const extractTraineeName = (event: CalendarEvent): string => {
-    // First try to get from attendees
-    if (event.attendees && event.attendees.length > 0) {
-      const attendee = event.attendees[0];
-      if (attendee.displayName) {
-        return attendee.displayName;
-      }
-    }
-    
-    // Then try from summary pattern "אימון - שם"
-    const match = event.summary.match(/אימון\s*-\s*(.+)/);
-    if (match && match[1]) {
-      return match[1].trim();
-    }
-    
-    // If it contains a dash, use the part after it
-    if (event.summary.includes(' - ')) {
-      return event.summary.split(' - ').pop() || event.summary;
-    }
-    
-    return event.summary;
-  };
-
   const traineeName = extractTraineeName(event);
-  const hasTraineeName = traineeName !== event.summary || (event.attendees && event.attendees.length > 0);
 
   return (
     <div
       onClick={() => onEventClick?.(event)}
       onContextMenu={handleContextMenu}
       onBlur={handleClickOutside}
-      className={`bg-blue-600 text-white p-2 rounded-sm cursor-pointer hover:bg-blue-700 transition-all relative group mb-1 shadow-sm border-l-4 border-blue-400 ${
-        isDragging ? 'opacity-50' : ''
+      className={`bg-emerald-600 text-white p-2 rounded-sm cursor-pointer hover:bg-emerald-700 hover:shadow-md transition-all relative group mb-1 shadow-sm border-l-[3px] border-emerald-400 ${
+        isDragging ? 'opacity-50 cursor-grabbing' : 'cursor-pointer'
       }`}
       title={`${event.summary}${eventTime ? ` - ${eventTime}` : ''} (גרור להעברה, לחץ ימני למחיקה)`}
     >
@@ -234,22 +233,23 @@ function DroppableDayCell({
     <div
       ref={setNodeRef}
       onClick={() => day && onDayClick(day)}
-      className={`min-h-[100px] p-2 border-r border-b border-zinc-700/30 transition-all ${
+      className={`min-h-[100px] p-2 border-r border-b border-zinc-700/30 transition-all group ${
         day
           ? isOver
-            ? 'bg-blue-500/10 ring-1 ring-blue-400/50'
+            ? 'bg-emerald-500/10 ring-1 ring-emerald-400/50'
             : isToday
-              ? 'bg-blue-500/5'
-              : 'bg-zinc-900/30 hover:bg-zinc-800/40 cursor-pointer'
+              ? 'bg-emerald-500/5 border-emerald-500/20'
+              : 'bg-zinc-900/30 hover:bg-emerald-500/5 cursor-pointer'
           : 'bg-transparent'
       }`}
+      title={day ? `לחץ ליצירת אימון ב-${day}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}` : ''}
     >
       {day && (
         <>
           <div
             className={`text-xs font-medium mb-1 ${
               isToday 
-                ? 'text-blue-400 font-semibold' 
+                ? 'text-emerald-400 font-semibold' 
                 : 'text-zinc-400'
             }`}
           >
@@ -280,8 +280,8 @@ function DroppableDayCell({
               </div>
             )}
             {dayEvents.length === 0 && (
-              <div className="text-[10px] text-zinc-600 opacity-40 mt-2 text-center">
-                {/* Empty - click to add */}
+              <div className="text-[10px] text-zinc-600 opacity-0 group-hover:opacity-40 mt-2 text-center transition-opacity">
+                לחץ להוספה
               </div>
             )}
           </div>
@@ -654,17 +654,24 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
   };
 
   // Handle create event by clicking on day
-  const handleDayClick = async (_day: number) => {
+  const handleDayClick = async (day: number) => {
     if (!user) return;
 
-    // If onCreateWorkout is provided, use it (create workout)
-    if (onCreateWorkout) {
-      onCreateWorkout();
-      return;
-    }
+    // Set the date to the clicked day
+    const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    setCurrentDate(clickedDate);
 
-    // Otherwise, show a message to use the create workout button
-    toast.success('לצורך יצירת אירוע חדש, השתמש בכפתור "אימון חדש"');
+    // Small delay to ensure date is set before creating workout
+    setTimeout(() => {
+      // If onCreateWorkout is provided, use it (create workout)
+      if (onCreateWorkout) {
+        onCreateWorkout();
+        return;
+      }
+
+      // Otherwise, show a message to use the create workout button
+      toast.info('לחץ על כפתור "אימון חדש" ליצירת אימון', { icon: '💪' });
+    }, 50);
   };
 
   // Handle drag start
@@ -902,10 +909,10 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                   <div
                     key={idx}
                     className={`min-h-[50px] p-1.5 border-r border-zinc-700/30 ${
-                      isToday ? 'bg-blue-500/5' : 'bg-zinc-900/20'
+                      isToday ? 'bg-emerald-500/5' : 'bg-zinc-900/20'
                     }`}
                   >
-                    <div className={`text-xs font-medium mb-1 ${isToday ? 'text-blue-400 font-semibold' : 'text-zinc-400'}`}>
+                    <div className={`text-xs font-medium mb-1 ${isToday ? 'text-emerald-400 font-semibold' : 'text-zinc-400'}`}>
                       {day.toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric' })}
                     </div>
                     <div className="space-y-0.5">
@@ -952,12 +959,15 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                           const clickedDate = new Date(day);
                           clickedDate.setHours(hour, 0, 0, 0);
                           setCurrentDate(clickedDate);
+                          // Always allow creating workout by clicking on time slot
                           if (onCreateWorkout) {
                             onCreateWorkout();
+                          } else {
+                            toast.info('לחץ על כפתור "אימון חדש" ליצירת אימון');
                           }
                         }}
                         className={`h-16 border-b border-r border-zinc-700/30 p-1 cursor-pointer hover:bg-zinc-800/30 transition-colors relative ${
-                          isToday ? 'bg-blue-500/5' : ''
+                          isToday ? 'bg-emerald-500/5' : ''
                         }`}
                       >
                         {hourEvents.map(event => {
@@ -974,7 +984,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                                 e.stopPropagation();
                                 onEventClick?.(event);
                               }}
-                              className="absolute left-0 right-0.5 bg-blue-600 text-white text-xs p-1.5 rounded-sm cursor-pointer hover:bg-blue-700 z-10 shadow-sm border-l-2 border-blue-400"
+                              className="absolute left-0 right-0.5 bg-emerald-600 text-white text-xs p-1.5 rounded-sm cursor-pointer hover:bg-emerald-700 hover:shadow-md z-10 shadow-sm border-l-[3px] border-emerald-400 transition-all"
                               style={{
                                 top: `${(startMinutes / 60) * 100}%`,
                                 height: `${heightPercent}%`,
@@ -989,11 +999,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                               
                               {/* Trainee Name - Clean */}
                               <div className="text-xs font-semibold text-white leading-tight truncate">
-                                {(() => {
-                                  const match = event.summary.match(/אימון\s*-\s*(.+)/);
-                                  const name = match && match[1] ? match[1].trim() : (event.summary.includes(' - ') ? event.summary.split(' - ').pop() : event.summary);
-                                  return name;
-                                })()}
+                                {extractTraineeName(event)}
                               </div>
                             </div>
                           );
@@ -1039,14 +1045,14 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
           {/* Hour slots */}
           <div className="grid grid-cols-2">
             {/* Hour labels */}
-            <div className="space-y-0">
+            <div className="space-y-0 sticky left-0 z-20 bg-zinc-900/80 backdrop-blur-sm">
               {hours.map(hour => (
-                  <div
-                    key={hour}
-                    className="h-16 border-b border-zinc-700/30 flex items-start justify-end pr-3 pt-1 bg-zinc-900/20"
-                  >
-                    <span className="text-xs text-zinc-500 font-normal">{hour}:00</span>
-                  </div>
+                <div
+                  key={hour}
+                  className="h-16 border-b border-r border-zinc-700/30 flex items-start justify-end pr-4 pt-1.5 bg-zinc-900/40"
+                >
+                  <span className="text-xs text-zinc-500 font-medium">{hour}:00</span>
+                </div>
               ))}
             </div>
 
@@ -1061,14 +1067,22 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                       const clickedDate = new Date(currentDate);
                       clickedDate.setHours(hour, 0, 0, 0);
                       setCurrentDate(clickedDate);
+                      // Always allow creating workout by clicking on time slot
                       if (onCreateWorkout) {
                         onCreateWorkout();
+                      } else {
+                        toast.info('לחץ על כפתור "אימון חדש" ליצירת אימון');
                       }
                     }}
-                    className={`h-16 border-b border-zinc-700/30 p-2 cursor-pointer hover:bg-zinc-800/30 transition-colors relative ${
-                      isToday ? 'bg-blue-500/5' : ''
+                    className={`h-16 border-b border-zinc-700/30 p-2 cursor-pointer hover:bg-emerald-500/5 transition-colors relative group ${
+                      isToday ? 'bg-emerald-500/5' : ''
                     }`}
+                    title={`לחץ ליצירת אימון ב-${currentDate.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric' })} בשעה ${hour}:00`}
                   >
+                    {/* Visual indicator on hover */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-500/30"></div>
+                    </div>
                     {hourEvents.map(event => {
                       const eventStart = new Date(event.start.dateTime || event.start.date || '');
                       const eventEnd = new Date(event.end.dateTime || event.end.date || '');
@@ -1083,7 +1097,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                             e.stopPropagation();
                             onEventClick?.(event);
                           }}
-                          className="absolute left-1 right-1 bg-blue-600 text-white text-xs p-2 rounded-sm cursor-pointer hover:bg-blue-700 z-10 shadow-sm border-l-2 border-blue-400"
+                          className="absolute left-1 right-1 bg-emerald-600 text-white text-xs p-2 rounded-sm cursor-pointer hover:bg-emerald-700 hover:shadow-md z-10 shadow-sm border-l-[3px] border-emerald-400 transition-all"
                           style={{
                             top: `${(startMinutes / 60) * 100}%`,
                             height: `${heightPercent}%`,
@@ -1098,11 +1112,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                           
                           {/* Trainee Name - Clean and prominent */}
                           <div className="text-xs font-semibold text-white leading-snug truncate">
-                            {(() => {
-                              const match = event.summary.match(/אימון\s*-\s*(.+)/);
-                              const name = match && match[1] ? match[1].trim() : (event.summary.includes(' - ') ? event.summary.split(' - ').pop() : event.summary);
-                              return name;
-                            })()}
+                            {extractTraineeName(event)}
                           </div>
                           
                           {event.location && (
@@ -1246,7 +1256,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
               {weekDayNames.map((day, index) => (
                 <div
                   key={index}
-                  className="text-center text-xs font-medium text-zinc-400 py-2 border-b border-r border-zinc-700/30 bg-zinc-900/50"
+                  className="text-center text-xs font-semibold text-zinc-400 py-2.5 border-b border-r border-zinc-700/30 bg-zinc-900/40 uppercase tracking-wide"
                 >
                   {day}
                 </div>
