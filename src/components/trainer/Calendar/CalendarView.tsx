@@ -15,6 +15,7 @@ import { logger } from '../../../utils/logger';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 
+// Calendar Event interface
 interface CalendarEvent {
   id: string;
   summary: string;
