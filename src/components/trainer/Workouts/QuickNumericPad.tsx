@@ -1,6 +1,5 @@
 import { X } from 'lucide-react';
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useIsTouchDevice } from '../../../hooks/useIsTouchDevice';
+import { useState, useEffect, useCallback } from 'react';
 
 interface QuickNumericPadProps {
   value: number;
@@ -26,12 +25,8 @@ export default function QuickNumericPad({
   compact = false,
   isTablet
 }: QuickNumericPadProps) {
-  // Use touch device detection - prevents keyboard on all touch devices (phones & tablets)
-  const isTouchDevice = useIsTouchDevice();
-  const preventKeyboard = isTablet || isTouchDevice;
   const [currentValue, setCurrentValue] = useState(value);
   const [inputValue, setInputValue] = useState(value.toString());
-  const inputRef = useRef<HTMLInputElement>(null);
   const isRpeMode = maxValue === 10 && minValue === 1;
 
   useEffect(() => {
@@ -39,13 +34,6 @@ export default function QuickNumericPad({
     setInputValue(value.toString());
   }, [value]);
 
-  useEffect(() => {
-    // Focus input on mount only if not tablet
-    if (inputRef.current && !preventKeyboard) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [preventKeyboard]);
 
   const handleAdd = useCallback((amount: number, isAbsolute: boolean = false) => {
     setCurrentValue(prev => {
@@ -73,23 +61,16 @@ export default function QuickNumericPad({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
-      } else if (e.key === 'Enter' && document.activeElement !== inputRef.current) {
-        const finalValue = allowDecimal ? parseFloat(inputValue) : parseInt(inputValue);
-        if (!isNaN(finalValue)) {
-          const clamped = minValue !== undefined && finalValue < minValue ? minValue :
-                        maxValue !== undefined && finalValue > maxValue ? maxValue : finalValue;
-          onConfirm(clamped);
-        } else {
-          onConfirm(currentValue);
-        }
+      } else if (e.key === 'Enter') {
+        handleConfirm();
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         handleAdd(allowDecimal ? 0.5 : 1, false);
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
         handleAdd(allowDecimal ? -0.5 : -1, false);
-      } else if (e.key >= '0' && e.key <= '9' && document.activeElement !== inputRef.current) {
-        // Allow direct number input when not focused on input
+      } else if (e.key >= '0' && e.key <= '9') {
+        // Allow direct number input
         const num = parseInt(e.key);
         if (isRpeMode) {
           if (num >= 1 && num <= 10) {
@@ -107,38 +88,7 @@ export default function QuickNumericPad({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, allowDecimal, minValue, maxValue, isRpeMode, inputValue, currentValue, onConfirm]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value;
-    // Allow empty input for better UX
-    if (input === '' || input === '-') {
-      setInputValue(input);
-      return;
-    }
-    
-    const num = allowDecimal ? parseFloat(input) : parseInt(input);
-    if (!isNaN(num)) {
-      const clamped = minValue !== undefined && num < minValue ? minValue :
-                    maxValue !== undefined && num > maxValue ? maxValue : num;
-      setCurrentValue(clamped);
-      setInputValue(input);
-    }
-  };
-
-  const handleInputBlur = () => {
-    // Validate and clamp on blur
-    const num = allowDecimal ? parseFloat(inputValue) : parseInt(inputValue);
-    if (isNaN(num) || num < (minValue || 0)) {
-      setInputValue((minValue || 0).toString());
-      setCurrentValue(minValue || 0);
-    } else if (maxValue !== undefined && num > maxValue) {
-      setInputValue(maxValue.toString());
-      setCurrentValue(maxValue);
-    } else {
-      setInputValue(currentValue.toString());
-    }
-  };
+  }, [onClose, allowDecimal, minValue, maxValue, isRpeMode, handleConfirm, handleAdd]);
 
   const buttons = isRpeMode
     ? [
@@ -202,42 +152,20 @@ export default function QuickNumericPad({
 
         <div className={compact ? 'mb-4' : 'mb-8'}>
           <div className={`bg-zinc-800/50 border-4 border-emerald-500/50 rounded-2xl ${compact ? 'p-4' : 'p-8'} text-center`}>
-            {preventKeyboard ? (
-              // On touch devices, use div instead of input to completely prevent keyboard
-              <div
-                className={`w-full bg-transparent font-bold text-emerald-400 tabular-nums text-center ${compact ? 'text-4xl' : 'text-6xl lg:text-8xl'}`}
-                aria-label={`${label} - ${inputValue}${allowDecimal ? ' קילוגרמים' : isRpeMode ? ' RPE' : ' חזרות'}`}
-                role="textbox"
-                tabIndex={-1}
-                onTouchStart={(e) => e.preventDefault()}
-                onTouchEnd={(e) => e.preventDefault()}
-              >
-                {inputValue}
-              </div>
-            ) : (
-              <input
-                ref={inputRef}
-                type="text"
-                inputMode="decimal"
-                value={inputValue}
-                onChange={handleInputChange}
-                onBlur={handleInputBlur}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleConfirm();
-                  }
-                  if (e.key === 'Escape') {
-                    e.preventDefault();
-                    onClose();
-                  }
-                }}
-                aria-label={`${label} - הזן ערך${allowDecimal ? ' בקילוגרמים' : isRpeMode ? ' RPE' : ' בחזרות'}`}
-                aria-describedby="numeric-pad-instructions"
-                className={`w-full bg-transparent font-bold text-emerald-400 tabular-nums text-center border-none outline-none focus:ring-0 ${compact ? 'text-4xl' : 'text-6xl lg:text-8xl'}`}
-                style={{ caretColor: 'transparent' }}
-              />
-            )}
+            {/* Always use div to prevent keyboard - use virtual buttons below */}
+            <div
+              className={`w-full bg-transparent font-bold text-emerald-400 tabular-nums text-center ${compact ? 'text-4xl' : 'text-6xl lg:text-8xl'}`}
+              aria-label={`${label} - ${inputValue}${allowDecimal ? ' קילוגרמים' : isRpeMode ? ' RPE' : ' חזרות'}`}
+              role="textbox"
+              aria-readonly="true"
+              tabIndex={-1}
+              onTouchStart={(e) => e.preventDefault()}
+              onTouchEnd={(e) => e.preventDefault()}
+              onClick={(e) => e.preventDefault()}
+              onFocus={(e) => e.preventDefault()}
+            >
+              {inputValue}
+            </div>
             <div className={`text-zinc-500 mt-2 font-medium ${compact ? 'text-base' : 'text-xl lg:text-2xl'}`} aria-hidden="true">
               {allowDecimal ? 'kg' : isRpeMode ? 'RPE' : 'reps'}
             </div>
@@ -246,7 +174,7 @@ export default function QuickNumericPad({
             </div>
             {!compact && (
               <div className="text-sm text-zinc-600 mt-2" aria-hidden="true">
-                {preventKeyboard ? 'השתמש בכפתורים למטה' : 'לחץ Enter לאישור • Esc לביטול • חצים למעלה/למטה'}
+                השתמש בכפתורים למטה
               </div>
             )}
           </div>
