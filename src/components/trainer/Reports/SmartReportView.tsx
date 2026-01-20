@@ -88,13 +88,12 @@ export default function SmartReportView() {
       const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0, 23, 59, 59);
 
       // Get workout counts for each trainee in the month - ONLY from calendar synced workouts
-      // First get all synced workouts for this month
+      // Count ALL synced workouts for the month (both past and future) for billing purposes
       const { data: workoutsData, error: workoutsError } = await supabase
         .from('workouts')
         .select('id')
         .eq('trainer_id', user.id)
         .eq('synced_from_google', true)
-        .eq('is_completed', true)
         .gte('workout_date', startOfMonth.toISOString())
         .lte('workout_date', endOfMonth.toISOString());
 
