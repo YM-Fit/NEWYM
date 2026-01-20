@@ -62,7 +62,10 @@ const PAYMENT_METHOD_ICONS: Record<PaymentMethod, typeof CreditCard> = {
 
 export default function SmartReportView() {
   const { user } = useAuth();
-  const { data: trainees = [], loading: traineesLoading, refetch } = useTrainees(user?.id || null);
+  const { data: traineesData, loading: traineesLoading, refetch } = useTrainees(user?.id || null);
+  
+  // Ensure trainees is always an array
+  const trainees = Array.isArray(traineesData) ? traineesData : [];
   
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [reportData, setReportData] = useState<TraineeReportRow[]>([]);

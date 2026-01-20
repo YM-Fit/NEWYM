@@ -35,7 +35,10 @@ export default function QuickAddWorkoutModal({
   onWorkoutCreated
 }: QuickAddWorkoutModalProps) {
   const { user } = useAuth();
-  const { data: trainees = [], loading: traineesLoading } = useTrainees(user?.id || null);
+  const { data: traineesData, loading: traineesLoading } = useTrainees(user?.id || null);
+  
+  // Ensure trainees is always an array
+  const trainees = Array.isArray(traineesData) ? traineesData : [];
   
   const [selectedTraineeId, setSelectedTraineeId] = useState<string>('');
   const [duration, setDuration] = useState<Duration>('60');
@@ -45,6 +48,7 @@ export default function QuickAddWorkoutModal({
 
   // Sort trainees by name for display
   const sortedTrainees = useMemo(() => {
+    if (!trainees || trainees.length === 0) return [];
     return [...trainees].sort((a, b) => 
       a.full_name.localeCompare(b.full_name, 'he')
     );
