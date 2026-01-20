@@ -213,11 +213,17 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3 shadow-xl">
-          <p className="text-zinc-400 text-sm mb-1">{label}</p>
-          <p className="font-bold text-lg" style={{ color: getMetricColor() }}>
-            {metricType === 'volume' ? payload[0].value.toLocaleString() : payload[0].value} {getMetricUnit()}
-          </p>
+        <div className="bg-zinc-900/95 backdrop-blur-sm border border-zinc-700/50 rounded-xl p-4 shadow-2xl">
+          <p className="text-zinc-400 text-xs mb-2 font-medium">{label}</p>
+          <div className="flex items-baseline gap-2">
+            <p className="font-bold text-2xl" style={{ color: getMetricColor() }}>
+              {metricType === 'volume' ? payload[0].value.toLocaleString() : payload[0].value}
+            </p>
+            <p className="text-sm text-zinc-500 font-medium">{getMetricUnit()}</p>
+          </div>
+          <div className="mt-2 pt-2 border-t border-zinc-700/50">
+            <p className="text-xs text-zinc-500">{getMetricLabel()}</p>
+          </div>
         </div>
       );
     }
@@ -451,18 +457,57 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
         {viewMode === 'chart' && (
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                <XAxis dataKey="date" stroke="#71717a" fontSize={12} tickLine={false} />
-                <YAxis stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip content={<CustomTooltip />} />
+              <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                <defs>
+                  <linearGradient id={`gradient-${metricType}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={getMetricColor()} stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={getMetricColor()} stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="#3f3f46" 
+                  strokeOpacity={0.3}
+                  vertical={false}
+                />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#71717a" 
+                  fontSize={12} 
+                  tickLine={false}
+                  axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
+                  tick={{ fill: '#a1a1aa' }}
+                />
+                <YAxis 
+                  stroke="#71717a" 
+                  fontSize={12} 
+                  tickLine={false} 
+                  axisLine={false}
+                  tick={{ fill: '#a1a1aa' }}
+                  width={45}
+                />
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: getMetricColor(), strokeWidth: 1, strokeDasharray: '5 5', strokeOpacity: 0.3 }} />
                 <Line
                   type="monotone"
                   dataKey="value"
                   stroke={getMetricColor()}
                   strokeWidth={3}
-                  dot={{ fill: getMetricColor(), strokeWidth: 2, r: 5, stroke: '#18181b' }}
-                  activeDot={{ r: 7, stroke: getMetricColor(), strokeWidth: 2, fill: '#18181b' }}
+                  dot={{ 
+                    fill: getMetricColor(), 
+                    strokeWidth: 3, 
+                    r: 5, 
+                    stroke: '#09090b',
+                    filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.3))'
+                  }}
+                  activeDot={{ 
+                    r: 8, 
+                    stroke: getMetricColor(), 
+                    strokeWidth: 3, 
+                    fill: '#09090b',
+                    filter: 'drop-shadow(0 0 8px ' + getMetricColor() + ')'
+                  }}
+                  animationDuration={1000}
+                  animationEasing="ease-in-out"
                 />
               </LineChart>
             </ResponsiveContainer>

@@ -45,15 +45,15 @@ interface WorkoutSummaryProps {
 }
 
 const MUSCLE_GROUP_COLORS: Record<string, string> = {
-  'chest': '#ef4444',
-  'back': '#3b82f6',
-  'shoulders': '#f59e0b',
-  'biceps': '#10b981',
-  'triceps': '#8b5cf6',
-  'legs': '#ec4899',
-  'glutes': '#f97316',
-  'core': '#06b6d4',
-  'default': '#6b7280',
+  'chest': '#ef4444',      // red-500
+  'back': '#06b6d4',       // cyan-500 (מותאם לפלטת המערכת)
+  'shoulders': '#f59e0b',  // amber-500 (מותאם לפלטת המערכת)
+  'biceps': '#10b981',     // emerald-500 (צבע ראשי במערכת)
+  'triceps': '#8b5cf6',    // violet-500
+  'legs': '#ec4899',       // pink-500
+  'glutes': '#f97316',     // orange-500
+  'core': '#14b8a6',       // teal-500 (מותאם לפלטת המערכת)
+  'default': '#71717a',    // zinc-500 (מותאם לפלטת המערכת)
 };
 
 export default function WorkoutSummary({
@@ -295,21 +295,49 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
           {chartData.length > 0 && (
             <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 bg-emerald-500/20 border border-emerald-500/30 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-emerald-400" />
                 </div>
                 <h3 className="text-lg font-bold text-white">נפח לפי קבוצת שריר</h3>
               </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 80, bottom: 5 }}>
-                    <XAxis type="number" tickFormatter={(v) => `${(v / 1000).toFixed(1)}K`} stroke="#71717a" />
-                    <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 12, fill: '#a1a1aa' }} stroke="#71717a" />
+                    <XAxis 
+                      type="number" 
+                      tickFormatter={(v) => `${(v / 1000).toFixed(1)}K`} 
+                      stroke="#71717a"
+                      tick={{ fill: '#a1a1aa' }}
+                      tickLine={false}
+                      axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
+                    />
+                    <YAxis 
+                      type="category" 
+                      dataKey="name" 
+                      width={70} 
+                      tick={{ fontSize: 12, fill: '#a1a1aa' }} 
+                      stroke="#71717a"
+                      tickLine={false}
+                      axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
+                    />
                     <Tooltip
                       formatter={(value: number) => [`${value.toLocaleString()} ק"ג`, 'נפח']}
-                      contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: '#27272a', color: '#fff' }}
+                      contentStyle={{ 
+                        borderRadius: '12px', 
+                        border: '1px solid rgba(63, 63, 70, 0.5)', 
+                        backgroundColor: 'rgba(24, 24, 27, 0.95)', 
+                        backdropFilter: 'blur(8px)',
+                        color: '#fff',
+                        padding: '12px'
+                      }}
+                      cursor={{ fill: 'rgba(16, 185, 129, 0.1)' }}
                     />
-                    <Bar dataKey="volume" radius={[0, 8, 8, 0]}>
+                    <Bar 
+                      dataKey="volume" 
+                      radius={[0, 8, 8, 0]}
+                      animationDuration={1000}
+                      animationEasing="ease-in-out"
+                    >
                       {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}

@@ -82,8 +82,8 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3 shadow-xl">
-          <p className="text-zinc-400 text-sm mb-2">{label}</p>
+        <div className="bg-zinc-900/95 backdrop-blur-sm border border-zinc-700/50 rounded-xl p-4 shadow-2xl">
+          <p className="text-zinc-400 text-xs mb-3 font-medium">{label}</p>
           {isPairWithBothMembers && payload.length > 1 ? (
             <div className="space-y-2">
               {payload.map((entry: any, index: number) => {
@@ -91,17 +91,31 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                 const memberName = index === 0 ? (trainee?.pairName1 || 'בן זוג 1') : (trainee?.pairName2 || 'בן זוג 2');
                 const color = index === 0 ? '#06b6d4' : '#f59e0b';
                 return (
-                  <p key={index} className="text-white font-bold text-base" style={{ color }}>
-                    {memberName}: {entry.value} {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
-                  </p>
+                  <div key={index} className="flex items-baseline gap-2">
+                    <p className="text-xs text-zinc-500 font-medium">{memberName}:</p>
+                    <p className="font-bold text-xl" style={{ color }}>
+                      {entry.value}
+                    </p>
+                    <p className="text-xs text-zinc-500 font-medium">
+                      {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
+                    </p>
+                  </div>
                 );
               })}
             </div>
           ) : (
-            <p className="text-white font-bold text-lg" style={{ color: getMetricColor(metric) }}>
-              {payload[0].value} {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
-            </p>
+            <div className="flex items-baseline gap-2">
+              <p className="font-bold text-2xl" style={{ color: getMetricColor(metric) }}>
+                {payload[0].value}
+              </p>
+              <p className="text-sm text-zinc-500 font-medium">
+                {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
+              </p>
+            </div>
           )}
+          <div className="mt-2 pt-2 border-t border-zinc-700/50">
+            <p className="text-xs text-zinc-500">{getMetricLabel(metric)}</p>
+          </div>
         </div>
       );
     }
@@ -179,21 +193,38 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
       {viewMode === 'chart' && (
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={combinedChartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+            <LineChart data={combinedChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+              <CartesianGrid 
+                strokeDasharray="3 3" 
+                stroke="#3f3f46" 
+                strokeOpacity={0.3}
+                vertical={false}
+              />
               <XAxis
                 dataKey="date"
                 stroke="#71717a"
                 fontSize={12}
                 tickLine={false}
+                axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
+                tick={{ fill: '#a1a1aa' }}
               />
               <YAxis
                 stroke="#71717a"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
+                tick={{ fill: '#a1a1aa' }}
+                width={45}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip 
+                content={<CustomTooltip />} 
+                cursor={{ 
+                  stroke: isPairWithBothMembers ? '#06b6d4' : getMetricColor(metric), 
+                  strokeWidth: 1, 
+                  strokeDasharray: '5 5', 
+                  strokeOpacity: 0.3 
+                }} 
+              />
               {isPairWithBothMembers ? (
                 <>
                   <Line
@@ -201,20 +232,48 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                     dataKey="value1"
                     stroke="#06b6d4"
                     strokeWidth={3}
-                    dot={{ fill: '#06b6d4', strokeWidth: 2, r: 5, stroke: '#18181b' }}
-                    activeDot={{ r: 7, stroke: '#06b6d4', strokeWidth: 2, fill: '#18181b' }}
+                    dot={{ 
+                      fill: '#06b6d4', 
+                      strokeWidth: 3, 
+                      r: 5, 
+                      stroke: '#09090b',
+                      filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.3))'
+                    }}
+                    activeDot={{ 
+                      r: 8, 
+                      stroke: '#06b6d4', 
+                      strokeWidth: 3, 
+                      fill: '#09090b',
+                      filter: 'drop-shadow(0 0 8px #06b6d4)'
+                    }}
                     name={trainee?.pairName1 || 'בן זוג 1'}
                     connectNulls={false}
+                    animationDuration={1000}
+                    animationEasing="ease-in-out"
                   />
                   <Line
                     type="monotone"
                     dataKey="value2"
                     stroke="#f59e0b"
                     strokeWidth={3}
-                    dot={{ fill: '#f59e0b', strokeWidth: 2, r: 5, stroke: '#18181b' }}
-                    activeDot={{ r: 7, stroke: '#f59e0b', strokeWidth: 2, fill: '#18181b' }}
+                    dot={{ 
+                      fill: '#f59e0b', 
+                      strokeWidth: 3, 
+                      r: 5, 
+                      stroke: '#09090b',
+                      filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.3))'
+                    }}
+                    activeDot={{ 
+                      r: 8, 
+                      stroke: '#f59e0b', 
+                      strokeWidth: 3, 
+                      fill: '#09090b',
+                      filter: 'drop-shadow(0 0 8px #f59e0b)'
+                    }}
                     name={trainee?.pairName2 || 'בן זוג 2'}
                     connectNulls={false}
+                    animationDuration={1000}
+                    animationEasing="ease-in-out"
                   />
                 </>
               ) : (
@@ -223,9 +282,23 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                   dataKey="value"
                   stroke={getMetricColor(metric)}
                   strokeWidth={3}
-                  dot={{ fill: getMetricColor(metric), strokeWidth: 2, r: 5, stroke: '#18181b' }}
-                  activeDot={{ r: 7, stroke: getMetricColor(metric), strokeWidth: 2, fill: '#18181b' }}
+                  dot={{ 
+                    fill: getMetricColor(metric), 
+                    strokeWidth: 3, 
+                    r: 5, 
+                    stroke: '#09090b',
+                    filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.3))'
+                  }}
+                  activeDot={{ 
+                    r: 8, 
+                    stroke: getMetricColor(metric), 
+                    strokeWidth: 3, 
+                    fill: '#09090b',
+                    filter: 'drop-shadow(0 0 8px ' + getMetricColor(metric) + ')'
+                  }}
                   name={getMetricLabel(metric)}
+                  animationDuration={1000}
+                  animationEasing="ease-in-out"
                 />
               )}
             </LineChart>

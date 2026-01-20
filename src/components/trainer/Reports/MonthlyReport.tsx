@@ -145,9 +145,12 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3 shadow-xl">
-          <p className="text-white font-semibold">{label}</p>
-          <p className="text-emerald-400">{payload[0].value} אימונים</p>
+        <div className="bg-zinc-900/95 backdrop-blur-sm border border-zinc-700/50 rounded-xl p-4 shadow-2xl">
+          <p className="text-zinc-400 text-xs mb-2 font-medium">{label}</p>
+          <div className="flex items-baseline gap-2">
+            <p className="text-emerald-400 font-bold text-2xl">{payload[0].value}</p>
+            <p className="text-zinc-500 text-sm font-medium">אימונים</p>
+          </div>
         </div>
       );
     }
@@ -169,18 +172,42 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
         <div className="p-5">
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                <XAxis dataKey="week" tick={{ fontSize: 12, fill: '#a1a1aa' }} axisLine={{ stroke: '#3f3f46' }} />
-                <YAxis tick={{ fontSize: 12, fill: '#a1a1aa' }} axisLine={{ stroke: '#3f3f46' }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="workouts" fill="url(#barGradient)" radius={[8, 8, 0, 0]} />
+              <BarChart data={weeklyData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" />
-                    <stop offset="100%" stopColor="#059669" />
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#059669" stopOpacity={0.9} />
                   </linearGradient>
                 </defs>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="#3f3f46" 
+                  strokeOpacity={0.3}
+                  vertical={false}
+                />
+                <XAxis 
+                  dataKey="week" 
+                  tick={{ fontSize: 12, fill: '#a1a1aa' }} 
+                  axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
+                  tickLine={false}
+                />
+                <YAxis 
+                  tick={{ fontSize: 12, fill: '#a1a1aa' }} 
+                  axisLine={false}
+                  tickLine={false}
+                  width={35}
+                />
+                <Tooltip 
+                  content={<CustomTooltip />}
+                  cursor={{ fill: 'rgba(16, 185, 129, 0.1)' }}
+                />
+                <Bar 
+                  dataKey="workouts" 
+                  fill="url(#barGradient)" 
+                  radius={[8, 8, 0, 0]}
+                  animationDuration={1000}
+                  animationEasing="ease-in-out"
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>

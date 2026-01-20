@@ -398,28 +398,64 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
       {activities.length >= 2 && (
         <div className="premium-card-static p-6">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-sky-400" />
+            <BarChart3 className="h-5 w-5 text-emerald-400" />
             גרף התקדמות - יעד מול ביצוע
           </h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={getChartData()}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                <XAxis dataKey="date" stroke="#71717a" style={{ fontSize: '12px' }} />
-                <YAxis stroke="#71717a" style={{ fontSize: '12px' }} />
+              <BarChart data={getChartData()} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="#3f3f46" 
+                  strokeOpacity={0.3}
+                  vertical={false}
+                />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#71717a" 
+                  style={{ fontSize: '12px' }}
+                  tickLine={false}
+                  axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
+                  tick={{ fill: '#a1a1aa' }}
+                />
+                <YAxis 
+                  stroke="#71717a" 
+                  style={{ fontSize: '12px' }}
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: '#a1a1aa' }}
+                  width={45}
+                />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#18181b',
-                    border: '1px solid #3f3f46',
+                    backgroundColor: 'rgba(24, 24, 27, 0.95)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(63, 63, 70, 0.5)',
                     borderRadius: '12px',
-                    color: '#fff'
+                    color: '#fff',
+                    padding: '12px'
                   }}
+                  cursor={{ fill: 'rgba(16, 185, 129, 0.1)' }}
                 />
-                <Legend />
-                <Bar dataKey="יעד" fill="#10b981" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="בוצע" radius={[4, 4, 0, 0]}>
+                <Legend 
+                  wrapperStyle={{ paddingTop: '20px' }}
+                  iconType="circle"
+                />
+                <Bar 
+                  dataKey="יעד" 
+                  fill="#10b981" 
+                  radius={[6, 6, 0, 0]}
+                  animationDuration={1000}
+                  animationEasing="ease-in-out"
+                />
+                <Bar 
+                  dataKey="בוצע" 
+                  radius={[6, 6, 0, 0]}
+                  animationDuration={1000}
+                  animationEasing="ease-in-out"
+                >
                   {getChartData().map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.achieved ? '#0ea5e9' : '#f59e0b'} />
+                    <Cell key={`cell-${index}`} fill={entry.achieved ? '#06b6d4' : '#f59e0b'} />
                   ))}
                 </Bar>
               </BarChart>

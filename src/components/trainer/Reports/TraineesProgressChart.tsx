@@ -176,13 +176,20 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3 shadow-xl">
-          <p className="text-white font-semibold mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} style={{ color: entry.color }} className="text-sm">
-              {entry.name}: {chartType === 'weight' ? `${entry.value?.toFixed(1)} ק"ג` : `${entry.value?.toLocaleString()} ק"ג`}
-            </p>
-          ))}
+        <div className="bg-zinc-900/95 backdrop-blur-sm border border-zinc-700/50 rounded-xl p-4 shadow-2xl">
+          <p className="text-zinc-400 text-xs mb-3 font-medium">{label}</p>
+          <div className="space-y-2">
+            {payload.map((entry: any, index: number) => (
+              <div key={index} className="flex items-baseline gap-2">
+                <div className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5" style={{ backgroundColor: entry.color }} />
+                <p className="text-xs text-zinc-400 flex-1">{entry.name}:</p>
+                <p className="font-bold text-base" style={{ color: entry.color }}>
+                  {chartType === 'weight' ? entry.value?.toFixed(1) : entry.value?.toLocaleString()}
+                </p>
+                <p className="text-xs text-zinc-500">ק"ג</p>
+              </div>
+            ))}
+          </div>
         </div>
       );
     }
@@ -290,18 +297,34 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
           <>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#a1a1aa' }} axisLine={{ stroke: '#3f3f46' }} />
+                <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                  <CartesianGrid 
+                    strokeDasharray="3 3" 
+                    stroke="#3f3f46" 
+                    strokeOpacity={0.3}
+                    vertical={false}
+                  />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 11, fill: '#a1a1aa' }} 
+                    axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
+                    tickLine={false}
+                  />
                   <YAxis
                     tick={{ fontSize: 11, fill: '#a1a1aa' }}
-                    axisLine={{ stroke: '#3f3f46' }}
+                    axisLine={false}
+                    tickLine={false}
                     tickFormatter={(value) => chartType === 'volume' ? `${(value / 1000).toFixed(0)}K` : value}
+                    width={45}
                   />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip 
+                    content={<CustomTooltip />}
+                    cursor={{ stroke: '#10b981', strokeWidth: 1, strokeDasharray: '5 5', strokeOpacity: 0.3 }}
+                  />
                   <Legend
                     wrapperStyle={{ paddingTop: '20px' }}
                     formatter={(value) => <span className="text-zinc-300 text-sm">{value}</span>}
+                    iconType="circle"
                   />
                   {progressData.map(trainee => (
                     <Line
@@ -309,10 +332,22 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
                       type="monotone"
                       dataKey={trainee.name}
                       stroke={trainee.color}
-                      strokeWidth={2}
-                      dot={{ r: 4, fill: trainee.color }}
-                      activeDot={{ r: 6 }}
+                      strokeWidth={3}
+                      dot={{ 
+                        r: 4, 
+                        fill: trainee.color,
+                        strokeWidth: 2,
+                        stroke: '#09090b'
+                      }}
+                      activeDot={{ 
+                        r: 7,
+                        fill: '#09090b',
+                        stroke: trainee.color,
+                        strokeWidth: 3
+                      }}
                       connectNulls
+                      animationDuration={1000}
+                      animationEasing="ease-in-out"
                     />
                   ))}
                 </LineChart>
