@@ -31,6 +31,11 @@ export interface Trainee {
   contract_value?: number;
   payment_status?: 'paid' | 'pending' | 'overdue' | 'free';
   tags?: string[];
+  // Payment management fields
+  payment_method?: 'standing_order' | 'credit' | 'monthly_count' | 'card_ticket' | null;
+  monthly_price?: number;
+  card_sessions_total?: number;
+  card_sessions_used?: number;
 }
 
 export interface Exercise {

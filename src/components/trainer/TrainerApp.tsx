@@ -36,6 +36,7 @@ const ToolsView = lazy(() => import('./Tools/ToolsView'));
 const TraineeFoodDiaryView = lazy(() => import('./Trainees/TraineeFoodDiaryView'));
 const CardioManager = lazy(() => import('./Cardio/CardioManager'));
 const ReportsView = lazy(() => import('./Reports/ReportsView'));
+const SmartReportView = lazy(() => import('./Reports/SmartReportView'));
 // Settings & Management Components
 const HealthCheckView = lazy(() => import('../settings/HealthCheckView'));
 const ErrorReportingSettings = lazy(() => import('../settings/ErrorReportingSettings'));
@@ -1156,6 +1157,13 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
         return (
           <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
             <ReportsView />
+          </Suspense>
+        );
+
+      case 'smart-report':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <SmartReportView />
           </Suspense>
         );
 

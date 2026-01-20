@@ -1,0 +1,323 @@
+/**
+ * QuickAddWorkoutModal - Quick workout creation from calendar
+ * Allows fast scheduling of workouts with trainee selection
+ */
+
+import { useState, useCallback, useMemo } from 'react';
+import { 
+  X, 
+  Clock, 
+  Calendar, 
+  User, 
+  Loader2,
+  Plus
+} from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useTrainees } from '../../../hooks/useSupabaseQuery';
+import { createGoogleCalendarEvent } from '../../../api/googleCalendarApi';
+import { supabase } from '../../../lib/supabase';
+import toast from 'react-hot-toast';
+import { logger } from '../../../utils/logger';
+
+interface QuickAddWorkoutModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  selectedDate: Date;
+  onWorkoutCreated?: () => void;
+}
+
+type Duration = '30' | '60';
+
+export default function QuickAddWorkoutModal({
+  isOpen,
+  onClose,
+  selectedDate,
+  onWorkoutCreated
+}: QuickAddWorkoutModalProps) {
+  const { user } = useAuth();
+  const { data: trainees = [], loading: traineesLoading } = useTrainees(user?.id || null);
+  
+  const [selectedTraineeId, setSelectedTraineeId] = useState<string>('');
+  const [duration, setDuration] = useState<Duration>('60');
+  const [date, setDate] = useState<string>(selectedDate.toISOString().split('T')[0]);
+  const [time, setTime] = useState<string>('09:00');
+  const [saving, setSaving] = useState(false);
+
+  // Sort trainees by name for display
+  const sortedTrainees = useMemo(() => {
+    return [...trainees].sort((a, b) => 
+      a.full_name.localeCompare(b.full_name, 'he')
+    );
+  }, [trainees]);
+
+  const handleSave = useCallback(async () => {
+    if (!user || !selectedTraineeId) {
+      toast.error('יש לבחור מתאמן');
+      return;
+    }
+
+    const selectedTrainee = trainees.find(t => t.id === selectedTraineeId);
+    if (!selectedTrainee) {
+      toast.error('מתאמן לא נמצא');
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      // Get access token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error('נדרשת הרשאה');
+        return;
+      }
+
+      // Calculate start and end times
+      const [hours, minutes] = time.split(':').map(Number);
+      const startTime = new Date(date);
+      startTime.setHours(hours, minutes, 0, 0);
+      
+      const endTime = new Date(startTime);
+      endTime.setMinutes(endTime.getMinutes() + parseInt(duration));
+
+      // Create event in Google Calendar
+      const eventResult = await createGoogleCalendarEvent(
+        user.id,
+        {
+          summary: `אימון - ${selectedTrainee.full_name}`,
+          startTime,
+          endTime,
+          description: `אימון אישי עם ${selectedTrainee.full_name}`,
+        },
+        session.access_token
+      );
+
+      if (!eventResult.success || !eventResult.data) {
+        throw new Error(eventResult.error || 'שגיאה ביצירת אירוע');
+      }
+
+      const googleEventId = eventResult.data;
+
+      // Create workout record in database
+      const { data: workoutData, error: workoutError } = await supabase
+        .from('workouts')
+        .insert({
+          trainer_id: user.id,
+          workout_date: startTime.toISOString(),
+          workout_type: 'personal',
+          is_completed: false,
+          google_event_id: googleEventId,
+          synced_from_google: false,
+          notes: '',
+        })
+        .select('id')
+        .single();
+
+      if (workoutError) {
+        logger.error('Error creating workout', workoutError, 'QuickAddWorkoutModal');
+        throw new Error('שגיאה ביצירת אימון');
+      }
+
+      // Link workout to trainee
+      const { error: linkError } = await supabase
+        .from('workout_trainees')
+        .insert({
+          workout_id: workoutData.id,
+          trainee_id: selectedTraineeId,
+        });
+
+      if (linkError) {
+        logger.error('Error linking trainee to workout', linkError, 'QuickAddWorkoutModal');
+        // Don't throw - workout was created, just the link failed
+      }
+
+      // Create sync record
+      const { error: syncError } = await supabase
+        .from('google_calendar_sync')
+        .upsert({
+          trainer_id: user.id,
+          trainee_id: selectedTraineeId,
+          workout_id: workoutData.id,
+          google_event_id: googleEventId,
+          google_calendar_id: 'primary',
+          sync_status: 'synced',
+          sync_direction: 'to_google',
+          event_start_time: startTime.toISOString(),
+          event_end_time: endTime.toISOString(),
+          event_summary: `אימון - ${selectedTrainee.full_name}`,
+        }, {
+          onConflict: 'google_event_id,google_calendar_id',
+        });
+
+      if (syncError) {
+        logger.error('Error creating sync record', syncError, 'QuickAddWorkoutModal');
+        // Don't throw - workout and event were created
+      }
+
+      toast.success(`נוצר אימון עם ${selectedTrainee.full_name}`);
+      
+      // Reset form
+      setSelectedTraineeId('');
+      setDuration('60');
+      setTime('09:00');
+      
+      onWorkoutCreated?.();
+      onClose();
+    } catch (err) {
+      logger.error('Error creating quick workout', err, 'QuickAddWorkoutModal');
+      toast.error(err instanceof Error ? err.message : 'שגיאה ביצירת אימון');
+    } finally {
+      setSaving(false);
+    }
+  }, [user, selectedTraineeId, trainees, date, time, duration, onWorkoutCreated, onClose]);
+
+  // Reset date when selectedDate changes
+  useMemo(() => {
+    setDate(selectedDate.toISOString().split('T')[0]);
+  }, [selectedDate]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-zinc-900 rounded-2xl max-w-md w-full border border-zinc-800 shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-zinc-800">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-emerald-500/20 rounded-lg">
+              <Plus className="h-5 w-5 text-emerald-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">הוספת אימון מהירה</h2>
+              <p className="text-xs text-zinc-400">
+                {selectedDate.toLocaleDateString('he-IL', { 
+                  weekday: 'long',
+                  day: 'numeric', 
+                  month: 'long' 
+                })}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-zinc-800 rounded-lg transition-all"
+          >
+            <X className="h-5 w-5 text-zinc-400" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 space-y-5">
+          {/* Trainee Selection */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-zinc-300">
+              <User className="h-4 w-4 text-emerald-400" />
+              בחירת מתאמן
+            </label>
+            <select
+              value={selectedTraineeId}
+              onChange={(e) => setSelectedTraineeId(e.target.value)}
+              disabled={traineesLoading}
+              className="w-full p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+            >
+              <option value="">-- בחר מתאמן --</option>
+              {sortedTrainees.map((trainee) => (
+                <option key={trainee.id} value={trainee.id}>
+                  {trainee.full_name}
+                  {trainee.phone && ` (${trainee.phone})`}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Duration Selection */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-zinc-300">
+              <Clock className="h-4 w-4 text-emerald-400" />
+              משך האימון
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setDuration('30')}
+                className={`p-3 rounded-xl border transition-all ${
+                  duration === '30'
+                    ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
+                    : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-300 hover:border-zinc-600'
+                }`}
+              >
+                30 דקות
+              </button>
+              <button
+                type="button"
+                onClick={() => setDuration('60')}
+                className={`p-3 rounded-xl border transition-all ${
+                  duration === '60'
+                    ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
+                    : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-300 hover:border-zinc-600'
+                }`}
+              >
+                שעה
+              </button>
+            </div>
+          </div>
+
+          {/* Date & Time */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-zinc-300">
+                <Calendar className="h-4 w-4 text-emerald-400" />
+                תאריך
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-zinc-300">
+                <Clock className="h-4 w-4 text-emerald-400" />
+                שעה
+              </label>
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="w-full p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between p-5 border-t border-zinc-800">
+          <button
+            onClick={onClose}
+            className="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl transition-all"
+          >
+            ביטול
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving || !selectedTraineeId}
+            className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                יוצר...
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4" />
+                צור אימון
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -237,6 +237,9 @@ export default function CalendarSyncModal({
       }> = [];
       
       const traineesToCreate: Array<{ name: string; eventId: string }> = [];
+      
+      // Track name-to-trainee mappings for auto-sync
+      const nameToTraineeMap = new Map<string, string>();
 
       for (const [eventId, decision] of decisions.entries()) {
         const matchedEvent = matchedEvents.find(e => e.event.id === eventId);
@@ -254,6 +257,10 @@ export default function CalendarSyncModal({
             event_end_time: matchedEvent.event.end?.dateTime || matchedEvent.event.end?.date || null,
             event_summary: matchedEvent.event.summary
           });
+          
+          // Track the name-to-trainee mapping for auto-sync
+          const extractedName = matchedEvent.event.extractedName?.toLowerCase() || matchedEvent.event.summary.toLowerCase();
+          nameToTraineeMap.set(extractedName, decision.traineeId);
         } else if (decision.action === 'create') {
           traineesToCreate.push({
             name: decision.displayName,
@@ -276,6 +283,102 @@ export default function CalendarSyncModal({
         }
       }
 
+      // Auto-sync future events with the same names
+      let autoSyncedCount = 0;
+      if (nameToTraineeMap.size > 0) {
+        try {
+          // Fetch future events (next 6 months)
+          const futureStart = new Date();
+          const futureEnd = new Date();
+          futureEnd.setMonth(futureEnd.getMonth() + 6);
+
+          const futureEventsResult = await getGoogleCalendarEvents(user.id, { start: futureStart, end: futureEnd }, { 
+            useCache: false, 
+            forceRefresh: true 
+          });
+
+          if (futureEventsResult.success && futureEventsResult.data) {
+            // Get existing synced event IDs
+            const { data: existingSyncs } = await supabase
+              .from('google_calendar_sync')
+              .select('google_event_id')
+              .eq('trainer_id', user.id)
+              .in('google_event_id', futureEventsResult.data.map(e => e.id));
+
+            const syncedEventIds = new Set((existingSyncs || []).map(s => s.google_event_id));
+
+            // Filter to unsyced future events
+            const unsyncedFutureEvents = futureEventsResult.data.filter(e => !syncedEventIds.has(e.id));
+
+            // Check for name conflicts - look for similar but different names
+            const allEventNames = new Set<string>();
+            unsyncedFutureEvents.forEach(e => {
+              const name = e.summary?.toLowerCase().replace(/^(אימון|פגישה|טיפול|מפגש)\s*[-–:]\s*/i, '').trim();
+              if (name) allEventNames.add(name);
+            });
+
+            // Find potential conflicts (names that start the same but are different)
+            const hasNameConflict = (baseName: string): boolean => {
+              const firstName = baseName.split(' ')[0];
+              let conflictFound = false;
+              allEventNames.forEach(name => {
+                if (name !== baseName && name.startsWith(firstName) && !nameToTraineeMap.has(name)) {
+                  conflictFound = true;
+                }
+              });
+              return conflictFound;
+            };
+
+            // Prepare auto-sync links
+            const autoSyncLinks: typeof linksToSave = [];
+
+            for (const event of unsyncedFutureEvents) {
+              const extractedName = event.summary?.toLowerCase().replace(/^(אימון|פגישה|טיפול|מפגש)\s*[-–:]\s*/i, '').trim();
+              if (!extractedName) continue;
+
+              // Check if we have a mapping for this name
+              const traineeId = nameToTraineeMap.get(extractedName);
+              if (!traineeId) continue;
+
+              // Check for name conflicts
+              if (hasNameConflict(extractedName)) {
+                logger.info(`Skipping auto-sync for "${extractedName}" due to name conflict`, {}, 'CalendarSyncModal');
+                continue;
+              }
+
+              autoSyncLinks.push({
+                trainer_id: user.id,
+                trainee_id: traineeId,
+                google_event_id: event.id,
+                google_calendar_id: 'primary',
+                sync_status: 'synced',
+                sync_direction: 'from_google',
+                event_start_time: event.start?.dateTime || event.start?.date || new Date().toISOString(),
+                event_end_time: event.end?.dateTime || event.end?.date || null,
+                event_summary: event.summary || ''
+              });
+            }
+
+            // Save auto-sync links
+            if (autoSyncLinks.length > 0) {
+              const { error: autoSyncError } = await supabase
+                .from('google_calendar_sync')
+                .upsert(autoSyncLinks, { 
+                  onConflict: 'google_event_id,google_calendar_id',
+                  ignoreDuplicates: true 
+                });
+
+              if (!autoSyncError) {
+                autoSyncedCount = autoSyncLinks.length;
+              }
+            }
+          }
+        } catch (autoSyncErr) {
+          // Don't fail the main save, just log the error
+          logger.error('Error in auto-sync future events', autoSyncErr, 'CalendarSyncModal');
+        }
+      }
+
       // Trigger trainee creation for each new person
       for (const trainee of traineesToCreate) {
         if (onCreateTrainee) {
@@ -286,9 +389,10 @@ export default function CalendarSyncModal({
       const savedCount = linksToSave.length;
       const createCount = traineesToCreate.length;
       
-      if (savedCount > 0 || createCount > 0) {
+      if (savedCount > 0 || createCount > 0 || autoSyncedCount > 0) {
         let message = '';
         if (savedCount > 0) message += `${savedCount} אירועים קושרו`;
+        if (autoSyncedCount > 0) message += `${message ? ', ' : ''}${autoSyncedCount} אירועים עתידיים סונכרנו אוטומטית`;
         if (createCount > 0) message += `${message ? ', ' : ''}${createCount} מתאמנים חדשים להוספה`;
         toast.success(message);
       }

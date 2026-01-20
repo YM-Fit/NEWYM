@@ -1,4 +1,4 @@
-import { Home, Users, Calculator, BarChart3, X, Sparkles, Search, ChevronRight, LucideIcon, Calendar, Briefcase, TrendingUp, FileText } from 'lucide-react';
+import { Home, Users, Calculator, BarChart3, X, Sparkles, Search, ChevronRight, LucideIcon, Calendar, Briefcase, TrendingUp, FileText, FileSpreadsheet } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 
 interface MobileSidebarProps {
@@ -53,6 +53,7 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
     // Tools & Analytics
     { id: 'tools', label: 'כלים', icon: Calculator, description: 'מחשבונים וכלים', category: 'tools' },
     { id: 'reports', label: 'דוחות', icon: BarChart3, description: 'סטטיסטיקות ונתונים', category: 'tools' },
+    { id: 'smart-report', label: 'דוח חכם', icon: FileSpreadsheet, description: 'ניהול תשלומים חודשי', category: 'tools' },
   ], []);
 
   const categories = useMemo(() => [

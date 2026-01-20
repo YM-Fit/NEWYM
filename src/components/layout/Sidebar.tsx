@@ -1,4 +1,4 @@
-import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3, Search, LucideIcon, Calendar, Briefcase, TrendingUp, MessageSquare, FileText, DollarSign, Filter, FolderOpen, Activity, Settings } from 'lucide-react';
+import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3, Search, LucideIcon, Calendar, Briefcase, TrendingUp, MessageSquare, FileText, DollarSign, Filter, FolderOpen, Activity, Settings, FileSpreadsheet } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { getFromStorage, setToStorage, STORAGE_KEYS } from '../../utils/storage';
 
@@ -38,6 +38,7 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
     // Tools & Analytics
     { id: 'tools', label: 'כלים', icon: Calculator, description: 'מחשבונים וכלים', category: 'tools' },
     { id: 'reports', label: 'דוחות', icon: BarChart3, description: 'סטטיסטיקות ונתונים', category: 'tools' },
+    { id: 'smart-report', label: 'דוח חכם', icon: FileSpreadsheet, description: 'ניהול תשלומים חודשי', category: 'tools' },
     
     // Settings & Management
     { id: 'health-check', label: 'בדיקת בריאות', icon: Activity, description: 'מצב המערכת', category: 'settings' },

@@ -10,6 +10,7 @@ import {
 import { supabase } from '../../../lib/supabase';
 import GoogleCalendarSettings from '../Settings/GoogleCalendarSettings';
 import CalendarSyncModal from './CalendarSyncModal';
+import QuickAddWorkoutModal from './QuickAddWorkoutModal';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -299,6 +300,8 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
   const [connected, setConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showSyncModal, setShowSyncModal] = useState(false);
+  const [showQuickAddModal, setShowQuickAddModal] = useState(false);
+  const [quickAddDate, setQuickAddDate] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -658,18 +661,10 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     // Set the date to the clicked day
     const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     setCurrentDate(clickedDate);
-
-    // Small delay to ensure date is set before creating workout
-    setTimeout(() => {
-      // If onCreateWorkout is provided, use it (create workout)
-      if (onCreateWorkout) {
-        onCreateWorkout();
-        return;
-      }
-
-      // Otherwise, show a message to use the create workout button
-      toast.info('לחץ על כפתור "אימון חדש" ליצירת אימון', { icon: '💪' });
-    }, 50);
+    
+    // Open quick add modal
+    setQuickAddDate(clickedDate);
+    setShowQuickAddModal(true);
   };
 
   // Handle drag start
@@ -1341,6 +1336,17 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         }}
         onCreateTrainee={onCreateTrainee}
         currentDate={currentDate}
+      />
+
+      {/* Quick Add Workout Modal */}
+      <QuickAddWorkoutModal
+        isOpen={showQuickAddModal}
+        onClose={() => setShowQuickAddModal(false)}
+        selectedDate={quickAddDate}
+        onWorkoutCreated={() => {
+          // Refresh events after workout creation
+          loadEvents(false, true);
+        }}
       />
     </div>
   );
