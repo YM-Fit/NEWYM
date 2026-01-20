@@ -94,10 +94,10 @@ export function useThemeClasses() {
     bgSurface: isDark ? 'bg-zinc-800' : 'bg-[#ecf0ed]',
     bgCard: isDark ? 'bg-zinc-900/90' : 'bg-white/97',
 
-    // Text classes - gray-green tones for light mode
-    textPrimary: isDark ? 'text-white' : 'text-[#1a2e22]',
-    textSecondary: isDark ? 'text-zinc-400' : 'text-[#3d5347]',
-    textMuted: isDark ? 'text-zinc-500' : 'text-[#6b7f72]',
+    // Text classes - use CSS variables for theme-aware typography
+    textPrimary: 'text-theme-primary',
+    textSecondary: 'text-theme-secondary',
+    textMuted: 'text-theme-muted',
 
     // Border classes - emerald tinted for light mode
     border: isDark ? 'border-zinc-800' : 'border-emerald-500/10',
@@ -106,7 +106,7 @@ export function useThemeClasses() {
     // Input classes
     inputBg: isDark ? 'bg-zinc-800/50' : 'bg-white/95',
     inputBorder: isDark ? 'border-zinc-700' : 'border-emerald-500/15',
-    inputText: isDark ? 'text-white' : 'text-[#1a2e22]',
+    inputText: 'text-theme-primary',
     inputPlaceholder: isDark ? 'placeholder-zinc-500' : 'placeholder-[#6b7f72]',
 
     // Card background

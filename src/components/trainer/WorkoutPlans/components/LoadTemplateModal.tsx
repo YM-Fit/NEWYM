@@ -31,8 +31,8 @@ export default function LoadTemplateModal({
               <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Dumbbell className="w-10 h-10 text-gray-400" />
               </div>
-              <p className="text-gray-500 text-lg font-medium">אין תבניות שמורות</p>
-              <p className="text-sm text-gray-400 mt-2">צור תוכנית ושמור אותה כתבנית</p>
+              <p className="text-lg font-medium text-theme-primary">אין תבניות שמורות</p>
+              <p className="text-sm text-theme-muted mt-2">צור תוכנית ושמור אותה כתבנית</p>
             </div>
           ) : (
             <div className="space-y-3">

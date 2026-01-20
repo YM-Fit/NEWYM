@@ -172,8 +172,8 @@ export default function WeightTrendAnalysis({
       <div className="premium-card-static p-6">
         <div className="text-center py-12">
           <BarChart3 className="h-16 w-16 mx-auto text-gray-600 mb-4" />
-          <p className="text-gray-400 font-medium">אין מספיק נתונים לניתוח</p>
-          <p className="text-sm text-gray-500 mt-2">נדרשות לפחות 2 שקילות</p>
+          <p className="text-theme-secondary font-medium">אין מספיק נתונים לניתוח</p>
+          <p className="text-sm text-theme-muted mt-2">נדרשות לפחות 2 שקילות</p>
         </div>
       </div>
     );
@@ -222,8 +222,8 @@ export default function WeightTrendAnalysis({
             <BarChart3 className="h-6 w-6 text-cyan-400" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">ניתוח מגמות</h3>
-            <p className="text-sm text-gray-400">{traineeName}</p>
+            <h3 className="text-lg font-bold text-theme-primary">ניתוח מגמות</h3>
+            <p className="text-sm text-theme-muted">{traineeName}</p>
           </div>
         </div>
         <select

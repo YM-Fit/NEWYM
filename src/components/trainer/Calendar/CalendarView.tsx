@@ -29,6 +29,10 @@ interface CalendarEvent {
   };
   description?: string;
   location?: string;
+  attendees?: Array<{
+    email: string;
+    displayName?: string;
+  }>;
 }
 
 interface CalendarViewProps {
@@ -93,19 +97,67 @@ function EventItem({ event, onEventClick, onDelete, isDragging }: EventItemProps
     setShowDelete(false);
   };
 
+  const eventTime = event.start.dateTime 
+    ? new Date(event.start.dateTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+    : null;
+
+  // Extract trainee name from summary or attendees
+  const extractTraineeName = (event: CalendarEvent): string => {
+    // First try to get from attendees
+    if (event.attendees && event.attendees.length > 0) {
+      const attendee = event.attendees[0];
+      if (attendee.displayName) {
+        return attendee.displayName;
+      }
+    }
+    
+    // Then try from summary pattern "אימון - שם"
+    const match = event.summary.match(/אימון\s*-\s*(.+)/);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+    
+    // If it contains a dash, use the part after it
+    if (event.summary.includes(' - ')) {
+      return event.summary.split(' - ').pop() || event.summary;
+    }
+    
+    return event.summary;
+  };
+
+  const traineeName = extractTraineeName(event);
+  const hasTraineeName = traineeName !== event.summary || (event.attendees && event.attendees.length > 0);
+
   return (
     <div
       onClick={() => onEventClick?.(event)}
       onContextMenu={handleContextMenu}
       onBlur={handleClickOutside}
-      className={`text-xs bg-emerald-500/20 text-emerald-300 p-1.5 rounded cursor-pointer hover:bg-emerald-500/30 transition-all truncate relative group ${
+      className={`bg-emerald-500/25 border-2 border-emerald-400/60 text-emerald-50 p-2.5 rounded-lg cursor-pointer hover:bg-emerald-500/35 hover:border-emerald-400/80 transition-all relative group mb-2 shadow-lg ${
         isDragging ? 'opacity-50' : ''
       }`}
-      title={`${event.summary}${event.start.dateTime ? ` - ${new Date(event.start.dateTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}` : ''} (גרור להעברה, לחץ ימני למחיקה)`}
+      title={`${event.summary}${eventTime ? ` - ${eventTime}` : ''} (גרור להעברה, לחץ ימני למחיקה)`}
     >
-      {event.summary}
+      {/* Time - Very prominent */}
+      {eventTime && (
+        <div className="text-base font-bold text-emerald-100 mb-1.5 pb-1.5 border-b-2 border-emerald-400/40">
+          🕐 {eventTime}
+        </div>
+      )}
+      
+      {/* Trainee Name - Very prominent */}
+      <div className="text-sm font-bold text-white leading-tight mb-1">
+        👤 {traineeName}
+      </div>
+      
+      {/* Additional info if summary is different from name */}
+      {hasTraineeName && event.summary !== traineeName && (
+        <div className="text-[10px] text-emerald-200/70 italic truncate">
+          {event.summary}
+        </div>
+      )}
       {showDelete && (
-        <div className="absolute top-0 right-0 bg-red-600 hover:bg-red-700 rounded p-1 z-10">
+        <div className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 rounded p-1 z-20 shadow-lg">
           <button
             onClick={handleDelete}
             className="text-white"
@@ -188,26 +240,28 @@ function DroppableDayCell({
     <div
       ref={setNodeRef}
       onClick={() => day && onDayClick(day)}
-      className={`min-h-[100px] p-2 border rounded-lg transition-all ${
+      className={`min-h-[120px] p-3 border-2 rounded-lg transition-all ${
         day
           ? isOver
-            ? 'bg-emerald-500/20 border-emerald-500/50 ring-2 ring-emerald-500/30'
+            ? 'bg-emerald-500/20 border-emerald-500/60 ring-2 ring-emerald-500/40'
             : isToday
-              ? 'bg-emerald-500/10 border-emerald-500/30'
-              : 'bg-zinc-800/30 hover:bg-zinc-800/50 cursor-pointer border-zinc-800'
+              ? 'bg-emerald-500/15 border-emerald-500/40 shadow-md'
+              : 'bg-zinc-800/40 hover:bg-zinc-800/60 cursor-pointer border-zinc-700/50'
           : 'bg-transparent border-transparent'
       }`}
     >
       {day && (
         <>
           <div
-            className={`text-sm font-semibold mb-2 ${
-              isToday ? 'text-emerald-400' : 'text-zinc-300'
+            className={`text-base font-bold mb-3 pb-2 border-b ${
+              isToday 
+                ? 'text-emerald-400 border-emerald-500/30' 
+                : 'text-zinc-200 border-zinc-700/50'
             }`}
           >
             {day}
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {dayEvents.slice(0, 3).map((event) => (
               <div key={event.id} className="group">
                 <DraggableEventItem
@@ -232,7 +286,7 @@ function DroppableDayCell({
               </div>
             )}
             {dayEvents.length === 0 && (
-              <div className="text-xs text-zinc-600 opacity-50 mt-4 text-center">
+              <div className="text-xs text-zinc-500 opacity-60 mt-4 text-center italic border border-dashed border-zinc-700/30 rounded p-2">
                 לחץ להוספת אירוע
               </div>
             )}
@@ -844,23 +898,23 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
       <div className="overflow-x-auto">
         <div className="min-w-[800px]">
           {/* All-day events row */}
-          <div className="border-b border-zinc-800 pb-2 mb-2">
-            <div className="grid grid-cols-8 gap-2">
-              <div className="text-xs text-zinc-500 font-semibold py-2">כל היום</div>
+          <div className="border-b-2 border-zinc-700/50 pb-3 mb-3">
+            <div className="grid grid-cols-8 gap-3">
+              <div className="text-sm text-zinc-300 font-bold py-3 bg-zinc-800/50 rounded-md flex items-center justify-center">כל היום</div>
               {weekDays.map((day, idx) => {
                 const allDayEvents = getAllDayEvents(day);
                 const isToday = day.toDateString() === new Date().toDateString();
                 return (
                   <div
                     key={idx}
-                    className={`min-h-[60px] p-2 border rounded-lg ${
-                      isToday ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-zinc-800/30 border-zinc-800'
+                    className={`min-h-[70px] p-2.5 border-2 rounded-lg ${
+                      isToday ? 'bg-emerald-500/15 border-emerald-500/40 shadow-md' : 'bg-zinc-800/40 border-zinc-700/50'
                     }`}
                   >
-                    <div className={`text-xs font-semibold mb-1 ${isToday ? 'text-emerald-400' : 'text-zinc-400'}`}>
+                    <div className={`text-xs font-bold mb-2 pb-1 border-b ${isToday ? 'text-emerald-400 border-emerald-500/40' : 'text-zinc-300 border-zinc-700/50'}`}>
                       {day.toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric' })}
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       {allDayEvents.map(event => (
                         <EventItem
                           key={event.id}
@@ -881,12 +935,12 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
             {/* Hour labels column */}
             <div className="space-y-0">
               {hours.map(hour => (
-                <div
-                  key={hour}
-                  className="h-16 border-b border-zinc-800 flex items-start justify-end pr-2 pt-1"
-                >
-                  <span className="text-xs text-zinc-500">{hour}:00</span>
-                </div>
+                  <div
+                    key={hour}
+                    className="h-16 border-b-2 border-zinc-700/50 flex items-start justify-end pr-3 pt-1.5 bg-zinc-800/30"
+                  >
+                    <span className="text-sm text-zinc-400 font-semibold">{hour}:00</span>
+                  </div>
               ))}
             </div>
 
@@ -908,8 +962,8 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                             onCreateWorkout();
                           }
                         }}
-                        className={`h-16 border-b border-zinc-800 p-1 cursor-pointer hover:bg-zinc-800/30 transition-colors relative ${
-                          isToday ? 'bg-emerald-500/5' : ''
+                        className={`h-16 border-b-2 border-zinc-700/50 p-1.5 cursor-pointer hover:bg-zinc-800/40 transition-colors relative ${
+                          isToday ? 'bg-emerald-500/8' : ''
                         }`}
                       >
                         {hourEvents.map(event => {
@@ -926,17 +980,26 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                                 e.stopPropagation();
                                 onEventClick?.(event);
                               }}
-                              className="absolute left-0 right-0 bg-emerald-500/30 text-emerald-200 text-xs p-1 rounded cursor-pointer hover:bg-emerald-500/40 z-10 border border-emerald-500/50"
+                              className="absolute left-0 right-0 bg-emerald-500/40 text-white text-xs p-2.5 rounded-lg cursor-pointer hover:bg-emerald-500/50 z-10 border-2 border-emerald-400/70 shadow-lg"
                               style={{
                                 top: `${(startMinutes / 60) * 100}%`,
                                 height: `${heightPercent}%`,
-                                minHeight: '20px',
+                                minHeight: '50px',
                               }}
                               title={`${event.summary} - ${eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}`}
                             >
-                              <div className="truncate">{event.summary}</div>
-                              <div className="text-[10px] opacity-75">
-                                {eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                              {/* Time - Very prominent */}
+                              <div className="text-sm font-bold text-emerald-100 mb-1.5 pb-1 border-b-2 border-emerald-400/50">
+                                🕐 {eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                              
+                              {/* Trainee Name - Extract and display prominently */}
+                              <div className="text-xs font-bold text-white leading-tight">
+                                👤 {(() => {
+                                  const match = event.summary.match(/אימון\s*-\s*(.+)/);
+                                  const name = match && match[1] ? match[1].trim() : (event.summary.includes(' - ') ? event.summary.split(' - ').pop() : event.summary);
+                                  return name;
+                                })()}
                               </div>
                             </div>
                           );
@@ -964,9 +1027,9 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         <div className="min-w-[400px]">
           {/* All-day events */}
           {allDayEvents.length > 0 && (
-            <div className="border-b border-zinc-800 pb-4 mb-4">
-              <div className="text-xs text-zinc-500 font-semibold mb-2">כל היום</div>
-              <div className="space-y-1">
+            <div className="border-b-2 border-zinc-700/50 pb-4 mb-4">
+              <div className="text-sm text-zinc-300 font-bold mb-3 bg-zinc-800/50 p-2 rounded-md">כל היום</div>
+              <div className="space-y-2">
                 {allDayEvents.map(event => (
                   <EventItem
                     key={event.id}
@@ -984,12 +1047,12 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
             {/* Hour labels */}
             <div className="space-y-0">
               {hours.map(hour => (
-                <div
-                  key={hour}
-                  className="h-16 border-b border-zinc-800 flex items-start justify-end pr-4 pt-1"
-                >
-                  <span className="text-sm text-zinc-500 font-semibold">{hour}:00</span>
-                </div>
+                  <div
+                    key={hour}
+                    className="h-16 border-b-2 border-zinc-700/50 flex items-start justify-end pr-5 pt-2 bg-zinc-800/30"
+                  >
+                    <span className="text-base text-zinc-300 font-bold">{hour}:00</span>
+                  </div>
               ))}
             </div>
 
@@ -1008,8 +1071,8 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                         onCreateWorkout();
                       }
                     }}
-                    className={`h-16 border-b border-zinc-800 p-2 cursor-pointer hover:bg-zinc-800/30 transition-colors relative ${
-                      isToday ? 'bg-emerald-500/5' : ''
+                    className={`h-16 border-b-2 border-zinc-700/50 p-2.5 cursor-pointer hover:bg-zinc-800/40 transition-colors relative ${
+                      isToday ? 'bg-emerald-500/8' : ''
                     }`}
                   >
                     {hourEvents.map(event => {
@@ -1026,20 +1089,39 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                             e.stopPropagation();
                             onEventClick?.(event);
                           }}
-                          className="absolute left-2 right-2 bg-emerald-500/30 text-emerald-200 text-sm p-2 rounded cursor-pointer hover:bg-emerald-500/40 z-10 border border-emerald-500/50 shadow-md"
+                          className="absolute left-2 right-2 bg-emerald-500/40 text-white text-sm p-3 rounded-lg cursor-pointer hover:bg-emerald-500/50 z-10 border-2 border-emerald-400/70 shadow-xl"
                           style={{
                             top: `${(startMinutes / 60) * 100}%`,
                             height: `${heightPercent}%`,
-                            minHeight: '40px',
+                            minHeight: '70px',
                           }}
                           title={`${event.summary} - ${eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}`}
                         >
-                          <div className="font-semibold truncate">{event.summary}</div>
-                          <div className="text-xs opacity-75 mt-1">
-                            {eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} - {eventEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                          {/* Time Range - Very prominent */}
+                          <div className="text-base font-bold text-emerald-100 mb-2 pb-2 border-b-2 border-emerald-400/50">
+                            🕐 {eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} - {eventEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
                           </div>
+                          
+                          {/* Trainee Name - Extract and display prominently */}
+                          <div className="text-sm font-bold text-white leading-tight mb-2">
+                            👤 {(() => {
+                              const match = event.summary.match(/אימון\s*-\s*(.+)/);
+                              const name = match && match[1] ? match[1].trim() : (event.summary.includes(' - ') ? event.summary.split(' - ').pop() : event.summary);
+                              return name;
+                            })()}
+                          </div>
+                          
+                          {/* Additional info */}
+                          {event.summary.includes('אימון') && (
+                            <div className="text-[10px] text-emerald-200/80 italic mb-1">
+                              אימון
+                            </div>
+                          )}
+                          
                           {event.location && (
-                            <div className="text-xs opacity-60 mt-1 truncate">{event.location}</div>
+                            <div className="text-xs opacity-90 mt-2 truncate text-emerald-100/90 border-t border-emerald-400/40 pt-2">
+                              📍 {event.location}
+                            </div>
                           )}
                         </div>
                       );
@@ -1172,12 +1254,12 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className={`grid grid-cols-7 gap-2 ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className={`grid grid-cols-7 gap-3 ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}>
               {/* Week days header */}
               {weekDayNames.map((day, index) => (
                 <div
                   key={index}
-                  className="text-center text-sm font-semibold text-zinc-400 py-2"
+                  className="text-center text-sm font-bold text-zinc-300 py-3 border-b-2 border-zinc-700/50 bg-zinc-800/50 rounded-t-lg"
                 >
                   {day}
                 </div>

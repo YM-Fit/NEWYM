@@ -1917,6 +1917,19 @@
     background-clip: text;
   }
 
+  /* Theme-aware text colors based on CSS variables */
+  .text-theme-primary {
+    color: var(--color-text-primary);
+  }
+
+  .text-theme-secondary {
+    color: var(--color-text-secondary);
+  }
+
+  .text-theme-muted {
+    color: var(--color-text-muted);
+  }
+
   .bg-gradient-primary {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   }

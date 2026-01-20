@@ -816,7 +816,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center shadow-glow animate-pulse">
               <Users className="w-7 h-7 text-dark-500" />
             </div>
-            <p className="mt-4 text-gray-400">טוען נתונים...</p>
+            <p className="mt-4 text-theme-muted">טוען נתונים...</p>
           </div>
         </div>
       );
@@ -1178,8 +1178,8 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
         return (
           <div className="flex items-center justify-center h-64">
             <div className="text-center glass-card p-8 rounded-2xl">
-              <h3 className="text-lg font-medium text-white mb-2">בפיתוח</h3>
-              <p className="text-gray-400">תכונה זו תהיה זמינה בקרוב</p>
+              <h3 className="text-lg font-medium text-theme-primary mb-2">בפיתוח</h3>
+              <p className="text-theme-muted">תכונה זו תהיה זמינה בקרוב</p>
             </div>
           </div>
         );
