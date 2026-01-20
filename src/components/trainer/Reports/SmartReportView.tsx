@@ -1,6 +1,13 @@
 /**
- * SmartReportView - Monthly trainee report with payment management
- * Shows all trainees, their workouts, and payment information
+ * SmartReportView - Enhanced Monthly trainee report with payment management
+ * Features:
+ * - Click on trainee to see all workout dates
+ * - Payment methods: bit, paybox, cash, standing_order, credit, monthly_count, card_ticket
+ * - Monthly summary: total income, workout count, payment distribution, income goal
+ * - Auto/manual save categorized by month
+ * - Forecast for next month and previous month income
+ * - Auto-sync when workouts are added/cancelled
+ * - Workout numbering per trainee (e.g., עדי 1, עדי 2)
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -18,7 +25,14 @@ import {
   Repeat,
   Loader2,
   Download,
-  Search
+  Search,
+  Target,
+  TrendingUp,
+  TrendingDown,
+  Eye,
+  RefreshCw,
+  Smartphone,
+  Wallet
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTrainees } from '../../../hooks/useSupabaseQuery';
@@ -26,7 +40,7 @@ import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
 
-type PaymentMethod = 'standing_order' | 'credit' | 'monthly_count' | 'card_ticket';
+type PaymentMethod = 'standing_order' | 'credit' | 'monthly_count' | 'card_ticket' | 'bit' | 'paybox' | 'cash';
 
 interface TraineeReportRow {
   id: string;
@@ -37,6 +51,8 @@ interface TraineeReportRow {
   card_sessions_used: number;
   workouts_this_month: number;
   total_due: number;
+  workout_dates: string[]; // All workout dates for this trainee in the month
+  workout_numbers: Map<string, number>; // Map of workout_date to workout number
 }
 
 interface EditingState {
@@ -46,11 +62,23 @@ interface EditingState {
   card_sessions_total: number;
 }
 
+interface MonthlyReport {
+  total_income: number;
+  total_workouts: number;
+  income_goal: number;
+  payment_distribution: Record<PaymentMethod, number>;
+  previous_month_income: number;
+  next_month_forecast: number;
+}
+
 const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   standing_order: 'הוראת קבע',
   credit: 'אשראי',
   monthly_count: 'כמות חודשית',
   card_ticket: 'כרטיסיה',
+  bit: 'ביט',
+  paybox: 'PayBox',
+  cash: 'מזומן',
 };
 
 const PAYMENT_METHOD_ICONS: Record<PaymentMethod, typeof CreditCard> = {
@@ -58,6 +86,9 @@ const PAYMENT_METHOD_ICONS: Record<PaymentMethod, typeof CreditCard> = {
   credit: CreditCard,
   monthly_count: Banknote,
   card_ticket: Ticket,
+  bit: Smartphone,
+  paybox: Wallet,
+  cash: Banknote,
 };
 
 export default function SmartReportView() {
@@ -69,12 +100,116 @@ export default function SmartReportView() {
   
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [reportData, setReportData] = useState<TraineeReportRow[]>([]);
+  const [monthlyReport, setMonthlyReport] = useState<MonthlyReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<EditingState | null>(null);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTrainee, setSelectedTrainee] = useState<string | null>(null);
+  const [incomeGoal, setIncomeGoal] = useState(0);
+  const [autoSave, setAutoSave] = useState(true);
+  const [savingReport, setSavingReport] = useState(false);
 
-  // Load workout counts for the selected month
+  // Get month key for storage
+  const getMonthKey = useCallback((date: Date) => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  }, []);
+
+  // Load saved monthly report
+  const loadSavedReport = useCallback(async () => {
+    if (!user) return null;
+
+    const monthKey = getMonthKey(selectedMonth);
+    const reportMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+
+    const { data, error } = await supabase
+      .from('monthly_reports')
+      .select('*')
+      .eq('trainer_id', user.id)
+      .eq('report_month', reportMonth.toISOString().split('T')[0])
+      .maybeSingle();
+
+    if (error) {
+      logger.error('Error loading saved report', error, 'SmartReportView');
+      return null;
+    }
+
+    return data;
+  }, [user, selectedMonth, getMonthKey]);
+
+  // Save monthly report
+  const saveMonthlyReport = useCallback(async (isAuto: boolean = false) => {
+    if (!user || !monthlyReport) return;
+
+    setSavingReport(true);
+    try {
+      const reportMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+      
+      const reportDataToSave = {
+        trainer_id: user.id,
+        report_month: reportMonth.toISOString().split('T')[0],
+        total_income: monthlyReport.total_income,
+        total_workouts: monthlyReport.total_workouts,
+        income_goal: incomeGoal,
+        payment_distribution: monthlyReport.payment_distribution,
+        report_data: reportData,
+        is_auto_saved: isAuto,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from('monthly_reports')
+        .upsert(reportDataToSave, { onConflict: 'trainer_id,report_month' });
+
+      if (error) throw error;
+
+      if (!isAuto) {
+        toast.success('הדוח נשמר בהצלחה');
+      }
+    } catch (err) {
+      logger.error('Error saving monthly report', err, 'SmartReportView');
+      toast.error('שגיאה בשמירת הדוח');
+    } finally {
+      setSavingReport(false);
+    }
+  }, [user, monthlyReport, selectedMonth, incomeGoal, reportData]);
+
+  // Calculate workout number for a trainee
+  const getWorkoutNumber = useCallback(async (traineeId: string, workoutDate: string): Promise<number> => {
+    try {
+      const { data, error } = await supabase.rpc('get_trainee_workout_number', {
+        p_trainee_id: traineeId,
+        p_workout_date: workoutDate,
+      });
+
+      if (error) {
+        // Fallback: count manually
+        const { data: workouts } = await supabase
+          .from('workouts')
+          .select('id, workout_date')
+          .eq('trainer_id', user?.id)
+          .lt('workout_date', workoutDate);
+
+        if (workouts) {
+          const { data: links } = await supabase
+            .from('workout_trainees')
+            .select('workout_id')
+            .eq('trainee_id', traineeId)
+            .in('workout_id', workouts.map(w => w.id));
+
+          return (links?.length || 0) + 1;
+        }
+        return 1;
+      }
+
+      return data || 1;
+    } catch (err) {
+      logger.error('Error getting workout number', err, 'SmartReportView');
+      return 1;
+    }
+  }, [user]);
+
+  // Load workout counts and dates for the selected month
   const loadReportData = useCallback(async () => {
     if (!user || trainees.length === 0) {
       setReportData([]);
@@ -87,15 +222,14 @@ export default function SmartReportView() {
       const startOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
       const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0, 23, 59, 59);
 
-      // Get workout counts for each trainee in the month - ONLY from calendar synced workouts
-      // Count ALL synced workouts for the month (both past and future) for billing purposes
+      // Get all workouts for the month (not just synced)
       const { data: workoutsData, error: workoutsError } = await supabase
         .from('workouts')
-        .select('id')
+        .select('id, workout_date')
         .eq('trainer_id', user.id)
-        .eq('synced_from_google', true)
         .gte('workout_date', startOfMonth.toISOString())
-        .lte('workout_date', endOfMonth.toISOString());
+        .lte('workout_date', endOfMonth.toISOString())
+        .order('workout_date', { ascending: true });
 
       if (workoutsError) {
         logger.error('Error loading workouts data', workoutsError, 'SmartReportView');
@@ -103,8 +237,8 @@ export default function SmartReportView() {
 
       const workoutIds = workoutsData?.map(w => w.id) || [];
       
-      // Now get the trainee links for these workouts
-      let workoutData: { trainee_id: string }[] = [];
+      // Get trainee links for these workouts
+      let workoutData: { trainee_id: string; workout_id: string; workout_date: string }[] = [];
       if (workoutIds.length > 0) {
         const { data: traineeLinks, error: linksError } = await supabase
           .from('workout_trainees')
@@ -114,21 +248,42 @@ export default function SmartReportView() {
         if (linksError) {
           logger.error('Error loading workout trainee links', linksError, 'SmartReportView');
         }
-        workoutData = traineeLinks || [];
+
+        // Map workout dates
+        const workoutDateMap = new Map(workoutsData?.map(w => [w.id, w.workout_date]) || []);
+        workoutData = (traineeLinks || []).map(link => ({
+          trainee_id: link.trainee_id,
+          workout_id: link.workout_id,
+          workout_date: workoutDateMap.get(link.workout_id) || '',
+        }));
       }
 
-      // Count workouts per trainee (only calendar-synced workouts)
-      const workoutCounts = new Map<string, number>();
+      // Group workouts by trainee and calculate numbers
+      const traineeWorkouts = new Map<string, { dates: string[]; numbers: Map<string, number> }>();
       
-      // Count from workouts table
-      workoutData.forEach((w: { trainee_id: string }) => {
-        const current = workoutCounts.get(w.trainee_id) || 0;
-        workoutCounts.set(w.trainee_id, current + 1);
-      });
+      for (const workout of workoutData) {
+        if (!traineeWorkouts.has(workout.trainee_id)) {
+          traineeWorkouts.set(workout.trainee_id, { dates: [], numbers: new Map() });
+        }
+        const traineeData = traineeWorkouts.get(workout.trainee_id)!;
+        if (!traineeData.dates.includes(workout.workout_date)) {
+          traineeData.dates.push(workout.workout_date);
+        }
+      }
+
+      // Calculate workout numbers for each trainee
+      for (const [traineeId, data] of traineeWorkouts.entries()) {
+        const sortedDates = [...data.dates].sort();
+        for (let i = 0; i < sortedDates.length; i++) {
+          const workoutNumber = await getWorkoutNumber(traineeId, sortedDates[i]);
+          data.numbers.set(sortedDates[i], workoutNumber);
+        }
+      }
 
       // Build report data
       const report: TraineeReportRow[] = trainees.map((trainee) => {
-        const workoutsThisMonth = workoutCounts.get(trainee.id) || 0;
+        const traineeWorkoutData = traineeWorkouts.get(trainee.id) || { dates: [], numbers: new Map() };
+        const workoutsThisMonth = traineeWorkoutData.dates.length;
         const paymentMethod = (trainee as { payment_method?: PaymentMethod }).payment_method || null;
         const monthlyPrice = (trainee as { monthly_price?: number }).monthly_price || 0;
         const cardSessionsTotal = (trainee as { card_sessions_total?: number }).card_sessions_total || 0;
@@ -139,14 +294,16 @@ export default function SmartReportView() {
         switch (paymentMethod) {
           case 'standing_order':
           case 'credit':
+          case 'bit':
+          case 'paybox':
+          case 'cash':
             totalDue = monthlyPrice; // Fixed monthly amount
             break;
           case 'monthly_count':
             totalDue = workoutsThisMonth * monthlyPrice; // Per workout
             break;
           case 'card_ticket':
-            // Card doesn't have a monthly due - it's prepaid
-            totalDue = 0;
+            totalDue = 0; // Prepaid
             break;
           default:
             totalDue = 0;
@@ -161,6 +318,8 @@ export default function SmartReportView() {
           card_sessions_used: cardSessionsUsed,
           workouts_this_month: workoutsThisMonth,
           total_due: totalDue,
+          workout_dates: traineeWorkoutData.dates.sort(),
+          workout_numbers: traineeWorkoutData.numbers,
         };
       });
 
@@ -168,19 +327,139 @@ export default function SmartReportView() {
       report.sort((a, b) => a.full_name.localeCompare(b.full_name, 'he'));
       
       setReportData(report);
+
+      // Calculate monthly summary
+      const totalIncome = report.reduce((sum, row) => sum + row.total_due, 0);
+      const totalWorkouts = report.reduce((sum, row) => sum + row.workouts_this_month, 0);
+      
+      // Calculate payment distribution
+      const paymentDistribution: Record<PaymentMethod, number> = {
+        standing_order: 0,
+        credit: 0,
+        monthly_count: 0,
+        card_ticket: 0,
+        bit: 0,
+        paybox: 0,
+        cash: 0,
+      };
+
+      report.forEach(row => {
+        if (row.payment_method) {
+          paymentDistribution[row.payment_method] += row.total_due;
+        }
+      });
+
+      // Get previous month income
+      const prevMonth = new Date(selectedMonth);
+      prevMonth.setMonth(prevMonth.getMonth() - 1);
+      const prevMonthKey = getMonthKey(prevMonth);
+      const prevMonthStart = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 1);
+      
+      const { data: prevReport } = await supabase
+        .from('monthly_reports')
+        .select('total_income')
+        .eq('trainer_id', user.id)
+        .eq('report_month', prevMonthStart.toISOString().split('T')[0])
+        .maybeSingle();
+
+      const previousMonthIncome = prevReport?.total_income || 0;
+
+      // Calculate next month forecast (simple: average of last 3 months or current month)
+      const nextMonthForecast = totalIncome; // Simplified - can be enhanced
+
+      // Load saved income goal
+      const savedReport = await loadSavedReport();
+      const goal = savedReport?.income_goal || incomeGoal;
+      if (savedReport?.income_goal) {
+        setIncomeGoal(savedReport.income_goal);
+      }
+
+      const newMonthlyReport: MonthlyReport = {
+        total_income: totalIncome,
+        total_workouts: totalWorkouts,
+        income_goal: goal,
+        payment_distribution: paymentDistribution,
+        previous_month_income: previousMonthIncome,
+        next_month_forecast: nextMonthForecast,
+      };
+
+      setMonthlyReport(newMonthlyReport);
+
+      // Auto-save if enabled (async, don't wait)
+      if (autoSave) {
+        // Save with the new report data
+        const reportMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+        const reportDataToSave = {
+          trainer_id: user.id,
+          report_month: reportMonth.toISOString().split('T')[0],
+          total_income: newMonthlyReport.total_income,
+          total_workouts: newMonthlyReport.total_workouts,
+          income_goal: goal,
+          payment_distribution: newMonthlyReport.payment_distribution,
+          report_data: report,
+          is_auto_saved: true,
+          updated_at: new Date().toISOString(),
+        };
+
+        // Don't await - save in background
+        supabase
+          .from('monthly_reports')
+          .upsert(reportDataToSave, { onConflict: 'trainer_id,report_month' })
+          .catch((err) => {
+            logger.error('Error auto-saving report', err, 'SmartReportView');
+          });
+      }
     } catch (err) {
       logger.error('Error loading report data', err, 'SmartReportView');
       toast.error('שגיאה בטעינת הנתונים');
     } finally {
       setLoading(false);
     }
-  }, [user, trainees, selectedMonth]);
+  }, [user, trainees, selectedMonth, getWorkoutNumber, getMonthKey, loadSavedReport, autoSave]);
+
+  // Subscribe to workout changes for auto-sync
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('workouts-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'workouts',
+          filter: `trainer_id=eq.${user.id}`,
+        },
+        () => {
+          // Reload report data when workouts change
+          loadReportData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'workout_trainees',
+        },
+        () => {
+          // Reload when trainee-workout links change
+          loadReportData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, loadReportData]);
 
   useEffect(() => {
     if (!traineesLoading) {
       loadReportData();
     }
-  }, [loadReportData, traineesLoading]);
+  }, [loadReportData, traineesLoading, selectedMonth]);
 
   // Filter trainees by search
   const filteredData = useMemo(() => {
@@ -198,6 +477,7 @@ export default function SmartReportView() {
       newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
       return newDate;
     });
+    setSelectedTrainee(null); // Clear selected trainee when changing months
   };
 
   // Start editing a trainee
@@ -280,29 +560,56 @@ export default function SmartReportView() {
     toast.success('הקובץ הורד בהצלחה');
   };
 
-  // Calculate totals
-  const totals = useMemo(() => {
-    const totalWorkouts = filteredData.reduce((sum, row) => sum + row.workouts_this_month, 0);
-    const totalDue = filteredData.reduce((sum, row) => sum + row.total_due, 0);
-    return { totalWorkouts, totalDue };
-  }, [filteredData]);
-
   const formatMonth = (date: Date) => {
     return date.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
   };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' });
+  };
+
+  const selectedTraineeData = useMemo(() => {
+    if (!selectedTrainee) return null;
+    return reportData.find(row => row.id === selectedTrainee);
+  }, [selectedTrainee, reportData]);
 
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="premium-card-static p-8 mb-8 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-        <div className="relative flex items-center gap-4">
-          <div className="p-4 rounded-2xl bg-purple-500/15 border border-purple-500/30">
-            <FileSpreadsheet className="w-8 h-8 text-purple-400" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-4 rounded-2xl bg-purple-500/15 border border-purple-500/30">
+              <FileSpreadsheet className="w-8 h-8 text-purple-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-1">דוח חכם</h1>
+              <p className="text-zinc-400 text-lg">ניהול תשלומים וסיכום חודשי של מתאמנים</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-1">דוח חכם</h1>
-            <p className="text-zinc-400 text-lg">ניהול תשלומים וסיכום חודשי של מתאמנים</p>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2 text-sm text-zinc-400">
+              <input
+                type="checkbox"
+                checked={autoSave}
+                onChange={(e) => setAutoSave(e.target.checked)}
+                className="rounded"
+              />
+              שמירה אוטומטית
+            </label>
+            <button
+              onClick={() => saveMonthlyReport(false)}
+              disabled={savingReport || !monthlyReport}
+              className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-all flex items-center gap-2 border border-emerald-500/30 disabled:opacity-50"
+            >
+              {savingReport ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              שמור דוח
+            </button>
           </div>
         </div>
       </div>
@@ -354,6 +661,168 @@ export default function SmartReportView() {
         </div>
       </div>
 
+      {/* Monthly Summary */}
+      {monthlyReport && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="premium-card-static p-5">
+            <div className="text-sm text-zinc-500 mb-1">סה"כ הכנסה חודשית</div>
+            <div className="text-2xl font-bold text-emerald-400">₪{monthlyReport.total_income.toLocaleString()}</div>
+            {monthlyReport.income_goal > 0 && (
+              <div className="mt-2">
+                <div className="flex items-center justify-between text-xs text-zinc-500 mb-1">
+                  <span>מטרה: ₪{monthlyReport.income_goal.toLocaleString()}</span>
+                  <span>{Math.round((monthlyReport.total_income / monthlyReport.income_goal) * 100)}%</span>
+                </div>
+                <div className="w-full bg-zinc-800 rounded-full h-2">
+                  <div
+                    className="bg-emerald-500 h-2 rounded-full transition-all"
+                    style={{ width: `${Math.min((monthlyReport.total_income / monthlyReport.income_goal) * 100, 100)}%` }}
+                  />
+                </div>
+                <div className="text-xs text-zinc-500 mt-1">
+                  נותר: ₪{Math.max(0, monthlyReport.income_goal - monthlyReport.total_income).toLocaleString()}
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="premium-card-static p-5">
+            <div className="text-sm text-zinc-500 mb-1">סה"כ אימונים החודש</div>
+            <div className="text-2xl font-bold text-purple-400">{monthlyReport.total_workouts}</div>
+          </div>
+          <div className="premium-card-static p-5">
+            <div className="text-sm text-zinc-500 mb-1 flex items-center gap-2">
+              <TrendingDown className="w-4 h-4" />
+              חודש קודם
+            </div>
+            <div className="text-2xl font-bold text-blue-400">₪{monthlyReport.previous_month_income.toLocaleString()}</div>
+          </div>
+          <div className="premium-card-static p-5">
+            <div className="text-sm text-zinc-500 mb-1 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              צפי חודש הבא
+            </div>
+            <div className="text-2xl font-bold text-amber-400">₪{monthlyReport.next_month_forecast.toLocaleString()}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Distribution */}
+      {monthlyReport && (
+        <div className="premium-card-static p-5 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4">התפלגות לפי סוג תשלום</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+            {Object.entries(monthlyReport.payment_distribution).map(([method, amount]) => {
+              if (amount === 0) return null;
+              const PaymentIcon = PAYMENT_METHOD_ICONS[method as PaymentMethod];
+              return (
+                <div key={method} className="flex flex-col items-center p-3 bg-zinc-800/50 rounded-lg">
+                  {PaymentIcon && <PaymentIcon className="w-5 h-5 text-zinc-400 mb-2" />}
+                  <div className="text-xs text-zinc-500 mb-1">{PAYMENT_METHOD_LABELS[method as PaymentMethod]}</div>
+                  <div className="text-lg font-bold text-white">₪{amount.toLocaleString()}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Income Goal Setting */}
+      <div className="premium-card-static p-4 mb-6">
+        <div className="flex items-center gap-4">
+          <Target className="w-5 h-5 text-purple-400" />
+          <label className="text-sm text-zinc-400">מטרת הכנסה חודשית:</label>
+          <div className="flex items-center gap-2">
+            <span className="text-zinc-500">₪</span>
+            <input
+              type="number"
+              value={incomeGoal}
+              onChange={(e) => setIncomeGoal(parseFloat(e.target.value) || 0)}
+              className="px-3 py-1 bg-zinc-800 border border-zinc-700 rounded-lg text-white w-32"
+              min="0"
+            />
+            <button
+              onClick={async () => {
+                if (monthlyReport) {
+                  const updatedReport = { ...monthlyReport, income_goal: incomeGoal };
+                  setMonthlyReport(updatedReport);
+                  // Save immediately
+                  const reportMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+                  const reportDataToSave = {
+                    trainer_id: user?.id,
+                    report_month: reportMonth.toISOString().split('T')[0],
+                    total_income: updatedReport.total_income,
+                    total_workouts: updatedReport.total_workouts,
+                    income_goal: incomeGoal,
+                    payment_distribution: updatedReport.payment_distribution,
+                    report_data: reportData,
+                    is_auto_saved: false,
+                    updated_at: new Date().toISOString(),
+                  };
+                  try {
+                    await supabase
+                      .from('monthly_reports')
+                      .upsert(reportDataToSave, { onConflict: 'trainer_id,report_month' });
+                    toast.success('מטרת הכנסה עודכנה');
+                  } catch (err) {
+                    logger.error('Error updating income goal', err, 'SmartReportView');
+                    toast.error('שגיאה בעדכון המטרה');
+                  }
+                }
+              }}
+              className="px-3 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg text-sm"
+            >
+              עדכן מטרה
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Trainee Workout Dates Modal */}
+      {selectedTraineeData && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="premium-card-static p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white">
+                תאריכי אימונים - {selectedTraineeData.full_name}
+              </h3>
+              <button
+                onClick={() => setSelectedTrainee(null)}
+                className="p-2 hover:bg-zinc-800 rounded-lg transition-all text-zinc-400"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-2">
+              {selectedTraineeData.workout_dates.length === 0 ? (
+                <div className="text-center text-zinc-500 py-8">אין אימונים בחודש זה</div>
+              ) : (
+                selectedTraineeData.workout_dates.map((date, index) => {
+                  const workoutNumber = selectedTraineeData.workout_numbers.get(date) || index + 1;
+                  return (
+                    <div
+                      key={date}
+                      className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-sm">
+                          {workoutNumber}
+                        </div>
+                        <div>
+                          <div className="text-white font-medium">
+                            {selectedTraineeData.full_name} {workoutNumber}
+                          </div>
+                          <div className="text-sm text-zinc-500">{formatDate(date)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="premium-card-static p-5">
@@ -362,11 +831,15 @@ export default function SmartReportView() {
         </div>
         <div className="premium-card-static p-5">
           <div className="text-sm text-zinc-500 mb-1">סה"כ אימונים החודש</div>
-          <div className="text-2xl font-bold text-purple-400">{totals.totalWorkouts}</div>
+          <div className="text-2xl font-bold text-purple-400">
+            {filteredData.reduce((sum, row) => sum + row.workouts_this_month, 0)}
+          </div>
         </div>
         <div className="premium-card-static p-5">
           <div className="text-sm text-zinc-500 mb-1">סה"כ לחיוב</div>
-          <div className="text-2xl font-bold text-emerald-400">₪{totals.totalDue.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-emerald-400">
+            ₪{filteredData.reduce((sum, row) => sum + row.total_due, 0).toLocaleString()}
+          </div>
         </div>
       </div>
 
@@ -401,9 +874,15 @@ export default function SmartReportView() {
 
                   return (
                     <tr key={row.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-all">
-                      {/* Name */}
+                      {/* Name - Clickable to show workout dates */}
                       <td className="p-4">
-                        <div className="font-medium text-white">{row.full_name}</div>
+                        <button
+                          onClick={() => setSelectedTrainee(row.id)}
+                          className="font-medium text-white hover:text-purple-400 transition-colors flex items-center gap-2"
+                        >
+                          {row.full_name}
+                          <Eye className="w-4 h-4" />
+                        </button>
                         {row.payment_method === 'card_ticket' && (
                           <div className="text-xs text-zinc-500 mt-1">
                             כרטיסיה #{row.card_sessions_total}
@@ -427,6 +906,9 @@ export default function SmartReportView() {
                             <option value="credit">אשראי</option>
                             <option value="monthly_count">כמות חודשית</option>
                             <option value="card_ticket">כרטיסיה</option>
+                            <option value="bit">ביט</option>
+                            <option value="paybox">PayBox</option>
+                            <option value="cash">מזומן</option>
                           </select>
                         ) : (
                           <div className="flex items-center gap-2">
