@@ -1119,6 +1119,13 @@ export default function WorkoutSession({
                   className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="למשל: אימון רגליים מלא"
                   autoFocus={!isTablet}
+                  readOnly={isTablet}
+                  inputMode={isTablet ? 'none' : 'text'}
+                  onFocus={(e) => {
+                    if (isTablet) {
+                      e.target.blur();
+                    }
+                  }}
                 />
               </div>
 
@@ -1132,6 +1139,13 @@ export default function WorkoutSession({
                   className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="הוסף תיאור לתבנית..."
                   rows={3}
+                  readOnly={isTablet}
+                  inputMode={isTablet ? 'none' : 'text'}
+                  onFocus={(e) => {
+                    if (isTablet) {
+                      e.target.blur();
+                    }
+                  }}
                 />
               </div>
 

@@ -234,33 +234,33 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
         <div className="p-6 border-b border-zinc-700/30">
           <div className="relative">
             <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-500" />
-            <input
-              type="text"
-              placeholder="חפש תרגיל..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pr-12 pl-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-              readOnly={isTablet}
-              tabIndex={isTablet ? -1 : 0}
-              onFocus={(e) => {
-                if (isTablet) {
-                  e.target.blur();
-                  e.preventDefault();
-                } else {
-                  e.currentTarget.removeAttribute('readonly');
-                }
-              }}
-              onTouchStart={(e) => {
-                if (isTablet) {
-                  e.preventDefault();
-                  const input = e.currentTarget;
-                  setTimeout(() => {
-                    input.removeAttribute('readonly');
-                    input.focus();
-                  }, 100);
-                }
-              }}
-            />
+            {isTablet ? (
+              // On tablet, use div with virtual keyboard button to prevent native keyboard
+              <div className="flex gap-2">
+                <div
+                  className="flex-1 pr-12 pl-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white min-h-[48px] flex items-center"
+                  onClick={() => {/* Virtual keyboard will be shown via button */}}
+                >
+                  {searchTerm || <span className="text-zinc-500">חפש תרגיל...</span>}
+                </div>
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="px-4 py-3 bg-red-500/15 border border-red-500/30 rounded-xl text-red-400 hover:bg-red-500/25 transition-all"
+                  >
+                    נקה
+                  </button>
+                )}
+              </div>
+            ) : (
+              <input
+                type="text"
+                placeholder="חפש תרגיל..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pr-12 pl-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              />
+            )}
           </div>
         </div>
 
