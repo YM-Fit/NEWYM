@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useIsTouchDevice } from '../../../hooks/useIsTouchDevice';
 
 interface QuickNumericPadProps {
   value: number;
@@ -25,6 +26,9 @@ export default function QuickNumericPad({
   compact = false,
   isTablet
 }: QuickNumericPadProps) {
+  // Use touch device detection - prevents keyboard on all touch devices (phones & tablets)
+  const isTouchDevice = useIsTouchDevice();
+  const preventKeyboard = isTablet || isTouchDevice;
   const [currentValue, setCurrentValue] = useState(value);
   const [inputValue, setInputValue] = useState(value.toString());
   const inputRef = useRef<HTMLInputElement>(null);
@@ -37,11 +41,11 @@ export default function QuickNumericPad({
 
   useEffect(() => {
     // Focus input on mount only if not tablet
-    if (inputRef.current && !isTablet) {
+    if (inputRef.current && !preventKeyboard) {
       inputRef.current.focus();
       inputRef.current.select();
     }
-  }, [isTablet]);
+  }, [preventKeyboard]);
 
   const handleAdd = useCallback((amount: number, isAbsolute: boolean = false) => {
     setCurrentValue(prev => {
@@ -198,8 +202,8 @@ export default function QuickNumericPad({
 
         <div className={compact ? 'mb-4' : 'mb-8'}>
           <div className={`bg-zinc-800/50 border-4 border-emerald-500/50 rounded-2xl ${compact ? 'p-4' : 'p-8'} text-center`}>
-            {isTablet ? (
-              // On tablet, use div instead of input to completely prevent keyboard
+            {preventKeyboard ? (
+              // On touch devices, use div instead of input to completely prevent keyboard
               <div
                 className={`w-full bg-transparent font-bold text-emerald-400 tabular-nums text-center ${compact ? 'text-4xl' : 'text-6xl lg:text-8xl'}`}
                 aria-label={`${label} - ${inputValue}${allowDecimal ? ' קילוגרמים' : isRpeMode ? ' RPE' : ' חזרות'}`}
@@ -242,7 +246,7 @@ export default function QuickNumericPad({
             </div>
             {!compact && (
               <div className="text-sm text-zinc-600 mt-2" aria-hidden="true">
-                {isTablet ? 'השתמש בכפתורים למטה' : 'לחץ Enter לאישור • Esc לביטול • חצים למעלה/למטה'}
+                {preventKeyboard ? 'השתמש בכפתורים למטה' : 'לחץ Enter לאישור • Esc לביטול • חצים למעלה/למטה'}
               </div>
             )}
           </div>

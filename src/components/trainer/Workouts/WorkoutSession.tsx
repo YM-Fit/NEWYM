@@ -6,6 +6,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { useAutoSave } from '../../../hooks/useAutoSave';
 import { useWorkoutSession } from '../../../hooks/useWorkoutSession';
 import { useErrorHandler } from '../../../hooks/useErrorHandler';
+import { useIsTouchDevice } from '../../../hooks/useIsTouchDevice';
 import { saveWorkout } from '../../../api/workoutApi';
 import { logger } from '../../../utils/logger';
 import ExerciseSelector from './ExerciseSelector';
@@ -84,6 +85,11 @@ export default function WorkoutSession({
 }: WorkoutSessionProps) {
   const { user } = useAuth();
   const { handleError } = useErrorHandler();
+
+  // Use touch device detection - prevents keyboard on all touch devices (phones & tablets)
+  const isTouchDevice = useIsTouchDevice();
+  const preventKeyboard = isTablet || isTouchDevice;
+
   const {
     exercises,
     setExercises,
@@ -1118,11 +1124,11 @@ export default function WorkoutSession({
                   onChange={(e) => setTemplateName(e.target.value)}
                   className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="למשל: אימון רגליים מלא"
-                  autoFocus={!isTablet}
-                  readOnly={isTablet}
-                  inputMode={isTablet ? 'none' : 'text'}
+                  autoFocus={!preventKeyboard}
+                  readOnly={preventKeyboard}
+                  inputMode={preventKeyboard ? 'none' : 'text'}
                   onFocus={(e) => {
-                    if (isTablet) {
+                    if (preventKeyboard) {
                       e.target.blur();
                     }
                   }}
@@ -1139,10 +1145,10 @@ export default function WorkoutSession({
                   className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="הוסף תיאור לתבנית..."
                   rows={3}
-                  readOnly={isTablet}
-                  inputMode={isTablet ? 'none' : 'text'}
+                  readOnly={preventKeyboard}
+                  inputMode={preventKeyboard ? 'none' : 'text'}
                   onFocus={(e) => {
-                    if (isTablet) {
+                    if (preventKeyboard) {
                       e.target.blur();
                     }
                   }}
