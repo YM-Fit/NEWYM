@@ -245,6 +245,7 @@ function DroppableDayCell({
 
 export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTrainee }: CalendarViewProps) {
   const { user } = useAuth();
+  
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [events, setEvents] = useState<CalendarEvent[]>([]);
