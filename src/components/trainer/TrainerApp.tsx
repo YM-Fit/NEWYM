@@ -366,6 +366,8 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
           workout_date,
           is_completed,
           is_self_recorded,
+          synced_from_google,
+          google_event_summary,
           created_at,
           workout_exercises (
             id,
@@ -428,7 +430,9 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             })),
             totalVolume,
             duration: 0,
-            isSelfRecorded: w.is_self_recorded || false
+            isSelfRecorded: w.is_self_recorded || false,
+            syncedFromGoogle: w.synced_from_google || false,
+            googleEventSummary: w.google_event_summary || null
           };
         })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

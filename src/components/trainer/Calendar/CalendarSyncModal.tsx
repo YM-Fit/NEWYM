@@ -269,11 +269,60 @@ export default function CalendarSyncModal({
         }
       }
 
-      // Save links to database
+      // Save links to database AND create workouts
       if (linksToSave.length > 0) {
+        // First, create workouts for each synced event
+        for (const link of linksToSave) {
+          // Determine if workout is in the past (should be marked as completed)
+          const eventDate = new Date(link.event_start_time);
+          const now = new Date();
+          const isInPast = eventDate < now;
+          
+          // Create workout record
+          const { data: workoutData, error: workoutError } = await supabase
+            .from('workouts')
+            .insert({
+              trainer_id: user.id,
+              workout_date: link.event_start_time,
+              workout_type: 'personal',
+              is_completed: isInPast, // Only mark as completed if it's in the past
+              google_event_id: link.google_event_id,
+              google_event_summary: link.event_summary,
+              synced_from_google: true,
+            })
+            .select('id')
+            .single();
+
+          if (workoutError) {
+            logger.error('Error creating workout for synced event', workoutError, 'CalendarSyncModal');
+            continue; // Skip this one but continue with others
+          }
+
+          // Link workout to trainee
+          if (workoutData) {
+            const { error: linkError } = await supabase
+              .from('workout_trainees')
+              .insert({
+                workout_id: workoutData.id,
+                trainee_id: link.trainee_id,
+              });
+
+            if (linkError) {
+              logger.error('Error linking workout to trainee', linkError, 'CalendarSyncModal');
+            }
+
+            // Update link with workout_id
+            link.workout_id = workoutData.id;
+          }
+        }
+
+        // Now save the sync records
         const { error: insertError } = await supabase
           .from('google_calendar_sync')
-          .upsert(linksToSave, { 
+          .upsert(linksToSave.map(l => ({
+            ...l,
+            workout_id: (l as any).workout_id || null
+          })), { 
             onConflict: 'google_event_id,google_calendar_id',
             ignoreDuplicates: false 
           });
@@ -329,9 +378,7 @@ export default function CalendarSyncModal({
               return conflictFound;
             };
 
-            // Prepare auto-sync links
-            const autoSyncLinks: typeof linksToSave = [];
-
+            // Prepare auto-sync links and create workouts for each
             for (const event of unsyncedFutureEvents) {
               const extractedName = event.summary?.toLowerCase().replace(/^(אימון|פגישה|טיפול|מפגש)\s*[-–:]\s*/i, '').trim();
               if (!extractedName) continue;
@@ -346,30 +393,65 @@ export default function CalendarSyncModal({
                 continue;
               }
 
-              autoSyncLinks.push({
-                trainer_id: user.id,
-                trainee_id: traineeId,
-                google_event_id: event.id,
-                google_calendar_id: 'primary',
-                sync_status: 'synced',
-                sync_direction: 'from_google',
-                event_start_time: event.start?.dateTime || event.start?.date || new Date().toISOString(),
-                event_end_time: event.end?.dateTime || event.end?.date || null,
-                event_summary: event.summary || ''
-              });
-            }
+              const eventStartTime = event.start?.dateTime || event.start?.date || new Date().toISOString();
+              const eventEndTime = event.end?.dateTime || event.end?.date || null;
 
-            // Save auto-sync links
-            if (autoSyncLinks.length > 0) {
-              const { error: autoSyncError } = await supabase
+              // Create workout record for this future event
+              // Determine if this future event is actually in the past
+              const eventDate = new Date(eventStartTime);
+              const now = new Date();
+              const isInPast = eventDate < now;
+              
+              const { data: workoutData, error: workoutError } = await supabase
+                .from('workouts')
+                .insert({
+                  trainer_id: user.id,
+                  workout_date: eventStartTime,
+                  workout_type: 'personal',
+                  is_completed: isInPast, // Only mark completed if in the past
+                  google_event_id: event.id,
+                  google_event_summary: event.summary || '',
+                  synced_from_google: true,
+                })
+                .select('id')
+                .single();
+
+              if (workoutError) {
+                logger.error('Error creating workout for auto-synced event', workoutError, 'CalendarSyncModal');
+                continue;
+              }
+
+              // Link workout to trainee
+              if (workoutData) {
+                await supabase
+                  .from('workout_trainees')
+                  .insert({
+                    workout_id: workoutData.id,
+                    trainee_id: traineeId,
+                  });
+              }
+
+              // Save sync record
+              const { error: syncError } = await supabase
                 .from('google_calendar_sync')
-                .upsert(autoSyncLinks, { 
+                .upsert({
+                  trainer_id: user.id,
+                  trainee_id: traineeId,
+                  google_event_id: event.id,
+                  google_calendar_id: 'primary',
+                  sync_status: 'synced',
+                  sync_direction: 'from_google',
+                  event_start_time: eventStartTime,
+                  event_end_time: eventEndTime,
+                  event_summary: event.summary || '',
+                  workout_id: workoutData?.id || null
+                }, { 
                   onConflict: 'google_event_id,google_calendar_id',
                   ignoreDuplicates: true 
                 });
 
-              if (!autoSyncError) {
-                autoSyncedCount = autoSyncLinks.length;
+              if (!syncError) {
+                autoSyncedCount++;
               }
             }
           }

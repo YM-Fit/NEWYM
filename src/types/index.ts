@@ -68,6 +68,10 @@ export interface Workout {
   averageRpe: number;
   duration: number;
   notes?: string;
+  // Calendar sync fields
+  syncedFromGoogle?: boolean;
+  googleEventSummary?: string | null;
+  isSelfRecorded?: boolean;
 }
 
 export interface WorkoutTemplateExercise {

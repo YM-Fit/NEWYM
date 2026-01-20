@@ -87,7 +87,7 @@ export default function SmartReportView() {
       const startOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
       const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0, 23, 59, 59);
 
-      // Get workout counts for each trainee in the month
+      // Get workout counts for each trainee in the month - ONLY from calendar synced workouts
       const { data: workoutData, error: workoutError } = await supabase
         .from('workout_trainees')
         .select(`
@@ -95,46 +95,26 @@ export default function SmartReportView() {
           workouts!inner (
             id,
             workout_date,
-            is_completed
+            is_completed,
+            synced_from_google
           )
         `)
         .gte('workouts.workout_date', startOfMonth.toISOString())
         .lte('workouts.workout_date', endOfMonth.toISOString())
-        .eq('workouts.is_completed', true);
+        .eq('workouts.is_completed', true)
+        .eq('workouts.synced_from_google', true); // Only count workouts from calendar
 
       if (workoutError) {
         logger.error('Error loading workout data', workoutError, 'SmartReportView');
       }
 
-      // Also get workout counts from google_calendar_sync (for events not yet converted to workouts)
-      const { data: syncData, error: syncError } = await supabase
-        .from('google_calendar_sync')
-        .select('trainee_id, event_start_time')
-        .eq('trainer_id', user.id)
-        .not('trainee_id', 'is', null)
-        .gte('event_start_time', startOfMonth.toISOString())
-        .lte('event_start_time', endOfMonth.toISOString());
-
-      if (syncError) {
-        logger.error('Error loading sync data', syncError, 'SmartReportView');
-      }
-
-      // Count workouts per trainee
+      // Count workouts per trainee (only calendar-synced workouts)
       const workoutCounts = new Map<string, number>();
       
       // Count from workouts table
       workoutData?.forEach((w: { trainee_id: string }) => {
         const current = workoutCounts.get(w.trainee_id) || 0;
         workoutCounts.set(w.trainee_id, current + 1);
-      });
-
-      // Count from sync table (only for trainee_ids not already counted from workouts)
-      const countedEventIds = new Set<string>();
-      syncData?.forEach((s: { trainee_id: string }) => {
-        if (!countedEventIds.has(s.trainee_id)) {
-          // This is a simple count - in reality you'd want to dedupe by event
-          // For now, we'll just use workout counts as primary
-        }
       });
 
       // Build report data

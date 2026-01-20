@@ -536,16 +536,38 @@ export default function TraineeProfile({
                     {recentWorkouts.map((workout, index) => (
                       <div
                         key={workout.id}
-                        className="flex items-center justify-between p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all animate-fade-in"
+                        className={`flex items-center justify-between p-4 rounded-xl border transition-all animate-fade-in ${
+                          workout.syncedFromGoogle 
+                            ? 'bg-blue-900/20 border-blue-700/30 hover:border-blue-600/50' 
+                            : 'bg-zinc-800/30 border-zinc-700/30 hover:border-zinc-600/50'
+                        }`}
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <div>
-                          <p className="font-medium text-white">{new Date(workout.date).toLocaleDateString('he-IL')}</p>
-                          <p className="text-sm text-zinc-500">{workout.exercises.length} תרגילים</p>
+                          <p className="font-medium text-white flex items-center gap-2">
+                            {new Date(workout.date).toLocaleDateString('he-IL')}
+                            {workout.syncedFromGoogle && (
+                              <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">יומן</span>
+                            )}
+                          </p>
+                          <p className="text-sm text-zinc-500">
+                            {workout.syncedFromGoogle && workout.exercises.length === 0 
+                              ? 'אימון מהיומן' 
+                              : `${workout.exercises.length} תרגילים`}
+                          </p>
                         </div>
                         <div className="text-left">
-                          <p className="text-lg font-bold text-emerald-400">{workout.totalVolume.toLocaleString()}</p>
-                          <p className="text-xs text-zinc-500">ק״ג נפח</p>
+                          {workout.syncedFromGoogle && workout.totalVolume === 0 ? (
+                            <div className="flex items-center gap-1 text-blue-400">
+                              <Calendar className="h-4 w-4" />
+                              <span className="text-sm">סונכרן</span>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-lg font-bold text-emerald-400">{workout.totalVolume.toLocaleString()}</p>
+                              <p className="text-xs text-zinc-500">ק״ג נפח</p>
+                            </>
+                          )}
                         </div>
                       </div>
                     ))}
