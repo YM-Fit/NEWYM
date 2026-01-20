@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Plus, RefreshCw, Trash2, GripVertical, Users } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Plus, RefreshCw, Trash2, GripVertical, Users, CalendarDays, CalendarRange } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { 
   getGoogleCalendarEvents, 
@@ -62,6 +62,14 @@ interface DroppableDayCellProps {
 // Optimized refresh interval - longer to reduce API calls
 const REFRESH_INTERVAL_MS = 120000; // 2 minutes instead of 30 seconds
 const CACHE_DURATION_MS = 60000; // Cache events for 1 minute
+
+// Calendar view modes
+type ViewMode = 'month' | 'week' | 'day';
+
+// Hour range for week and day views
+const HOUR_START = 6;
+const HOUR_END = 22;
+const HOURS_PER_DAY = HOUR_END - HOUR_START + 1;
 
 // Event Item Component (base display component)
 function EventItem({ event, onEventClick, onDelete, isDragging }: EventItemProps) {
@@ -237,6 +245,7 @@ function DroppableDayCell({
 export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTrainee }: CalendarViewProps) {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
@@ -271,19 +280,32 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     }
   }, [user]);
 
-  // Memoize date range calculation
+  // Memoize date range calculation based on view mode
   const dateRange = useMemo(() => {
     const start = new Date(currentDate);
+    const end = new Date(currentDate);
+
+    if (viewMode === 'month') {
     start.setDate(1);
     start.setHours(0, 0, 0, 0);
-
-    const end = new Date(currentDate);
     end.setMonth(end.getMonth() + 1);
     end.setDate(0);
     end.setHours(23, 59, 59, 999);
+    } else if (viewMode === 'week') {
+      // Get start of week (Sunday)
+      const dayOfWeek = start.getDay();
+      start.setDate(start.getDate() - dayOfWeek);
+      start.setHours(0, 0, 0, 0);
+      // Get end of week (Saturday)
+      end.setDate(start.getDate() + 6);
+      end.setHours(23, 59, 59, 999);
+    } else if (viewMode === 'day') {
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+    }
 
     return { start, end };
-  }, [currentDate]);
+  }, [currentDate, viewMode]);
 
   // Generate cache key for current month
   const cacheKey = useMemo(() => {
@@ -408,12 +430,26 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     }
   }, [connected, user, loading, isRefreshing, loadEvents]);
 
-  const navigateMonth = (direction: 'prev' | 'next') => {
+  const navigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
+    if (viewMode === 'month') {
     if (direction === 'prev') {
       newDate.setMonth(newDate.getMonth() - 1);
     } else {
       newDate.setMonth(newDate.getMonth() + 1);
+      }
+    } else if (viewMode === 'week') {
+      if (direction === 'prev') {
+        newDate.setDate(newDate.getDate() - 7);
+      } else {
+        newDate.setDate(newDate.getDate() + 7);
+      }
+    } else if (viewMode === 'day') {
+      if (direction === 'prev') {
+        newDate.setDate(newDate.getDate() - 1);
+      } else {
+        newDate.setDate(newDate.getDate() + 1);
+      }
     }
     setCurrentDate(newDate);
   };
@@ -463,9 +499,68 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     return eventsByDay.get(date.toDateString()) || [];
   }, [currentDate, eventsByDay]);
 
-  const formatMonthYear = useMemo(() => {
+  const formatDateHeader = useMemo(() => {
+    if (viewMode === 'month') {
     return currentDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
-  }, [currentDate]);
+    } else if (viewMode === 'week') {
+      const startOfWeek = new Date(currentDate);
+      const dayOfWeek = startOfWeek.getDay();
+      startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(endOfWeek.getDate() + 6);
+      
+      if (startOfWeek.getMonth() === endOfWeek.getMonth()) {
+        return `${startOfWeek.getDate()}-${endOfWeek.getDate()} ${startOfWeek.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' })}`;
+      } else {
+        return `${startOfWeek.toLocaleDateString('he-IL', { day: 'numeric', month: 'long' })} - ${endOfWeek.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+      }
+    } else {
+      return currentDate.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+  }, [currentDate, viewMode]);
+
+  // Get week days for week view
+  const weekDays = useMemo(() => {
+    if (viewMode !== 'week') return [];
+    const startOfWeek = new Date(currentDate);
+    const dayOfWeek = startOfWeek.getDay();
+    startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
+    
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(startOfWeek);
+      day.setDate(day.getDate() + i);
+      days.push(day);
+    }
+    return days;
+  }, [currentDate, viewMode]);
+
+  // Get events for a specific hour slot
+  const getEventsForHour = useCallback((date: Date, hour: number) => {
+    const hourStart = new Date(date);
+    hourStart.setHours(hour, 0, 0, 0);
+    const hourEnd = new Date(date);
+    hourEnd.setHours(hour, 59, 59, 999);
+
+    return events.filter(event => {
+      const eventStart = new Date(event.start.dateTime || event.start.date || '');
+      if (isNaN(eventStart.getTime())) return false;
+      
+      // Check if event overlaps with this hour
+      const eventEnd = new Date(event.end.dateTime || event.end.date || '');
+      return eventStart <= hourEnd && eventEnd >= hourStart &&
+             eventStart.toDateString() === date.toDateString();
+    });
+  }, [events]);
+
+  // Get all-day events for a specific date
+  const getAllDayEvents = useCallback((date: Date) => {
+    return events.filter(event => {
+      if (event.start.dateTime) return false; // Has time, not all-day
+      const eventDate = new Date(event.start.date || '');
+      return eventDate.toDateString() === date.toDateString();
+    });
+  }, [events]);
 
   // Handle delete event
   const handleDeleteEvent = async (eventId: string) => {
@@ -737,28 +832,292 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     );
   }
 
-  const weekDays = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+  const weekDayNames = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+
+  // Render week view
+  const renderWeekView = () => {
+    const hours = Array.from({ length: HOURS_PER_DAY }, (_, i) => HOUR_START + i);
+
+    return (
+      <div className="overflow-x-auto">
+        <div className="min-w-[800px]">
+          {/* All-day events row */}
+          <div className="border-b border-zinc-800 pb-2 mb-2">
+            <div className="grid grid-cols-8 gap-2">
+              <div className="text-xs text-zinc-500 font-semibold py-2">כל היום</div>
+              {weekDays.map((day, idx) => {
+                const allDayEvents = getAllDayEvents(day);
+                const isToday = day.toDateString() === new Date().toDateString();
+                return (
+                  <div
+                    key={idx}
+                    className={`min-h-[60px] p-2 border rounded-lg ${
+                      isToday ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-zinc-800/30 border-zinc-800'
+                    }`}
+                  >
+                    <div className={`text-xs font-semibold mb-1 ${isToday ? 'text-emerald-400' : 'text-zinc-400'}`}>
+                      {day.toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric' })}
+                    </div>
+                    <div className="space-y-1">
+                      {allDayEvents.map(event => (
+                        <EventItem
+                          key={event.id}
+                          event={event}
+                          onEventClick={onEventClick}
+                          onDelete={handleDeleteEvent}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Hour slots */}
+          <div className="grid grid-cols-8 gap-2">
+            {/* Hour labels column */}
+            <div className="space-y-0">
+              {hours.map(hour => (
+                <div
+                  key={hour}
+                  className="h-16 border-b border-zinc-800 flex items-start justify-end pr-2 pt-1"
+                >
+                  <span className="text-xs text-zinc-500">{hour}:00</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Day columns */}
+            {weekDays.map((day, dayIdx) => {
+              const isToday = day.toDateString() === new Date().toDateString();
+              return (
+                <div key={dayIdx} className="space-y-0">
+                  {hours.map(hour => {
+                    const hourEvents = getEventsForHour(day, hour);
+                    return (
+                      <div
+                        key={hour}
+                        onClick={() => {
+                          const clickedDate = new Date(day);
+                          clickedDate.setHours(hour, 0, 0, 0);
+                          setCurrentDate(clickedDate);
+                          if (onCreateWorkout) {
+                            onCreateWorkout();
+                          }
+                        }}
+                        className={`h-16 border-b border-zinc-800 p-1 cursor-pointer hover:bg-zinc-800/30 transition-colors relative ${
+                          isToday ? 'bg-emerald-500/5' : ''
+                        }`}
+                      >
+                        {hourEvents.map(event => {
+                          const eventStart = new Date(event.start.dateTime || event.start.date || '');
+                          const eventEnd = new Date(event.end.dateTime || event.end.date || '');
+                          const startMinutes = eventStart.getMinutes();
+                          const duration = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
+                          const heightPercent = Math.min((duration / 60) * 100, 100);
+                          
+                          return (
+                            <div
+                              key={event.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEventClick?.(event);
+                              }}
+                              className="absolute left-0 right-0 bg-emerald-500/30 text-emerald-200 text-xs p-1 rounded cursor-pointer hover:bg-emerald-500/40 z-10 border border-emerald-500/50"
+                              style={{
+                                top: `${(startMinutes / 60) * 100}%`,
+                                height: `${heightPercent}%`,
+                                minHeight: '20px',
+                              }}
+                              title={`${event.summary} - ${eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}`}
+                            >
+                              <div className="truncate">{event.summary}</div>
+                              <div className="text-[10px] opacity-75">
+                                {eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render day view
+  const renderDayView = () => {
+    const hours = Array.from({ length: HOURS_PER_DAY }, (_, i) => HOUR_START + i);
+    const isToday = currentDate.toDateString() === new Date().toDateString();
+    const allDayEvents = getAllDayEvents(currentDate);
+
+    return (
+      <div className="overflow-x-auto">
+        <div className="min-w-[400px]">
+          {/* All-day events */}
+          {allDayEvents.length > 0 && (
+            <div className="border-b border-zinc-800 pb-4 mb-4">
+              <div className="text-xs text-zinc-500 font-semibold mb-2">כל היום</div>
+              <div className="space-y-1">
+                {allDayEvents.map(event => (
+                  <EventItem
+                    key={event.id}
+                    event={event}
+                    onEventClick={onEventClick}
+                    onDelete={handleDeleteEvent}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Hour slots */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Hour labels */}
+            <div className="space-y-0">
+              {hours.map(hour => (
+                <div
+                  key={hour}
+                  className="h-16 border-b border-zinc-800 flex items-start justify-end pr-4 pt-1"
+                >
+                  <span className="text-sm text-zinc-500 font-semibold">{hour}:00</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Events column */}
+            <div className="space-y-0 relative">
+              {hours.map(hour => {
+                const hourEvents = getEventsForHour(currentDate, hour);
+                return (
+                  <div
+                    key={hour}
+                    onClick={() => {
+                      const clickedDate = new Date(currentDate);
+                      clickedDate.setHours(hour, 0, 0, 0);
+                      setCurrentDate(clickedDate);
+                      if (onCreateWorkout) {
+                        onCreateWorkout();
+                      }
+                    }}
+                    className={`h-16 border-b border-zinc-800 p-2 cursor-pointer hover:bg-zinc-800/30 transition-colors relative ${
+                      isToday ? 'bg-emerald-500/5' : ''
+                    }`}
+                  >
+                    {hourEvents.map(event => {
+                      const eventStart = new Date(event.start.dateTime || event.start.date || '');
+                      const eventEnd = new Date(event.end.dateTime || event.end.date || '');
+                      const startMinutes = eventStart.getMinutes();
+                      const duration = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
+                      const heightPercent = Math.min((duration / 60) * 100, 100);
+                      
+                      return (
+                        <div
+                          key={event.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEventClick?.(event);
+                          }}
+                          className="absolute left-2 right-2 bg-emerald-500/30 text-emerald-200 text-sm p-2 rounded cursor-pointer hover:bg-emerald-500/40 z-10 border border-emerald-500/50 shadow-md"
+                          style={{
+                            top: `${(startMinutes / 60) * 100}%`,
+                            height: `${heightPercent}%`,
+                            minHeight: '40px',
+                          }}
+                          title={`${event.summary} - ${eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}`}
+                        >
+                          <div className="font-semibold truncate">{event.summary}</div>
+                          <div className="text-xs opacity-75 mt-1">
+                            {eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} - {eventEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                          {event.location && (
+                            <div className="text-xs opacity-60 mt-1 truncate">{event.location}</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="premium-card p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigateMonth('prev')}
+              onClick={() => navigateDate('prev')}
               className="p-2 hover:bg-zinc-800 rounded-lg transition-all"
             >
               <ChevronRight className="h-5 w-5 text-zinc-400" />
             </button>
             <h2 className="text-xl font-bold text-white">
-              {formatMonthYear}
+              {formatDateHeader}
             </h2>
             <button
-              onClick={() => navigateMonth('next')}
+              onClick={() => navigateDate('next')}
               className="p-2 hover:bg-zinc-800 rounded-lg transition-all"
             >
               <ChevronLeft className="h-5 w-5 text-zinc-400" />
+            </button>
+            <button
+              onClick={() => setCurrentDate(new Date())}
+              className="px-3 py-1 text-sm bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all"
+            >
+              היום
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* View mode buttons */}
+            <div className="flex items-center gap-1 bg-zinc-800 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('month')}
+                className={`px-3 py-1.5 text-sm rounded transition-all flex items-center gap-2 ${
+                  viewMode === 'month'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    : 'text-zinc-400 hover:text-zinc-300'
+                }`}
+                title="תצוגת חודש"
+              >
+                <Calendar className="h-4 w-4" />
+                חודש
+              </button>
+              <button
+                onClick={() => setViewMode('week')}
+                className={`px-3 py-1.5 text-sm rounded transition-all flex items-center gap-2 ${
+                  viewMode === 'week'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    : 'text-zinc-400 hover:text-zinc-300'
+                }`}
+                title="תצוגת שבוע"
+              >
+                <CalendarRange className="h-4 w-4" />
+                שבוע
+              </button>
+              <button
+                onClick={() => setViewMode('day')}
+                className={`px-3 py-1.5 text-sm rounded transition-all flex items-center gap-2 ${
+                  viewMode === 'day'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    : 'text-zinc-400 hover:text-zinc-300'
+                }`}
+                title="תצוגת יום"
+              >
+                <CalendarDays className="h-4 w-4" />
+                יום
             </button>
           </div>
           <div className="flex items-center gap-2">
@@ -799,12 +1158,12 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
       </div>
 
       {/* Calendar Grid */}
-      <div className="premium-card p-4">
+      <div className="premium-card p-4 relative">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-400"></div>
           </div>
-        ) : (
+        ) : viewMode === 'month' ? (
           <DndContext
             sensors={sensors}
             onDragStart={handleDragStart}
@@ -812,7 +1171,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
           >
             <div className={`grid grid-cols-7 gap-2 ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}>
               {/* Week days header */}
-              {weekDays.map((day, index) => (
+              {weekDayNames.map((day, index) => (
                 <div
                   key={index}
                   className="text-center text-sm font-semibold text-zinc-400 py-2"
@@ -859,6 +1218,14 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
               ) : null}
             </DragOverlay>
           </DndContext>
+        ) : viewMode === 'week' ? (
+          <div className={isUpdating ? 'opacity-50 pointer-events-none' : ''}>
+            {renderWeekView()}
+          </div>
+        ) : (
+          <div className={isUpdating ? 'opacity-50 pointer-events-none' : ''}>
+            {renderDayView()}
+          </div>
         )}
 
         {/* Updating indicator */}

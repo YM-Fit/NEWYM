@@ -1200,6 +1200,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             activeView={activeView}
             onViewChange={handleViewChange}
             collapsed={sidebarCollapsed}
+            isTablet={isTablet}
           />
         )}
 

@@ -6,6 +6,7 @@ interface SidebarProps {
   activeView: string;
   onViewChange: (view: string) => void;
   collapsed?: boolean;
+  isTablet?: boolean;
 }
 
 interface MenuItem {
@@ -17,7 +18,7 @@ interface MenuItem {
   badge?: string | number;
 }
 
-export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
+export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarProps) {
   const [isMinimized, setIsMinimized] = useState(() => {
     return getFromStorage(STORAGE_KEYS.SIDEBAR_MINIMIZED, false);
   });
@@ -100,7 +101,14 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
           {!isMinimized && (
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-emerald-400" />
-              <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">תפריט</span>
+              <div className="flex flex-col items-start">
+                <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                  תפריט
+                </span>
+                <span className="mt-0.5 inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+                  מצב עבודה: {isTablet ? 'טאבלט / מגע' : 'מחשב'}
+                </span>
+              </div>
             </div>
           )}
           <button
