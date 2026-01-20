@@ -15,7 +15,7 @@ import { logger } from '../../../utils/logger';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 
-// Calendar Event interface
+// Calendar Event interface - CalendarView component
 interface CalendarEvent {
   id: string;
   summary: string;
@@ -1122,39 +1122,40 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                 יום
               </button>
             </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowSyncModal(true)}
-              className="px-4 py-2 text-sm bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-all flex items-center gap-2 border border-emerald-500/30"
-              title="סנכרון מתאמנים מהיומן"
-            >
-              <Users className="h-4 w-4" />
-              סנכרון מתאמנים
-            </button>
-            <button
-              onClick={handleManualRefresh}
-              disabled={loading || isRefreshing}
-              className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              title="רענון יומן"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              רענון
-            </button>
-            <button
-              onClick={() => setShowSettings(true)}
-              className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all"
-            >
-              הגדרות
-            </button>
-            {onCreateWorkout && (
+            <div className="flex items-center gap-2">
               <button
-                onClick={onCreateWorkout}
-                className="btn-primary flex items-center gap-2"
+                onClick={() => setShowSyncModal(true)}
+                className="px-4 py-2 text-sm bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-all flex items-center gap-2 border border-emerald-500/30"
+                title="סנכרון מתאמנים מהיומן"
               >
-                <Plus className="h-4 w-4" />
-                אימון חדש
+                <Users className="h-4 w-4" />
+                סנכרון מתאמנים
               </button>
-            )}
+              <button
+                onClick={handleManualRefresh}
+                disabled={loading || isRefreshing}
+                className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                title="רענון יומן"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                רענון
+              </button>
+              <button
+                onClick={() => setShowSettings(true)}
+                className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all"
+              >
+                הגדרות
+              </button>
+              {onCreateWorkout && (
+                <button
+                  onClick={onCreateWorkout}
+                  className="btn-primary flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  אימון חדש
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
