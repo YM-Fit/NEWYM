@@ -286,11 +286,11 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     const end = new Date(currentDate);
 
     if (viewMode === 'month') {
-    start.setDate(1);
-    start.setHours(0, 0, 0, 0);
-    end.setMonth(end.getMonth() + 1);
-    end.setDate(0);
-    end.setHours(23, 59, 59, 999);
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+      end.setMonth(end.getMonth() + 1);
+      end.setDate(0);
+      end.setHours(23, 59, 59, 999);
     } else if (viewMode === 'week') {
       // Get start of week (Sunday)
       const dayOfWeek = start.getDay();
@@ -433,10 +433,10 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
   const navigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
     if (viewMode === 'month') {
-    if (direction === 'prev') {
-      newDate.setMonth(newDate.getMonth() - 1);
-    } else {
-      newDate.setMonth(newDate.getMonth() + 1);
+      if (direction === 'prev') {
+        newDate.setMonth(newDate.getMonth() - 1);
+      } else {
+        newDate.setMonth(newDate.getMonth() + 1);
       }
     } else if (viewMode === 'week') {
       if (direction === 'prev') {
@@ -501,7 +501,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
 
   const formatDateHeader = useMemo(() => {
     if (viewMode === 'month') {
-    return currentDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
+      return currentDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
     } else if (viewMode === 'week') {
       const startOfWeek = new Date(currentDate);
       const dayOfWeek = startOfWeek.getDay();
@@ -1118,8 +1118,8 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
               >
                 <CalendarDays className="h-4 w-4" />
                 יום
-            </button>
-          </div>
+              </button>
+            </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowSyncModal(true)}
