@@ -88,31 +88,41 @@ export default function SmartReportView() {
       const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0, 23, 59, 59);
 
       // Get workout counts for each trainee in the month - ONLY from calendar synced workouts
-      const { data: workoutData, error: workoutError } = await supabase
-        .from('workout_trainees')
-        .select(`
-          trainee_id,
-          workouts!inner (
-            id,
-            workout_date,
-            is_completed,
-            synced_from_google
-          )
-        `)
-        .gte('workouts.workout_date', startOfMonth.toISOString())
-        .lte('workouts.workout_date', endOfMonth.toISOString())
-        .eq('workouts.is_completed', true)
-        .eq('workouts.synced_from_google', true); // Only count workouts from calendar
+      // First get all synced workouts for this month
+      const { data: workoutsData, error: workoutsError } = await supabase
+        .from('workouts')
+        .select('id')
+        .eq('trainer_id', user.id)
+        .eq('synced_from_google', true)
+        .eq('is_completed', true)
+        .gte('workout_date', startOfMonth.toISOString())
+        .lte('workout_date', endOfMonth.toISOString());
 
-      if (workoutError) {
-        logger.error('Error loading workout data', workoutError, 'SmartReportView');
+      if (workoutsError) {
+        logger.error('Error loading workouts data', workoutsError, 'SmartReportView');
+      }
+
+      const workoutIds = workoutsData?.map(w => w.id) || [];
+      
+      // Now get the trainee links for these workouts
+      let workoutData: { trainee_id: string }[] = [];
+      if (workoutIds.length > 0) {
+        const { data: traineeLinks, error: linksError } = await supabase
+          .from('workout_trainees')
+          .select('trainee_id, workout_id')
+          .in('workout_id', workoutIds);
+
+        if (linksError) {
+          logger.error('Error loading workout trainee links', linksError, 'SmartReportView');
+        }
+        workoutData = traineeLinks || [];
       }
 
       // Count workouts per trainee (only calendar-synced workouts)
       const workoutCounts = new Map<string, number>();
       
       // Count from workouts table
-      workoutData?.forEach((w: { trainee_id: string }) => {
+      workoutData.forEach((w: { trainee_id: string }) => {
         const current = workoutCounts.get(w.trainee_id) || 0;
         workoutCounts.set(w.trainee_id, current + 1);
       });

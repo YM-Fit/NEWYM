@@ -245,21 +245,35 @@ export default function CalendarSyncModal({
         const matchedEvent = matchedEvents.find(e => e.event.id === eventId);
         if (!matchedEvent) continue;
 
+        // Get the extracted name to find ALL events with the same name in the group
+        const extractedName = matchedEvent.event.extractedName?.toLowerCase() || matchedEvent.event.summary.toLowerCase().replace(/^(אימון|פגישה|טיפול|מפגש)\s*[-–:]\s*/i, '').trim();
+        
+        // Find ALL events with the same extracted name
+        const eventsInGroup = matchedEvents.filter(e => {
+          const eName = e.event.extractedName?.toLowerCase() || e.event.summary.toLowerCase().replace(/^(אימון|פגישה|טיפול|מפגש)\s*[-–:]\s*/i, '').trim();
+          return eName === extractedName;
+        });
+
         if (decision.action === 'link' && decision.traineeId) {
-          linksToSave.push({
-            trainer_id: user.id,
-            trainee_id: decision.traineeId,
-            google_event_id: eventId,
-            google_calendar_id: 'primary',
-            sync_status: 'synced',
-            sync_direction: 'from_google',
-            event_start_time: matchedEvent.event.start.dateTime || matchedEvent.event.start.date || new Date().toISOString(),
-            event_end_time: matchedEvent.event.end?.dateTime || matchedEvent.event.end?.date || null,
-            event_summary: matchedEvent.event.summary
-          });
+          // Link ALL events in this group to the trainee
+          for (const evt of eventsInGroup) {
+            // Skip if already in linksToSave
+            if (linksToSave.some(l => l.google_event_id === evt.event.id)) continue;
+            
+            linksToSave.push({
+              trainer_id: user.id,
+              trainee_id: decision.traineeId,
+              google_event_id: evt.event.id,
+              google_calendar_id: 'primary',
+              sync_status: 'synced',
+              sync_direction: 'from_google',
+              event_start_time: evt.event.start.dateTime || evt.event.start.date || new Date().toISOString(),
+              event_end_time: evt.event.end?.dateTime || evt.event.end?.date || null,
+              event_summary: evt.event.summary
+            });
+          }
           
           // Track the name-to-trainee mapping for auto-sync
-          const extractedName = matchedEvent.event.extractedName?.toLowerCase() || matchedEvent.event.summary.toLowerCase();
           nameToTraineeMap.set(extractedName, decision.traineeId);
         } else if (decision.action === 'create') {
           traineesToCreate.push({
