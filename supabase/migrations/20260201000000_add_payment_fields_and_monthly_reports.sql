@@ -6,9 +6,27 @@ BEGIN
     SELECT 1 FROM information_schema.columns 
     WHERE table_name = 'trainees' AND column_name = 'payment_method'
   ) THEN
-    ALTER TABLE trainees ADD COLUMN payment_method TEXT 
-      CHECK (payment_method IN ('standing_order', 'credit', 'monthly_count', 'card_ticket', 'bit', 'paybox', 'cash'));
+    ALTER TABLE trainees ADD COLUMN payment_method TEXT;
   END IF;
+  
+  -- Update payment_method constraint to include all payment methods
+  IF EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'trainees_payment_method_check'
+  ) THEN
+    ALTER TABLE trainees DROP CONSTRAINT trainees_payment_method_check;
+  END IF;
+  
+  ALTER TABLE trainees ADD CONSTRAINT trainees_payment_method_check 
+    CHECK (payment_method IS NULL OR payment_method IN (
+      'standing_order', 
+      'credit', 
+      'monthly_count', 
+      'card_ticket', 
+      'bit', 
+      'paybox', 
+      'cash'
+    ));
 
   -- Add monthly_price column
   IF NOT EXISTS (
