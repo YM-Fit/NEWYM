@@ -29,12 +29,12 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
 
   const getMetricColor = (metric: string) => {
     switch (metric) {
-      case 'weight': return '#10b981';
-      case 'bodyFat': return '#f59e0b';
-      case 'muscleMass': return '#06b6d4';
-      case 'waterPercentage': return '#3b82f6';
-      case 'metabolicAge': return '#ef4444';
-      default: return '#71717a';
+      case 'weight': return '#10b981';        // emerald-500
+      case 'bodyFat': return '#f59e0b';       // amber-500
+      case 'muscleMass': return '#06b6d4';    // cyan-500
+      case 'waterPercentage': return '#06b6d4'; // cyan-500 (במקום blue)
+      case 'metabolicAge': return '#ef4444';  // red-500
+      default: return '#71717a';              // zinc-500
     }
   };
 

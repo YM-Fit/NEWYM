@@ -12,6 +12,7 @@ export interface PerformanceMetric {
   unit: string;
   timestamp: string;
   metadata?: Record<string, any>;
+  rating?: 'good' | 'needs-improvement' | 'poor';
 }
 
 export interface WebVitals {
@@ -367,6 +368,50 @@ export async function trackAPICall<T>(
 }
 
 /**
+ * Measure API response time (backward compatibility wrapper)
+ * This function provides the same interface as the old performanceMonitor.ts
+ */
+export function measureApiCall<T>(
+  apiCall: () => Promise<T>,
+  endpoint: string
+): Promise<T> {
+  return trackAPICall(endpoint, 'GET', apiCall);
+}
+
+/**
+ * Get all performance metrics (backward compatibility wrapper)
+ */
+export function getPerformanceMetrics(): Array<{ name: string; value: number; rating: 'good' | 'needs-improvement' | 'poor'; timestamp: number }> {
+  const metrics = performanceMonitor.getRecentMetrics(1000);
+  return metrics.map(m => ({
+    name: m.name,
+    value: m.value,
+    rating: (m.metadata?.rating as 'good' | 'needs-improvement' | 'poor') || 'good',
+    timestamp: new Date(m.timestamp).getTime(),
+  }));
+}
+
+/**
+ * Get performance rating based on Web Vitals thresholds
+ */
+function getRating(name: string, value: number): 'good' | 'needs-improvement' | 'poor' {
+  const thresholds: Record<string, { good: number; poor: number }> = {
+    lcp: { good: 2500, poor: 4000 }, // milliseconds
+    fcp: { good: 1800, poor: 3000 },
+    fid: { good: 100, poor: 300 },
+    cls: { good: 0.1, poor: 0.25 },
+    ttfb: { good: 800, poor: 1800 },
+  };
+
+  const threshold = thresholds[name.toLowerCase()];
+  if (!threshold) return 'good';
+
+  if (value <= threshold.good) return 'good';
+  if (value <= threshold.poor) return 'needs-improvement';
+  return 'poor';
+}
+
+/**
  * Track Web Vitals using the Performance Monitor
  */
 export function trackWebVitals(onPerfEntry?: (metric: PerformanceMetric) => void): void {
@@ -379,7 +424,8 @@ export function trackWebVitals(onPerfEntry?: (metric: PerformanceMetric) => void
   const originalRecord = performanceMonitor.recordMetric.bind(performanceMonitor);
   
   performanceMonitor.recordMetric = function(name, value, unit, metadata) {
-    originalRecord(name, value, unit, metadata);
+    const rating = getRating(name.toLowerCase(), value);
+    originalRecord(name, value, unit, { ...metadata, rating });
     
     if (onPerfEntry && ['LCP', 'FID', 'CLS', 'FCP', 'TTFB'].includes(name)) {
       onPerfEntry({
@@ -387,10 +433,28 @@ export function trackWebVitals(onPerfEntry?: (metric: PerformanceMetric) => void
         value,
         unit,
         timestamp: new Date().toISOString(),
-        metadata,
+        metadata: { ...metadata, rating },
+        rating,
       });
     }
   };
+}
+
+/**
+ * Measure and report Web Vitals (backward compatibility wrapper)
+ * This function provides the same interface as the old performanceMonitor.ts
+ */
+export function measureWebVitals(onReport?: (metric: { name: string; value: number; rating: 'good' | 'needs-improvement' | 'poor'; timestamp: number }) => void): void {
+  trackWebVitals((metric) => {
+    if (onReport) {
+      onReport({
+        name: metric.name,
+        value: metric.value,
+        rating: metric.rating || 'good',
+        timestamp: new Date(metric.timestamp).getTime(),
+      });
+    }
+  });
 }
 
 /**

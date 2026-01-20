@@ -186,3 +186,122 @@ export function validateNumberRange(
 
   return { isValid: true };
 }
+
+/**
+ * Validate trainee form data (shared validation logic for AddTraineeForm and EditTraineeForm)
+ */
+export interface TraineeFormData {
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  birth_date?: string;
+  height?: string | number;
+  pair_name_1?: string;
+  pair_name_2?: string;
+  pair_phone_1?: string;
+  pair_phone_2?: string;
+  pair_email_1?: string;
+  pair_email_2?: string;
+  pair_birth_date_1?: string;
+  pair_birth_date_2?: string;
+  pair_height_1?: string | number;
+  pair_height_2?: string | number;
+}
+
+export interface TraineeFormErrors {
+  [key: string]: string;
+}
+
+/**
+ * Validate trainee form fields
+ * @param formData - Form data to validate
+ * @param isPair - Whether this is a pair trainee
+ * @param includeCmInHeightError - Whether to include "ס״מ" in height error message
+ * @returns Object with errors object and isValid boolean
+ */
+export function validateTraineeForm(
+  formData: TraineeFormData,
+  isPair: boolean,
+  includeCmInHeightError: boolean = false
+): { errors: TraineeFormErrors; isValid: boolean } {
+  const errors: TraineeFormErrors = {};
+  const heightErrorSuffix = includeCmInHeightError ? ' ס״מ' : '';
+
+  if (isPair) {
+    // Validate pair fields
+    if (!formData.pair_name_1?.trim()) {
+      errors.pair_name_1 = 'שם ראשון נדרש';
+    }
+    if (!formData.pair_name_2?.trim()) {
+      errors.pair_name_2 = 'שם שני נדרש';
+    }
+    if (!formData.pair_phone_1?.trim()) {
+      errors.pair_phone_1 = 'טלפון ראשון נדרש';
+    }
+    if (!formData.pair_phone_2?.trim()) {
+      errors.pair_phone_2 = 'טלפון שני נדרש';
+    }
+
+    // Validate pair heights
+    const height1 = typeof formData.pair_height_1 === 'string' 
+      ? Number(formData.pair_height_1) 
+      : formData.pair_height_1;
+    if (!height1 || height1 < 1 || height1 > 250) {
+      errors.pair_height_1 = `גובה תקין נדרש (1-250${heightErrorSuffix})`;
+    }
+
+    const height2 = typeof formData.pair_height_2 === 'string' 
+      ? Number(formData.pair_height_2) 
+      : formData.pair_height_2;
+    if (!height2 || height2 < 1 || height2 > 250) {
+      errors.pair_height_2 = `גובה תקין נדרש (1-250${heightErrorSuffix})`;
+    }
+
+    // Validate pair emails
+    if (formData.pair_email_1 && !isValidEmail(formData.pair_email_1)) {
+      errors.pair_email_1 = 'כתובת אימייל לא תקינה';
+    }
+    if (formData.pair_email_2 && !isValidEmail(formData.pair_email_2)) {
+      errors.pair_email_2 = 'כתובת אימייל לא תקינה';
+    }
+
+    // Validate pair birth dates are in the past
+    if (formData.pair_birth_date_1 && new Date(formData.pair_birth_date_1) > new Date()) {
+      errors.pair_birth_date_1 = 'תאריך לידה חייב להיות בעבר';
+    }
+    if (formData.pair_birth_date_2 && new Date(formData.pair_birth_date_2) > new Date()) {
+      errors.pair_birth_date_2 = 'תאריך לידה חייב להיות בעבר';
+    }
+  } else {
+    // Validate single trainee fields
+    if (!formData.full_name?.trim()) {
+      errors.full_name = 'שם מלא נדרש';
+    }
+    if (!formData.phone?.trim()) {
+      errors.phone = 'מספר טלפון נדרש';
+    }
+
+    // Validate height
+    const height = typeof formData.height === 'string' 
+      ? Number(formData.height) 
+      : formData.height;
+    if (!height || height < 1 || height > 250) {
+      errors.height = `גובה תקין נדרש (1-250${heightErrorSuffix})`;
+    }
+
+    // Validate email
+    if (formData.email && !isValidEmail(formData.email)) {
+      errors.email = 'כתובת אימייל לא תקינה';
+    }
+
+    // Validate birth date is in the past
+    if (formData.birth_date && new Date(formData.birth_date) > new Date()) {
+      errors.birth_date = 'תאריך לידה חייב להיות בעבר';
+    }
+  }
+
+  return {
+    errors,
+    isValid: Object.keys(errors).length === 0,
+  };
+}

@@ -259,7 +259,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 bg-zinc-900/50 rounded-xl border border-zinc-800">
               <div className="flex items-center gap-2 mb-2">
-                <Activity className="h-4 w-4 text-sky-400" />
+                <Activity className="h-4 w-4 text-cyan-400" />
                 <span className="text-xs text-zinc-500">סוג אירובי</span>
               </div>
               <p className="text-lg font-bold text-white">{latestActivity.cardio_type?.name || 'לא זמין'}</p>

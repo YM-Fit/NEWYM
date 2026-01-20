@@ -1,5 +1,6 @@
 import { ArrowRight, Save, User, Users, Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import { validateTraineeForm } from '../../../utils/validation';
 
 interface AddTraineeFormProps {
   onBack: () => void;
@@ -34,49 +35,9 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (isPair) {
-      if (!formData.pair_name_1.trim()) newErrors.pair_name_1 = 'שם ראשון נדרש';
-      if (!formData.pair_name_2.trim()) newErrors.pair_name_2 = 'שם שני נדרש';
-      if (!formData.pair_phone_1.trim()) newErrors.pair_phone_1 = 'טלפון ראשון נדרש';
-      if (!formData.pair_phone_2.trim()) newErrors.pair_phone_2 = 'טלפון שני נדרש';
-      if (!formData.pair_height_1 || Number(formData.pair_height_1) < 1 || Number(formData.pair_height_1) > 250) {
-        newErrors.pair_height_1 = 'גובה תקין נדרש (1-250 ס״מ)';
-      }
-      if (!formData.pair_height_2 || Number(formData.pair_height_2) < 1 || Number(formData.pair_height_2) > 250) {
-        newErrors.pair_height_2 = 'גובה תקין נדרש (1-250 ס״מ)';
-      }
-      if (formData.pair_email_1 && !/\S+@\S+\.\S+/.test(formData.pair_email_1)) {
-        newErrors.pair_email_1 = 'כתובת אימייל לא תקינה';
-      }
-      if (formData.pair_email_2 && !/\S+@\S+\.\S+/.test(formData.pair_email_2)) {
-        newErrors.pair_email_2 = 'כתובת אימייל לא תקינה';
-      }
-      // Validate birth dates are in the past
-      if (formData.pair_birth_date_1 && new Date(formData.pair_birth_date_1) > new Date()) {
-        newErrors.pair_birth_date_1 = 'תאריך לידה חייב להיות בעבר';
-      }
-      if (formData.pair_birth_date_2 && new Date(formData.pair_birth_date_2) > new Date()) {
-        newErrors.pair_birth_date_2 = 'תאריך לידה חייב להיות בעבר';
-      }
-    } else {
-      if (!formData.full_name.trim()) newErrors.full_name = 'שם מלא נדרש';
-      if (!formData.phone.trim()) newErrors.phone = 'מספר טלפון נדרש';
-      if (!formData.height || Number(formData.height) < 1 || Number(formData.height) > 250) {
-        newErrors.height = 'גובה תקין נדרש (1-250 ס״מ)';
-      }
-      if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-        newErrors.email = 'כתובת אימייל לא תקינה';
-      }
-      // Validate birth date is in the past
-      if (formData.birth_date && new Date(formData.birth_date) > new Date()) {
-        newErrors.birth_date = 'תאריך לידה חייב להיות בעבר';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const { errors, isValid } = validateTraineeForm(formData, isPair, true);
+    setErrors(errors);
+    return isValid;
   };
 
   const handleSubmit = (e: React.FormEvent) => {

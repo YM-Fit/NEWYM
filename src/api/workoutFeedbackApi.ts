@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { handleApiError } from './config';
+import { rateLimiter } from '../utils/rateLimiter';
 
 export interface WorkoutFeedback {
   id: string;

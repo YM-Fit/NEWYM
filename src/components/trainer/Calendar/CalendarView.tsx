@@ -127,30 +127,35 @@ function EventItem({ event, onEventClick, onDelete, isDragging }: EventItemProps
 
   const traineeName = extractTraineeName(event);
 
+  // Get end time for display
+  const eventEndTime = event.end.dateTime 
+    ? new Date(event.end.dateTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+    : null;
+
   return (
     <div
       onClick={() => onEventClick?.(event)}
       onContextMenu={handleContextMenu}
       onBlur={handleClickOutside}
-      className={`bg-emerald-500/20 text-emerald-100 p-2 rounded-md cursor-pointer hover:bg-emerald-500/30 transition-all relative group mb-1 shadow-sm border border-emerald-500/30 border-l-[3px] border-l-emerald-400 ${
-        isDragging ? 'opacity-60 cursor-grabbing' : 'cursor-pointer'
+      className={`bg-emerald-500 text-white px-2 py-1.5 rounded cursor-pointer hover:bg-emerald-600 transition-all relative group mb-0.5 ${
+        isDragging ? 'opacity-60 cursor-grabbing shadow-lg' : 'cursor-pointer'
       }`}
       title={`${event.summary}${eventTime ? ` - ${eventTime}` : ''} (גרור להעברה, לחץ ימני למחיקה)`}
     >
-      {/* Time - Clean and clear */}
-      {eventTime && (
-        <div className="text-[10px] font-medium text-emerald-100/80 mb-0.5">
-          {eventTime}
-        </div>
-      )}
-      
-      {/* Trainee Name - Clean and prominent */}
-      <div className="text-xs font-semibold text-emerald-50 leading-snug truncate">
+      {/* Trainee Name - Prominent */}
+      <div className="text-[11px] font-semibold text-white leading-tight truncate">
         {traineeName}
       </div>
       
+      {/* Time range - Below name */}
+      {eventTime && eventEndTime && (
+        <div className="text-[10px] text-white/80 mt-0.5">
+          {eventEndTime} עד {eventTime}
+        </div>
+      )}
+      
       {showDelete && (
-        <div className="absolute top-0.5 right-0.5 bg-red-600 hover:bg-red-700 rounded-sm p-0.5 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-0.5 left-0.5 bg-red-500 hover:bg-red-600 rounded p-0.5 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={handleDelete}
             className="text-white"
@@ -233,27 +238,26 @@ function DroppableDayCell({
     <div
       ref={setNodeRef}
       onClick={() => day && onDayClick(day)}
-      className={`min-h-[100px] p-2 border-r border-b border-zinc-700/30 transition-all group ${
+      className={`min-h-[100px] p-1.5 border-l border-b border-zinc-700/30 transition-all group ${
         day
           ? isOver
-            ? 'bg-emerald-500/10 ring-1 ring-emerald-400/50'
-            : isToday
-              ? 'bg-emerald-500/5 border-emerald-500/20'
-              : 'bg-zinc-900/30 hover:bg-emerald-500/5 cursor-pointer'
+            ? 'bg-emerald-500/10'
+            : 'hover:bg-zinc-800/50 cursor-pointer'
           : 'bg-transparent'
       }`}
-      title={day ? `לחץ ליצירת אימון ב-${day}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}` : ''}
     >
       {day && (
         <>
-          <div
-            className={`text-xs font-medium mb-1 text-right ${
-              isToday 
-                ? 'text-emerald-400 font-semibold' 
-                : 'text-zinc-400'
-            }`}
-          >
-            {day}
+          <div className="flex justify-end mb-1">
+            <div
+              className={`w-7 h-7 flex items-center justify-center rounded-full text-sm ${
+                isToday 
+                  ? 'bg-emerald-500 text-white font-semibold' 
+                  : 'text-zinc-400'
+              }`}
+            >
+              {day}
+            </div>
           </div>
           <div className="space-y-0.5">
             {dayEvents.slice(0, 3).map((event) => (
@@ -268,20 +272,14 @@ function DroppableDayCell({
             ))}
             {dayEvents.length > 3 && (
               <div
-                className="text-xs text-zinc-500 cursor-pointer hover:text-zinc-400"
-                title={`${dayEvents.length - 3} אירועים נוספים`}
+                className="text-[11px] text-zinc-400 cursor-pointer hover:bg-zinc-800 rounded px-1 py-0.5 mt-0.5"
                 onClick={(e) => {
                   e.stopPropagation();
                   const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
                   toast.success(`${dayEvents.length} אירועים ב-${dayDate.toLocaleDateString('he-IL')}`);
                 }}
               >
-                +{dayEvents.length - 3} נוספים
-              </div>
-            )}
-            {dayEvents.length === 0 && (
-              <div className="text-[10px] text-zinc-600 opacity-0 group-hover:opacity-40 mt-2 text-center transition-opacity">
-                לחץ להוספה
+                {dayEvents.length - 3}+ נוספים
               </div>
             )}
           </div>
@@ -896,51 +894,63 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     const hours = Array.from({ length: HOURS_PER_DAY }, (_, i) => HOUR_START + i);
 
     return (
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto bg-zinc-900/50 rounded-lg">
         <div className="min-w-[800px]">
-          {/* All-day events row */}
-          <div className="border-b border-zinc-700/30 pb-2 mb-2">
-            <div className="grid grid-cols-8">
-              <div className="text-xs text-zinc-500 font-medium py-2 px-2 bg-zinc-900/30 border-r border-zinc-700/30 flex items-center justify-center">כל היום</div>
-              {weekDays.map((day, idx) => {
-                const allDayEvents = getAllDayEvents(day);
-                const isToday = day.toDateString() === new Date().toDateString();
-                return (
-                  <div
-                    key={idx}
-                    className={`min-h-[50px] p-1.5 border-r border-zinc-700/30 ${
-                      isToday ? 'bg-emerald-500/5' : 'bg-zinc-900/20'
-                    }`}
-                  >
-                    <div className={`text-xs font-medium mb-1 text-right ${isToday ? 'text-emerald-400 font-semibold' : 'text-zinc-400'}`}>
-                      {day.toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric' })}
-                    </div>
-                    <div className="space-y-0.5">
-                      {allDayEvents.map(event => (
-                        <EventItem
-                          key={event.id}
-                          event={event}
-                          onEventClick={onEventClick}
-                          onDelete={handleDeleteEvent}
-                        />
-                      ))}
-                    </div>
+          {/* Week header with day names and dates */}
+          <div className="grid grid-cols-8 border-b border-zinc-700/50">
+            {/* Empty cell for time column */}
+            <div className="py-3 px-2 text-center text-xs text-zinc-500 border-l border-zinc-700/30">GMT+02</div>
+            {weekDays.map((day, idx) => {
+              const isToday = day.toDateString() === new Date().toDateString();
+              const dayNum = day.getDate();
+              const dayName = day.toLocaleDateString('he-IL', { weekday: 'short' });
+              return (
+                <div key={idx} className="py-2 px-1 text-center border-l border-zinc-700/30">
+                  <div className="text-xs text-zinc-400 mb-1">{dayName}</div>
+                  <div className={`text-lg font-medium mx-auto w-8 h-8 flex items-center justify-center rounded-full ${
+                    isToday 
+                      ? 'bg-emerald-500 text-white' 
+                      : 'text-zinc-300'
+                  }`}>
+                    {dayNum}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* All-day events row */}
+          <div className="grid grid-cols-8 border-b border-zinc-700/30">
+            <div className="text-[10px] text-zinc-500 py-2 px-2 border-l border-zinc-700/30 text-center">כל היום</div>
+            {weekDays.map((day, idx) => {
+              const allDayEvents = getAllDayEvents(day);
+              return (
+                <div key={idx} className="min-h-[40px] p-1 border-l border-zinc-700/30">
+                  <div className="space-y-0.5">
+                    {allDayEvents.map(event => (
+                      <EventItem
+                        key={event.id}
+                        event={event}
+                        onEventClick={onEventClick}
+                        onDelete={handleDeleteEvent}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Hour slots */}
           <div className="grid grid-cols-8">
             {/* Hour labels column */}
-            <div className="space-y-0 sticky left-0 z-20 bg-zinc-900/70 backdrop-blur-sm">
+            <div className="space-y-0">
               {hours.map(hour => (
                 <div
                   key={hour}
-                  className="h-16 border-b border-r border-zinc-700/30 flex items-start justify-end pr-3 pt-1.5 bg-zinc-900/40"
+                  className="h-14 border-b border-l border-zinc-700/30 flex items-start justify-center pt-0"
                 >
-                  <span className="text-xs text-zinc-500 font-medium">{hour}:00</span>
+                  <span className="text-[10px] text-zinc-500 -mt-2 bg-zinc-900/80 px-1">{hour}:00</span>
                 </div>
               ))}
             </div>
@@ -949,7 +959,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
             {weekDays.map((day, dayIdx) => {
               const isToday = day.toDateString() === new Date().toDateString();
               return (
-                <div key={dayIdx} className="space-y-0">
+                <div key={dayIdx} className="space-y-0 relative">
                   {hours.map(hour => {
                     const hourEvents = getEventsForHour(day, hour);
                     return (
@@ -959,27 +969,20 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                           const clickedDate = new Date(day);
                           clickedDate.setHours(hour, 0, 0, 0);
                           setCurrentDate(clickedDate);
-                          // Always allow creating workout by clicking on time slot
                           if (onCreateWorkout) {
                             onCreateWorkout();
-                          } else {
-                            toast.info('לחץ על כפתור "אימון חדש" ליצירת אימון');
                           }
                         }}
-                        className={`h-16 border-b border-r border-zinc-700/30 p-1 cursor-pointer hover:bg-emerald-500/5 transition-colors relative group ${
-                          isToday ? 'bg-emerald-500/5' : ''
-                        }`}
-                        title={`לחץ ליצירת אימון ב-${day.toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric' })} בשעה ${hour}:00`}
+                        className={`h-14 border-b border-l border-zinc-700/30 cursor-pointer hover:bg-zinc-800/50 transition-colors relative`}
                       >
-                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                          <div className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-500/30"></div>
-                        </div>
                         {hourEvents.map(event => {
                           const eventStart = new Date(event.start.dateTime || event.start.date || '');
                           const eventEnd = new Date(event.end.dateTime || event.end.date || '');
                           const startMinutes = eventStart.getMinutes();
                           const duration = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
-                          const heightPercent = Math.min((duration / 60) * 100, 100);
+                          const heightPercent = Math.max((duration / 60) * 100, 100);
+                          const startTime = eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+                          const endTime = eventEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
                           
                           return (
                             <div
@@ -988,22 +991,21 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                                 e.stopPropagation();
                                 onEventClick?.(event);
                               }}
-                              className="absolute left-0 right-0.5 bg-emerald-500/25 text-emerald-50 text-xs p-1.5 rounded-md cursor-pointer hover:bg-emerald-500/35 z-10 shadow-sm border border-emerald-500/40 border-l-[3px] border-l-emerald-400 transition-all"
+                              className="absolute left-0.5 right-0.5 bg-emerald-500 text-white text-xs px-2 py-1 rounded cursor-pointer hover:bg-emerald-600 z-10 overflow-hidden"
                               style={{
                                 top: `${(startMinutes / 60) * 100}%`,
                                 height: `${heightPercent}%`,
-                                minHeight: '18px',
+                                minHeight: '44px',
                               }}
-                              title={`${event.summary} - ${eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}`}
+                              title={`${event.summary} - ${startTime}`}
                             >
-                              {/* Time - Clean */}
-                              <div className="text-[10px] font-medium text-emerald-100/80 mb-0.5">
-                                {eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-                              </div>
-                              
-                              {/* Trainee Name - Clean */}
-                              <div className="text-xs font-semibold text-emerald-50 leading-tight truncate">
+                              {/* Trainee Name - Prominent */}
+                              <div className="text-[11px] font-semibold text-white truncate">
                                 {extractTraineeName(event)}
+                              </div>
+                              {/* Time range */}
+                              <div className="text-[10px] text-white/80 mt-0.5">
+                                {endTime} עד {startTime}
                               </div>
                             </div>
                           );
@@ -1027,13 +1029,27 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     const allDayEvents = getAllDayEvents(currentDate);
 
     return (
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto bg-zinc-900/50 rounded-lg">
         <div className="min-w-[400px]">
+          {/* Day header */}
+          <div className="flex items-center justify-center py-4 border-b border-zinc-700/30">
+            <div className="text-center">
+              <div className="text-xs text-zinc-400 mb-1">
+                {currentDate.toLocaleDateString('he-IL', { weekday: 'long' })}
+              </div>
+              <div className={`text-2xl font-medium mx-auto w-12 h-12 flex items-center justify-center rounded-full ${
+                isToday ? 'bg-emerald-500 text-white' : 'text-zinc-300'
+              }`}>
+                {currentDate.getDate()}
+              </div>
+            </div>
+          </div>
+
           {/* All-day events */}
           {allDayEvents.length > 0 && (
-            <div className="border-b border-zinc-700/30 pb-2 mb-2">
-              <div className="text-xs text-zinc-500 font-medium mb-2 bg-zinc-900/30 p-1.5">כל היום</div>
-              <div className="space-y-1">
+            <div className="border-b border-zinc-700/30 p-2">
+              <div className="text-[10px] text-zinc-500 mb-1">כל היום</div>
+              <div className="space-y-0.5">
                 {allDayEvents.map(event => (
                   <EventItem
                     key={event.id}
@@ -1047,21 +1063,21 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
           )}
 
           {/* Hour slots */}
-          <div className="grid grid-cols-2">
+          <div className="grid grid-cols-[60px_1fr]">
             {/* Hour labels */}
-            <div className="space-y-0 sticky left-0 z-20 bg-zinc-900/80 backdrop-blur-sm">
+            <div className="space-y-0">
               {hours.map(hour => (
                 <div
                   key={hour}
-                  className="h-16 border-b border-r border-zinc-700/30 flex items-start justify-end pr-4 pt-1.5 bg-zinc-900/40"
+                  className="h-14 border-b border-zinc-700/30 flex items-start justify-center pt-0"
                 >
-                  <span className="text-xs text-zinc-500 font-medium">{hour}:00</span>
+                  <span className="text-[10px] text-zinc-500 -mt-2 bg-zinc-900/80 px-1">{hour}:00</span>
                 </div>
               ))}
             </div>
 
             {/* Events column */}
-            <div className="space-y-0 relative">
+            <div className="space-y-0 relative border-l border-zinc-700/30">
               {hours.map(hour => {
                 const hourEvents = getEventsForHour(currentDate, hour);
                 return (
@@ -1071,28 +1087,20 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                       const clickedDate = new Date(currentDate);
                       clickedDate.setHours(hour, 0, 0, 0);
                       setCurrentDate(clickedDate);
-                      // Always allow creating workout by clicking on time slot
                       if (onCreateWorkout) {
                         onCreateWorkout();
-                      } else {
-                        toast.info('לחץ על כפתור "אימון חדש" ליצירת אימון');
                       }
                     }}
-                    className={`h-16 border-b border-zinc-700/30 p-2 cursor-pointer hover:bg-emerald-500/5 transition-colors relative group ${
-                      isToday ? 'bg-emerald-500/5' : ''
-                    }`}
-                    title={`לחץ ליצירת אימון ב-${currentDate.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric' })} בשעה ${hour}:00`}
+                    className="h-14 border-b border-zinc-700/30 cursor-pointer hover:bg-zinc-800/50 transition-colors relative"
                   >
-                    {/* Visual indicator on hover */}
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-500/30"></div>
-                    </div>
                     {hourEvents.map(event => {
                       const eventStart = new Date(event.start.dateTime || event.start.date || '');
                       const eventEnd = new Date(event.end.dateTime || event.end.date || '');
                       const startMinutes = eventStart.getMinutes();
                       const duration = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
-                      const heightPercent = Math.min((duration / 60) * 100, 100);
+                      const heightPercent = Math.max((duration / 60) * 100, 100);
+                      const startTime = eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+                      const endTime = eventEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
                       
                       return (
                         <div
@@ -1101,26 +1109,24 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                             e.stopPropagation();
                             onEventClick?.(event);
                           }}
-                          className="absolute left-1 right-1 bg-emerald-500/25 text-emerald-50 text-xs p-2 rounded-md cursor-pointer hover:bg-emerald-500/35 z-10 shadow-sm border border-emerald-500/40 border-l-[3px] border-l-emerald-400 transition-all"
+                          className="absolute left-1 right-1 bg-emerald-500 text-white text-xs px-2 py-1.5 rounded cursor-pointer hover:bg-emerald-600 z-10 overflow-hidden"
                           style={{
                             top: `${(startMinutes / 60) * 100}%`,
                             height: `${heightPercent}%`,
-                            minHeight: '24px',
+                            minHeight: '50px',
                           }}
-                          title={`${event.summary} - ${eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}`}
+                          title={`${event.summary} - ${startTime}`}
                         >
-                          {/* Time Range - Clean */}
-                          <div className="text-[11px] font-medium text-emerald-100/80 mb-1">
-                            {eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} - {eventEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-                          </div>
-                          
-                          {/* Trainee Name - Clean and prominent */}
-                          <div className="text-xs font-semibold text-emerald-50 leading-snug truncate">
+                          {/* Trainee Name - Prominent */}
+                          <div className="text-sm font-semibold text-white truncate">
                             {extractTraineeName(event)}
                           </div>
-                          
+                          {/* Time range */}
+                          <div className="text-[11px] text-white/80 mt-0.5">
+                            {endTime} עד {startTime}
+                          </div>
                           {event.location && (
-                              <div className="text-[10px] opacity-80 mt-1 truncate text-emerald-100/80">
+                            <div className="text-[10px] text-white/70 mt-1 truncate">
                               {event.location}
                             </div>
                           )}
@@ -1244,7 +1250,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
       </div>
 
       {/* Calendar Grid */}
-      <div className="premium-card p-4 relative">
+      <div className="premium-card p-0 overflow-hidden relative">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-400"></div>
@@ -1255,14 +1261,14 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className={`grid grid-cols-7 ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className={`grid grid-cols-7 bg-zinc-900/50 ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}>
               {/* Week days header */}
               {weekDayNames.map((day, index) => (
                 <div
                   key={index}
-                  className="text-center text-xs font-semibold text-zinc-400 py-2.5 border-b border-r border-zinc-700/30 bg-zinc-900/40 uppercase tracking-wide"
+                  className="text-center text-xs text-zinc-400 py-3 border-b border-l border-zinc-700/30"
                 >
-                  {day}
+                  {day === 'א' ? 'יום א׳' : day === 'ב' ? 'יום ב׳' : day === 'ג' ? 'יום ג׳' : day === 'ד' ? 'יום ד׳' : day === 'ה' ? 'יום ה׳' : day === 'ו' ? 'יום ו׳' : 'שבת'}
                 </div>
               ))}
 

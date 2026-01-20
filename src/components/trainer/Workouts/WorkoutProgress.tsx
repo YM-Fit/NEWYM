@@ -332,32 +332,41 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
 
       <div className="grid grid-cols-3 gap-3">
         {[
-          { id: 'weight', label: 'משקל', sublabel: 'מקסימלי', icon: BarChart3, color: '#10b981' },
-          { id: 'reps', label: 'חזרות', sublabel: 'סה"כ', icon: Repeat, color: '#06b6d4' },
-          { id: 'volume', label: 'נפח', sublabel: 'כולל', icon: Target, color: '#f59e0b' },
+          { id: 'weight', label: 'משקל', sublabel: 'מקסימלי', icon: BarChart3, 
+            activeBg: 'bg-emerald-500/15', inactiveBg: 'bg-zinc-800/30',
+            activeIconBg: 'bg-emerald-500/20', inactiveIconBg: 'bg-zinc-700/50',
+            activeColor: 'text-emerald-400', inactiveColor: 'text-zinc-500',
+            activeBorder: 'border-emerald-500/30' },
+          { id: 'reps', label: 'חזרות', sublabel: 'סה"כ', icon: Repeat,
+            activeBg: 'bg-cyan-500/15', inactiveBg: 'bg-zinc-800/30',
+            activeIconBg: 'bg-cyan-500/20', inactiveIconBg: 'bg-zinc-700/50',
+            activeColor: 'text-cyan-400', inactiveColor: 'text-zinc-500',
+            activeBorder: 'border-cyan-500/30' },
+          { id: 'volume', label: 'נפח', sublabel: 'כולל', icon: Target,
+            activeBg: 'bg-amber-500/15', inactiveBg: 'bg-zinc-800/30',
+            activeIconBg: 'bg-amber-500/20', inactiveIconBg: 'bg-zinc-700/50',
+            activeColor: 'text-amber-400', inactiveColor: 'text-zinc-500',
+            activeBorder: 'border-amber-500/30' },
         ].map((metric) => (
           <button
             key={metric.id}
             onClick={() => setMetricType(metric.id as typeof metricType)}
             className={`p-4 rounded-xl border transition-all ${
               metricType === metric.id
-                ? 'border-emerald-500/30'
-                : 'border-zinc-700/30 hover:border-zinc-600/50'
+                ? `${metric.activeBg} ${metric.activeBorder}`
+                : `${metric.inactiveBg} border-zinc-700/30 hover:border-zinc-600/50`
             }`}
-            style={{
-              backgroundColor: metricType === metric.id ? `${metric.color}15` : 'rgba(39, 39, 42, 0.3)'
-            }}
           >
             <div
-              className="w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: metricType === metric.id ? `${metric.color}20` : 'rgba(63, 63, 70, 0.5)' }}
+              className={`w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center ${
+                metricType === metric.id ? metric.activeIconBg : metric.inactiveIconBg
+              }`}
             >
               <metric.icon
-                className="w-5 h-5"
-                style={{ color: metricType === metric.id ? metric.color : '#71717a' }}
+                className={`w-5 h-5 ${metricType === metric.id ? metric.activeColor : 'text-zinc-500'}`}
               />
             </div>
-            <p className="font-bold text-center" style={{ color: metricType === metric.id ? metric.color : '#fff' }}>
+            <p className={`font-bold text-center ${metricType === metric.id ? metric.activeColor : 'text-white'}`}>
               {metric.label}
             </p>
             <p className="text-xs text-zinc-500 text-center">{metric.sublabel}</p>
@@ -422,10 +431,14 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
             </div>
             <div className="bg-zinc-800/30 rounded-xl p-3 border border-zinc-700/30">
               <div className="flex items-center gap-2 mb-1">
-                <Trophy className="w-4 h-4 text-amber-500" />
+                <Trophy className="w-4 h-4 text-amber-400" />
                 <p className="text-xs text-zinc-500">שיא {metricType === 'weight' ? 'משקל' : metricType === 'reps' ? 'חזרות' : 'נפח'}</p>
               </div>
-              <p className="text-xl font-bold" style={{ color: getMetricColor() }}>
+              <p className={`text-xl font-bold ${
+                metricType === 'weight' ? 'text-emerald-400' : 
+                metricType === 'reps' ? 'text-cyan-400' : 
+                'text-amber-400'
+              }`}>
                 {metricType === 'volume' ? getMetricValue(bestWorkout!).toLocaleString() : getMetricValue(bestWorkout!)}
               </p>
             </div>
@@ -534,13 +547,21 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: isBest ? 'rgba(245, 158, 11, 0.2)' : `${getMetricColor()}20` }}
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        isBest ? 'bg-amber-500/20' : 
+                        metricType === 'weight' ? 'bg-emerald-500/20' : 
+                        metricType === 'reps' ? 'bg-cyan-500/20' : 
+                        'bg-amber-500/20'
+                      }`}
                     >
                       {isBest ? (
                         <Trophy className="w-5 h-5 text-amber-400" />
                       ) : (
-                        <span className="text-sm font-bold" style={{ color: getMetricColor() }}>
+                        <span className={`text-sm font-bold ${
+                          metricType === 'weight' ? 'text-emerald-400' : 
+                          metricType === 'reps' ? 'text-cyan-400' : 
+                          'text-amber-400'
+                        }`}>
                           {arr.length - index}
                         </span>
                       )}
@@ -576,14 +597,14 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                       </div>
                     )}
                     <div
-                      className="px-4 py-2 rounded-xl font-bold text-lg"
-                      style={{
-                        backgroundColor: `${getMetricColor()}15`,
-                        color: getMetricColor()
-                      }}
+                      className={`px-4 py-2 rounded-xl font-bold text-lg ${
+                        metricType === 'weight' ? 'bg-emerald-500/15 text-emerald-400' : 
+                        metricType === 'reps' ? 'bg-cyan-500/15 text-cyan-400' : 
+                        'bg-amber-500/15 text-amber-400'
+                      }`}
                     >
                       {metricType === 'volume' ? value.toLocaleString() : value}
-                      <span className="text-xs font-normal mr-1">{getMetricUnit()}</span>
+                      <span className="text-xs font-normal mr-1 text-zinc-400">{getMetricUnit()}</span>
                     </div>
                   </div>
                 </div>
