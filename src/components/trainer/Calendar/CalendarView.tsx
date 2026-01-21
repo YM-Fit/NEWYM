@@ -261,8 +261,8 @@ function DroppableDayCell({
             </div>
           </div>
           <div className="space-y-0.5">
-            {dayEvents.slice(0, 3).map((event) => (
-              <div key={event.id} className="group">
+            {dayEvents.slice(0, 3).map((event, eventIndex) => (
+              <div key={`${event.id}-${eventIndex}`} className="group">
                 <DraggableEventItem
                   event={event}
                   day={day}
@@ -922,9 +922,9 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
               return (
                 <div key={idx} className="min-h-[40px] p-1 border-l border-zinc-700/30">
                   <div className="space-y-0.5">
-                    {allDayEvents.map(event => (
+                    {allDayEvents.map((event, eventIdx) => (
                       <EventItem
-                        key={event.id}
+                        key={`${event.id}-${eventIdx}`}
                         event={event}
                         onEventClick={onEventClick}
                         onDelete={handleDeleteEvent}
@@ -970,7 +970,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                         }}
                         className={`h-14 border-b border-l border-zinc-700/30 cursor-pointer hover:bg-zinc-800/50 transition-colors relative`}
                       >
-                        {hourEvents.map(event => {
+                        {hourEvents.map((event, eventIdx) => {
                           const eventStart = new Date(event.start.dateTime || event.start.date || '');
                           const eventEnd = new Date(event.end.dateTime || event.end.date || '');
                           const startMinutes = eventStart.getMinutes();
@@ -981,7 +981,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                           
                           return (
                             <div
-                              key={event.id}
+                              key={`${event.id}-${hour}-${eventIdx}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onEventClick?.(event);
@@ -1045,9 +1045,9 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
             <div className="border-b border-zinc-700/30 p-2">
               <div className="text-[10px] text-zinc-500 mb-1">כל היום</div>
               <div className="space-y-0.5">
-                {allDayEvents.map(event => (
+                {allDayEvents.map((event, eventIdx) => (
                   <EventItem
-                    key={event.id}
+                    key={`${event.id}-allday-${eventIdx}`}
                     event={event}
                     onEventClick={onEventClick}
                     onDelete={handleDeleteEvent}
@@ -1088,7 +1088,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                     }}
                     className="h-14 border-b border-zinc-700/30 cursor-pointer hover:bg-zinc-800/50 transition-colors relative"
                   >
-                    {hourEvents.map(event => {
+                    {hourEvents.map((event, eventIdx) => {
                       const eventStart = new Date(event.start.dateTime || event.start.date || '');
                       const eventEnd = new Date(event.end.dateTime || event.end.date || '');
                       const startMinutes = eventStart.getMinutes();
@@ -1099,7 +1099,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                       
                       return (
                         <div
-                          key={event.id}
+                          key={`${event.id}-day-${hour}-${eventIdx}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             onEventClick?.(event);

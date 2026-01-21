@@ -164,6 +164,12 @@ export default function SmartReportView() {
     try {
       const reportMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
       
+      // Convert Maps to plain objects for JSON serialization
+      const serializableReport = reportData.map(row => ({
+        ...row,
+        workout_numbers: Object.fromEntries(row.workout_numbers),
+      }));
+      
       const reportDataToSave = {
         trainer_id: user.id,
         report_month: reportMonth.toISOString().split('T')[0],
@@ -171,7 +177,7 @@ export default function SmartReportView() {
         total_workouts: monthlyReport.total_workouts,
         income_goal: incomeGoal,
         payment_distribution: monthlyReport.payment_distribution,
-        report_data: reportData,
+        report_data: serializableReport,
         is_auto_saved: isAuto,
         updated_at: new Date().toISOString(),
       };
@@ -416,8 +422,12 @@ export default function SmartReportView() {
 
       // Auto-save if enabled (async, don't wait)
       if (autoSave) {
-        // Save with the new report data
+        // Save with the new report data (convert Maps to plain objects for JSON serialization)
         const reportMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+        const serializableReport = report.map(row => ({
+          ...row,
+          workout_numbers: Object.fromEntries(row.workout_numbers), // Convert Map to object
+        }));
         const reportDataToSave = {
           trainer_id: user.id,
           report_month: reportMonth.toISOString().split('T')[0],
@@ -425,7 +435,7 @@ export default function SmartReportView() {
           total_workouts: newMonthlyReport.total_workouts,
           income_goal: goal,
           payment_distribution: newMonthlyReport.payment_distribution,
-          report_data: report,
+          report_data: serializableReport,
           is_auto_saved: true,
           updated_at: new Date().toISOString(),
         };
