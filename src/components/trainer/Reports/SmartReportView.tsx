@@ -236,7 +236,13 @@ export default function SmartReportView() {
 
   // Load workout counts and dates for the selected month
   const loadReportData = useCallback(async () => {
-    if (!user || trainees.length === 0) {
+    // Don't reset data if trainees are still loading
+    if (!user || traineesLoading) {
+      return;
+    }
+    
+    // Only reset if we truly have no trainees (not just during refetch)
+    if (trainees.length === 0) {
       setReportData([]);
       setLoading(false);
       return;
@@ -464,7 +470,7 @@ export default function SmartReportView() {
     } finally {
       setLoading(false);
     }
-  }, [user, trainees, selectedMonth, getWorkoutNumber, getMonthKey, loadSavedReport, autoSave]);
+  }, [user, trainees, traineesLoading, selectedMonth, getWorkoutNumber, getMonthKey, loadSavedReport, autoSave]);
 
   // Subscribe to workout changes for auto-sync
   useEffect(() => {
@@ -566,15 +572,21 @@ export default function SmartReportView() {
         updateData.card_sessions_used = 0;
       }
 
-      const { error } = await supabase
+      console.log('Saving trainee data:', { traineeId: editing.traineeId, updateData });
+      
+      const { data: updatedData, error } = await supabase
         .from('trainees')
         .update(updateData)
-        .eq('id', editing.traineeId);
+        .eq('id', editing.traineeId)
+        .select()
+        .single();
 
       if (error) {
+        console.error('Supabase update error:', error);
         throw error;
       }
 
+      console.log('Update successful:', updatedData);
       toast.success('הנתונים עודכנו בהצלחה');
       
       // Update local state immediately for better UX
@@ -614,8 +626,9 @@ export default function SmartReportView() {
       
       setEditing(null);
       
-      // Also refresh from server in background
-      refetch();
+      // Don't call refetch() immediately - it would overwrite our local state
+      // The data is already saved to DB and local state is updated
+      // User will get fresh data on next page load or month change
     } catch (err) {
       logger.error('Error saving trainee payment data', err, 'SmartReportView');
       toast.error('שגיאה בשמירת הנתונים');
