@@ -40,12 +40,17 @@ import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
 
-type PaymentMethod = 'standing_order' | 'credit' | 'monthly_count' | 'card_ticket' | 'bit' | 'paybox' | 'cash';
+// שיטת תשלום - איך משלמים
+type PaymentMethod = 'standing_order' | 'credit' | 'cash' | 'paybox' | 'bit';
+
+// שיטת ספירת אימונים - איך מחשבים את התשלום
+type CountingMethod = 'card_ticket' | 'subscription' | 'monthly_count';
 
 interface TraineeReportRow {
   id: string;
   full_name: string;
   payment_method: PaymentMethod | null;
+  counting_method: CountingMethod | null;
   monthly_price: number;
   card_sessions_total: number;
   card_sessions_used: number;
@@ -58,6 +63,7 @@ interface TraineeReportRow {
 interface EditingState {
   traineeId: string;
   payment_method: PaymentMethod | null;
+  counting_method: CountingMethod | null;
   monthly_price: number;
   card_sessions_total: number;
 }
@@ -67,28 +73,41 @@ interface MonthlyReport {
   total_workouts: number;
   income_goal: number;
   payment_distribution: Record<PaymentMethod, number>;
+  counting_distribution: Record<CountingMethod, number>;
   previous_month_income: number;
   next_month_forecast: number;
 }
 
+// תוויות שיטת תשלום
 const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   standing_order: 'הוראת קבע',
   credit: 'אשראי',
-  monthly_count: 'כמות חודשית',
-  card_ticket: 'כרטיסיה',
-  bit: 'ביט',
-  paybox: 'PayBox',
   cash: 'מזומן',
+  paybox: 'PayBox',
+  bit: 'ביט',
 };
 
+// תוויות שיטת ספירה
+const COUNTING_METHOD_LABELS: Record<CountingMethod, string> = {
+  card_ticket: 'כרטיסיה',
+  subscription: 'מנוי מתחדש',
+  monthly_count: 'כמות חודשית',
+};
+
+// אייקונים לשיטת תשלום
 const PAYMENT_METHOD_ICONS: Record<PaymentMethod, typeof CreditCard> = {
   standing_order: Repeat,
   credit: CreditCard,
-  monthly_count: Banknote,
-  card_ticket: Ticket,
-  bit: Smartphone,
-  paybox: Wallet,
   cash: Banknote,
+  paybox: Wallet,
+  bit: Smartphone,
+};
+
+// אייקונים לשיטת ספירה
+const COUNTING_METHOD_ICONS: Record<CountingMethod, typeof CreditCard> = {
+  card_ticket: Ticket,
+  subscription: Repeat,
+  monthly_count: Banknote,
 };
 
 export default function SmartReportView() {
@@ -285,25 +304,25 @@ export default function SmartReportView() {
         const traineeWorkoutData = traineeWorkouts.get(trainee.id) || { dates: [], numbers: new Map() };
         const workoutsThisMonth = traineeWorkoutData.dates.length;
         const paymentMethod = (trainee as { payment_method?: PaymentMethod }).payment_method || null;
+        const countingMethod = (trainee as { counting_method?: CountingMethod }).counting_method || null;
         const monthlyPrice = (trainee as { monthly_price?: number }).monthly_price || 0;
         const cardSessionsTotal = (trainee as { card_sessions_total?: number }).card_sessions_total || 0;
         const cardSessionsUsed = (trainee as { card_sessions_used?: number }).card_sessions_used || 0;
 
-        // Calculate total due based on payment method
+        // Calculate total due based on counting method (not payment method)
         let totalDue = 0;
-        switch (paymentMethod) {
-          case 'standing_order':
-          case 'credit':
-          case 'bit':
-          case 'paybox':
-          case 'cash':
-            totalDue = monthlyPrice; // Fixed monthly amount
+        switch (countingMethod) {
+          case 'subscription':
+            // מנוי מתחדש - סכום קבוע חודשי
+            totalDue = monthlyPrice;
             break;
           case 'monthly_count':
-            totalDue = workoutsThisMonth * monthlyPrice; // Per workout
+            // כמות חודשית - לפי כמות אימונים
+            totalDue = workoutsThisMonth * monthlyPrice;
             break;
           case 'card_ticket':
-            totalDue = 0; // Prepaid
+            // כרטיסיה - תשלום מראש, לא נספר כחיוב חודשי
+            totalDue = 0;
             break;
           default:
             totalDue = 0;
@@ -313,6 +332,7 @@ export default function SmartReportView() {
           id: trainee.id,
           full_name: trainee.full_name,
           payment_method: paymentMethod,
+          counting_method: countingMethod,
           monthly_price: monthlyPrice,
           card_sessions_total: cardSessionsTotal,
           card_sessions_used: cardSessionsUsed,
@@ -332,20 +352,28 @@ export default function SmartReportView() {
       const totalIncome = report.reduce((sum, row) => sum + row.total_due, 0);
       const totalWorkouts = report.reduce((sum, row) => sum + row.workouts_this_month, 0);
       
-      // Calculate payment distribution
+      // Calculate payment distribution (by payment method)
       const paymentDistribution: Record<PaymentMethod, number> = {
         standing_order: 0,
         credit: 0,
-        monthly_count: 0,
-        card_ticket: 0,
-        bit: 0,
-        paybox: 0,
         cash: 0,
+        paybox: 0,
+        bit: 0,
+      };
+
+      // Calculate counting distribution (by counting method)
+      const countingDistribution: Record<CountingMethod, number> = {
+        card_ticket: 0,
+        subscription: 0,
+        monthly_count: 0,
       };
 
       report.forEach(row => {
         if (row.payment_method) {
           paymentDistribution[row.payment_method] += row.total_due;
+        }
+        if (row.counting_method) {
+          countingDistribution[row.counting_method] += row.total_due;
         }
       });
 
@@ -379,6 +407,7 @@ export default function SmartReportView() {
         total_workouts: totalWorkouts,
         income_goal: goal,
         payment_distribution: paymentDistribution,
+        counting_distribution: countingDistribution,
         previous_month_income: previousMonthIncome,
         next_month_forecast: nextMonthForecast,
       };
@@ -485,6 +514,7 @@ export default function SmartReportView() {
     setEditing({
       traineeId: row.id,
       payment_method: row.payment_method,
+      counting_method: row.counting_method,
       monthly_price: row.monthly_price,
       card_sessions_total: row.card_sessions_total,
     });
@@ -503,11 +533,12 @@ export default function SmartReportView() {
     try {
       const updateData: Record<string, unknown> = {
         payment_method: editing.payment_method,
+        counting_method: editing.counting_method,
         monthly_price: editing.monthly_price,
       };
 
-      // Only update card fields if payment method is card_ticket
-      if (editing.payment_method === 'card_ticket') {
+      // Only update card fields if counting method is card_ticket
+      if (editing.counting_method === 'card_ticket') {
         updateData.card_sessions_total = editing.card_sessions_total;
       }
 
@@ -536,14 +567,15 @@ export default function SmartReportView() {
 
   // Export to CSV
   const exportToCSV = () => {
-    const headers = ['שם', 'שיטת תשלום', 'מחיר', 'אימונים החודש', 'סה"כ לחיוב', 'כרטיסיה נותר'];
+    const headers = ['שם', 'שיטת תשלום', 'שיטת ספירה', 'מחיר', 'אימונים החודש', 'סה"כ לחיוב', 'כרטיסיה נותר'];
     const rows = filteredData.map(row => [
       row.full_name,
       row.payment_method ? PAYMENT_METHOD_LABELS[row.payment_method] : '',
+      row.counting_method ? COUNTING_METHOD_LABELS[row.counting_method] : '',
       row.monthly_price.toString(),
       row.workouts_this_month.toString(),
       row.total_due.toString(),
-      row.payment_method === 'card_ticket' ? (row.card_sessions_total - row.card_sessions_used).toString() : '',
+      row.counting_method === 'card_ticket' ? (row.card_sessions_total - row.card_sessions_used).toString() : '',
     ]);
 
     const csvContent = [
@@ -860,6 +892,7 @@ export default function SmartReportView() {
                 <tr className="border-b border-zinc-800">
                   <th className="text-right p-4 text-sm font-semibold text-zinc-400">שם מתאמן</th>
                   <th className="text-right p-4 text-sm font-semibold text-zinc-400">שיטת תשלום</th>
+                  <th className="text-right p-4 text-sm font-semibold text-zinc-400">שיטת ספירה</th>
                   <th className="text-right p-4 text-sm font-semibold text-zinc-400">מחיר</th>
                   <th className="text-right p-4 text-sm font-semibold text-zinc-400">אימונים החודש</th>
                   <th className="text-right p-4 text-sm font-semibold text-zinc-400">סה"כ לחיוב</th>
@@ -871,6 +904,7 @@ export default function SmartReportView() {
                 {filteredData.map((row) => {
                   const isEditing = editing?.traineeId === row.id;
                   const PaymentIcon = row.payment_method ? PAYMENT_METHOD_ICONS[row.payment_method] : null;
+                  const CountingIcon = row.counting_method ? COUNTING_METHOD_ICONS[row.counting_method] : null;
 
                   return (
                     <tr key={row.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-all">
@@ -883,14 +917,14 @@ export default function SmartReportView() {
                           {row.full_name}
                           <Eye className="w-4 h-4" />
                         </button>
-                        {row.payment_method === 'card_ticket' && (
+                        {row.counting_method === 'card_ticket' && (
                           <div className="text-xs text-zinc-500 mt-1">
                             כרטיסיה #{row.card_sessions_total}
                           </div>
                         )}
                       </td>
 
-                      {/* Payment Method */}
+                      {/* Payment Method - איך משלמים */}
                       <td className="p-4">
                         {isEditing ? (
                           <select
@@ -904,17 +938,41 @@ export default function SmartReportView() {
                             <option value="">לא הוגדר</option>
                             <option value="standing_order">הוראת קבע</option>
                             <option value="credit">אשראי</option>
-                            <option value="monthly_count">כמות חודשית</option>
-                            <option value="card_ticket">כרטיסיה</option>
-                            <option value="bit">ביט</option>
-                            <option value="paybox">PayBox</option>
                             <option value="cash">מזומן</option>
+                            <option value="paybox">PayBox</option>
+                            <option value="bit">ביט</option>
                           </select>
                         ) : (
                           <div className="flex items-center gap-2">
                             {PaymentIcon && <PaymentIcon className="w-4 h-4 text-zinc-400" />}
                             <span className={row.payment_method ? 'text-white' : 'text-zinc-500'}>
                               {row.payment_method ? PAYMENT_METHOD_LABELS[row.payment_method] : 'לא הוגדר'}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Counting Method - איך סופרים */}
+                      <td className="p-4">
+                        {isEditing ? (
+                          <select
+                            value={editing.counting_method || ''}
+                            onChange={(e) => setEditing({ 
+                              ...editing, 
+                              counting_method: e.target.value as CountingMethod || null 
+                            })}
+                            className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm w-full"
+                          >
+                            <option value="">לא הוגדר</option>
+                            <option value="subscription">מנוי מתחדש</option>
+                            <option value="monthly_count">כמות חודשית</option>
+                            <option value="card_ticket">כרטיסיה</option>
+                          </select>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            {CountingIcon && <CountingIcon className="w-4 h-4 text-zinc-400" />}
+                            <span className={row.counting_method ? 'text-white' : 'text-zinc-500'}>
+                              {row.counting_method ? COUNTING_METHOD_LABELS[row.counting_method] : 'לא הוגדר'}
                             </span>
                           </div>
                         )}
@@ -959,7 +1017,7 @@ export default function SmartReportView() {
 
                       {/* Card Status */}
                       <td className="p-4">
-                        {row.payment_method === 'card_ticket' ? (
+                        {row.counting_method === 'card_ticket' ? (
                           isEditing ? (
                             <input
                               type="number"

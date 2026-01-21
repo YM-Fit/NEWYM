@@ -32,7 +32,10 @@ export interface Trainee {
   payment_status?: 'paid' | 'pending' | 'overdue' | 'free';
   tags?: string[];
   // Payment management fields
-  payment_method?: 'standing_order' | 'credit' | 'monthly_count' | 'card_ticket' | null;
+  // שיטת תשלום - איך משלמים
+  payment_method?: 'standing_order' | 'credit' | 'cash' | 'paybox' | 'bit' | null;
+  // שיטת ספירה - איך סופרים אימונים
+  counting_method?: 'card_ticket' | 'subscription' | 'monthly_count' | null;
   monthly_price?: number;
   card_sessions_total?: number;
   card_sessions_used?: number;
