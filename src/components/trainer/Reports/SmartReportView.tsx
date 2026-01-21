@@ -32,7 +32,9 @@ import {
   Eye,
   RefreshCw,
   Smartphone,
-  Wallet
+  Wallet,
+  Plus,
+  History
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTrainees } from '../../../hooks/useSupabaseQuery';
@@ -46,6 +48,17 @@ type PaymentMethod = 'standing_order' | 'credit' | 'cash' | 'paybox' | 'bit';
 // שיטת ספירת אימונים - איך מחשבים את התשלום
 type CountingMethod = 'card_ticket' | 'subscription' | 'monthly_count';
 
+// Card/ticket data interface
+interface TraineeCard {
+  id: string;
+  trainee_id: string;
+  purchase_date: string;
+  sessions_purchased: number;
+  price_paid: number;
+  sessions_used: number;
+  is_active: boolean;
+}
+
 interface TraineeReportRow {
   id: string;
   full_name: string;
@@ -58,6 +71,10 @@ interface TraineeReportRow {
   total_due: number;
   workout_dates: string[]; // All workout dates for this trainee in the month
   workout_numbers: Map<string, number>; // Map of workout_date to workout number
+  // Card-specific fields
+  active_card: TraineeCard | null; // Current active card
+  card_purchased_this_month: boolean; // Whether card was purchased in selected month
+  card_remaining: number; // Remaining sessions on active card
 }
 
 interface EditingState {
@@ -128,6 +145,18 @@ export default function SmartReportView() {
   const [incomeGoal, setIncomeGoal] = useState(0);
   const [autoSave, setAutoSave] = useState(true);
   const [savingReport, setSavingReport] = useState(false);
+  
+  // Card management state
+  const [showAddCardModal, setShowAddCardModal] = useState(false);
+  const [showCardHistoryModal, setShowCardHistoryModal] = useState(false);
+  const [selectedTraineeForCard, setSelectedTraineeForCard] = useState<{ id: string; name: string } | null>(null);
+  const [cardHistory, setCardHistory] = useState<TraineeCard[]>([]);
+  const [newCard, setNewCard] = useState({
+    sessions_purchased: 10,
+    price_paid: 0,
+    purchase_date: new Date().toISOString().split('T')[0],
+  });
+  const [savingCard, setSavingCard] = useState(false);
 
   // Get month key for storage
   const getMonthKey = useCallback((date: Date) => {
@@ -252,6 +281,8 @@ export default function SmartReportView() {
     try {
       const startOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
       const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0, 23, 59, 59);
+      const startOfMonthStr = startOfMonth.toISOString().split('T')[0];
+      const endOfMonthStr = endOfMonth.toISOString().split('T')[0];
 
       // Get all workouts for the month (not just synced)
       const { data: workoutsData, error: workoutsError } = await supabase
@@ -265,6 +296,26 @@ export default function SmartReportView() {
       if (workoutsError) {
         logger.error('Error loading workouts data', workoutsError, 'SmartReportView');
       }
+
+      // Get all trainee cards for this trainer
+      const { data: cardsData, error: cardsError } = await supabase
+        .from('trainee_cards')
+        .select('*')
+        .eq('trainer_id', user.id)
+        .order('purchase_date', { ascending: false });
+
+      if (cardsError) {
+        logger.error('Error loading trainee cards', cardsError, 'SmartReportView');
+      }
+
+      // Group cards by trainee (most recent first)
+      const traineeCards = new Map<string, TraineeCard[]>();
+      (cardsData || []).forEach((card: TraineeCard) => {
+        if (!traineeCards.has(card.trainee_id)) {
+          traineeCards.set(card.trainee_id, []);
+        }
+        traineeCards.get(card.trainee_id)!.push(card);
+      });
 
       const workoutIds = workoutsData?.map(w => w.id) || [];
       
@@ -318,8 +369,26 @@ export default function SmartReportView() {
         const paymentMethod = (trainee as { payment_method?: PaymentMethod }).payment_method || null;
         const countingMethod = (trainee as { counting_method?: CountingMethod }).counting_method || null;
         const monthlyPrice = (trainee as { monthly_price?: number }).monthly_price || 0;
-        const cardSessionsTotal = (trainee as { card_sessions_total?: number }).card_sessions_total || 0;
-        const cardSessionsUsed = (trainee as { card_sessions_used?: number }).card_sessions_used || 0;
+        
+        // Get card data for this trainee
+        const cards = traineeCards.get(trainee.id) || [];
+        const activeCard = cards.find(c => c.is_active) || null;
+        
+        // Check if card was purchased in the selected month
+        let cardPurchasedThisMonth = false;
+        let cardPurchasePrice = 0;
+        if (activeCard) {
+          const purchaseDate = activeCard.purchase_date;
+          cardPurchasedThisMonth = purchaseDate >= startOfMonthStr && purchaseDate <= endOfMonthStr;
+          if (cardPurchasedThisMonth) {
+            cardPurchasePrice = activeCard.price_paid;
+          }
+        }
+        
+        // Calculate remaining sessions on active card
+        const cardRemaining = activeCard 
+          ? activeCard.sessions_purchased - activeCard.sessions_used 
+          : 0;
 
         // Calculate total due based on counting method (not payment method)
         let totalDue = 0;
@@ -333,8 +402,8 @@ export default function SmartReportView() {
             totalDue = workoutsThisMonth * monthlyPrice;
             break;
           case 'card_ticket':
-            // כרטיסיה - תשלום מראש, לא נספר כחיוב חודשי
-            totalDue = 0;
+            // כרטיסיה - תשלום רק בחודש הרכישה
+            totalDue = cardPurchasedThisMonth ? cardPurchasePrice : 0;
             break;
           default:
             totalDue = 0;
@@ -346,10 +415,14 @@ export default function SmartReportView() {
           payment_method: paymentMethod,
           counting_method: countingMethod,
           monthly_price: monthlyPrice,
-          card_sessions_total: cardSessionsTotal,
-          card_sessions_used: cardSessionsUsed,
+          card_sessions_total: activeCard?.sessions_purchased || 0,
+          card_sessions_used: activeCard?.sessions_used || 0,
           workouts_this_month: workoutsThisMonth,
           total_due: totalDue,
+          // Card-specific fields
+          active_card: activeCard,
+          card_purchased_this_month: cardPurchasedThisMonth,
+          card_remaining: cardRemaining,
           workout_dates: traineeWorkoutData.dates.sort(),
           workout_numbers: traineeWorkoutData.numbers,
         };
@@ -551,6 +624,83 @@ export default function SmartReportView() {
     setEditing(null);
   };
 
+  // Open add card modal
+  const openAddCardModal = (traineeId: string, traineeName: string) => {
+    setSelectedTraineeForCard({ id: traineeId, name: traineeName });
+    setNewCard({
+      sessions_purchased: 10,
+      price_paid: 0,
+      purchase_date: new Date().toISOString().split('T')[0],
+    });
+    setShowAddCardModal(true);
+  };
+
+  // Open card history modal
+  const openCardHistoryModal = async (traineeId: string, traineeName: string) => {
+    if (!user) return;
+    
+    setSelectedTraineeForCard({ id: traineeId, name: traineeName });
+    
+    // Fetch card history for this trainee
+    const { data, error } = await supabase
+      .from('trainee_cards')
+      .select('*')
+      .eq('trainee_id', traineeId)
+      .eq('trainer_id', user.id)
+      .order('purchase_date', { ascending: false });
+
+    if (error) {
+      logger.error('Error loading card history', error, 'SmartReportView');
+      toast.error('שגיאה בטעינת היסטוריית כרטיסיות');
+      return;
+    }
+
+    setCardHistory(data || []);
+    setShowCardHistoryModal(true);
+  };
+
+  // Save new card
+  const saveNewCard = async () => {
+    if (!user || !selectedTraineeForCard) return;
+
+    setSavingCard(true);
+    try {
+      // Deactivate any existing active cards for this trainee
+      await supabase
+        .from('trainee_cards')
+        .update({ is_active: false })
+        .eq('trainee_id', selectedTraineeForCard.id)
+        .eq('trainer_id', user.id)
+        .eq('is_active', true);
+
+      // Create new card
+      const { error } = await supabase
+        .from('trainee_cards')
+        .insert({
+          trainee_id: selectedTraineeForCard.id,
+          trainer_id: user.id,
+          purchase_date: newCard.purchase_date,
+          sessions_purchased: newCard.sessions_purchased,
+          price_paid: newCard.price_paid,
+          sessions_used: 0,
+          is_active: true,
+        });
+
+      if (error) throw error;
+
+      toast.success(`כרטיסיה חדשה נוספה ל${selectedTraineeForCard.name}`);
+      setShowAddCardModal(false);
+      
+      // Reload report data to reflect the new card
+      loadReportData();
+    } catch (err) {
+      logger.error('Error saving new card', err, 'SmartReportView');
+      toast.error('שגיאה בשמירת הכרטיסיה');
+    } finally {
+      setSavingCard(false);
+    }
+  };
+
   // Save edited trainee
   const saveEditing = async () => {
     if (!editing) return;
@@ -639,7 +789,7 @@ export default function SmartReportView() {
 
   // Export to CSV
   const exportToCSV = () => {
-    const headers = ['שם', 'שיטת תשלום', 'שיטת ספירה', 'מחיר', 'אימונים החודש', 'סה"כ לחיוב', 'כרטיסיה נותר'];
+    const headers = ['שם', 'שיטת תשלום', 'שיטת ספירה', 'מחיר', 'אימונים החודש', 'סה"כ לחיוב', 'כרטיסיה נותר', 'נרכש החודש'];
     const rows = filteredData.map(row => [
       row.full_name,
       row.payment_method ? PAYMENT_METHOD_LABELS[row.payment_method] : '',
@@ -647,7 +797,8 @@ export default function SmartReportView() {
       row.monthly_price.toString(),
       row.workouts_this_month.toString(),
       row.total_due.toString(),
-      row.counting_method === 'card_ticket' ? (row.card_sessions_total - row.card_sessions_used).toString() : '',
+      row.counting_method === 'card_ticket' ? `${row.card_remaining}/${row.card_sessions_total}` : '',
+      row.card_purchased_this_month ? 'כן' : '',
     ]);
 
     const csvContent = [
@@ -1090,25 +1241,39 @@ export default function SmartReportView() {
                       {/* Card Status */}
                       <td className="p-4">
                         {row.counting_method === 'card_ticket' ? (
-                          isEditing ? (
-                            <input
-                              type="number"
-                              value={editing?.card_sessions_total || 0}
-                              onChange={(e) => setEditing({ 
-                                ...editing!, 
-                                card_sessions_total: parseInt(e.target.value) || 0 
-                              })}
-                              className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm w-20"
-                              min="0"
-                            />
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="text-amber-400 font-medium">
-                                {row.card_sessions_total - row.card_sessions_used}
-                              </span>
-                              <span className="text-zinc-500 text-sm">/ {row.card_sessions_total}</span>
-                            </div>
-                          )
+                          <div className="flex items-center gap-2">
+                            {row.active_card ? (
+                              <button
+                                onClick={() => openCardHistoryModal(row.id, row.full_name)}
+                                className="flex flex-col gap-1 text-right hover:bg-zinc-800/50 p-2 -m-2 rounded-lg transition-all"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className={`font-medium ${row.card_remaining > 2 ? 'text-emerald-400' : row.card_remaining > 0 ? 'text-amber-400' : 'text-red-400'}`}>
+                                    {row.card_remaining}
+                                  </span>
+                                  <span className="text-zinc-500 text-sm">/ {row.card_sessions_total}</span>
+                                </div>
+                                {row.card_purchased_this_month && (
+                                  <span className="text-xs text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded">
+                                    נרכש החודש - ₪{row.active_card.price_paid}
+                                  </span>
+                                )}
+                                {row.card_remaining === 0 && (
+                                  <span className="text-xs text-red-400 bg-red-400/10 px-2 py-0.5 rounded">
+                                    הכרטיסיה נגמרה
+                                  </span>
+                                )}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => openAddCardModal(row.id, row.full_name)}
+                                className="flex items-center gap-2 text-amber-400 hover:text-amber-300 text-sm transition-all"
+                              >
+                                <Plus className="w-4 h-4" />
+                                הוסף כרטיסיה
+                              </button>
+                            )}
+                          </div>
                         ) : (
                           <span className="text-zinc-500">-</span>
                         )}
@@ -1156,6 +1321,169 @@ export default function SmartReportView() {
           </div>
         )}
       </div>
+
+      {/* Add Card Modal */}
+      {showAddCardModal && selectedTraineeForCard && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 rounded-2xl max-w-md w-full p-6 border border-zinc-800">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Ticket className="w-6 h-6 text-amber-400" />
+                כרטיסיה חדשה - {selectedTraineeForCard.name}
+              </h2>
+              <button
+                onClick={() => setShowAddCardModal(false)}
+                className="p-2 hover:bg-zinc-800 rounded-lg transition-all"
+              >
+                <X className="w-5 h-5 text-zinc-400" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-zinc-400 mb-2">כמות אימונים</label>
+                <input
+                  type="number"
+                  value={newCard.sessions_purchased}
+                  onChange={(e) => setNewCard({ ...newCard, sessions_purchased: parseInt(e.target.value) || 0 })}
+                  className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white"
+                  min="1"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-zinc-400 mb-2">מחיר הכרטיסיה (₪)</label>
+                <input
+                  type="number"
+                  value={newCard.price_paid}
+                  onChange={(e) => setNewCard({ ...newCard, price_paid: parseFloat(e.target.value) || 0 })}
+                  className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white"
+                  min="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-zinc-400 mb-2">תאריך רכישה</label>
+                <input
+                  type="date"
+                  value={newCard.purchase_date}
+                  onChange={(e) => setNewCard({ ...newCard, purchase_date: e.target.value })}
+                  className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={saveNewCard}
+                disabled={savingCard || newCard.sessions_purchased < 1}
+                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 rounded-lg text-white font-medium transition-all flex items-center justify-center gap-2"
+              >
+                {savingCard ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <Plus className="w-5 h-5" />
+                    הוסף כרטיסיה
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setShowAddCardModal(false)}
+                className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-zinc-400 transition-all"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Card History Modal */}
+      {showCardHistoryModal && selectedTraineeForCard && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 rounded-2xl max-w-lg w-full p-6 border border-zinc-800 max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <History className="w-6 h-6 text-blue-400" />
+                היסטוריית כרטיסיות - {selectedTraineeForCard.name}
+              </h2>
+              <button
+                onClick={() => setShowCardHistoryModal(false)}
+                className="p-2 hover:bg-zinc-800 rounded-lg transition-all"
+              >
+                <X className="w-5 h-5 text-zinc-400" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {cardHistory.length === 0 ? (
+                <div className="text-center py-8 text-zinc-500">
+                  אין היסטוריית כרטיסיות
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {cardHistory.map((card) => (
+                    <div
+                      key={card.id}
+                      className={`p-4 rounded-lg border ${
+                        card.is_active 
+                          ? 'bg-emerald-500/10 border-emerald-500/30' 
+                          : 'bg-zinc-800/50 border-zinc-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Ticket className={`w-5 h-5 ${card.is_active ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                          <span className="font-medium text-white">
+                            {card.sessions_purchased} אימונים
+                          </span>
+                          {card.is_active && (
+                            <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded">
+                              פעילה
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-emerald-400 font-medium">₪{card.price_paid}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm text-zinc-400">
+                        <span>
+                          נרכש: {new Date(card.purchase_date).toLocaleDateString('he-IL')}
+                        </span>
+                        <span>
+                          נוצל: {card.sessions_used} / {card.sessions_purchased}
+                        </span>
+                      </div>
+                      {/* Progress bar */}
+                      <div className="mt-2 h-2 bg-zinc-700 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            card.is_active ? 'bg-emerald-500' : 'bg-zinc-500'
+                          }`}
+                          style={{ width: `${(card.sessions_used / card.sessions_purchased) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-zinc-800">
+              <button
+                onClick={() => {
+                  setShowCardHistoryModal(false);
+                  openAddCardModal(selectedTraineeForCard.id, selectedTraineeForCard.name);
+                }}
+                className="w-full py-3 bg-amber-500 hover:bg-amber-600 rounded-lg text-white font-medium transition-all flex items-center justify-center gap-2"
+              >
+                <Plus className="w-5 h-5" />
+                הוסף כרטיסיה חדשה
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
