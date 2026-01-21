@@ -18,6 +18,7 @@ import { createGoogleCalendarEvent } from '../../../api/googleCalendarApi';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
+import { getTraineeSessionInfo, generateEventSummaryWithSession } from '../../../utils/traineeSessionUtils';
 
 interface QuickAddWorkoutModalProps {
   isOpen: boolean;
@@ -85,17 +86,22 @@ export default function QuickAddWorkoutModal({
       const endTime = new Date(startTime);
       endTime.setMinutes(endTime.getMinutes() + parseInt(duration));
 
+      // Get trainee session info for the event summary
+      const sessionInfo = await getTraineeSessionInfo(selectedTraineeId, user.id);
+      const eventSummary = generateEventSummaryWithSession(selectedTrainee.full_name, sessionInfo);
+
       // Create event in Google Calendar
       logger.info('Creating Google Calendar event', { 
         trainerId: user.id, 
         traineeName: selectedTrainee.full_name,
-        startTime: startTime.toISOString() 
+        startTime: startTime.toISOString(),
+        eventSummary
       }, 'QuickAddWorkoutModal');
 
       const eventResult = await createGoogleCalendarEvent(
         user.id,
         {
-          summary: `אימון - ${selectedTrainee.full_name}`,
+          summary: eventSummary,
           startTime,
           endTime,
           description: `אימון אישי עם ${selectedTrainee.full_name}`,
@@ -157,7 +163,7 @@ export default function QuickAddWorkoutModal({
           sync_direction: 'to_google',
           event_start_time: startTime.toISOString(),
           event_end_time: endTime.toISOString(),
-          event_summary: `אימון - ${selectedTrainee.full_name}`,
+          event_summary: eventSummary,
         }, {
           onConflict: 'google_event_id,google_calendar_id',
         });

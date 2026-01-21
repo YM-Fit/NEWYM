@@ -30,6 +30,7 @@ import {
   TrendingUp,
   TrendingDown,
   Eye,
+  EyeOff,
   RefreshCw,
   Smartphone,
   Wallet,
@@ -157,6 +158,10 @@ export default function SmartReportView() {
     purchase_date: new Date().toISOString().split('T')[0],
   });
   const [savingCard, setSavingCard] = useState(false);
+  
+  // Hidden trainees state - hide trainees from current month's report view
+  const [hiddenTrainees, setHiddenTrainees] = useState<Set<string>>(new Set());
+  const [showHidden, setShowHidden] = useState(false);
 
   // Get month key for storage
   const getMonthKey = useCallback((date: Date) => {
@@ -590,13 +595,42 @@ export default function SmartReportView() {
   }, [loadReportData, traineesLoading, selectedMonth]);
 
   // Filter trainees by search
+  // Filter trainees by search and hidden status
   const filteredData = useMemo(() => {
-    if (!searchQuery) return reportData;
-    const query = searchQuery.toLowerCase();
-    return reportData.filter(row => 
-      row.full_name.toLowerCase().includes(query)
-    );
-  }, [reportData, searchQuery]);
+    let data = reportData;
+    
+    // Filter out hidden trainees unless showHidden is true
+    if (!showHidden) {
+      data = data.filter(row => !hiddenTrainees.has(row.id));
+    }
+    
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      data = data.filter(row => row.full_name.toLowerCase().includes(query));
+    }
+    
+    return data;
+  }, [reportData, searchQuery, hiddenTrainees, showHidden]);
+
+  // Toggle hide/show trainee
+  const toggleHideTrainee = (traineeId: string) => {
+    setHiddenTrainees(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(traineeId)) {
+        newSet.delete(traineeId);
+      } else {
+        newSet.add(traineeId);
+      }
+      return newSet;
+    });
+  };
+
+  // Clear all hidden trainees
+  const clearHiddenTrainees = () => {
+    setHiddenTrainees(new Set());
+    setShowHidden(false);
+  };
 
   // Navigate months
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -893,7 +927,7 @@ export default function SmartReportView() {
             </button>
           </div>
 
-          {/* Search and Export */}
+          {/* Search, Hidden Toggle, and Export */}
           <div className="flex items-center gap-3">
             <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
@@ -905,6 +939,32 @@ export default function SmartReportView() {
                 className="pr-10 pl-4 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500/50 focus:outline-none w-48"
               />
             </div>
+            
+            {/* Hidden trainees toggle */}
+            {hiddenTrainees.size > 0 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowHidden(!showHidden)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-sm ${
+                    showHidden
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                      : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:text-zinc-300'
+                  }`}
+                  title={showHidden ? 'הסתר מוסתרים' : 'הצג מוסתרים'}
+                >
+                  {showHidden ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  <span>{hiddenTrainees.size} מוסתרים</span>
+                </button>
+                <button
+                  onClick={clearHiddenTrainees}
+                  className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-400 hover:text-zinc-300 rounded-lg transition-all"
+                  title="נקה את כל המוסתרים"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+            
             <button
               onClick={exportToCSV}
               className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-zinc-300 border border-zinc-700/50"
@@ -1304,12 +1364,30 @@ export default function SmartReportView() {
                               </button>
                             </>
                           ) : (
-                            <button
-                              onClick={() => startEditing(row)}
-                              className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-lg transition-all text-zinc-400 hover:text-white"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
+                            <>
+                              <button
+                                onClick={() => startEditing(row)}
+                                className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-lg transition-all text-zinc-400 hover:text-white"
+                                title="עריכה"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => toggleHideTrainee(row.id)}
+                                className={`p-2 rounded-lg transition-all ${
+                                  hiddenTrainees.has(row.id)
+                                    ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
+                                    : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50 hover:text-white'
+                                }`}
+                                title={hiddenTrainees.has(row.id) ? 'הצג בדוח' : 'הסתר מהדוח'}
+                              >
+                                {hiddenTrainees.has(row.id) ? (
+                                  <Eye className="w-4 h-4" />
+                                ) : (
+                                  <EyeOff className="w-4 h-4" />
+                                )}
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Plus, RefreshCw, Trash2, GripVertical, Users, CalendarDays, CalendarRange } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Plus, RefreshCw, Trash2, GripVertical, Users, CalendarDays, CalendarRange, Repeat } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { 
   getGoogleCalendarEvents, 
@@ -11,10 +11,18 @@ import { supabase } from '../../../lib/supabase';
 import GoogleCalendarSettings from '../Settings/GoogleCalendarSettings';
 import CalendarSyncModal from './CalendarSyncModal';
 import QuickAddWorkoutModal from './QuickAddWorkoutModal';
+import TraineeWorkoutHistoryModal from './TraineeWorkoutHistoryModal';
+import RecurringWorkoutModal from './RecurringWorkoutModal';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import { 
+  getTraineesSessionInfo, 
+  TraineeSessionInfo, 
+  formatTraineeNameWithSession,
+  sessionInfoCache 
+} from '../../../utils/traineeSessionUtils';
 
 // Calendar Event interface - CalendarView component
 interface CalendarEvent {
@@ -48,10 +56,14 @@ interface EventItemProps {
   onEventClick?: (event: CalendarEvent) => void;
   onDelete?: (eventId: string) => void;
   isDragging?: boolean;
+  sessionInfo?: TraineeSessionInfo | null;
+  onTraineeNameClick?: (traineeName: string, traineeId: string | null) => void;
 }
 
 interface DraggableEventItemProps extends EventItemProps {
   day: number;
+  sessionInfo?: TraineeSessionInfo | null;
+  onTraineeNameClick?: (traineeName: string, traineeId: string | null) => void;
 }
 
 interface DroppableDayCellProps {
@@ -64,6 +76,8 @@ interface DroppableDayCellProps {
   onDayClick: (day: number) => void;
   currentDate: Date;
   activeEventId: string | null;
+  sessionInfoMap?: Map<string, TraineeSessionInfo>;
+  onTraineeNameClick?: (traineeName: string, traineeId: string | null) => void;
 }
 
 interface DroppableWeekHourCellProps {
@@ -74,6 +88,8 @@ interface DroppableWeekHourCellProps {
   onDelete?: (eventId: string) => void;
   onCellClick: (day: Date, hour: number) => void;
   activeEventId: string | null;
+  sessionInfoMap?: Map<string, TraineeSessionInfo>;
+  onTraineeNameClick?: (traineeName: string, traineeId: string | null) => void;
 }
 
 interface DraggableWeekEventItemProps {
@@ -82,6 +98,8 @@ interface DraggableWeekEventItemProps {
   onDelete?: (eventId: string) => void;
   sourceDate: Date;
   sourceHour: number;
+  sessionInfo?: TraineeSessionInfo | null;
+  onTraineeNameClick?: (traineeName: string, traineeId: string | null) => void;
 }
 
 // Optimized refresh interval - longer to reduce API calls
@@ -121,7 +139,7 @@ function extractTraineeName(event: CalendarEvent): string {
 }
 
 // Event Item Component (base display component)
-function EventItem({ event, onEventClick, onDelete, isDragging }: EventItemProps) {
+function EventItem({ event, onEventClick, onDelete, isDragging, sessionInfo, onTraineeNameClick }: EventItemProps) {
   const [showDelete, setShowDelete] = useState(false);
 
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -141,11 +159,21 @@ function EventItem({ event, onEventClick, onDelete, isDragging }: EventItemProps
     setShowDelete(false);
   };
 
+  const handleNameClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const traineeName = extractTraineeName(event);
+    const traineeId = sessionInfo?.traineeId || null;
+    onTraineeNameClick?.(traineeName, traineeId);
+  };
+
   const eventTime = event.start.dateTime 
     ? new Date(event.start.dateTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
     : null;
 
   const traineeName = extractTraineeName(event);
+  
+  // Format name with session info if available
+  const displayInfo = formatTraineeNameWithSession(traineeName, sessionInfo || null);
 
   // Get end time for display
   const eventEndTime = event.end.dateTime 
@@ -160,11 +188,15 @@ function EventItem({ event, onEventClick, onDelete, isDragging }: EventItemProps
       className={`bg-emerald-500 text-white px-2 py-1.5 rounded cursor-pointer hover:bg-emerald-600 transition-all relative group mb-0.5 ${
         isDragging ? 'opacity-60 cursor-grabbing shadow-lg' : 'cursor-pointer'
       }`}
-      title={`${event.summary}${eventTime ? ` - ${eventTime}` : ''} (גרור להעברה, לחץ ימני למחיקה)`}
+      title={`${event.summary}${eventTime ? ` - ${eventTime}` : ''} (גרור להעברה, לחץ ימני למחיקה, לחץ על השם לצפייה בהיסטוריה)`}
     >
-      {/* Trainee Name - Prominent */}
-      <div className="text-[11px] font-semibold text-white leading-tight truncate">
-        {traineeName}
+      {/* Trainee Name with Session Info - Clickable */}
+      <div 
+        className="text-[11px] font-semibold text-white leading-tight truncate hover:underline cursor-pointer"
+        onClick={handleNameClick}
+        title="לחץ לצפייה בהיסטוריית האימונים"
+      >
+        {displayInfo.displayName}
       </div>
       
       {/* Time range - Below name */}
@@ -190,7 +222,7 @@ function EventItem({ event, onEventClick, onDelete, isDragging }: EventItemProps
 }
 
 // Draggable Event Item Component
-function DraggableEventItem({ event, onEventClick, onDelete, day }: DraggableEventItemProps) {
+function DraggableEventItem({ event, onEventClick, onDelete, day, sessionInfo, onTraineeNameClick }: DraggableEventItemProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `event-${event.id}`,
     data: {
@@ -223,6 +255,8 @@ function DraggableEventItem({ event, onEventClick, onDelete, day }: DraggableEve
         onEventClick={onEventClick}
         onDelete={onDelete}
         isDragging={isDragging}
+        sessionInfo={sessionInfo}
+        onTraineeNameClick={onTraineeNameClick}
       />
     </div>
   );
@@ -239,6 +273,8 @@ function DroppableDayCell({
   onDayClick,
   currentDate,
   activeEventId,
+  sessionInfoMap,
+  onTraineeNameClick,
 }: DroppableDayCellProps) {
   const dayId = day
     ? `day-${currentDate.getFullYear()}-${currentDate.getMonth()}-${day}`
@@ -253,6 +289,20 @@ function DroppableDayCell({
     },
     disabled: !day,
   });
+
+  // Helper to get session info for an event
+  const getSessionInfoForEvent = (event: CalendarEvent): TraineeSessionInfo | null => {
+    if (!sessionInfoMap) return null;
+    // Try to find trainee ID from the event
+    const traineeName = extractTraineeName(event);
+    // Look through the map to find matching trainee by name
+    for (const [, info] of sessionInfoMap) {
+      if (info.traineeName === traineeName) {
+        return info;
+      }
+    }
+    return null;
+  };
 
   return (
     <div
@@ -287,6 +337,8 @@ function DroppableDayCell({
                   day={day}
                   onEventClick={onEventClick}
                   onDelete={activeEventId === event.id ? undefined : onDelete}
+                  sessionInfo={getSessionInfoForEvent(event)}
+                  onTraineeNameClick={onTraineeNameClick}
                 />
               </div>
             ))}
@@ -315,7 +367,9 @@ function DraggableWeekEventItem({
   onEventClick, 
   onDelete, 
   sourceDate, 
-  sourceHour 
+  sourceHour,
+  sessionInfo,
+  onTraineeNameClick 
 }: DraggableWeekEventItemProps) {
   const [showDelete, setShowDelete] = useState(false);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -341,6 +395,9 @@ function DraggableWeekEventItem({
   const startTime = eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
   const endTime = eventEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 
+  const traineeName = extractTraineeName(event);
+  const displayInfo = formatTraineeNameWithSession(traineeName, sessionInfo || null);
+
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -353,6 +410,12 @@ function DraggableWeekEventItem({
       onDelete(event.id);
     }
     setShowDelete(false);
+  };
+
+  const handleNameClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const traineeId = sessionInfo?.traineeId || null;
+    onTraineeNameClick?.(traineeName, traineeId);
   };
 
   return (
@@ -401,9 +464,13 @@ function DraggableWeekEventItem({
         <GripVertical className="h-3 w-3 text-white/80" />
       </div>
       <div className="px-2 py-1">
-        {/* Trainee Name - Prominent */}
-        <div className="text-[11px] font-semibold text-white truncate pr-4">
-          {extractTraineeName(event)}
+        {/* Trainee Name with Session Info - Clickable */}
+        <div 
+          className="text-[11px] font-semibold text-white truncate pr-4 hover:underline cursor-pointer"
+          onClick={handleNameClick}
+          title="לחץ לצפייה בהיסטוריית האימונים"
+        >
+          {displayInfo.displayName}
         </div>
         {/* Time range */}
         <div className="text-[10px] text-white/80 mt-0.5">
@@ -423,6 +490,8 @@ function DroppableWeekHourCell({
   onDelete,
   onCellClick,
   activeEventId,
+  sessionInfoMap,
+  onTraineeNameClick,
 }: DroppableWeekHourCellProps) {
   const cellId = `week-cell-${day.getFullYear()}-${day.getMonth()}-${day.getDate()}-${hour}`;
 
@@ -434,6 +503,18 @@ function DroppableWeekHourCell({
       isWeekView: true,
     },
   });
+
+  // Helper to get session info for an event
+  const getSessionInfoForEvent = (event: CalendarEvent): TraineeSessionInfo | null => {
+    if (!sessionInfoMap) return null;
+    const traineeName = extractTraineeName(event);
+    for (const [, info] of sessionInfoMap) {
+      if (info.traineeName === traineeName) {
+        return info;
+      }
+    }
+    return null;
+  };
 
   return (
     <div
@@ -453,6 +534,8 @@ function DroppableWeekHourCell({
           onDelete={activeEventId === event.id ? undefined : onDelete}
           sourceDate={day}
           sourceHour={hour}
+          sessionInfo={getSessionInfoForEvent(event)}
+          onTraineeNameClick={onTraineeNameClick}
         />
       ))}
     </div>
@@ -478,6 +561,16 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastRefreshRef = useRef<Date | null>(null);
   const eventsCacheRef = useRef<{ events: CalendarEvent[]; timestamp: number; dateKey: string } | null>(null);
+  
+  // Session info state for displaying card counts
+  const [sessionInfoMap, setSessionInfoMap] = useState<Map<string, TraineeSessionInfo>>(new Map());
+  
+  // Trainee history modal state
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [selectedTraineeForHistory, setSelectedTraineeForHistory] = useState<{ name: string; id: string | null } | null>(null);
+  
+  // Recurring workout modal state
+  const [showRecurringModal, setShowRecurringModal] = useState(false);
 
   // Configure drag sensors with activation constraints to prevent accidental drags
   const sensors = useSensors(
@@ -612,6 +705,59 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     toast.success('יומן עודכן');
   }, [loadEvents]);
 
+  // Load session info for trainees in events
+  const loadSessionInfo = useCallback(async () => {
+    if (!user || events.length === 0) return;
+
+    try {
+      // Extract unique trainee names from events
+      const traineeNames = new Set<string>();
+      events.forEach(event => {
+        const name = extractTraineeName(event);
+        traineeNames.add(name);
+      });
+
+      if (traineeNames.size === 0) return;
+
+      // Check cache first
+      const cachedInfos: TraineeSessionInfo[] = [];
+      const namesToFetch: string[] = [];
+      
+      traineeNames.forEach(name => {
+        // We can't cache by name, so we'll fetch all trainees
+        namesToFetch.push(name);
+      });
+
+      // Fetch trainee IDs by names
+      const { data: trainees, error: traineesError } = await supabase
+        .from('trainees')
+        .select('id, full_name')
+        .eq('trainer_id', user.id)
+        .in('full_name', Array.from(traineeNames));
+
+      if (traineesError || !trainees || trainees.length === 0) {
+        return;
+      }
+
+      // Fetch session info for these trainees
+      const traineeIds = trainees.map(t => t.id);
+      const sessionInfos = await getTraineesSessionInfo(traineeIds, user.id);
+      
+      // Cache the results
+      sessionInfoCache.setMultiple(sessionInfos);
+      
+      setSessionInfoMap(sessionInfos);
+    } catch (err) {
+      logger.error('Error loading session info', err, 'CalendarView');
+    }
+  }, [user, events]);
+
+  // Handle trainee name click - open history modal
+  const handleTraineeNameClick = useCallback((traineeName: string, traineeId: string | null) => {
+    setSelectedTraineeForHistory({ name: traineeName, id: traineeId });
+    setShowHistoryModal(true);
+  }, []);
+
   // Check connection when user changes
   useEffect(() => {
     if (user) {
@@ -625,6 +771,13 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
       loadEvents();
     }
   }, [user, connected, currentDate, loadEvents]);
+
+  // Load session info when events change
+  useEffect(() => {
+    if (events.length > 0) {
+      loadSessionInfo();
+    }
+  }, [events, loadSessionInfo]);
 
   // Set up automatic refresh interval
   useEffect(() => {
@@ -1262,6 +1415,8 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                         onDelete={handleDeleteEvent}
                         onCellClick={handleWeekCellClick}
                         activeEventId={activeEvent?.id || null}
+                        sessionInfoMap={sessionInfoMap}
+                        onTraineeNameClick={handleTraineeNameClick}
                       />
                     );
                   })}
@@ -1477,6 +1632,14 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
             </div>
             <div className="flex items-center gap-2">
               <button
+                onClick={() => setShowRecurringModal(true)}
+                className="px-4 py-2 text-sm bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-all flex items-center gap-2 border border-purple-500/30"
+                title="קביעת אימונים חוזרים"
+              >
+                <Repeat className="h-4 w-4" />
+                קביעת אימונים
+              </button>
+              <button
                 onClick={() => setShowSyncModal(true)}
                 className="px-4 py-2 text-sm bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-all flex items-center gap-2 border border-emerald-500/30"
                 title="סנכרון מתאמנים מהיומן"
@@ -1560,6 +1723,8 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                     onDayClick={handleDayClick}
                     currentDate={currentDate}
                     activeEventId={activeEvent?.id || null}
+                    sessionInfoMap={sessionInfoMap}
+                    onTraineeNameClick={handleTraineeNameClick}
                   />
                 );
               })}
@@ -1615,6 +1780,34 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         selectedDate={quickAddDate}
         onWorkoutCreated={() => {
           // Refresh events after workout creation
+          loadEvents(false, true);
+        }}
+      />
+
+      {/* Trainee Workout History Modal */}
+      {showHistoryModal && selectedTraineeForHistory && (
+        <TraineeWorkoutHistoryModal
+          isOpen={showHistoryModal}
+          onClose={() => {
+            setShowHistoryModal(false);
+            setSelectedTraineeForHistory(null);
+          }}
+          traineeName={selectedTraineeForHistory.name}
+          traineeId={selectedTraineeForHistory.id}
+          currentDate={currentDate}
+          onWorkoutUpdated={() => {
+            // Refresh events after workout update
+            loadEvents(false, true);
+          }}
+        />
+      )}
+
+      {/* Recurring Workout Modal */}
+      <RecurringWorkoutModal
+        isOpen={showRecurringModal}
+        onClose={() => setShowRecurringModal(false)}
+        onWorkoutsCreated={() => {
+          // Refresh events after workouts creation
           loadEvents(false, true);
         }}
       />
