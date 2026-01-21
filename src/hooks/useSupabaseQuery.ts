@@ -157,9 +157,17 @@ export function useSupabaseQuery<T>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refetchOnMount, enabled, ...deps]);
 
+  // Force refetch by invalidating cache first
+  const refetch = useCallback(async () => {
+    const cacheKey = cacheKeyRef.current || getCacheKey(queryFnRef.current, depsRef.current);
+    // Invalidate cache before refetching
+    queryCache.delete(cacheKey);
+    await execute();
+  }, [execute]);
+
   return {
     ...state,
-    refetch: execute,
+    refetch,
   };
 }
 

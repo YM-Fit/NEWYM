@@ -560,6 +560,10 @@ export default function SmartReportView() {
       // Only update card fields if counting method is card_ticket
       if (editing.counting_method === 'card_ticket') {
         updateData.card_sessions_total = editing.card_sessions_total;
+      } else {
+        // Clear card fields if not using card_ticket
+        updateData.card_sessions_total = null;
+        updateData.card_sessions_used = 0;
       }
 
       const { error } = await supabase
@@ -572,11 +576,46 @@ export default function SmartReportView() {
       }
 
       toast.success('הנתונים עודכנו בהצלחה');
+      
+      // Update local state immediately for better UX
+      setReportData(prev => prev.map(row => {
+        if (row.id === editing.traineeId) {
+          const countingMethod = editing.counting_method;
+          const monthlyPrice = editing.monthly_price;
+          const workoutsThisMonth = row.workouts_this_month;
+          
+          // Recalculate total_due based on counting method
+          let totalDue = 0;
+          switch (countingMethod) {
+            case 'subscription':
+              totalDue = monthlyPrice;
+              break;
+            case 'monthly_count':
+              totalDue = workoutsThisMonth * monthlyPrice;
+              break;
+            case 'card_ticket':
+              totalDue = 0;
+              break;
+            default:
+              totalDue = 0;
+          }
+          
+          return {
+            ...row,
+            payment_method: editing.payment_method,
+            counting_method: countingMethod,
+            monthly_price: monthlyPrice,
+            card_sessions_total: countingMethod === 'card_ticket' ? editing.card_sessions_total : 0,
+            total_due: totalDue,
+          };
+        }
+        return row;
+      }));
+      
       setEditing(null);
       
-      // Refresh data
-      await refetch();
-      await loadReportData();
+      // Also refresh from server in background
+      refetch();
     } catch (err) {
       logger.error('Error saving trainee payment data', err, 'SmartReportView');
       toast.error('שגיאה בשמירת הנתונים');
