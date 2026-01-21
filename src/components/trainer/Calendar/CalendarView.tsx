@@ -65,6 +65,24 @@ interface DroppableDayCellProps {
   activeEventId: string | null;
 }
 
+interface DroppableWeekHourCellProps {
+  day: Date;
+  hour: number;
+  hourEvents: CalendarEvent[];
+  onEventClick?: (event: CalendarEvent) => void;
+  onDelete?: (eventId: string) => void;
+  onCellClick: (day: Date, hour: number) => void;
+  activeEventId: string | null;
+}
+
+interface DraggableWeekEventItemProps {
+  event: CalendarEvent;
+  onEventClick?: (event: CalendarEvent) => void;
+  onDelete?: (eventId: string) => void;
+  sourceDate: Date;
+  sourceHour: number;
+}
+
 // Optimized refresh interval - longer to reduce API calls
 const REFRESH_INTERVAL_MS = 120000; // 2 minutes instead of 30 seconds
 const CACHE_DURATION_MS = 60000; // Cache events for 1 minute
@@ -286,6 +304,123 @@ function DroppableDayCell({
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+// Draggable Event Item for Week View
+function DraggableWeekEventItem({ 
+  event, 
+  onEventClick, 
+  onDelete, 
+  sourceDate, 
+  sourceHour 
+}: DraggableWeekEventItemProps) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `week-event-${event.id}`,
+    data: {
+      event,
+      sourceDate,
+      sourceHour,
+      isWeekView: true,
+    },
+  });
+
+  const style = transform ? {
+    transform: CSS.Translate.toString(transform),
+    zIndex: isDragging ? 100 : undefined,
+  } : undefined;
+
+  const eventStart = new Date(event.start.dateTime || event.start.date || '');
+  const eventEnd = new Date(event.end.dateTime || event.end.date || '');
+  const startMinutes = eventStart.getMinutes();
+  const duration = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
+  const heightPercent = Math.max((duration / 60) * 100, 100);
+  const startTime = eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  const endTime = eventEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        ...style,
+        top: `${(startMinutes / 60) * 100}%`,
+        height: `${heightPercent}%`,
+        minHeight: '44px',
+      }}
+      className={`absolute left-0.5 right-0.5 bg-emerald-500 text-white text-xs rounded cursor-pointer hover:bg-emerald-600 z-10 overflow-hidden group ${
+        isDragging ? 'opacity-60 shadow-lg ring-2 ring-emerald-400' : ''
+      }`}
+      onClick={(e) => {
+        e.stopPropagation();
+        onEventClick?.(event);
+      }}
+      title={`${event.summary} - ${startTime} (גרור להעברה)`}
+    >
+      {/* Drag handle */}
+      <div
+        {...listeners}
+        {...attributes}
+        className="absolute right-0 top-0 bottom-0 w-5 flex items-center justify-center cursor-grab active:cursor-grabbing z-20 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity bg-emerald-600/50"
+        title="גרור להעברה"
+      >
+        <GripVertical className="h-3 w-3 text-white/80" />
+      </div>
+      <div className="px-2 py-1">
+        {/* Trainee Name - Prominent */}
+        <div className="text-[11px] font-semibold text-white truncate pr-4">
+          {extractTraineeName(event)}
+        </div>
+        {/* Time range */}
+        <div className="text-[10px] text-white/80 mt-0.5">
+          {endTime} עד {startTime}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Droppable Week Hour Cell Component
+function DroppableWeekHourCell({
+  day,
+  hour,
+  hourEvents,
+  onEventClick,
+  onDelete,
+  onCellClick,
+  activeEventId,
+}: DroppableWeekHourCellProps) {
+  const cellId = `week-cell-${day.getFullYear()}-${day.getMonth()}-${day.getDate()}-${hour}`;
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: cellId,
+    data: {
+      day,
+      hour,
+      isWeekView: true,
+    },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      onClick={() => onCellClick(day, hour)}
+      className={`h-14 border-b border-l border-zinc-700/30 cursor-pointer transition-colors relative ${
+        isOver 
+          ? 'bg-emerald-500/20 ring-1 ring-emerald-500/50' 
+          : 'hover:bg-zinc-800/50'
+      }`}
+    >
+      {hourEvents.map((event, eventIdx) => (
+        <DraggableWeekEventItem
+          key={`${event.id}-${hour}-${eventIdx}`}
+          event={event}
+          onEventClick={onEventClick}
+          onDelete={activeEventId === event.id ? undefined : onDelete}
+          sourceDate={day}
+          sourceHour={hour}
+        />
+      ))}
     </div>
   );
 }
@@ -889,136 +1024,237 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
 
   const weekDayNames = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
 
+  // Handle week view cell click - open quick add modal
+  const handleWeekCellClick = useCallback((day: Date, hour: number) => {
+    const clickedDate = new Date(day);
+    clickedDate.setHours(hour, 0, 0, 0);
+    setQuickAddDate(clickedDate);
+    setShowQuickAddModal(true);
+  }, []);
+
+  // Handle week view drag end
+  const handleWeekDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveEvent(null);
+
+    if (!over || !user) return;
+
+    const draggedEvent = active.data.current?.event as CalendarEvent | undefined;
+    const isWeekViewDrag = active.data.current?.isWeekView;
+    const targetData = over.data.current;
+
+    if (!draggedEvent || !isWeekViewDrag || !targetData?.isWeekView) {
+      return;
+    }
+
+    const targetDay = targetData.day as Date;
+    const targetHour = targetData.hour as number;
+
+    if (!targetDay || targetHour === undefined) {
+      return;
+    }
+
+    // Get original event times
+    const originalStartTime = new Date(draggedEvent.start.dateTime || draggedEvent.start.date || '');
+    const originalEndTime = new Date(draggedEvent.end.dateTime || draggedEvent.end.date || '');
+    const duration = originalEndTime.getTime() - originalStartTime.getTime();
+
+    // Create new start time at target day and hour
+    const newStartTime = new Date(targetDay);
+    newStartTime.setHours(targetHour, originalStartTime.getMinutes(), 0, 0);
+
+    // Check if it's the same time (no change needed)
+    if (originalStartTime.getTime() === newStartTime.getTime()) {
+      return;
+    }
+
+    // Create new end time
+    const newEndTime = new Date(newStartTime.getTime() + duration);
+
+    setIsUpdating(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error('נדרשת הרשאה לעדכון');
+        return;
+      }
+
+      const updateResult = await updateCalendarEventBidirectional(
+        user.id,
+        draggedEvent.id,
+        {
+          startTime: newStartTime,
+          endTime: newEndTime,
+        },
+        session.access_token
+      );
+
+      if (updateResult.error) {
+        toast.error(updateResult.error);
+        return;
+      }
+
+      // Optimistically update local state
+      setEvents(prevEvents => 
+        prevEvents.map(e => {
+          if (e.id === draggedEvent.id) {
+            return {
+              ...e,
+              start: { ...e.start, dateTime: newStartTime.toISOString() },
+              end: { ...e.end, dateTime: newEndTime.toISOString() },
+            };
+          }
+          return e;
+        })
+      );
+
+      // Update cache
+      if (eventsCacheRef.current) {
+        eventsCacheRef.current = {
+          ...eventsCacheRef.current,
+          events: eventsCacheRef.current.events.map(e => {
+            if (e.id === draggedEvent.id) {
+              return {
+                ...e,
+                start: { ...e.start, dateTime: newStartTime.toISOString() },
+                end: { ...e.end, dateTime: newEndTime.toISOString() },
+              };
+            }
+            return e;
+          }),
+        };
+      }
+
+      const formattedDate = newStartTime.toLocaleDateString('he-IL');
+      const formattedTime = newStartTime.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+      toast.success(`האירוע הועבר ל-${formattedDate} בשעה ${formattedTime}`);
+    } catch (error) {
+      logger.error('Error moving event in week view', error, 'CalendarView');
+      toast.error('שגיאה בהעברת אירוע');
+      await loadEvents(false, true);
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [user, loadEvents]);
+
   // Render week view
   const renderWeekView = () => {
     const hours = Array.from({ length: HOURS_PER_DAY }, (_, i) => HOUR_START + i);
 
     return (
-      <div className="overflow-x-auto bg-zinc-900/50 rounded-lg">
-        <div className="min-w-[800px]">
-          {/* Week header with day names and dates */}
-          <div className="grid grid-cols-8 border-b border-zinc-700/50">
-            {/* Empty cell for time column */}
-            <div className="py-3 px-2 text-center text-xs text-zinc-500 border-l border-zinc-700/30">GMT+02</div>
-            {weekDays.map((day, idx) => {
-              const isToday = day.toDateString() === new Date().toDateString();
-              const dayNum = day.getDate();
-              const dayName = day.toLocaleDateString('he-IL', { weekday: 'short' });
-              return (
-                <div key={idx} className="py-2 px-1 text-center border-l border-zinc-700/30">
-                  <div className="text-xs text-zinc-400 mb-1">{dayName}</div>
-                  <div className={`text-lg font-medium mx-auto w-8 h-8 flex items-center justify-center rounded-full ${
-                    isToday 
-                      ? 'bg-emerald-500 text-white' 
-                      : 'text-zinc-300'
-                  }`}>
-                    {dayNum}
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleWeekDragEnd}
+      >
+        <div className="overflow-x-auto bg-zinc-900/50 rounded-lg">
+          <div className="min-w-[800px]">
+            {/* Week header with day names and dates */}
+            <div className="grid grid-cols-8 border-b border-zinc-700/50">
+              {/* Empty cell for time column */}
+              <div className="py-3 px-2 text-center text-xs text-zinc-500 border-l border-zinc-700/30">GMT+02</div>
+              {weekDays.map((day, idx) => {
+                const isToday = day.toDateString() === new Date().toDateString();
+                const dayNum = day.getDate();
+                const dayName = day.toLocaleDateString('he-IL', { weekday: 'short' });
+                return (
+                  <div 
+                    key={idx} 
+                    className="py-2 px-1 text-center border-l border-zinc-700/30 cursor-pointer hover:bg-zinc-800/30 transition-colors"
+                    onClick={() => handleWeekCellClick(day, 9)} // Default to 9:00 AM when clicking header
+                    title="לחץ ליצירת אימון מהיר"
+                  >
+                    <div className="text-xs text-zinc-400 mb-1">{dayName}</div>
+                    <div className={`text-lg font-medium mx-auto w-8 h-8 flex items-center justify-center rounded-full ${
+                      isToday 
+                        ? 'bg-emerald-500 text-white' 
+                        : 'text-zinc-300'
+                    }`}>
+                      {dayNum}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* All-day events row */}
-          <div className="grid grid-cols-8 border-b border-zinc-700/30">
-            <div className="text-[10px] text-zinc-500 py-2 px-2 border-l border-zinc-700/30 text-center">כל היום</div>
-            {weekDays.map((day, idx) => {
-              const allDayEvents = getAllDayEvents(day);
-              return (
-                <div key={idx} className="min-h-[40px] p-1 border-l border-zinc-700/30">
-                  <div className="space-y-0.5">
-                    {allDayEvents.map((event, eventIdx) => (
-                      <EventItem
-                        key={`${event.id}-${eventIdx}`}
-                        event={event}
-                        onEventClick={onEventClick}
-                        onDelete={handleDeleteEvent}
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Hour slots */}
-          <div className="grid grid-cols-8">
-            {/* Hour labels column */}
-            <div className="space-y-0">
-              {hours.map(hour => (
-                <div
-                  key={hour}
-                  className="h-14 border-b border-l border-zinc-700/30 flex items-start justify-center pt-0"
-                >
-                  <span className="text-[10px] text-zinc-500 -mt-2 bg-zinc-900/80 px-1">{hour}:00</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            {/* Day columns */}
-            {weekDays.map((day, dayIdx) => {
-              const isToday = day.toDateString() === new Date().toDateString();
-              return (
+            {/* All-day events row */}
+            <div className="grid grid-cols-8 border-b border-zinc-700/30">
+              <div className="text-[10px] text-zinc-500 py-2 px-2 border-l border-zinc-700/30 text-center">כל היום</div>
+              {weekDays.map((day, idx) => {
+                const allDayEvents = getAllDayEvents(day);
+                return (
+                  <div 
+                    key={idx} 
+                    className="min-h-[40px] p-1 border-l border-zinc-700/30 cursor-pointer hover:bg-zinc-800/30 transition-colors"
+                    onClick={() => handleWeekCellClick(day, 9)}
+                    title="לחץ ליצירת אימון מהיר"
+                  >
+                    <div className="space-y-0.5">
+                      {allDayEvents.map((event, eventIdx) => (
+                        <div key={`${event.id}-${eventIdx}`} onClick={(e) => e.stopPropagation()}>
+                          <EventItem
+                            event={event}
+                            onEventClick={onEventClick}
+                            onDelete={handleDeleteEvent}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Hour slots */}
+            <div className="grid grid-cols-8">
+              {/* Hour labels column */}
+              <div className="space-y-0">
+                {hours.map(hour => (
+                  <div
+                    key={hour}
+                    className="h-14 border-b border-l border-zinc-700/30 flex items-start justify-center pt-0"
+                  >
+                    <span className="text-[10px] text-zinc-500 -mt-2 bg-zinc-900/80 px-1">{hour}:00</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Day columns */}
+              {weekDays.map((day, dayIdx) => (
                 <div key={dayIdx} className="space-y-0 relative">
                   {hours.map(hour => {
                     const hourEvents = getEventsForHour(day, hour);
                     return (
-                      <div
-                        key={hour}
-                        onClick={() => {
-                          const clickedDate = new Date(day);
-                          clickedDate.setHours(hour, 0, 0, 0);
-                          setCurrentDate(clickedDate);
-                          if (onCreateWorkout) {
-                            onCreateWorkout();
-                          }
-                        }}
-                        className={`h-14 border-b border-l border-zinc-700/30 cursor-pointer hover:bg-zinc-800/50 transition-colors relative`}
-                      >
-                        {hourEvents.map((event, eventIdx) => {
-                          const eventStart = new Date(event.start.dateTime || event.start.date || '');
-                          const eventEnd = new Date(event.end.dateTime || event.end.date || '');
-                          const startMinutes = eventStart.getMinutes();
-                          const duration = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
-                          const heightPercent = Math.max((duration / 60) * 100, 100);
-                          const startTime = eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-                          const endTime = eventEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-                          
-                          return (
-                            <div
-                              key={`${event.id}-${hour}-${eventIdx}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onEventClick?.(event);
-                              }}
-                              className="absolute left-0.5 right-0.5 bg-emerald-500 text-white text-xs px-2 py-1 rounded cursor-pointer hover:bg-emerald-600 z-10 overflow-hidden"
-                              style={{
-                                top: `${(startMinutes / 60) * 100}%`,
-                                height: `${heightPercent}%`,
-                                minHeight: '44px',
-                              }}
-                              title={`${event.summary} - ${startTime}`}
-                            >
-                              {/* Trainee Name - Prominent */}
-                              <div className="text-[11px] font-semibold text-white truncate">
-                                {extractTraineeName(event)}
-                              </div>
-                              {/* Time range */}
-                              <div className="text-[10px] text-white/80 mt-0.5">
-                                {endTime} עד {startTime}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                      <DroppableWeekHourCell
+                        key={`${dayIdx}-${hour}`}
+                        day={day}
+                        hour={hour}
+                        hourEvents={hourEvents}
+                        onEventClick={onEventClick}
+                        onDelete={handleDeleteEvent}
+                        onCellClick={handleWeekCellClick}
+                        activeEventId={activeEvent?.id || null}
+                      />
                     );
                   })}
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+
+        {/* Drag Overlay for week view */}
+        <DragOverlay>
+          {activeEvent ? (
+            <div className="text-xs bg-emerald-500/80 text-white p-2 rounded shadow-lg border border-emerald-400 truncate max-w-[150px]">
+              <div className="font-semibold">{extractTraineeName(activeEvent)}</div>
+              <div className="text-white/80 text-[10px] mt-0.5">
+                {activeEvent.start.dateTime && new Date(activeEvent.start.dateTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+              </div>
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
     );
   };
 
