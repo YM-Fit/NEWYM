@@ -386,7 +386,6 @@ export default function SmartReportView() {
       // Get previous month income
       const prevMonth = new Date(selectedMonth);
       prevMonth.setMonth(prevMonth.getMonth() - 1);
-      const prevMonthKey = getMonthKey(prevMonth);
       const prevMonthStart = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 1);
       
       const { data: prevReport } = await supabase
@@ -444,12 +443,23 @@ export default function SmartReportView() {
         supabase
           .from('monthly_reports')
           .upsert(reportDataToSave, { onConflict: 'trainer_id,report_month' })
+          .then(({ error }) => {
+            if (error) {
+              logger.error('Error auto-saving report', error, 'SmartReportView');
+            }
+          })
           .catch((err) => {
             logger.error('Error auto-saving report', err, 'SmartReportView');
           });
       }
     } catch (err) {
-      logger.error('Error loading report data', err, 'SmartReportView');
+      const errorMessage = err instanceof Error ? err.message : JSON.stringify(err);
+      logger.error('Error loading report data', { 
+        error: err, 
+        message: errorMessage,
+        stack: err instanceof Error ? err.stack : undefined 
+      }, 'SmartReportView');
+      console.error('SmartReportView error details:', err);
       toast.error('שגיאה בטעינת הנתונים');
     } finally {
       setLoading(false);

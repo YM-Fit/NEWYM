@@ -526,11 +526,16 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     return daysArray;
   }, [currentDate]);
 
-  // Memoize events by day for better performance
+  // Memoize events by day for better performance (with deduplication)
   const eventsByDay = useMemo(() => {
     const eventsMap = new Map<string, CalendarEvent[]>();
+    const seenEventIds = new Set<string>(); // Track seen event IDs to prevent duplicates
     
     events.forEach(event => {
+      // Skip if we've already seen this event ID
+      if (seenEventIds.has(event.id)) return;
+      seenEventIds.add(event.id);
+      
       const eventDate = new Date(event.start.dateTime || event.start.date || '');
       if (isNaN(eventDate.getTime())) return;
       
