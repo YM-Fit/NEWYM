@@ -316,6 +316,7 @@ function DraggableWeekEventItem({
   sourceDate, 
   sourceHour 
 }: DraggableWeekEventItemProps) {
+  const [showDelete, setShowDelete] = useState(false);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `week-event-${event.id}`,
     data: {
@@ -339,6 +340,20 @@ function DraggableWeekEventItem({
   const startTime = eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
   const endTime = eventEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowDelete(true);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(event.id);
+    }
+    setShowDelete(false);
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -353,10 +368,28 @@ function DraggableWeekEventItem({
       }`}
       onClick={(e) => {
         e.stopPropagation();
+        if (showDelete) {
+          setShowDelete(false);
+          return;
+        }
         onEventClick?.(event);
       }}
-      title={`${event.summary} - ${startTime} (גרור להעברה)`}
+      onContextMenu={handleContextMenu}
+      title={`${event.summary} - ${startTime} (גרור להעברה, לחץ ימני למחיקה)`}
     >
+      {/* Delete button - shows on right-click */}
+      {showDelete && (
+        <div className="absolute inset-0 bg-red-500/90 flex items-center justify-center z-30">
+          <button
+            onClick={handleDelete}
+            className="flex items-center gap-1 text-white text-[11px] font-semibold hover:text-red-100 transition-colors"
+            title="מחק אימון"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            מחק
+          </button>
+        </div>
+      )}
       {/* Drag handle */}
       <div
         {...listeners}
@@ -726,20 +759,14 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     return days;
   }, [currentDate, viewMode]);
 
-  // Get events for a specific hour slot
+  // Get events for a specific hour slot - only events that START in this hour
   const getEventsForHour = useCallback((date: Date, hour: number) => {
-    const hourStart = new Date(date);
-    hourStart.setHours(hour, 0, 0, 0);
-    const hourEnd = new Date(date);
-    hourEnd.setHours(hour, 59, 59, 999);
-
     return events.filter(event => {
       const eventStart = new Date(event.start.dateTime || event.start.date || '');
       if (isNaN(eventStart.getTime())) return false;
       
-      // Check if event overlaps with this hour
-      const eventEnd = new Date(event.end.dateTime || event.end.date || '');
-      return eventStart <= hourEnd && eventEnd >= hourStart &&
+      // Only return events that START in this specific hour
+      return eventStart.getHours() === hour &&
              eventStart.toDateString() === date.toDateString();
     });
   }, [events]);
@@ -944,86 +971,6 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     }
   }, [user, currentDate, loadEvents]);
 
-  if (showSettings) {
-    return (
-      <div className="space-y-4">
-        <button
-          onClick={() => setShowSettings(false)}
-          className="text-emerald-400 hover:text-emerald-300 flex items-center gap-2"
-        >
-          <ChevronRight className="h-4 w-4" />
-          חזרה ליומן
-        </button>
-        <GoogleCalendarSettings onClose={() => setShowSettings(false)} />
-      </div>
-    );
-  }
-
-  if (!connected) {
-    return (
-      <div className="premium-card p-8 text-center space-y-6">
-        <div className="mx-auto w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center">
-          <Calendar className="h-10 w-10 text-zinc-500" />
-        </div>
-        <div>
-          <h3 className="text-xl font-bold text-white mb-2">
-            Google Calendar לא מחובר
-          </h3>
-          <p className="text-zinc-400 mb-6">
-            חבר את Google Calendar כדי לראות את האירועים שלך
-          </p>
-        </div>
-        <button
-          onClick={() => setShowSettings(true)}
-          className="btn-primary mx-auto"
-        >
-          הגדר Google Calendar
-        </button>
-      </div>
-    );
-  }
-
-  // Show auth error with reconnect option
-  if (authError) {
-    return (
-      <div className="premium-card p-8 text-center space-y-6">
-        <div className="mx-auto w-20 h-20 bg-amber-500/20 rounded-full flex items-center justify-center">
-          <Calendar className="h-10 w-10 text-amber-400" />
-        </div>
-        <div>
-          <h3 className="text-xl font-bold text-white mb-2">
-            נדרש חיבור מחדש
-          </h3>
-          <p className="text-zinc-400 mb-2">
-            ההרשאה ל-Google Calendar פגה
-          </p>
-          <p className="text-zinc-500 text-sm mb-6">
-            {authError}
-          </p>
-        </div>
-        <div className="flex gap-3 justify-center">
-          <button
-            onClick={() => setShowSettings(true)}
-            className="btn-primary"
-          >
-            חבר מחדש
-          </button>
-          <button
-            onClick={() => {
-              setAuthError(null);
-              loadEvents(false, true);
-            }}
-            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg transition-all"
-          >
-            נסה שוב
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const weekDayNames = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
-
   // Handle week view cell click - open quick add modal
   const handleWeekCellClick = useCallback((day: Date, hour: number) => {
     const clickedDate = new Date(day);
@@ -1136,6 +1083,86 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
       setIsUpdating(false);
     }
   }, [user, loadEvents]);
+
+  if (showSettings) {
+    return (
+      <div className="space-y-4">
+        <button
+          onClick={() => setShowSettings(false)}
+          className="text-emerald-400 hover:text-emerald-300 flex items-center gap-2"
+        >
+          <ChevronRight className="h-4 w-4" />
+          חזרה ליומן
+        </button>
+        <GoogleCalendarSettings onClose={() => setShowSettings(false)} />
+      </div>
+    );
+  }
+
+  if (!connected) {
+    return (
+      <div className="premium-card p-8 text-center space-y-6">
+        <div className="mx-auto w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center">
+          <Calendar className="h-10 w-10 text-zinc-500" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-white mb-2">
+            Google Calendar לא מחובר
+          </h3>
+          <p className="text-zinc-400 mb-6">
+            חבר את Google Calendar כדי לראות את האירועים שלך
+          </p>
+        </div>
+        <button
+          onClick={() => setShowSettings(true)}
+          className="btn-primary mx-auto"
+        >
+          הגדר Google Calendar
+        </button>
+      </div>
+    );
+  }
+
+  // Show auth error with reconnect option
+  if (authError) {
+    return (
+      <div className="premium-card p-8 text-center space-y-6">
+        <div className="mx-auto w-20 h-20 bg-amber-500/20 rounded-full flex items-center justify-center">
+          <Calendar className="h-10 w-10 text-amber-400" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-white mb-2">
+            נדרש חיבור מחדש
+          </h3>
+          <p className="text-zinc-400 mb-2">
+            ההרשאה ל-Google Calendar פגה
+          </p>
+          <p className="text-zinc-500 text-sm mb-6">
+            {authError}
+          </p>
+        </div>
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={() => setShowSettings(true)}
+            className="btn-primary"
+          >
+            חבר מחדש
+          </button>
+          <button
+            onClick={() => {
+              setAuthError(null);
+              loadEvents(false, true);
+            }}
+            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg transition-all"
+          >
+            נסה שוב
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const weekDayNames = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
 
   // Render week view
   const renderWeekView = () => {

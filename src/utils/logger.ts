@@ -107,7 +107,15 @@ class Logger {
 
     if (isDev) {
       if (error) {
-        if (typeof error === 'object') {
+        if (error instanceof Error) {
+          // Properly log Error objects - their properties are not enumerable
+          console.error(`[${entry.context || 'APP'}] ${message}:`, {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+            cause: error.cause,
+          });
+        } else if (typeof error === 'object') {
           // Log error object with expanded details
           console.error(`[${entry.context || 'APP'}] ${message}:`, {
             ...error,

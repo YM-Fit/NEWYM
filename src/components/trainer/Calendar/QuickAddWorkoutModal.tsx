@@ -72,7 +72,8 @@ export default function QuickAddWorkoutModal({
       // Get access token
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
-        toast.error('נדרשת הרשאה');
+        toast.error('נדרשת הרשאה - יש להתחבר מחדש');
+        setSaving(false);
         return;
       }
 
@@ -85,6 +86,12 @@ export default function QuickAddWorkoutModal({
       endTime.setMinutes(endTime.getMinutes() + parseInt(duration));
 
       // Create event in Google Calendar
+      logger.info('Creating Google Calendar event', { 
+        trainerId: user.id, 
+        traineeName: selectedTrainee.full_name,
+        startTime: startTime.toISOString() 
+      }, 'QuickAddWorkoutModal');
+
       const eventResult = await createGoogleCalendarEvent(
         user.id,
         {
@@ -97,7 +104,9 @@ export default function QuickAddWorkoutModal({
       );
 
       if (!eventResult.success || !eventResult.data) {
-        throw new Error(eventResult.error || 'שגיאה ביצירת אירוע');
+        const errorMessage = eventResult.error || 'שגיאה ביצירת אירוע ב-Google Calendar';
+        logger.error('Google Calendar event creation failed', { error: errorMessage, eventResult }, 'QuickAddWorkoutModal');
+        throw new Error(errorMessage);
       }
 
       const googleEventId = eventResult.data;
@@ -168,8 +177,22 @@ export default function QuickAddWorkoutModal({
       onWorkoutCreated?.();
       onClose();
     } catch (err) {
-      logger.error('Error creating quick workout', err, 'QuickAddWorkoutModal');
-      toast.error(err instanceof Error ? err.message : 'שגיאה ביצירת אימון');
+      // Extract meaningful error message
+      let errorMessage = 'שגיאה ביצירת אימון';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'object' && err !== null && 'message' in err) {
+        errorMessage = String((err as { message: unknown }).message);
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      
+      logger.error('Error creating quick workout', { 
+        error: err instanceof Error ? { name: err.name, message: err.message, stack: err.stack } : err,
+        errorMessage 
+      }, 'QuickAddWorkoutModal');
+      
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }

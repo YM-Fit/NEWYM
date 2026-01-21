@@ -654,7 +654,7 @@ export async function getGoogleCalendarEvents(
 export async function createGoogleCalendarEvent(
   trainerId: string,
   eventData: CreateEventData,
-  accessToken: string
+  _accessToken?: string // Not used - we always get fresh Google OAuth token from service
 ): Promise<ApiResponse<string>> {
   // Rate limiting: 50 create requests per minute per trainer
   const rateLimitKey = `createGoogleCalendarEvent:${trainerId}`;
@@ -675,7 +675,8 @@ export async function createGoogleCalendarEvent(
       return { error: 'Google Calendar לא מחובר' };
     }
 
-    // Get valid access token (refresh if needed)
+    // Get valid Google OAuth access token (refresh if needed)
+    // IMPORTANT: Always use the token from OAuthTokenService, not the passed Supabase token
     const { OAuthTokenService } = await import('../services/oauthTokenService');
     const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
     
@@ -683,7 +684,8 @@ export async function createGoogleCalendarEvent(
       return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
     }
     
-    const accessTokenToUse = accessToken || tokenResult.data;
+    // Always use the Google OAuth token from the service
+    const accessTokenToUse = tokenResult.data;
 
     const calendarId = credentials.default_calendar_id || 'primary';
     
@@ -897,7 +899,7 @@ export async function updateGoogleCalendarEvent(
 export async function deleteGoogleCalendarEvent(
   trainerId: string,
   eventId: string,
-  accessToken: string
+  _accessToken?: string // Not used - we always get fresh Google OAuth token from service
 ): Promise<ApiResponse> {
   // Rate limiting: 30 delete requests per minute per trainer
   const rateLimitKey = `deleteGoogleCalendarEvent:${trainerId}`;
@@ -919,7 +921,8 @@ export async function deleteGoogleCalendarEvent(
 
     const calendarId = credentials.default_calendar_id || 'primary';
     
-    // Get valid access token (refresh if needed)
+    // Get valid Google OAuth access token (refresh if needed)
+    // IMPORTANT: Always use the token from OAuthTokenService, not the passed Supabase token
     const { OAuthTokenService } = await import('../services/oauthTokenService');
     const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
     
@@ -927,7 +930,8 @@ export async function deleteGoogleCalendarEvent(
       return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
     }
     
-    const accessTokenToUse = accessToken || tokenResult.data;
+    // Always use the Google OAuth token from the service
+    const accessTokenToUse = tokenResult.data;
 
     const response = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`,
