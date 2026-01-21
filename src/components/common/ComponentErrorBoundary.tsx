@@ -45,28 +45,28 @@ export default class ComponentErrorBoundary extends Component<Props, State> {
   render(): ReactNode {
     if (this.state.hasError) {
       return (
-        <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-xl text-center" dir="rtl">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-red-500/20 flex items-center justify-center">
-            <AlertTriangle className="w-6 h-6 text-red-400" />
+        <div className="p-6 bg-danger/10 border border-danger/30 rounded-xl text-center" dir="rtl">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-danger/20 flex items-center justify-center">
+            <AlertTriangle className="w-6 h-6 text-danger" />
           </div>
 
-          <h3 className="text-lg font-bold text-white mb-2">
+          <h3 className="text-lg font-bold text-foreground mb-2">
             שגיאה בטעינת {this.props.componentName || 'הרכיב'}
           </h3>
 
-          <p className="text-sm text-zinc-400 mb-4">
+          <p className="text-sm text-muted mb-4">
             משהו השתבש. נסה לרענן או חזור אחורה.
           </p>
 
           {process.env.NODE_ENV === 'development' && this.state.error && (
-            <p className="text-xs font-mono text-red-400 mb-4 break-all bg-red-500/5 p-2 rounded-lg">
+            <p className="text-xs font-mono text-danger mb-4 break-all bg-danger/5 p-2 rounded-lg">
               {this.state.error.message}
             </p>
           )}
 
           <button
             onClick={this.handleRetry}
-            className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg flex items-center gap-2 mx-auto transition-all"
+            className="px-4 py-2 bg-danger/20 hover:bg-danger/30 text-danger rounded-lg flex items-center gap-2 mx-auto transition-all"
           >
             <RefreshCw className="w-4 h-4" />
             <span>נסה שוב</span>

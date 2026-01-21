@@ -37,7 +37,7 @@ export function DataTable<T extends { id: string }>({
               {columns.map((_, j) => (
                 <div
                   key={j}
-                  className="h-4 bg-zinc-800/50 rounded flex-1"
+                  className="h-4 bg-surface/60 rounded flex-1"
                   style={{ width: `${100 / columns.length}%` }}
                 />
               ))}
@@ -51,7 +51,7 @@ export function DataTable<T extends { id: string }>({
   if (data.length === 0) {
     return (
       <div className="premium-card-static p-12 text-center">
-        <p className="text-zinc-400">{emptyMessage}</p>
+        <p className="text-muted">{emptyMessage}</p>
       </div>
     );
   }
@@ -60,31 +60,31 @@ export function DataTable<T extends { id: string }>({
     <div className={`premium-card-static overflow-hidden ${className}`} dir="rtl">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-zinc-800/50 border-b border-zinc-700/50">
+          <thead className="bg-surface/60 border-b border-border/15">
             <tr>
               {columns.map((column) => (
                 <th
                   key={String(column.key)}
-                  className={`px-4 py-3 text-right text-sm font-semibold text-zinc-400 ${column.className || ''}`}
+                  className={`px-4 py-3 text-right text-sm font-semibold text-muted ${column.className || ''}`}
                 >
                   {column.header}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-800/50">
+          <tbody className="divide-y divide-border/10">
             {data.map((item) => (
               <tr
                 key={item.id}
                 onClick={() => onRowClick?.(item)}
-                className={`hover:bg-zinc-800/30 transition-colors ${
+                className={`hover:bg-surface/40 transition-colors ${
                   onRowClick ? 'cursor-pointer' : ''
                 }`}
               >
                 {columns.map((column) => (
                   <td
                     key={String(column.key)}
-                    className={`px-4 py-3 text-sm text-zinc-300 ${column.className || ''}`}
+                    className={`px-4 py-3 text-sm text-secondary ${column.className || ''}`}
                   >
                     {column.render
                       ? column.render(item)

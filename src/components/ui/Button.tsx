@@ -58,7 +58,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           relative inline-flex items-center justify-center gap-2 font-semibold transition-all duration-300
           disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
           active:scale-[0.98]
-          focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900
+          focus:outline-none focus:ring-2 focus:ring-primary/60 focus:ring-offset-2 focus:ring-offset-base
           ${variantStyles[variant]}
           ${sizeStyles[size]}
           ${className}
@@ -68,7 +68,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {ripples.map(ripple => (
           <span
             key={ripple.id}
-            className="absolute rounded-full bg-white/30 animate-ripple pointer-events-none"
+            className="absolute rounded-full bg-inverse/30 animate-ripple pointer-events-none"
             style={{
               left: ripple.x,
               top: ripple.y,

@@ -28,16 +28,16 @@ export function ConfirmationDialog({
   const messageId = useId();
   const variantStyles = {
     danger: {
-      button: 'bg-red-500/15 hover:bg-red-500/25 text-red-400 border-red-500/30',
-      icon: 'text-red-400',
+      button: 'bg-danger/15 hover:bg-danger/25 text-danger border-danger/30',
+      icon: 'text-danger',
     },
     warning: {
-      button: 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border-amber-500/30',
-      icon: 'text-amber-400',
+      button: 'bg-warning/15 hover:bg-warning/25 text-warning border-warning/30',
+      icon: 'text-warning',
     },
     info: {
-      button: 'bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 border-blue-500/30',
-      icon: 'text-blue-400',
+      button: 'bg-info/15 hover:bg-info/25 text-info border-info/30',
+      icon: 'text-info',
     },
   };
 
@@ -59,16 +59,16 @@ export function ConfirmationDialog({
         <div className="flex items-start gap-4 mb-6">
           <div 
             className={`p-3 rounded-xl flex-shrink-0 ${
-              variant === 'danger' ? 'bg-red-500/15' : 
-              variant === 'warning' ? 'bg-amber-500/15' : 
-              'bg-blue-500/15'
+              variant === 'danger' ? 'bg-danger/15' : 
+              variant === 'warning' ? 'bg-warning/15' : 
+              'bg-info/15'
             }`}
             aria-hidden="true"
           >
             <AlertTriangle className={`w-6 h-6 ${styles.icon}`} />
           </div>
           <div className="flex-1">
-            <p id={messageId} className="text-zinc-400 leading-relaxed">
+            <p id={messageId} className="text-muted leading-relaxed">
               {message}
             </p>
           </div>
@@ -78,7 +78,7 @@ export function ConfirmationDialog({
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="px-6 py-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50 border border-zinc-700/50 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className="px-6 py-2.5 rounded-xl bg-surface/60 text-muted hover:bg-surface/80 border border-border/20 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/50"
             aria-label={cancelText}
           >
             {cancelText}
@@ -86,7 +86,7 @@ export function ConfirmationDialog({
           <button
             onClick={handleConfirm}
             disabled={isLoading}
-            className={`px-6 py-2.5 rounded-xl border transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${styles.button}`}
+            className={`px-6 py-2.5 rounded-xl border transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/50 ${styles.button}`}
             aria-label={confirmText}
             autoFocus
           >

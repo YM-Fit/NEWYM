@@ -5,6 +5,27 @@ export default {
   theme: {
     extend: {
       colors: {
+        base: 'rgb(var(--color-bg-base) / <alpha-value>)',
+        elevated: 'rgb(var(--color-bg-elevated) / <alpha-value>)',
+        surface: 'rgb(var(--color-bg-surface) / <alpha-value>)',
+        card: 'rgb(var(--color-bg-card) / <alpha-value>)',
+        input: 'rgb(var(--color-bg-input) / <alpha-value>)',
+        overlay: 'rgb(var(--color-bg-overlay) / <alpha-value>)',
+        foreground: 'rgb(var(--color-text-primary) / <alpha-value>)',
+        secondary: 'rgb(var(--color-text-secondary) / <alpha-value>)',
+        muted: 'rgb(var(--color-text-muted) / <alpha-value>)',
+        inverse: 'rgb(var(--color-text-inverse) / <alpha-value>)',
+        border: 'rgb(var(--color-border) / <alpha-value>)',
+        'border-hover': 'rgb(var(--color-border-hover) / <alpha-value>)',
+        'border-strong': 'rgb(var(--color-border-strong) / <alpha-value>)',
+        primary: 'rgb(var(--color-primary) / <alpha-value>)',
+        'primary-foreground': 'rgb(var(--color-on-primary) / <alpha-value>)',
+        success: 'rgb(var(--color-success) / <alpha-value>)',
+        warning: 'rgb(var(--color-warning) / <alpha-value>)',
+        danger: 'rgb(var(--color-danger) / <alpha-value>)',
+        info: 'rgb(var(--color-info) / <alpha-value>)',
+        'accent-bg': 'rgb(var(--color-accent-bg) / <alpha-value>)',
+        'accent-bg-hover': 'rgb(var(--color-accent-bg-hover) / <alpha-value>)',
         emerald: {
           50: '#ecfdf5',
           100: '#d1fae5',

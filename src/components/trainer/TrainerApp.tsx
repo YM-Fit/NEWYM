@@ -12,6 +12,7 @@ import Header from '../layout/Header';
 import Sidebar from '../layout/Sidebar';
 import MobileSidebar from '../layout/MobileSidebar';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { ThemeShowcase } from '../ui/ThemeShowcase';
 
 // Lazy load heavy components - including main views for better code splitting
 const Dashboard = lazy(() => import('./Dashboard/Dashboard'));
@@ -1146,6 +1147,36 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
                 setActiveView('add-trainee');
                 toast(`יוצר כרטיס מתאמן חדש: ${name}`, { icon: '👤' });
               }}
+              onQuickCreateTrainee={async (name) => {
+                if (!user) return null;
+                try {
+                  const { data, error } = await supabase
+                    .from('trainees')
+                    .insert([{
+                      trainer_id: user.id,
+                      full_name: name.trim(),
+                      status: 'active',
+                    }])
+                    .select()
+                    .single();
+                  
+                  if (error) {
+                    logger.error('Error quick creating trainee', error, 'TrainerApp');
+                    toast.error('שגיאה ביצירת מתאמן');
+                    return null;
+                  }
+                  
+                  // Add to local state
+                  if (data) {
+                    setTrainees(prev => [data, ...prev]);
+                  }
+                  
+                  return data?.id || null;
+                } catch (err) {
+                  logger.error('Error in quick create trainee', err, 'TrainerApp');
+                  return null;
+                }
+              }}
             />
           </Suspense>
         );
@@ -1200,6 +1231,14 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
 
   const isWorkoutSession = activeView === 'workout-session' || activeView === 'pair-workout-session';
   const showCollapseControls = isWorkoutSession;
+  const isThemeShowcase =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('theme') === 'showcase';
+
+  if (isThemeShowcase) {
+    return <ThemeShowcase />;
+  }
 
   return (
       <div

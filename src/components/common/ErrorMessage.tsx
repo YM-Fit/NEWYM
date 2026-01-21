@@ -22,22 +22,22 @@ export function ErrorMessage({
 
   const variantStyles = {
     error: {
-      bg: 'bg-red-500/15',
-      border: 'border-red-500/30',
-      text: 'text-red-400',
-      icon: 'text-red-400',
+      bg: 'bg-danger/15',
+      border: 'border-danger/30',
+      text: 'text-danger',
+      icon: 'text-danger',
     },
     warning: {
-      bg: 'bg-amber-500/15',
-      border: 'border-amber-500/30',
-      text: 'text-amber-400',
-      icon: 'text-amber-400',
+      bg: 'bg-warning/15',
+      border: 'border-warning/30',
+      text: 'text-warning',
+      icon: 'text-warning',
     },
     info: {
-      bg: 'bg-blue-500/15',
-      border: 'border-blue-500/30',
-      text: 'text-blue-400',
-      icon: 'text-blue-400',
+      bg: 'bg-info/15',
+      border: 'border-info/30',
+      text: 'text-info',
+      icon: 'text-info',
     },
   };
 

@@ -33,6 +33,7 @@ interface CalendarSyncModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreateTrainee?: (name: string, eventId?: string) => void;
+  onQuickCreateTrainee?: (name: string) => Promise<string | null>; // Returns trainee ID on success
   currentDate: Date;
 }
 
@@ -49,10 +50,11 @@ export default function CalendarSyncModal({
   isOpen,
   onClose,
   onCreateTrainee,
+  onQuickCreateTrainee,
   currentDate
 }: CalendarSyncModalProps) {
   const { user } = useAuth();
-  const { data: trainees = [], loading: traineesLoading } = useTrainees(user?.id || null);
+  const { data: trainees = [], loading: traineesLoading, refetch: refetchTrainees } = useTrainees(user?.id || null);
   
   const [step, setStep] = useState<SyncStep>('loading');
   const [matchedEvents, setMatchedEvents] = useState<MatchedEvent[]>([]);
@@ -60,6 +62,7 @@ export default function CalendarSyncModal({
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [quickCreatingFor, setQuickCreatingFor] = useState<string | null>(null); // event group name being created
 
   // Load events and match them
   const loadAndMatchEvents = useCallback(async () => {
@@ -203,6 +206,39 @@ export default function CalendarSyncModal({
       displayName 
     });
     setDecisions(newDecisions);
+  };
+
+  // Handle quick create trainee - creates trainee with name only and links immediately
+  const handleQuickCreate = async (displayName: string, events: MatchedEvent[]) => {
+    if (!onQuickCreateTrainee) return;
+    
+    setQuickCreatingFor(displayName);
+    try {
+      const newTraineeId = await onQuickCreateTrainee(displayName);
+      if (newTraineeId) {
+        // Link all events in this group to the new trainee
+        const newDecisions = new Map(decisions);
+        events.forEach(e => {
+          newDecisions.set(e.event.id, {
+            eventId: e.event.id,
+            traineeId: newTraineeId,
+            action: 'link',
+            displayName: e.event.extractedName || e.event.summary
+          });
+        });
+        setDecisions(newDecisions);
+        
+        // Refresh trainees list
+        await refetchTrainees();
+        
+        toast.success(`מתאמן "${displayName}" נוצר וקושר לאירועים`);
+      }
+    } catch (err) {
+      logger.error('Error in quick create trainee', err, 'CalendarSyncModal');
+      toast.error('שגיאה ביצירת מתאמן');
+    } finally {
+      setQuickCreatingFor(null);
+    }
   };
 
   // Toggle group expansion
@@ -749,44 +785,75 @@ export default function CalendarSyncModal({
                           </div>
 
                           {/* Action buttons */}
-                          <div className="flex gap-2 pt-2">
-                            {onCreateTrainee && (
+                          <div className="flex flex-col gap-2 pt-2">
+                            {/* Quick create - creates trainee with name only */}
+                            {onQuickCreateTrainee && (
+                              <button
+                                onClick={() => handleQuickCreate(
+                                  firstEvent.event.extractedName || firstEvent.event.summary,
+                                  events
+                                )}
+                                disabled={quickCreatingFor === (firstEvent.event.extractedName || firstEvent.event.summary)}
+                                className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all ${
+                                  decision?.action === 'link' && decision.traineeId
+                                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50'
+                                    : 'bg-emerald-600/80 hover:bg-emerald-600 text-white'
+                                } disabled:opacity-50 disabled:cursor-wait`}
+                              >
+                                {quickCreatingFor === (firstEvent.event.extractedName || firstEvent.event.summary) ? (
+                                  <>
+                                    <RefreshCw className="h-4 w-4 animate-spin" />
+                                    יוצר מתאמן...
+                                  </>
+                                ) : (
+                                  <>
+                                    <UserPlus className="h-4 w-4" />
+                                    צור מתאמן מהיר וקשר
+                                  </>
+                                )}
+                              </button>
+                            )}
+                            
+                            <div className="flex gap-2">
+                              {/* Full form create */}
+                              {onCreateTrainee && (
+                                <button
+                                  onClick={() => {
+                                    events.forEach(e => {
+                                      handleCreateNew(
+                                        e.event.id,
+                                        e.event.extractedName || e.event.summary
+                                      );
+                                    });
+                                  }}
+                                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all text-sm ${
+                                    decision?.action === 'create'
+                                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                                      : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
+                                  }`}
+                                >
+                                  <UserPlus className="h-4 w-4" />
+                                  טופס מלא
+                                </button>
+                              )}
                               <button
                                 onClick={() => {
                                   events.forEach(e => {
-                                    handleCreateNew(
+                                    handleSkip(
                                       e.event.id,
                                       e.event.extractedName || e.event.summary
                                     );
                                   });
                                 }}
-                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                                  decision?.action === 'create'
-                                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
-                                    : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
+                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all text-sm ${
+                                  decision?.action === 'skip'
+                                    ? 'bg-zinc-600/50 text-zinc-300 border border-zinc-500/50'
+                                    : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400'
                                 }`}
                               >
-                                <UserPlus className="h-4 w-4" />
-                                צור מתאמן חדש
+                                דלג
                               </button>
-                            )}
-                            <button
-                              onClick={() => {
-                                events.forEach(e => {
-                                  handleSkip(
-                                    e.event.id,
-                                    e.event.extractedName || e.event.summary
-                                  );
-                                });
-                              }}
-                              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                                decision?.action === 'skip'
-                                  ? 'bg-zinc-600/50 text-zinc-300 border border-zinc-500/50'
-                                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400'
-                              }`}
-                            >
-                              דלג
-                            </button>
+                            </div>
                           </div>
                         </div>
                       )}

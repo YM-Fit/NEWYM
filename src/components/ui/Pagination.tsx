@@ -66,7 +66,7 @@ export function Pagination({
   return (
     <div className="flex items-center justify-between gap-4 py-4" dir="rtl">
       {showItemCount && (
-        <div className="text-sm text-zinc-400">
+        <div className="text-sm text-muted">
           מציג {startIndex}-{endIndex} מתוך {totalItems}
         </div>
       )}
@@ -75,25 +75,25 @@ export function Pagination({
         <button
           onClick={() => onGoToPage(1)}
           disabled={!hasPrevPage}
-          className="p-2 rounded-lg hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="p-2 rounded-lg hover:bg-surface/60 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           aria-label="לעמוד הראשון"
         >
-          <ChevronsRight className="h-4 w-4 text-zinc-400" />
+          <ChevronsRight className="h-4 w-4 text-muted" />
         </button>
 
         <button
           onClick={onPrevPage}
           disabled={!hasPrevPage}
-          className="p-2 rounded-lg hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="p-2 rounded-lg hover:bg-surface/60 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           aria-label="עמוד קודם"
         >
-          <ChevronRight className="h-4 w-4 text-zinc-400" />
+          <ChevronRight className="h-4 w-4 text-muted" />
         </button>
 
         <div className="flex items-center gap-1 mx-2">
           {getPageNumbers().map((page, index) =>
             page === 'ellipsis' ? (
-              <span key={`ellipsis-${index}`} className="px-2 text-zinc-500">
+              <span key={`ellipsis-${index}`} className="px-2 text-muted">
                 ...
               </span>
             ) : (
@@ -102,8 +102,8 @@ export function Pagination({
                 onClick={() => onGoToPage(page)}
                 className={`min-w-[36px] h-9 rounded-lg font-medium transition-all ${
                   currentPage === page
-                    ? 'bg-emerald-500 text-white'
-                    : 'text-zinc-400 hover:bg-zinc-800'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted hover:bg-surface/60'
                 }`}
               >
                 {page}
@@ -115,19 +115,19 @@ export function Pagination({
         <button
           onClick={onNextPage}
           disabled={!hasNextPage}
-          className="p-2 rounded-lg hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="p-2 rounded-lg hover:bg-surface/60 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           aria-label="עמוד הבא"
         >
-          <ChevronLeft className="h-4 w-4 text-zinc-400" />
+          <ChevronLeft className="h-4 w-4 text-muted" />
         </button>
 
         <button
           onClick={() => onGoToPage(totalPages)}
           disabled={!hasNextPage}
-          className="p-2 rounded-lg hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="p-2 rounded-lg hover:bg-surface/60 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           aria-label="לעמוד האחרון"
         >
-          <ChevronsLeft className="h-4 w-4 text-zinc-400" />
+          <ChevronsLeft className="h-4 w-4 text-muted" />
         </button>
       </div>
     </div>

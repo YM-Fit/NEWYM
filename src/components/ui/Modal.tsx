@@ -74,7 +74,7 @@ export function Modal({
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-base/70 backdrop-blur-sm p-4"
       aria-hidden="true"
     >
       <div
@@ -85,12 +85,12 @@ export function Modal({
         aria-labelledby={title ? titleId : undefined}
         aria-describedby={ariaDescribedBy}
         tabIndex={-1}
-        className={`w-full ${sizeStyles[size]} bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-800 animate-fade-in focus:outline-none`}
+        className={`w-full ${sizeStyles[size]} bg-elevated rounded-2xl shadow-2xl border border-border/12 animate-fade-in focus:outline-none`}
       >
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-5 border-b border-zinc-800">
+          <div className="flex items-center justify-between p-5 border-b border-border/10">
             {title && (
-              <h2 id={titleId} className="text-xl font-bold text-white">
+              <h2 id={titleId} className="text-xl font-bold text-foreground">
                 {title}
               </h2>
             )}
@@ -98,7 +98,7 @@ export function Modal({
               <button
                 ref={closeButtonRef}
                 onClick={onClose}
-                className="p-2 hover:bg-zinc-800 rounded-xl transition-all text-zinc-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                className="p-2 hover:bg-surface/70 rounded-xl transition-all text-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 aria-label="סגור דיאלוג"
               >
                 <X className="h-5 w-5" aria-hidden="true" />

@@ -16,18 +16,18 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
             className="sr-only peer"
             {...props}
           />
-          <div className="w-5 h-5 rounded-full border-2 border-zinc-700 bg-zinc-800/50 peer-checked:border-emerald-500 transition-all flex items-center justify-center peer-focus:ring-2 peer-focus:ring-emerald-500/50">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 opacity-0 peer-checked:opacity-100 transition-opacity" />
+          <div className="w-5 h-5 rounded-full border-2 border-border/30 bg-surface/60 peer-checked:border-primary transition-all flex items-center justify-center peer-focus:ring-2 peer-focus:ring-primary/50">
+            <div className="w-2.5 h-2.5 rounded-full bg-primary opacity-0 peer-checked:opacity-100 transition-opacity" />
           </div>
         </div>
         <label
           htmlFor={props.id}
-          className="text-sm text-zinc-300 cursor-pointer select-none"
+          className="text-sm text-secondary cursor-pointer select-none"
         >
           {label}
         </label>
         {error && (
-          <p className="text-sm text-red-400">{error}</p>
+          <p className="text-sm text-danger">{error}</p>
         )}
       </div>
     );

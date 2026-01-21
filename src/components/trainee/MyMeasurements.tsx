@@ -166,17 +166,28 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
 
     setSubmitting(true);
 
-    const { error } = await supabase.from('trainee_self_weights').insert({
+    const { error, data } = await supabase.from('trainee_self_weights').insert({
       trainee_id: traineeId,
       weight_kg: parseFloat(newWeight.weight_kg),
       weight_date: newWeight.weight_date,
       notes: newWeight.notes || null,
-    });
+    }).select().single();
 
     if (error) {
       toast.error('שגיאה בשמירת המשקל');
       setSubmitting(false);
       return;
+    }
+
+    // Optimistic update: add the new weight to state immediately
+    if (data) {
+      setSelfWeights((prev) => {
+        const updated = [data, ...prev];
+        // Sort by date descending to maintain order
+        return updated.sort((a, b) => 
+          new Date(b.weight_date).getTime() - new Date(a.weight_date).getTime()
+        );
+      });
     }
 
     if (trainerId) {
@@ -189,6 +200,9 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
       });
     }
 
+    // Wait for data to reload before closing modal
+    await loadData();
+
     toast.success('המשקל נשלח למאמן שלך!');
     setShowAddModal(false);
     setNewWeight({
@@ -196,7 +210,6 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
       weight_date: new Date().toISOString().split('T')[0],
       notes: '',
     });
-    loadData();
     setSubmitting(false);
   };
 

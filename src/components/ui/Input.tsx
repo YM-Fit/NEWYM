@@ -30,11 +30,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <label 
             htmlFor={inputId} 
             className={`block text-sm font-semibold mb-2.5 transition-colors ${
-              error ? 'text-red-400' : success ? 'text-emerald-400' : 'text-zinc-400'
+              error ? 'text-danger' : success ? 'text-success' : 'text-muted'
             }`}
           >
             {label}
-            {required && <span className="text-red-400 ml-1" aria-label="שדה חובה">*</span>}
+            {required && <span className="text-danger ml-1" aria-label="שדה חובה">*</span>}
           </label>
         )}
         <div className="relative">
@@ -50,12 +50,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             required={required}
             className={`
               w-full px-4 py-3.5 rounded-xl glass-input
-              text-white placeholder-zinc-500
+              text-foreground placeholder-muted
               transition-all duration-300
               focus:outline-none focus:ring-2
-              ${error ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/50' : ''}
-              ${success && !error ? 'border-emerald-500/50 focus:border-emerald-500 focus:ring-emerald-500/50' : ''}
-              ${!error && !success ? 'focus:ring-emerald-500/50 focus:border-emerald-500/50' : ''}
+              ${error ? 'border-danger/50 focus:border-danger focus:ring-danger/50' : ''}
+              ${success && !error ? 'border-success/50 focus:border-success focus:ring-success/50' : ''}
+              ${!error && !success ? 'focus:ring-primary/50 focus:border-primary/50' : ''}
               ${showPasswordToggle ? 'pr-12' : ''}
               ${(error || success) && showPasswordToggle ? 'pl-12' : ''}
               ${isFocused ? 'shadow-lg' : ''}
@@ -67,7 +67,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors rounded-lg hover:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 text-muted hover:text-foreground transition-colors rounded-lg hover:bg-surface/60 focus:outline-none focus:ring-2 focus:ring-primary/50"
               aria-label={showPassword ? 'הסתר סיסמה' : 'הצג סיסמה'}
               aria-pressed={showPassword}
               tabIndex={0}
@@ -78,21 +78,21 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {(error || success) && !showPasswordToggle && (
             <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true">
               {error ? (
-                <AlertCircle className="w-5 h-5 text-red-400" />
+                <AlertCircle className="w-5 h-5 text-danger" />
               ) : success ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                <CheckCircle2 className="w-5 h-5 text-success" />
               ) : null}
             </div>
           )}
         </div>
         {error && (
-          <p id={errorId} className="mt-2 text-sm text-red-400 flex items-center gap-1.5 animate-fade-in" role="alert">
+          <p id={errorId} className="mt-2 text-sm text-danger flex items-center gap-1.5 animate-fade-in" role="alert">
             <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
             {error}
           </p>
         )}
         {hint && !error && (
-          <p id={hintId} className="mt-2 text-sm text-zinc-500 flex items-center gap-1.5">
+          <p id={hintId} className="mt-2 text-sm text-muted flex items-center gap-1.5">
             {hint}
           </p>
         )}

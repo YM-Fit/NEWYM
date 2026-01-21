@@ -40,6 +40,7 @@ interface CalendarViewProps {
   onEventClick?: (event: CalendarEvent) => void;
   onCreateWorkout?: () => void;
   onCreateTrainee?: (name: string, eventId?: string) => void;
+  onQuickCreateTrainee?: (name: string) => Promise<string | null>;
 }
 
 interface EventItemProps {
@@ -458,7 +459,7 @@ function DroppableWeekHourCell({
   );
 }
 
-export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTrainee }: CalendarViewProps) {
+export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTrainee, onQuickCreateTrainee }: CalendarViewProps) {
   const { user } = useAuth();
   
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -1603,6 +1604,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
           loadEvents(false, true);
         }}
         onCreateTrainee={onCreateTrainee}
+        onQuickCreateTrainee={onQuickCreateTrainee}
         currentDate={currentDate}
       />
 
