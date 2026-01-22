@@ -50,7 +50,8 @@ async function generateEventTitle(
   traineeId: string,
   trainerId: string,
   traineeName: string,
-  eventDate: Date
+  eventDate: Date,
+  workoutId?: string
 ): Promise<string> {
   try {
     // Get trainee counting method and card info
@@ -105,20 +106,49 @@ async function generateEventTitle(
         const traineeWorkouts = workouts.filter((w: any) => traineeWorkoutIds.has(w.id));
 
         if (traineeWorkouts.length > 0) {
-          const eventDateStr = eventDate.toISOString().split('T')[0];
-          let position = traineeWorkouts.length + 1; // Default to end of list
-          
-          for (let i = 0; i < traineeWorkouts.length; i++) {
-            const workoutDateStr = new Date(traineeWorkouts[i].workout_date).toISOString().split('T')[0];
-            if (workoutDateStr === eventDateStr) {
-              position = i + 1;
-              break;
+          // Sort workouts by date to ensure correct order
+          traineeWorkouts.sort((a: any, b: any) => 
+            new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime()
+          );
+
+          let position = 1;
+          const totalInMonth = traineeWorkouts.length;
+
+          // If we have workoutId, find its exact position
+          if (workoutId) {
+            const workoutIndex = traineeWorkouts.findIndex((w: any) => w.id === workoutId);
+            if (workoutIndex >= 0) {
+              position = workoutIndex + 1;
+            } else {
+              // New workout, add to count
+              position = totalInMonth + 1;
+            }
+          } else {
+            // Fallback: find position by date
+            const eventDateMs = eventDate.getTime();
+            for (let i = 0; i < traineeWorkouts.length; i++) {
+              const workoutDateMs = new Date(traineeWorkouts[i].workout_date).getTime();
+              // If dates are within 1 hour of each other, consider it a match
+              if (Math.abs(workoutDateMs - eventDateMs) < 3600000) {
+                position = i + 1;
+                break;
+              }
+              if (workoutDateMs < eventDateMs) {
+                position = i + 2;
+              }
+            }
+            // Make sure position doesn't exceed total
+            if (position > totalInMonth) {
+              position = totalInMonth;
             }
           }
 
-          // Include this new workout in the count
-          const totalInMonth = traineeWorkouts.length + 1;
-          sessionText = totalInMonth > 1 ? `${position}/${totalInMonth}` : `${position}`;
+          // For new workouts (workoutId not found in list), we might need to add 1 to total
+          const displayTotal = workoutId && !traineeWorkouts.find((w: any) => w.id === workoutId) 
+            ? totalInMonth + 1 
+            : totalInMonth;
+          
+          sessionText = displayTotal > 1 ? `${position}/${displayTotal}` : `${position}`;
         } else {
           // First workout for this trainee this month
           sessionText = '1';
@@ -548,7 +578,8 @@ Deno.serve(async (req: Request) => {
               traineeData.trainee_id,
               trainer_id,
               trainee.full_name,
-              workoutDate
+              workoutDate,
+              workout.id
             );
             
             const eventPayload: any = {

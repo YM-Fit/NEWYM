@@ -123,10 +123,12 @@ export async function syncTraineeEventsToCalendar(
           const eventDate = new Date(event.event_start_time);
           
           // Generate the new event title with session number
+          // Pass workout_id for accurate position calculation
           const newTitle = await generateGoogleCalendarEventTitle(
             traineeId,
             trainerId,
-            eventDate
+            eventDate,
+            event.workout_id || undefined
           );
 
           // Update the event via bulk update (single event)

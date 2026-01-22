@@ -48,7 +48,8 @@ async function generateEventTitle(
   supabase: any,
   traineeId: string,
   trainerId: string,
-  eventDate: Date
+  eventDate: Date,
+  workoutId?: string
 ): Promise<string> {
   try {
     // Get trainee info
@@ -105,21 +106,40 @@ async function generateEventTitle(
         const traineeWorkouts = workouts.filter((w: any) => traineeWorkoutIds.has(w.id));
 
         if (traineeWorkouts.length > 0) {
-          const eventDateStr = eventDate.toISOString().split('T')[0];
+          // Sort workouts by date to ensure correct order
+          traineeWorkouts.sort((a: any, b: any) => 
+            new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime()
+          );
+
           let position = 1;
-          
-          for (let i = 0; i < traineeWorkouts.length; i++) {
-            const workoutDateStr = new Date(traineeWorkouts[i].workout_date).toISOString().split('T')[0];
-            if (workoutDateStr === eventDateStr) {
-              position = i + 1;
-              break;
+          const totalInMonth = traineeWorkouts.length;
+
+          // If we have workoutId, find its exact position
+          if (workoutId) {
+            const workoutIndex = traineeWorkouts.findIndex((w: any) => w.id === workoutId);
+            if (workoutIndex >= 0) {
+              position = workoutIndex + 1;
             }
-            if (new Date(traineeWorkouts[i].workout_date) < eventDate) {
-              position = i + 2;
+          } else {
+            // Fallback: find position by date
+            const eventDateMs = eventDate.getTime();
+            for (let i = 0; i < traineeWorkouts.length; i++) {
+              const workoutDateMs = new Date(traineeWorkouts[i].workout_date).getTime();
+              // If dates are within 1 hour of each other, consider it a match
+              if (Math.abs(workoutDateMs - eventDateMs) < 3600000) {
+                position = i + 1;
+                break;
+              }
+              if (workoutDateMs < eventDateMs) {
+                position = i + 2;
+              }
+            }
+            // Make sure position doesn't exceed total
+            if (position > totalInMonth) {
+              position = totalInMonth;
             }
           }
 
-          const totalInMonth = traineeWorkouts.length;
           sessionText = totalInMonth > 1 ? `${position}/${totalInMonth}` : `${position}`;
         }
       }
@@ -308,7 +328,7 @@ Deno.serve(async (req: Request) => {
     // Get all synced events for this trainee in the date range
     const { data: syncRecords, error: syncError } = await supabase
       .from('google_calendar_sync')
-      .select('id, google_event_id, event_start_time')
+      .select('id, google_event_id, event_start_time, workout_id')
       .eq('trainer_id', trainer_id)
       .eq('trainee_id', trainee_id)
       .eq('sync_status', 'synced')
@@ -340,7 +360,7 @@ Deno.serve(async (req: Request) => {
     for (const record of syncRecords) {
       try {
         const eventDate = new Date(record.event_start_time);
-        const newTitle = await generateEventTitle(supabase, trainee_id, trainer_id, eventDate);
+        const newTitle = await generateEventTitle(supabase, trainee_id, trainer_id, eventDate, record.workout_id);
 
         const success = await updateGoogleCalendarEvent(
           accessToken,

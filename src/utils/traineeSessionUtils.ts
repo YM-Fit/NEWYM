@@ -570,12 +570,14 @@ export const sessionInfoCache = new SessionInfoCache();
  * @param traineeId The trainee's ID
  * @param trainerId The trainer's ID
  * @param eventDate The date of the event (used to calculate monthly position)
+ * @param workoutId Optional workout ID for accurate position calculation
  * @returns Formatted title: "אימון - [name] [number]"
  */
 export async function generateGoogleCalendarEventTitle(
   traineeId: string,
   trainerId: string,
-  eventDate: Date
+  eventDate: Date,
+  workoutId?: string
 ): Promise<string> {
   try {
     // Get trainee basic info
@@ -615,12 +617,12 @@ export async function generateGoogleCalendarEventTitle(
       // Show card sessions: remaining/total
       sessionText = `${sessionInfo.cardSessionsRemaining}/${sessionInfo.cardSessionsTotal}`;
     } else {
-      // Calculate monthly position for this specific event date
+      // Calculate monthly position for this specific workout
       const eventMonth = new Date(eventDate.getFullYear(), eventDate.getMonth(), 1);
       const startOfMonth = new Date(eventMonth.getFullYear(), eventMonth.getMonth(), 1);
       const endOfMonth = new Date(eventMonth.getFullYear(), eventMonth.getMonth() + 1, 0, 23, 59, 59);
 
-      // Get all workouts for this trainee in this month
+      // Get all workouts for this trainer in this month
       const { data: workouts, error: workoutsError } = await supabase
         .from('workouts')
         .select('id, workout_date')
@@ -642,22 +644,41 @@ export async function generateGoogleCalendarEventTitle(
         const traineeWorkouts = workouts.filter(w => traineeWorkoutIds.has(w.id));
 
         if (traineeWorkouts.length > 0) {
-          // Find position of this event date
-          const eventDateStr = eventDate.toISOString().split('T')[0];
+          // Sort workouts by date to ensure correct order
+          traineeWorkouts.sort((a, b) => 
+            new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime()
+          );
+
           let position = 1;
-          
-          for (let i = 0; i < traineeWorkouts.length; i++) {
-            const workoutDateStr = new Date(traineeWorkouts[i].workout_date).toISOString().split('T')[0];
-            if (workoutDateStr === eventDateStr) {
-              position = i + 1;
-              break;
+          const totalInMonth = traineeWorkouts.length;
+
+          // If we have workoutId, find its exact position
+          if (workoutId) {
+            const workoutIndex = traineeWorkouts.findIndex(w => w.id === workoutId);
+            if (workoutIndex >= 0) {
+              position = workoutIndex + 1;
             }
-            if (new Date(traineeWorkouts[i].workout_date) < eventDate) {
-              position = i + 2; // This event comes after this workout
+          } else {
+            // Fallback: find position by date (for backwards compatibility)
+            const eventDateMs = eventDate.getTime();
+            for (let i = 0; i < traineeWorkouts.length; i++) {
+              const workoutDateMs = new Date(traineeWorkouts[i].workout_date).getTime();
+              // If dates are within 1 hour of each other, consider it a match
+              if (Math.abs(workoutDateMs - eventDateMs) < 3600000) {
+                position = i + 1;
+                break;
+              }
+              // If workout is before event date, update position
+              if (workoutDateMs < eventDateMs) {
+                position = i + 2;
+              }
+            }
+            // Make sure position doesn't exceed total
+            if (position > totalInMonth) {
+              position = totalInMonth;
             }
           }
 
-          const totalInMonth = traineeWorkouts.length;
           sessionText = totalInMonth > 1 
             ? `${position}/${totalInMonth}`
             : `${position}`;
