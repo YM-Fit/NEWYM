@@ -2461,9 +2461,6 @@
     animation: fade-in-up 0.5s ease-out forwards;
     opacity: 0;
   }
-    animation: swipe-hint-pulse 2s ease-in-out infinite;
-    opacity: 0;
-  }
 
   @keyframes swipe-hint-pulse {
     0%, 100% {
