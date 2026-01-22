@@ -168,6 +168,43 @@ export async function deleteWorkout(
   }
 
   try {
+    // First, get workout info before deleting (for calendar sync)
+    const { data: workoutInfo } = await supabase
+      .from('workouts')
+      .select('trainer_id, workout_trainees(trainee_id)')
+      .eq('id', workoutId)
+      .single();
+
+    const trainerId = workoutInfo?.trainer_id;
+    const traineeId = workoutInfo?.workout_trainees?.[0]?.trainee_id;
+
+    // Check if there's a Google Calendar sync record
+    const { data: syncRecord } = await supabase
+      .from('google_calendar_sync')
+      .select('google_event_id')
+      .eq('workout_id', workoutId)
+      .maybeSingle();
+
+    // Delete the Google Calendar event if it exists
+    if (syncRecord?.google_event_id && trainerId) {
+      try {
+        const { deleteGoogleCalendarEvent } = await import('./googleCalendarApi');
+        await deleteGoogleCalendarEvent(trainerId, syncRecord.google_event_id);
+      } catch (calendarErr) {
+        console.error('Error deleting Google Calendar event:', calendarErr);
+        // Continue with workout deletion even if calendar delete fails
+      }
+    }
+
+    // Delete sync record
+    if (syncRecord) {
+      await supabase
+        .from('google_calendar_sync')
+        .delete()
+        .eq('workout_id', workoutId);
+    }
+
+    // Delete the workout
     const { error } = await supabase
       .from('workouts')
       .delete()
@@ -175,6 +212,20 @@ export async function deleteWorkout(
 
     if (error) {
       return { error: error.message };
+    }
+
+    // After deleting, sync remaining events for this trainee to update numbering
+    if (traineeId && trainerId) {
+      // Do this in the background (non-blocking)
+      import('../services/traineeCalendarSyncService').then(({ syncTraineeEventsToCalendar }) => {
+        syncTraineeEventsToCalendar(traineeId, trainerId, 'current_month')
+          .then(result => {
+            if (result.data && result.data.updated > 0) {
+              console.log(`Calendar sync after delete: updated ${result.data.updated} events`);
+            }
+          })
+          .catch(err => console.error('Calendar sync after delete failed:', err));
+      }).catch(err => console.error('Failed to load calendar sync service:', err));
     }
 
     return { success: true };
