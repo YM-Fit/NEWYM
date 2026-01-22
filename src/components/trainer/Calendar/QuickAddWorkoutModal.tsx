@@ -230,17 +230,17 @@ export default function QuickAddWorkoutModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-[var(--color-bg-surface)] rounded-2xl max-w-md w-full border border-[var(--color-border)] shadow-2xl">
+    <div className="fixed inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl max-w-md w-full border border-gray-200 dark:border-[var(--color-border)]/30 shadow-2xl animate-scale-in">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[var(--color-border)]">
+        <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-[var(--color-border)]/30">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500/20 rounded-lg">
-              <Plus className="h-5 w-5 text-emerald-400" />
+            <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-xl border border-emerald-500/30 dark:border-emerald-500/30">
+              <Plus className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">הוספת אימון מהירה</h2>
-              <p className="text-xs text-[var(--color-text-muted)]">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-[var(--color-text-primary)]">הוספת אימון מהירה</h2>
+              <p className="text-xs text-gray-600 dark:text-[var(--color-text-muted)]">
                 {selectedDate.toLocaleDateString('he-IL', { 
                   weekday: 'long',
                   day: 'numeric', 
@@ -251,9 +251,9 @@ export default function QuickAddWorkoutModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-[var(--color-bg-elevated)] rounded-lg transition-all"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300"
           >
-            <X className="h-5 w-5 text-[var(--color-text-muted)]" />
+            <X className="h-5 w-5 text-gray-600 dark:text-[var(--color-text-muted)]" />
           </button>
         </div>
 
@@ -261,15 +261,15 @@ export default function QuickAddWorkoutModal({
         <div className="p-5 space-y-5">
           {/* Trainee Selection */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-              <User className="h-4 w-4 text-emerald-400" />
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-[var(--color-text-primary)]">
+              <User className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               בחירת מתאמן
             </label>
             <select
               value={selectedTraineeId}
               onChange={(e) => setSelectedTraineeId(e.target.value)}
               disabled={traineesLoading}
-              className="w-full p-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+              className="w-full p-3 bg-white dark:bg-[var(--color-bg-elevated)] border border-gray-200 dark:border-[var(--color-border)]/30 rounded-xl text-gray-900 dark:text-[var(--color-text-primary)] focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300"
             >
               <option value="">-- בחר מתאמן --</option>
               {sortedTrainees.map((trainee) => (
@@ -283,18 +283,18 @@ export default function QuickAddWorkoutModal({
 
           {/* Duration Selection */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-              <Clock className="h-4 w-4 text-emerald-400" />
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-[var(--color-text-primary)]">
+              <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               משך האימון
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setDuration('30')}
-                className={`p-3 rounded-xl border transition-all ${
+                className={`p-3 rounded-xl border transition-all duration-300 ${
                   duration === '30'
-                    ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                    : 'bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-zinc-600'
+                    ? 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/20 dark:to-teal-500/20 border-emerald-200 dark:border-emerald-500/50 text-emerald-700 dark:text-emerald-400 font-semibold shadow-sm'
+                    : 'bg-white dark:bg-[var(--color-bg-elevated)] border border-gray-200 dark:border-[var(--color-border)]/30 text-gray-700 dark:text-[var(--color-text-primary)] hover:bg-gray-100 dark:hover:bg-[var(--color-bg-surface)]'
                 }`}
               >
                 30 דקות
@@ -302,10 +302,10 @@ export default function QuickAddWorkoutModal({
               <button
                 type="button"
                 onClick={() => setDuration('60')}
-                className={`p-3 rounded-xl border transition-all ${
+                className={`p-3 rounded-xl border transition-all duration-300 ${
                   duration === '60'
-                    ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                    : 'bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-zinc-600'
+                    ? 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/20 dark:to-teal-500/20 border-emerald-200 dark:border-emerald-500/50 text-emerald-700 dark:text-emerald-400 font-semibold shadow-sm'
+                    : 'bg-white dark:bg-[var(--color-bg-elevated)] border border-gray-200 dark:border-[var(--color-border)]/30 text-gray-700 dark:text-[var(--color-text-primary)] hover:bg-gray-100 dark:hover:bg-[var(--color-bg-surface)]'
                 }`}
               >
                 שעה
@@ -316,44 +316,44 @@ export default function QuickAddWorkoutModal({
           {/* Date & Time */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                <Calendar className="h-4 w-4 text-emerald-400" />
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-[var(--color-text-primary)]">
+                <Calendar className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 תאריך
               </label>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full p-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                className="w-full p-3 bg-white dark:bg-[var(--color-bg-elevated)] border border-gray-200 dark:border-[var(--color-border)]/30 rounded-xl text-gray-900 dark:text-[var(--color-text-primary)] focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300"
               />
             </div>
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                <Clock className="h-4 w-4 text-emerald-400" />
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-[var(--color-text-primary)]">
+                <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 שעה
               </label>
               <input
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full p-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                className="w-full p-3 bg-white dark:bg-[var(--color-bg-elevated)] border border-gray-200 dark:border-[var(--color-border)]/30 rounded-xl text-gray-900 dark:text-[var(--color-text-primary)] focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300"
               />
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-5 border-t border-[var(--color-border)]">
+        <div className="flex items-center justify-between p-5 border-t border-gray-200 dark:border-[var(--color-border)]/30">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 bg-[var(--color-bg-elevated)] hover:bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] rounded-xl transition-all"
+            className="px-5 py-2.5 bg-gray-100 dark:bg-[var(--color-bg-surface)] hover:bg-gray-200 dark:hover:bg-[var(--color-bg-elevated)] text-gray-700 dark:text-[var(--color-text-primary)] rounded-xl transition-all duration-300 border border-gray-200 dark:border-[var(--color-border)]/30"
           >
             ביטול
           </button>
           <button
             onClick={handleSave}
             disabled={saving || !selectedTraineeId}
-            className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
           >
             {saving ? (
               <>

@@ -319,17 +319,17 @@ export default function RecurringWorkoutModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-[var(--color-bg-surface)] rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col border border-[var(--color-border)] shadow-2xl">
+    <div className="fixed inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col border border-gray-200 dark:border-[var(--color-border)]/30 shadow-2xl animate-scale-in">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[var(--color-border)]">
+        <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-[var(--color-border)]/30">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-500/20 rounded-lg">
-              <Calendar className="h-5 w-5 text-purple-400" />
+            <div className="p-2 bg-gradient-to-br from-purple-500/20 to-purple-600/20 dark:from-purple-500/20 dark:to-purple-600/20 rounded-xl border border-purple-500/30 dark:border-purple-500/30">
+              <Calendar className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">קביעת אימונים חוזרים</h2>
-              <p className="text-xs text-[var(--color-text-muted)]">יצירת מספר אימונים בלחיצה אחת</p>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-[var(--color-text-primary)]">קביעת אימונים חוזרים</h2>
+              <p className="text-xs text-gray-600 dark:text-[var(--color-text-muted)]">יצירת מספר אימונים בלחיצה אחת</p>
             </div>
           </div>
           <button
@@ -337,9 +337,9 @@ export default function RecurringWorkoutModal({
               resetForm();
               onClose();
             }}
-            className="p-2 hover:bg-[var(--color-bg-elevated)] rounded-lg transition-all"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300"
           >
-            <X className="h-5 w-5 text-[var(--color-text-muted)]" />
+            <X className="h-5 w-5 text-gray-600 dark:text-[var(--color-text-muted)]" />
           </button>
         </div>
 
@@ -347,15 +347,15 @@ export default function RecurringWorkoutModal({
         <div className="flex-1 overflow-y-auto p-5 space-y-6">
           {/* Trainee Selection */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-              <User className="h-4 w-4 text-purple-400" />
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-[var(--color-text-primary)]">
+              <User className="h-4 w-4 text-purple-600 dark:text-purple-400" />
               בחירת מתאמן
             </label>
             <select
               value={selectedTraineeId}
               onChange={(e) => setSelectedTraineeId(e.target.value)}
               disabled={traineesLoading || creating}
-              className="w-full p-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:border-purple-500/50 focus:outline-none"
+              className="w-full p-3 bg-white dark:bg-[var(--color-bg-elevated)] border border-gray-200 dark:border-[var(--color-border)]/30 rounded-xl text-gray-900 dark:text-[var(--color-text-primary)] focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
             >
               <option value="">-- בחר מתאמן --</option>
               {trainees
@@ -371,14 +371,14 @@ export default function RecurringWorkoutModal({
           {/* Time Slots */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-                <Clock className="h-4 w-4 text-purple-400" />
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-[var(--color-text-primary)]">
+                <Clock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                 ימים ושעות
               </label>
               <button
                 onClick={addSlot}
                 disabled={creating}
-                className="flex items-center gap-1 px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg text-sm transition-all disabled:opacity-50"
+                className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-br from-purple-500/20 to-purple-600/20 dark:from-purple-500/20 dark:to-purple-600/20 hover:from-purple-500/30 hover:to-purple-600/30 text-purple-700 dark:text-purple-400 rounded-xl text-sm transition-all duration-300 disabled:opacity-50 border border-purple-500/30 dark:border-purple-500/30 shadow-sm"
               >
                 <Plus className="h-4 w-4" />
                 הוסף
@@ -386,8 +386,8 @@ export default function RecurringWorkoutModal({
             </div>
 
             {slots.length === 0 ? (
-              <div className="text-center py-6 text-[var(--color-text-muted)] bg-[var(--color-bg-elevated)]/30 rounded-xl border border-dashed border-[var(--color-border)]">
-                <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <div className="text-center py-6 text-gray-600 dark:text-[var(--color-text-muted)] bg-gray-50 dark:bg-[var(--color-bg-surface)] rounded-xl border border-dashed border-gray-200 dark:border-[var(--color-border)]/30">
+                <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50 text-gray-400 dark:text-[var(--color-text-muted)]" />
                 <p className="text-sm">לחץ על "הוסף" לקביעת יום ושעה</p>
               </div>
             ) : (
@@ -395,13 +395,13 @@ export default function RecurringWorkoutModal({
                 {slots.map((slot) => (
                   <div
                     key={slot.id}
-                    className="flex items-center gap-3 p-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl"
+                    className="flex items-center gap-3 p-3 bg-white dark:bg-[var(--color-bg-elevated)] border border-gray-200 dark:border-[var(--color-border)]/30 rounded-xl transition-all duration-300 shadow-sm"
                   >
                     <select
                       value={slot.dayOfWeek}
                       onChange={(e) => updateSlot(slot.id, 'dayOfWeek', parseInt(e.target.value))}
                       disabled={creating}
-                      className="flex-1 p-2 bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:border-purple-500/50 focus:outline-none"
+                      className="flex-1 p-2 bg-white dark:bg-[var(--color-bg-surface)] border border-gray-200 dark:border-[var(--color-border)]/30 rounded-lg text-gray-900 dark:text-[var(--color-text-primary)] focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
                     >
                       {DAY_NAMES.map((name, index) => (
                         <option key={index} value={index}>
@@ -414,12 +414,12 @@ export default function RecurringWorkoutModal({
                       value={slot.time}
                       onChange={(e) => updateSlot(slot.id, 'time', e.target.value)}
                       disabled={creating}
-                      className="w-32 p-2 bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:border-purple-500/50 focus:outline-none"
+                      className="w-32 p-2 bg-white dark:bg-[var(--color-bg-surface)] border border-gray-200 dark:border-[var(--color-border)]/30 rounded-lg text-gray-900 dark:text-[var(--color-text-primary)] focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
                     />
                     <button
                       onClick={() => removeSlot(slot.id)}
                       disabled={creating}
-                      className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-all disabled:opacity-50"
+                      className="p-2 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-500/20 dark:to-rose-500/20 hover:from-red-100 hover:to-rose-100 dark:hover:from-red-500/30 dark:hover:to-rose-500/30 text-red-600 dark:text-red-400 rounded-lg transition-all duration-300 disabled:opacity-50 border border-red-200 dark:border-red-500/30"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -431,8 +431,8 @@ export default function RecurringWorkoutModal({
 
           {/* Duration */}
           <div className="space-y-3">
-            <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-              <Calendar className="h-4 w-4 text-purple-400" />
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-[var(--color-text-primary)]">
+              <Calendar className="h-4 w-4 text-purple-600 dark:text-purple-400" />
               משך הזמן
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -446,10 +446,10 @@ export default function RecurringWorkoutModal({
                   key={option.value}
                   onClick={() => setDurationOption(option.value as DurationOption)}
                   disabled={creating}
-                  className={`p-3 rounded-xl border transition-all ${
+                  className={`p-3 rounded-xl border transition-all duration-300 ${
                     durationOption === option.value
-                      ? 'bg-purple-500/20 border-purple-500/50 text-purple-400'
-                      : 'bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-zinc-600'
+                      ? 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-500/20 dark:to-purple-600/20 border-purple-200 dark:border-purple-500/50 text-purple-700 dark:text-purple-400 font-semibold shadow-sm'
+                      : 'bg-white dark:bg-[var(--color-bg-elevated)] border border-gray-200 dark:border-[var(--color-border)]/30 text-gray-700 dark:text-[var(--color-text-primary)] hover:bg-gray-100 dark:hover:bg-[var(--color-bg-surface)]'
                   } disabled:opacity-50`}
                 >
                   {option.label}
@@ -466,17 +466,17 @@ export default function RecurringWorkoutModal({
                   value={customWeeks}
                   onChange={(e) => setCustomWeeks(Math.max(1, Math.min(52, parseInt(e.target.value) || 1)))}
                   disabled={creating}
-                  className="w-24 p-2 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:border-purple-500/50 focus:outline-none"
+                  className="w-24 p-2 bg-white dark:bg-[var(--color-bg-elevated)] border border-gray-200 dark:border-[var(--color-border)]/30 rounded-lg text-gray-900 dark:text-[var(--color-text-primary)] focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
                 />
-                <span className="text-[var(--color-text-muted)]">שבועות</span>
+                <span className="text-gray-600 dark:text-[var(--color-text-muted)]">שבועות</span>
               </div>
             )}
           </div>
 
           {/* Start Date */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-              <Calendar className="h-4 w-4 text-purple-400" />
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-[var(--color-text-primary)]">
+              <Calendar className="h-4 w-4 text-purple-600 dark:text-purple-400" />
               תאריך התחלה
             </label>
             <input
@@ -484,24 +484,24 @@ export default function RecurringWorkoutModal({
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               disabled={creating}
-              className="w-full p-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:border-purple-500/50 focus:outline-none"
+              className="w-full p-3 bg-white dark:bg-[var(--color-bg-elevated)] border border-gray-200 dark:border-[var(--color-border)]/30 rounded-xl text-gray-900 dark:text-[var(--color-text-primary)] focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
             />
           </div>
 
           {/* Workout Duration */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-              <Clock className="h-4 w-4 text-purple-400" />
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-[var(--color-text-primary)]">
+              <Clock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
               משך האימון
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setWorkoutDuration('30')}
                 disabled={creating}
-                className={`p-3 rounded-xl border transition-all ${
+                className={`p-3 rounded-xl border transition-all duration-300 ${
                   workoutDuration === '30'
-                    ? 'bg-purple-500/20 border-purple-500/50 text-purple-400'
-                    : 'bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-zinc-600'
+                    ? 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-500/20 dark:to-purple-600/20 border-purple-200 dark:border-purple-500/50 text-purple-700 dark:text-purple-400 font-semibold shadow-sm'
+                    : 'bg-white dark:bg-[var(--color-bg-elevated)] border border-gray-200 dark:border-[var(--color-border)]/30 text-gray-700 dark:text-[var(--color-text-primary)] hover:bg-gray-100 dark:hover:bg-[var(--color-bg-surface)]'
                 } disabled:opacity-50`}
               >
                 30 דקות
@@ -509,10 +509,10 @@ export default function RecurringWorkoutModal({
               <button
                 onClick={() => setWorkoutDuration('60')}
                 disabled={creating}
-                className={`p-3 rounded-xl border transition-all ${
+                className={`p-3 rounded-xl border transition-all duration-300 ${
                   workoutDuration === '60'
-                    ? 'bg-purple-500/20 border-purple-500/50 text-purple-400'
-                    : 'bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-zinc-600'
+                    ? 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-500/20 dark:to-purple-600/20 border-purple-200 dark:border-purple-500/50 text-purple-700 dark:text-purple-400 font-semibold shadow-sm'
+                    : 'bg-white dark:bg-[var(--color-bg-elevated)] border border-gray-200 dark:border-[var(--color-border)]/30 text-gray-700 dark:text-[var(--color-text-primary)] hover:bg-gray-100 dark:hover:bg-[var(--color-bg-surface)]'
                 } disabled:opacity-50`}
               >
                 שעה
@@ -525,27 +525,27 @@ export default function RecurringWorkoutModal({
             <div className="space-y-3">
               <button
                 onClick={() => setShowPreview(!showPreview)}
-                className="flex items-center justify-between w-full p-3 bg-[var(--color-bg-elevated)] rounded-xl border border-[var(--color-border)] hover:border-zinc-600 transition-all"
+                className="flex items-center justify-between w-full p-3 bg-white dark:bg-[var(--color-bg-elevated)] rounded-xl border border-gray-200 dark:border-[var(--color-border)]/30 hover:bg-gray-100 dark:hover:bg-[var(--color-bg-surface)] transition-all duration-300 shadow-sm"
               >
-                <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
-                  <Calendar className="h-4 w-4 text-purple-400" />
+                <div className="flex items-center gap-2 text-gray-700 dark:text-[var(--color-text-primary)]">
+                  <Calendar className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                   <span className="font-medium">תצוגה מקדימה</span>
-                  <span className="text-purple-400 font-bold">({workoutDates.length} אימונים)</span>
+                  <span className="text-purple-600 dark:text-purple-400 font-bold">({workoutDates.length} אימונים)</span>
                 </div>
-                <ChevronDown className={`h-5 w-5 text-[var(--color-text-muted)] transition-transform ${showPreview ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-5 w-5 text-gray-600 dark:text-[var(--color-text-muted)] transition-transform duration-300 ${showPreview ? 'rotate-180' : ''}`} />
               </button>
 
               {showPreview && (
-                <div className="max-h-48 overflow-y-auto space-y-1 p-3 bg-[var(--color-bg-elevated)]/30 rounded-xl border border-[var(--color-border)]">
+                <div className="max-h-48 overflow-y-auto space-y-1 p-3 bg-gray-50 dark:bg-[var(--color-bg-surface)] rounded-xl border border-gray-200 dark:border-[var(--color-border)]/30">
                   {workoutDates.map((item, index) => (
                     <div
                       key={index}
                       className="flex items-center justify-between p-2 text-sm"
                     >
-                      <span className="text-[var(--color-text-secondary)]">
+                      <span className="text-gray-700 dark:text-[var(--color-text-primary)]">
                         {DAY_NAMES_SHORT[item.date.getDay()]} {item.date.toLocaleDateString('he-IL')}
                       </span>
-                      <span className="text-[var(--color-text-muted)]">{item.slot.time}</span>
+                      <span className="text-gray-600 dark:text-[var(--color-text-muted)]">{item.slot.time}</span>
                     </div>
                   ))}
                 </div>
@@ -555,13 +555,13 @@ export default function RecurringWorkoutModal({
 
           {/* Validation Messages */}
           {!selectedTraineeId && (
-            <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400 text-sm">
+            <div className="flex items-center gap-2 p-3 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl text-amber-700 dark:text-amber-400 text-sm">
               <AlertCircle className="h-4 w-4" />
               יש לבחור מתאמן
             </div>
           )}
           {selectedTraineeId && slots.length === 0 && (
-            <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400 text-sm">
+            <div className="flex items-center gap-2 p-3 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl text-amber-700 dark:text-amber-400 text-sm">
               <AlertCircle className="h-4 w-4" />
               יש להוסיף לפחות יום ושעה אחד
             </div>
@@ -569,25 +569,25 @@ export default function RecurringWorkoutModal({
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-[var(--color-border)]">
+        <div className="p-5 border-t border-gray-200 dark:border-[var(--color-border)]/30">
           {creating ? (
             <div className="space-y-3">
-              <div className="flex items-center justify-between text-sm text-[var(--color-text-muted)]">
+              <div className="flex items-center justify-between text-sm text-gray-600 dark:text-[var(--color-text-muted)]">
                 <span>יוצר אימונים...</span>
                 <span>{progress.current} / {progress.total}</span>
               </div>
-              <div className="w-full bg-[var(--color-bg-elevated)] rounded-full h-2">
+              <div className="w-full bg-gray-200 dark:bg-[var(--color-bg-surface)] rounded-full h-2">
                 <div
-                  className="bg-purple-500 h-2 rounded-full transition-all"
+                  className="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${(progress.current / progress.total) * 100}%` }}
                 />
               </div>
             </div>
           ) : (
             <div className="flex items-center justify-between">
-              <div className="text-sm text-[var(--color-text-muted)]">
+              <div className="text-sm text-gray-600 dark:text-[var(--color-text-muted)]">
                 {workoutDates.length > 0 && selectedTraineeId ? (
-                  <span className="text-purple-400 font-medium">{workoutDates.length} אימונים ייווצרו</span>
+                  <span className="text-purple-600 dark:text-purple-400 font-medium">{workoutDates.length} אימונים ייווצרו</span>
                 ) : null}
               </div>
               <div className="flex gap-3">
@@ -596,14 +596,14 @@ export default function RecurringWorkoutModal({
                     resetForm();
                     onClose();
                   }}
-                  className="px-5 py-2.5 bg-[var(--color-bg-elevated)] hover:bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] rounded-xl transition-all"
+                  className="px-5 py-2.5 bg-gray-100 dark:bg-[var(--color-bg-surface)] hover:bg-gray-200 dark:hover:bg-[var(--color-bg-elevated)] text-gray-700 dark:text-[var(--color-text-primary)] rounded-xl transition-all duration-300 border border-gray-200 dark:border-[var(--color-border)]/30"
                 >
                   ביטול
                 </button>
                 <button
                   onClick={createWorkouts}
                   disabled={!selectedTraineeId || slots.length === 0 || workoutDates.length === 0}
-                  className="px-6 py-2.5 bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all flex items-center gap-2"
+                  className="px-6 py-2.5 bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg"
                 >
                   <Check className="h-5 w-5" />
                   צור {workoutDates.length} אימונים
