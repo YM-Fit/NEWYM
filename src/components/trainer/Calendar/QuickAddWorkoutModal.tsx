@@ -18,7 +18,8 @@ import { createGoogleCalendarEvent } from '../../../api/googleCalendarApi';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
-import { getTraineeSessionInfo, generateEventSummaryWithSession } from '../../../utils/traineeSessionUtils';
+import { generateGoogleCalendarEventTitle } from '../../../utils/traineeSessionUtils';
+import { syncTraineeEventsToCalendar } from '../../../services/traineeCalendarSyncService';
 
 interface QuickAddWorkoutModalProps {
   isOpen: boolean;
@@ -86,9 +87,12 @@ export default function QuickAddWorkoutModal({
       const endTime = new Date(startTime);
       endTime.setMinutes(endTime.getMinutes() + parseInt(duration));
 
-      // Get trainee session info for the event summary
-      const sessionInfo = await getTraineeSessionInfo(selectedTraineeId, user.id);
-      const eventSummary = generateEventSummaryWithSession(selectedTrainee.full_name, sessionInfo);
+      // Generate event summary with session number (e.g., "אימון - שם מתאמן 3/8")
+      const eventSummary = await generateGoogleCalendarEventTitle(
+        selectedTraineeId,
+        user.id,
+        startTime
+      );
 
       // Create event in Google Calendar
       logger.info('Creating Google Calendar event', { 
@@ -172,6 +176,20 @@ export default function QuickAddWorkoutModal({
         logger.error('Error creating sync record', syncError, 'QuickAddWorkoutModal');
         // Don't throw - workout and event were created
       }
+
+      // Trigger sync to update all events for this trainee with correct session numbers
+      // This runs in background and updates all future events
+      syncTraineeEventsToCalendar(selectedTraineeId, user.id, 'current_month_and_future')
+        .then(result => {
+          if (result.error) {
+            logger.warn('Background sync failed', { error: result.error }, 'QuickAddWorkoutModal');
+          } else {
+            logger.info('Background sync completed', { result: result.data }, 'QuickAddWorkoutModal');
+          }
+        })
+        .catch(err => {
+          logger.warn('Background sync error', err, 'QuickAddWorkoutModal');
+        });
 
       toast.success(`נוצר אימון עם ${selectedTrainee.full_name}`);
       

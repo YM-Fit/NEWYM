@@ -643,46 +643,54 @@ export async function generateGoogleCalendarEventTitle(
         const traineeWorkoutIds = new Set((links || []).map(l => l.workout_id));
         const traineeWorkouts = workouts.filter(w => traineeWorkoutIds.has(w.id));
 
-        if (traineeWorkouts.length > 0) {
-          // Sort workouts by date to ensure correct order
-          traineeWorkouts.sort((a, b) => 
-            new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime()
-          );
+        // Sort workouts by date to ensure correct order
+        traineeWorkouts.sort((a, b) => 
+          new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime()
+        );
 
-          let position = 1;
-          const totalInMonth = traineeWorkouts.length;
+        let position = 1;
+        let totalInMonth = traineeWorkouts.length;
 
-          // If we have workoutId, find its exact position
-          if (workoutId) {
-            const workoutIndex = traineeWorkouts.findIndex(w => w.id === workoutId);
-            if (workoutIndex >= 0) {
-              position = workoutIndex + 1;
-            }
-          } else {
-            // Fallback: find position by date (for backwards compatibility)
-            const eventDateMs = eventDate.getTime();
-            for (let i = 0; i < traineeWorkouts.length; i++) {
-              const workoutDateMs = new Date(traineeWorkouts[i].workout_date).getTime();
-              // If dates are within 1 hour of each other, consider it a match
-              if (Math.abs(workoutDateMs - eventDateMs) < 3600000) {
-                position = i + 1;
-                break;
-              }
-              // If workout is before event date, update position
-              if (workoutDateMs < eventDateMs) {
-                position = i + 2;
-              }
-            }
-            // Make sure position doesn't exceed total
-            if (position > totalInMonth) {
-              position = totalInMonth;
+        // If we have workoutId, find its exact position (existing workout)
+        if (workoutId) {
+          const workoutIndex = traineeWorkouts.findIndex(w => w.id === workoutId);
+          if (workoutIndex >= 0) {
+            position = workoutIndex + 1;
+          }
+        } else {
+          // No workoutId means this is a NEW workout being created
+          const eventDateMs = eventDate.getTime();
+          let foundMatch = false;
+          
+          // Check if event matches any existing workout
+          for (let i = 0; i < traineeWorkouts.length; i++) {
+            const workoutDateMs = new Date(traineeWorkouts[i].workout_date).getTime();
+            // If dates are within 1 hour of each other, consider it a match (existing workout)
+            if (Math.abs(workoutDateMs - eventDateMs) < 3600000) {
+              position = i + 1;
+              foundMatch = true;
+              break;
             }
           }
-
-          sessionText = totalInMonth > 1 
-            ? `${position}/${totalInMonth}`
-            : `${position}`;
+          
+          // If no exact match, this is a new workout - calculate its future position
+          if (!foundMatch) {
+            // Count how many workouts are before this date
+            const workoutsBefore = traineeWorkouts.filter(w => 
+              new Date(w.workout_date).getTime() < eventDateMs
+            ).length;
+            
+            position = workoutsBefore + 1;
+            totalInMonth = traineeWorkouts.length + 1; // Account for the new workout
+          }
         }
+
+        sessionText = totalInMonth > 1 
+          ? `${position}/${totalInMonth}`
+          : `${position}`;
+      } else if (!workoutId) {
+        // No existing workouts for this trainee in the month, but this is a new workout
+        sessionText = '1';
       }
     }
 

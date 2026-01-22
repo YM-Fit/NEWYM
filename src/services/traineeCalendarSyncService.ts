@@ -4,10 +4,9 @@
  */
 
 import { supabase } from '../lib/supabase';
-import { bulkUpdateCalendarEvents } from '../api/googleCalendarApi';
+import { updateGoogleCalendarEvent } from '../api/googleCalendarApi';
 import { 
   getTraineeSessionInfo, 
-  formatTraineeNameWithSession,
   generateGoogleCalendarEventTitle,
   sessionInfoCache
 } from '../utils/traineeSessionUtils';
@@ -131,29 +130,30 @@ export async function syncTraineeEventsToCalendar(
             event.workout_id || undefined
           );
 
-          // Update the event via bulk update (single event)
-          const updateResult = await bulkUpdateCalendarEvents(
-            traineeId,
+          // Update the event directly using its google_event_id
+          const updateResult = await updateGoogleCalendarEvent(
             trainerId,
-            {
-              summary: newTitle,
-              dateRange: {
-                start: eventDate,
-                end: new Date(eventDate.getTime() + 1000) // 1 second range
-              }
-            }
+            event.google_event_id,
+            { summary: newTitle }
           );
 
           if (updateResult.error) {
             failed++;
             errors.push(`Event ${event.google_event_id}: ${updateResult.error}`);
-          } else if (updateResult.data) {
-            updated += updateResult.data.updated;
-            failed += updateResult.data.failed;
-            errors.push(...updateResult.data.errors);
+          } else {
+            updated++;
+            
+            // Update the sync record with the new summary
+            await supabase
+              .from('google_calendar_sync')
+              .update({ 
+                event_summary: newTitle,
+                last_synced_at: new Date().toISOString()
+              })
+              .eq('id', event.id);
           }
 
-          // Small delay between updates
+          // Small delay between updates to respect rate limits
           await new Promise(resolve => setTimeout(resolve, 150));
         } catch (err) {
           failed++;

@@ -30,7 +30,8 @@ import {
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
-import { getTraineeSessionInfo, generateEventSummaryWithSession } from '../../../utils/traineeSessionUtils';
+import { generateGoogleCalendarEventTitle } from '../../../utils/traineeSessionUtils';
+import { syncTraineeEventsToCalendar } from '../../../services/traineeCalendarSyncService';
 import { findBestMatches } from '../../../utils/nameMatching';
 
 interface TraineeWorkoutHistoryModalProps {
@@ -375,9 +376,16 @@ export default function TraineeWorkoutHistoryModal({
 
     setActionLoading(selectedWorkout.id);
     try {
-      // Get session info for the new trainee
-      const sessionInfo = await getTraineeSessionInfo(replaceTraineeId, user.id);
-      const newEventSummary = generateEventSummaryWithSession(newTrainee.full_name, sessionInfo);
+      // Get the workout date for session number calculation
+      const workoutDate = new Date(selectedWorkout.date);
+      
+      // Generate event summary with correct session number
+      const newEventSummary = await generateGoogleCalendarEventTitle(
+        replaceTraineeId,
+        user.id,
+        workoutDate,
+        selectedWorkout.id
+      );
 
       // Update Google Calendar event with new trainee name
       if (selectedWorkout.googleEventId) {
@@ -427,6 +435,20 @@ export default function TraineeWorkoutHistoryModal({
       }
 
       toast.success(`האימון הועבר ל${newTrainee.full_name}`);
+      
+      // Sync both old and new trainee events to update session numbers
+      // Run in background
+      Promise.all([
+        // Sync the new trainee's events
+        syncTraineeEventsToCalendar(replaceTraineeId, user.id, 'current_month_and_future'),
+        // Sync the old trainee's events (if we have their ID)
+        resolvedTraineeId 
+          ? syncTraineeEventsToCalendar(resolvedTraineeId, user.id, 'current_month_and_future')
+          : Promise.resolve(null)
+      ]).catch(err => {
+        logger.warn('Background sync failed after trainee replacement', err, 'TraineeWorkoutHistoryModal');
+      });
+      
       setActionMode('view');
       setSelectedWorkout(null);
       loadWorkouts();
