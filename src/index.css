@@ -5,6 +5,13 @@
 
 @layer base {
   /* ============================================
+     Global Text Color Override - All text is black everywhere
+     ============================================ */
+  * {
+    color: #000000 !important;
+  }
+  
+  /* ============================================
      Accessibility - Focus Indicators
      ============================================ */
   *:focus-visible {
@@ -298,7 +305,7 @@
     color: #000000 !important;
   }
 
-  /* Fix white text with opacity on light backgrounds - but preserve on colored backgrounds */
+  /* Fix white text with opacity - all black */
   .light .bg-zinc-800 .text-white\/80,
   .light .bg-zinc-800\/50 .text-white\/80,
   .light .bg-zinc-800\/80 .text-white\/80,
@@ -306,8 +313,24 @@
   .light .bg-zinc-900 .text-white\/80,
   .light .bg-gray-800 .text-white\/80,
   .light .bg-gray-700 .text-white\/80,
-  .light .bg-gray-900 .text-white\/80 {
-    color: rgba(26, 46, 34, 0.85) !important;
+  .light .bg-gray-900 .text-white\/80,
+  .dark .bg-zinc-800 .text-white\/80,
+  .dark .bg-zinc-800\/50 .text-white\/80,
+  .dark .bg-zinc-800\/80 .text-white\/80,
+  .dark .bg-zinc-700 .text-white\/80,
+  .dark .bg-zinc-900 .text-white\/80,
+  .dark .bg-gray-800 .text-white\/80,
+  .dark .bg-gray-700 .text-white\/80,
+  .dark .bg-gray-900 .text-white\/80,
+  :root .bg-zinc-800 .text-white\/80,
+  :root .bg-zinc-800\/50 .text-white\/80,
+  :root .bg-zinc-800\/80 .text-white\/80,
+  :root .bg-zinc-700 .text-white\/80,
+  :root .bg-zinc-900 .text-white\/80,
+  :root .bg-gray-800 .text-white\/80,
+  :root .bg-gray-700 .text-white\/80,
+  :root .bg-gray-900 .text-white\/80 {
+    color: #000000 !important;
   }
 
   /* Fix bg with white opacity */
@@ -678,8 +701,14 @@
 
   .light .hover\:text-zinc-100:hover,
   .light .hover\:text-zinc-200:hover,
-  .light .hover\:text-zinc-300:hover {
-    color: #1a2e22 !important;
+  .light .hover\:text-zinc-300:hover,
+  .dark .hover\:text-zinc-100:hover,
+  .dark .hover\:text-zinc-200:hover,
+  .dark .hover\:text-zinc-300:hover,
+  :root .hover\:text-zinc-100:hover,
+  :root .hover\:text-zinc-200:hover,
+  :root .hover\:text-zinc-300:hover {
+    color: #000000 !important;
   }
 
   .light .hover\:border-zinc-700:hover {
@@ -713,8 +742,10 @@
     background-color: rgba(236, 240, 237, 0.8) !important;
   }
 
-  .light .group:hover .group-hover\:text-white {
-    color: #1a2e22 !important;
+  .light .group:hover .group-hover\:text-white,
+  .dark .group:hover .group-hover\:text-white,
+  :root .group:hover .group-hover\:text-white {
+    color: #000000 !important;
   }
 
   .light .group:hover .group-hover\:bg-zinc-800 {
