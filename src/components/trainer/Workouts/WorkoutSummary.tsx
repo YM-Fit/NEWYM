@@ -298,7 +298,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 <div className="w-8 h-8 bg-emerald-500/20 border border-emerald-500/30 rounded-lg flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-emerald-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white">נפח לפי קבוצת שריר</h3>
+                <h3 className="text-lg font-bold text-foreground">נפח לפי קבוצת שריר</h3>
               </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">

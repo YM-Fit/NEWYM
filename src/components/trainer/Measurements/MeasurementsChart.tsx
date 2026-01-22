@@ -82,8 +82,8 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-zinc-900/95 backdrop-blur-sm border border-zinc-700/50 rounded-xl p-4 shadow-2xl">
-          <p className="text-zinc-400 text-xs mb-3 font-medium">{label}</p>
+        <div className="bg-zinc-900/95 dark:bg-zinc-900/95 light:bg-white/95 backdrop-blur-sm border border-zinc-700/50 dark:border-zinc-700/50 light:border-zinc-200/50 rounded-xl p-4 shadow-2xl">
+          <p className="text-zinc-400 dark:text-zinc-400 light:text-zinc-600 text-xs mb-3 font-medium">{label}</p>
           {isPairWithBothMembers && payload.length > 1 ? (
             <div className="space-y-2">
               {payload.map((entry: any, index: number) => {
@@ -92,11 +92,11 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                 const color = index === 0 ? '#06b6d4' : '#f59e0b';
                 return (
                   <div key={index} className="flex items-baseline gap-2">
-                    <p className="text-xs text-zinc-500 font-medium">{memberName}:</p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-500 light:text-zinc-600 font-medium">{memberName}:</p>
                     <p className="font-bold text-xl" style={{ color }}>
                       {entry.value}
                     </p>
-                    <p className="text-xs text-zinc-500 font-medium">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-500 light:text-zinc-600 font-medium">
                       {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
                     </p>
                   </div>
@@ -108,13 +108,13 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
               <p className="font-bold text-2xl" style={{ color: getMetricColor(metric) }}>
                 {payload[0].value}
               </p>
-              <p className="text-sm text-zinc-500 font-medium">
+              <p className="text-sm text-zinc-500 dark:text-zinc-500 light:text-zinc-600 font-medium">
                 {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
               </p>
             </div>
           )}
-          <div className="mt-2 pt-2 border-t border-zinc-700/50">
-            <p className="text-xs text-zinc-500">{getMetricLabel(metric)}</p>
+          <div className="mt-2 pt-2 border-t border-zinc-700/50 dark:border-zinc-700/50 light:border-zinc-200/50">
+            <p className="text-xs text-zinc-500 dark:text-zinc-500 light:text-zinc-600">{getMetricLabel(metric)}</p>
           </div>
         </div>
       );

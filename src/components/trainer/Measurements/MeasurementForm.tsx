@@ -641,7 +641,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       </div>
 
       <div className="premium-card-static p-5">
-        <h3 className="text-lg font-semibold text-white mb-6">מדידות בסיסיות</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-6">מדידות בסיסיות</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className={highlightedFields.includes('weight') ? 'animate-highlight-pulse' : ''}>

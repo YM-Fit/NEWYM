@@ -170,94 +170,94 @@ export default function Dashboard({
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 animate-fade-in">
-      {/* Header with inline stats */}
-      <div className="premium-card-static p-5 md:p-6 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+    <div className="space-y-6 md:space-y-8 lg:space-y-10 animate-fade-in">
+      {/* Enhanced Header Section */}
+      <div className="premium-card-static p-5 md:p-6 lg:p-7 relative overflow-hidden
+                      border border-primary/10 hover:border-primary/20 transition-all duration-500">
+        <div className="absolute top-0 left-0 w-80 h-80 bg-gradient-to-br from-primary/15 via-emerald-500/8 to-transparent 
+                        rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+        <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-tl from-emerald-500/10 via-primary/5 to-transparent 
+                        rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
-        <div className="relative">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <Sparkles className="w-4 h-4 text-primary" />
-                <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-emerald-500/20 
+                            border border-primary/20 shadow-lg shadow-primary/10">
+                <Sparkles className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <span className="text-xs md:text-sm font-bold text-primary uppercase tracking-widest">
                   {getGreeting()}
                 </span>
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tight mt-1
+                             bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text text-transparent">
+                  {trainerName ? `שלום, ${trainerName}` : 'שלום'}
+                </h1>
               </div>
-              <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
-                {trainerName ? `שלום, ${trainerName}` : 'שלום'}
-              </h1>
-            </div>
-
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-surface/50 rounded-lg border border-border/10">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-xs text-secondary">
-                {new Date().toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })}
-              </span>
             </div>
           </div>
 
-          {/* Inline stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10 hover:bg-surface/70 transition-colors duration-200">
-              <div className="p-2 rounded-lg bg-primary/20">
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="flex items-center gap-2.5 px-4 py-2.5 bg-gradient-to-r from-surface/60 to-surface/40 
+                          rounded-xl border-2 border-border/20 hover:border-primary/30
+                          transition-all duration-300 hover:scale-105 shadow-sm">
+              <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-lg shadow-primary/50" />
+              <span className="text-sm font-semibold text-foreground">
+                {new Date().toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })}
+              </span>
+            </div>
+            
+            {/* Enhanced Quick Stats */}
+            <div className="hidden md:flex items-center gap-2.5">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-primary/15 to-emerald-500/10 
+                            border border-primary/20 hover:border-primary/30 transition-all duration-300 hover:scale-105
+                            shadow-sm">
                 <Users className="w-4 h-4 text-primary" />
+                <span className="text-base font-extrabold text-foreground">{trainees.length}</span>
               </div>
-              <div>
-                <p className="text-xs text-secondary">מתאמנים</p>
-                <p className="text-lg font-bold text-foreground">{trainees.length}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10 hover:bg-surface/70 transition-colors duration-200">
-              <div className="p-2 rounded-lg bg-info/20">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-info/15 to-cyan-500/10 
+                            border border-info/20 hover:border-info/30 transition-all duration-300 hover:scale-105
+                            shadow-sm">
                 <Activity className="w-4 h-4 text-info" />
-              </div>
-              <div>
-                <p className="text-xs text-secondary">אימונים היום</p>
-                <p className="text-lg font-bold text-foreground">{todayWorkouts}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10 hover:bg-surface/70 transition-colors duration-200">
-              <div className="p-2 rounded-lg bg-success/20">
-                <Target className="w-4 h-4 text-success" />
-              </div>
-              <div>
-                <p className="text-xs text-secondary">מדידות (7 ימים)</p>
-                <p className="text-lg font-bold text-foreground">{recentMeasurements}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10 hover:bg-surface/70 transition-colors duration-200">
-              <div className="p-2 rounded-lg bg-warning/20">
-                <AlertCircle className="w-4 h-4 text-warning" />
-              </div>
-              <div>
-                <p className="text-xs text-secondary">קריאות מאזניים</p>
-                <p className="text-lg font-bold text-foreground">{scaleReadings.length}</p>
+                <span className="text-base font-extrabold text-foreground">{todayWorkouts}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Today's Trainees Section - Main Feature */}
-      {onNewWorkout && onViewWorkoutPlan && onViewMealPlan && (
+      {/* Today's Trainees Section - MAIN FEATURE - Prominent */}
+      {onNewWorkout && onViewWorkoutPlan && onViewMealPlan ? (
         <TodayTraineesSection
           trainees={trainees}
           onNewWorkout={onNewWorkout}
           onViewWorkoutPlan={onViewWorkoutPlan}
           onViewMealPlan={onViewMealPlan}
         />
+      ) : (
+        <div className="premium-card-static p-8 md:p-10 text-center border border-primary/20">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/20 to-primary-dark/10 flex items-center justify-center">
+            <Users className="w-8 h-8 text-primary" />
+          </div>
+          <h3 className="text-xl font-bold text-foreground mb-3">מתאמנים של היום</h3>
+          <p className="text-secondary mb-6 max-w-md mx-auto">
+            אין אימונים מתוזמנים להיום
+          </p>
+        </div>
       )}
 
-      {/* Alerts and Scale Readings - Grouped */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Secondary Sections - Below */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        {/* Alerts */}
         {user && (
           <WeightAlerts
             trainerId={user.id}
             onTraineeClick={onTraineeClick}
           />
         )}
+        
+        {/* Scale Readings */}
         <RecentScaleReadings
           readings={scaleReadings}
           isListening={isScaleListening}
@@ -266,14 +266,35 @@ export default function Dashboard({
         />
       </div>
 
-      {/* Activity and Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* Stats and Activity - Bottom Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+        {/* Stats Cards */}
+        <div className="premium-card-static p-4 md:p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Target className="w-4 h-4 text-success" />
+            סטטיסטיקות מהירות
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-2 rounded-lg bg-surface/50">
+              <span className="text-xs text-secondary">מדידות (7 ימים)</span>
+              <span className="text-sm font-bold text-foreground">{recentMeasurements}</span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-lg bg-surface/50">
+              <span className="text-xs text-secondary">קריאות מאזניים</span>
+              <span className="text-sm font-bold text-foreground">{scaleReadings.length}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
         <div className="lg:col-span-2">
           <RecentActivity />
         </div>
-        <div>
-          <QuickActions onAction={handleQuickAction} />
-        </div>
+      </div>
+
+      {/* Quick Actions - Bottom */}
+      <div>
+        <QuickActions onAction={handleQuickAction} />
       </div>
 
     </div>

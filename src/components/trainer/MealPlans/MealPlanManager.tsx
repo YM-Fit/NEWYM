@@ -174,7 +174,7 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
                 <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30">
                   <UtensilsCrossed className="h-5 w-5 text-amber-400" />
                 </div>
-                <h2 className="text-xl font-bold text-white">תפריט חדש</h2>
+                <h2 className="text-xl font-bold text-foreground">תפריט חדש</h2>
               </div>
               <button
                 onClick={() => {

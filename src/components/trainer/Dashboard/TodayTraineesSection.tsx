@@ -275,28 +275,81 @@ export default function TodayTraineesSection({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-primary" />
-          <h2 className="text-xl font-bold text-foreground">מתאמנים של היום</h2>
+    <div className="premium-card-static p-6 md:p-8 lg:p-10 relative overflow-hidden
+                    border-2 border-primary/10 hover:border-primary/20 transition-all duration-500">
+      {/* Enhanced Background gradient effects */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-primary/10 via-emerald-500/5 to-transparent 
+                      rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-gradient-to-tl from-emerald-500/10 via-primary/5 to-transparent 
+                      rounded-full blur-3xl translate-x-1/2 translate-y-1/2 animate-pulse" 
+           style={{ animationDelay: '1s' }} />
+      
+      {/* Animated border glow */}
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 
+                      opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      
+      <div className="relative z-10">
+        {/* Enhanced Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+          <div className="flex-1">
+            <div className="flex items-center gap-4 mb-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl animate-pulse" />
+                <div className="relative p-3 rounded-2xl bg-gradient-to-br from-primary/30 via-primary/20 to-emerald-500/20 
+                              border-2 border-primary/30 shadow-lg shadow-primary/20">
+                  <Calendar className="w-7 h-7 text-primary" />
+                </div>
+              </div>
+              <div>
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight mb-1
+                            bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+                  מתאמנים של היום
+                </h2>
+                <p className="text-sm md:text-base text-secondary/80 font-medium">
+                  כל המתאמנים עם אימון מתוזמן להיום • ניהול מהיר ונוח
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="px-5 py-3 rounded-2xl bg-gradient-to-r from-primary/25 via-emerald-500/20 to-primary/25 
+                          border-2 border-primary/30 shadow-lg shadow-primary/10
+                          hover:scale-105 transition-transform duration-300">
+              <span className="text-2xl md:text-3xl font-extrabold text-primary">{todayTrainees.length}</span>
+              <span className="text-sm md:text-base text-secondary/80 font-semibold mr-2">מתאמנים</span>
+            </div>
+          </div>
         </div>
-        <span className="text-sm text-secondary bg-surface/50 px-3 py-1 rounded-lg">
-          {todayTrainees.length} מתאמנים
-        </span>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {todayTrainees.map((item, index) => (
-          <TraineeCardToday
-            key={`${item.trainee.id}-${item.workout.id}`}
-            todayTrainee={item}
-            index={index}
-            onNewWorkout={onNewWorkout}
-            onViewWorkoutPlan={onViewWorkoutPlan}
-            onViewMealPlan={onViewMealPlan}
-          />
-        ))}
+        {/* Trainees Grid */}
+        {todayTrainees.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 lg:gap-8">
+            {todayTrainees.map((item, index) => (
+              <TraineeCardToday
+                key={`${item.trainee.id}-${item.workout.id}`}
+                todayTrainee={item}
+                index={index}
+                onNewWorkout={onNewWorkout}
+                onViewWorkoutPlan={onViewWorkoutPlan}
+                onViewMealPlan={onViewMealPlan}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <div className="relative w-24 h-24 mx-auto mb-6">
+              <div className="absolute inset-0 bg-primary/20 rounded-3xl blur-2xl animate-pulse" />
+              <div className="relative w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/30 to-primary-dark/20 
+                            flex items-center justify-center border-2 border-primary/30 shadow-xl">
+                <Calendar className="w-12 h-12 text-primary" />
+              </div>
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold text-foreground mb-3">אין אימונים מתוזמנים להיום</h3>
+            <p className="text-sm md:text-base text-secondary/80 max-w-md mx-auto">
+              תוכל להוסיף אימון חדש מהרשימה הכללית או לתזמן אימונים מראש
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -320,55 +373,87 @@ function TraineeCardToday({
   const { trainee, workout, status, daysSinceLastWorkout, unseenWeightsCount } = todayTrainee;
   const isActive = daysSinceLastWorkout !== null && daysSinceLastWorkout <= 7;
 
+  // Get status colors and styles
+  const statusConfig = {
+    completed: {
+      bar: 'bg-gradient-to-r from-success to-emerald-500',
+      badge: 'bg-success/20 text-success border-success/30 shadow-success/20',
+      gradient: 'from-success/15 via-success/5 to-transparent',
+      glow: 'shadow-success/10'
+    },
+    scheduled: {
+      bar: 'bg-gradient-to-r from-primary to-emerald-500',
+      badge: 'bg-primary/20 text-primary border-primary/30 shadow-primary/20',
+      gradient: 'from-primary/15 via-primary/5 to-transparent',
+      glow: 'shadow-primary/10'
+    },
+    upcoming: {
+      bar: 'bg-gradient-to-r from-warning to-amber-500',
+      badge: 'bg-warning/20 text-warning border-warning/30 shadow-warning/20',
+      gradient: 'from-warning/15 via-warning/5 to-transparent',
+      glow: 'shadow-warning/10'
+    }
+  };
+
+  const config = statusConfig[status];
+
   return (
     <div
-      className="premium-card p-4 sm:p-5 md:p-6 relative overflow-hidden group 
-                  hover:scale-[1.02] transition-all duration-300
-                  animate-fade-in-up"
+      className="premium-card p-5 sm:p-6 md:p-7 relative overflow-hidden group 
+                  hover:scale-[1.03] hover:-translate-y-1
+                  transition-all duration-500 ease-out
+                  animate-fade-in-up
+                  border border-border/20 hover:border-primary/40"
       style={{ animationDelay: `${index * 100}ms` }}
       role="article"
       aria-label={`כרטיס מתאמן ${trainee.full_name}`}
     >
-      {/* Status indicator bar */}
-      <div className={`absolute top-0 left-0 right-0 h-1 ${
-        status === 'completed' ? 'bg-success' :
-        status === 'scheduled' ? 'bg-primary' :
-        'bg-warning'
-      }`} />
+      {/* Animated Status indicator bar */}
+      <div className={`absolute top-0 left-0 right-0 h-1.5 ${config.bar} 
+                      group-hover:h-2 transition-all duration-300`} />
 
-      {/* Gradient overlay */}
+      {/* Shimmer effect on hover */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 
+                      transition-opacity duration-500 pointer-events-none">
+        <div className={`absolute inset-0 bg-gradient-to-br ${config.gradient} 
+                        animate-pulse`} />
+      </div>
+
+      {/* Glow effect */}
       <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 
-                      transition-opacity duration-300 bg-gradient-to-br ${
-        status === 'completed' ? 'from-success/10 to-transparent' :
-        status === 'scheduled' ? 'from-primary/10 to-transparent' :
-        'from-warning/10 to-transparent'
-      }`} />
+                      transition-opacity duration-500 pointer-events-none
+                      ${config.glow} shadow-2xl`} />
 
       {/* Content */}
       <div className="relative z-10">
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between mb-5">
           <div className="flex items-center gap-4 flex-1 min-w-0">
-            {/* Avatar */}
+            {/* Enhanced Avatar with ring */}
             <div className="relative flex-shrink-0">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br 
-                             from-primary/20 to-primary-dark/10 
+              <div className={`absolute inset-0 rounded-2xl ${config.bar} opacity-0 
+                              group-hover:opacity-20 blur-xl transition-opacity duration-500`} />
+              <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 
+                             rounded-2xl bg-gradient-to-br 
+                             from-primary/25 via-primary/15 to-primary-dark/10 
                              flex items-center justify-center
-                             group-hover:from-primary/30 group-hover:to-primary-dark/20
-                             transition-all duration-300 shadow-lg">
+                             group-hover:from-primary/35 group-hover:via-primary/25 group-hover:to-primary-dark/20
+                             transition-all duration-500 shadow-xl
+                             border-2 border-primary/20 group-hover:border-primary/40">
                 {trainee.is_pair ? (
-                  <Users className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary" />
+                  <Users className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-primary" />
                 ) : (
-                  <span className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
+                  <span className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">
                     {trainee.full_name.charAt(0)}
                   </span>
                 )}
               </div>
               {unseenWeightsCount && unseenWeightsCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 
-                               bg-info rounded-full flex items-center justify-center 
-                               text-xs font-bold text-inverse border-2 border-elevated 
-                               animate-pulse">
+                <span className="absolute -top-1 -right-1 w-6 h-6 sm:w-7 sm:h-7
+                               bg-gradient-to-br from-info to-cyan-500 rounded-full 
+                               flex items-center justify-center 
+                               text-xs font-bold text-white border-2 border-elevated 
+                               animate-pulse shadow-lg shadow-info/50">
                   {unseenWeightsCount}
                 </span>
               )}
@@ -376,32 +461,36 @@ function TraineeCardToday({
 
             {/* Name & Info */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-base sm:text-lg md:text-xl font-bold text-foreground mb-1.5 sm:mb-2 truncate">
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-2 
+                           group-hover:text-primary transition-colors duration-300 truncate">
                 {trainee.full_name}
               </h3>
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg text-xs font-semibold ${
-                  status === 'completed' 
-                    ? 'bg-success/20 text-success border border-success/30' :
-                  status === 'scheduled'
-                    ? 'bg-primary/20 text-primary border border-primary/30' :
-                    'bg-warning/20 text-warning border border-warning/30'
-                }`}>
-                  {status === 'completed' ? 'הושלם' :
-                   status === 'scheduled' ? 'מתוזמן' :
-                   'מתקרב'}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wide
+                                border shadow-sm ${config.badge}
+                                group-hover:scale-105 transition-transform duration-200`}>
+                  {status === 'completed' ? '✓ הושלם' :
+                   status === 'scheduled' ? '📅 מתוזמן' :
+                   '⏰ מתקרב'}
                 </span>
                 {workout.workout_time && (
-                  <div className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-secondary">
-                    <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span>{workout.workout_time}</span>
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg 
+                                bg-surface/60 border border-border/20
+                                group-hover:bg-surface group-hover:border-primary/30
+                                transition-all duration-200">
+                    <Clock className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-xs sm:text-sm font-semibold text-foreground">
+                      {workout.workout_time}
+                    </span>
                   </div>
                 )}
                 {daysSinceLastWorkout !== null && (
-                  <div className={`text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg ${
+                  <div className={`px-2.5 py-1 rounded-lg text-xs font-semibold
+                                border shadow-sm transition-all duration-200
+                                group-hover:scale-105 ${
                     isActive
-                      ? 'bg-success/15 text-success'
-                      : 'bg-danger/15 text-danger'
+                      ? 'bg-success/15 text-success border-success/30'
+                      : 'bg-danger/15 text-danger border-danger/30'
                   }`}>
                     {daysSinceLastWorkout} ימים
                   </div>
@@ -411,9 +500,9 @@ function TraineeCardToday({
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          {/* אימון חדש */}
+        {/* Enhanced Action Buttons */}
+        <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+          {/* אימון חדש - Primary */}
           <button
             onClick={() => onNewWorkout(trainee)}
             onKeyDown={(e) => {
@@ -422,14 +511,18 @@ function TraineeCardToday({
                 onNewWorkout(trainee);
               }
             }}
-            className="btn-primary p-3 sm:p-4 rounded-lg sm:rounded-xl flex flex-col items-center gap-1.5 sm:gap-2
-                       hover:scale-105 active:scale-95 transition-all duration-200
-                       shadow-lg shadow-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/60
-                       focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-2"
+            className="btn-primary p-4 sm:p-5 rounded-xl flex flex-col items-center gap-2
+                       hover:scale-110 active:scale-95 transition-all duration-300
+                       shadow-lg shadow-emerald-500/50 hover:shadow-2xl hover:shadow-emerald-500/70
+                       focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-2
+                       group/btn relative overflow-hidden"
             aria-label={`הוסף אימון חדש ל${trainee.full_name}`}
           >
-            <Dumbbell className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
-            <span className="text-xs sm:text-sm font-semibold">אימון חדש</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
+                          translate-x-[-100%] group-hover/btn:translate-x-[100%] 
+                          transition-transform duration-700" />
+            <Dumbbell className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" aria-hidden="true" />
+            <span className="text-xs sm:text-sm font-bold relative z-10">אימון חדש</span>
           </button>
 
           {/* תוכנית אימון */}
@@ -441,14 +534,19 @@ function TraineeCardToday({
                 onViewWorkoutPlan(trainee);
               }
             }}
-            className="bg-surface/50 hover:bg-surface border border-border/10 
-                       hover:border-primary/30 p-3 sm:p-4 rounded-lg sm:rounded-xl flex flex-col items-center gap-1.5 sm:gap-2
-                       transition-all duration-200 hover:scale-105 active:scale-95
-                       focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
+            className="bg-surface/60 hover:bg-surface border-2 border-border/20 
+                       hover:border-primary/50 p-4 sm:p-5 rounded-xl flex flex-col items-center gap-2
+                       transition-all duration-300 hover:scale-105 active:scale-95
+                       hover:shadow-lg hover:shadow-primary/20
+                       focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
+                       group/btn relative overflow-hidden"
             aria-label={`צפה בתוכנית אימון של ${trainee.full_name}`}
           >
-            <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 text-primary" aria-hidden="true" />
-            <span className="text-xs sm:text-sm font-semibold text-foreground">תוכנית</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent 
+                          translate-x-[-100%] group-hover/btn:translate-x-[100%] 
+                          transition-transform duration-700" />
+            <ClipboardList className="w-5 h-5 sm:w-6 sm:h-6 text-primary relative z-10" aria-hidden="true" />
+            <span className="text-xs sm:text-sm font-bold text-foreground relative z-10">תוכנית</span>
           </button>
 
           {/* תפריט */}
@@ -460,14 +558,19 @@ function TraineeCardToday({
                 onViewMealPlan(trainee);
               }
             }}
-            className="bg-surface/50 hover:bg-surface border border-border/10 
-                       hover:border-primary/30 p-3 sm:p-4 rounded-lg sm:rounded-xl flex flex-col items-center gap-1.5 sm:gap-2
-                       transition-all duration-200 hover:scale-105 active:scale-95
-                       focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
+            className="bg-surface/60 hover:bg-surface border-2 border-border/20 
+                       hover:border-primary/50 p-4 sm:p-5 rounded-xl flex flex-col items-center gap-2
+                       transition-all duration-300 hover:scale-105 active:scale-95
+                       hover:shadow-lg hover:shadow-primary/20
+                       focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
+                       group/btn relative overflow-hidden"
             aria-label={`צפה בתפריט של ${trainee.full_name}`}
           >
-            <UtensilsCrossed className="w-4 h-4 sm:w-5 sm:h-5 text-primary" aria-hidden="true" />
-            <span className="text-xs sm:text-sm font-semibold text-foreground">תפריט</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent 
+                          translate-x-[-100%] group-hover/btn:translate-x-[100%] 
+                          transition-transform duration-700" />
+            <UtensilsCrossed className="w-5 h-5 sm:w-6 sm:h-6 text-primary relative z-10" aria-hidden="true" />
+            <span className="text-xs sm:text-sm font-bold text-foreground relative z-10">תפריט</span>
           </button>
         </div>
       </div>
