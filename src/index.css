@@ -20,12 +20,14 @@
      These automatically fix Tailwind classes
      ============================================ */
 
-  /* Text colors - override white to dark, but preserve on colored backgrounds */
-  .light .text-white {
-    color: #1a2e22 !important;
+  /* Text colors - override all text to black */
+  .light .text-white,
+  .dark .text-white,
+  :root .text-white {
+    color: #000000 !important;
   }
 
-  /* Override text-white on light backgrounds, but preserve on colored elements */
+  /* Override text-white on all backgrounds to black */
   .light .bg-zinc-800 .text-white,
   .light .bg-zinc-800\/50 .text-white,
   .light .bg-zinc-800\/80 .text-white,
@@ -39,33 +41,67 @@
   .light .bg-white .text-white,
   .light .bg-\[\#ffffff\] .text-white,
   .light .bg-\[\#f8faf9\] .text-white,
-  .light .bg-\[\#ecf0ed\] .text-white {
-    color: #1a2e22 !important;
+  .light .bg-\[\#ecf0ed\] .text-white,
+  .dark .bg-zinc-800 .text-white,
+  .dark .bg-zinc-800\/50 .text-white,
+  .dark .bg-zinc-800\/80 .text-white,
+  .dark .bg-zinc-700 .text-white,
+  .dark .bg-zinc-900 .text-white,
+  .dark .bg-zinc-900\/90 .text-white,
+  .dark .bg-zinc-900\/80 .text-white,
+  .dark .bg-gray-800 .text-white,
+  .dark .bg-gray-700 .text-white,
+  .dark .bg-gray-900 .text-white,
+  :root .bg-zinc-800 .text-white,
+  :root .bg-zinc-800\/50 .text-white,
+  :root .bg-zinc-800\/80 .text-white,
+  :root .bg-zinc-700 .text-white,
+  :root .bg-zinc-900 .text-white,
+  :root .bg-zinc-900\/90 .text-white,
+  :root .bg-zinc-900\/80 .text-white,
+  :root .bg-gray-800 .text-white,
+  :root .bg-gray-700 .text-white,
+  :root .bg-gray-900 .text-white {
+    color: #000000 !important;
   }
 
   .light .text-zinc-100,
-  .light .text-zinc-200 {
-    color: #1a2e22 !important;
+  .light .text-zinc-200,
+  .dark .text-zinc-100,
+  .dark .text-zinc-200,
+  :root .text-zinc-100,
+  :root .text-zinc-200 {
+    color: #000000 !important;
   }
 
-  .light .text-zinc-300 {
-    color: #2d4a38 !important;
+  .light .text-zinc-300,
+  .dark .text-zinc-300,
+  :root .text-zinc-300 {
+    color: #000000 !important;
   }
 
-  .light .text-zinc-400 {
-    color: #3d5347 !important;
+  .light .text-zinc-400,
+  .dark .text-zinc-400,
+  :root .text-zinc-400 {
+    color: #000000 !important;
   }
 
-  .light .text-zinc-500 {
-    color: #6b7f72 !important;
+  .light .text-zinc-500,
+  .dark .text-zinc-500,
+  :root .text-zinc-500 {
+    color: #000000 !important;
   }
 
-  .light .text-gray-400 {
-    color: #3d5347 !important;
+  .light .text-gray-400,
+  .dark .text-gray-400,
+  :root .text-gray-400 {
+    color: #000000 !important;
   }
 
-  .light .text-gray-500 {
-    color: #6b7f72 !important;
+  .light .text-gray-500,
+  .dark .text-gray-500,
+  :root .text-gray-500 {
+    color: #000000 !important;
   }
 
   /* Background colors */
@@ -137,8 +173,10 @@
   }
 
   /* Hover states */
-  .light .hover\:text-white:hover {
-    color: #1a2e22 !important;
+  .light .hover\:text-white:hover,
+  .dark .hover\:text-white:hover,
+  :root .hover\:text-white:hover {
+    color: #000000 !important;
   }
 
   /* Fix hover states for buttons on light backgrounds */
@@ -150,8 +188,16 @@
   .light .hover\:text-zinc-100:hover,
   .light .hover\:text-zinc-200:hover,
   .light .hover\:text-gray-100:hover,
-  .light .hover\:text-gray-200:hover {
-    color: #1a2e22 !important;
+  .light .hover\:text-gray-200:hover,
+  .dark .hover\:text-zinc-100:hover,
+  .dark .hover\:text-zinc-200:hover,
+  .dark .hover\:text-gray-100:hover,
+  .dark .hover\:text-gray-200:hover,
+  :root .hover\:text-zinc-100:hover,
+  :root .hover\:text-zinc-200:hover,
+  :root .hover\:text-gray-100:hover,
+  :root .hover\:text-gray-200:hover {
+    color: #000000 !important;
   }
 
   .light .hover\:bg-zinc-800:hover {
@@ -187,8 +233,12 @@
 
   /* Additional text colors */
   .light .text-e4e4e7,
-  .light [class*="text-\[#e4e4e7\]"] {
-    color: #3d5347 !important;
+  .light [class*="text-\[#e4e4e7\]"],
+  .dark .text-e4e4e7,
+  .dark [class*="text-\[#e4e4e7\]"],
+  :root .text-e4e4e7,
+  :root [class*="text-\[#e4e4e7\]"] {
+    color: #000000 !important;
   }
 
   /* Divide colors */
@@ -218,8 +268,12 @@
 
   /* Fix zinc text with opacity */
   .light .text-zinc-400\/60,
-  .light .text-zinc-500\/60 {
-    color: rgba(61, 83, 71, 0.7) !important;
+  .light .text-zinc-500\/60,
+  .dark .text-zinc-400\/60,
+  .dark .text-zinc-500\/60,
+  :root .text-zinc-400\/60,
+  :root .text-zinc-500\/60 {
+    color: #000000 !important;
   }
 
   /* Fix white with opacity */
@@ -228,8 +282,20 @@
   .light .text-white\/60,
   .light .text-white\/50,
   .light .text-white\/40,
-  .light .text-white\/30 {
-    color: rgba(26, 46, 34, 0.85) !important;
+  .light .text-white\/30,
+  .dark .text-white\/80,
+  .dark .text-white\/70,
+  .dark .text-white\/60,
+  .dark .text-white\/50,
+  .dark .text-white\/40,
+  .dark .text-white\/30,
+  :root .text-white\/80,
+  :root .text-white\/70,
+  :root .text-white\/60,
+  :root .text-white\/50,
+  :root .text-white\/40,
+  :root .text-white\/30 {
+    color: #000000 !important;
   }
 
   /* Fix white text with opacity on light backgrounds - but preserve on colored backgrounds */
@@ -267,7 +333,7 @@
     stroke: #6b7f72 !important;
   }
 
-  /* Preserve white text on colored backgrounds */
+  /* All text is black, even on colored backgrounds */
   .light .bg-gradient-to-br .text-white,
   .light .bg-gradient-to-r .text-white,
   .light .bg-emerald-500 .text-white,
@@ -297,11 +363,69 @@
   .light .action-btn-rose .text-white,
   .light [class*="from-emerald"] .text-white,
   .light [class*="bg-gradient"] .text-white,
-  .light [class*="\[\.light_\&\]\:text-white"] {
-    color: #ffffff !important;
+  .light [class*="\[\.light_\&\]\:text-white"],
+  .dark .bg-gradient-to-br .text-white,
+  .dark .bg-gradient-to-r .text-white,
+  .dark .bg-emerald-500 .text-white,
+  .dark .bg-emerald-600 .text-white,
+  .dark .bg-emerald-700 .text-white,
+  .dark .bg-emerald-400 .text-white,
+  .dark .bg-green-500 .text-white,
+  .dark .bg-green-600 .text-white,
+  .dark .bg-cyan-500 .text-white,
+  .dark .bg-cyan-600 .text-white,
+  .dark .bg-amber-500 .text-white,
+  .dark .bg-amber-600 .text-white,
+  .dark .bg-teal-500 .text-white,
+  .dark .bg-teal-600 .text-white,
+  .dark .bg-rose-500 .text-white,
+  .dark .bg-rose-600 .text-white,
+  .dark .bg-red-500 .text-white,
+  .dark .bg-red-600 .text-white,
+  .dark .bg-slate-500 .text-white,
+  .dark .bg-slate-600 .text-white,
+  .dark .bg-lime-500 .text-white,
+  .dark .bg-lime-600 .text-white,
+  .dark .btn-primary .text-white,
+  .dark .action-btn-emerald .text-white,
+  .dark .action-btn-cyan .text-white,
+  .dark .action-btn-amber .text-white,
+  .dark .action-btn-rose .text-white,
+  .dark [class*="from-emerald"] .text-white,
+  .dark [class*="bg-gradient"] .text-white,
+  :root .bg-gradient-to-br .text-white,
+  :root .bg-gradient-to-r .text-white,
+  :root .bg-emerald-500 .text-white,
+  :root .bg-emerald-600 .text-white,
+  :root .bg-emerald-700 .text-white,
+  :root .bg-emerald-400 .text-white,
+  :root .bg-green-500 .text-white,
+  :root .bg-green-600 .text-white,
+  :root .bg-cyan-500 .text-white,
+  :root .bg-cyan-600 .text-white,
+  :root .bg-amber-500 .text-white,
+  :root .bg-amber-600 .text-white,
+  :root .bg-teal-500 .text-white,
+  :root .bg-teal-600 .text-white,
+  :root .bg-rose-500 .text-white,
+  :root .bg-rose-600 .text-white,
+  :root .bg-red-500 .text-white,
+  :root .bg-red-600 .text-white,
+  :root .bg-slate-500 .text-white,
+  :root .bg-slate-600 .text-white,
+  :root .bg-lime-500 .text-white,
+  :root .bg-lime-600 .text-white,
+  :root .btn-primary .text-white,
+  :root .action-btn-emerald .text-white,
+  :root .action-btn-cyan .text-white,
+  :root .action-btn-amber .text-white,
+  :root .action-btn-rose .text-white,
+  :root [class*="from-emerald"] .text-white,
+  :root [class*="bg-gradient"] .text-white {
+    color: #000000 !important;
   }
 
-  /* Fix: Keep white on gradient buttons and colored buttons */
+  /* All buttons have black text */
   .light .btn-primary,
   .light .btn-lime,
   .light .btn-danger,
@@ -319,8 +443,44 @@
   .light button[class*="bg-red"],
   .light button[class*="bg-green"],
   .light button[class*="bg-lime"],
-  .light button[class*="bg-slate"] {
-    color: #ffffff !important;
+  .light button[class*="bg-slate"],
+  .dark .btn-primary,
+  .dark .btn-lime,
+  .dark .btn-danger,
+  .dark .action-btn-emerald,
+  .dark .action-btn-cyan,
+  .dark .action-btn-amber,
+  .dark .action-btn-teal,
+  .dark .action-btn-rose,
+  .dark .action-btn-slate,
+  .dark button[class*="bg-emerald"],
+  .dark button[class*="bg-cyan"],
+  .dark button[class*="bg-amber"],
+  .dark button[class*="bg-teal"],
+  .dark button[class*="bg-rose"],
+  .dark button[class*="bg-red"],
+  .dark button[class*="bg-green"],
+  .dark button[class*="bg-lime"],
+  .dark button[class*="bg-slate"],
+  :root .btn-primary,
+  :root .btn-lime,
+  :root .btn-danger,
+  :root .action-btn-emerald,
+  :root .action-btn-cyan,
+  :root .action-btn-amber,
+  :root .action-btn-teal,
+  :root .action-btn-rose,
+  :root .action-btn-slate,
+  :root button[class*="bg-emerald"],
+  :root button[class*="bg-cyan"],
+  :root button[class*="bg-amber"],
+  :root button[class*="bg-teal"],
+  :root button[class*="bg-rose"],
+  :root button[class*="bg-red"],
+  :root button[class*="bg-green"],
+  :root button[class*="bg-lime"],
+  :root button[class*="bg-slate"] {
+    color: #000000 !important;
   }
 
   /* Fix buttons with light backgrounds - ensure dark text */
@@ -344,9 +504,11 @@
     color: #1a2e22 !important;
   }
 
-  /* Keep white on colored badges */
-  .light .calendar-day.has-workout {
-    color: #ffffff !important;
+  /* All badges have black text */
+  .light .calendar-day.has-workout,
+  .dark .calendar-day.has-workout,
+  :root .calendar-day.has-workout {
+    color: #000000 !important;
   }
 
   /* ============================================
@@ -388,62 +550,98 @@
     background-color: #ecf0ed !important;
   }
 
-  /* Text color overrides for zinc-600 and below */
-  .light .text-zinc-600 {
-    color: #6b7f72 !important;
+  /* Text color overrides for zinc-600 and below - all black */
+  .light .text-zinc-600,
+  .dark .text-zinc-600,
+  :root .text-zinc-600 {
+    color: #000000 !important;
   }
 
-  .light .text-zinc-700 {
-    color: #4a5e52 !important;
+  .light .text-zinc-700,
+  .dark .text-zinc-700,
+  :root .text-zinc-700 {
+    color: #000000 !important;
   }
 
-  .light .text-zinc-800 {
-    color: #3d5347 !important;
+  .light .text-zinc-800,
+  .dark .text-zinc-800,
+  :root .text-zinc-800 {
+    color: #000000 !important;
   }
 
-  .light .text-zinc-900 {
-    color: #1a2e22 !important;
+  .light .text-zinc-900,
+  .dark .text-zinc-900,
+  :root .text-zinc-900 {
+    color: #000000 !important;
   }
 
-  .light .text-gray-300 {
-    color: #2d4a38 !important;
+  .light .text-gray-300,
+  .dark .text-gray-300,
+  :root .text-gray-300 {
+    color: #000000 !important;
   }
 
-  .light .text-gray-200 {
-    color: #1a2e22 !important;
+  .light .text-gray-200,
+  .dark .text-gray-200,
+  :root .text-gray-200 {
+    color: #000000 !important;
   }
 
-  .light .text-gray-100 {
-    color: #1a2e22 !important;
+  .light .text-gray-100,
+  .dark .text-gray-100,
+  :root .text-gray-100 {
+    color: #000000 !important;
   }
 
-  .light .text-gray-600 {
-    color: #6b7f72 !important;
+  .light .text-gray-600,
+  .dark .text-gray-600,
+  :root .text-gray-600 {
+    color: #000000 !important;
   }
 
   .light .text-zinc-200 {
     color: #2d4a38 !important;
   }
 
-  /* Additional text color fixes for light backgrounds */
+  /* Additional text color fixes - all black */
   .light .text-zinc-100\/80,
   .light .text-zinc-100\/90,
   .light .text-zinc-200\/80,
-  .light .text-zinc-200\/90 {
-    color: rgba(26, 46, 34, 0.9) !important;
+  .light .text-zinc-200\/90,
+  .dark .text-zinc-100\/80,
+  .dark .text-zinc-100\/90,
+  .dark .text-zinc-200\/80,
+  .dark .text-zinc-200\/90,
+  :root .text-zinc-100\/80,
+  :root .text-zinc-100\/90,
+  :root .text-zinc-200\/80,
+  :root .text-zinc-200\/90 {
+    color: #000000 !important;
   }
 
-  /* Fix text-gray-100 and text-gray-200 on light backgrounds */
+  /* Fix text-gray-100 and text-gray-200 - all black */
   .light .text-gray-100,
-  .light .text-gray-200 {
-    color: #1a2e22 !important;
+  .light .text-gray-200,
+  .dark .text-gray-100,
+  .dark .text-gray-200,
+  :root .text-gray-100,
+  :root .text-gray-200 {
+    color: #000000 !important;
   }
 
   .light .text-gray-100\/80,
   .light .text-gray-100\/90,
   .light .text-gray-200\/80,
-  .light .text-gray-200\/90 {
-    color: rgba(26, 46, 34, 0.9) !important;
+  .light .text-gray-200\/90,
+  .dark .text-gray-100\/80,
+  .dark .text-gray-100\/90,
+  .dark .text-gray-200\/80,
+  .dark .text-gray-200\/90,
+  :root .text-gray-100\/80,
+  :root .text-gray-100\/90,
+  :root .text-gray-200\/80,
+  :root .text-gray-200\/90 {
+    color: #000000 !important;
   }
 
   /* Border color extensions */
@@ -581,12 +779,18 @@
     border-color: rgba(16, 185, 129, 0.15) !important;
   }
 
-  /* Input and form fields in light mode */
+  /* Input and form fields - all black text */
   .light input,
   .light textarea,
-  .light select {
+  .light select,
+  .dark input,
+  .dark textarea,
+  .dark select,
+  :root input,
+  :root textarea,
+  :root select {
     background-color: rgba(255, 255, 255, 0.95) !important;
-    color: #1a2e16 !important;
+    color: #000000 !important;
     border-color: rgba(74, 107, 42, 0.2) !important;
   }
 
@@ -602,10 +806,12 @@
     background-color: #ffffff !important;
   }
 
-  /* Table styles */
-  .light th {
+  /* Table styles - all black text */
+  .light th,
+  .dark th,
+  :root th {
     background-color: rgba(232, 240, 224, 0.8) !important;
-    color: #1a2e16 !important;
+    color: #000000 !important;
   }
 
   .light td {
@@ -681,13 +887,17 @@
     color: rgba(26, 46, 34, 0.9) !important;
   }
 
-  /* Ensure emerald text stays visible */
-  .light .text-emerald-400 {
-    color: #6b8e4a !important;
+  /* Ensure emerald text is black */
+  .light .text-emerald-400,
+  .dark .text-emerald-400,
+  :root .text-emerald-400 {
+    color: #000000 !important;
   }
 
-  .light .text-emerald-300 {
-    color: #7fa05a !important;
+  .light .text-emerald-300,
+  .dark .text-emerald-300,
+  :root .text-emerald-300 {
+    color: #000000 !important;
   }
 
   /* Dropdown and menu backgrounds */
@@ -784,20 +994,28 @@
     background-color: rgba(74, 107, 42, 0.1) !important;
   }
 
-  /* Fix lime/emerald text on light mode */
+  /* Fix lime/emerald text - all black */
   .light .text-lime-500,
-  .light .text-lime-400 {
-    color: #6b8e4a !important;
+  .light .text-lime-400,
+  .dark .text-lime-500,
+  .dark .text-lime-400,
+  :root .text-lime-500,
+  :root .text-lime-400 {
+    color: #000000 !important;
   }
 
-  /* Fix dark text classes */
-  .light .text-dark-500 {
-    color: #1a2e22 !important;
+  /* Fix dark text classes - all black */
+  .light .text-dark-500,
+  .dark .text-dark-500,
+  :root .text-dark-500 {
+    color: #000000 !important;
   }
 
-  /* Fix teal colors */
-  .light .text-teal-400 {
-    color: #0d9488 !important;
+  /* Fix teal colors - all black */
+  .light .text-teal-400,
+  .dark .text-teal-400,
+  :root .text-teal-400 {
+    color: #000000 !important;
   }
 
   /* ============================================
@@ -890,7 +1108,7 @@
     -moz-osx-font-smoothing: grayscale;
     background: rgb(var(--color-bg-base));
     min-height: 100vh;
-    color: rgb(var(--color-text-primary));
+    color: #000000 !important;
     font-feature-settings: 'cv11', 'ss01';
     letter-spacing: -0.01em;
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -902,7 +1120,7 @@
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1.2;
-    color: rgb(var(--color-text-primary));
+    color: #000000 !important;
   }
 
   h1 {
@@ -944,7 +1162,7 @@
   p {
     line-height: 1.6;
     margin-bottom: 1rem;    /* 16px */
-    color: rgb(var(--color-text-primary));
+    color: #000000 !important;
   }
 
   /* Standardized spacing for common elements */

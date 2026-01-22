@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Dumbbell, ClipboardList, UtensilsCrossed, Clock, Users, Calendar, AlertCircle, Scale } from 'lucide-react';
 import { Trainee } from '../../../types';
 import { supabase } from '../../../lib/supabase';
@@ -71,16 +71,21 @@ export default function TodayTraineesSection({
   const [todayTrainees, setTodayTrainees] = useState<TodayTrainee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isLoadingRef = useRef(false);
+  const lastTraineeIdsRef = useRef<string>('');
 
-  useEffect(() => {
-    if (trainees.length > 0) {
-      loadTodayTrainees();
-    } else {
-      setLoading(false);
-    }
+  // Create a stable dependency based on trainee IDs
+  const traineeIdsString = useMemo(() => {
+    return trainees.map(t => t.id).sort().join(',');
   }, [trainees]);
 
-  const loadTodayTrainees = async () => {
+  const loadTodayTrainees = useCallback(async () => {
+    // Prevent multiple simultaneous requests
+    if (isLoadingRef.current) {
+      return;
+    }
+
+    isLoadingRef.current = true;
     setLoading(true);
     setError(null);
     
@@ -242,10 +247,28 @@ export default function TodayTraineesSection({
     } catch (err: any) {
       logger.error('Error loading today trainees:', err, 'TodayTraineesSection');
       setError('שגיאה בטעינת המתאמנים של היום');
+      // Don't retry on error - user can manually refresh if needed
+      setTodayTrainees([]);
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
-  };
+  }, [trainees]);
+
+  useEffect(() => {
+    // Skip if already loading or if trainee IDs haven't changed
+    if (isLoadingRef.current || lastTraineeIdsRef.current === traineeIdsString) {
+      return;
+    }
+
+    if (trainees.length > 0) {
+      lastTraineeIdsRef.current = traineeIdsString;
+      loadTodayTrainees();
+    } else {
+      setLoading(false);
+      setTodayTrainees([]);
+    }
+  }, [traineeIdsString, trainees.length, loadTodayTrainees]);
 
   if (loading) {
     return (

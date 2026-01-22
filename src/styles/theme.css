@@ -59,10 +59,10 @@
     --color-bg-input: 26 46 22;
     --color-bg-overlay: 0 0 0;
 
-    --color-text-primary: 255 255 255;
-    --color-text-secondary: 180 190 170;
-    --color-text-muted: 140 155 130;
-    --color-text-inverse: 26 46 22;
+    --color-text-primary: 0 0 0;
+    --color-text-secondary: 0 0 0;
+    --color-text-muted: 0 0 0;
+    --color-text-inverse: 0 0 0;
 
     --color-border: 74 107 42;
     --color-border-hover: 107 142 74;
@@ -86,10 +86,10 @@
     --color-bg-input: 255 255 255;
     --color-bg-overlay: 26 46 22;
 
-    --color-text-primary: 26 46 22;    /* #1a2e16 - dark green */
-    --color-text-secondary: 61 83 71;  /* #3d5347 - medium green */
-    --color-text-muted: 107 127 114;   /* #6b7f72 - muted green */
-    --color-text-inverse: 255 255 255;
+    --color-text-primary: 0 0 0;    /* black */
+    --color-text-secondary: 0 0 0;  /* black */
+    --color-text-muted: 0 0 0;   /* black */
+    --color-text-inverse: 0 0 0;
 
     --color-border: 74 107 42;         /* #4a6b2a - olive green */
     --color-border-hover: 107 142 74;  /* #6b8e4a - soft green */
