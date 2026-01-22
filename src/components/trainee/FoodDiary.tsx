@@ -557,13 +557,13 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
 
   const renderMonthView = () => {
     return (
-      <div className="premium-card-static p-4">
+      <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] p-4">
         <div className="grid grid-cols-7 gap-2">
           {/* Week days header */}
           {weekDays.map((day, index) => (
             <div
               key={index}
-              className="text-center text-sm font-semibold text-[var(--color-text-muted)] py-2"
+              className="text-center text-sm font-semibold text-gray-600 dark:text-[var(--color-text-muted)] py-2"
             >
               {day}
             </div>
@@ -586,28 +586,28 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               <div
                 key={index}
                 onClick={() => handleDateClick(date)}
-                className={`min-h-[80px] p-2 border border-[var(--color-border)] rounded-lg cursor-pointer transition-all hover:border-emerald-500/50 ${
+                className={`min-h-[80px] p-2 border border-gray-200 dark:border-[var(--color-border)]/30 rounded-lg cursor-pointer transition-all hover:border-emerald-500/50 dark:hover:border-emerald-500/50 ${
                   isCurrentDay
-                    ? 'bg-emerald-500/10 border-emerald-500/30'
+                    ? 'bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 dark:border-emerald-500/40'
                     : hasMeals
-                    ? 'bg-zinc-800/30'
+                    ? 'bg-gray-50 dark:bg-[var(--color-bg-surface)]'
                     : 'bg-transparent'
                 }`}
               >
                 <div
                   className={`text-sm font-semibold mb-1 ${
-                    isCurrentDay ? 'text-emerald-400' : 'text-[var(--color-text-primary)]'
+                    isCurrentDay ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-[var(--color-text-primary)]'
                   }`}
                 >
                   {date.getDate()}
                 </div>
                 {hasMeals && (
                   <div className="space-y-1">
-                    <div className="text-xs bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded truncate">
+                    <div className="text-xs bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded truncate">
                       {dayMeals.length} ארוחות
                     </div>
                     {isCompleted && (
-                      <div className="text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded">
+                      <div className="text-xs bg-emerald-500 dark:bg-emerald-600 text-white px-1.5 py-0.5 rounded">
                         ✓
                       </div>
                     )}
@@ -644,13 +644,23 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               {isCompleted && (
-                <div className="bg-emerald-500 text-white rounded-full p-1 shadow-md">
-                  <Check className="w-4 h-4" />
+                <div className={`rounded-full p-1 shadow-md transition-all duration-300 ${
+                  isToday(date) ? 'bg-white/20' : 'bg-emerald-500 dark:bg-emerald-600'
+                }`}>
+                  <Check className="w-4 h-4 text-white" />
                 </div>
               )}
               <div>
-                <span className="font-bold text-lg">יום {getHebrewDayName(date)}</span>
-                <span className="text-sm mr-2 opacity-80">{formatDate(date)}</span>
+                <span className={`font-bold text-lg ${
+                  isToday(date) ? 'text-white' : 'text-gray-900 dark:text-[var(--color-text-primary)]'
+                }`}>
+                  יום {getHebrewDayName(date)}
+                </span>
+                <span className={`text-sm mr-2 ${
+                  isToday(date) ? 'text-white/90' : 'text-gray-600 dark:text-[var(--color-text-muted)]'
+                }`}>
+                  {formatDate(date)}
+                </span>
                 {isToday(date) && (
                   <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full mr-2 font-medium">
                     היום
@@ -658,7 +668,9 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 )}
                 {isCompleted && (
                   <span className={`text-xs px-2 py-0.5 rounded-full mr-2 font-medium ${
-                    isToday(date) ? 'bg-white/20' : 'bg-emerald-500 text-white'
+                    isToday(date) 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-emerald-500 dark:bg-emerald-600 text-white shadow-sm'
                   }`}>
                     הושלם
                   </span>
@@ -684,10 +696,10 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 disabled={isCompleted}
                 className={`p-2 rounded-xl transition-all duration-300 ${
                   isCompleted
-                    ? 'opacity-50 cursor-not-allowed bg-[var(--color-bg-surface)] text-[var(--color-text-muted)]'
+                    ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-[var(--color-bg-surface)] text-gray-400 dark:text-[var(--color-text-muted)]'
                     : isToday(date)
                     ? 'bg-white/20 hover:bg-white/30 text-white'
-                    : 'bg-emerald-500/15 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-md hover:shadow-lg'
+                    : 'bg-emerald-500/15 dark:bg-emerald-500/20 hover:bg-emerald-500/20 dark:hover:bg-emerald-500/30 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 dark:border-emerald-500/40 shadow-md hover:shadow-lg'
                 }`}
               >
                 <Plus className="w-5 h-5" />
