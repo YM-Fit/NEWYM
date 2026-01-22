@@ -491,37 +491,37 @@ export default function TraineeWorkoutHistoryModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-border200 dark:border-[var(--color-border)]/30 shadow-2xl animate-scale-in">
+      <div className="premium-card-static bg-white bg-elevated rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-border border-border30 shadow-2xl animate-scale-in">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-border200 dark:border-[var(--color-border)]/30">
+        <div className="flex items-center justify-between p-5 border-b border-border border-border30">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-xl border border-emerald-500/30 dark:border-emerald-500/30">
               <Calendar className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-muted900 dark:text-[var(--color-text-primary)]">היסטוריית אימונים - {traineeName}</h2>
+              <h2 className="text-lg font-bold text-foreground text-foreground">היסטוריית אימונים - {traineeName}</h2>
               <div className="flex items-center gap-2 mt-1">
                 <button
                   onClick={() => navigateMonth('prev')}
-                  className="p-1 hover:bg-surface100 dark:hover:bg-[var(--color-bg-surface)] rounded-lg transition-all duration-300"
+                  className="p-1 hover:bg-surface dark:hover:bg-[var(--color-bg-surface)] rounded-lg transition-all duration-300"
                 >
-                  <ChevronRight className="h-4 w-4 text-muted600 dark:text-[var(--color-text-muted)]" />
+                  <ChevronRight className="h-4 w-4 text-muted text-muted" />
                 </button>
-                <span className="text-sm text-muted600 dark:text-[var(--color-text-muted)]">{formatMonth(selectedMonth)}</span>
+                <span className="text-sm text-muted text-muted">{formatMonth(selectedMonth)}</span>
                 <button
                   onClick={() => navigateMonth('next')}
-                  className="p-1 hover:bg-surface100 dark:hover:bg-[var(--color-bg-surface)] rounded-lg transition-all duration-300"
+                  className="p-1 hover:bg-surface dark:hover:bg-[var(--color-bg-surface)] rounded-lg transition-all duration-300"
                 >
-                  <ChevronLeft className="h-4 w-4 text-muted600 dark:text-[var(--color-text-muted)]" />
+                  <ChevronLeft className="h-4 w-4 text-muted text-muted" />
                 </button>
               </div>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-surface100 dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300"
+            className="p-2 hover:bg-surface dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300"
           >
-            <X className="h-5 w-5 text-muted600 dark:text-[var(--color-text-muted)]" />
+            <X className="h-5 w-5 text-muted text-muted" />
           </button>
         </div>
 
@@ -532,50 +532,50 @@ export default function TraineeWorkoutHistoryModal({
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30 mb-3">
                 <Search className="h-8 w-8 text-foreground" />
               </div>
-              <p className="text-muted600 dark:text-[var(--color-text-muted)]">מחפש מתאמן...</p>
+              <p className="text-muted text-muted">מחפש מתאמן...</p>
             </div>
           ) : loading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30 mb-3">
                 <Loader2 className="h-8 w-8 text-foreground animate-spin" />
               </div>
-              <p className="text-muted600 dark:text-[var(--color-text-muted)]">טוען אימונים...</p>
+              <p className="text-muted text-muted">טוען אימונים...</p>
             </div>
           ) : !resolvedTraineeId ? (
             <div className="text-center py-12">
               <div className="mx-auto w-16 h-16 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-500/20 dark:to-orange-500/20 rounded-full flex items-center justify-center mb-4 border border-amber-200 dark:border-amber-500/30">
                 <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-500" />
               </div>
-              <p className="text-muted700 dark:text-[var(--color-text-primary)] font-medium">לא נמצא מתאמן בשם "{traineeName}"</p>
-              <p className="text-muted500 dark:text-[var(--color-text-muted)] text-sm mt-2">ייתכן ששם המתאמן ביומן לא תואם לשם במערכת</p>
+              <p className="text-foreground text-foreground font-medium">לא נמצא מתאמן בשם "{traineeName}"</p>
+              <p className="text-muted text-muted text-sm mt-2">ייתכן ששם המתאמן ביומן לא תואם לשם במערכת</p>
             </div>
           ) : workouts.length === 0 ? (
             <div className="text-center py-12">
-              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-[var(--color-bg-surface)] dark:to-[var(--color-bg-elevated)] rounded-full flex items-center justify-center mb-4 border border-border200 dark:border-[var(--color-border)]/30">
-                <Calendar className="h-8 w-8 text-muted400 dark:text-[var(--color-text-muted)]" />
+              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-[var(--color-bg-surface)] dark:to-[var(--color-bg-elevated)] rounded-full flex items-center justify-center mb-4 border border-border border-border30">
+                <Calendar className="h-8 w-8 text-muted400 text-muted" />
               </div>
-              <p className="text-muted600 dark:text-[var(--color-text-muted)]">אין אימונים בחודש זה</p>
+              <p className="text-muted text-muted">אין אימונים בחודש זה</p>
             </div>
           ) : actionMode === 'view' ? (
             <div className="space-y-3">
               {workouts.map((workout) => (
                 <div
                   key={workout.id}
-                  className="flex items-center justify-between p-4 bg-white dark:bg-[var(--color-bg-elevated)] rounded-xl border border-border200 dark:border-[var(--color-border)]/30 hover:bg-surface50 dark:hover:bg-[var(--color-bg-surface)] transition-all duration-300 shadow-sm"
+                  className="flex items-center justify-between p-4 bg-white bg-elevated rounded-xl border border-border border-border30 hover:bg-surface50 dark:hover:bg-[var(--color-bg-surface)] transition-all duration-300 shadow-sm"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-foreground font-bold shadow-md">
                       {workout.workoutNumber}
                     </div>
                     <div>
-                      <div className="font-medium text-muted900 dark:text-[var(--color-text-primary)]">
+                      <div className="font-medium text-foreground text-foreground">
                         {new Date(workout.workoutDate).toLocaleDateString('he-IL', {
                           weekday: 'long',
                           day: 'numeric',
                           month: 'long'
                         })}
                       </div>
-                      <div className="flex items-center gap-1 text-sm text-muted600 dark:text-[var(--color-text-muted)]">
+                      <div className="flex items-center gap-1 text-sm text-muted text-muted">
                         <Clock className="h-3.5 w-3.5" />
                         {workout.startTime} - {workout.endTime}
                       </div>
@@ -618,28 +618,28 @@ export default function TraineeWorkoutHistoryModal({
             <div className="space-y-4">
               <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-500/10 dark:to-blue-600/10 border border-blue-200 dark:border-blue-500/30 rounded-xl">
                 <h3 className="font-medium text-blue-700 dark:text-blue-400 mb-2">שינוי תאריך אימון</h3>
-                <p className="text-sm text-muted600 dark:text-[var(--color-text-muted)]">
+                <p className="text-sm text-muted text-muted">
                   אימון מקורי: {new Date(selectedWorkout.workoutDate).toLocaleDateString('he-IL')} בשעה {selectedWorkout.startTime}
                 </p>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-muted700 dark:text-[var(--color-text-primary)] font-medium mb-2">תאריך חדש</label>
+                  <label className="block text-sm text-foreground text-foreground font-medium mb-2">תאריך חדש</label>
                   <input
                     type="date"
                     value={rescheduleDate}
                     onChange={(e) => setRescheduleDate(e.target.value)}
-                    className="w-full p-3 bg-white dark:bg-[var(--color-bg-elevated)] border border-border200 dark:border-[var(--color-border)]/30 rounded-xl text-muted900 dark:text-[var(--color-text-primary)] focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
+                    className="w-full p-3 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-muted700 dark:text-[var(--color-text-primary)] font-medium mb-2">שעה חדשה</label>
+                  <label className="block text-sm text-foreground text-foreground font-medium mb-2">שעה חדשה</label>
                   <input
                     type="time"
                     value={rescheduleTime}
                     onChange={(e) => setRescheduleTime(e.target.value)}
-                    className="w-full p-3 bg-white dark:bg-[var(--color-bg-elevated)] border border-border200 dark:border-[var(--color-border)]/30 rounded-xl text-muted900 dark:text-[var(--color-text-primary)] focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
+                    className="w-full p-3 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
                   />
                 </div>
               </div>
@@ -662,7 +662,7 @@ export default function TraineeWorkoutHistoryModal({
                 <button
                   onClick={cancelAction}
                   disabled={!!actionLoading}
-                  className="px-6 py-3 bg-surface100 dark:bg-[var(--color-bg-surface)] hover:bg-surface200 dark:hover:bg-[var(--color-bg-elevated)] rounded-xl text-muted700 dark:text-[var(--color-text-primary)] transition-all duration-300 border border-border200 dark:border-[var(--color-border)]/30"
+                  className="px-6 py-3 bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] rounded-xl text-foreground text-foreground transition-all duration-300 border border-border border-border30"
                 >
                   ביטול
                 </button>
@@ -672,17 +672,17 @@ export default function TraineeWorkoutHistoryModal({
             <div className="space-y-4">
               <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-500/10 dark:to-purple-600/10 border border-purple-200 dark:border-purple-500/30 rounded-xl">
                 <h3 className="font-medium text-purple-700 dark:text-purple-400 mb-2">החלפת מתאמן</h3>
-                <p className="text-sm text-muted600 dark:text-[var(--color-text-muted)]">
+                <p className="text-sm text-muted text-muted">
                   אימון בתאריך: {new Date(selectedWorkout.workoutDate).toLocaleDateString('he-IL')} בשעה {selectedWorkout.startTime}
                 </p>
               </div>
               
               <div>
-                <label className="block text-sm text-muted700 dark:text-[var(--color-text-primary)] font-medium mb-2">בחר מתאמן חדש</label>
+                <label className="block text-sm text-foreground text-foreground font-medium mb-2">בחר מתאמן חדש</label>
                 <select
                   value={replaceTraineeId}
                   onChange={(e) => setReplaceTraineeId(e.target.value)}
-                  className="w-full p-3 bg-white dark:bg-[var(--color-bg-elevated)] border border-border200 dark:border-[var(--color-border)]/30 rounded-xl text-muted900 dark:text-[var(--color-text-primary)] focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
+                  className="w-full p-3 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
                 >
                   <option value="">-- בחר מתאמן --</option>
                   {trainees
@@ -714,7 +714,7 @@ export default function TraineeWorkoutHistoryModal({
                 <button
                   onClick={cancelAction}
                   disabled={!!actionLoading}
-                  className="px-6 py-3 bg-surface100 dark:bg-[var(--color-bg-surface)] hover:bg-surface200 dark:hover:bg-[var(--color-bg-elevated)] rounded-xl text-muted700 dark:text-[var(--color-text-primary)] transition-all duration-300 border border-border200 dark:border-[var(--color-border)]/30"
+                  className="px-6 py-3 bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] rounded-xl text-foreground text-foreground transition-all duration-300 border border-border border-border30"
                 >
                   ביטול
                 </button>
@@ -724,14 +724,14 @@ export default function TraineeWorkoutHistoryModal({
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-border200 dark:border-[var(--color-border)]/30">
+        <div className="p-5 border-t border-border border-border30">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-muted600 dark:text-[var(--color-text-muted)]">
+            <div className="text-sm text-muted text-muted">
               {workouts.length} אימונים בחודש זה
             </div>
             <button
               onClick={onClose}
-              className="px-5 py-2.5 bg-surface100 dark:bg-[var(--color-bg-surface)] hover:bg-surface200 dark:hover:bg-[var(--color-bg-elevated)] text-muted700 dark:text-[var(--color-text-primary)] rounded-xl transition-all duration-300 border border-border200 dark:border-[var(--color-border)]/30"
+              className="px-5 py-2.5 bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] text-foreground text-foreground rounded-xl transition-all duration-300 border border-border border-border30"
             >
               סגור
             </button>

@@ -342,11 +342,11 @@ function DroppableDayCell({
     <div
       ref={setNodeRef}
       onClick={() => day && onDayClick(day)}
-      className={`min-h-[100px] p-1.5 border-l border-b border-border200 dark:border-[var(--color-border)]/30 transition-all duration-300 group ${
+      className={`min-h-[100px] p-1.5 border-l border-b border-border transition-all duration-300 group ${
         day
           ? isOver
             ? 'bg-emerald-500/10 dark:bg-emerald-500/20'
-            : 'hover:bg-surface100 dark:hover:bg-[var(--color-bg-surface)] cursor-pointer'
+            : 'hover:bg-surface hover:bg-surface cursor-pointer'
           : 'bg-transparent'
       }`}
     >
@@ -357,7 +357,7 @@ function DroppableDayCell({
               className={`w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all duration-300 ${
                 isToday 
                   ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground font-semibold shadow-lg' 
-                  : 'text-muted700 dark:text-[var(--color-text-primary)]'
+                  : 'text-foreground'
               }`}
             >
               {day}
@@ -379,7 +379,7 @@ function DroppableDayCell({
             ))}
             {dayEvents.length > 3 && (
               <div
-                className="text-[11px] text-muted600 dark:text-[var(--color-text-muted)] cursor-pointer hover:bg-surface100 dark:hover:bg-[var(--color-bg-surface)] rounded-lg px-2 py-1 mt-0.5 transition-all duration-300 border border-border200 dark:border-[var(--color-border)]/30"
+                className="text-[11px] text-muted cursor-pointer hover:bg-surface hover:bg-surface rounded-lg px-2 py-1 mt-0.5 transition-all duration-300 border border-border"
                 onClick={(e) => {
                   e.stopPropagation();
                   const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
@@ -563,10 +563,10 @@ function DroppableWeekHourCell({
     <div
       ref={setNodeRef}
       onClick={() => onCellClick(day, hour)}
-      className={`h-14 border-b border-l border-border200 dark:border-[var(--color-border)]/30 cursor-pointer transition-all duration-300 relative bg-white dark:bg-[var(--color-bg-elevated)] ${
+      className={`h-14 border-b border-l border-border cursor-pointer transition-all duration-300 relative bg-elevated ${
         isOver 
           ? 'bg-emerald-500/20 dark:bg-emerald-500/20 ring-1 ring-emerald-500/50' 
-          : 'hover:bg-surface100 dark:hover:bg-[var(--color-bg-surface)]'
+          : 'hover:bg-surface hover:bg-surface'
       }`}
     >
       {hourEvents.map((event, eventIdx) => (
@@ -1327,15 +1327,15 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
 
   if (!connected) {
     return (
-      <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl p-8 text-center space-y-6 transition-all duration-300">
-        <div className="mx-auto w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[var(--color-bg-surface)] dark:to-[var(--color-bg-elevated)] rounded-2xl flex items-center justify-center shadow-lg border-2 border-border300 dark:border-[var(--color-border)]/30">
-          <Calendar className="h-10 w-10 text-muted500 dark:text-[var(--color-text-muted)]" />
+      <div className="premium-card-static bg-elevated rounded-2xl shadow-xl p-8 text-center space-y-6 transition-all duration-300">
+        <div className="mx-auto w-20 h-20 bg-gradient-to-br from-surface to-elevated rounded-2xl flex items-center justify-center shadow-lg border-2 border-border">
+          <Calendar className="h-10 w-10 text-muted" />
         </div>
         <div>
-          <h3 className="text-xl font-bold text-muted900 dark:text-[var(--color-text-primary)] mb-2">
+          <h3 className="text-xl font-bold text-foreground mb-2">
             Google Calendar לא מחובר
           </h3>
-          <p className="text-muted600 dark:text-[var(--color-text-muted)] mb-6">
+          <p className="text-muted text-muted mb-6">
             חבר את Google Calendar כדי לראות את האירועים שלך
           </p>
         </div>
@@ -1352,18 +1352,18 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
   // Show auth error with reconnect option
   if (authError) {
     return (
-      <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl p-8 text-center space-y-6 transition-all duration-300">
+      <div className="premium-card-static bg-elevated rounded-2xl shadow-xl p-8 text-center space-y-6 transition-all duration-300">
         <div className="mx-auto w-20 h-20 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-500/20 dark:to-orange-500/20 rounded-2xl flex items-center justify-center shadow-lg border-2 border-amber-300 dark:border-amber-500/30">
           <Calendar className="h-10 w-10 text-amber-600 dark:text-amber-400" />
         </div>
         <div>
-          <h3 className="text-xl font-bold text-muted900 dark:text-[var(--color-text-primary)] mb-2">
+          <h3 className="text-xl font-bold text-foreground mb-2">
             נדרש חיבור מחדש
           </h3>
-          <p className="text-muted600 dark:text-[var(--color-text-muted)] mb-2">
+          <p className="text-muted text-muted mb-2">
             ההרשאה ל-Google Calendar פגה
           </p>
-          <p className="text-muted500 dark:text-[var(--color-text-muted)] text-sm mb-6">
+          <p className="text-muted text-muted text-sm mb-6">
             {authError}
           </p>
         </div>
@@ -1379,7 +1379,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
               setAuthError(null);
               loadEvents(false, true);
             }}
-            className="px-4 py-2 bg-surface100 dark:bg-[var(--color-bg-surface)] hover:bg-surface200 dark:hover:bg-[var(--color-bg-elevated)] text-muted700 dark:text-[var(--color-text-primary)] rounded-xl transition-all duration-300 border border-border200 dark:border-[var(--color-border)]/30"
+            className="px-4 py-2 bg-surface hover:bg-elevated text-foreground rounded-xl transition-all duration-300 border border-border"
           >
             נסה שוב
           </button>
@@ -1400,12 +1400,12 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         onDragStart={handleDragStart}
         onDragEnd={handleWeekDragEnd}
       >
-        <div className="overflow-x-auto bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[var(--color-bg-surface)] dark:to-[var(--color-bg-elevated)] rounded-xl border border-border200 dark:border-[var(--color-border)]/30">
+        <div className="overflow-x-auto bg-gradient-to-br from-surface to-elevated rounded-xl border border-border">
           <div className="min-w-[800px]">
             {/* Week header with day names and dates */}
-            <div className="grid grid-cols-8 border-b border-border200 dark:border-[var(--color-border)]/30 bg-white dark:bg-[var(--color-bg-elevated)]">
+            <div className="grid grid-cols-8 border-b border-border bg-elevated">
               {/* Empty cell for time column */}
-              <div className="py-3 px-2 text-center text-xs text-muted600 dark:text-[var(--color-text-muted)] border-l border-border200 dark:border-[var(--color-border)]/30 font-semibold">GMT+02</div>
+              <div className="py-3 px-2 text-center text-xs text-muted border-l border-border font-semibold">GMT+02</div>
               {weekDays.map((day, idx) => {
                 const isToday = day.toDateString() === new Date().toDateString();
                 const dayNum = day.getDate();
@@ -1413,15 +1413,15 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                 return (
                   <div 
                     key={idx} 
-                    className="py-2 px-1 text-center border-l border-border200 dark:border-[var(--color-border)]/30 cursor-pointer hover:bg-surface100 dark:hover:bg-[var(--color-bg-surface)] transition-all duration-300"
+                    className="py-2 px-1 text-center border-l border-border cursor-pointer hover:bg-surface hover:bg-surface transition-all duration-300"
                     onClick={() => handleWeekCellClick(day, 9)} // Default to 9:00 AM when clicking header
                     title="לחץ ליצירת אימון מהיר"
                   >
-                    <div className="text-xs text-muted600 dark:text-[var(--color-text-muted)] mb-1 font-medium">{dayName}</div>
+                    <div className="text-xs text-muted mb-1 font-medium">{dayName}</div>
                     <div className={`text-lg font-medium mx-auto w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 ${
                       isToday 
                         ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground shadow-lg' 
-                        : 'text-muted700 dark:text-[var(--color-text-primary)]'
+                        : 'text-foreground'
                     }`}>
                       {dayNum}
                     </div>
@@ -1431,14 +1431,14 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
             </div>
 
             {/* All-day events row */}
-            <div className="grid grid-cols-8 border-b border-border200 dark:border-[var(--color-border)]/30 bg-white dark:bg-[var(--color-bg-elevated)]">
-              <div className="text-[10px] text-muted600 dark:text-[var(--color-text-muted)] py-2 px-2 border-l border-border200 dark:border-[var(--color-border)]/30 text-center font-semibold">כל היום</div>
+            <div className="grid grid-cols-8 border-b border-border bg-elevated">
+              <div className="text-[10px] text-muted py-2 px-2 border-l border-border text-center font-semibold">כל היום</div>
               {weekDays.map((day, idx) => {
                 const allDayEvents = getAllDayEvents(day);
                 return (
                   <div 
                     key={idx} 
-                    className="min-h-[40px] p-1 border-l border-border200 dark:border-[var(--color-border)]/30 cursor-pointer hover:bg-surface100 dark:hover:bg-[var(--color-bg-surface)] transition-all duration-300"
+                    className="min-h-[40px] p-1 border-l border-border cursor-pointer hover:bg-surface hover:bg-surface transition-all duration-300"
                     onClick={() => handleWeekCellClick(day, 9)}
                     title="לחץ ליצירת אימון מהיר"
                   >
@@ -1461,13 +1461,13 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
             {/* Hour slots */}
             <div className="grid grid-cols-8">
               {/* Hour labels column */}
-              <div className="space-y-0 bg-white dark:bg-[var(--color-bg-elevated)]">
+              <div className="space-y-0 bg-elevated">
                 {hours.map(hour => (
                   <div
                     key={hour}
-                    className="h-14 border-b border-l border-border200 dark:border-[var(--color-border)]/30 flex items-start justify-center pt-0"
+                    className="h-14 border-b border-l border-border flex items-start justify-center pt-0"
                   >
-                    <span className="text-[10px] text-muted600 dark:text-[var(--color-text-muted)] -mt-2 bg-white dark:bg-[var(--color-bg-elevated)] px-1 font-medium">{hour}:00</span>
+                    <span className="text-[10px] text-muted -mt-2 bg-elevated px-1 font-medium">{hour}:00</span>
                   </div>
                 ))}
               </div>
@@ -1521,16 +1521,16 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     const allDayEvents = getAllDayEvents(currentDate);
 
     return (
-      <div className="overflow-x-auto bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[var(--color-bg-surface)] dark:to-[var(--color-bg-elevated)] rounded-xl border border-border200 dark:border-[var(--color-border)]/30">
+      <div className="overflow-x-auto bg-gradient-to-br from-surface to-elevated rounded-xl border border-border">
         <div className="min-w-[400px]">
           {/* Day header */}
-          <div className="flex items-center justify-center py-4 border-b border-border200 dark:border-[var(--color-border)]/30 bg-white dark:bg-[var(--color-bg-elevated)]">
+          <div className="flex items-center justify-center py-4 border-b border-border bg-elevated">
             <div className="text-center">
-              <div className="text-xs text-muted600 dark:text-[var(--color-text-muted)] mb-1 font-semibold">
+              <div className="text-xs text-muted mb-1 font-semibold">
                 {currentDate.toLocaleDateString('he-IL', { weekday: 'long' })}
               </div>
               <div className={`text-2xl font-medium mx-auto w-12 h-12 flex items-center justify-center rounded-full transition-all duration-300 ${
-                isToday ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground shadow-lg' : 'text-muted700 dark:text-[var(--color-text-primary)]'
+                isToday ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground shadow-lg' : 'text-foreground'
               }`}>
                 {currentDate.getDate()}
               </div>
@@ -1539,8 +1539,8 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
 
           {/* All-day events */}
           {allDayEvents.length > 0 && (
-            <div className="border-b border-border200 dark:border-[var(--color-border)]/30 p-2 bg-white dark:bg-[var(--color-bg-elevated)]">
-              <div className="text-[10px] text-muted600 dark:text-[var(--color-text-muted)] mb-1 font-semibold">כל היום</div>
+            <div className="border-b border-border p-2 bg-elevated">
+              <div className="text-[10px] text-muted mb-1 font-semibold">כל היום</div>
               <div className="space-y-0.5">
                 {allDayEvents.map((event, eventIdx) => (
                   <EventItem
@@ -1557,19 +1557,19 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
           {/* Hour slots */}
           <div className="grid grid-cols-[60px_1fr]">
             {/* Hour labels */}
-            <div className="space-y-0 bg-white dark:bg-[var(--color-bg-elevated)]">
+            <div className="space-y-0 bg-elevated">
               {hours.map(hour => (
                 <div
                   key={hour}
-                  className="h-14 border-b border-border200 dark:border-[var(--color-border)]/30 flex items-start justify-center pt-0"
+                  className="h-14 border-b border-border flex items-start justify-center pt-0"
                 >
-                  <span className="text-[10px] text-muted600 dark:text-[var(--color-text-muted)] -mt-2 bg-white dark:bg-[var(--color-bg-elevated)] px-1 font-medium">{hour}:00</span>
+                  <span className="text-[10px] text-muted -mt-2 bg-elevated px-1 font-medium">{hour}:00</span>
                 </div>
               ))}
             </div>
 
             {/* Events column */}
-            <div className="space-y-0 relative border-l border-border200 dark:border-[var(--color-border)]/30 bg-white dark:bg-[var(--color-bg-elevated)]">
+            <div className="space-y-0 relative border-l border-border bg-elevated">
               {hours.map(hour => {
                 const hourEvents = getEventsForHour(currentDate, hour);
                 return (
@@ -1583,7 +1583,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                         onCreateWorkout();
                       }
                     }}
-                    className="h-14 border-b border-border200 dark:border-[var(--color-border)]/30 cursor-pointer hover:bg-surface100 dark:hover:bg-[var(--color-bg-surface)] transition-all duration-300 relative"
+                    className="h-14 border-b border-border cursor-pointer hover:bg-surface hover:bg-surface transition-all duration-300 relative"
                   >
                     {hourEvents.map((event, eventIdx) => {
                       const eventStart = new Date(event.start.dateTime || event.start.date || '');
@@ -1647,40 +1647,40 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl p-4 lg:p-6 transition-all duration-300">
+      <div className="premium-card-static bg-elevated rounded-2xl shadow-xl p-4 lg:p-6 transition-all duration-300">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigateDate('prev')}
-              className="p-2 hover:bg-surface100 dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300 border border-border200 dark:border-[var(--color-border)]/30"
+              className="p-2 hover:bg-surface hover:bg-surface rounded-xl transition-all duration-300 border border-border"
             >
-              <ChevronRight className="h-5 w-5 text-muted700 dark:text-[var(--color-text-primary)]" />
+              <ChevronRight className="h-5 w-5 text-foreground" />
             </button>
-            <h2 className="text-xl font-bold text-muted900 dark:text-[var(--color-text-primary)]">
+            <h2 className="text-xl font-bold text-foreground">
               {formatDateHeader}
             </h2>
             <button
               onClick={() => navigateDate('next')}
-              className="p-2 hover:bg-surface100 dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300 border border-border200 dark:border-[var(--color-border)]/30"
+              className="p-2 hover:bg-surface hover:bg-surface rounded-xl transition-all duration-300 border border-border"
             >
-              <ChevronLeft className="h-5 w-5 text-muted700 dark:text-[var(--color-text-primary)]" />
+              <ChevronLeft className="h-5 w-5 text-foreground" />
             </button>
             <button
               onClick={() => setCurrentDate(new Date())}
-              className="px-3 py-1 text-sm bg-surface100 dark:bg-[var(--color-bg-surface)] hover:bg-surface200 dark:hover:bg-[var(--color-bg-elevated)] text-muted700 dark:text-[var(--color-text-primary)] rounded-xl transition-all duration-300 border border-border200 dark:border-[var(--color-border)]/30"
+              className="px-3 py-1 text-sm bg-surface hover:bg-elevated text-foreground rounded-xl transition-all duration-300 border border-border"
             >
               היום
             </button>
           </div>
           <div className="flex items-center gap-2">
             {/* View mode buttons */}
-            <div className="flex items-center gap-1 bg-surface100 dark:bg-[var(--color-bg-surface)] rounded-xl p-1 border border-border200 dark:border-[var(--color-border)]/30">
+            <div className="flex items-center gap-1 bg-surface rounded-xl p-1 border border-border">
               <button
                 onClick={() => setViewMode('month')}
                 className={`px-3 py-1.5 text-sm rounded-lg transition-all duration-300 flex items-center gap-2 ${
                   viewMode === 'month'
                     ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground shadow-lg'
-                    : 'text-muted700 dark:text-[var(--color-text-primary)] hover:bg-surface200 dark:hover:bg-[var(--color-bg-elevated)]'
+                    : 'text-foreground hover:bg-elevated'
                 }`}
                 title="תצוגת חודש"
               >
@@ -1692,7 +1692,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                 className={`px-3 py-1.5 text-sm rounded-lg transition-all duration-300 flex items-center gap-2 ${
                   viewMode === 'week'
                     ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground shadow-lg'
-                    : 'text-muted700 dark:text-[var(--color-text-primary)] hover:bg-surface200 dark:hover:bg-[var(--color-bg-elevated)]'
+                    : 'text-foreground hover:bg-elevated'
                 }`}
                 title="תצוגת שבוע"
               >
@@ -1704,7 +1704,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                 className={`px-3 py-1.5 text-sm rounded-lg transition-all duration-300 flex items-center gap-2 ${
                   viewMode === 'day'
                     ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground shadow-lg'
-                    : 'text-muted700 dark:text-[var(--color-text-primary)] hover:bg-surface200 dark:hover:bg-[var(--color-bg-elevated)]'
+                    : 'text-foreground hover:bg-elevated'
                 }`}
                 title="תצוגת יום"
               >
@@ -1732,7 +1732,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
               <button
                 onClick={handleManualRefresh}
                 disabled={loading || isRefreshing}
-                className="px-4 py-2 text-sm bg-surface100 dark:bg-[var(--color-bg-surface)] hover:bg-surface200 dark:hover:bg-[var(--color-bg-elevated)] text-muted700 dark:text-[var(--color-text-primary)] rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border border-border200 dark:border-[var(--color-border)]/30"
+                className="px-4 py-2 text-sm bg-surface hover:bg-elevated text-foreground rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border border-border"
                 title="רענון יומן"
               >
                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -1740,7 +1740,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
               </button>
               <button
                 onClick={() => setShowSettings(true)}
-                className="px-4 py-2 text-sm bg-surface100 dark:bg-[var(--color-bg-surface)] hover:bg-surface200 dark:hover:bg-[var(--color-bg-elevated)] text-muted700 dark:text-[var(--color-text-primary)] rounded-xl transition-all duration-300 border border-border200 dark:border-[var(--color-border)]/30"
+                className="px-4 py-2 text-sm bg-surface hover:bg-elevated text-foreground rounded-xl transition-all duration-300 border border-border"
               >
                 הגדרות
               </button>
@@ -1759,14 +1759,14 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
       </div>
 
       {/* Calendar Grid */}
-      <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl p-0 overflow-hidden relative transition-all duration-300">
+      <div className="premium-card-static bg-elevated rounded-2xl shadow-xl p-0 overflow-hidden relative transition-all duration-300">
         {loading ? (
           <div className="flex items-center justify-center py-12 min-h-[400px]">
             <div className="flex flex-col items-center gap-4">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
                 <Calendar className="w-8 h-8 text-foreground" />
               </div>
-              <span className="text-sm font-medium text-muted600 dark:text-[var(--color-text-muted)]">טוען יומן...</span>
+              <span className="text-sm font-medium text-muted">טוען יומן...</span>
             </div>
           </div>
         ) : viewMode === 'month' ? (
@@ -1775,12 +1775,12 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className={`grid grid-cols-7 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[var(--color-bg-surface)] dark:to-[var(--color-bg-elevated)] ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className={`grid grid-cols-7 bg-gradient-to-br from-surface to-elevated ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}>
               {/* Week days header */}
               {weekDayNames.map((day, index) => (
                 <div
                   key={index}
-                  className="text-center text-xs text-muted700 dark:text-[var(--color-text-primary)] py-3 border-b border-l border-border200 dark:border-[var(--color-border)]/30 font-semibold"
+                  className="text-center text-xs text-foreground py-3 border-b border-l border-border font-semibold"
                 >
                   {day === 'א' ? 'יום א׳' : day === 'ב' ? 'יום ב׳' : day === 'ג' ? 'יום ג׳' : day === 'ד' ? 'יום ד׳' : day === 'ה' ? 'יום ה׳' : day === 'ו' ? 'יום ו׳' : 'שבת'}
                 </div>
@@ -1840,9 +1840,9 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         {/* Updating indicator */}
         {isUpdating && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/30 dark:bg-black/50 backdrop-blur-sm rounded-2xl">
-            <div className="flex items-center gap-2 bg-white dark:bg-[var(--color-bg-elevated)] px-4 py-2 rounded-xl shadow-lg border border-border200 dark:border-[var(--color-border)]/30">
+            <div className="flex items-center gap-2 bg-elevated px-4 py-2 rounded-xl shadow-lg border border-border">
               <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-emerald-500"></div>
-              <span className="text-sm text-muted700 dark:text-[var(--color-text-primary)]">מעביר אירוע...</span>
+              <span className="text-sm text-foreground">מעביר אירוע...</span>
             </div>
           </div>
         )}

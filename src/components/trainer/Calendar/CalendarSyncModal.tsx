@@ -546,25 +546,25 @@ export default function CalendarSyncModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col border border-border200 dark:border-[var(--color-border)]/30 shadow-2xl animate-scale-in">
+      <div className="premium-card-static bg-white bg-elevated rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col border border-border border-border30 shadow-2xl animate-scale-in">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border200 dark:border-[var(--color-border)]/30">
+        <div className="flex items-center justify-between p-6 border-b border-border border-border30">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-xl border border-emerald-500/30 dark:border-emerald-500/30">
               <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-muted900 dark:text-[var(--color-text-primary)]">סנכרון מתאמנים</h2>
-              <p className="text-sm text-muted600 dark:text-[var(--color-text-muted)]">
+              <h2 className="text-xl font-bold text-foreground text-foreground">סנכרון מתאמנים</h2>
+              <p className="text-sm text-muted text-muted">
                 {currentDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' })}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-surface100 dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300"
+            className="p-2 hover:bg-surface dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300"
           >
-            <X className="h-5 w-5 text-muted600 dark:text-[var(--color-text-muted)]" />
+            <X className="h-5 w-5 text-muted text-muted" />
           </button>
         </div>
 
@@ -575,7 +575,7 @@ export default function CalendarSyncModal({
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
                 <RefreshCw className="h-8 w-8 text-foreground animate-spin" />
               </div>
-              <p className="text-muted600 dark:text-[var(--color-text-muted)] font-medium">טוען אירועים ומתאים שמות...</p>
+              <p className="text-muted text-muted font-medium">טוען אירועים ומתאים שמות...</p>
             </div>
           )}
 
@@ -584,10 +584,10 @@ export default function CalendarSyncModal({
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-500/20 dark:to-rose-500/20 flex items-center justify-center shadow-lg border-2 border-red-300 dark:border-red-500/30">
                 <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
               </div>
-              <p className="text-muted700 dark:text-[var(--color-text-primary)] font-medium">{error}</p>
+              <p className="text-foreground text-foreground font-medium">{error}</p>
               <button
                 onClick={loadAndMatchEvents}
-                className="px-4 py-2 bg-surface100 dark:bg-[var(--color-bg-surface)] hover:bg-surface200 dark:hover:bg-[var(--color-bg-elevated)] text-muted700 dark:text-[var(--color-text-primary)] rounded-xl transition-all duration-300 border border-border200 dark:border-[var(--color-border)]/30"
+                className="px-4 py-2 bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] text-foreground text-foreground rounded-xl transition-all duration-300 border border-border border-border30"
               >
                 נסה שוב
               </button>
@@ -599,8 +599,8 @@ export default function CalendarSyncModal({
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-500/20 dark:to-teal-500/20 flex items-center justify-center shadow-lg border-2 border-emerald-300 dark:border-emerald-500/30">
                 <Check className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <p className="text-muted700 dark:text-[var(--color-text-primary)] font-medium">כל האירועים כבר מסונכרנים!</p>
-              <p className="text-muted500 dark:text-[var(--color-text-muted)] text-sm">אין אירועים חדשים לקשר</p>
+              <p className="text-foreground text-foreground font-medium">כל האירועים כבר מסונכרנים!</p>
+              <p className="text-muted text-muted text-sm">אין אירועים חדשים לקשר</p>
             </div>
           )}
 
@@ -620,9 +620,9 @@ export default function CalendarSyncModal({
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.newNames}</div>
                   <div className="text-xs text-blue-700 dark:text-blue-300 font-medium">שמות חדשים</div>
                 </div>
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[var(--color-bg-surface)] dark:to-[var(--color-bg-elevated)] border border-border200 dark:border-[var(--color-border)]/30 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
-                  <div className="text-2xl font-bold text-muted600 dark:text-[var(--color-text-primary)]">{stats.unmatched}</div>
-                  <div className="text-xs text-muted700 dark:text-[var(--color-text-muted)] font-medium">לא זוהו</div>
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[var(--color-bg-surface)] dark:to-[var(--color-bg-elevated)] border border-border border-border30 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
+                  <div className="text-2xl font-bold text-muted text-foreground">{stats.unmatched}</div>
+                  <div className="text-xs text-foreground text-muted font-medium">לא זוהו</div>
                 </div>
               </div>
 
@@ -637,12 +637,12 @@ export default function CalendarSyncModal({
                   return (
                     <div
                       key={groupName}
-                      className="bg-surface50 dark:bg-[var(--color-bg-surface)] rounded-xl border border-border200 dark:border-[var(--color-border)]/30 overflow-hidden transition-all duration-300 shadow-sm"
+                      className="bg-surface50 bg-surface rounded-xl border border-border border-border30 overflow-hidden transition-all duration-300 shadow-sm"
                     >
                       {/* Group Header */}
                       <button
                         onClick={() => toggleGroup(groupName)}
-                        className="w-full flex items-center justify-between p-4 hover:bg-surface100 dark:hover:bg-[var(--color-bg-elevated)] transition-all duration-300"
+                        className="w-full flex items-center justify-between p-4 hover:bg-surface dark:hover:bg-[var(--color-bg-elevated)] transition-all duration-300"
                       >
                         <div className="flex items-center gap-3">
                           <div className={`p-2 rounded-lg ${
@@ -660,10 +660,10 @@ export default function CalendarSyncModal({
                             )}
                           </div>
                           <div className="text-right">
-                            <div className="font-medium text-muted900 dark:text-[var(--color-text-primary)]">
+                            <div className="font-medium text-foreground text-foreground">
                               {firstEvent.event.extractedName || firstEvent.event.summary}
                             </div>
-                            <div className="text-xs text-muted600 dark:text-[var(--color-text-muted)]">
+                            <div className="text-xs text-muted text-muted">
                               {events.length} אירועים
                               {hasDecision && (
                                 <span className="mr-2 text-emerald-600 dark:text-emerald-400 font-semibold">
@@ -675,9 +675,9 @@ export default function CalendarSyncModal({
                           </div>
                         </div>
                         {isExpanded ? (
-                          <ChevronUp className="h-5 w-5 text-muted600 dark:text-[var(--color-text-muted)]" />
+                          <ChevronUp className="h-5 w-5 text-muted text-muted" />
                         ) : (
-                          <ChevronDown className="h-5 w-5 text-muted600 dark:text-[var(--color-text-muted)]" />
+                          <ChevronDown className="h-5 w-5 text-muted text-muted" />
                         )}
                       </button>
 
@@ -685,11 +685,11 @@ export default function CalendarSyncModal({
                       {isExpanded && (
                         <div className="px-4 pb-4 space-y-4">
                           {/* Events list */}
-                          <div className="bg-white dark:bg-[var(--color-bg-elevated)] rounded-lg p-3 space-y-2 border border-border200 dark:border-[var(--color-border)]/30">
+                          <div className="bg-white bg-elevated rounded-lg p-3 space-y-2 border border-border border-border30">
                             {events.slice(0, 5).map(event => (
                               <div key={event.event.id} className="flex items-center gap-2 text-sm">
-                                <Calendar className="h-3 w-3 text-muted500 dark:text-[var(--color-text-muted)]" />
-                                <span className="text-muted700 dark:text-[var(--color-text-primary)]">
+                                <Calendar className="h-3 w-3 text-muted text-muted" />
+                                <span className="text-foreground text-foreground">
                                   {new Date(event.event.start.dateTime || event.event.start.date || '').toLocaleDateString('he-IL', {
                                     weekday: 'short',
                                     day: 'numeric',
@@ -697,7 +697,7 @@ export default function CalendarSyncModal({
                                   })}
                                 </span>
                                 {event.event.start.dateTime && (
-                                  <span className="text-muted500 dark:text-[var(--color-text-muted)]">
+                                  <span className="text-muted text-muted">
                                     {new Date(event.event.start.dateTime).toLocaleTimeString('he-IL', {
                                       hour: '2-digit',
                                       minute: '2-digit'
@@ -707,7 +707,7 @@ export default function CalendarSyncModal({
                               </div>
                             ))}
                             {events.length > 5 && (
-                              <div className="text-xs text-muted500 dark:text-[var(--color-text-muted)]">
+                              <div className="text-xs text-muted text-muted">
                                 +{events.length - 5} אירועים נוספים
                               </div>
                             )}
@@ -716,7 +716,7 @@ export default function CalendarSyncModal({
                           {/* Matches / Actions */}
                           {firstEvent.matches.length > 0 && (
                             <div className="space-y-2">
-                              <div className="text-xs text-muted600 dark:text-[var(--color-text-muted)] font-medium">התאמות אפשריות:</div>
+                              <div className="text-xs text-muted text-muted font-medium">התאמות אפשריות:</div>
                               {firstEvent.matches.slice(0, 3).map(match => (
                                 <button
                                   key={match.trainee.id}
@@ -732,7 +732,7 @@ export default function CalendarSyncModal({
                                   className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-300 ${
                                     decision?.traineeId === match.trainee.id
                                       ? 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/20 dark:to-teal-500/20 border border-emerald-200 dark:border-emerald-500/50'
-                                      : 'bg-white dark:bg-[var(--color-bg-elevated)] hover:bg-surface100 dark:hover:bg-[var(--color-bg-surface)] border border-border200 dark:border-[var(--color-border)]/30'
+                                      : 'bg-white bg-elevated hover:bg-surface dark:hover:bg-[var(--color-bg-surface)] border border-border border-border30'
                                   }`}
                                 >
                                   <div className="flex items-center gap-3">
@@ -744,14 +744,14 @@ export default function CalendarSyncModal({
                                       {match.trainee.full_name[0]}
                                     </div>
                                     <div className="text-right">
-                                      <div className="font-medium text-muted900 dark:text-[var(--color-text-primary)]">{match.trainee.full_name}</div>
-                                      <div className="text-xs text-muted500 dark:text-[var(--color-text-muted)]">{match.trainee.phone || match.trainee.email}</div>
+                                      <div className="font-medium text-foreground text-foreground">{match.trainee.full_name}</div>
+                                      <div className="text-xs text-muted text-muted">{match.trainee.phone || match.trainee.email}</div>
                                     </div>
                                   </div>
                                   <div className={`text-xs px-2 py-1 rounded-lg ${
                                     match.matchType === 'exact' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' :
                                     match.matchType === 'close' ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400' :
-                                    'bg-surface100 dark:bg-[var(--color-bg-surface)] text-muted600 dark:text-[var(--color-text-muted)]'
+                                    'bg-surface bg-surface text-muted text-muted'
                                   }`}>
                                     {match.score}%
                                   </div>
@@ -762,7 +762,7 @@ export default function CalendarSyncModal({
 
                           {/* Manual Selection - Always show for linking to any trainee */}
                           <div className="space-y-2">
-                            <div className="text-xs text-muted600 dark:text-[var(--color-text-muted)] font-medium">
+                            <div className="text-xs text-muted text-muted font-medium">
                               {firstEvent.matches.length > 0 ? 'או בחר ידנית:' : 'בחר מתאמן לקישור:'}
                             </div>
                             <select
@@ -779,7 +779,7 @@ export default function CalendarSyncModal({
                                   });
                                 }
                               }}
-                              className="w-full p-3 bg-white dark:bg-[var(--color-bg-elevated)] border border-border200 dark:border-[var(--color-border)]/30 rounded-xl text-muted900 dark:text-[var(--color-text-primary)] focus:border-emerald-500/50 focus:outline-none transition-all duration-300"
+                              className="w-full p-3 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-emerald-500/50 focus:outline-none transition-all duration-300"
                             >
                               <option value="">-- בחר מתאמן --</option>
                               {getAllTraineesForSelection(trainees || []).map(({ trainee }) => (
@@ -835,7 +835,7 @@ export default function CalendarSyncModal({
                                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-sm ${
                                     decision?.action === 'create'
                                       ? 'bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-500/20 dark:to-cyan-500/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/50'
-                                      : 'bg-surface100 dark:bg-[var(--color-bg-surface)] hover:bg-surface200 dark:hover:bg-[var(--color-bg-elevated)] text-muted700 dark:text-[var(--color-text-primary)] border border-border200 dark:border-[var(--color-border)]/30'
+                                      : 'bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] text-foreground text-foreground border border-border border-border30'
                                   }`}
                                 >
                                   <UserPlus className="h-4 w-4" />
@@ -853,8 +853,8 @@ export default function CalendarSyncModal({
                                 }}
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-sm ${
                                   decision?.action === 'skip'
-                                    ? 'bg-surface200 dark:bg-[var(--color-bg-elevated)] text-muted700 dark:text-[var(--color-text-primary)] border border-border300 dark:border-[var(--color-border)]/50'
-                                    : 'bg-surface100 dark:bg-[var(--color-bg-surface)] hover:bg-surface200 dark:hover:bg-[var(--color-bg-elevated)] text-muted600 dark:text-[var(--color-text-muted)] border border-border200 dark:border-[var(--color-border)]/30'
+                                    ? 'bg-elevated bg-elevated text-foreground text-foreground border border-border border-border50'
+                                    : 'bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] text-muted text-muted border border-border border-border30'
                                 }`}
                               >
                                 דלג
@@ -875,7 +875,7 @@ export default function CalendarSyncModal({
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
                 <RefreshCw className="h-8 w-8 text-foreground animate-spin" />
               </div>
-              <p className="text-muted600 dark:text-[var(--color-text-muted)] font-medium">שומר קישורים...</p>
+              <p className="text-muted text-muted font-medium">שומר קישורים...</p>
             </div>
           )}
 
@@ -884,21 +884,21 @@ export default function CalendarSyncModal({
               <div className="p-4 bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-full shadow-lg border-2 border-emerald-300 dark:border-emerald-500/30">
                 <Check className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <p className="text-xl font-bold text-muted900 dark:text-[var(--color-text-primary)]">הסנכרון הושלם!</p>
+              <p className="text-xl font-bold text-foreground text-foreground">הסנכרון הושלם!</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
         {step === 'review' && !error && matchedEvents.length > 0 && (
-          <div className="flex items-center justify-between p-6 border-t border-border200 dark:border-[var(--color-border)]/30">
-            <div className="text-sm text-muted600 dark:text-[var(--color-text-muted)]">
+          <div className="flex items-center justify-between p-6 border-t border-border border-border30">
+            <div className="text-sm text-muted text-muted">
               {decisions.size} מתוך {matchedEvents.length} אירועים נבחרו
             </div>
             <div className="flex gap-3">
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-surface100 dark:bg-[var(--color-bg-surface)] hover:bg-surface200 dark:hover:bg-[var(--color-bg-elevated)] text-muted700 dark:text-[var(--color-text-primary)] rounded-xl transition-all duration-300 border border-border200 dark:border-[var(--color-border)]/30"
+                className="px-4 py-2 bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] text-foreground text-foreground rounded-xl transition-all duration-300 border border-border border-border30"
               >
                 ביטול
               </button>
