@@ -239,7 +239,7 @@ export function formatTraineeNameWithSession(
 
 /**
  * Format trainee name with event position for display
- * This shows the sequential position of the workout in the month (1, 2, 3...)
+ * This shows the sequential position of the workout in the month (e.g., "אריאל 3/8")
  */
 export function formatTraineeNameWithPosition(
   traineeName: string,
@@ -251,8 +251,12 @@ export function formatTraineeNameWithPosition(
     return formatTraineeNameWithSession(traineeName, sessionInfo);
   }
 
-  // Show position number for all counting methods
-  const sessionText = `${positionInfo.position}`;
+  // Show position/total format for monthly workout count (e.g., "3/8")
+  const totalInMonth = positionInfo.totalInMonth;
+  const sessionText = totalInMonth > 1 
+    ? `${positionInfo.position}/${totalInMonth}`
+    : `${positionInfo.position}`;
+  
   return {
     displayName: `${traineeName} ${sessionText}`,
     sessionText,
@@ -303,6 +307,208 @@ export function calculateEventPositions(
   });
   
   return result;
+}
+
+/**
+ * Extended position info that includes monthly totals from database
+ */
+export interface MonthlyPositionInfo extends EventPositionInfo {
+  monthlyTotalFromDb: number;  // Total workouts this month from database
+}
+
+/**
+ * Calculate event positions based on database records for the displayed month
+ * This ensures accurate numbering regardless of which view (week/day/month) is displayed
+ * 
+ * @param trainerId The trainer ID
+ * @param displayedMonth The month being displayed in the calendar
+ * @param events Array of displayed events with Google event IDs
+ * @returns Map of eventId -> MonthlyPositionInfo
+ */
+export async function calculateMonthlyPositionsFromDb(
+  trainerId: string,
+  displayedMonth: Date,
+  events: Array<{
+    id: string;  // Google Calendar event ID
+    traineeName: string;
+    startDate: Date;
+  }>
+): Promise<Map<string, MonthlyPositionInfo>> {
+  const result = new Map<string, MonthlyPositionInfo>();
+  
+  if (events.length === 0) return result;
+  
+  try {
+    const startOfMonth = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth(), 1);
+    const endOfMonth = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth() + 1, 0, 23, 59, 59);
+    
+    // Get trainee names from events
+    const traineeNames = [...new Set(events.map(e => e.traineeName))];
+    
+    // Get trainee IDs by names
+    const { data: trainees, error: traineesError } = await supabase
+      .from('trainees')
+      .select('id, full_name')
+      .eq('trainer_id', trainerId);
+    
+    if (traineesError || !trainees) {
+      logger.error('Error fetching trainees for monthly positions', traineesError, 'traineeSessionUtils');
+      // Fallback to basic calculation
+      return calculateEventPositions(events) as Map<string, MonthlyPositionInfo>;
+    }
+    
+    // Map trainee names to IDs (with fuzzy matching for partial names)
+    const traineeNameToId = new Map<string, string>();
+    traineeNames.forEach(eventName => {
+      // First try exact match
+      const exactMatch = trainees.find(t => t.full_name === eventName);
+      if (exactMatch) {
+        traineeNameToId.set(eventName, exactMatch.id);
+        return;
+      }
+      
+      // Try partial match (event name is part of trainee name or vice versa)
+      const partialMatch = trainees.find(t => 
+        t.full_name.toLowerCase().includes(eventName.toLowerCase()) ||
+        eventName.toLowerCase().includes(t.full_name.toLowerCase())
+      );
+      if (partialMatch) {
+        traineeNameToId.set(eventName, partialMatch.id);
+      }
+    });
+    
+    // Get all workouts for this month
+    const { data: workouts, error: workoutsError } = await supabase
+      .from('workouts')
+      .select('id, workout_date, google_event_id')
+      .eq('trainer_id', trainerId)
+      .gte('workout_date', startOfMonth.toISOString())
+      .lte('workout_date', endOfMonth.toISOString())
+      .order('workout_date', { ascending: true });
+    
+    if (workoutsError || !workouts) {
+      logger.error('Error fetching workouts for monthly positions', workoutsError, 'traineeSessionUtils');
+      return calculateEventPositions(events) as Map<string, MonthlyPositionInfo>;
+    }
+    
+    if (workouts.length === 0) {
+      // No workouts in DB, use events as is
+      return calculateEventPositions(events) as Map<string, MonthlyPositionInfo>;
+    }
+    
+    // Get workout-trainee links
+    const workoutIds = workouts.map(w => w.id);
+    const traineeIds = [...new Set(Array.from(traineeNameToId.values()))];
+    
+    const { data: links, error: linksError } = await supabase
+      .from('workout_trainees')
+      .select('workout_id, trainee_id')
+      .in('workout_id', workoutIds);
+    
+    if (linksError) {
+      logger.error('Error fetching workout links for monthly positions', linksError, 'traineeSessionUtils');
+    }
+    
+    // Create a map of trainee ID to their workouts (sorted by date)
+    const traineeWorkouts = new Map<string, Array<{ workoutId: string; date: Date; googleEventId: string | null }>>();
+    
+    workouts.forEach(workout => {
+      const traineeLink = (links || []).find(l => l.workout_id === workout.id);
+      if (traineeLink) {
+        const existing = traineeWorkouts.get(traineeLink.trainee_id) || [];
+        existing.push({
+          workoutId: workout.id,
+          date: new Date(workout.workout_date),
+          googleEventId: workout.google_event_id,
+        });
+        traineeWorkouts.set(traineeLink.trainee_id, existing);
+      }
+    });
+    
+    // Sort each trainee's workouts by date
+    traineeWorkouts.forEach((workoutList) => {
+      workoutList.sort((a, b) => a.date.getTime() - b.date.getTime());
+    });
+    
+    // Create a map of trainee ID to name (reverse lookup)
+    const traineeIdToName = new Map<string, string>();
+    traineeNameToId.forEach((id, name) => {
+      traineeIdToName.set(id, name);
+    });
+    
+    // Also add from trainees data for complete mapping
+    trainees.forEach(t => {
+      if (!traineeIdToName.has(t.id)) {
+        traineeIdToName.set(t.id, t.full_name);
+      }
+    });
+    
+    // Now process each event and find its position
+    events.forEach(event => {
+      const traineeId = traineeNameToId.get(event.traineeName);
+      
+      if (!traineeId) {
+        // No trainee match, use fallback position calculation
+        const sameNameEvents = events.filter(e => e.traineeName === event.traineeName);
+        sameNameEvents.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+        const position = sameNameEvents.findIndex(e => e.id === event.id) + 1;
+        
+        result.set(event.id, {
+          position,
+          totalInMonth: sameNameEvents.length,
+          traineeName: event.traineeName,
+          monthlyTotalFromDb: sameNameEvents.length,
+        });
+        return;
+      }
+      
+      const traineeWorkoutList = traineeWorkouts.get(traineeId) || [];
+      const monthlyTotal = traineeWorkoutList.length;
+      
+      // Find position by matching google event ID or date
+      let position = -1;
+      
+      // First try to match by Google event ID
+      const matchByGoogleId = traineeWorkoutList.findIndex(w => w.googleEventId === event.id);
+      if (matchByGoogleId >= 0) {
+        position = matchByGoogleId + 1;
+      } else {
+        // Match by date (find closest date match)
+        const eventTime = event.startDate.getTime();
+        let closestIndex = -1;
+        let closestDiff = Infinity;
+        
+        traineeWorkoutList.forEach((w, index) => {
+          const diff = Math.abs(w.date.getTime() - eventTime);
+          // Allow 1 hour tolerance for time differences
+          if (diff < closestDiff && diff < 3600000) {
+            closestDiff = diff;
+            closestIndex = index;
+          }
+        });
+        
+        if (closestIndex >= 0) {
+          position = closestIndex + 1;
+        } else {
+          // If no match found, calculate position based on where this date would fit
+          const insertIndex = traineeWorkoutList.findIndex(w => w.date.getTime() > eventTime);
+          position = insertIndex >= 0 ? insertIndex + 1 : monthlyTotal + 1;
+        }
+      }
+      
+      result.set(event.id, {
+        position: position > 0 ? position : 1,
+        totalInMonth: monthlyTotal,
+        traineeName: event.traineeName,
+        monthlyTotalFromDb: monthlyTotal,
+      });
+    });
+    
+    return result;
+  } catch (err) {
+    logger.error('Error in calculateMonthlyPositionsFromDb', err, 'traineeSessionUtils');
+    return calculateEventPositions(events) as Map<string, MonthlyPositionInfo>;
+  }
 }
 
 /**

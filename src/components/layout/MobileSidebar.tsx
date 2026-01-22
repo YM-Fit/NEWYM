@@ -1,4 +1,4 @@
-import { Home, Users, Calculator, BarChart3, X, Sparkles, Search, ChevronRight, LucideIcon, Calendar, Briefcase, TrendingUp, FileText, FileSpreadsheet } from 'lucide-react';
+import { Home, Users, Calculator, BarChart3, X, Sparkles, Search, ChevronRight, LucideIcon, Calendar, FileSpreadsheet } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 
 interface MobileSidebarProps {

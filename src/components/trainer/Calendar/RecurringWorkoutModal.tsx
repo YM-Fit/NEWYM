@@ -164,9 +164,9 @@ export default function RecurringWorkoutModal({
       for (let i = 0; i < workoutDates.length; i++) {
         const { date } = workoutDates[i];
         
-        // Calculate position for this event (sequential number)
-        const eventPosition = i + 1;
-        const eventSummary = `אימון - ${selectedTrainee.full_name} ${eventPosition}`;
+        // Event summary without position number - positions are calculated dynamically in the calendar view
+        // This allows correct numbering even when workouts are deleted or rescheduled
+        const eventSummary = `אימון - ${selectedTrainee.full_name}`;
         
         setProgress({ current: i + 1, total: workoutDates.length });
 

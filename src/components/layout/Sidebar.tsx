@@ -1,4 +1,4 @@
-import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3, Search, LucideIcon, Calendar, Briefcase, TrendingUp, MessageSquare, FileText, DollarSign, Filter, FolderOpen, Activity, Settings, FileSpreadsheet } from 'lucide-react';
+import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3, Search, LucideIcon, Calendar, Activity, Settings, FileSpreadsheet } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { getFromStorage, setToStorage, STORAGE_KEYS } from '../../utils/storage';
 
@@ -42,8 +42,6 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
     
     // Settings & Management
     { id: 'health-check', label: 'בדיקת בריאות', icon: Activity, description: 'מצב המערכת', category: 'settings' },
-    { id: 'scheduled-exports', label: 'ייצואים מתוזמנים', icon: Calendar, description: 'ניהול ייצואים', category: 'settings' },
-    { id: 'data-import', label: 'ייבוא נתונים', icon: FileText, description: 'ייבוא CSV/JSON', category: 'settings' },
   ], []);
 
   const categories = useMemo(() => [

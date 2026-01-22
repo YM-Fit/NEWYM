@@ -18,7 +18,8 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
-  AlertCircle
+  AlertCircle,
+  Search
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTrainees } from '../../../hooks/useSupabaseQuery';
@@ -30,6 +31,7 @@ import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
 import { getTraineeSessionInfo, generateEventSummaryWithSession } from '../../../utils/traineeSessionUtils';
+import { findBestMatches } from '../../../utils/nameMatching';
 
 interface TraineeWorkoutHistoryModalProps {
   isOpen: boolean;
@@ -70,6 +72,10 @@ export default function TraineeWorkoutHistoryModal({
   const [actionMode, setActionMode] = useState<ActionMode>('view');
   const [selectedMonth, setSelectedMonth] = useState(new Date(currentDate));
   
+  // Resolved trainee ID - in case passed traineeId is null, we try to find by name
+  const [resolvedTraineeId, setResolvedTraineeId] = useState<string | null>(traineeId);
+  const [searchingTrainee, setSearchingTrainee] = useState(false);
+  
   // Reschedule form state
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [rescheduleTime, setRescheduleTime] = useState('');
@@ -77,9 +83,76 @@ export default function TraineeWorkoutHistoryModal({
   // Replace form state
   const [replaceTraineeId, setReplaceTraineeId] = useState('');
 
+  // Try to find trainee by name when traineeId is null
+  const resolveTraineeByName = useCallback(async () => {
+    if (traineeId) {
+      setResolvedTraineeId(traineeId);
+      return;
+    }
+
+    if (!traineeName || trainees.length === 0) {
+      setResolvedTraineeId(null);
+      return;
+    }
+
+    setSearchingTrainee(true);
+    try {
+      // Use findBestMatches to find the trainee
+      const matches = findBestMatches(traineeName, trainees, 60);
+      
+      if (matches.length > 0) {
+        // Use the best match
+        const bestMatch = matches[0];
+        logger.info('Found trainee by name matching', { 
+          searchName: traineeName, 
+          matchedName: bestMatch.trainee.full_name,
+          score: bestMatch.score 
+        }, 'TraineeWorkoutHistoryModal');
+        setResolvedTraineeId(bestMatch.trainee.id);
+      } else {
+        // Fallback: try exact match or partial match on name
+        const exactMatch = trainees.find(t => 
+          t.full_name.toLowerCase() === traineeName.toLowerCase() ||
+          t.full_name.toLowerCase().includes(traineeName.toLowerCase()) ||
+          traineeName.toLowerCase().includes(t.full_name.toLowerCase())
+        );
+        
+        if (exactMatch) {
+          logger.info('Found trainee by fallback matching', { 
+            searchName: traineeName, 
+            matchedName: exactMatch.full_name 
+          }, 'TraineeWorkoutHistoryModal');
+          setResolvedTraineeId(exactMatch.id);
+        } else {
+          logger.warn('Could not find trainee by name', { traineeName }, 'TraineeWorkoutHistoryModal');
+          setResolvedTraineeId(null);
+        }
+      }
+    } catch (err) {
+      logger.error('Error resolving trainee by name', err, 'TraineeWorkoutHistoryModal');
+      setResolvedTraineeId(null);
+    } finally {
+      setSearchingTrainee(false);
+    }
+  }, [traineeId, traineeName, trainees]);
+
+  // Resolve trainee when modal opens or traineeId/traineeName changes
+  useEffect(() => {
+    if (isOpen) {
+      resolveTraineeByName();
+    }
+  }, [isOpen, resolveTraineeByName]);
+
+  // Update resolved ID when traineeId prop changes
+  useEffect(() => {
+    if (traineeId) {
+      setResolvedTraineeId(traineeId);
+    }
+  }, [traineeId]);
+
   // Load workouts for the trainee in the selected month
   const loadWorkouts = useCallback(async () => {
-    if (!user || !traineeId) {
+    if (!user || !resolvedTraineeId) {
       setLoading(false);
       return;
     }
@@ -118,7 +191,7 @@ export default function TraineeWorkoutHistoryModal({
       const { data: links, error: linksError } = await supabase
         .from('workout_trainees')
         .select('workout_id')
-        .eq('trainee_id', traineeId)
+        .eq('trainee_id', resolvedTraineeId)
         .in('workout_id', workoutIds);
 
       if (linksError) {
@@ -149,13 +222,13 @@ export default function TraineeWorkoutHistoryModal({
     } finally {
       setLoading(false);
     }
-  }, [user, traineeId, selectedMonth]);
+  }, [user, resolvedTraineeId, selectedMonth]);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && resolvedTraineeId && !searchingTrainee) {
       loadWorkouts();
     }
-  }, [isOpen, loadWorkouts]);
+  }, [isOpen, resolvedTraineeId, searchingTrainee, loadWorkouts]);
 
   // Navigate months
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -189,7 +262,7 @@ export default function TraineeWorkoutHistoryModal({
         .from('workout_trainees')
         .delete()
         .eq('workout_id', workout.id)
-        .eq('trainee_id', traineeId);
+        .eq('trainee_id', resolvedTraineeId);
 
       if (linkError) {
         throw new Error('שגיאה במחיקת קישור אימון');
@@ -289,7 +362,7 @@ export default function TraineeWorkoutHistoryModal({
 
   // Handle replace trainee
   const handleReplaceTrainee = async () => {
-    if (!user || !selectedWorkout || !replaceTraineeId || !traineeId) {
+    if (!user || !selectedWorkout || !replaceTraineeId || !resolvedTraineeId) {
       toast.error('יש לבחור מתאמן');
       return;
     }
@@ -325,7 +398,7 @@ export default function TraineeWorkoutHistoryModal({
         .from('workout_trainees')
         .delete()
         .eq('workout_id', selectedWorkout.id)
-        .eq('trainee_id', traineeId);
+        .eq('trainee_id', resolvedTraineeId);
 
       if (deleteLinkError) {
         throw new Error('שגיאה בעדכון קישור אימון');
@@ -432,9 +505,20 @@ export default function TraineeWorkoutHistoryModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-5">
-          {loading ? (
+          {searchingTrainee ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Search className="h-8 w-8 text-emerald-400 animate-pulse mb-3" />
+              <p className="text-zinc-400">מחפש מתאמן...</p>
+            </div>
+          ) : loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 text-emerald-400 animate-spin" />
+            </div>
+          ) : !resolvedTraineeId ? (
+            <div className="text-center py-12">
+              <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-3" />
+              <p className="text-zinc-400">לא נמצא מתאמן בשם "{traineeName}"</p>
+              <p className="text-zinc-500 text-sm mt-2">ייתכן ששם המתאמן ביומן לא תואם לשם במערכת</p>
             </div>
           ) : workouts.length === 0 ? (
             <div className="text-center py-12">
@@ -571,7 +655,7 @@ export default function TraineeWorkoutHistoryModal({
                 >
                   <option value="">-- בחר מתאמן --</option>
                   {trainees
-                    .filter(t => t.id !== traineeId)
+                    .filter(t => t.id !== resolvedTraineeId)
                     .sort((a, b) => a.full_name.localeCompare(b.full_name, 'he'))
                     .map((trainee) => (
                       <option key={trainee.id} value={trainee.id}>

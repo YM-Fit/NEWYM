@@ -21,7 +21,7 @@ import {
   getTraineesSessionInfo, 
   TraineeSessionInfo, 
   formatTraineeNameWithPosition,
-  calculateEventPositions,
+  calculateMonthlyPositionsFromDb,
   EventPositionInfo,
   sessionInfoCache 
 } from '../../../utils/traineeSessionUtils';
@@ -757,25 +757,42 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         }
       });
 
-      // Calculate positions for all events
-      const positions = calculateEventPositions(eventsForPositionCalc);
+      // Calculate positions for all events using database records for accuracy
+      // This ensures correct numbering even when only viewing a week or day
+      const positions = await calculateMonthlyPositionsFromDb(
+        user.id,
+        currentDate,
+        eventsForPositionCalc
+      );
       setEventPositionMap(positions);
 
       if (traineeNames.size === 0) return;
 
-      // Fetch trainee IDs by names
+      // Fetch trainee IDs by names (including partial matches)
       const { data: trainees, error: traineesError } = await supabase
         .from('trainees')
         .select('id, full_name')
-        .eq('trainer_id', user.id)
-        .in('full_name', Array.from(traineeNames));
+        .eq('trainer_id', user.id);
 
       if (traineesError || !trainees || trainees.length === 0) {
         return;
       }
 
+      // Find matching trainees (exact or partial match)
+      const matchingTrainees = trainees.filter(trainee => {
+        return Array.from(traineeNames).some(eventName => 
+          trainee.full_name === eventName ||
+          trainee.full_name.toLowerCase().includes(eventName.toLowerCase()) ||
+          eventName.toLowerCase().includes(trainee.full_name.toLowerCase())
+        );
+      });
+
+      if (matchingTrainees.length === 0) {
+        return;
+      }
+
       // Fetch session info for these trainees
-      const traineeIds = trainees.map(t => t.id);
+      const traineeIds = matchingTrainees.map(t => t.id);
       const sessionInfos = await getTraineesSessionInfo(traineeIds, user.id);
       
       // Cache the results
@@ -785,7 +802,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     } catch (err) {
       logger.error('Error loading session info', err, 'CalendarView');
     }
-  }, [user, events]);
+  }, [user, events, currentDate]);
 
   // Handle trainee name click - open history modal
   const handleTraineeNameClick = useCallback((traineeName: string, traineeId: string | null) => {
