@@ -4,6 +4,7 @@ import RecentActivity from './RecentActivity';
 import QuickActions from './QuickActions';
 import RecentScaleReadings from './RecentScaleReadings';
 import WeightAlerts from '../Measurements/WeightAlerts';
+import TodayTraineesSection from './TodayTraineesSection';
 import { IdentifiedReading } from '../../../hooks/useGlobalScaleListener';
 import { ScaleReading } from '../../../hooks/useScaleListener';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -22,6 +23,9 @@ interface DashboardProps {
   isScaleListening?: boolean;
   onTraineeClick?: (traineeId: string) => void;
   onSaveMeasurement?: (traineeId: string, traineeName: string, reading: ScaleReading) => Promise<boolean>;
+  onNewWorkout?: (trainee: Trainee) => void;
+  onViewWorkoutPlan?: (trainee: Trainee) => void;
+  onViewMealPlan?: (trainee: Trainee) => void;
 }
 
 export default function Dashboard({
@@ -31,7 +35,10 @@ export default function Dashboard({
   scaleReadings = [],
   isScaleListening = false,
   onTraineeClick,
-  onSaveMeasurement
+  onSaveMeasurement,
+  onNewWorkout,
+  onViewWorkoutPlan,
+  onViewMealPlan
 }: DashboardProps) {
   const { user } = useAuth();
   const [todayWorkouts, setTodayWorkouts] = useState(0);
@@ -193,7 +200,7 @@ export default function Dashboard({
 
           {/* Inline stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10">
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10 hover:bg-surface/70 transition-colors duration-200">
               <div className="p-2 rounded-lg bg-primary/20">
                 <Users className="w-4 h-4 text-primary" />
               </div>
@@ -202,7 +209,7 @@ export default function Dashboard({
                 <p className="text-lg font-bold text-foreground">{trainees.length}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10">
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10 hover:bg-surface/70 transition-colors duration-200">
               <div className="p-2 rounded-lg bg-info/20">
                 <Activity className="w-4 h-4 text-info" />
               </div>
@@ -211,7 +218,7 @@ export default function Dashboard({
                 <p className="text-lg font-bold text-foreground">{todayWorkouts}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10">
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10 hover:bg-surface/70 transition-colors duration-200">
               <div className="p-2 rounded-lg bg-success/20">
                 <Target className="w-4 h-4 text-success" />
               </div>
@@ -220,7 +227,7 @@ export default function Dashboard({
                 <p className="text-lg font-bold text-foreground">{recentMeasurements}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10">
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10 hover:bg-surface/70 transition-colors duration-200">
               <div className="p-2 rounded-lg bg-warning/20">
                 <AlertCircle className="w-4 h-4 text-warning" />
               </div>
@@ -232,6 +239,16 @@ export default function Dashboard({
           </div>
         </div>
       </div>
+
+      {/* Today's Trainees Section - Main Feature */}
+      {onNewWorkout && onViewWorkoutPlan && onViewMealPlan && (
+        <TodayTraineesSection
+          trainees={trainees}
+          onNewWorkout={onNewWorkout}
+          onViewWorkoutPlan={onViewWorkoutPlan}
+          onViewMealPlan={onViewMealPlan}
+        />
+      )}
 
       {/* Alerts and Scale Readings - Grouped */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

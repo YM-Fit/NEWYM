@@ -20,8 +20,26 @@
      These automatically fix Tailwind classes
      ============================================ */
 
-  /* Text colors - override white to dark */
+  /* Text colors - override white to dark, but preserve on colored backgrounds */
   .light .text-white {
+    color: #1a2e22 !important;
+  }
+
+  /* Override text-white on light backgrounds, but preserve on colored elements */
+  .light .bg-zinc-800 .text-white,
+  .light .bg-zinc-800\/50 .text-white,
+  .light .bg-zinc-800\/80 .text-white,
+  .light .bg-zinc-700 .text-white,
+  .light .bg-zinc-900 .text-white,
+  .light .bg-zinc-900\/90 .text-white,
+  .light .bg-zinc-900\/80 .text-white,
+  .light .bg-gray-800 .text-white,
+  .light .bg-gray-700 .text-white,
+  .light .bg-gray-900 .text-white,
+  .light .bg-white .text-white,
+  .light .bg-\[\#ffffff\] .text-white,
+  .light .bg-\[\#f8faf9\] .text-white,
+  .light .bg-\[\#ecf0ed\] .text-white {
     color: #1a2e22 !important;
   }
 
@@ -123,6 +141,19 @@
     color: #1a2e22 !important;
   }
 
+  /* Fix hover states for buttons on light backgrounds */
+  .light button:hover.text-white:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]):not(.btn-primary):not(.btn-lime):not(.btn-danger):not(.action-btn-emerald):not(.action-btn-cyan):not(.action-btn-amber):not(.action-btn-teal):not(.action-btn-rose):not(.action-btn-slate),
+  .light a:hover.text-white:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) {
+    color: #1a2e22 !important;
+  }
+
+  .light .hover\:text-zinc-100:hover,
+  .light .hover\:text-zinc-200:hover,
+  .light .hover\:text-gray-100:hover,
+  .light .hover\:text-gray-200:hover {
+    color: #1a2e22 !important;
+  }
+
   .light .hover\:bg-zinc-800:hover {
     background-color: #ecf0ed !important;
   }
@@ -194,7 +225,22 @@
   /* Fix white with opacity */
   .light .text-white\/80,
   .light .text-white\/70,
-  .light .text-white\/60 {
+  .light .text-white\/60,
+  .light .text-white\/50,
+  .light .text-white\/40,
+  .light .text-white\/30 {
+    color: rgba(26, 46, 34, 0.85) !important;
+  }
+
+  /* Fix white text with opacity on light backgrounds - but preserve on colored backgrounds */
+  .light .bg-zinc-800 .text-white\/80,
+  .light .bg-zinc-800\/50 .text-white\/80,
+  .light .bg-zinc-800\/80 .text-white\/80,
+  .light .bg-zinc-700 .text-white\/80,
+  .light .bg-zinc-900 .text-white\/80,
+  .light .bg-gray-800 .text-white\/80,
+  .light .bg-gray-700 .text-white\/80,
+  .light .bg-gray-900 .text-white\/80 {
     color: rgba(26, 46, 34, 0.85) !important;
   }
 
@@ -226,6 +272,24 @@
   .light .bg-gradient-to-r .text-white,
   .light .bg-emerald-500 .text-white,
   .light .bg-emerald-600 .text-white,
+  .light .bg-emerald-700 .text-white,
+  .light .bg-emerald-400 .text-white,
+  .light .bg-green-500 .text-white,
+  .light .bg-green-600 .text-white,
+  .light .bg-cyan-500 .text-white,
+  .light .bg-cyan-600 .text-white,
+  .light .bg-amber-500 .text-white,
+  .light .bg-amber-600 .text-white,
+  .light .bg-teal-500 .text-white,
+  .light .bg-teal-600 .text-white,
+  .light .bg-rose-500 .text-white,
+  .light .bg-rose-600 .text-white,
+  .light .bg-red-500 .text-white,
+  .light .bg-red-600 .text-white,
+  .light .bg-slate-500 .text-white,
+  .light .bg-slate-600 .text-white,
+  .light .bg-lime-500 .text-white,
+  .light .bg-lime-600 .text-white,
   .light .btn-primary .text-white,
   .light .action-btn-emerald .text-white,
   .light .action-btn-cyan .text-white,
@@ -237,7 +301,7 @@
     color: #ffffff !important;
   }
 
-  /* Fix: Keep white on gradient buttons */
+  /* Fix: Keep white on gradient buttons and colored buttons */
   .light .btn-primary,
   .light .btn-lime,
   .light .btn-danger,
@@ -246,8 +310,38 @@
   .light .action-btn-amber,
   .light .action-btn-teal,
   .light .action-btn-rose,
-  .light .action-btn-slate {
+  .light .action-btn-slate,
+  .light button[class*="bg-emerald"],
+  .light button[class*="bg-cyan"],
+  .light button[class*="bg-amber"],
+  .light button[class*="bg-teal"],
+  .light button[class*="bg-rose"],
+  .light button[class*="bg-red"],
+  .light button[class*="bg-green"],
+  .light button[class*="bg-lime"],
+  .light button[class*="bg-slate"] {
     color: #ffffff !important;
+  }
+
+  /* Fix buttons with light backgrounds - ensure dark text */
+  .light button.bg-zinc-800,
+  .light button.bg-zinc-800\/50,
+  .light button.bg-zinc-800\/80,
+  .light button.bg-zinc-700,
+  .light button.bg-zinc-900,
+  .light button.bg-gray-800,
+  .light button.bg-gray-700,
+  .light button.bg-gray-900,
+  .light button[class*="bg-zinc-8"],
+  .light button[class*="bg-zinc-9"],
+  .light button[class*="bg-gray-8"],
+  .light button[class*="bg-gray-9"] {
+    color: #1a2e22 !important;
+  }
+
+  /* Fix text-white on light backgrounds (not on colored buttons) */
+  .light button:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]):not(.btn-primary):not(.btn-lime):not(.btn-danger):not(.action-btn-emerald):not(.action-btn-cyan):not(.action-btn-amber):not(.action-btn-teal):not(.action-btn-rose):not(.action-btn-slate).text-white {
+    color: #1a2e22 !important;
   }
 
   /* Keep white on colored badges */
@@ -329,6 +423,27 @@
 
   .light .text-zinc-200 {
     color: #2d4a38 !important;
+  }
+
+  /* Additional text color fixes for light backgrounds */
+  .light .text-zinc-100\/80,
+  .light .text-zinc-100\/90,
+  .light .text-zinc-200\/80,
+  .light .text-zinc-200\/90 {
+    color: rgba(26, 46, 34, 0.9) !important;
+  }
+
+  /* Fix text-gray-100 and text-gray-200 on light backgrounds */
+  .light .text-gray-100,
+  .light .text-gray-200 {
+    color: #1a2e22 !important;
+  }
+
+  .light .text-gray-100\/80,
+  .light .text-gray-100\/90,
+  .light .text-gray-200\/80,
+  .light .text-gray-200\/90 {
+    color: rgba(26, 46, 34, 0.9) !important;
   }
 
   /* Border color extensions */
@@ -683,6 +798,66 @@
   /* Fix teal colors */
   .light .text-teal-400 {
     color: #0d9488 !important;
+  }
+
+  /* ============================================
+     Comprehensive Button Text Color Fixes
+     Ensure buttons with light backgrounds have dark text
+     ============================================ */
+
+  /* Buttons with light backgrounds should have dark text */
+  .light button.bg-zinc-800.text-white,
+  .light button.bg-zinc-800\/50.text-white,
+  .light button.bg-zinc-800\/80.text-white,
+  .light button.bg-zinc-700.text-white,
+  .light button.bg-zinc-900.text-white,
+  .light button.bg-gray-800.text-white,
+  .light button.bg-gray-700.text-white,
+  .light button.bg-gray-900.text-white,
+  .light a.bg-zinc-800.text-white,
+  .light a.bg-zinc-800\/50.text-white,
+  .light a.bg-zinc-800\/80.text-white,
+  .light a.bg-zinc-700.text-white,
+  .light a.bg-zinc-900.text-white,
+  .light a.bg-gray-800.text-white,
+  .light a.bg-gray-700.text-white,
+  .light a.bg-gray-900.text-white {
+    color: #1a2e22 !important;
+  }
+
+  /* Fix text-white in buttons/links on light card backgrounds */
+  .light .premium-card button.text-white:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]),
+  .light .glass-card button.text-white:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]),
+  .light .stat-card button.text-white:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) {
+    color: #1a2e22 !important;
+  }
+
+  /* Fix text-white in divs/spans on light backgrounds */
+  .light div.bg-zinc-800 .text-white,
+  .light div.bg-zinc-800\/50 .text-white,
+  .light div.bg-zinc-800\/80 .text-white,
+  .light div.bg-zinc-700 .text-white,
+  .light div.bg-zinc-900 .text-white,
+  .light div.bg-gray-800 .text-white,
+  .light div.bg-gray-700 .text-white,
+  .light div.bg-gray-900 .text-white,
+  .light span.bg-zinc-800 .text-white,
+  .light span.bg-zinc-800\/50 .text-white,
+  .light span.bg-zinc-800\/80 .text-white,
+  .light span.bg-zinc-700 .text-white,
+  .light span.bg-zinc-900 .text-white,
+  .light span.bg-gray-800 .text-white,
+  .light span.bg-gray-700 .text-white,
+  .light span.bg-gray-900 .text-white {
+    color: #1a2e22 !important;
+  }
+
+  /* Ensure text-white on elements with light background colors gets dark text */
+  .light [class*="bg-zinc-8"]:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) .text-white,
+  .light [class*="bg-zinc-9"]:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) .text-white,
+  .light [class*="bg-gray-8"]:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) .text-white,
+  .light [class*="bg-gray-9"]:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) .text-white {
+    color: #1a2e22 !important;
   }
 
   /* ============================================
@@ -2247,6 +2422,45 @@
     height: 4px;
     background: linear-gradient(90deg, rgba(16, 185, 129, 0.3), transparent);
     border-radius: 2px;
+  }
+
+  /* Shimmer effect for skeleton loaders */
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Light mode shimmer */
+  .light .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(16, 185, 129, 0.05) 0%,
+      rgba(16, 185, 129, 0.1) 50%,
+      rgba(16, 185, 129, 0.05) 100%
+    );
+    background-size: 1000px 100%;
+  }
+
+  /* Enhanced fade-in-up animation for stagger effects */
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s ease-out forwards;
+    opacity: 0;
+  }
     animation: swipe-hint-pulse 2s ease-in-out infinite;
     opacity: 0;
   }

@@ -130,3 +130,18 @@ export interface DashboardStats {
   avgWeightLossPercentage: number;
   avgMuscleMassIncrease: number;
 }
+
+export interface TodayTrainee {
+  trainee: Trainee;
+  workout: {
+    id: string;
+    workout_date: string;
+    workout_type: string;
+    is_completed: boolean;
+    workout_time?: string;
+    notes?: string;
+  };
+  daysSinceLastWorkout?: number | null;
+  unseenWeightsCount?: number;
+  status: 'scheduled' | 'completed' | 'upcoming';
+}

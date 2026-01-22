@@ -596,6 +596,16 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
     }
   };
 
+  const handleViewWorkoutPlan = (trainee: Trainee) => {
+    setSelectedTrainee(trainee);
+    setActiveView('workout-plans');
+  };
+
+  const handleViewMealPlan = (trainee: Trainee) => {
+    setSelectedTrainee(trainee);
+    setActiveView('meal-plans');
+  };
+
   const handleSelectPersonalWorkout = (memberIndex: 1 | 2) => {
     setSelectedPairMember(memberIndex === 1 ? 'member_1' : 'member_2');
     setActiveView('workout-session');
@@ -850,6 +860,9 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
               }
             }}
             onSaveMeasurement={handleSaveScaleMeasurement}
+            onNewWorkout={handleNewWorkout}
+            onViewWorkoutPlan={handleViewWorkoutPlan}
+            onViewMealPlan={handleViewMealPlan}
           />
           </Suspense>
         );
