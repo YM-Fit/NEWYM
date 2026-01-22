@@ -35,7 +35,7 @@ const getLastWorkoutDate = async (traineeId: string): Promise<string | null> => 
       .select('workouts!inner(workout_date)')
       .eq('trainee_id', traineeId)
       .eq('workouts.is_completed', true)
-      .order('workouts(workout_date)', { ascending: false })
+      .order('workouts.workout_date', { ascending: false })
       .limit(1)
       .maybeSingle();
       
@@ -87,8 +87,12 @@ export default function TodayTraineesSection({
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const todayStr = today.toISOString().split('T')[0];
-      const tomorrowStr = new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      // Use full ISO timestamp strings for timestamptz comparison
+      const todayStr = today.toISOString();
+      const tomorrowStr = tomorrow.toISOString();
       
       const traineeIds = trainees.map(t => t.id);
       
@@ -98,89 +102,135 @@ export default function TodayTraineesSection({
         return;
       }
 
-      // Query מתקדם עם כל הנתונים הנדרשים
-      const { data, error: queryError } = await supabase
-        .from('workout_trainees')
+      // Query workouts directly and join workout_trainees for better filtering support
+      const { data: workoutsData, error: workoutsError } = await supabase
+        .from('workouts')
         .select(`
-          trainee_id,
-          workouts!inner(
-            id,
-            workout_date,
-            workout_type,
-            is_completed,
-            notes,
-            created_at
-          ),
-          trainees(
-            id,
-            full_name,
-            gender,
-            phone,
-            email,
-            google_calendar_client_id,
-            is_pair,
-            pair_name_1,
-            pair_name_2
+          id,
+          workout_date,
+          workout_type,
+          is_completed,
+          notes,
+          created_at,
+          workout_trainees!inner(
+            trainee_id,
+            trainees(
+              id,
+              full_name,
+              gender,
+              phone,
+              email,
+              google_calendar_client_id,
+              is_pair,
+              pair_name_1,
+              pair_name_2
+            )
           )
         `)
-        .in('trainee_id', traineeIds)
-        .gte('workouts.workout_date', todayStr)
-        .lt('workouts.workout_date', tomorrowStr)
-        .order('workouts(workout_date)', { ascending: true });
+        .gte('workout_date', todayStr)
+        .lt('workout_date', tomorrowStr)
+        .order('workout_date', { ascending: true });
 
-      if (queryError) {
-        throw queryError;
+      if (workoutsError) {
+        logger.error('Query error details:', workoutsError, 'TodayTraineesSection');
+        throw workoutsError;
       }
 
-      // עיבוד הנתונים עם helper functions
-      const processedTrainees = await Promise.all(
-        (data || []).map(async (item: any) => {
-          const trainee = item.trainees;
-          const workout = item.workouts;
-          
-          // חישוב ימים מאז אימון אחרון
-          const lastWorkout = await getLastWorkoutDate(trainee.id);
-          const daysSinceLastWorkout = lastWorkout 
-            ? Math.floor((new Date().getTime() - new Date(lastWorkout).getTime()) / (1000 * 60 * 60 * 24))
-            : null;
-          
-          // חישוב מספר שקילות חדשות
-          const unseenWeightsCount = await getUnseenWeightsCount(trainee.id);
-          
-          // חילוץ זמן האימון (אם workout_date הוא timestamptz)
-          let workoutTime: string | undefined;
-          if (workout.workout_date && workout.workout_date.includes('T')) {
-            const workoutDate = new Date(workout.workout_date);
-            workoutTime = workoutDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-          }
-          
-          // קביעת סטטוס
-          const workoutDate = new Date(workout.workout_date);
-          const now = new Date();
-          const status = workout.is_completed 
-            ? 'completed' as const
-            : workoutDate > now 
-              ? 'upcoming' as const
-              : 'scheduled' as const;
-          
-          return {
-            trainee: trainee as Trainee,
-            workout: {
+      // Filter workouts to only include trainees in our list and flatten the structure
+      // Handle pair workouts by creating separate entries for each trainee
+      const data: any[] = [];
+      (workoutsData || []).forEach((workout: any) => {
+        const matchingTrainees = (workout.workout_trainees || []).filter((wt: any) => 
+          traineeIds.includes(wt.trainee_id)
+        );
+        
+        matchingTrainees.forEach((workoutTrainee: any) => {
+          data.push({
+            trainee_id: workoutTrainee.trainee_id,
+            workouts: {
               id: workout.id,
               workout_date: workout.workout_date,
               workout_type: workout.workout_type,
               is_completed: workout.is_completed,
-              workout_time: workoutTime,
-              notes: workout.notes
+              notes: workout.notes,
+              created_at: workout.created_at
             },
-            daysSinceLastWorkout,
-            unseenWeightsCount,
-            status
-          };
-        })
+            trainees: workoutTrainee.trainees
+          });
+        });
+      });
+
+      // עיבוד הנתונים עם helper functions
+      const processedTrainees = await Promise.all(
+        (data || [])
+          .filter((item: any) => item.trainees && item.workouts) // Safety check
+          .map(async (item: any) => {
+            const trainee = item.trainees;
+            const workout = item.workouts;
+            
+            if (!trainee || !workout || !trainee.id || !workout.id) {
+              return null;
+            }
+            
+            // חישוב ימים מאז אימון אחרון
+            const lastWorkout = await getLastWorkoutDate(trainee.id);
+            const daysSinceLastWorkout = lastWorkout 
+              ? Math.floor((new Date().getTime() - new Date(lastWorkout).getTime()) / (1000 * 60 * 60 * 24))
+              : null;
+            
+            // חישוב מספר שקילות חדשות
+            const unseenWeightsCount = await getUnseenWeightsCount(trainee.id);
+            
+            // חילוץ זמן האימון (אם workout_date הוא timestamptz)
+            let workoutTime: string | undefined;
+            if (workout.workout_date && typeof workout.workout_date === 'string' && workout.workout_date.includes('T')) {
+              try {
+                const workoutDate = new Date(workout.workout_date);
+                if (!isNaN(workoutDate.getTime())) {
+                  workoutTime = workoutDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+                }
+              } catch (e) {
+                // Ignore date parsing errors
+              }
+            }
+            
+            // קביעת סטטוס
+            let status: 'scheduled' | 'completed' | 'upcoming' = 'scheduled';
+            if (workout.is_completed) {
+              status = 'completed';
+            } else if (workout.workout_date) {
+              try {
+                const workoutDate = new Date(workout.workout_date);
+                const now = new Date();
+                if (!isNaN(workoutDate.getTime()) && workoutDate > now) {
+                  status = 'upcoming';
+                }
+              } catch (e) {
+                // Ignore date parsing errors, default to 'scheduled'
+              }
+            }
+            
+            return {
+              trainee: trainee as Trainee,
+              workout: {
+                id: workout.id,
+                workout_date: workout.workout_date,
+                workout_type: workout.workout_type,
+                is_completed: workout.is_completed,
+                workout_time: workoutTime,
+                notes: workout.notes
+              },
+              daysSinceLastWorkout,
+              unseenWeightsCount,
+              status
+            };
+          })
       );
       
-      setTodayTrainees(processedTrainees);
+      // Filter out any null values from processing
+      const validTrainees = processedTrainees.filter((t): t is TodayTrainee => t !== null);
+      
+      setTodayTrainees(validTrainees);
     } catch (err: any) {
       logger.error('Error loading today trainees:', err, 'TodayTraineesSection');
       setError('שגיאה בטעינת המתאמנים של היום');
@@ -317,7 +367,7 @@ function TraineeCardToday({
               {unseenWeightsCount && unseenWeightsCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 
                                bg-info rounded-full flex items-center justify-center 
-                               text-xs font-bold text-white border-2 border-elevated 
+                               text-xs font-bold text-inverse border-2 border-elevated 
                                animate-pulse">
                   {unseenWeightsCount}
                 </span>
