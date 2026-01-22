@@ -491,37 +491,37 @@ export default function TraineeWorkoutHistoryModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-zinc-800 shadow-2xl">
+      <div className="bg-[var(--color-bg-surface)] rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-[var(--color-border)] shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-zinc-800">
+        <div className="flex items-center justify-between p-5 border-b border-[var(--color-border)]">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-emerald-500/20 rounded-lg">
               <Calendar className="h-5 w-5 text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">היסטוריית אימונים - {traineeName}</h2>
+              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">היסטוריית אימונים - {traineeName}</h2>
               <div className="flex items-center gap-2 mt-1">
                 <button
                   onClick={() => navigateMonth('prev')}
-                  className="p-1 hover:bg-zinc-800 rounded transition-all"
+                  className="p-1 hover:bg-[var(--color-bg-elevated)] rounded transition-all"
                 >
-                  <ChevronRight className="h-4 w-4 text-zinc-400" />
+                  <ChevronRight className="h-4 w-4 text-[var(--color-text-muted)]" />
                 </button>
-                <span className="text-sm text-zinc-400">{formatMonth(selectedMonth)}</span>
+                <span className="text-sm text-[var(--color-text-muted)]">{formatMonth(selectedMonth)}</span>
                 <button
                   onClick={() => navigateMonth('next')}
-                  className="p-1 hover:bg-zinc-800 rounded transition-all"
+                  className="p-1 hover:bg-[var(--color-bg-elevated)] rounded transition-all"
                 >
-                  <ChevronLeft className="h-4 w-4 text-zinc-400" />
+                  <ChevronLeft className="h-4 w-4 text-[var(--color-text-muted)]" />
                 </button>
               </div>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-zinc-800 rounded-lg transition-all"
+            className="p-2 hover:bg-[var(--color-bg-elevated)] rounded-lg transition-all"
           >
-            <X className="h-5 w-5 text-zinc-400" />
+            <X className="h-5 w-5 text-[var(--color-text-muted)]" />
           </button>
         </div>
 
@@ -530,7 +530,7 @@ export default function TraineeWorkoutHistoryModal({
           {searchingTrainee ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Search className="h-8 w-8 text-emerald-400 animate-pulse mb-3" />
-              <p className="text-zinc-400">מחפש מתאמן...</p>
+              <p className="text-[var(--color-text-muted)]">מחפש מתאמן...</p>
             </div>
           ) : loading ? (
             <div className="flex items-center justify-center py-12">
@@ -539,34 +539,34 @@ export default function TraineeWorkoutHistoryModal({
           ) : !resolvedTraineeId ? (
             <div className="text-center py-12">
               <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-3" />
-              <p className="text-zinc-400">לא נמצא מתאמן בשם "{traineeName}"</p>
-              <p className="text-zinc-500 text-sm mt-2">ייתכן ששם המתאמן ביומן לא תואם לשם במערכת</p>
+              <p className="text-[var(--color-text-muted)]">לא נמצא מתאמן בשם "{traineeName}"</p>
+              <p className="text-[var(--color-text-muted)] opacity-60 text-sm mt-2">ייתכן ששם המתאמן ביומן לא תואם לשם במערכת</p>
             </div>
           ) : workouts.length === 0 ? (
             <div className="text-center py-12">
-              <AlertCircle className="h-12 w-12 text-zinc-600 mx-auto mb-3" />
-              <p className="text-zinc-400">אין אימונים בחודש זה</p>
+              <AlertCircle className="h-12 w-12 text-[var(--color-text-muted)] opacity-20 mx-auto mb-3" />
+              <p className="text-[var(--color-text-muted)]">אין אימונים בחודש זה</p>
             </div>
           ) : actionMode === 'view' ? (
             <div className="space-y-3">
               {workouts.map((workout) => (
                 <div
                   key={workout.id}
-                  className="flex items-center justify-between p-4 bg-zinc-800/50 rounded-xl border border-zinc-700/50 hover:border-zinc-600/50 transition-all"
+                  className="flex items-center justify-between p-4 bg-[var(--color-bg-elevated)]/50 rounded-xl border border-[var(--color-border)] hover:border-[var(--color-border)] transition-all"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold">
                       {workout.workoutNumber}
                     </div>
                     <div>
-                      <div className="font-medium text-white">
+                      <div className="font-medium text-[var(--color-text-primary)]">
                         {new Date(workout.workoutDate).toLocaleDateString('he-IL', {
                           weekday: 'long',
                           day: 'numeric',
                           month: 'long'
                         })}
                       </div>
-                      <div className="flex items-center gap-1 text-sm text-zinc-400">
+                      <div className="flex items-center gap-1 text-sm text-[var(--color-text-muted)]">
                         <Clock className="h-3.5 w-3.5" />
                         {workout.startTime} - {workout.endTime}
                       </div>
@@ -609,28 +609,28 @@ export default function TraineeWorkoutHistoryModal({
             <div className="space-y-4">
               <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
                 <h3 className="font-medium text-blue-400 mb-2">שינוי תאריך אימון</h3>
-                <p className="text-sm text-zinc-400">
+                <p className="text-sm text-[var(--color-text-muted)]">
                   אימון מקורי: {new Date(selectedWorkout.workoutDate).toLocaleDateString('he-IL')} בשעה {selectedWorkout.startTime}
                 </p>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-zinc-400 mb-2">תאריך חדש</label>
+                  <label className="block text-sm text-[var(--color-text-muted)] mb-2">תאריך חדש</label>
                   <input
                     type="date"
                     value={rescheduleDate}
                     onChange={(e) => setRescheduleDate(e.target.value)}
-                    className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white focus:border-blue-500/50 focus:outline-none"
+                    className="w-full p-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:border-blue-500/50 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-zinc-400 mb-2">שעה חדשה</label>
+                  <label className="block text-sm text-[var(--color-text-muted)] mb-2">שעה חדשה</label>
                   <input
                     type="time"
                     value={rescheduleTime}
                     onChange={(e) => setRescheduleTime(e.target.value)}
-                    className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white focus:border-blue-500/50 focus:outline-none"
+                    className="w-full p-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:border-blue-500/50 focus:outline-none"
                   />
                 </div>
               </div>
@@ -653,7 +653,7 @@ export default function TraineeWorkoutHistoryModal({
                 <button
                   onClick={cancelAction}
                   disabled={!!actionLoading}
-                  className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-400 transition-all"
+                  className="px-6 py-3 bg-[var(--color-bg-elevated)] hover:bg-[var(--color-bg-surface)] rounded-xl text-[var(--color-text-muted)] transition-all"
                 >
                   ביטול
                 </button>
@@ -663,17 +663,17 @@ export default function TraineeWorkoutHistoryModal({
             <div className="space-y-4">
               <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
                 <h3 className="font-medium text-purple-400 mb-2">החלפת מתאמן</h3>
-                <p className="text-sm text-zinc-400">
+                <p className="text-sm text-[var(--color-text-muted)]">
                   אימון בתאריך: {new Date(selectedWorkout.workoutDate).toLocaleDateString('he-IL')} בשעה {selectedWorkout.startTime}
                 </p>
               </div>
               
               <div>
-                <label className="block text-sm text-zinc-400 mb-2">בחר מתאמן חדש</label>
+                <label className="block text-sm text-[var(--color-text-muted)] mb-2">בחר מתאמן חדש</label>
                 <select
                   value={replaceTraineeId}
                   onChange={(e) => setReplaceTraineeId(e.target.value)}
-                  className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white focus:border-purple-500/50 focus:outline-none"
+                  className="w-full p-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:border-purple-500/50 focus:outline-none"
                 >
                   <option value="">-- בחר מתאמן --</option>
                   {trainees
@@ -705,7 +705,7 @@ export default function TraineeWorkoutHistoryModal({
                 <button
                   onClick={cancelAction}
                   disabled={!!actionLoading}
-                  className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-400 transition-all"
+                  className="px-6 py-3 bg-[var(--color-bg-elevated)] hover:bg-[var(--color-bg-surface)] rounded-xl text-[var(--color-text-muted)] transition-all"
                 >
                   ביטול
                 </button>
@@ -715,14 +715,14 @@ export default function TraineeWorkoutHistoryModal({
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-zinc-800">
+        <div className="p-5 border-t border-[var(--color-border)]">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-zinc-400">
+            <div className="text-sm text-[var(--color-text-muted)]">
               {workouts.length} אימונים בחודש זה
             </div>
             <button
               onClick={onClose}
-              className="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl transition-all"
+              className="px-5 py-2.5 bg-[var(--color-bg-elevated)] hover:bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] rounded-xl transition-all"
             >
               סגור
             </button>

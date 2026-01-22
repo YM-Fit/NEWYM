@@ -897,12 +897,12 @@ export default function SmartReportView() {
               <FileSpreadsheet className="w-8 h-8 text-purple-400" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white mb-1">דוח חכם</h1>
-              <p className="text-zinc-400 text-lg">ניהול תשלומים וסיכום חודשי של מתאמנים</p>
+              <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-1">דוח חכם</h1>
+              <p className="text-[var(--color-text-muted)] text-lg">ניהול תשלומים וסיכום חודשי של מתאמנים</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 text-sm text-zinc-400">
+            <label className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
               <input
                 type="checkbox"
                 checked={autoSave}
@@ -934,17 +934,17 @@ export default function SmartReportView() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigateMonth('prev')}
-              className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-zinc-400 hover:text-white"
+              className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700/50">
               <Calendar className="w-5 h-5 text-purple-400" />
-              <span className="font-semibold text-white">{formatMonth(selectedMonth)}</span>
+              <span className="font-semibold text-[var(--color-text-primary)]">{formatMonth(selectedMonth)}</span>
             </div>
             <button
               onClick={() => navigateMonth('next')}
-              className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-zinc-400 hover:text-white disabled:opacity-50"
+              className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-50"
               disabled={selectedMonth >= new Date()}
             >
               <ChevronLeft className="w-5 h-5" />
@@ -954,13 +954,13 @@ export default function SmartReportView() {
           {/* Search, Hidden Toggle, and Export */}
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
               <input
                 type="text"
                 placeholder="חיפוש מתאמן..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10 pl-4 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500/50 focus:outline-none w-48"
+                className="pr-10 pl-4 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:border-purple-500/50 focus:outline-none w-48"
               />
             </div>
             
@@ -972,7 +972,7 @@ export default function SmartReportView() {
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-sm ${
                     showHidden
                       ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                      : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:text-zinc-300'
+                      : 'bg-zinc-800/50 text-[var(--color-text-muted)] border border-zinc-700/50 hover:text-[var(--color-text-secondary)]'
                   }`}
                   title={showHidden ? 'הסתר מוסתרים' : 'הצג מוסתרים'}
                 >
@@ -981,7 +981,7 @@ export default function SmartReportView() {
                 </button>
                 <button
                   onClick={clearHiddenTrainees}
-                  className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-400 hover:text-zinc-300 rounded-lg transition-all"
+                  className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] rounded-lg transition-all"
                   title="נקה את כל המוסתרים"
                 >
                   <X className="w-4 h-4" />
@@ -991,7 +991,7 @@ export default function SmartReportView() {
             
             <button
               onClick={exportToCSV}
-              className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-zinc-300 border border-zinc-700/50"
+              className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-[var(--color-text-secondary)] border border-zinc-700/50"
             >
               <Download className="w-4 h-4" />
               ייצוא CSV
@@ -1004,11 +1004,11 @@ export default function SmartReportView() {
       {monthlyReport && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="premium-card-static p-5">
-            <div className="text-sm text-zinc-500 mb-1">סה"כ הכנסה חודשית</div>
+            <div className="text-sm text-[var(--color-text-muted)] mb-1">סה"כ הכנסה חודשית</div>
             <div className="text-2xl font-bold text-emerald-400">₪{monthlyReport.total_income.toLocaleString()}</div>
             {monthlyReport.income_goal > 0 && (
               <div className="mt-2">
-                <div className="flex items-center justify-between text-xs text-zinc-500 mb-1">
+                <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] mb-1">
                   <span>מטרה: ₪{monthlyReport.income_goal.toLocaleString()}</span>
                   <span>{Math.round((monthlyReport.total_income / monthlyReport.income_goal) * 100)}%</span>
                 </div>
@@ -1018,25 +1018,25 @@ export default function SmartReportView() {
                     style={{ width: `${Math.min((monthlyReport.total_income / monthlyReport.income_goal) * 100, 100)}%` }}
                   />
                 </div>
-                <div className="text-xs text-zinc-500 mt-1">
+                <div className="text-xs text-[var(--color-text-muted)] mt-1">
                   נותר: ₪{Math.max(0, monthlyReport.income_goal - monthlyReport.total_income).toLocaleString()}
                 </div>
               </div>
             )}
           </div>
           <div className="premium-card-static p-5">
-            <div className="text-sm text-zinc-500 mb-1">סה"כ אימונים החודש</div>
+            <div className="text-sm text-[var(--color-text-muted)] mb-1">סה"כ אימונים החודש</div>
             <div className="text-2xl font-bold text-purple-400">{monthlyReport.total_workouts}</div>
           </div>
           <div className="premium-card-static p-5">
-            <div className="text-sm text-zinc-500 mb-1 flex items-center gap-2">
+            <div className="text-sm text-[var(--color-text-muted)] mb-1 flex items-center gap-2">
               <TrendingDown className="w-4 h-4" />
               חודש קודם
             </div>
             <div className="text-2xl font-bold text-blue-400">₪{monthlyReport.previous_month_income.toLocaleString()}</div>
           </div>
           <div className="premium-card-static p-5">
-            <div className="text-sm text-zinc-500 mb-1 flex items-center gap-2">
+            <div className="text-sm text-[var(--color-text-muted)] mb-1 flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
               צפי חודש הבא
             </div>
@@ -1048,16 +1048,16 @@ export default function SmartReportView() {
       {/* Payment Distribution */}
       {monthlyReport && (
         <div className="premium-card-static p-5 mb-6">
-          <h3 className="text-lg font-semibold text-white mb-4">התפלגות לפי סוג תשלום</h3>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">התפלגות לפי סוג תשלום</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
             {Object.entries(monthlyReport.payment_distribution).map(([method, amount]) => {
               if (amount === 0) return null;
               const PaymentIcon = PAYMENT_METHOD_ICONS[method as PaymentMethod];
               return (
                 <div key={method} className="flex flex-col items-center p-3 bg-zinc-800/50 rounded-lg">
-                  {PaymentIcon && <PaymentIcon className="w-5 h-5 text-zinc-400 mb-2" />}
-                  <div className="text-xs text-zinc-500 mb-1">{PAYMENT_METHOD_LABELS[method as PaymentMethod]}</div>
-                  <div className="text-lg font-bold text-white">₪{amount.toLocaleString()}</div>
+                  {PaymentIcon && <PaymentIcon className="w-5 h-5 text-[var(--color-text-muted)] mb-2" />}
+                  <div className="text-xs text-[var(--color-text-muted)] mb-1">{PAYMENT_METHOD_LABELS[method as PaymentMethod]}</div>
+                  <div className="text-lg font-bold text-[var(--color-text-primary)]">₪{amount.toLocaleString()}</div>
                 </div>
               );
             })}
@@ -1069,14 +1069,14 @@ export default function SmartReportView() {
       <div className="premium-card-static p-4 mb-6">
         <div className="flex items-center gap-4">
           <Target className="w-5 h-5 text-purple-400" />
-          <label className="text-sm text-zinc-400">מטרת הכנסה חודשית:</label>
+          <label className="text-sm text-[var(--color-text-muted)]">מטרת הכנסה חודשית:</label>
           <div className="flex items-center gap-2">
-            <span className="text-zinc-500">₪</span>
+            <span className="text-[var(--color-text-muted)]">₪</span>
             <input
               type="number"
               value={incomeGoal}
               onChange={(e) => setIncomeGoal(parseFloat(e.target.value) || 0)}
-              className="px-3 py-1 bg-zinc-800 border border-zinc-700 rounded-lg text-white w-32"
+              className="px-3 py-1 bg-zinc-800 border border-zinc-700 rounded-lg text-[var(--color-text-primary)] w-32"
               min="0"
             />
             <button
@@ -1197,14 +1197,14 @@ export default function SmartReportView() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-zinc-800">
-                  <th className="text-right p-4 text-sm font-semibold text-zinc-400">שם מתאמן</th>
-                  <th className="text-right p-4 text-sm font-semibold text-zinc-400">שיטת תשלום</th>
-                  <th className="text-right p-4 text-sm font-semibold text-zinc-400">שיטת ספירה</th>
-                  <th className="text-right p-4 text-sm font-semibold text-zinc-400">מחיר</th>
-                  <th className="text-right p-4 text-sm font-semibold text-zinc-400">אימונים החודש</th>
-                  <th className="text-right p-4 text-sm font-semibold text-zinc-400">סה"כ לחיוב</th>
-                  <th className="text-right p-4 text-sm font-semibold text-zinc-400">כרטיסיה</th>
-                  <th className="text-center p-4 text-sm font-semibold text-zinc-400">פעולות</th>
+                  <th className="text-right p-4 text-sm font-semibold text-[var(--color-text-muted)]">שם מתאמן</th>
+                  <th className="text-right p-4 text-sm font-semibold text-[var(--color-text-muted)]">שיטת תשלום</th>
+                  <th className="text-right p-4 text-sm font-semibold text-[var(--color-text-muted)]">שיטת ספירה</th>
+                  <th className="text-right p-4 text-sm font-semibold text-[var(--color-text-muted)]">מחיר</th>
+                  <th className="text-right p-4 text-sm font-semibold text-[var(--color-text-muted)]">אימונים החודש</th>
+                  <th className="text-right p-4 text-sm font-semibold text-[var(--color-text-muted)]">סה"כ לחיוב</th>
+                  <th className="text-right p-4 text-sm font-semibold text-[var(--color-text-muted)]">כרטיסיה</th>
+                  <th className="text-center p-4 text-sm font-semibold text-[var(--color-text-muted)]">פעולות</th>
                 </tr>
               </thead>
               <tbody>
@@ -1219,13 +1219,13 @@ export default function SmartReportView() {
                       <td className="p-4">
                         <button
                           onClick={() => setSelectedTrainee(row.id)}
-                          className="font-medium text-white hover:text-purple-400 transition-colors flex items-center gap-2"
+                          className="font-medium text-[var(--color-text-primary)] hover:text-purple-400 transition-colors flex items-center gap-2"
                         >
                           {row.full_name}
                           <Eye className="w-4 h-4" />
                         </button>
                         {row.counting_method === 'card_ticket' && (
-                          <div className="text-xs text-zinc-500 mt-1">
+                          <div className="text-xs text-[var(--color-text-muted)] mt-1">
                             כרטיסיה #{row.card_sessions_total}
                           </div>
                         )}
@@ -1240,7 +1240,7 @@ export default function SmartReportView() {
                               ...editing, 
                               payment_method: e.target.value as PaymentMethod || null 
                             })}
-                            className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm w-full"
+                            className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-[var(--color-text-primary)] text-sm w-full"
                           >
                             <option value="">לא הוגדר</option>
                             <option value="standing_order">הוראת קבע</option>
@@ -1251,8 +1251,8 @@ export default function SmartReportView() {
                           </select>
                         ) : (
                           <div className="flex items-center gap-2">
-                            {PaymentIcon && <PaymentIcon className="w-4 h-4 text-zinc-400" />}
-                            <span className={row.payment_method ? 'text-white' : 'text-zinc-500'}>
+                            {PaymentIcon && <PaymentIcon className="w-4 h-4 text-[var(--color-text-muted)]" />}
+                            <span className={row.payment_method ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]'}>
                               {row.payment_method ? PAYMENT_METHOD_LABELS[row.payment_method] : 'לא הוגדר'}
                             </span>
                           </div>
@@ -1268,7 +1268,7 @@ export default function SmartReportView() {
                               ...editing, 
                               counting_method: e.target.value as CountingMethod || null 
                             })}
-                            className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm w-full"
+                            className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-[var(--color-text-primary)] text-sm w-full"
                           >
                             <option value="">לא הוגדר</option>
                             <option value="subscription">מנוי מתחדש</option>
@@ -1277,8 +1277,8 @@ export default function SmartReportView() {
                           </select>
                         ) : (
                           <div className="flex items-center gap-2">
-                            {CountingIcon && <CountingIcon className="w-4 h-4 text-zinc-400" />}
-                            <span className={row.counting_method ? 'text-white' : 'text-zinc-500'}>
+                            {CountingIcon && <CountingIcon className="w-4 h-4 text-[var(--color-text-muted)]" />}
+                            <span className={row.counting_method ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]'}>
                               {row.counting_method ? COUNTING_METHOD_LABELS[row.counting_method] : 'לא הוגדר'}
                             </span>
                           </div>
@@ -1289,7 +1289,7 @@ export default function SmartReportView() {
                       <td className="p-4">
                         {isEditing ? (
                           <div className="flex items-center gap-1">
-                            <span className="text-zinc-500">₪</span>
+                            <span className="text-[var(--color-text-muted)]">₪</span>
                             <input
                               type="number"
                               value={editing.monthly_price}
@@ -1297,12 +1297,12 @@ export default function SmartReportView() {
                                 ...editing, 
                                 monthly_price: parseFloat(e.target.value) || 0 
                               })}
-                              className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm w-24"
+                              className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-[var(--color-text-primary)] text-sm w-24"
                               min="0"
                             />
                           </div>
                         ) : (
-                          <span className="text-white">
+                          <span className="text-[var(--color-text-primary)]">
                             {row.monthly_price > 0 ? `₪${row.monthly_price}` : '-'}
                           </span>
                         )}
@@ -1310,14 +1310,14 @@ export default function SmartReportView() {
 
                       {/* Workouts */}
                       <td className="p-4">
-                        <span className={`font-semibold ${row.workouts_this_month > 0 ? 'text-purple-400' : 'text-zinc-500'}`}>
+                        <span className={`font-semibold ${row.workouts_this_month > 0 ? 'text-purple-400' : 'text-[var(--color-text-muted)]'}`}>
                           {row.workouts_this_month}
                         </span>
                       </td>
 
                       {/* Total Due */}
                       <td className="p-4">
-                        <span className={`font-semibold ${row.total_due > 0 ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                        <span className={`font-semibold ${row.total_due > 0 ? 'text-emerald-400' : 'text-[var(--color-text-muted)]'}`}>
                           {row.total_due > 0 ? `₪${row.total_due}` : '-'}
                         </span>
                       </td>
@@ -1335,7 +1335,7 @@ export default function SmartReportView() {
                                   <span className={`font-medium ${row.card_remaining > 2 ? 'text-emerald-400' : row.card_remaining > 0 ? 'text-amber-400' : 'text-red-400'}`}>
                                     {row.card_remaining}
                                   </span>
-                                  <span className="text-zinc-500 text-sm">/ {row.card_sessions_total}</span>
+                                  <span className="text-[var(--color-text-muted)] text-sm">/ {row.card_sessions_total}</span>
                                 </div>
                                 {row.card_purchased_this_month && (
                                   <span className="text-xs text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded">
@@ -1427,50 +1427,50 @@ export default function SmartReportView() {
       {/* Add Card Modal */}
       {showAddCardModal && selectedTraineeForCard && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 rounded-2xl max-w-md w-full p-6 border border-zinc-800">
+          <div className="bg-[var(--color-bg-surface)] rounded-2xl max-w-md w-full p-6 border border-[var(--color-border)]">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
                 <Ticket className="w-6 h-6 text-amber-400" />
                 כרטיסיה חדשה - {selectedTraineeForCard.name}
               </h2>
               <button
                 onClick={() => setShowAddCardModal(false)}
-                className="p-2 hover:bg-zinc-800 rounded-lg transition-all"
+                className="p-2 hover:bg-[var(--color-bg-elevated)] rounded-lg transition-all"
               >
-                <X className="w-5 h-5 text-zinc-400" />
+                <X className="w-5 h-5 text-[var(--color-text-muted)]" />
               </button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-zinc-400 mb-2">כמות אימונים</label>
+                <label className="block text-sm text-[var(--color-text-muted)] mb-2">כמות אימונים</label>
                 <input
                   type="number"
                   value={newCard.sessions_purchased}
                   onChange={(e) => setNewCard({ ...newCard, sessions_purchased: parseInt(e.target.value) || 0 })}
-                  className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white"
+                  className="w-full p-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)]"
                   min="1"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-zinc-400 mb-2">מחיר הכרטיסיה (₪)</label>
+                <label className="block text-sm text-[var(--color-text-muted)] mb-2">מחיר הכרטיסיה (₪)</label>
                 <input
                   type="number"
                   value={newCard.price_paid}
                   onChange={(e) => setNewCard({ ...newCard, price_paid: parseFloat(e.target.value) || 0 })}
-                  className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white"
+                  className="w-full p-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)]"
                   min="0"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-zinc-400 mb-2">תאריך רכישה</label>
+                <label className="block text-sm text-[var(--color-text-muted)] mb-2">תאריך רכישה</label>
                 <input
                   type="date"
                   value={newCard.purchase_date}
                   onChange={(e) => setNewCard({ ...newCard, purchase_date: e.target.value })}
-                  className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white"
+                  className="w-full p-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)]"
                 />
               </div>
             </div>
@@ -1492,7 +1492,7 @@ export default function SmartReportView() {
               </button>
               <button
                 onClick={() => setShowAddCardModal(false)}
-                className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-zinc-400 transition-all"
+                className="px-6 py-3 bg-[var(--color-bg-elevated)] hover:bg-[var(--color-bg-surface)] rounded-lg text-[var(--color-text-muted)] transition-all"
               >
                 ביטול
               </button>
@@ -1504,23 +1504,23 @@ export default function SmartReportView() {
       {/* Card History Modal */}
       {showCardHistoryModal && selectedTraineeForCard && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 rounded-2xl max-w-lg w-full p-6 border border-zinc-800 max-h-[80vh] overflow-hidden flex flex-col">
+          <div className="bg-[var(--color-bg-surface)] rounded-2xl max-w-lg w-full p-6 border border-[var(--color-border)] max-h-[80vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
                 <History className="w-6 h-6 text-blue-400" />
                 היסטוריית כרטיסיות - {selectedTraineeForCard.name}
               </h2>
               <button
                 onClick={() => setShowCardHistoryModal(false)}
-                className="p-2 hover:bg-zinc-800 rounded-lg transition-all"
+                className="p-2 hover:bg-[var(--color-bg-elevated)] rounded-lg transition-all"
               >
-                <X className="w-5 h-5 text-zinc-400" />
+                <X className="w-5 h-5 text-[var(--color-text-muted)]" />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto">
               {cardHistory.length === 0 ? (
-                <div className="text-center py-8 text-zinc-500">
+                <div className="text-center py-8 text-[var(--color-text-muted)]">
                   אין היסטוריית כרטיסיות
                 </div>
               ) : (
@@ -1531,13 +1531,13 @@ export default function SmartReportView() {
                       className={`p-4 rounded-lg border ${
                         card.is_active 
                           ? 'bg-emerald-500/10 border-emerald-500/30' 
-                          : 'bg-zinc-800/50 border-zinc-700'
+                          : 'bg-[var(--color-bg-elevated)]/50 border-[var(--color-border)]'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <Ticket className={`w-5 h-5 ${card.is_active ? 'text-emerald-400' : 'text-zinc-500'}`} />
-                          <span className="font-medium text-white">
+                          <Ticket className={`w-5 h-5 ${card.is_active ? 'text-emerald-400' : 'text-[var(--color-text-muted)]'}`} />
+                          <span className="font-medium text-[var(--color-text-primary)]">
                             {card.sessions_purchased} אימונים
                           </span>
                           {card.is_active && (
@@ -1548,7 +1548,7 @@ export default function SmartReportView() {
                         </div>
                         <span className="text-emerald-400 font-medium">₪{card.price_paid}</span>
                       </div>
-                      <div className="flex items-center justify-between text-sm text-zinc-400">
+                      <div className="flex items-center justify-between text-sm text-[var(--color-text-muted)]">
                         <span>
                           נרכש: {new Date(card.purchase_date).toLocaleDateString('he-IL')}
                         </span>
@@ -1571,7 +1571,7 @@ export default function SmartReportView() {
               )}
             </div>
 
-            <div className="mt-6 pt-4 border-t border-zinc-800">
+            <div className="mt-6 pt-4 border-t border-[var(--color-border)]">
               <button
                 onClick={() => {
                   setShowCardHistoryModal(false);

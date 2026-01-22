@@ -231,16 +231,16 @@ export default function QuickAddWorkoutModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 rounded-2xl max-w-md w-full border border-zinc-800 shadow-2xl">
+      <div className="bg-[var(--color-bg-surface)] rounded-2xl max-w-md w-full border border-[var(--color-border)] shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-zinc-800">
+        <div className="flex items-center justify-between p-5 border-b border-[var(--color-border)]">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-emerald-500/20 rounded-lg">
               <Plus className="h-5 w-5 text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">הוספת אימון מהירה</h2>
-              <p className="text-xs text-zinc-400">
+              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">הוספת אימון מהירה</h2>
+              <p className="text-xs text-[var(--color-text-muted)]">
                 {selectedDate.toLocaleDateString('he-IL', { 
                   weekday: 'long',
                   day: 'numeric', 
@@ -251,9 +251,9 @@ export default function QuickAddWorkoutModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-zinc-800 rounded-lg transition-all"
+            className="p-2 hover:bg-[var(--color-bg-elevated)] rounded-lg transition-all"
           >
-            <X className="h-5 w-5 text-zinc-400" />
+            <X className="h-5 w-5 text-[var(--color-text-muted)]" />
           </button>
         </div>
 
@@ -261,7 +261,7 @@ export default function QuickAddWorkoutModal({
         <div className="p-5 space-y-5">
           {/* Trainee Selection */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-zinc-300">
+            <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
               <User className="h-4 w-4 text-emerald-400" />
               בחירת מתאמן
             </label>
@@ -269,7 +269,7 @@ export default function QuickAddWorkoutModal({
               value={selectedTraineeId}
               onChange={(e) => setSelectedTraineeId(e.target.value)}
               disabled={traineesLoading}
-              className="w-full p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+              className="w-full p-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
             >
               <option value="">-- בחר מתאמן --</option>
               {sortedTrainees.map((trainee) => (
@@ -283,7 +283,7 @@ export default function QuickAddWorkoutModal({
 
           {/* Duration Selection */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-zinc-300">
+            <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
               <Clock className="h-4 w-4 text-emerald-400" />
               משך האימון
             </label>
@@ -294,7 +294,7 @@ export default function QuickAddWorkoutModal({
                 className={`p-3 rounded-xl border transition-all ${
                   duration === '30'
                     ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                    : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-300 hover:border-zinc-600'
+                    : 'bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-zinc-600'
                 }`}
               >
                 30 דקות
@@ -305,7 +305,7 @@ export default function QuickAddWorkoutModal({
                 className={`p-3 rounded-xl border transition-all ${
                   duration === '60'
                     ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                    : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-300 hover:border-zinc-600'
+                    : 'bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-zinc-600'
                 }`}
               >
                 שעה
@@ -316,7 +316,7 @@ export default function QuickAddWorkoutModal({
           {/* Date & Time */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-zinc-300">
+              <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
                 <Calendar className="h-4 w-4 text-emerald-400" />
                 תאריך
               </label>
@@ -324,11 +324,11 @@ export default function QuickAddWorkoutModal({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                className="w-full p-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
               />
             </div>
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-zinc-300">
+              <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
                 <Clock className="h-4 w-4 text-emerald-400" />
                 שעה
               </label>
@@ -336,17 +336,17 @@ export default function QuickAddWorkoutModal({
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                className="w-full p-3 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
               />
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-5 border-t border-zinc-800">
+        <div className="flex items-center justify-between p-5 border-t border-[var(--color-border)]">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl transition-all"
+            className="px-5 py-2.5 bg-[var(--color-bg-elevated)] hover:bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] rounded-xl transition-all"
           >
             ביטול
           </button>

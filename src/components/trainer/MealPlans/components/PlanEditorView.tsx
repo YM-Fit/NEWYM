@@ -83,7 +83,7 @@ export function PlanEditorView({
               type="text"
               value={plan.name || ''}
               onChange={(e) => onUpdatePlan({ name: e.target.value })}
-              className="glass-input w-full px-4 py-3"
+              className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
             />
           </div>
           <div>
@@ -92,7 +92,7 @@ export function PlanEditorView({
               type="text"
               value={plan.description || ''}
               onChange={(e) => onUpdatePlan({ description: e.target.value })}
-              className="glass-input w-full px-4 py-3"
+              className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
               placeholder="לדוגמה: תפריט הורדה במשקל"
             />
           </div>
@@ -108,7 +108,7 @@ export function PlanEditorView({
               type="number"
               value={plan.daily_calories || ''}
               onChange={(e) => onUpdatePlan({ daily_calories: e.target.value ? parseInt(e.target.value) : null })}
-              className="glass-input w-full px-4 py-3"
+              className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
             />
           </div>
           <div>
@@ -120,7 +120,7 @@ export function PlanEditorView({
               type="number"
               value={plan.protein_grams || ''}
               onChange={(e) => onUpdatePlan({ protein_grams: e.target.value ? parseInt(e.target.value) : null })}
-              className="glass-input w-full px-4 py-3"
+              className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
             />
           </div>
           <div>
@@ -132,7 +132,7 @@ export function PlanEditorView({
               type="number"
               value={plan.carbs_grams || ''}
               onChange={(e) => onUpdatePlan({ carbs_grams: e.target.value ? parseInt(e.target.value) : null })}
-              className="glass-input w-full px-4 py-3"
+              className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
             />
           </div>
           <div>
@@ -144,7 +144,7 @@ export function PlanEditorView({
               type="number"
               value={plan.fat_grams || ''}
               onChange={(e) => onUpdatePlan({ fat_grams: e.target.value ? parseInt(e.target.value) : null })}
-              className="glass-input w-full px-4 py-3"
+              className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
             />
           </div>
           <div>
@@ -156,7 +156,7 @@ export function PlanEditorView({
               type="number"
               value={plan.daily_water_ml || ''}
               onChange={(e) => onUpdatePlan({ daily_water_ml: e.target.value ? parseInt(e.target.value) : null })}
-              className="glass-input w-full px-4 py-3"
+              className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
             />
           </div>
         </div>
@@ -175,7 +175,7 @@ export function PlanEditorView({
           <textarea
             value={plan.notes || ''}
             onChange={(e) => onUpdatePlan({ notes: e.target.value })}
-            className="glass-input w-full px-4 py-3"
+            className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
             rows={3}
             placeholder="הערות כלליות לתפריט..."
           />
@@ -236,12 +236,12 @@ export function PlanEditorView({
                         <div className="flex gap-2 text-sm">
                           {mealTotals.calories > 0 && (
                             <span className="text-[var(--color-text-secondary)] bg-[var(--color-bg-surface)] px-3 py-1.5 rounded-lg border border-[var(--color-border)]">
-                              <span className="text-emerald-400 font-semibold">{mealTotals.calories}</span> קל'
+                              <span className="text-emerald-400 font-semibold">{mealTotals.calories}</span> <span className="text-[var(--color-text-muted)]">קל'</span>
                             </span>
                           )}
                           {mealTotals.protein > 0 && (
                             <span className="text-[var(--color-text-secondary)] bg-[var(--color-bg-surface)] px-3 py-1.5 rounded-lg border border-[var(--color-border)]">
-                              <span className="text-emerald-400 font-semibold">{mealTotals.protein}ג</span> חלבון
+                              <span className="text-emerald-400 font-semibold">{mealTotals.protein}ג</span> <span className="text-[var(--color-text-muted)]">חלבון</span>
                             </span>
                           )}
                         </div>
@@ -318,10 +318,14 @@ export function PlanEditorView({
                                 {meal.total_calories || meal.total_protein ? (
                                   <div className="flex gap-2 text-xs">
                                     {meal.total_calories && (
-                                      <span className="text-[var(--color-text-muted)] bg-[var(--color-bg-surface)] px-2 py-0.5 rounded border border-[var(--color-border)]">{meal.total_calories} קל'</span>
+                                      <span className="text-[var(--color-text-muted)] bg-[var(--color-bg-surface)] px-2 py-0.5 rounded border border-[var(--color-border)]">
+                                        <span className="text-[var(--color-text-primary)] font-medium">{meal.total_calories}</span> קל'
+                                      </span>
                                     )}
                                     {meal.total_protein && (
-                                      <span className="text-[var(--color-text-muted)] bg-[var(--color-bg-surface)] px-2 py-0.5 rounded border border-[var(--color-border)]">{meal.total_protein}ג חלבון</span>
+                                      <span className="text-[var(--color-text-muted)] bg-[var(--color-bg-surface)] px-2 py-0.5 rounded border border-[var(--color-border)]">
+                                        <span className="text-[var(--color-text-primary)] font-medium">{meal.total_protein}ג</span> חלבון
+                                      </span>
                                     )}
                                   </div>
                                 ) : null}
@@ -355,7 +359,7 @@ export function PlanEditorView({
                                     type="time"
                                     value={meal.meal_time}
                                     onChange={(e) => onUpdateMeal(displayIndex, 'meal_time', e.target.value)}
-                                    className="glass-input w-full px-4 py-3"
+                                    className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
                                   />
                                 </div>
                                 <div>
@@ -363,7 +367,7 @@ export function PlanEditorView({
                                   <select
                                     value={meal.meal_name}
                                     onChange={(e) => onUpdateMeal(displayIndex, 'meal_name', e.target.value)}
-                                    className="glass-input w-full px-4 py-3"
+                                    className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
                                   >
                                     {MEAL_NAMES.map((m) => (
                                       <option key={m.value} value={m.value}>
@@ -411,7 +415,7 @@ export function PlanEditorView({
                                   </button>
                                 </div>
 
-                                {meal.food_items && meal.food_items.length > 0 ? (
+                                  {meal.food_items && meal.food_items.length > 0 ? (
                                   <div className="space-y-2">
                                     {meal.food_items.map((item, itemIndex) => (
                                       <div
@@ -427,7 +431,7 @@ export function PlanEditorView({
                                               onChange={(e) => {
                                                 debouncedUpdateFoodItem(item.id, { food_name: e.target.value }, displayIndex, itemIndex);
                                               }}
-                                              className="glass-input w-full px-3 py-2 text-sm"
+                                              className="glass-input w-full px-3 py-2 text-sm text-[var(--color-text-primary)]"
                                               placeholder="לדוגמה: ביצה"
                                             />
                                           </div>
@@ -440,7 +444,7 @@ export function PlanEditorView({
                                               onChange={(e) => {
                                                 debouncedUpdateFoodItem(item.id, { quantity: parseFloat(e.target.value) || 0 }, displayIndex, itemIndex);
                                               }}
-                                              className="glass-input w-full px-3 py-2 text-sm"
+                                              className="glass-input w-full px-3 py-2 text-sm text-[var(--color-text-primary)]"
                                             />
                                           </div>
                                           <div className="col-span-2">
@@ -450,7 +454,7 @@ export function PlanEditorView({
                                               onChange={(e) => {
                                                 debouncedUpdateFoodItem(item.id, { unit: e.target.value }, displayIndex, itemIndex);
                                               }}
-                                              className="glass-input w-full px-3 py-2 text-sm"
+                                              className="glass-input w-full px-3 py-2 text-sm text-[var(--color-text-primary)]"
                                             >
                                               <option value="g">גרם</option>
                                               <option value="unit">יחידה</option>
@@ -469,7 +473,7 @@ export function PlanEditorView({
                                                 onChange={(e) => {
                                                   debouncedUpdateFoodItem(item.id, { calories: e.target.value ? parseInt(e.target.value) : null }, displayIndex, itemIndex);
                                                 }}
-                                                className="glass-input w-full px-2 py-2 text-xs"
+                                                className="glass-input w-full px-2 py-2 text-xs text-[var(--color-text-primary)]"
                                                 placeholder="קל'"
                                               />
                                             </div>
@@ -481,7 +485,7 @@ export function PlanEditorView({
                                                 onChange={(e) => {
                                                   debouncedUpdateFoodItem(item.id, { protein: e.target.value ? parseInt(e.target.value) : null }, displayIndex, itemIndex);
                                                 }}
-                                                className="glass-input w-full px-2 py-2 text-xs"
+                                                className="glass-input w-full px-2 py-2 text-xs text-[var(--color-text-primary)]"
                                                 placeholder="גרם"
                                               />
                                             </div>
@@ -544,7 +548,7 @@ export function PlanEditorView({
                                 <textarea
                                   value={meal.description}
                                   onChange={(e) => onUpdateMeal(displayIndex, 'description', e.target.value)}
-                                  className="glass-input w-full px-4 py-3"
+                                  className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
                                   rows={2}
                                   placeholder="הערות כלליות על הארוחה..."
                                 />
@@ -555,7 +559,7 @@ export function PlanEditorView({
                                 <textarea
                                   value={meal.alternatives}
                                   onChange={(e) => onUpdateMeal(displayIndex, 'alternatives', e.target.value)}
-                                  className="glass-input w-full px-4 py-3"
+                                  className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
                                   rows={2}
                                   placeholder="ניתן להחליף ב..."
                                 />
@@ -567,7 +571,7 @@ export function PlanEditorView({
                                   type="text"
                                   value={meal.notes}
                                   onChange={(e) => onUpdateMeal(displayIndex, 'notes', e.target.value)}
-                                  className="glass-input w-full px-4 py-3"
+                                  className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
                                   placeholder="הערות נוספות..."
                                 />
                               </div>
@@ -587,10 +591,10 @@ export function PlanEditorView({
             <div className="flex items-center justify-between">
               <span className="font-semibold text-[var(--color-text-primary)]">סיכום יומי כולל:</span>
               <div className="flex gap-6 text-sm">
-                <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.calories}</span> קלוריות</span>
-                <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.protein}ג</span> חלבון</span>
-                <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.carbs}ג</span> פחמימות</span>
-                <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.fat}ג</span> שומן</span>
+                <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.calories}</span> <span className="text-[var(--color-text-muted)]">קלוריות</span></span>
+                <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.protein}ג</span> <span className="text-[var(--color-text-muted)]">חלבון</span></span>
+                <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.carbs}ג</span> <span className="text-[var(--color-text-muted)]">פחמימות</span></span>
+                <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.fat}ג</span> <span className="text-[var(--color-text-muted)]">שומן</span></span>
               </div>
             </div>
           </div>

@@ -49,12 +49,12 @@ export default function StatsCard({ title, value, change, icon: Icon, color }: S
     <div className={`stat-card p-6 bg-gradient-to-br ${config.bg} ${config.glow}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-zinc-400 mb-2">{title}</p>
+          <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">{title}</p>
           <p className={`text-3xl font-bold ${config.value} tracking-tight animate-count-up`}>
             {value}
           </p>
           {change && (
-            <p className="text-sm text-zinc-500 mt-2 font-medium">
+            <p className="text-sm text-[var(--color-text-muted)] mt-2 font-medium">
               {change}
             </p>
           )}

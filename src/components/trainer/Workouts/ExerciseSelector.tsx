@@ -322,7 +322,14 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                             onChange={(e) => setNewExerciseName(e.target.value)}
                             className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                             placeholder="הזן שם תרגיל..."
-                            autoFocus={!isTablet}
+                            autoFocus={!preventKeyboard}
+                            readOnly={preventKeyboard}
+                            inputMode={preventKeyboard ? 'none' : 'text'}
+                            onFocus={(e) => {
+                              if (preventKeyboard) {
+                                e.target.blur();
+                              }
+                            }}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' && e.ctrlKey) handleAddExercise();
                             }}
@@ -338,6 +345,13 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                             className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
                             placeholder="הזן הוראות ביצוע מפורטות לתרגיל..."
                             rows={4}
+                            readOnly={preventKeyboard}
+                            inputMode={preventKeyboard ? 'none' : 'text'}
+                            onFocus={(e) => {
+                              if (preventKeyboard) {
+                                e.target.blur();
+                              }
+                            }}
                           />
                         </div>
                         <div className="flex gap-2">

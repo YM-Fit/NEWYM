@@ -160,6 +160,7 @@ export const WorkoutHeader = memo(({
           className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
           readOnly={isTablet}
           tabIndex={isTablet ? -1 : 0}
+          inputMode={isTablet ? 'none' : undefined}
           onFocus={(e) => {
             if (isTablet) {
               e.target.blur();
@@ -167,6 +168,16 @@ export const WorkoutHeader = memo(({
             }
           }}
           onTouchStart={(e) => {
+            if (isTablet) {
+              e.preventDefault();
+              const input = e.currentTarget;
+              setTimeout(() => {
+                input.removeAttribute('readonly');
+                input.showPicker?.();
+              }, 100);
+            }
+          }}
+          onClick={(e) => {
             if (isTablet) {
               e.preventDefault();
               const input = e.currentTarget;
