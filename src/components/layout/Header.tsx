@@ -31,11 +31,11 @@ export default function Header({ onLogout, trainerName, onNavigateToTrainee, onT
           )}
           <div className="flex items-center gap-3">
             <div className="relative group">
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-2.5 rounded-xl shadow-glow-lg transition-all duration-300 group-hover:shadow-glow-xl group-hover:scale-105">
+              <div className="bg-gradient-to-br from-emerald-700 to-emerald-800 p-2.5 rounded-xl shadow-glow-lg transition-all duration-300 group-hover:shadow-glow-xl group-hover:scale-105">
                 <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-white [.light_&]:text-white transition-transform group-hover:rotate-12" />
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-[var(--color-bg-base)] animate-pulse" />
-              <div className="absolute inset-0 bg-emerald-400/30 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-600 rounded-full border-2 border-[var(--color-bg-base)] animate-pulse" />
+              <div className="absolute inset-0 bg-emerald-600/30 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
             <div className="hidden sm:block animate-fade-in">
               <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">
@@ -67,11 +67,11 @@ export default function Header({ onLogout, trainerName, onNavigateToTrainee, onT
           <NotificationBell onNavigateToTrainee={onNavigateToTrainee} />
 
           <div className="hidden sm:flex items-center gap-3 px-4 py-2.5 bg-zinc-800/50 rounded-xl border border-zinc-700/50 hover:border-zinc-600/50 transition-all duration-300 hover:bg-zinc-800/70 group cursor-pointer">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-6">
-              <User className="h-4 w-4 text-emerald-400" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-700/20 to-emerald-800/20 flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-6">
+              <User className="h-4 w-4 text-emerald-600" />
             </div>
             <div className="text-right">
-              <span className="text-sm font-medium text-white block transition-colors group-hover:text-emerald-400">
+              <span className="text-sm font-medium text-white block transition-colors group-hover:text-emerald-600">
                 {trainerName || 'מאמן'}
               </span>
               <span className="text-xs text-zinc-500">מאמן אישי</span>

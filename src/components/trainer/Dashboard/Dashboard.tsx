@@ -174,15 +174,15 @@ export default function Dashboard({
       {/* Enhanced Header Section */}
       <div className="premium-card-static p-5 md:p-6 lg:p-7 relative overflow-hidden
                       border border-primary/10 hover:border-primary/20 transition-all duration-500">
-        <div className="absolute top-0 left-0 w-80 h-80 bg-gradient-to-br from-primary/15 via-emerald-500/8 to-transparent 
+        <div className="absolute top-0 left-0 w-80 h-80 bg-gradient-to-br from-primary/15 via-emerald-700/8 to-transparent 
                         rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 animate-pulse" />
-        <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-tl from-emerald-500/10 via-primary/5 to-transparent 
+        <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-tl from-emerald-700/10 via-primary/5 to-transparent 
                         rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
         <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-emerald-500/20 
+              <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-emerald-700/20 
                             border border-primary/20 shadow-lg shadow-primary/10">
                 <Sparkles className="w-5 h-5 text-primary" />
               </div>
@@ -210,7 +210,7 @@ export default function Dashboard({
             
             {/* Enhanced Quick Stats */}
             <div className="hidden md:flex items-center gap-2.5">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-primary/15 to-emerald-500/10 
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-primary/15 to-emerald-700/10 
                             border border-primary/20 hover:border-primary/30 transition-all duration-300 hover:scale-105
                             shadow-sm">
                 <Users className="w-4 h-4 text-primary" />

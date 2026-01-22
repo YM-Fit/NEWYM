@@ -47,7 +47,7 @@ export function ThemeProvider({ children, defaultTheme = 'dark' }: ThemeProvider
     if (metaThemeColor) {
       metaThemeColor.setAttribute(
         'content',
-        theme === 'dark' ? '#09090b' : '#f8faf9'
+        theme === 'dark' ? '#1a2e16' : '#f0f5ed'
       );
     }
   }, [theme]);
@@ -88,10 +88,10 @@ export function useThemeClasses() {
   const { isDark } = useTheme();
 
   return {
-    // Background classes - elegant gray-green for light mode
-    bgBase: isDark ? 'bg-zinc-950' : 'bg-[#f8faf9]',
+    // Background classes - nature-inspired colors
+    bgBase: isDark ? 'bg-zinc-950' : 'bg-[#f0f5ed]',
     bgElevated: isDark ? 'bg-zinc-900' : 'bg-white',
-    bgSurface: isDark ? 'bg-zinc-800' : 'bg-[#ecf0ed]',
+    bgSurface: isDark ? 'bg-zinc-800' : 'bg-[#e8f0e0]',
     bgCard: isDark ? 'bg-zinc-900/90' : 'bg-white/97',
 
     // Text classes - use CSS variables for theme-aware typography
@@ -99,19 +99,19 @@ export function useThemeClasses() {
     textSecondary: 'text-theme-secondary',
     textMuted: 'text-theme-muted',
 
-    // Border classes - emerald tinted for light mode
-    border: isDark ? 'border-zinc-800' : 'border-emerald-500/10',
-    borderHover: isDark ? 'border-zinc-700' : 'border-emerald-500/20',
+    // Border classes - nature-inspired olive green for light mode
+    border: isDark ? 'border-zinc-800' : 'border-emerald-700/10',
+    borderHover: isDark ? 'border-zinc-700' : 'border-emerald-700/20',
 
     // Input classes
     inputBg: isDark ? 'bg-zinc-800/50' : 'bg-white/95',
-    inputBorder: isDark ? 'border-zinc-700' : 'border-emerald-500/15',
+    inputBorder: isDark ? 'border-zinc-700' : 'border-emerald-700/15',
     inputText: 'text-theme-primary',
     inputPlaceholder: isDark ? 'placeholder-zinc-500' : 'placeholder-[#6b7f72]',
 
     // Card background
     cardBg: isDark ? 'bg-zinc-900/90' : 'bg-white/95',
-    cardBorder: isDark ? 'border-zinc-800' : 'border-emerald-500/12',
-    cardShadow: isDark ? 'shadow-lg shadow-black/20' : 'shadow-lg shadow-emerald-900/8',
+    cardBorder: isDark ? 'border-zinc-800' : 'border-emerald-700/12',
+    cardShadow: isDark ? 'shadow-lg shadow-black/20' : 'shadow-lg shadow-emerald-950/8',
   };
 }

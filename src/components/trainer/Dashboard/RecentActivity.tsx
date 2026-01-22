@@ -157,9 +157,9 @@ export default function RecentActivity() {
         };
       case 'measurement':
         return {
-          bg: 'bg-emerald-500/15',
-          text: 'text-emerald-400',
-          border: 'border-emerald-500/20',
+          bg: 'bg-emerald-700/15',
+          text: 'text-emerald-600',
+          border: 'border-emerald-700/20',
         };
       default:
         return {

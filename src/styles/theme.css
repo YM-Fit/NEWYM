@@ -40,67 +40,67 @@
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
 
-    /* Brand */
-    --color-primary: 16 185 129;
-    --color-primary-light: 52 211 153;
-    --color-primary-dark: 5 150 105;
+    /* Brand - Nature-inspired colors */
+    --color-primary: 74 107 42;        /* #4a6b2a - olive green */
+    --color-primary-light: 107 142 74; /* #6b8e4a - soft green */
+    --color-primary-dark: 61 90 31;    /* #3d5a1f - dark olive */
     --color-on-primary: 255 255 255;
     --color-primary-foreground: 255 255 255;
-    --color-success: 16 185 129;
+    --color-success: 74 107 42;
     --color-warning: 245 158 11;
     --color-danger: 220 38 38;
-    --color-info: 6 182 212;
+    --color-info: 107 142 74;
 
-    /* Dark theme (default) */
-    --color-bg-base: 9 9 11;
-    --color-bg-elevated: 24 24 27;
-    --color-bg-surface: 39 39 42;
-    --color-bg-card: 24 24 27;
-    --color-bg-input: 15 15 17;
+    /* Dark theme (default) - Nature-inspired dark greens */
+    --color-bg-base: 26 46 22;         /* #1a2e16 - deep dark green */
+    --color-bg-elevated: 36 50 28;    /* #24321c - medium dark green */
+    --color-bg-surface: 45 58 36;      /* #2d3a24 - lighter dark green */
+    --color-bg-card: 36 50 28;
+    --color-bg-input: 26 46 22;
     --color-bg-overlay: 0 0 0;
 
     --color-text-primary: 255 255 255;
-    --color-text-secondary: 161 161 170;
-    --color-text-muted: 113 113 122;
-    --color-text-inverse: 26 46 34;
+    --color-text-secondary: 180 190 170;
+    --color-text-muted: 140 155 130;
+    --color-text-inverse: 26 46 22;
 
-    --color-border: 255 255 255;
-    --color-border-hover: 255 255 255;
-    --color-border-strong: 255 255 255;
+    --color-border: 74 107 42;
+    --color-border-hover: 107 142 74;
+    --color-border-strong: 61 90 31;
 
-    --color-accent-bg: 16 185 129;
-    --color-accent-bg-hover: 16 185 129;
+    --color-accent-bg: 74 107 42;
+    --color-accent-bg-hover: 107 142 74;
 
     --color-shadow: 0 0 0;
     --color-shadow-strong: 0 0 0;
-    --shadow-soft: rgba(0, 0, 0, 0.3);
-    --shadow-strong: rgba(0, 0, 0, 0.5);
+    --shadow-soft: rgba(26, 46, 22, 0.4);
+    --shadow-strong: rgba(26, 46, 22, 0.6);
   }
 
   .light {
-    /* Light theme */
-    --color-bg-base: 248 250 249;
-    --color-bg-elevated: 255 255 255;
-    --color-bg-surface: 236 240 237;
+    /* Light theme - Nature-inspired soft greens */
+    --color-bg-base: 240 245 237;      /* #f0f5ed - soft light green */
+    --color-bg-elevated: 255 255 255;  /* #ffffff - white */
+    --color-bg-surface: 232 240 224;  /* #e8f0e0 - light green */
     --color-bg-card: 255 255 255;
     --color-bg-input: 255 255 255;
-    --color-bg-overlay: 26 46 34;
+    --color-bg-overlay: 26 46 22;
 
-    --color-text-primary: 26 46 34;
-    --color-text-secondary: 61 83 71;
-    --color-text-muted: 107 127 114;
+    --color-text-primary: 26 46 22;    /* #1a2e16 - dark green */
+    --color-text-secondary: 61 83 71;  /* #3d5347 - medium green */
+    --color-text-muted: 107 127 114;   /* #6b7f72 - muted green */
     --color-text-inverse: 255 255 255;
 
-    --color-border: 16 185 129;
-    --color-border-hover: 16 185 129;
-    --color-border-strong: 16 185 129;
+    --color-border: 74 107 42;         /* #4a6b2a - olive green */
+    --color-border-hover: 107 142 74;  /* #6b8e4a - soft green */
+    --color-border-strong: 61 90 31;    /* #3d5a1f - dark olive */
 
-    --color-accent-bg: 16 185 129;
-    --color-accent-bg-hover: 16 185 129;
+    --color-accent-bg: 74 107 42;
+    --color-accent-bg-hover: 107 142 74;
 
-    --color-shadow: 16 90 60;
-    --color-shadow-strong: 16 90 60;
-    --shadow-soft: rgba(16, 90, 60, 0.08);
-    --shadow-strong: rgba(16, 90, 60, 0.15);
+    --color-shadow: 74 107 42;
+    --color-shadow-strong: 61 90 31;
+    --shadow-soft: rgba(74, 107, 42, 0.1);
+    --shadow-strong: rgba(74, 107, 42, 0.2);
   }
 }
