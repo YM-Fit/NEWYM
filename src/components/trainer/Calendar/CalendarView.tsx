@@ -121,28 +121,47 @@ const HOUR_START = 6;
 const HOUR_END = 22;
 const HOURS_PER_DAY = HOUR_END - HOUR_START + 1;
 
+// Helper function to strip existing session numbers from trainee name
+// Matches patterns like "3/8", "3/10", "7", etc. at the end of the name
+function stripSessionNumber(name: string): string {
+  // Remove patterns like "3/8", "10/12" at the end
+  let stripped = name.replace(/\s+\d+\/\d+\s*$/, '').trim();
+  // Remove single numbers at the end (like "עדי 3")
+  stripped = stripped.replace(/\s+\d+\s*$/, '').trim();
+  return stripped;
+}
+
 // Helper function to extract trainee name from event
 function extractTraineeName(event: CalendarEvent): string {
+  let name = '';
+  
   // First try to get from attendees
   if (event.attendees && event.attendees.length > 0) {
     const attendee = event.attendees[0];
     if (attendee.displayName) {
-      return attendee.displayName;
+      name = attendee.displayName;
     }
   }
   
   // Then try from summary pattern "אימון - שם"
-  const match = event.summary.match(/אימון\s*-\s*(.+)/);
-  if (match && match[1]) {
-    return match[1].trim();
+  if (!name) {
+    const match = event.summary.match(/אימון\s*-\s*(.+)/);
+    if (match && match[1]) {
+      name = match[1].trim();
+    }
   }
   
   // If it contains a dash, use the part after it
-  if (event.summary.includes(' - ')) {
-    return event.summary.split(' - ').pop() || event.summary;
+  if (!name && event.summary.includes(' - ')) {
+    name = event.summary.split(' - ').pop() || event.summary;
   }
   
-  return event.summary;
+  if (!name) {
+    name = event.summary;
+  }
+  
+  // Strip any existing session numbers from the name to prevent double numbering
+  return stripSessionNumber(name);
 }
 
 // Event Item Component (base display component)
@@ -768,11 +787,12 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
 
       if (traineeNames.size === 0) return;
 
-      // Fetch trainee IDs by names (including partial matches)
+      // Fetch trainee IDs by names (including partial matches), excluding deleted trainees
       const { data: trainees, error: traineesError } = await supabase
         .from('trainees')
         .select('id, full_name')
-        .eq('trainer_id', user.id);
+        .eq('trainer_id', user.id)
+        .neq('status', 'deleted');
 
       if (traineesError || !trainees || trainees.length === 0) {
         return;

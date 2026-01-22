@@ -233,40 +233,26 @@ export default function SmartReportView() {
     }
   }, [user, monthlyReport, selectedMonth, incomeGoal, reportData]);
 
-  // Calculate workout number for a trainee
-  const getWorkoutNumber = useCallback(async (traineeId: string, workoutDate: string): Promise<number> => {
-    try {
-      const { data, error } = await supabase.rpc('get_trainee_workout_number', {
-        p_trainee_id: traineeId,
-        p_workout_date: workoutDate,
-      });
-
-      if (error) {
-        // Fallback: count manually
-        const { data: workouts } = await supabase
-          .from('workouts')
-          .select('id, workout_date')
-          .eq('trainer_id', user?.id)
-          .lt('workout_date', workoutDate);
-
-        if (workouts) {
-          const { data: links } = await supabase
-            .from('workout_trainees')
-            .select('workout_id')
-            .eq('trainee_id', traineeId)
-            .in('workout_id', workouts.map(w => w.id));
-
-          return (links?.length || 0) + 1;
-        }
-        return 1;
-      }
-
-      return data || 1;
-    } catch (err) {
-      logger.error('Error getting workout number', err, 'SmartReportView');
-      return 1;
+  // Calculate workout numbers locally for a trainee based on all their historical workouts
+  // This is much faster than making RPC calls for each workout date
+  const calculateWorkoutNumbersLocally = useCallback((
+    traineeWorkoutDates: string[],
+    allHistoricalDates: string[]
+  ): Map<string, number> => {
+    const result = new Map<string, number>();
+    
+    // Sort all historical dates
+    const sortedHistoricalDates = [...allHistoricalDates].sort();
+    
+    // For each workout date in this month, find its position in the historical list
+    for (const date of traineeWorkoutDates) {
+      // Count how many workouts happened before this date + 1
+      const position = sortedHistoricalDates.filter(d => d <= date).length;
+      result.set(date, position);
     }
-  }, [user]);
+    
+    return result;
+  }, []);
 
   // Load workout counts and dates for the selected month
   const loadReportData = useCallback(async () => {
@@ -289,28 +275,42 @@ export default function SmartReportView() {
       const startOfMonthStr = startOfMonth.toISOString().split('T')[0];
       const endOfMonthStr = endOfMonth.toISOString().split('T')[0];
 
-      // Get all workouts for the month (not just synced)
-      const { data: workoutsData, error: workoutsError } = await supabase
-        .from('workouts')
-        .select('id, workout_date')
-        .eq('trainer_id', user.id)
-        .gte('workout_date', startOfMonth.toISOString())
-        .lte('workout_date', endOfMonth.toISOString())
-        .order('workout_date', { ascending: true });
+      // OPTIMIZATION: Load all data in parallel instead of sequentially
+      const [workoutsResult, cardsResult, allWorkoutsResult] = await Promise.all([
+        // Get workouts for the selected month
+        supabase
+          .from('workouts')
+          .select('id, workout_date')
+          .eq('trainer_id', user.id)
+          .gte('workout_date', startOfMonth.toISOString())
+          .lte('workout_date', endOfMonth.toISOString())
+          .order('workout_date', { ascending: true }),
+        
+        // Get all trainee cards for this trainer
+        supabase
+          .from('trainee_cards')
+          .select('*')
+          .eq('trainer_id', user.id)
+          .order('purchase_date', { ascending: false }),
+        
+        // Get ALL workouts for workout number calculation (historical data)
+        supabase
+          .from('workouts')
+          .select('id, workout_date')
+          .eq('trainer_id', user.id)
+          .lte('workout_date', endOfMonth.toISOString())
+          .order('workout_date', { ascending: true })
+      ]);
 
-      if (workoutsError) {
-        logger.error('Error loading workouts data', workoutsError, 'SmartReportView');
+      const workoutsData = workoutsResult.data;
+      const cardsData = cardsResult.data;
+      const allWorkoutsData = allWorkoutsResult.data;
+
+      if (workoutsResult.error) {
+        logger.error('Error loading workouts data', workoutsResult.error, 'SmartReportView');
       }
-
-      // Get all trainee cards for this trainer
-      const { data: cardsData, error: cardsError } = await supabase
-        .from('trainee_cards')
-        .select('*')
-        .eq('trainer_id', user.id)
-        .order('purchase_date', { ascending: false });
-
-      if (cardsError) {
-        logger.error('Error loading trainee cards', cardsError, 'SmartReportView');
+      if (cardsResult.error) {
+        logger.error('Error loading trainee cards', cardsResult.error, 'SmartReportView');
       }
 
       // Group cards by trainee (most recent first)
@@ -323,29 +323,55 @@ export default function SmartReportView() {
       });
 
       const workoutIds = workoutsData?.map(w => w.id) || [];
+      const allWorkoutIds = allWorkoutsData?.map(w => w.id) || [];
       
-      // Get trainee links for these workouts
-      let workoutData: { trainee_id: string; workout_id: string; workout_date: string }[] = [];
-      if (workoutIds.length > 0) {
-        const { data: traineeLinks, error: linksError } = await supabase
-          .from('workout_trainees')
-          .select('trainee_id, workout_id')
-          .in('workout_id', workoutIds);
+      // OPTIMIZATION: Load trainee links in parallel
+      const [monthLinksResult, allLinksResult] = await Promise.all([
+        // Get trainee links for this month's workouts
+        workoutIds.length > 0 
+          ? supabase
+              .from('workout_trainees')
+              .select('trainee_id, workout_id')
+              .in('workout_id', workoutIds)
+          : Promise.resolve({ data: [], error: null }),
+        
+        // Get trainee links for ALL workouts (for workout numbering)
+        allWorkoutIds.length > 0
+          ? supabase
+              .from('workout_trainees')
+              .select('trainee_id, workout_id')
+              .in('workout_id', allWorkoutIds)
+          : Promise.resolve({ data: [], error: null })
+      ]);
 
-        if (linksError) {
-          logger.error('Error loading workout trainee links', linksError, 'SmartReportView');
-        }
-
-        // Map workout dates
-        const workoutDateMap = new Map(workoutsData?.map(w => [w.id, w.workout_date]) || []);
-        workoutData = (traineeLinks || []).map(link => ({
-          trainee_id: link.trainee_id,
-          workout_id: link.workout_id,
-          workout_date: workoutDateMap.get(link.workout_id) || '',
-        }));
+      if (monthLinksResult.error) {
+        logger.error('Error loading workout trainee links', monthLinksResult.error, 'SmartReportView');
       }
 
-      // Group workouts by trainee and calculate numbers
+      // Map workout dates for this month
+      const workoutDateMap = new Map(workoutsData?.map(w => [w.id, w.workout_date]) || []);
+      const workoutData = (monthLinksResult.data || []).map(link => ({
+        trainee_id: link.trainee_id,
+        workout_id: link.workout_id,
+        workout_date: workoutDateMap.get(link.workout_id) || '',
+      }));
+
+      // Map ALL workout dates for historical numbering
+      const allWorkoutDateMap = new Map(allWorkoutsData?.map(w => [w.id, w.workout_date]) || []);
+      
+      // Build historical workout dates per trainee (for workout numbering)
+      const traineeHistoricalDates = new Map<string, string[]>();
+      (allLinksResult.data || []).forEach(link => {
+        if (!traineeHistoricalDates.has(link.trainee_id)) {
+          traineeHistoricalDates.set(link.trainee_id, []);
+        }
+        const date = allWorkoutDateMap.get(link.workout_id);
+        if (date) {
+          traineeHistoricalDates.get(link.trainee_id)!.push(date);
+        }
+      });
+
+      // Group workouts by trainee for this month
       const traineeWorkouts = new Map<string, { dates: string[]; numbers: Map<string, number> }>();
       
       for (const workout of workoutData) {
@@ -358,13 +384,11 @@ export default function SmartReportView() {
         }
       }
 
-      // Calculate workout numbers for each trainee
+      // OPTIMIZATION: Calculate workout numbers locally instead of making RPC calls
       for (const [traineeId, data] of traineeWorkouts.entries()) {
-        const sortedDates = [...data.dates].sort();
-        for (let i = 0; i < sortedDates.length; i++) {
-          const workoutNumber = await getWorkoutNumber(traineeId, sortedDates[i]);
-          data.numbers.set(sortedDates[i], workoutNumber);
-        }
+        const historicalDates = traineeHistoricalDates.get(traineeId) || [];
+        const numbers = calculateWorkoutNumbersLocally(data.dates, historicalDates);
+        data.numbers = numbers;
       }
 
       // Build report data
@@ -548,7 +572,7 @@ export default function SmartReportView() {
     } finally {
       setLoading(false);
     }
-  }, [user, trainees, traineesLoading, selectedMonth, getWorkoutNumber, getMonthKey, loadSavedReport, autoSave]);
+  }, [user, trainees, traineesLoading, selectedMonth, calculateWorkoutNumbersLocally, getMonthKey, loadSavedReport, autoSave]);
 
   // Subscribe to workout changes for auto-sync
   useEffect(() => {

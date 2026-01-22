@@ -271,6 +271,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
       .from('trainees')
       .select('*')
       .eq('trainer_id', user.id)
+      .neq('status', 'deleted') // Filter out deleted trainees
       .order('created_at', { ascending: false });
 
     if (!error && data) {
@@ -565,9 +566,11 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
     }
 
     try {
+      // Use soft delete by setting status to 'deleted' instead of hard delete
+      // This preserves historical data and avoids foreign key constraint issues
       const { error } = await supabase
         .from('trainees')
-        .delete()
+        .update({ status: 'deleted' })
         .eq('id', traineeId);
 
       if (!error) {

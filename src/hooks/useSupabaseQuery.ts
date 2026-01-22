@@ -180,6 +180,7 @@ export function useTrainees(trainerId: string | null) {
         .from('trainees')
         .select('*')
         .eq('trainer_id', trainerId)
+        .neq('status', 'deleted') // Filter out deleted trainees
         .order('full_name');
     },
     [trainerId],
