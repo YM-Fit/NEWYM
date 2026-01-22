@@ -810,9 +810,9 @@ export default function SmartReportView() {
       
       setEditing(null);
       
-      // Don't call refetch() immediately - it would overwrite our local state
-      // The data is already saved to DB and local state is updated
-      // User will get fresh data on next page load or month change
+      // Refetch trainees data to ensure consistency
+      // This ensures that if loadReportData is called again, it will have the updated data
+      await refetch();
     } catch (err) {
       logger.error('Error saving trainee payment data', err, 'SmartReportView');
       toast.error('שגיאה בשמירת הנתונים');

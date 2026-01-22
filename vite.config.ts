@@ -4,10 +4,6 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  optimizeDeps: {
-    exclude: ['lucide-react'],
-    include: ['react', 'react-dom', '@supabase/supabase-js'],
-  },
   build: {
     target: 'esnext',
     minify: 'esbuild',
@@ -106,6 +102,9 @@ export default defineConfig({
       'react-dom',
       '@supabase/supabase-js',
       'react-hot-toast',
+      '@dnd-kit/core',
+      '@dnd-kit/sortable',
+      '@dnd-kit/utilities',
     ],
     // Pre-bundle heavy dependencies
     esbuildOptions: {
