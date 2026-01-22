@@ -562,3 +562,117 @@ class SessionInfoCache {
 }
 
 export const sessionInfoCache = new SessionInfoCache();
+
+/**
+ * Generate Google Calendar event title with trainee name and session info
+ * This is used when creating or updating calendar events
+ * 
+ * @param traineeId The trainee's ID
+ * @param trainerId The trainer's ID
+ * @param eventDate The date of the event (used to calculate monthly position)
+ * @returns Formatted title: "אימון - [name] [number]"
+ */
+export async function generateGoogleCalendarEventTitle(
+  traineeId: string,
+  trainerId: string,
+  eventDate: Date
+): Promise<string> {
+  try {
+    // Get trainee basic info
+    const { data: trainee, error: traineeError } = await supabase
+      .from('trainees')
+      .select('full_name')
+      .eq('id', traineeId)
+      .eq('trainer_id', trainerId)
+      .single();
+
+    if (traineeError || !trainee) {
+      logger.error('Error fetching trainee for calendar title', traineeError, 'generateGoogleCalendarEventTitle');
+      return 'אימון';
+    }
+
+    // Try to get cached session info first
+    let sessionInfo = sessionInfoCache.get(traineeId);
+    
+    // If not cached, fetch it
+    if (!sessionInfo) {
+      sessionInfo = await getTraineeSessionInfo(traineeId, trainerId);
+      if (sessionInfo) {
+        sessionInfoCache.set(traineeId, sessionInfo);
+      }
+    }
+
+    // If no session info, return just the name
+    if (!sessionInfo) {
+      return `אימון - ${trainee.full_name}`;
+    }
+
+    // Determine the display format based on counting method
+    let sessionText = '';
+    
+    // Prefer card/ticket format if available
+    if (sessionInfo.countingMethod === 'card_ticket' && sessionInfo.hasActiveCard) {
+      // Show card sessions: remaining/total
+      sessionText = `${sessionInfo.cardSessionsRemaining}/${sessionInfo.cardSessionsTotal}`;
+    } else {
+      // Calculate monthly position for this specific event date
+      const eventMonth = new Date(eventDate.getFullYear(), eventDate.getMonth(), 1);
+      const startOfMonth = new Date(eventMonth.getFullYear(), eventMonth.getMonth(), 1);
+      const endOfMonth = new Date(eventMonth.getFullYear(), eventMonth.getMonth() + 1, 0, 23, 59, 59);
+
+      // Get all workouts for this trainee in this month
+      const { data: workouts, error: workoutsError } = await supabase
+        .from('workouts')
+        .select('id, workout_date')
+        .eq('trainer_id', trainerId)
+        .gte('workout_date', startOfMonth.toISOString())
+        .lte('workout_date', endOfMonth.toISOString())
+        .order('workout_date', { ascending: true });
+
+      if (!workoutsError && workouts && workouts.length > 0) {
+        // Get workout links to find which workouts belong to this trainee
+        const workoutIds = workouts.map(w => w.id);
+        const { data: links } = await supabase
+          .from('workout_trainees')
+          .select('workout_id')
+          .eq('trainee_id', traineeId)
+          .in('workout_id', workoutIds);
+
+        const traineeWorkoutIds = new Set((links || []).map(l => l.workout_id));
+        const traineeWorkouts = workouts.filter(w => traineeWorkoutIds.has(w.id));
+
+        if (traineeWorkouts.length > 0) {
+          // Find position of this event date
+          const eventDateStr = eventDate.toISOString().split('T')[0];
+          let position = 1;
+          
+          for (let i = 0; i < traineeWorkouts.length; i++) {
+            const workoutDateStr = new Date(traineeWorkouts[i].workout_date).toISOString().split('T')[0];
+            if (workoutDateStr === eventDateStr) {
+              position = i + 1;
+              break;
+            }
+            if (new Date(traineeWorkouts[i].workout_date) < eventDate) {
+              position = i + 2; // This event comes after this workout
+            }
+          }
+
+          const totalInMonth = traineeWorkouts.length;
+          sessionText = totalInMonth > 1 
+            ? `${position}/${totalInMonth}`
+            : `${position}`;
+        }
+      }
+    }
+
+    // Return formatted title
+    if (sessionText) {
+      return `אימון - ${trainee.full_name} ${sessionText}`;
+    } else {
+      return `אימון - ${trainee.full_name}`;
+    }
+  } catch (err) {
+    logger.error('Error generating calendar event title', err, 'generateGoogleCalendarEventTitle');
+    return 'אימון';
+  }
+}

@@ -42,6 +42,100 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
   };
 }
 
+/**
+ * Generate Google Calendar event title with session info
+ */
+async function generateEventTitle(
+  supabase: any,
+  traineeId: string,
+  trainerId: string,
+  traineeName: string,
+  eventDate: Date
+): Promise<string> {
+  try {
+    // Get trainee counting method and card info
+    const { data: trainee } = await supabase
+      .from('trainees')
+      .select('counting_method, card_sessions_total, card_sessions_used')
+      .eq('id', traineeId)
+      .single();
+
+    if (!trainee) {
+      return `אימון - ${traineeName}`;
+    }
+
+    // Check for active card
+    const { data: activeCard } = await supabase
+      .from('trainee_cards')
+      .select('sessions_purchased, sessions_used')
+      .eq('trainee_id', traineeId)
+      .eq('trainer_id', trainerId)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    let sessionText = '';
+
+    // Use card format if available
+    if (trainee.counting_method === 'card_ticket' && activeCard) {
+      const remaining = (activeCard.sessions_purchased || 0) - (activeCard.sessions_used || 0);
+      sessionText = `${remaining}/${activeCard.sessions_purchased}`;
+    } else {
+      // Calculate monthly position
+      const eventMonth = new Date(eventDate.getFullYear(), eventDate.getMonth(), 1);
+      const startOfMonth = new Date(eventMonth.getFullYear(), eventMonth.getMonth(), 1);
+      const endOfMonth = new Date(eventMonth.getFullYear(), eventMonth.getMonth() + 1, 0, 23, 59, 59);
+
+      const { data: workouts } = await supabase
+        .from('workouts')
+        .select('id, workout_date')
+        .eq('trainer_id', trainerId)
+        .gte('workout_date', startOfMonth.toISOString())
+        .lte('workout_date', endOfMonth.toISOString())
+        .order('workout_date', { ascending: true });
+
+      if (workouts && workouts.length > 0) {
+        const workoutIds = workouts.map((w: any) => w.id);
+        const { data: links } = await supabase
+          .from('workout_trainees')
+          .select('workout_id')
+          .eq('trainee_id', traineeId)
+          .in('workout_id', workoutIds);
+
+        const traineeWorkoutIds = new Set((links || []).map((l: any) => l.workout_id));
+        const traineeWorkouts = workouts.filter((w: any) => traineeWorkoutIds.has(w.id));
+
+        if (traineeWorkouts.length > 0) {
+          const eventDateStr = eventDate.toISOString().split('T')[0];
+          let position = traineeWorkouts.length + 1; // Default to end of list
+          
+          for (let i = 0; i < traineeWorkouts.length; i++) {
+            const workoutDateStr = new Date(traineeWorkouts[i].workout_date).toISOString().split('T')[0];
+            if (workoutDateStr === eventDateStr) {
+              position = i + 1;
+              break;
+            }
+          }
+
+          // Include this new workout in the count
+          const totalInMonth = traineeWorkouts.length + 1;
+          sessionText = totalInMonth > 1 ? `${position}/${totalInMonth}` : `${position}`;
+        } else {
+          // First workout for this trainee this month
+          sessionText = '1';
+        }
+      } else {
+        // First workout this month
+        sessionText = '1';
+      }
+    }
+
+    return sessionText ? `אימון - ${traineeName} ${sessionText}` : `אימון - ${traineeName}`;
+  } catch (err) {
+    console.error('Error generating event title:', err);
+    return `אימון - ${traineeName}`;
+  }
+}
+
 interface SetData {
   set_number: number;
   weight: number;
@@ -447,10 +541,18 @@ Deno.serve(async (req: Request) => {
               }
             }
 
-            // Create calendar event
+            // Create calendar event with session info
             const calendarId = credentials.default_calendar_id || 'primary';
+            const eventSummary = await generateEventTitle(
+              supabase,
+              traineeData.trainee_id,
+              trainer_id,
+              trainee.full_name,
+              workoutDate
+            );
+            
             const eventPayload: any = {
-              summary: `אימון - ${trainee.full_name}`,
+              summary: eventSummary,
               start: {
                 dateTime: workoutDate.toISOString(),
                 timeZone: 'Asia/Jerusalem',

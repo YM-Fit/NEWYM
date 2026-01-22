@@ -1,7 +1,9 @@
-import { ArrowRight, Save, Sparkles, User, Users } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowRight, Save, Sparkles, User, Users, Calendar, RefreshCw } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { validateTraineeForm } from '../../../utils/validation';
+import { useAuth } from '../../../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 interface EditTraineeFormProps {
   trainee: any;
@@ -10,6 +12,7 @@ interface EditTraineeFormProps {
 }
 
 export default function EditTraineeForm({ trainee, onBack, onSave }: EditTraineeFormProps) {
+  const { user } = useAuth();
   const isPair = trainee.isPair || false;
 
   const [formData, setFormData] = useState({
@@ -38,11 +41,62 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [hasGoogleCalendar, setHasGoogleCalendar] = useState(false);
+
+  // Check if trainer has Google Calendar connected
+  useEffect(() => {
+    const checkGoogleCalendar = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('trainer_google_credentials')
+        .select('id')
+        .eq('trainer_id', user.id)
+        .maybeSingle();
+      
+      setHasGoogleCalendar(!!data);
+    };
+    
+    checkGoogleCalendar();
+  }, [user]);
 
   const validateForm = () => {
     const { errors, isValid } = validateTraineeForm(formData, isPair, false);
     setErrors(errors);
     return isValid;
+  };
+
+  const handleSyncToCalendar = async () => {
+    if (!user) return;
+    
+    setSyncing(true);
+    
+    try {
+      const { syncTraineeEventsToCalendar } = await import('../../../services/traineeCalendarSyncService');
+      
+      const result = await syncTraineeEventsToCalendar(
+        trainee.id,
+        user.id,
+        'current_month_and_future'
+      );
+      
+      if (result.error) {
+        toast.error(result.error);
+      } else if (result.data) {
+        const { updated, failed } = result.data;
+        if (failed > 0) {
+          toast.success(`עודכנו ${updated} אירועים, ${failed} נכשלו`);
+        } else {
+          toast.success(`עודכנו ${updated} אירועים בהצלחה`);
+        }
+      }
+    } catch (err) {
+      console.error('Error syncing to calendar:', err);
+      toast.error('שגיאה בסנכרון עם Google Calendar');
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -467,22 +521,43 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
           />
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-4">
-          <button
-            type="button"
-            onClick={onBack}
-            className="px-6 py-3 rounded-xl border border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all"
-          >
-            ביטול
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="btn-primary px-6 py-3 rounded-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Save className="h-5 w-5" />
-            <span>{saving ? 'שומר...' : 'שמור שינויים'}</span>
-          </button>
+        <div className="flex items-center justify-between pt-4">
+          <div>
+            {hasGoogleCalendar && (
+              <button
+                type="button"
+                onClick={handleSyncToCalendar}
+                disabled={syncing}
+                className="px-4 py-3 rounded-xl border border-blue-500/50 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="סנכרן שם ומספרי אימון עם Google Calendar"
+              >
+                {syncing ? (
+                  <RefreshCw className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Calendar className="h-5 w-5" />
+                )}
+                <span>{syncing ? 'מסנכרן...' : 'סנכרן עם יומן'}</span>
+              </button>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onBack}
+              className="px-6 py-3 rounded-xl border border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all"
+            >
+              ביטול
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="btn-primary px-6 py-3 rounded-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Save className="h-5 w-5" />
+              <span>{saving ? 'שומר...' : 'שמור שינויים'}</span>
+            </button>
+          </div>
         </div>
       </form>
     </div>

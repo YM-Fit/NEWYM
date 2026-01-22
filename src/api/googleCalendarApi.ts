@@ -1262,3 +1262,131 @@ export async function getSyncRecordForEvent(
     return { error: errorMessage };
   }
 }
+
+/**
+ * Bulk update Google Calendar events for a trainee
+ * Used when trainee name or session numbers need to be updated across multiple events
+ */
+export async function bulkUpdateCalendarEvents(
+  traineeId: string,
+  trainerId: string,
+  updates: {
+    summary?: string;
+    dateRange?: { start: Date; end: Date };
+  }
+): Promise<ApiResponse<{ updated: number; failed: number; errors: string[] }>> {
+  // Rate limiting: 5 bulk update requests per minute per trainer (expensive operation)
+  const rateLimitKey = `bulkUpdateCalendarEvents:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 5, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
+  try {
+    // Get all synced events for this trainee
+    let query = supabase
+      .from('google_calendar_sync')
+      .select('id, google_event_id, google_calendar_id, event_start_time, event_end_time, workout_id')
+      .eq('trainer_id', trainerId)
+      .eq('trainee_id', traineeId)
+      .eq('sync_status', 'synced');
+
+    // Apply date range filter if provided
+    if (updates.dateRange) {
+      query = query
+        .gte('event_start_time', updates.dateRange.start.toISOString())
+        .lte('event_start_time', updates.dateRange.end.toISOString());
+    }
+
+    const { data: syncRecords, error: syncError } = await query;
+
+    if (syncError) {
+      return { error: syncError.message };
+    }
+
+    if (!syncRecords || syncRecords.length === 0) {
+      return { data: { updated: 0, failed: 0, errors: [] }, success: true };
+    }
+
+    // Get trainer credentials
+    const { data: credentials, error: credError } = await supabase
+      .from('trainer_google_credentials')
+      .select('access_token, default_calendar_id')
+      .eq('trainer_id', trainerId)
+      .single() as { data: Pick<GoogleCredentialsRow, 'access_token' | 'default_calendar_id'> | null; error: { message: string } | null };
+
+    if (credError || !credentials) {
+      return { error: 'Google Calendar לא מחובר' };
+    }
+
+    // Get valid access token (refresh if needed)
+    const { OAuthTokenService } = await import('../services/oauthTokenService');
+    const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
+    
+    if (!tokenResult.success || !tokenResult.data) {
+      return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
+    }
+    
+    const accessToken = tokenResult.data;
+    const calendarId = credentials.default_calendar_id || 'primary';
+
+    let updated = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    // Update each event (with rate limiting delay between calls)
+    for (const record of syncRecords) {
+      try {
+        // Small delay to respect rate limits (100ms between calls)
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        const updateResult = await updateGoogleCalendarEvent(
+          trainerId,
+          record.google_event_id,
+          { summary: updates.summary },
+          accessToken
+        );
+
+        if (updateResult.error) {
+          failed++;
+          errors.push(`Event ${record.google_event_id}: ${updateResult.error}`);
+          
+          // Update sync status to failed
+          await supabase
+            .from('google_calendar_sync')
+            .update({ sync_status: 'failed' })
+            .eq('id', record.id);
+        } else {
+          updated++;
+          
+          // Update sync record with new summary
+          await supabase
+            .from('google_calendar_sync')
+            .update({
+              event_summary: updates.summary,
+              last_synced_at: new Date().toISOString(),
+              sync_status: 'synced'
+            })
+            .eq('id', record.id);
+        }
+      } catch (err: unknown) {
+        failed++;
+        const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+        errors.push(`Event ${record.google_event_id}: ${errorMsg}`);
+        logger.error('Error updating calendar event in bulk', err, 'bulkUpdateCalendarEvents');
+      }
+    }
+
+    return {
+      data: { updated, failed, errors },
+      success: true
+    };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בעדכון אירועי יומן',
+      context: 'bulkUpdateCalendarEvents',
+      additionalInfo: { trainerId, traineeId },
+    });
+    return { error: errorMessage };
+  }
+}

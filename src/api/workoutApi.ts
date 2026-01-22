@@ -237,10 +237,24 @@ export async function syncWorkoutToCalendar(
     const endDate = new Date(workoutDate);
     endDate.setHours(workoutDate.getHours() + 1); // Default 1 hour workout
 
+    // Generate event title with session info
+    let eventSummary = `אימון - ${trainee?.full_name || 'מתאמן'}`;
+    try {
+      const { generateGoogleCalendarEventTitle } = await import('../utils/traineeSessionUtils');
+      eventSummary = await generateGoogleCalendarEventTitle(
+        workout.workout_trainees[0].trainee_id,
+        trainerId,
+        workoutDate
+      );
+    } catch (titleErr) {
+      // Fallback to simple title if generation fails
+      console.warn('Could not generate event title with session info:', titleErr);
+    }
+
     const eventResult = await createGoogleCalendarEvent(
       trainerId,
       {
-        summary: `אימון - ${trainee?.full_name || 'מתאמן'}`,
+        summary: eventSummary,
         description: workout.notes || undefined,
         startTime: workoutDate,
         endTime: endDate,
@@ -268,13 +282,32 @@ export async function syncWorkoutToCalendar(
         sync_direction: 'to_google',
         event_start_time: workoutDate.toISOString(),
         event_end_time: endDate.toISOString(),
-        event_summary: `אימון - ${trainee?.full_name || 'מתאמן'}`,
+        event_summary: eventSummary,
         event_description: workout.notes || null,
         last_synced_at: new Date().toISOString(),
       });
 
     if (syncError) {
       return { error: syncError.message };
+    }
+
+    // After successfully syncing this workout, update all other events for this trainee
+    // to ensure session numbers are current
+    try {
+      const { syncTraineeEventsToCalendar } = await import('../services/traineeCalendarSyncService');
+      
+      // Sync current month events to update session numbers
+      // Fire and forget - don't block the response
+      syncTraineeEventsToCalendar(
+        workout.workout_trainees[0].trainee_id,
+        trainerId,
+        'current_month'
+      ).catch(err => {
+        console.error('Error syncing trainee events after workout save:', err);
+      });
+    } catch (importErr) {
+      // If service not available, continue without syncing
+      console.warn('Could not import trainee calendar sync service:', importErr);
     }
 
     return { data: googleEventId, success: true };
