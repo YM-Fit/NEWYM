@@ -230,16 +230,16 @@ export default function QuickAddWorkoutModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="premium-card-static bg-white bg-elevated rounded-2xl max-w-md w-full border border-border border-border30 shadow-2xl animate-scale-in">
+    <div className="fixed inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-fade-in">
+      <div className="premium-card-static bg-white bg-elevated rounded-2xl max-w-md w-full md:max-w-lg border border-border border-border30 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-border border-border30">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-xl border border-emerald-500/30 dark:border-emerald-500/30">
-              <Plus className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-border border-border30 sticky top-0 bg-white dark:bg-elevated z-10">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-xl border border-emerald-500/30 dark:border-emerald-500/30">
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-foreground text-foreground">הוספת אימון מהירה</h2>
+              <h2 className="text-base sm:text-lg font-bold text-foreground text-foreground">הוספת אימון מהירה</h2>
               <p className="text-xs text-muted text-muted">
                 {selectedDate.toLocaleDateString('he-IL', { 
                   weekday: 'long',
@@ -251,14 +251,14 @@ export default function QuickAddWorkoutModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-surface dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300"
+            className="p-1.5 sm:p-2 hover:bg-surface dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300"
           >
-            <X className="h-5 w-5 text-muted text-muted" />
+            <X className="h-4 w-4 sm:h-5 sm:w-5 text-muted text-muted" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-5 space-y-5">
+        <div className="p-4 sm:p-5 md:p-6 space-y-4 sm:space-y-5">
           {/* Trainee Selection */}
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-medium text-foreground text-foreground">
@@ -269,7 +269,7 @@ export default function QuickAddWorkoutModal({
               value={selectedTraineeId}
               onChange={(e) => setSelectedTraineeId(e.target.value)}
               disabled={traineesLoading}
-              className="w-full p-3 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300"
+              className="w-full p-2.5 sm:p-3 md:p-3.5 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300 text-sm sm:text-base"
             >
               <option value="">-- בחר מתאמן --</option>
               {sortedTrainees.map((trainee) => (
@@ -287,11 +287,11 @@ export default function QuickAddWorkoutModal({
               <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               משך האימון
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setDuration('30')}
-                className={`p-3 rounded-xl border transition-all duration-300 ${
+                className={`p-2.5 sm:p-3 md:p-3.5 rounded-xl border transition-all duration-300 text-sm sm:text-base ${
                   duration === '30'
                     ? 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/20 dark:to-teal-500/20 border-emerald-200 dark:border-emerald-500/50 text-emerald-700 dark:text-emerald-400 font-semibold shadow-sm'
                     : 'bg-white bg-elevated border border-border border-border30 text-foreground text-foreground hover:bg-surface dark:hover:bg-[var(--color-bg-surface)]'
@@ -302,7 +302,7 @@ export default function QuickAddWorkoutModal({
               <button
                 type="button"
                 onClick={() => setDuration('60')}
-                className={`p-3 rounded-xl border transition-all duration-300 ${
+                className={`p-2.5 sm:p-3 md:p-3.5 rounded-xl border transition-all duration-300 text-sm sm:text-base ${
                   duration === '60'
                     ? 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/20 dark:to-teal-500/20 border-emerald-200 dark:border-emerald-500/50 text-emerald-700 dark:text-emerald-400 font-semibold shadow-sm'
                     : 'bg-white bg-elevated border border-border border-border30 text-foreground text-foreground hover:bg-surface dark:hover:bg-[var(--color-bg-surface)]'
@@ -313,8 +313,8 @@ export default function QuickAddWorkoutModal({
             </div>
           </div>
 
-          {/* Date & Time */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Date & Time - stacks on very small screens, side by side on tablets */}
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium text-foreground text-foreground">
                 <Calendar className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
@@ -324,7 +324,7 @@ export default function QuickAddWorkoutModal({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full p-3 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300"
+                className="w-full p-2.5 sm:p-3 md:p-3.5 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300 text-sm sm:text-base"
               />
             </div>
             <div className="space-y-2">
@@ -336,24 +336,24 @@ export default function QuickAddWorkoutModal({
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full p-3 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300"
+                className="w-full p-2.5 sm:p-3 md:p-3.5 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300 text-sm sm:text-base"
               />
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between p-5 border-t border-border border-border30">
+        {/* Footer - responsive button sizing */}
+        <div className="flex flex-col-reverse xs:flex-row items-stretch xs:items-center justify-between gap-2 sm:gap-3 p-4 sm:p-5 border-t border-border border-border30 sticky bottom-0 bg-white dark:bg-elevated">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] text-foreground text-foreground rounded-xl transition-all duration-300 border border-border border-border30"
+            className="px-4 sm:px-5 py-2.5 sm:py-3 bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] text-foreground text-foreground rounded-xl transition-all duration-300 border border-border border-border30 text-sm sm:text-base"
           >
             ביטול
           </button>
           <button
             onClick={handleSave}
             disabled={saving || !selectedTraineeId}
-            className="px-6 py-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
+            className="px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg text-sm sm:text-base font-medium"
           >
             {saving ? (
               <>

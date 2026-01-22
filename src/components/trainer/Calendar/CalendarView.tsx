@@ -1686,107 +1686,118 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="premium-card-static bg-elevated rounded-2xl shadow-xl p-4 lg:p-6 transition-all duration-300">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigateDate('prev')}
-              className="p-2 hover:bg-surface hover:bg-surface rounded-xl transition-all duration-300 border border-border"
-            >
-              <ChevronRight className="h-5 w-5 text-foreground" />
-            </button>
-            <h2 className="text-xl font-bold text-foreground">
-              {formatDateHeader}
-            </h2>
-            <button
-              onClick={() => navigateDate('next')}
-              className="p-2 hover:bg-surface hover:bg-surface rounded-xl transition-all duration-300 border border-border"
-            >
-              <ChevronLeft className="h-5 w-5 text-foreground" />
-            </button>
+      <div className="premium-card-static bg-elevated rounded-2xl shadow-xl p-3 sm:p-4 lg:p-6 transition-all duration-300">
+        {/* Main header container - stacks on mobile/tablet portrait, row on landscape/desktop */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 md:gap-4">
+          
+          {/* Navigation Section */}
+          <div className="flex items-center justify-between md:justify-start gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <button
+                onClick={() => navigateDate('prev')}
+                className="p-1.5 sm:p-2 hover:bg-surface rounded-xl transition-all duration-300 border border-border"
+              >
+                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-foreground" />
+              </button>
+              <h2 className="text-base sm:text-lg md:text-xl font-bold text-foreground whitespace-nowrap">
+                {formatDateHeader}
+              </h2>
+              <button
+                onClick={() => navigateDate('next')}
+                className="p-1.5 sm:p-2 hover:bg-surface rounded-xl transition-all duration-300 border border-border"
+              >
+                <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 text-foreground" />
+              </button>
+            </div>
             <button
               onClick={() => setCurrentDate(new Date())}
-              className="px-3 py-1 text-sm bg-surface hover:bg-elevated text-foreground rounded-xl transition-all duration-300 border border-border"
+              className="px-2.5 py-1 sm:px-3 text-xs sm:text-sm bg-surface hover:bg-elevated text-foreground rounded-xl transition-all duration-300 border border-border"
             >
               היום
             </button>
           </div>
-          <div className="flex items-center gap-2">
+          
+          {/* Controls Section - View modes and action buttons */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             {/* View mode buttons */}
-            <div className="flex items-center gap-1 bg-surface rounded-xl p-1 border border-border">
+            <div className="flex items-center justify-center gap-1 bg-surface rounded-xl p-1 border border-border">
               <button
                 onClick={() => setViewMode('month')}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-all duration-300 flex items-center gap-2 ${
+                className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${
                   viewMode === 'month'
                     ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground shadow-lg'
                     : 'text-foreground hover:bg-elevated'
                 }`}
                 title="תצוגת חודש"
               >
-                <Calendar className="h-4 w-4" />
-                חודש
+                <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">חודש</span>
               </button>
               <button
                 onClick={() => setViewMode('week')}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-all duration-300 flex items-center gap-2 ${
+                className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${
                   viewMode === 'week'
                     ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground shadow-lg'
                     : 'text-foreground hover:bg-elevated'
                 }`}
                 title="תצוגת שבוע"
               >
-                <CalendarRange className="h-4 w-4" />
-                שבוע
+                <CalendarRange className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">שבוע</span>
               </button>
               <button
                 onClick={() => setViewMode('day')}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-all duration-300 flex items-center gap-2 ${
+                className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${
                   viewMode === 'day'
                     ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground shadow-lg'
                     : 'text-foreground hover:bg-elevated'
                 }`}
                 title="תצוגת יום"
               >
-                <CalendarDays className="h-4 w-4" />
-                יום
+                <CalendarDays className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">יום</span>
               </button>
             </div>
-            <div className="flex items-center gap-2">
+            
+            {/* Action buttons - wrap on tablet portrait, row on landscape */}
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap md:flex-nowrap items-center gap-2">
               <button
                 onClick={() => setShowRecurringModal(true)}
-                className="px-4 py-2 text-sm bg-gradient-to-br from-purple-500/20 to-purple-600/20 dark:from-purple-500/20 dark:to-purple-600/20 hover:from-purple-500/30 hover:to-purple-600/30 text-purple-700 dark:text-purple-400 rounded-xl transition-all duration-300 flex items-center gap-2 border border-purple-500/30 dark:border-purple-500/30 shadow-sm"
+                className="px-2.5 sm:px-3 md:px-4 py-2 text-xs sm:text-sm bg-gradient-to-br from-purple-500/20 to-purple-600/20 dark:from-purple-500/20 dark:to-purple-600/20 hover:from-purple-500/30 hover:to-purple-600/30 text-purple-700 dark:text-purple-400 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 border border-purple-500/30 dark:border-purple-500/30 shadow-sm"
                 title="קביעת אימונים חוזרים"
               >
-                <Repeat className="h-4 w-4" />
-                קביעת אימונים
+                <Repeat className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden md:inline">קביעת אימונים</span>
+                <span className="md:hidden">קביעה</span>
               </button>
               <button
                 onClick={() => setShowSyncModal(true)}
-                className="px-4 py-2 text-sm bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-500/20 dark:to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 text-emerald-700 dark:text-emerald-400 rounded-xl transition-all duration-300 flex items-center gap-2 border border-emerald-500/30 dark:border-emerald-500/30 shadow-sm"
+                className="px-2.5 sm:px-3 md:px-4 py-2 text-xs sm:text-sm bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-500/20 dark:to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 text-emerald-700 dark:text-emerald-400 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 border border-emerald-500/30 dark:border-emerald-500/30 shadow-sm"
                 title="סנכרון מתאמנים מהיומן"
               >
-                <Users className="h-4 w-4" />
-                סנכרון מתאמנים
+                <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden md:inline">סנכרון מתאמנים</span>
+                <span className="md:hidden">סנכרון</span>
               </button>
               <button
                 onClick={handleManualRefresh}
                 disabled={loading || isRefreshing}
-                className="px-4 py-2 text-sm bg-surface hover:bg-elevated text-foreground rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border border-border"
+                className="px-2.5 sm:px-3 md:px-4 py-2 text-xs sm:text-sm bg-surface hover:bg-elevated text-foreground rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 sm:gap-2 border border-border"
                 title="רענון יומן"
               >
-                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 רענון
               </button>
               <button
                 onClick={() => setShowSettings(true)}
-                className="px-4 py-2 text-sm bg-surface hover:bg-elevated text-foreground rounded-xl transition-all duration-300 border border-border"
+                className="px-2.5 sm:px-3 md:px-4 py-2 text-xs sm:text-sm bg-surface hover:bg-elevated text-foreground rounded-xl transition-all duration-300 border border-border flex items-center justify-center"
               >
                 הגדרות
               </button>
               {onCreateWorkout && (
                 <button
                   onClick={onCreateWorkout}
-                  className="btn-primary flex items-center gap-2 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground shadow-lg"
+                  className="col-span-2 sm:col-span-1 btn-primary flex items-center justify-center gap-2 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground shadow-lg text-xs sm:text-sm py-2.5 md:py-2"
                 >
                   <Plus className="h-4 w-4" />
                   אימון חדש
