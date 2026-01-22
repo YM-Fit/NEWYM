@@ -30,6 +30,7 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [bulkSyncing, setBulkSyncing] = useState(false);
   const loadingRef = useRef(false);
   const lastLoadTimeRef = useRef(0);
   const LOAD_DEBOUNCE_MS = 2000; // Don't load more than once every 2 seconds
@@ -273,6 +274,49 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
     }
   };
 
+  const handleBulkSync = async () => {
+    if (!user) return;
+
+    if (!confirm('האם לעדכן את כל האירועים ביומן Google Calendar עם מספור אימונים? פעולה זו עשויה לקחת כמה דקות.')) {
+      return;
+    }
+
+    try {
+      setBulkSyncing(true);
+      const { data: { session } } = await (await import('../../../lib/supabase')).supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error('נדרשת התחברות מחדש');
+        return;
+      }
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://vqvczpxmvrwfkecpwovc.supabase.co';
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/bulk-sync-all-calendar-events`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({}),
+      });
+
+      const result = await response.json();
+      
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(result.message || `עודכנו ${result.updated} אירועים בהצלחה!`);
+    } catch (error) {
+      logger.error('Error bulk syncing calendar events', error, 'GoogleCalendarSettings');
+      toast.error('שגיאה בעדכון האירועים');
+    } finally {
+      setBulkSyncing(false);
+    }
+  };
+
   if (loading && !connected) {
     return (
       <div className="premium-card p-6">
@@ -461,6 +505,25 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
               <>
                 <RefreshCw className="h-4 w-4" />
                 סנכרון ידני עכשיו
+              </>
+            )}
+          </button>
+
+          {/* Bulk Sync Button - Updates all events with session numbers */}
+          <button
+            onClick={handleBulkSync}
+            disabled={bulkSyncing || loading}
+            className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {bulkSyncing ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                מעדכן את כל האירועים...
+              </>
+            ) : (
+              <>
+                <Calendar className="h-4 w-4" />
+                עדכן מספור אימונים בכל האירועים
               </>
             )}
           </button>

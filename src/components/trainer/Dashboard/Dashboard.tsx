@@ -1,9 +1,8 @@
-import { Users, Target, Sparkles, TrendingUp, Activity, AlertCircle } from 'lucide-react';
+import { Users, Target, Sparkles, Activity, AlertCircle } from 'lucide-react';
 import StatsCard from './StatsCard';
 import RecentActivity from './RecentActivity';
 import QuickActions from './QuickActions';
 import RecentScaleReadings from './RecentScaleReadings';
-import AdherenceMetrics from '../Analytics/AdherenceMetrics';
 import WeightAlerts from '../Measurements/WeightAlerts';
 import { IdentifiedReading } from '../../../hooks/useGlobalScaleListener';
 import { ScaleReading } from '../../../hooks/useScaleListener';
@@ -260,16 +259,6 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* Adherence Metrics */}
-      {trainees.length > 0 && (
-        <div className="premium-card-static p-5 md:p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-emerald-400" />
-            <h3 className="text-lg font-semibold text-white">מדדי Adherence</h3>
-          </div>
-          <AdherenceMetrics />
-        </div>
-      )}
     </div>
   );
 }
