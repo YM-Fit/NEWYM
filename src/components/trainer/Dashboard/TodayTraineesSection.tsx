@@ -50,7 +50,7 @@ const getLastWorkoutDate = async (traineeId: string): Promise<string | null> => 
 const getUnseenWeightsCount = async (traineeId: string): Promise<number> => {
   try {
     const { count } = await supabase
-      .from('self_weights')
+      .from('trainee_self_weights')
       .select('*', { count: 'exact', head: true })
       .eq('trainee_id', traineeId)
       .eq('is_seen_by_trainer', false);
