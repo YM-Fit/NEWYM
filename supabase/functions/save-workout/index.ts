@@ -426,6 +426,35 @@ Deno.serve(async (req: Request) => {
 
       workout = updatedWorkout;
     } else {
+      // Check if a workout already exists for this trainee on the same date
+      const workoutDateOnly = finalWorkoutDate.split('T')[0];
+      const startOfDay = `${workoutDateOnly}T00:00:00.000Z`;
+      const endOfDay = `${workoutDateOnly}T23:59:59.999Z`;
+      
+      const { data: existingWorkouts } = await supabase
+        .from('workouts')
+        .select('id, workout_trainees!inner(trainee_id)')
+        .eq('trainer_id', trainer_id)
+        .eq('workout_trainees.trainee_id', trainee_id)
+        .gte('workout_date', startOfDay)
+        .lte('workout_date', endOfDay)
+        .limit(1);
+      
+      if (existingWorkouts && existingWorkouts.length > 0) {
+        // Return the existing workout instead of creating a duplicate
+        console.log('Workout already exists for this trainee on this date, returning existing workout');
+        return new Response(
+          JSON.stringify({ 
+            error: "אימון כבר קיים למתאמן זה בתאריך זה",
+            existing_workout_id: existingWorkouts[0].id
+          }),
+          {
+            status: 409, // Conflict
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
       // When creating new workout, use the date from input but with current time
       const { data: newWorkout, error: workoutError } = await supabase
         .from('workouts')

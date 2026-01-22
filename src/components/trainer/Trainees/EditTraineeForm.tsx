@@ -2,6 +2,7 @@ import { ArrowRight, Save, Sparkles, User, Users } from 'lucide-react';
 import { useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { validateTraineeForm } from '../../../utils/validation';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface EditTraineeFormProps {
   trainee: any;
@@ -10,7 +11,9 @@ interface EditTraineeFormProps {
 }
 
 export default function EditTraineeForm({ trainee, onBack, onSave }: EditTraineeFormProps) {
+  const { user } = useAuth();
   const isPair = trainee.isPair || false;
+  const originalName = !isPair ? (trainee.name || '') : `${trainee.pairName1 || ''} ו${trainee.pairName2 || ''}`;
 
   const [formData, setFormData] = useState({
     // Regular trainee fields
@@ -110,6 +113,24 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
           .eq('id', trainee.id);
 
         if (error) throw error;
+      }
+
+      // Check if name changed - if so, sync to Google Calendar automatically
+      const newName = isPair 
+        ? `${formData.pair_name_1.trim()} ו${formData.pair_name_2.trim()}`
+        : formData.full_name.trim();
+      
+      if (newName !== originalName && user) {
+        // Trigger calendar sync in the background (non-blocking)
+        import('../../../services/traineeCalendarSyncService').then(({ syncTraineeEventsToCalendar }) => {
+          syncTraineeEventsToCalendar(trainee.id, user.id, 'current_month_and_future')
+            .then(result => {
+              if (result.data && result.data.updated > 0) {
+                console.log(`Calendar sync: updated ${result.data.updated} events`);
+              }
+            })
+            .catch(err => console.error('Calendar sync failed:', err));
+        }).catch(err => console.error('Failed to load calendar sync service:', err));
       }
 
       onSave();
