@@ -15,6 +15,7 @@ import {
   Calendar,
   CalendarDays,
   CalendarRange,
+  Utensils,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
@@ -314,30 +315,37 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
         </div>
 
         {/* Water Tracking */}
-        <div className="p-4 border-b bg-gradient-to-br from-blue-50/50 to-sky-50/50 transition-all duration-300">
+        <div className="p-4 border-b border-gray-200 dark:border-[var(--color-border)]/30 bg-gradient-to-br from-blue-50/80 to-cyan-50/80 dark:from-blue-500/10 dark:to-cyan-500/10 transition-all duration-300">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-sky-500 rounded-xl flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-sky-500 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
               <Droplets className="w-5 h-5 text-white" />
             </div>
-            <span className="text-sm font-semibold text-gray-700">מעקב מים</span>
-            <span className="text-sm text-gray-500 font-medium">
-              {waterAmount} / {WATER_GOAL} מ"ל
-            </span>
+            <div className="flex-1 min-w-0">
+              <span className="text-sm font-semibold text-gray-800 dark:text-[var(--color-text-primary)] block">מעקב מים</span>
+              <span className="text-sm text-gray-600 dark:text-[var(--color-text-muted)] font-medium">
+                {waterAmount} / {WATER_GOAL} מ"ל
+              </span>
+            </div>
           </div>
-          <div className="h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+          <div className="h-3 bg-gray-200 dark:bg-[var(--color-bg-surface)] rounded-full overflow-hidden shadow-inner border border-gray-300 dark:border-[var(--color-border)]/30">
             <div
-              className="h-full bg-gradient-to-r from-blue-400 to-sky-500 transition-all duration-500 rounded-full"
+              className="h-full bg-gradient-to-r from-blue-400 to-sky-500 transition-all duration-500 rounded-full shadow-sm"
               style={{ width: `${waterProgress}%` }}
             />
           </div>
         </div>
 
         {/* Meals */}
-        <div className="p-4">
+        <div className="p-4 bg-white dark:bg-[var(--color-bg-base)]">
           {dayMeals.length === 0 ? (
-            <p className="text-center text-gray-400 text-sm py-6">
-              לא נרשמו ארוחות
-            </p>
+            <div className="text-center py-8">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-[var(--color-bg-surface)] flex items-center justify-center">
+                <Utensils className="w-8 h-8 text-gray-400 dark:text-[var(--color-text-muted)]" />
+              </div>
+              <p className="text-gray-600 dark:text-[var(--color-text-muted)] text-sm">
+                לא נרשמו ארוחות
+              </p>
+            </div>
           ) : (
             <div className="space-y-3">
               {dayMeals.map((meal) => {
@@ -348,25 +356,25 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
                 return (
                   <div
                     key={meal.id}
-                    className={`${typeInfo.color} rounded-2xl p-4 transition-all duration-300 hover:shadow-lg hover:scale-[1.01]`}
+                    className={`${typeInfo.color} rounded-2xl p-4 transition-all duration-300 hover:shadow-lg hover:scale-[1.01] shadow-sm`}
                   >
                     <div className="flex items-start gap-4">
-                      <div className={`${typeInfo.iconBg} p-3 rounded-xl shadow-md`}>
+                      <div className={`${typeInfo.iconBg} p-3 rounded-xl shadow-md flex-shrink-0`}>
                         <Icon className="w-5 h-5 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <span className="font-bold text-base">
                             {typeInfo.label}
                           </span>
                           {meal.meal_time && (
-                            <span className="text-xs text-gray-500 flex items-center gap-1 bg-white/50 px-2 py-1 rounded-lg">
+                            <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1 bg-white/70 dark:bg-white/10 px-2 py-1 rounded-lg">
                               <Clock className="w-3 h-3" />
                               {meal.meal_time.slice(0, 5)}
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                        <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
                           {description}
                         </p>
                       </div>
@@ -383,10 +391,12 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex justify-center items-center py-12 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[var(--color-bg-base)] dark:to-[var(--color-bg-elevated)]">
         <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
-          <span className="text-gray-600 font-medium">טוען יומן אכילה...</span>
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
+            <BookOpen className="w-8 h-8 text-white" />
+          </div>
+          <span className="text-gray-700 dark:text-[var(--color-text-muted)] font-medium">טוען יומן אכילה...</span>
         </div>
       </div>
     );
@@ -398,24 +408,24 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
   ).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 lg:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[var(--color-bg-base)] dark:to-[var(--color-bg-elevated)] p-4 lg:p-6">
       {/* Premium Header */}
-      <div className="bg-white rounded-2xl shadow-xl p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10 transition-all duration-300">
+      <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
             <button
               onClick={onBack}
-              className="p-3 lg:p-4 hover:bg-gray-100 rounded-xl transition-all duration-300"
+              className="p-3 lg:p-4 hover:bg-gray-100 dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300"
             >
-              <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7 text-gray-600" />
+              <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7 text-gray-700 dark:text-[var(--color-text-primary)]" />
             </button>
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105">
                 <BookOpen className="w-7 h-7 lg:w-8 lg:h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-xl lg:text-3xl font-bold text-gray-900">יומן אכילה</h1>
-                <p className="text-base lg:text-lg text-gray-600">{traineeName}</p>
+                <h1 className="text-xl lg:text-3xl font-bold text-gray-900 dark:text-[var(--color-text-primary)]">יומן אכילה</h1>
+                <p className="text-base lg:text-lg text-gray-700 dark:text-[var(--color-text-secondary)]">{traineeName}</p>
               </div>
             </div>
           </div>
@@ -427,19 +437,19 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
         </div>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between mb-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 transition-all duration-300">
+        <div className="flex items-center justify-between mb-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[var(--color-bg-surface)] dark:to-[var(--color-bg-elevated)] rounded-xl p-3 transition-all duration-300 border border-gray-200 dark:border-[var(--color-border)]/20">
           <button
             onClick={() => {
               if (viewMode === 'day') navigateDay('next');
               else if (viewMode === 'week') navigateWeek('next');
               else navigateMonth('next');
             }}
-            className="p-3 hover:bg-white rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
+            className="p-3 hover:bg-white dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
           >
-            <ChevronRight className="w-5 h-5 text-gray-600" />
+            <ChevronRight className="w-5 h-5 text-gray-700 dark:text-[var(--color-text-primary)]" />
           </button>
           <div className="text-center">
-            <p className="text-sm font-semibold text-gray-700">{getViewTitle()}</p>
+            <p className="text-sm font-semibold text-gray-800 dark:text-[var(--color-text-primary)]">{getViewTitle()}</p>
           </div>
           <button
             onClick={() => {
@@ -447,9 +457,9 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
               else if (viewMode === 'week') navigateWeek('prev');
               else navigateMonth('prev');
             }}
-            className="p-3 hover:bg-white rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
+            className="p-3 hover:bg-white dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
+            <ChevronLeft className="w-5 h-5 text-gray-700 dark:text-[var(--color-text-primary)]" />
           </button>
         </div>
 
@@ -460,7 +470,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
               viewMode === 'day'
                 ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-[var(--color-bg-surface)] text-gray-700 dark:text-[var(--color-text-primary)] hover:bg-gray-200 dark:hover:bg-[var(--color-bg-elevated)]'
             }`}
           >
             <Calendar className="w-4 h-4" />
@@ -471,7 +481,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
               viewMode === 'week'
                 ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-[var(--color-bg-surface)] text-gray-700 dark:text-[var(--color-text-primary)] hover:bg-gray-200 dark:hover:bg-[var(--color-bg-elevated)]'
             }`}
           >
             <CalendarRange className="w-4 h-4" />
@@ -482,7 +492,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
               viewMode === 'month'
                 ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-[var(--color-bg-surface)] text-gray-700 dark:text-[var(--color-text-primary)] hover:bg-gray-200 dark:hover:bg-[var(--color-bg-elevated)]'
             }`}
           >
             <CalendarDays className="w-4 h-4" />
@@ -497,7 +507,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 ${
               filter === 'all'
                 ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-[var(--color-bg-surface)] text-gray-700 dark:text-[var(--color-text-primary)] hover:bg-gray-200 dark:hover:bg-[var(--color-bg-elevated)]'
             }`}
           >
             הכל
@@ -507,7 +517,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 ${
               filter === 'completed'
                 ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-[var(--color-bg-surface)] text-gray-700 dark:text-[var(--color-text-primary)] hover:bg-gray-200 dark:hover:bg-[var(--color-bg-elevated)]'
             }`}
           >
             הושלמו
@@ -517,7 +527,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 relative ${
               filter === 'unseen'
                 ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-[var(--color-bg-surface)] text-gray-700 dark:text-[var(--color-text-primary)] hover:bg-gray-200 dark:hover:bg-[var(--color-bg-elevated)]'
             }`}
           >
             לא נצפו
@@ -554,7 +564,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             return (
               <div
                 key={dateStr}
-                className={`bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl ${
+                className={`premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl ${
                   isToday(currentDate) ? 'ring-2 ring-emerald-500' : ''
                 } ${!isSeen && isCompleted ? 'ring-2 ring-red-400' : ''}`}
               >
@@ -582,7 +592,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             return (
               <div
                 key={dateStr}
-                className={`bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl ${
+                className={`premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl ${
                   isToday(date) ? 'ring-2 ring-emerald-500' : ''
                 } ${!isSeen && isCompleted ? 'ring-2 ring-red-400' : ''}`}
               >
@@ -594,13 +604,13 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
       )}
 
       {viewMode === 'month' && (
-        <div className="bg-white rounded-2xl shadow-xl p-4">
+        <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl p-4">
           <div className="grid grid-cols-7 gap-2">
             {/* Week days header */}
             {['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'].map((day, index) => (
               <div
                 key={index}
-                className="text-center text-sm font-semibold text-gray-500 py-2"
+                className="text-center text-sm font-semibold text-gray-600 dark:text-[var(--color-text-muted)] py-2"
               >
                 {day}
               </div>
@@ -624,29 +634,29 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
                 <div
                   key={index}
                   onClick={() => handleDateClick(date)}
-                  className={`min-h-[80px] p-2 border border-gray-200 rounded-lg cursor-pointer transition-all hover:border-emerald-500/50 ${
+                  className={`min-h-[80px] p-2 border border-gray-200 dark:border-[var(--color-border)]/30 rounded-lg cursor-pointer transition-all hover:border-emerald-500/50 dark:hover:border-emerald-500/50 ${
                     isCurrentDay
-                      ? 'bg-emerald-500/10 border-emerald-500/30'
+                      ? 'bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 dark:border-emerald-500/40'
                       : hasMeals
-                      ? 'bg-gray-50'
+                      ? 'bg-gray-50 dark:bg-[var(--color-bg-surface)]'
                       : 'bg-transparent'
                   } ${!isSeen && isCompleted ? 'ring-2 ring-red-400' : ''}`}
                 >
                   <div
                     className={`text-sm font-semibold mb-1 ${
-                      isCurrentDay ? 'text-emerald-600' : 'text-gray-900'
+                      isCurrentDay ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-[var(--color-text-primary)]'
                     }`}
                   >
                     {date.getDate()}
                   </div>
                   {hasMeals && (
                     <div className="space-y-1">
-                      <div className="text-xs bg-emerald-500/20 text-emerald-700 px-1.5 py-0.5 rounded truncate">
+                      <div className="text-xs bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded truncate">
                         {dayMeals.length} ארוחות
                       </div>
                       {isCompleted && (
                         <div className={`text-xs px-1.5 py-0.5 rounded ${
-                          isSeen ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
+                          isSeen ? 'bg-emerald-500 dark:bg-emerald-600 text-white' : 'bg-red-500 dark:bg-red-600 text-white'
                         }`}>
                           {isSeen ? '✓' : 'חדש'}
                         </div>
@@ -662,11 +672,11 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
 
       {/* Empty state for week view */}
       {viewMode === 'week' && weekDates.filter((date) => shouldShowDay(date.toISOString().split('T')[0])).length === 0 && (
-        <div className="bg-white rounded-2xl shadow-xl p-10 text-center transition-all duration-300">
-          <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <BookOpen className="w-10 h-10 text-gray-400" />
+        <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl p-10 text-center transition-all duration-300">
+          <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[var(--color-bg-surface)] dark:to-[var(--color-bg-elevated)] rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <BookOpen className="w-10 h-10 text-gray-500 dark:text-[var(--color-text-muted)]" />
           </div>
-          <p className="text-gray-500 text-lg font-medium">אין ימים להצגה בפילטר הנוכחי</p>
+          <p className="text-gray-600 dark:text-[var(--color-text-muted)] text-lg font-medium">אין ימים להצגה בפילטר הנוכחי</p>
         </div>
       )}
     </div>

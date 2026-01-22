@@ -518,9 +518,12 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
-          <Utensils className="w-8 h-8 text-white" />
+      <div className="flex justify-center items-center py-12 min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
+            <Utensils className="w-8 h-8 text-white" />
+          </div>
+          <span className="text-sm font-medium text-[var(--color-text-muted)]">טוען יומן אכילה...</span>
         </div>
       </div>
     );
@@ -630,8 +633,12 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
     return (
       <>
         <div
-          className={`px-4 py-4 ${
-            isToday(date) ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white' : isCompleted ? 'bg-emerald-500/10' : 'bg-[var(--color-bg-surface)]'
+          className={`px-4 py-4 rounded-t-2xl transition-all duration-300 ${
+            isToday(date) 
+              ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg' 
+              : isCompleted 
+              ? 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 border-b border-emerald-200 dark:border-emerald-500/20' 
+              : 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[var(--color-bg-surface)] dark:to-[var(--color-bg-elevated)] border-b border-gray-200 dark:border-[var(--color-border)]/20'
           }`}
         >
           <div className="flex justify-between items-center">
@@ -689,34 +696,34 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
           </div>
         </div>
 
-        <div className="p-4 border-b bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-[var(--color-border)]">
+        <div className="p-4 border-b bg-gradient-to-br from-blue-50/80 to-cyan-50/80 dark:from-cyan-500/10 dark:to-blue-500/10 border-gray-200 dark:border-[var(--color-border)]/30">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
               <Droplets className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <span className="text-sm font-bold text-[var(--color-text-primary)]">מעקב מים</span>
-              <p className="text-sm text-[var(--color-text-muted)]">
+            <div className="flex-1 min-w-0">
+              <span className="text-sm font-bold text-gray-900 dark:text-[var(--color-text-primary)] block">מעקב מים</span>
+              <p className="text-sm text-gray-600 dark:text-[var(--color-text-muted)]">
                 {waterAmount} / {waterGoal} מ"ל
               </p>
             </div>
           </div>
-          <div className="h-3 bg-[var(--color-bg-surface)] rounded-full overflow-hidden mb-4 shadow-inner border border-[var(--color-border)]">
+          <div className="h-3 bg-gray-200 dark:bg-[var(--color-bg-surface)] rounded-full overflow-hidden mb-4 shadow-inner border border-gray-300 dark:border-[var(--color-border)]/30">
             <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500 ease-out rounded-full"
+              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500 ease-out rounded-full shadow-sm"
               style={{ width: `${waterProgress}%` }}
             />
           </div>
           <div className="flex gap-3">
             <button
               onClick={() => addWater(dateStr, 250)}
-              className="flex-1 py-3 text-sm bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 rounded-xl hover:bg-cyan-500/20 transition-all duration-300 font-medium shadow-sm hover:shadow-md hover:scale-[1.02]"
+              className="flex-1 py-3 text-sm bg-cyan-500/15 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 dark:border-cyan-500/40 rounded-xl hover:bg-cyan-500/25 dark:hover:bg-cyan-500/30 transition-all duration-300 font-medium shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
             >
               +250 מ"ל
             </button>
             <button
               onClick={() => addWater(dateStr, 500)}
-              className="flex-1 py-3 text-sm bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 rounded-xl hover:bg-cyan-500/20 transition-all duration-300 font-medium shadow-sm hover:shadow-md hover:scale-[1.02]"
+              className="flex-1 py-3 text-sm bg-cyan-500/15 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 dark:border-cyan-500/40 rounded-xl hover:bg-cyan-500/25 dark:hover:bg-cyan-500/30 transition-all duration-300 font-medium shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
             >
               +500 מ"ל
             </button>
@@ -724,43 +731,48 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
         </div>
 
         {dayMeals.length > 0 && (
-          <div className="px-4 py-3 border-b border-[var(--color-border)] bg-gradient-to-br from-emerald-500/5 to-teal-500/5">
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-[var(--color-border)]/30 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-emerald-500/5 dark:to-teal-500/5">
             <button
               onClick={() => toggleDailySummary(dateStr)}
-              className="w-full flex items-center justify-between"
+              className="w-full flex items-center justify-between hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10 rounded-lg p-2 -m-2 transition-colors duration-200"
             >
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-emerald-400" />
-                <span className="text-sm font-bold text-[var(--color-text-primary)]">סיכום יומי</span>
+                <BarChart3 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-sm font-bold text-gray-900 dark:text-[var(--color-text-primary)]">סיכום יומי</span>
               </div>
               {showDailySummary.has(dateStr) ? (
-                <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
+                <ChevronUp className="w-4 h-4 text-gray-600 dark:text-[var(--color-text-muted)]" />
               ) : (
-                <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
+                <ChevronDown className="w-4 h-4 text-gray-600 dark:text-[var(--color-text-muted)]" />
               )}
             </button>
             {showDailySummary.has(dateStr) && (
-              <DailySummaryCard
-                dateStr={dateStr}
-                totals={calculateDailyTotals(dateStr)}
-                mealPlan={mealPlan}
-                waterAmount={waterAmount}
-              />
+              <div className="mt-3 animate-fade-in">
+                <DailySummaryCard
+                  dateStr={dateStr}
+                  totals={calculateDailyTotals(dateStr)}
+                  mealPlan={mealPlan}
+                  waterAmount={waterAmount}
+                />
+              </div>
             )}
           </div>
         )}
 
-        <div className="p-4">
+        <div className="p-4 bg-white dark:bg-[var(--color-bg-base)]">
           {dayMeals.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-[var(--color-text-muted)] text-sm mb-4">לא נרשמו ארוחות</p>
+            <div className="text-center py-8">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-[var(--color-bg-surface)] flex items-center justify-center">
+                <Utensils className="w-8 h-8 text-gray-400 dark:text-[var(--color-text-muted)]" />
+              </div>
+              <p className="text-gray-600 dark:text-[var(--color-text-muted)] text-sm mb-4">לא נרשמו ארוחות</p>
               {mealPlanMeals.length > 0 && (
                 <button
                   onClick={() => {
                     setSelectedDate(dateStr);
                     setShowMealPlanCopy(true);
                   }}
-                  className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center gap-1 mx-auto font-medium"
+                  className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 mx-auto font-medium transition-colors duration-200"
                 >
                   <Copy className="w-4 h-4" />
                   העתק מתפריט
@@ -780,7 +792,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 return (
                   <div
                     key={meal.id}
-                    className="border-2 border-[var(--color-border)] rounded-xl p-4 hover:border-emerald-500/50 transition-all duration-300 hover:shadow-lg bg-[var(--color-bg-base)]"
+                    className="border-2 border-gray-200 dark:border-[var(--color-border)]/30 rounded-xl p-4 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 transition-all duration-300 hover:shadow-lg bg-white dark:bg-[var(--color-bg-base)] shadow-sm"
                   >
                     <div className="flex items-start gap-3">
                       <div className={`p-2.5 rounded-xl ${typeInfo.color} shadow-md`}>
@@ -788,11 +800,11 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="font-bold text-sm text-[var(--color-text-primary)]">
+                          <span className="font-bold text-sm text-gray-900 dark:text-[var(--color-text-primary)]">
                             {typeInfo.label}
                           </span>
                           {meal.meal_time && (
-                            <span className="text-xs text-[var(--color-text-muted)] flex items-center gap-1 bg-[var(--color-bg-surface)] px-2 py-0.5 rounded-full border border-[var(--color-border)]">
+                            <span className="text-xs text-gray-600 dark:text-[var(--color-text-muted)] flex items-center gap-1 bg-gray-100 dark:bg-[var(--color-bg-surface)] px-2 py-0.5 rounded-full border border-gray-300 dark:border-[var(--color-border)]/30">
                               <Clock className="w-3 h-3" />
                               {meal.meal_time.slice(0, 5)}
                             </span>
@@ -827,7 +839,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                           )}
                         </div>
                         <p
-                          className={`text-sm text-[var(--color-text-secondary)] leading-relaxed ${
+                          className={`text-sm text-gray-700 dark:text-[var(--color-text-secondary)] leading-relaxed ${
                             !isExpanded && shouldTruncate ? 'line-clamp-2' : ''
                           }`}
                         >
@@ -855,7 +867,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                         {shouldTruncate && (
                           <button
                             onClick={() => toggleMealExpand(meal.id)}
-                            className="text-xs text-emerald-400 flex items-center gap-1 mt-2 font-medium hover:text-emerald-300 transition-colors"
+                            className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-2 font-medium hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
                           >
                             {isExpanded ? (
                               <>
@@ -875,7 +887,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                         <div className="flex gap-1">
                           <button
                             onClick={() => openEditMeal(meal)}
-                            className="p-2 text-[var(--color-text-muted)] hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all duration-300"
+                            className="p-2 text-gray-600 dark:text-[var(--color-text-muted)] hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-all duration-300"
                           >
                             <svg
                               className="w-4 h-4"
@@ -893,7 +905,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                           </button>
                           <button
                             onClick={() => deleteMeal(meal.id)}
-                            className="p-2 text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-300"
+                            className="p-2 text-gray-600 dark:text-[var(--color-text-muted)] hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all duration-300"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -912,22 +924,22 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 shadow-xl sticky top-0 z-10">
+      <div className="premium-card-static rounded-2xl p-6 shadow-xl sticky top-0 z-10 bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full">
             <button
               onClick={() => {
                 if (viewMode === 'day') navigateDay('next');
                 else if (viewMode === 'week') navigateWeek('next');
                 else navigateMonth('next');
               }}
-              className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-white"
+              className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-white flex-shrink-0"
             >
               <ChevronRight className="w-6 h-6" />
             </button>
-            <div className="text-center text-white flex-1">
+            <div className="text-center text-white flex-1 min-w-0">
               <h2 className="text-2xl font-bold">יומן אכילה</h2>
-              <p className="text-sm text-emerald-100 mt-1">{getViewTitle()}</p>
+              <p className="text-sm text-white/90 mt-1">{getViewTitle()}</p>
             </div>
             <button
               onClick={() => {
@@ -935,7 +947,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 else if (viewMode === 'week') navigateWeek('prev');
                 else navigateMonth('prev');
               }}
-              className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-white"
+              className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-white flex-shrink-0"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
@@ -1009,9 +1021,9 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       {viewMode === 'month' && renderMonthView()}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="premium-card-static w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gradient-to-br from-emerald-500 to-teal-600 p-4 flex items-center justify-between rounded-t-2xl">
+        <div className="fixed inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="premium-card-static w-full max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-[var(--color-bg-elevated)] shadow-2xl animate-scale-in">
+            <div className="sticky top-0 bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700 p-4 flex items-center justify-between rounded-t-2xl z-10">
               <h3 className="text-lg font-bold text-white">
                 {editingMeal ? 'עריכת ארוחה' : 'הוספת ארוחה'}
               </h3>
@@ -1023,10 +1035,10 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 bg-white dark:bg-[var(--color-bg-elevated)]">
               {mealPlanMeals.length > 0 && !editingMeal && (
                 <div>
-                  <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-2">
+                  <label className="block text-sm font-bold text-gray-900 dark:text-[var(--color-text-secondary)] mb-2">
                     העתק מתפריט
                   </label>
                   <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
@@ -1034,18 +1046,18 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                       <button
                         key={planMeal.id}
                         onClick={() => copyMealFromPlan(planMeal)}
-                        className="p-3 rounded-xl border-2 border-emerald-500/30 hover:border-emerald-500/50 bg-emerald-500/10 hover:bg-emerald-500/15 transition-all text-right"
+                        className="p-3 rounded-xl border-2 border-emerald-500/30 dark:border-emerald-500/40 hover:border-emerald-500/50 dark:hover:border-emerald-500/60 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/15 transition-all text-right"
                       >
-                        <div className="text-sm font-bold text-[var(--color-text-primary)]">
+                        <div className="text-sm font-bold text-gray-900 dark:text-[var(--color-text-primary)]">
                           {planMeal.meal_name === 'breakfast' ? 'ארוחת בוקר' :
                            planMeal.meal_name === 'lunch' ? 'ארוחת צהריים' :
                            planMeal.meal_name === 'dinner' ? 'ארוחת ערב' : planMeal.meal_name}
                         </div>
-                        <div className="text-xs text-[var(--color-text-muted)] line-clamp-1">
+                        <div className="text-xs text-gray-600 dark:text-[var(--color-text-muted)] line-clamp-1">
                           {planMeal.description}
                         </div>
                         {planMeal.total_calories && (
-                          <div className="text-xs text-amber-500 mt-1">
+                          <div className="text-xs text-amber-600 dark:text-amber-500 mt-1">
                             {planMeal.total_calories} קלוריות
                           </div>
                         )}
@@ -1056,7 +1068,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               )}
 
               <div>
-                <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-2">
+                <label className="block text-sm font-bold text-gray-900 dark:text-[var(--color-text-secondary)] mb-2">
                   שעה
                 </label>
                 <input
@@ -1070,7 +1082,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-2">
+                <label className="block text-sm font-bold text-gray-900 dark:text-[var(--color-text-secondary)] mb-2">
                   סוג ארוחה
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -1084,14 +1096,14 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                         }
                         className={`p-4 rounded-xl border-2 flex items-center gap-2 transition-all duration-300 ${
                           mealForm.meal_type === type.value
-                            ? 'border-emerald-500 bg-emerald-500/15 shadow-md'
-                            : 'border-[var(--color-border)] hover:border-emerald-500/50 hover:shadow-md bg-[var(--color-bg-base)]'
+                            ? 'border-emerald-500 dark:border-emerald-500 bg-emerald-50 dark:bg-emerald-500/15 shadow-md'
+                            : 'border-gray-300 dark:border-[var(--color-border)] hover:border-emerald-500/50 dark:hover:border-emerald-500/50 hover:shadow-md bg-white dark:bg-[var(--color-bg-base)]'
                         }`}
                       >
                         <div className={`p-2 rounded-xl ${type.color} shadow-sm`}>
                           <Icon className="w-4 h-4" />
                         </div>
-                        <span className="text-sm font-bold text-[var(--color-text-primary)]">{type.label}</span>
+                        <span className="text-sm font-bold text-gray-900 dark:text-[var(--color-text-primary)]">{type.label}</span>
                       </button>
                     );
                   })}
@@ -1099,7 +1111,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-2">
+                <label className="block text-sm font-bold text-gray-900 dark:text-[var(--color-text-secondary)] mb-2">
                   תיאור האוכל
                 </label>
                 <textarea
@@ -1114,12 +1126,12 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-3">
+                <label className="block text-sm font-bold text-gray-900 dark:text-[var(--color-text-secondary)] mb-3">
                   ערכים תזונתיים (אופציונלי)
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">
+                    <label className="block text-xs text-gray-600 dark:text-[var(--color-text-muted)] mb-1">
                       <Flame className="w-3 h-3 inline ml-1" />
                       קלוריות
                     </label>
@@ -1134,7 +1146,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">
+                    <label className="block text-xs text-gray-600 dark:text-[var(--color-text-muted)] mb-1">
                       <Beef className="w-3 h-3 inline ml-1" />
                       חלבון (גרם)
                     </label>
@@ -1149,7 +1161,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">
+                    <label className="block text-xs text-gray-600 dark:text-[var(--color-text-muted)] mb-1">
                       <Wheat className="w-3 h-3 inline ml-1" />
                       פחמימות (גרם)
                     </label>
@@ -1164,7 +1176,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">
+                    <label className="block text-xs text-gray-600 dark:text-[var(--color-text-muted)] mb-1">
                       <Droplet className="w-3 h-3 inline ml-1" />
                       שומן (גרם)
                     </label>
@@ -1182,7 +1194,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               </div>
             </div>
 
-            <div className="sticky bottom-0 bg-[var(--color-bg-base)] p-4 border-t border-[var(--color-border)] flex gap-3">
+            <div className="sticky bottom-0 bg-white dark:bg-[var(--color-bg-base)] p-4 border-t border-gray-200 dark:border-[var(--color-border)] flex gap-3">
               <button
                 onClick={() => setShowModal(false)}
                 className="flex-1 py-4 btn-secondary rounded-xl font-bold"
@@ -1201,9 +1213,9 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       )}
 
       {showMealPlanCopy && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="premium-card-static w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gradient-to-br from-emerald-500 to-teal-600 p-4 flex items-center justify-between rounded-t-2xl">
+        <div className="fixed inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="premium-card-static w-full max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-[var(--color-bg-elevated)] shadow-2xl animate-scale-in">
+            <div className="sticky top-0 bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700 p-4 flex items-center justify-between rounded-t-2xl z-10">
               <h3 className="text-lg font-bold text-white">העתק מתפריט</h3>
               <button
                 onClick={() => {
@@ -1215,7 +1227,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6 space-y-3">
+            <div className="p-6 space-y-3 bg-white dark:bg-[var(--color-bg-elevated)]">
               {mealPlanMeals.map((planMeal) => (
                 <button
                   key={planMeal.id}
@@ -1224,40 +1236,40 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                     setShowMealPlanCopy(false);
                     setShowModal(true);
                   }}
-                  className="w-full p-4 rounded-xl border-2 border-emerald-500/30 hover:border-emerald-500/50 bg-emerald-500/10 hover:bg-emerald-500/15 transition-all text-right"
+                  className="w-full p-4 rounded-xl border-2 border-emerald-500/30 dark:border-emerald-500/40 hover:border-emerald-500/50 dark:hover:border-emerald-500/60 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/15 transition-all text-right"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm font-bold text-[var(--color-text-primary)]">
+                    <div className="text-sm font-bold text-gray-900 dark:text-[var(--color-text-primary)]">
                       {planMeal.meal_name === 'breakfast' ? 'ארוחת בוקר' :
                        planMeal.meal_name === 'lunch' ? 'ארוחת צהריים' :
                        planMeal.meal_name === 'dinner' ? 'ארוחת ערב' : planMeal.meal_name}
                     </div>
-                    <span className="text-xs text-[var(--color-text-muted)]">
+                    <span className="text-xs text-gray-600 dark:text-[var(--color-text-muted)]">
                       {planMeal.meal_time}
                     </span>
                   </div>
-                  <div className="text-xs text-[var(--color-text-secondary)] mb-2">
+                  <div className="text-xs text-gray-700 dark:text-[var(--color-text-secondary)] mb-2">
                     {planMeal.description}
                   </div>
                   {(planMeal.total_calories || planMeal.total_protein || planMeal.total_carbs || planMeal.total_fat) && (
                     <div className="flex gap-2 flex-wrap">
                       {planMeal.total_calories && (
-                        <span className="text-xs text-amber-500 bg-amber-500/15 px-2 py-1 rounded-lg">
+                        <span className="text-xs text-amber-700 dark:text-amber-500 bg-amber-100 dark:bg-amber-500/15 px-2 py-1 rounded-lg">
                           {planMeal.total_calories} קל'
                         </span>
                       )}
                       {planMeal.total_protein && (
-                        <span className="text-xs text-red-500 bg-red-500/15 px-2 py-1 rounded-lg">
+                        <span className="text-xs text-red-700 dark:text-red-500 bg-red-100 dark:bg-red-500/15 px-2 py-1 rounded-lg">
                           {planMeal.total_protein}ג' חלבון
                         </span>
                       )}
                       {planMeal.total_carbs && (
-                        <span className="text-xs text-amber-500 bg-amber-500/15 px-2 py-1 rounded-lg">
+                        <span className="text-xs text-amber-700 dark:text-amber-500 bg-amber-100 dark:bg-amber-500/15 px-2 py-1 rounded-lg">
                           {planMeal.total_carbs}ג' פחמימות
                         </span>
                       )}
                       {planMeal.total_fat && (
-                        <span className="text-xs text-blue-500 bg-blue-500/15 px-2 py-1 rounded-lg">
+                        <span className="text-xs text-blue-700 dark:text-blue-500 bg-blue-100 dark:bg-blue-500/15 px-2 py-1 rounded-lg">
                           {planMeal.total_fat}ג' שומן
                         </span>
                       )}
@@ -1266,7 +1278,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 </button>
               ))}
             </div>
-            <div className="sticky bottom-0 bg-[var(--color-bg-base)] p-4 border-t border-[var(--color-border)]">
+            <div className="sticky bottom-0 bg-white dark:bg-[var(--color-bg-base)] p-4 border-t border-gray-200 dark:border-[var(--color-border)]">
               <button
                 onClick={() => {
                   setShowMealPlanCopy(false);
@@ -1298,57 +1310,57 @@ function DailySummaryCard({
   const waterGoal = mealPlan?.daily_water_ml || WATER_GOAL;
 
   return (
-    <div className="mt-4 space-y-3">
+    <div className="mt-4 space-y-3 animate-fade-in">
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-amber-500/15 border border-amber-500/30 rounded-lg p-3 text-center">
-          <Flame className="w-5 h-5 text-amber-500 mx-auto mb-1" />
-          <p className="text-lg font-bold text-[var(--color-text-primary)]">{totals.calories}</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">קלוריות</p>
+        <div className="bg-amber-100 dark:bg-amber-500/15 border border-amber-300 dark:border-amber-500/30 rounded-lg p-3 text-center shadow-sm">
+          <Flame className="w-5 h-5 text-amber-600 dark:text-amber-500 mx-auto mb-1" />
+          <p className="text-lg font-bold text-gray-900 dark:text-[var(--color-text-primary)]">{totals.calories}</p>
+          <p className="text-xs text-gray-700 dark:text-[var(--color-text-secondary)]">קלוריות</p>
           {mealPlan?.daily_calories && (
-            <p className={`text-xs mt-1 ${totals.calories <= mealPlan.daily_calories ? 'text-emerald-500' : 'text-red-500'}`}>
+            <p className={`text-xs mt-1 ${totals.calories <= mealPlan.daily_calories ? 'text-emerald-600 dark:text-emerald-500' : 'text-red-600 dark:text-red-500'}`}>
               מתוך {mealPlan.daily_calories}
             </p>
           )}
         </div>
-        <div className="bg-red-500/15 border border-red-500/30 rounded-lg p-3 text-center">
-          <Beef className="w-5 h-5 text-red-500 mx-auto mb-1" />
-          <p className="text-lg font-bold text-[var(--color-text-primary)]">{totals.protein}ג'</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">חלבון</p>
+        <div className="bg-red-100 dark:bg-red-500/15 border border-red-300 dark:border-red-500/30 rounded-lg p-3 text-center shadow-sm">
+          <Beef className="w-5 h-5 text-red-600 dark:text-red-500 mx-auto mb-1" />
+          <p className="text-lg font-bold text-gray-900 dark:text-[var(--color-text-primary)]">{totals.protein}ג'</p>
+          <p className="text-xs text-gray-700 dark:text-[var(--color-text-secondary)]">חלבון</p>
           {mealPlan?.protein_grams && (
-            <p className={`text-xs mt-1 ${totals.protein >= mealPlan.protein_grams ? 'text-emerald-500' : 'text-orange-500'}`}>
+            <p className={`text-xs mt-1 ${totals.protein >= mealPlan.protein_grams ? 'text-emerald-600 dark:text-emerald-500' : 'text-orange-600 dark:text-orange-500'}`}>
               מתוך {mealPlan.protein_grams}ג'
             </p>
           )}
         </div>
-        <div className="bg-amber-500/15 border border-amber-500/30 rounded-lg p-3 text-center">
-          <Wheat className="w-5 h-5 text-amber-500 mx-auto mb-1" />
-          <p className="text-lg font-bold text-[var(--color-text-primary)]">{totals.carbs}ג'</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">פחמימות</p>
+        <div className="bg-amber-100 dark:bg-amber-500/15 border border-amber-300 dark:border-amber-500/30 rounded-lg p-3 text-center shadow-sm">
+          <Wheat className="w-5 h-5 text-amber-600 dark:text-amber-500 mx-auto mb-1" />
+          <p className="text-lg font-bold text-gray-900 dark:text-[var(--color-text-primary)]">{totals.carbs}ג'</p>
+          <p className="text-xs text-gray-700 dark:text-[var(--color-text-secondary)]">פחמימות</p>
           {mealPlan?.carbs_grams && (
-            <p className="text-xs text-[var(--color-text-muted)] mt-1">מתוך {mealPlan.carbs_grams}ג'</p>
+            <p className="text-xs text-gray-600 dark:text-[var(--color-text-muted)] mt-1">מתוך {mealPlan.carbs_grams}ג'</p>
           )}
         </div>
-        <div className="bg-blue-500/15 border border-blue-500/30 rounded-lg p-3 text-center">
-          <Droplet className="w-5 h-5 text-blue-500 mx-auto mb-1" />
-          <p className="text-lg font-bold text-[var(--color-text-primary)]">{totals.fat}ג'</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">שומן</p>
+        <div className="bg-blue-100 dark:bg-blue-500/15 border border-blue-300 dark:border-blue-500/30 rounded-lg p-3 text-center shadow-sm">
+          <Droplet className="w-5 h-5 text-blue-600 dark:text-blue-500 mx-auto mb-1" />
+          <p className="text-lg font-bold text-gray-900 dark:text-[var(--color-text-primary)]">{totals.fat}ג'</p>
+          <p className="text-xs text-gray-700 dark:text-[var(--color-text-secondary)]">שומן</p>
           {mealPlan?.fat_grams && (
-            <p className="text-xs text-[var(--color-text-muted)] mt-1">מתוך {mealPlan.fat_grams}ג'</p>
+            <p className="text-xs text-gray-600 dark:text-[var(--color-text-muted)] mt-1">מתוך {mealPlan.fat_grams}ג'</p>
           )}
         </div>
       </div>
       {mealPlan && (
-        <div className="bg-cyan-500/15 border border-cyan-500/30 rounded-lg p-3">
+        <div className="bg-cyan-100 dark:bg-cyan-500/15 border border-cyan-300 dark:border-cyan-500/30 rounded-lg p-3 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Droplets className="w-5 h-5 text-cyan-500" />
-              <span className="font-medium text-cyan-600 dark:text-cyan-400">מים</span>
+              <Droplets className="w-5 h-5 text-cyan-600 dark:text-cyan-500" />
+              <span className="font-medium text-cyan-700 dark:text-cyan-400">מים</span>
             </div>
-            <span className="text-lg font-bold text-cyan-600 dark:text-cyan-400">
+            <span className="text-lg font-bold text-cyan-700 dark:text-cyan-400">
               {waterAmount} / {waterGoal} מ"ל
             </span>
           </div>
-          <div className="h-2 bg-cyan-500/20 rounded-full overflow-hidden mt-2">
+          <div className="h-2 bg-cyan-200 dark:bg-cyan-500/20 rounded-full overflow-hidden mt-2">
             <div
               className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500"
               style={{ width: `${Math.min((waterAmount / waterGoal) * 100, 100)}%` }}
