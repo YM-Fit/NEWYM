@@ -135,16 +135,16 @@ export default function ExerciseHistory({
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-scale-in">
+      <div className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-scale-in">
         {/* Header */}
         <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-4 lg:p-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-3 rtl:space-x-reverse">
               <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
-                <Dumbbell className="h-5 w-5 text-white" />
+                <Dumbbell className="h-5 w-5 text-foreground" />
               </div>
               <div>
-                <h2 className="text-xl lg:text-2xl font-bold text-white">{exerciseName}</h2>
+                <h2 className="text-xl lg:text-2xl font-bold text-foreground">{exerciseName}</h2>
                 <p className="text-sm text-emerald-100">{traineeName}</p>
               </div>
             </div>
@@ -153,48 +153,48 @@ export default function ExerciseHistory({
               onClick={onClose}
               className="p-2 hover:bg-white/20 rounded-xl transition-all"
             >
-              <X className="h-6 w-6 text-white" />
+              <X className="h-6 w-6 text-foreground" />
             </button>
           </div>
         </div>
 
         {/* Personal Records */}
         {personalRecords && (
-          <div className="p-4 bg-gradient-to-b from-amber-500/10 to-transparent border-b border-zinc-800">
+          <div className="p-4 bg-gradient-to-b from-amber-500/10 to-transparent border-b border-border">
             <div className="flex items-center gap-2 mb-3">
               <Trophy className="h-5 w-5 text-amber-400" />
               <h3 className="font-semibold text-amber-400 text-sm">שיאים אישיים</h3>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-zinc-800/50 rounded-xl p-3 border border-amber-500/20 text-center">
-                <div className="text-xl lg:text-2xl font-bold text-white">{personalRecords.maxWeight}</div>
-                <div className="text-xs text-zinc-400">ק״ג מקס</div>
+              <div className="bg-surface rounded-xl p-3 border border-amber-500/20 text-center">
+                <div className="text-xl lg:text-2xl font-bold text-foreground">{personalRecords.maxWeight}</div>
+                <div className="text-xs text-muted">ק״ג מקס</div>
               </div>
-              <div className="bg-zinc-800/50 rounded-xl p-3 border border-cyan-500/20 text-center">
-                <div className="text-xl lg:text-2xl font-bold text-white">{personalRecords.maxReps}</div>
-                <div className="text-xs text-zinc-400">חזרות מקס</div>
+              <div className="bg-surface rounded-xl p-3 border border-cyan-500/20 text-center">
+                <div className="text-xl lg:text-2xl font-bold text-foreground">{personalRecords.maxReps}</div>
+                <div className="text-xs text-muted">חזרות מקס</div>
               </div>
-              <div className="bg-zinc-800/50 rounded-xl p-3 border border-emerald-500/20 text-center">
-                <div className="text-xl lg:text-2xl font-bold text-white">{personalRecords.maxVolume.toLocaleString()}</div>
-                <div className="text-xs text-zinc-400">נפח סט מקס</div>
+              <div className="bg-surface rounded-xl p-3 border border-emerald-500/20 text-center">
+                <div className="text-xl lg:text-2xl font-bold text-foreground">{personalRecords.maxVolume.toLocaleString()}</div>
+                <div className="text-xs text-muted">נפח סט מקס</div>
               </div>
             </div>
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-zinc-900">
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-card">
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-              <p className="text-zinc-400">טוען היסטוריה...</p>
+              <p className="text-muted">טוען היסטוריה...</p>
             </div>
           ) : history.length === 0 ? (
             <div className="text-center py-12">
-              <div className="w-20 h-20 bg-zinc-800 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-zinc-700">
-                <Calendar className="h-10 w-10 text-zinc-500" />
+              <div className="w-20 h-20 bg-surface rounded-2xl flex items-center justify-center mx-auto mb-4 border border-border">
+                <Calendar className="h-10 w-10 text-muted" />
               </div>
-              <p className="text-white text-lg font-medium">אין היסטוריה לתרגיל זה</p>
-              <p className="text-zinc-500 text-sm mt-2">זה יהיה האימון הראשון!</p>
+              <p className="text-foreground text-lg font-medium">אין היסטוריה לתרגיל זה</p>
+              <p className="text-muted text-sm mt-2">זה יהיה האימון הראשון!</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -206,16 +206,16 @@ export default function ExerciseHistory({
                 return (
                   <div
                     key={workout.workout_id}
-                    className={`bg-zinc-800/50 rounded-2xl p-4 border transition-all ${
-                      isLatest ? 'border-emerald-500/30' : 'border-zinc-700/50'
+                    className={`bg-surface rounded-2xl p-4 border transition-all ${
+                      isLatest ? 'border-emerald-500/30' : 'border-border'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                        <div className={`p-1.5 rounded-lg ${isLatest ? 'bg-emerald-500/20' : 'bg-zinc-700/50'}`}>
-                          <Calendar className={`h-4 w-4 ${isLatest ? 'text-emerald-400' : 'text-zinc-400'}`} />
+                        <div className={`p-1.5 rounded-lg ${isLatest ? 'bg-emerald-500/20' : 'bg-elevated/50'}`}>
+                          <Calendar className={`h-4 w-4 ${isLatest ? 'text-emerald-400' : 'text-muted'}`} />
                         </div>
-                        <span className="font-semibold text-white">
+                        <span className="font-semibold text-foreground">
                           {new Date(workout.workout_date).toLocaleDateString('he-IL', {
                             year: 'numeric',
                             month: 'long',
@@ -262,11 +262,11 @@ export default function ExerciseHistory({
                             className={`flex items-center justify-between p-3 rounded-xl transition-all ${
                               bestSet && set.set_number === bestSet.set_number
                                 ? 'bg-amber-500/10 border border-amber-500/30'
-                                : 'bg-zinc-900/50 border border-zinc-700/30 hover:bg-zinc-800/50'
+                                : 'bg-card/50 border border-border/30 hover:bg-surface'
                             }`}
                           >
                             <div className="flex items-center space-x-2 rtl:space-x-reverse flex-wrap gap-1">
-                              <span className="text-sm font-semibold text-zinc-400 min-w-[50px]">
+                              <span className="text-sm font-semibold text-muted min-w-[50px]">
                                 סט {set.set_number}
                               </span>
                               {set.set_type === 'superset' && (
@@ -279,17 +279,17 @@ export default function ExerciseHistory({
                                 <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-lg font-medium border border-red-500/30">כשל</span>
                               )}
                               {isPR && (
-                                <span className="text-xs bg-amber-500 text-white px-2 py-0.5 rounded-lg font-medium flex items-center gap-1">
+                                <span className="text-xs bg-amber-500 text-foreground px-2 py-0.5 rounded-lg font-medium flex items-center gap-1">
                                   <Trophy className="h-3 w-3" /> PR
                                 </span>
                               )}
                             </div>
                             <div className="flex items-center space-x-3 rtl:space-x-reverse text-sm">
-                              <span className="font-bold text-white">
+                              <span className="font-bold text-foreground">
                                 {set.weight} ק״ג × {set.reps}
                               </span>
                               {set.rpe && (
-                                <span className="text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded-lg border border-zinc-700/50 text-xs">
+                                <span className="text-muted bg-surface px-2 py-0.5 rounded-lg border border-border text-xs">
                                   RPE {set.rpe}
                                 </span>
                               )}
@@ -302,8 +302,8 @@ export default function ExerciseHistory({
                       })}
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-zinc-700/50 flex justify-between text-sm">
-                      <span className="text-zinc-400 font-medium">{workout.sets.length} סטים</span>
+                    <div className="mt-4 pt-3 border-t border-border flex justify-between text-sm">
+                      <span className="text-muted font-medium">{workout.sets.length} סטים</span>
                       <span className="text-emerald-400 font-semibold">נפח כולל: {totalVolume.toLocaleString()} ק״ג</span>
                     </div>
                   </div>

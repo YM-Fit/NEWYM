@@ -176,8 +176,8 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
       case 'measurement': return { bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/30' };
       case 'self_weight': return { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' };
       case 'goal_achieved': return { bg: 'bg-yellow-500/15', text: 'text-yellow-400', border: 'border-yellow-500/30' };
-      case 'note': return { bg: 'bg-zinc-500/15', text: 'text-zinc-400', border: 'border-zinc-500/30' };
-      default: return { bg: 'bg-zinc-500/15', text: 'text-zinc-400', border: 'border-zinc-500/30' };
+      case 'note': return { bg: 'bg-muted/15', text: 'text-muted', border: 'border-border/30' };
+      default: return { bg: 'bg-muted/15', text: 'text-muted', border: 'border-border/30' };
     }
   };
 
@@ -197,27 +197,27 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
   };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 backdrop-blur-sm bg-overlay/70 flex items-center justify-center z-50 p-4">
       <div className="premium-card-static max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="p-6 border-b border-zinc-800/50 flex items-center justify-between">
+        <div className="p-6 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-emerald-500/15">
               <Calendar className="h-6 w-6 text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">ציר זמן</h2>
-              <p className="text-sm text-zinc-500">{traineeName} - {filteredItems.length} פעילויות</p>
+              <h2 className="text-xl font-bold text-foreground">ציר זמן</h2>
+              <p className="text-sm text-muted">{traineeName} - {filteredItems.length} פעילויות</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
+            className="p-2.5 rounded-xl bg-surface text-muted hover:text-foreground hover:bg-elevated transition-all"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="p-4 border-b border-zinc-800/50">
+        <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between gap-4">
             <div className="flex gap-2 overflow-x-auto no-scrollbar flex-1">
               {[
@@ -232,18 +232,18 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
                   className={`px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap transition-all ${
                     filter === f.id
                       ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                      : 'bg-zinc-800/50 text-zinc-400 hover:text-white border border-zinc-700/30'
+                      : 'bg-surface text-muted hover:text-foreground border border-border'
                   }`}
                 >
                   {f.label}
                 </button>
               ))}
             </div>
-            <div className="flex gap-1 bg-zinc-800/50 p-1 rounded-xl border border-zinc-700/50">
+            <div className="flex gap-1 bg-surface p-1 rounded-xl border border-border">
               <button
                 onClick={() => setViewMode('timeline')}
                 className={`p-2 rounded-lg transition-all ${
-                  viewMode === 'timeline' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+                  viewMode === 'timeline' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
                 }`}
                 title="ציר זמן"
               >
@@ -252,7 +252,7 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
               <button
                 onClick={() => setViewMode('table')}
                 className={`p-2 rounded-lg transition-all ${
-                  viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+                  viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
                 }`}
                 title="טבלה"
               >
@@ -269,14 +269,14 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
             </div>
           ) : filteredItems.length === 0 ? (
             <div className="text-center py-12">
-              <div className="w-14 h-14 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
-                <Calendar className="w-7 h-7 text-zinc-600" />
+              <div className="w-14 h-14 rounded-xl bg-surface flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-7 h-7 text-muted" />
               </div>
-              <p className="text-zinc-500">אין פעילות להצגה</p>
+              <p className="text-muted">אין פעילות להצגה</p>
             </div>
           ) : viewMode === 'timeline' ? (
             <div className="relative">
-              <div className="absolute right-6 top-0 bottom-0 w-0.5 bg-zinc-800" />
+              <div className="absolute right-6 top-0 bottom-0 w-0.5 bg-border" />
               <div className="space-y-4">
                 {filteredItems.map((item) => {
                   const styles = getItemStyles(item.type);
@@ -287,7 +287,7 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
                         <div className={`w-2 h-2 rounded-full ${styles.bg}`} />
                       </div>
                       <div
-                        className="bg-zinc-800/30 rounded-xl border border-zinc-700/30 hover:border-zinc-600/50 transition-all cursor-pointer overflow-hidden"
+                        className="bg-surface/30 rounded-xl border border-border hover:border-border-hover transition-all cursor-pointer overflow-hidden"
                         onClick={() => toggleExpand(item.id)}
                       >
                         <div className="p-4">
@@ -297,8 +297,8 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
                                 {getItemIcon(item.type)}
                               </div>
                               <div>
-                                <p className="font-semibold text-white">{item.title}</p>
-                                <p className="text-sm text-zinc-500">{formatDate(item.date)}</p>
+                                <p className="font-semibold text-foreground">{item.title}</p>
+                                <p className="text-sm text-muted">{formatDate(item.date)}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -308,9 +308,9 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
                                 </span>
                               )}
                               {isExpanded ? (
-                                <ChevronUp className="w-5 h-5 text-zinc-500" />
+                                <ChevronUp className="w-5 h-5 text-muted" />
                               ) : (
-                                <ChevronDown className="w-5 h-5 text-zinc-500" />
+                                <ChevronDown className="w-5 h-5 text-muted" />
                               )}
                             </div>
                           </div>
@@ -318,7 +318,7 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
 
                         {isExpanded && item.metadata && (
                           <div className="px-4 pb-4 pt-0">
-                            <div className="pt-4 border-t border-zinc-700/30">
+                            <div className="pt-4 border-t border-border">
                               {item.type === 'measurement' && (
                                 <div className="space-y-3">
                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -356,15 +356,15 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
                                       </div>
                                     )}
                                     {item.metadata.bmi && (
-                                      <div className="bg-zinc-500/10 rounded-xl p-3 text-center border border-zinc-500/20">
-                                        <Scale className="w-4 h-4 text-zinc-400 mx-auto mb-1" />
-                                        <p className="text-xs text-zinc-400 mb-0.5">BMI</p>
-                                        <p className="font-bold text-zinc-300">{item.metadata.bmi}</p>
+                                      <div className="bg-muted/10 rounded-xl p-3 text-center border border-border/20">
+                                        <Scale className="w-4 h-4 text-muted mx-auto mb-1" />
+                                        <p className="text-xs text-muted mb-0.5">BMI</p>
+                                        <p className="font-bold text-foreground">{item.metadata.bmi}</p>
                                       </div>
                                     )}
                                   </div>
                                   {item.metadata.source && (
-                                    <p className="text-xs text-zinc-500">
+                                    <p className="text-xs text-muted">
                                       מקור: {item.metadata.source === 'tanita' ? 'Tanita' : 'מדידה ידנית'}
                                     </p>
                                   )}
@@ -386,7 +386,7 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
                                   {(item.metadata.exercises as string[])?.length > 0 && (
                                     <div className="flex flex-wrap gap-2">
                                       {(item.metadata.exercises as string[]).map((ex, idx) => (
-                                        <span key={idx} className="text-xs bg-zinc-800/50 text-zinc-300 px-2 py-1 rounded-lg border border-zinc-700/50">
+                                        <span key={idx} className="text-xs bg-surface text-foreground px-2 py-1 rounded-lg border border-border">
                                           {ex}
                                         </span>
                                       ))}
@@ -404,7 +404,7 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
                               )}
 
                               {item.metadata.notes && (
-                                <p className="text-sm text-zinc-400 bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/30 mt-3">
+                                <p className="text-sm text-muted bg-surface rounded-xl p-3 border border-border mt-3">
                                   {item.metadata.notes as string}
                                 </p>
                               )}
@@ -420,24 +420,24 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[600px]">
-                <thead className="sticky top-0 bg-zinc-900">
-                  <tr className="border-b border-zinc-700/50">
-                    <th className="text-right py-3 px-3 text-xs font-semibold text-zinc-400">תאריך</th>
-                    <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">סוג</th>
-                    <th className="text-right py-3 px-3 text-xs font-semibold text-zinc-400">פרטים</th>
-                    <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">משקל</th>
-                    <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">% שומן</th>
-                    <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">מסת שריר</th>
-                    <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">נפח/BMI</th>
+                <thead className="sticky top-0 bg-card">
+                  <tr className="border-b border-border">
+                    <th className="text-right py-3 px-3 text-xs font-semibold text-muted">תאריך</th>
+                    <th className="text-center py-3 px-3 text-xs font-semibold text-muted">סוג</th>
+                    <th className="text-right py-3 px-3 text-xs font-semibold text-muted">פרטים</th>
+                    <th className="text-center py-3 px-3 text-xs font-semibold text-muted">משקל</th>
+                    <th className="text-center py-3 px-3 text-xs font-semibold text-muted">% שומן</th>
+                    <th className="text-center py-3 px-3 text-xs font-semibold text-muted">מסת שריר</th>
+                    <th className="text-center py-3 px-3 text-xs font-semibold text-muted">נפח/BMI</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredItems.map((item) => {
                     const styles = getItemStyles(item.type);
                     return (
-                      <tr key={item.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-all">
+                      <tr key={item.id} className="border-b border-border hover:bg-surface/30 transition-all">
                         <td className="py-3 px-3">
-                          <span className="text-white text-sm">
+                          <span className="text-foreground text-sm">
                             {new Date(item.date).toLocaleDateString('he-IL')}
                           </span>
                         </td>
@@ -447,36 +447,36 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
                           </span>
                         </td>
                         <td className="py-3 px-3">
-                          <span className="text-zinc-300 text-sm">{item.title}</span>
+                          <span className="text-foreground text-sm">{item.title}</span>
                         </td>
                         <td className="py-3 px-3 text-center">
                           {item.metadata?.weight ? (
                             <span className="font-semibold text-cyan-400">{item.metadata.weight}</span>
                           ) : (
-                            <span className="text-zinc-600">-</span>
+                            <span className="text-muted">-</span>
                           )}
                         </td>
                         <td className="py-3 px-3 text-center">
                           {item.metadata?.bodyFat ? (
                             <span className="font-semibold text-amber-400">{item.metadata.bodyFat}%</span>
                           ) : (
-                            <span className="text-zinc-600">-</span>
+                            <span className="text-muted">-</span>
                           )}
                         </td>
                         <td className="py-3 px-3 text-center">
                           {item.metadata?.muscleMass ? (
                             <span className="font-semibold text-emerald-400">{item.metadata.muscleMass}</span>
                           ) : (
-                            <span className="text-zinc-600">-</span>
+                            <span className="text-muted">-</span>
                           )}
                         </td>
                         <td className="py-3 px-3 text-center">
                           {item.type === 'workout' && item.metadata?.totalVolume ? (
                             <span className="font-semibold text-emerald-400">{(item.metadata.totalVolume as number).toLocaleString()}</span>
                           ) : item.metadata?.bmi ? (
-                            <span className="font-semibold text-zinc-300">{item.metadata.bmi}</span>
+                            <span className="font-semibold text-foreground">{item.metadata.bmi}</span>
                           ) : (
-                            <span className="text-zinc-600">-</span>
+                            <span className="text-muted">-</span>
                           )}
                         </td>
                       </tr>
@@ -488,7 +488,7 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
           )}
         </div>
 
-        <div className="p-6 border-t border-zinc-800/50">
+        <div className="p-6 border-t border-border">
           <button
             onClick={onClose}
             className="w-full btn-primary px-6 py-4 text-lg font-bold"

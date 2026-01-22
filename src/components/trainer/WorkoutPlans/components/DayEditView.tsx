@@ -117,23 +117,23 @@ export default function DayEditView({
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
             <button
               onClick={onBack}
-              className="p-3 lg:p-4 hover:bg-gray-100 rounded-xl transition-all duration-300"
+              className="p-3 lg:p-4 hover:bg-surface100 rounded-xl transition-all duration-300"
             >
-              <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7 text-gray-600" />
+              <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7 text-muted600" />
             </button>
             <div className="flex items-center gap-4">
               <div className={`w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br ${color.bg} rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105`}>
-                <span className="text-2xl lg:text-3xl font-bold text-white">{day.day_number}</span>
+                <span className="text-2xl lg:text-3xl font-bold text-foreground">{day.day_number}</span>
               </div>
               <div>
-                <h1 className="text-xl lg:text-3xl font-bold text-gray-900">יום {day.day_number}</h1>
-                <p className="text-base lg:text-lg text-gray-600">{day.day_name || 'הגדר שם ליום'}</p>
+                <h1 className="text-xl lg:text-3xl font-bold text-muted900">יום {day.day_number}</h1>
+                <p className="text-base lg:text-lg text-muted600">{day.day_name || 'הגדר שם ליום'}</p>
               </div>
             </div>
           </div>
           <button
             onClick={() => onComplete(day.tempId)}
-            className="bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-5 py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            className="bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground px-5 py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
           >
             סיים יום
           </button>
@@ -141,33 +141,33 @@ export default function DayEditView({
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">שם היום</label>
+            <label className="block text-sm font-semibold text-muted700 mb-2">שם היום</label>
             <input
               type="text"
               value={day.day_name}
               onChange={(e) => onUpdateDay(day.tempId, 'day_name', e.target.value)}
-              className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
               placeholder="לדוגמה: חזה + טריצפס"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">פוקוס (קבוצות שריר)</label>
+            <label className="block text-sm font-semibold text-muted700 mb-2">פוקוס (קבוצות שריר)</label>
             <input
               type="text"
               value={day.focus}
               onChange={(e) => onUpdateDay(day.tempId, 'focus', e.target.value)}
-              className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
               placeholder="חזה, כתפיים קדמיות, טריצפס"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">הערות ליום</label>
+            <label className="block text-sm font-semibold text-muted700 mb-2">הערות ליום</label>
             <textarea
               value={day.notes}
               onChange={(e) => onUpdateDay(day.tempId, 'notes', e.target.value)}
-              className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
               rows={2}
               placeholder="הערות כלליות ליום האימון..."
             />
@@ -218,7 +218,7 @@ export default function DayEditView({
 
       <button
         onClick={() => onSetShowExerciseSelector(true)}
-        className="w-full mt-4 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]"
+        className="w-full mt-4 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]"
       >
         <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
         <span className="font-bold text-lg lg:text-xl">הוסף תרגיל</span>

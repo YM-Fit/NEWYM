@@ -163,9 +163,9 @@ export default function RecentActivity() {
         };
       default:
         return {
-          bg: 'bg-zinc-500/15',
-          text: 'text-zinc-400',
-          border: 'border-zinc-500/20',
+          bg: 'bg-muted/15',
+          text: 'text-muted',
+          border: 'border-border/20',
         };
     }
   };

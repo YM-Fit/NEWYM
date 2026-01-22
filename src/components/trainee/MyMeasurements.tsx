@@ -369,7 +369,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
                     onClick={() => setChartPeriod(period)}
                     className={`px-3 py-1 text-xs rounded-lg transition-colors ${
                       chartPeriod === period
-                        ? 'bg-emerald-500 text-white'
+                        ? 'bg-emerald-500 text-foreground'
                         : 'bg-[var(--color-bg-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border)]'
                     }`}
                   >

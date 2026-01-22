@@ -365,18 +365,18 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
   };
 
   const inputClass = (hasHighlight: boolean) =>
-    `w-full p-4 text-xl bg-zinc-800/50 border rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 transition-all ${
+    `w-full p-4 text-xl bg-surface border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 transition-all ${
       hasHighlight
         ? 'border-emerald-500/50 bg-emerald-500/10 ring-2 ring-emerald-500/30'
-        : 'border-zinc-700/50 focus:border-emerald-500/50 focus:ring-emerald-500/20'
+        : 'border-border focus:border-emerald-500/50 focus:ring-emerald-500/20'
     }`;
 
-  const labelClass = "block text-sm font-medium text-zinc-400 mb-2";
+  const labelClass = "block text-sm font-medium text-muted mb-2";
 
   return (
     <div className="space-y-6 animate-fade-in">
       {isStabilizing && !showScaleDataToast && (
-        <div className="fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-80 bg-cyan-500/90 backdrop-blur-sm text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-pulse border border-cyan-400/50">
+        <div className="fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-80 bg-cyan-500/90 backdrop-blur-sm text-foreground px-6 py-4 rounded-xl shadow-2xl z-50 animate-pulse border border-cyan-400/50">
           <div className="flex items-center gap-3">
             <Loader2 className="h-6 w-6 animate-spin" />
             <div>
@@ -390,7 +390,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       {showScaleDataToast && pendingScaleData && (
         <div className={`fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-96 ${
           showValidationWarning ? 'bg-amber-500/90' : 'bg-emerald-500/90'
-        } backdrop-blur-sm text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-slide-in-top border ${
+        } backdrop-blur-sm text-foreground px-6 py-4 rounded-xl shadow-2xl z-50 animate-slide-in-top border ${
           showValidationWarning ? 'border-amber-400/50' : 'border-emerald-400/50'
         }`}>
           <div className="flex items-start gap-3 mb-3">
@@ -458,7 +458,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
             <button
               type="button"
               onClick={onBack}
-              className="p-3 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
+              className="p-3 rounded-xl bg-surface text-muted hover:text-foreground hover:bg-elevated/50 transition-all"
             >
               <ArrowRight className="h-5 w-5" />
             </button>
@@ -469,7 +469,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                   {isEditing ? 'עריכת מדידה' : 'מדידה חדשה'}
                 </span>
               </div>
-              <h1 className="text-2xl font-bold text-white">{trainee.name}</h1>
+              <h1 className="text-2xl font-bold text-foreground">{trainee.name}</h1>
               {!isEditing && (
                 <div className="flex flex-col gap-2 mt-2">
                   <div className="flex items-center gap-3 flex-wrap">
@@ -491,7 +491,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                     </div>
 
                     <div className={`flex items-center gap-1 text-xs ${
-                      scriptStatus.isOnline ? 'text-emerald-400' : 'text-zinc-500'
+                      scriptStatus.isOnline ? 'text-emerald-400' : 'text-muted'
                     }`}>
                       <Server className="h-3.5 w-3.5" />
                       <span>
@@ -509,20 +509,20 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                     <div className="flex items-center gap-1">
                       <button
                         onClick={refreshConnection}
-                        className="p-1.5 hover:bg-zinc-800/50 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-surface rounded-lg transition-colors"
                         title="רענן חיבור"
                       >
-                        <RefreshCw className="h-3.5 w-3.5 text-zinc-500 hover:text-white" />
+                        <RefreshCw className="h-3.5 w-3.5 text-muted hover:text-foreground" />
                       </button>
                       <button
                         onClick={toggleSound}
-                        className="p-1.5 hover:bg-zinc-800/50 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-surface rounded-lg transition-colors"
                         title={soundEnabled ? 'השתק צלילים' : 'הפעל צלילים'}
                       >
                         {soundEnabled ? (
                           <Volume2 className="h-3.5 w-3.5 text-emerald-400" />
                         ) : (
-                          <VolumeX className="h-3.5 w-3.5 text-zinc-500" />
+                          <VolumeX className="h-3.5 w-3.5 text-muted" />
                         )}
                       </button>
                     </div>
@@ -548,7 +548,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               type="date"
               value={measurementDate}
               onChange={(e) => setMeasurementDate(e.target.value)}
-              className="px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 text-white text-sm transition-all"
+              className="px-3 py-2 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 text-foreground text-sm transition-all"
             />
           </div>
         </div>
@@ -556,7 +556,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
       {trainee.isPair && (
         <div className="premium-card-static p-5">
-          <h3 className="text-sm font-medium text-zinc-400 mb-4">מי מתשקל/ת?</h3>
+          <h3 className="text-sm font-medium text-muted mb-4">מי מתשקל/ת?</h3>
           <div className="grid grid-cols-3 gap-3">
             <button
               type="button"
@@ -564,14 +564,14 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'both'
                   ? 'border-emerald-500/50 bg-emerald-500/10'
-                  : 'border-zinc-700/50 bg-zinc-800/30 hover:border-zinc-600/50'
+                  : 'border-border bg-surface/30 hover:border-border-hover'
               }`}
             >
               <User className={`h-8 w-8 mx-auto mb-2 ${
-                selectedMember === 'both' ? 'text-emerald-400' : 'text-zinc-500'
+                selectedMember === 'both' ? 'text-emerald-400' : 'text-muted'
               }`} />
               <p className={`font-semibold text-sm text-center ${
-                selectedMember === 'both' ? 'text-emerald-400' : 'text-zinc-400'
+                selectedMember === 'both' ? 'text-emerald-400' : 'text-muted'
               }`}>{trainee.pairName1} + {trainee.pairName2}</p>
             </button>
             <button
@@ -580,14 +580,14 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'member_1'
                   ? 'border-cyan-500/50 bg-cyan-500/10'
-                  : 'border-zinc-700/50 bg-zinc-800/30 hover:border-zinc-600/50'
+                  : 'border-border bg-surface/30 hover:border-border-hover'
               }`}
             >
               <User className={`h-8 w-8 mx-auto mb-2 ${
-                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-zinc-500'
+                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-muted'
               }`} />
               <p className={`font-semibold text-sm ${
-                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-zinc-400'
+                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-muted'
               }`}>{trainee.pairName1}</p>
             </button>
             <button
@@ -596,14 +596,14 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'member_2'
                   ? 'border-amber-500/50 bg-amber-500/10'
-                  : 'border-zinc-700/50 bg-zinc-800/30 hover:border-zinc-600/50'
+                  : 'border-border bg-surface/30 hover:border-border-hover'
               }`}
             >
               <User className={`h-8 w-8 mx-auto mb-2 ${
-                selectedMember === 'member_2' ? 'text-amber-400' : 'text-zinc-500'
+                selectedMember === 'member_2' ? 'text-amber-400' : 'text-muted'
               }`} />
               <p className={`font-semibold text-sm ${
-                selectedMember === 'member_2' ? 'text-amber-400' : 'text-zinc-400'
+                selectedMember === 'member_2' ? 'text-amber-400' : 'text-muted'
               }`}>{trainee.pairName2}</p>
             </button>
           </div>
@@ -611,7 +611,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       )}
 
       <div className="premium-card-static p-5">
-        <h3 className="text-lg font-semibold text-white mb-4">מקור המדידה</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">מקור המדידה</h3>
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
@@ -619,7 +619,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
             className={`flex items-center justify-center gap-2 px-6 py-4 rounded-xl transition-all ${
               formData.source === 'tanita'
                 ? 'bg-emerald-500/15 text-emerald-400 border-2 border-emerald-500/50'
-                : 'bg-zinc-800/30 text-zinc-400 border-2 border-zinc-700/50 hover:border-zinc-600/50'
+                : 'bg-surface/30 text-muted border-2 border-border hover:border-border-hover'
             }`}
           >
             <Scale className="h-5 w-5" />
@@ -631,7 +631,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
             className={`flex items-center justify-center gap-2 px-6 py-4 rounded-xl transition-all ${
               formData.source === 'manual'
                 ? 'bg-emerald-500/15 text-emerald-400 border-2 border-emerald-500/50'
-                : 'bg-zinc-800/30 text-zinc-400 border-2 border-zinc-700/50 hover:border-zinc-600/50'
+                : 'bg-surface/30 text-muted border-2 border-border hover:border-border-hover'
             }`}
           >
             <User className="h-5 w-5" />
@@ -663,7 +663,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
           <div>
             <label className={labelClass}>גובה (ס״מ)</label>
-            <div className="w-full p-4 text-xl bg-zinc-800/30 border border-zinc-700/50 rounded-xl text-zinc-400">
+            <div className="w-full p-4 text-xl bg-surface/30 border border-border rounded-xl text-muted">
               {(() => {
                 const height = trainee.isPair
                   ? (selectedMember === 'member_1' ? trainee.pairHeight1 : selectedMember === 'member_2' ? trainee.pairHeight2 : trainee.pairHeight1)
@@ -671,7 +671,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                 return height || 'לא הוגדר';
               })()}
             </div>
-            <p className="text-xs text-zinc-500 mt-1">הגובה נשמר בפרופיל המתאמן</p>
+            <p className="text-xs text-muted mt-1">הגובה נשמר בפרופיל המתאמן</p>
           </div>
 
           <div className={highlightedFields.includes('bodyFat') ? 'animate-highlight-pulse' : ''}>
@@ -725,7 +725,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
           <div>
             <label className={labelClass}>
               BMR (קלוריות בסיסיות)
-              <span className="text-xs text-zinc-500 mr-2">(מחושב אוטומטית)</span>
+              <span className="text-xs text-muted mr-2">(מחושב אוטומטית)</span>
             </label>
             <div className="w-full p-4 text-xl bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400 font-semibold">
               {(() => {
@@ -746,7 +746,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
           <div>
             <label className={labelClass}>
               גיל מטבולי
-              <span className="text-xs text-zinc-500 mr-2">(מחושב אוטומטית)</span>
+              <span className="text-xs text-muted mr-2">(מחושב אוטומטית)</span>
             </label>
             {(() => {
               const height = trainee.isPair
@@ -804,7 +804,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                     {message.recommendations && message.recommendations.length > 0 && (
                       <div className="mt-3 space-y-1">
                         {message.recommendations.map((rec, idx) => (
-                          <p key={idx} className="text-xs text-zinc-500 flex items-start">
+                          <p key={idx} className="text-xs text-muted flex items-start">
                             <span className="mr-1">*</span>
                             <span>{rec}</span>
                           </p>
@@ -816,7 +816,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               }
 
               return (
-                <div className="w-full p-4 text-xl bg-zinc-800/30 border border-zinc-700/50 rounded-xl text-zinc-500 font-semibold">
+                <div className="w-full p-4 text-xl bg-surface/30 border border-border rounded-xl text-muted font-semibold">
                   נדרש משקל וגובה לחישוב
                 </div>
               );
@@ -826,9 +826,9 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
           <div>
             <label className={labelClass}>
               BMI
-              <span className="text-xs text-zinc-500 mr-2">(מחושב אוטומטית)</span>
+              <span className="text-xs text-muted mr-2">(מחושב אוטומטית)</span>
             </label>
-            <div className="w-full p-4 text-xl bg-zinc-800/30 border border-zinc-700/50 rounded-xl text-zinc-300 font-semibold">
+            <div className="w-full p-4 text-xl bg-surface/30 border border-border rounded-xl text-foreground font-semibold">
               {(() => {
                 const height = trainee.isPair
                   ? (selectedMember === 'member_1' ? trainee.pairHeight1 : selectedMember === 'member_2' ? trainee.pairHeight2 : trainee.pairHeight1)
@@ -841,18 +841,18 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       </div>
 
       <div className="premium-card-static p-5">
-        <h3 className="text-lg font-semibold text-white mb-4">הערות למדידה</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">הערות למדידה</h3>
         <textarea
           value={formData.notes}
           onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-          className="w-full p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-all resize-none"
+          className="w-full p-4 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-all resize-none"
           rows={3}
           placeholder="הערות על השקילה, התקדמות, מצב כללי..."
         />
       </div>
 
       <div className="premium-card-static p-5">
-        <h3 className="text-lg font-semibold text-white mb-6">מדידות היקפים (ס״מ)</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-6">מדידות היקפים (ס״מ)</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div>

@@ -240,7 +240,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
       case 'low':
         return 'border-blue-500/50 bg-gradient-to-br from-blue-500/10 to-cyan-500/10';
       default:
-        return 'border-gray-500/50 bg-gray-800/30';
+        return 'border-border500/50 bg-surface800/30';
     }
   };
 
@@ -270,7 +270,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
           <div className="p-3 rounded-xl bg-gradient-to-br from-red-500/30 to-orange-500/30 relative">
             <Bell className="h-6 w-6 text-red-400" />
             {unseenCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-foreground text-xs font-bold flex items-center justify-center">
                 {unseenCount}
               </span>
             )}
@@ -290,7 +290,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
           {unseenCount > 0 && (
             <button
               onClick={markAllAsSeen}
-              className="px-4 py-2 rounded-xl bg-gray-800/50 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-gray-700/50 text-sm font-medium transition-all"
+              className="px-4 py-2 rounded-xl bg-surface800/50 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-surface700/50 text-sm font-medium transition-all"
             >
               סמן הכל כנראה
             </button>
@@ -303,7 +303,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
         <select
           value={filterPriority}
           onChange={(e) => setFilterPriority(e.target.value as any)}
-          className="px-4 py-2 rounded-xl bg-gray-800/50 border border-gray-700/50 text-[var(--color-text-primary)] text-sm focus:ring-2 focus:ring-teal-500/50"
+          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-[var(--color-text-primary)] text-sm focus:ring-2 focus:ring-teal-500/50"
         >
           <option value="all">כל העדיפויות</option>
           <option value="high">גבוהה</option>
@@ -313,7 +313,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
         <select
           value={filterSeen}
           onChange={(e) => setFilterSeen(e.target.value as any)}
-          className="px-4 py-2 rounded-xl bg-gray-800/50 border border-gray-700/50 text-[var(--color-text-primary)] text-sm focus:ring-2 focus:ring-teal-500/50"
+          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-[var(--color-text-primary)] text-sm focus:ring-2 focus:ring-teal-500/50"
         >
           <option value="unseen">לא נראה</option>
           <option value="seen">נראה</option>
@@ -419,7 +419,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
                     type="checkbox"
                     checked={alertSettings.enableSignificantChange}
                     onChange={(e) => setAlertSettings(prev => ({ ...prev, enableSignificantChange: e.target.checked }))}
-                    className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-emerald-500"
+                    className="w-4 h-4 rounded border-border600 bg-surface800 text-emerald-500"
                   />
                   <span className="text-sm font-semibold text-[var(--color-text-secondary)]">התראה על שינוי משמעותי</span>
                 </label>
@@ -429,7 +429,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
                     step="0.1"
                     value={alertSettings.significantChangeThreshold}
                     onChange={(e) => setAlertSettings(prev => ({ ...prev, significantChangeThreshold: parseFloat(e.target.value) }))}
-                    className="w-full mt-2 px-4 py-2 rounded-xl bg-gray-800/80 border border-white/10 text-[var(--color-text-primary)]"
+                    className="w-full mt-2 px-4 py-2 rounded-xl bg-surface800/80 border border-white/10 text-[var(--color-text-primary)]"
                     placeholder="סף שינוי (ק״ג)"
                   />
                 )}
@@ -441,7 +441,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
                     type="checkbox"
                     checked={alertSettings.enableNoWeighIn}
                     onChange={(e) => setAlertSettings(prev => ({ ...prev, enableNoWeighIn: e.target.checked }))}
-                    className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-emerald-500"
+                    className="w-4 h-4 rounded border-border600 bg-surface800 text-emerald-500"
                   />
                   <span className="text-sm font-semibold text-[var(--color-text-secondary)]">התראה על חוסר שקילות</span>
                 </label>
@@ -450,7 +450,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
                     type="number"
                     value={alertSettings.noWeighInDays}
                     onChange={(e) => setAlertSettings(prev => ({ ...prev, noWeighInDays: parseInt(e.target.value) }))}
-                    className="w-full mt-2 px-4 py-2 rounded-xl bg-gray-800/80 border border-white/10 text-[var(--color-text-primary)]"
+                    className="w-full mt-2 px-4 py-2 rounded-xl bg-surface800/80 border border-white/10 text-[var(--color-text-primary)]"
                     placeholder="מספר ימים"
                   />
                 )}
@@ -462,7 +462,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
                     type="checkbox"
                     checked={alertSettings.enableGoalReached}
                     onChange={(e) => setAlertSettings(prev => ({ ...prev, enableGoalReached: e.target.checked }))}
-                    className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-emerald-500"
+                    className="w-4 h-4 rounded border-border600 bg-surface800 text-emerald-500"
                   />
                   <span className="text-sm font-semibold text-[var(--color-text-secondary)]">התראה על הגעה ליעד</span>
                 </label>
@@ -472,13 +472,13 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
             <div className="flex gap-4 mt-6">
               <button
                 onClick={() => setShowSettings(false)}
-                className="flex-1 px-4 py-3 rounded-xl font-semibold bg-gray-700/50 hover:bg-gray-700 text-[var(--color-text-secondary)] transition-all"
+                className="flex-1 px-4 py-3 rounded-xl font-semibold bg-surface700/50 hover:bg-surface700 text-[var(--color-text-secondary)] transition-all"
               >
                 ביטול
               </button>
               <button
                 onClick={saveSettings}
-                className="flex-1 px-4 py-3 rounded-xl font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg transition-all hover:scale-[1.02]"
+                className="flex-1 px-4 py-3 rounded-xl font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-foreground shadow-lg transition-all hover:scale-[1.02]"
               >
                 שמור
               </button>

@@ -109,11 +109,11 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
               <Package className="h-6 w-6 text-emerald-400" />
             </div>
             <div>
-              <p className="text-sm text-zinc-400">בחר ציוד לכל סט</p>
-              <p className="text-xs text-zinc-500">החיפוש והפילטרים מעודכנים לפי רשימת הציוד שלך</p>
+              <p className="text-sm text-muted">בחר ציוד לכל סט</p>
+              <p className="text-xs text-muted">החיפוש והפילטרים מעודכנים לפי רשימת הציוד שלך</p>
             </div>
           </div>
-          <div className="hidden md:flex items-center gap-2 text-xs text-zinc-500">
+          <div className="hidden md:flex items-center gap-2 text-xs text-muted">
             <span className="w-2 h-2 rounded-full bg-emerald-500/80" />
             <span>לחיצה על כרטיס תבחר את הציוד</span>
           </div>
@@ -122,7 +122,7 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
         <div className="grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 md:gap-6 items-start">
           <div className="space-y-4">
             <div className="relative">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -140,8 +140,8 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
                   size="sm"
                   className={`whitespace-nowrap ${
                     filter === cat.id
-                      ? 'bg-emerald-500 text-white'
-                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                      ? 'bg-emerald-500 text-foreground'
+                      : 'text-muted hover:text-foreground hover:bg-surface/60'
                   }`}
                   onClick={() => setFilter(cat.id)}
                 >
@@ -162,7 +162,7 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
                   className={`p-2 rounded-xl ${
                     !currentEquipmentId
                       ? 'bg-emerald-500/20 text-emerald-300'
-                      : 'bg-zinc-800 text-zinc-300'
+                      : 'bg-surface text-foreground'
                   }`}
                 >
                   <span className="text-sm font-semibold">ללא</span>
@@ -171,7 +171,7 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
                   <p className="text-sm font-semibold">
                     ללא ציוד
                   </p>
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-xs text-muted">
                     סט רגיל ללא ציוד נוסף
                   </p>
                 </div>
@@ -185,18 +185,18 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
               <div className="flex items-center justify-center py-12">
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
-                  <p className="text-sm text-zinc-400">טוען ציוד...</p>
+                  <p className="text-sm text-muted">טוען ציוד...</p>
                 </div>
               </div>
             ) : filteredEquipment.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-center rounded-2xl border border-dashed border-zinc-700/70 bg-zinc-900/40">
-                <div className="p-4 rounded-2xl bg-zinc-800/60 mb-3">
-                  <Package className="h-10 w-10 text-zinc-600" />
+              <div className="flex flex-col items-center justify-center py-10 text-center rounded-2xl border border-dashed border-border/70 bg-card/40">
+                <div className="p-4 rounded-2xl bg-surface/60 mb-3">
+                  <Package className="h-10 w-10 text-muted" />
                 </div>
-                <p className="text-sm font-medium text-zinc-300 mb-1">
+                <p className="text-sm font-medium text-foreground mb-1">
                   לא נמצא ציוד תואם
                 </p>
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-muted">
                   נסה לשנות את החיפוש או הפילטרים
                 </p>
               </div>
@@ -206,7 +206,7 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
                   <div key={category}>
                     <div className="flex items-center gap-2 mb-3 px-1">
                       <span className="w-1.5 h-6 rounded-full bg-gradient-to-b from-emerald-500 to-teal-500" />
-                      <h3 className="text-sm font-semibold text-zinc-300">
+                      <h3 className="text-sm font-semibold text-foreground">
                         {getCategoryLabel(category)}
                       </h3>
                     </div>
@@ -219,24 +219,24 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
                           className={`group flex items-center gap-3 p-3 rounded-2xl border text-right transition-all ${
                             currentEquipmentId === item.id
                               ? 'border-emerald-500/50 bg-emerald-500/10 shadow-lg shadow-emerald-500/10'
-                              : 'border-zinc-800 bg-zinc-900/40 hover:border-emerald-500/40 hover:bg-emerald-500/5'
+                              : 'border-border bg-card/40 hover:border-emerald-500/40 hover:bg-emerald-500/5'
                           }`}
                         >
                           <span className="text-3xl filter drop-shadow-md group-hover:scale-110 transition-transform duration-200">
                             {item.emoji}
                           </span>
                           <div className="flex-1">
-                            <p className="text-sm font-semibold text-white group-hover:text-emerald-300">
+                            <p className="text-sm font-semibold text-foreground group-hover:text-emerald-300">
                               {item.name}
                             </p>
                             <div className="flex flex-wrap gap-1.5 mt-1.5">
                               {item.weight_kg && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-zinc-800/80 text-[11px] text-zinc-300">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-surface/80 text-[11px] text-foreground">
                                   {item.weight_kg} ק&quot;ג
                                 </span>
                               )}
                               {item.resistance_level && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-zinc-800/80 text-[11px] text-zinc-300">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-surface/80 text-[11px] text-foreground">
                                   רמה {item.resistance_level}/5
                                 </span>
                               )}

@@ -88,30 +88,30 @@ export function useThemeClasses() {
   const { isDark } = useTheme();
 
   return {
-    // Background classes - nature-inspired colors
-    bgBase: isDark ? 'bg-zinc-950' : 'bg-[#f0f5ed]',
-    bgElevated: isDark ? 'bg-zinc-900' : 'bg-white',
-    bgSurface: isDark ? 'bg-zinc-800' : 'bg-[#e8f0e0]',
-    bgCard: isDark ? 'bg-zinc-900/90' : 'bg-white/97',
+    // Background classes - use design tokens
+    bgBase: 'bg-base',
+    bgElevated: 'bg-elevated',
+    bgSurface: 'bg-surface',
+    bgCard: 'bg-card',
 
-    // Text classes - use CSS variables for theme-aware typography
-    textPrimary: 'text-theme-primary',
-    textSecondary: 'text-theme-secondary',
-    textMuted: 'text-theme-muted',
+    // Text classes - use design tokens
+    textPrimary: 'text-foreground',
+    textSecondary: 'text-secondary',
+    textMuted: 'text-muted',
 
-    // Border classes - nature-inspired olive green for light mode
-    border: isDark ? 'border-zinc-800' : 'border-emerald-700/10',
-    borderHover: isDark ? 'border-zinc-700' : 'border-emerald-700/20',
+    // Border classes - use design tokens
+    border: 'border-border',
+    borderHover: 'border-border-hover',
 
-    // Input classes
-    inputBg: isDark ? 'bg-zinc-800/50' : 'bg-white/95',
-    inputBorder: isDark ? 'border-zinc-700' : 'border-emerald-700/15',
-    inputText: 'text-theme-primary',
-    inputPlaceholder: isDark ? 'placeholder-zinc-500' : 'placeholder-[#6b7f72]',
+    // Input classes - use design tokens
+    inputBg: 'bg-input',
+    inputBorder: 'border-border',
+    inputText: 'text-foreground',
+    inputPlaceholder: 'placeholder-muted',
 
-    // Card background
-    cardBg: isDark ? 'bg-zinc-900/90' : 'bg-white/95',
-    cardBorder: isDark ? 'border-zinc-800' : 'border-emerald-700/12',
-    cardShadow: isDark ? 'shadow-lg shadow-black/20' : 'shadow-lg shadow-emerald-950/8',
+    // Card background - use design tokens
+    cardBg: 'bg-card',
+    cardBorder: 'border-border',
+    cardShadow: 'shadow-card',
   };
 }

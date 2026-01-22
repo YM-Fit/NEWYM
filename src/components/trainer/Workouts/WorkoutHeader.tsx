@@ -70,7 +70,7 @@ export const WorkoutHeader = memo(({
               e.stopPropagation();
               onBack();
             }}
-            className="p-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all touch-manipulation cursor-pointer"
+            className="p-2.5 rounded-xl bg-surface text-muted hover:text-foreground hover:bg-elevated/50 transition-all touch-manipulation cursor-pointer"
             aria-label="חזור"
           >
             <ArrowRight className="h-5 w-5 lg:h-6 lg:w-6" />
@@ -80,10 +80,10 @@ export const WorkoutHeader = memo(({
               <Dumbbell className="h-6 w-6 lg:h-7 lg:w-7 text-emerald-400" />
             </div>
             <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-white">
+              <h1 className="text-xl lg:text-2xl font-bold text-foreground">
                 {workoutId ? 'עריכת אימון' : 'אימון חדש'}
               </h1>
-              <p className="text-sm lg:text-base text-zinc-500">{trainee.full_name}</p>
+              <p className="text-sm lg:text-base text-muted">{trainee.full_name}</p>
               {trainee.is_pair && selectedMember && workoutType === 'personal' && (
                 <p className={`text-xs font-semibold mt-1 px-2 py-0.5 rounded-lg inline-block ${
                   selectedMember === 'member_1' 
@@ -140,7 +140,7 @@ export const WorkoutHeader = memo(({
               onSave();
             }}
             disabled={saving || exercisesCount === 0}
-            className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-4 lg:px-6 py-2.5 lg:py-3 rounded-xl flex items-center gap-2 transition-all disabled:cursor-not-allowed touch-manipulation font-bold cursor-pointer"
+            className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-elevated disabled:text-muted text-foreground px-4 lg:px-6 py-2.5 lg:py-3 rounded-xl flex items-center gap-2 transition-all disabled:cursor-not-allowed touch-manipulation font-bold cursor-pointer"
           >
             <Save className="h-4 w-4 lg:h-5 lg:w-5" />
             <span className="text-sm lg:text-base">{saving ? 'שומר...' : (workoutId ? 'עדכן' : 'שמור')}</span>
@@ -148,16 +148,16 @@ export const WorkoutHeader = memo(({
         </div>
       </div>
 
-      <div className="mt-4 bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
+      <div className="mt-4 bg-surface/30 border border-border rounded-xl p-4">
         <div className="flex items-center gap-2 mb-2">
-          <Calendar className="h-4 w-4 text-zinc-500" />
-          <label className="text-sm font-medium text-zinc-400">תאריך האימון</label>
+          <Calendar className="h-4 w-4 text-muted" />
+          <label className="text-sm font-medium text-muted">תאריך האימון</label>
         </div>
         <input
           type="date"
           value={workoutDate.toISOString().split('T')[0]}
           onChange={(e) => onDateChange(new Date(e.target.value))}
-          className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 text-white rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+          className="w-full px-4 py-3 bg-surface border border-border text-foreground rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
           readOnly={isTablet}
           tabIndex={isTablet ? -1 : 0}
           inputMode={isTablet ? 'none' : undefined}
@@ -197,7 +197,7 @@ export const WorkoutHeader = memo(({
           className={`py-3 lg:py-4 px-4 rounded-xl border transition-all touch-manipulation cursor-pointer ${
             workoutType === 'personal'
               ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-400 font-bold'
-              : 'border-zinc-700/50 bg-zinc-800/30 hover:bg-zinc-800/50 text-zinc-400 hover:text-white'
+              : 'border-border bg-surface/30 hover:bg-surface text-muted hover:text-foreground'
           }`}
         >
           <span className="text-base lg:text-lg">אימון אישי</span>
@@ -208,7 +208,7 @@ export const WorkoutHeader = memo(({
           className={`py-3 lg:py-4 px-4 rounded-xl border transition-all touch-manipulation cursor-pointer ${
             workoutType === 'pair'
               ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-400 font-bold'
-              : 'border-zinc-700/50 bg-zinc-800/30 hover:bg-zinc-800/50 text-zinc-400 hover:text-white'
+              : 'border-border bg-surface/30 hover:bg-surface text-muted hover:text-foreground'
           }`}
         >
           <span className="text-base lg:text-lg">אימון זוגי</span>

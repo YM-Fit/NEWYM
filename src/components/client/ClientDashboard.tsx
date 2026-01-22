@@ -85,13 +85,13 @@ export default function ClientDashboard() {
   return (
     <div className="space-y-6">
       <div className="premium-card p-6">
-        <h1 className="text-2xl font-bold text-white mb-6">Dashboard שלי</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-6">Dashboard שלי</h1>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-emerald-500/10 rounded-lg p-4 border border-emerald-500/20">
             <div className="flex items-center gap-2 mb-2">
               <Calendar className="h-5 w-5 text-emerald-400" />
-              <div className="text-sm text-zinc-400">אימונים חודשיים</div>
+              <div className="text-sm text-muted">אימונים חודשיים</div>
             </div>
             <div className="text-2xl font-bold text-emerald-400">{stats.workoutsThisMonth}</div>
           </div>
@@ -99,7 +99,7 @@ export default function ClientDashboard() {
           <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/20">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="h-5 w-5 text-blue-400" />
-              <div className="text-sm text-zinc-400">סה"כ אימונים</div>
+              <div className="text-sm text-muted">סה"כ אימונים</div>
             </div>
             <div className="text-2xl font-bold text-blue-400">{stats.totalWorkouts}</div>
           </div>
@@ -107,7 +107,7 @@ export default function ClientDashboard() {
           <div className="bg-purple-500/10 rounded-lg p-4 border border-purple-500/20">
             <div className="flex items-center gap-2 mb-2">
               <Target className="h-5 w-5 text-purple-400" />
-              <div className="text-sm text-zinc-400">ירידה במשקל</div>
+              <div className="text-sm text-muted">ירידה במשקל</div>
             </div>
             <div className="text-2xl font-bold text-purple-400">{stats.weightLoss} ק"ג</div>
           </div>
@@ -115,7 +115,7 @@ export default function ClientDashboard() {
           <div className="bg-yellow-500/10 rounded-lg p-4 border border-yellow-500/20">
             <div className="flex items-center gap-2 mb-2">
               <Award className="h-5 w-5 text-yellow-400" />
-              <div className="text-sm text-zinc-400">יעדים הושגו</div>
+              <div className="text-sm text-muted">יעדים הושגו</div>
             </div>
             <div className="text-2xl font-bold text-yellow-400">{stats.goalsAchieved}</div>
           </div>

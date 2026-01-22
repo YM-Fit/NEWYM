@@ -68,7 +68,7 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
   };
 
   const getMealConfig = (mealName: string) => {
-    return MEAL_CONFIG[mealName] || { label: mealName, color: 'text-gray-700', bgColor: 'bg-gray-50 border-gray-200', icon: '🍽️' };
+    return MEAL_CONFIG[mealName] || { label: mealName, color: 'text-muted700', bgColor: 'bg-surface50 border-border200', icon: '🍽️' };
   };
 
   const calculateTotals = () => {
@@ -102,7 +102,7 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
     return (
       <div className="flex justify-center items-center py-16">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
-          <UtensilsCrossed className="w-8 h-8 text-white" />
+          <UtensilsCrossed className="w-8 h-8 text-foreground" />
         </div>
       </div>
     );
@@ -125,7 +125,7 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="bg-gradient-to-l from-emerald-600 to-emerald-500 rounded-2xl p-5 text-white shadow-lg">
+      <div className="bg-gradient-to-l from-emerald-600 to-emerald-500 rounded-2xl p-5 text-foreground shadow-lg">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xl font-bold">{mealPlan.name}</h2>
           <button

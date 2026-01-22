@@ -527,7 +527,7 @@ function TraineeCardToday({
                 <span className="absolute -top-1 -right-1 w-6 h-6 sm:w-7 sm:h-7
                                bg-gradient-to-br from-info to-cyan-500 rounded-full 
                                flex items-center justify-center 
-                               text-xs font-bold text-white border-2 border-elevated 
+                               text-xs font-bold text-inverse border-2 border-elevated 
                                animate-pulse shadow-lg shadow-info/50">
                   {unseenWeightsCount}
                 </span>

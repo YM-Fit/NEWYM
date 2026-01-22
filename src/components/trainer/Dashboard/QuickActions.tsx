@@ -48,12 +48,12 @@ export default function QuickActions({ onAction }: QuickActionsProps) {
                   ? 'bg-white/20'
                   : 'bg-primary/10 group-hover:bg-primary/20'
               }`}>
-                <Icon className={`h-5 w-5 ${action.primary ? 'text-white' : 'text-primary'}`} />
+                <Icon className={`h-5 w-5 ${action.primary ? 'text-inverse' : 'text-primary'}`} />
               </div>
               <div className="text-right flex-1">
                 <span className="block text-sm font-semibold">{action.label}</span>
                 <span className={`block text-xs mt-0.5 ${
-                  action.primary ? 'text-white/70' : 'text-secondary'
+                  action.primary ? 'text-inverse/70' : 'text-secondary'
                 }`}>
                   {action.description}
                 </span>

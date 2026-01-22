@@ -934,17 +934,17 @@ export default function SmartReportView() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigateMonth('prev')}
-              className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+              className="p-2 bg-surface hover:bg-elevated/50 rounded-xl transition-all text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700/50">
+            <div className="flex items-center gap-2 px-4 py-2 bg-surface rounded-xl border border-border">
               <Calendar className="w-5 h-5 text-purple-400" />
               <span className="font-semibold text-[var(--color-text-primary)]">{formatMonth(selectedMonth)}</span>
             </div>
             <button
               onClick={() => navigateMonth('next')}
-              className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-50"
+              className="p-2 bg-surface hover:bg-elevated/50 rounded-xl transition-all text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-50"
               disabled={selectedMonth >= new Date()}
             >
               <ChevronLeft className="w-5 h-5" />
@@ -960,7 +960,7 @@ export default function SmartReportView() {
                 placeholder="חיפוש מתאמן..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10 pl-4 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:border-purple-500/50 focus:outline-none w-48"
+                className="pr-10 pl-4 py-2 bg-surface border border-border rounded-xl text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:border-purple-500/50 focus:outline-none w-48"
               />
             </div>
             
@@ -972,7 +972,7 @@ export default function SmartReportView() {
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-sm ${
                     showHidden
                       ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                      : 'bg-zinc-800/50 text-[var(--color-text-muted)] border border-zinc-700/50 hover:text-[var(--color-text-secondary)]'
+                      : 'bg-surface text-[var(--color-text-muted)] border border-border hover:text-[var(--color-text-secondary)]'
                   }`}
                   title={showHidden ? 'הסתר מוסתרים' : 'הצג מוסתרים'}
                 >
@@ -981,7 +981,7 @@ export default function SmartReportView() {
                 </button>
                 <button
                   onClick={clearHiddenTrainees}
-                  className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] rounded-lg transition-all"
+                  className="p-2 bg-surface hover:bg-elevated/50 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] rounded-lg transition-all"
                   title="נקה את כל המוסתרים"
                 >
                   <X className="w-4 h-4" />
@@ -991,7 +991,7 @@ export default function SmartReportView() {
             
             <button
               onClick={exportToCSV}
-              className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-[var(--color-text-secondary)] border border-zinc-700/50"
+              className="flex items-center gap-2 px-4 py-2 bg-surface hover:bg-elevated/50 rounded-xl transition-all text-[var(--color-text-secondary)] border border-border"
             >
               <Download className="w-4 h-4" />
               ייצוא CSV
@@ -1012,7 +1012,7 @@ export default function SmartReportView() {
                   <span>מטרה: ₪{monthlyReport.income_goal.toLocaleString()}</span>
                   <span>{Math.round((monthlyReport.total_income / monthlyReport.income_goal) * 100)}%</span>
                 </div>
-                <div className="w-full bg-zinc-800 rounded-full h-2">
+                <div className="w-full bg-surface rounded-full h-2">
                   <div
                     className="bg-emerald-500 h-2 rounded-full transition-all"
                     style={{ width: `${Math.min((monthlyReport.total_income / monthlyReport.income_goal) * 100, 100)}%` }}
@@ -1054,7 +1054,7 @@ export default function SmartReportView() {
               if (amount === 0) return null;
               const PaymentIcon = PAYMENT_METHOD_ICONS[method as PaymentMethod];
               return (
-                <div key={method} className="flex flex-col items-center p-3 bg-zinc-800/50 rounded-lg">
+                <div key={method} className="flex flex-col items-center p-3 bg-surface rounded-lg">
                   {PaymentIcon && <PaymentIcon className="w-5 h-5 text-[var(--color-text-muted)] mb-2" />}
                   <div className="text-xs text-[var(--color-text-muted)] mb-1">{PAYMENT_METHOD_LABELS[method as PaymentMethod]}</div>
                   <div className="text-lg font-bold text-[var(--color-text-primary)]">₪{amount.toLocaleString()}</div>
@@ -1076,7 +1076,7 @@ export default function SmartReportView() {
               type="number"
               value={incomeGoal}
               onChange={(e) => setIncomeGoal(parseFloat(e.target.value) || 0)}
-              className="px-3 py-1 bg-zinc-800 border border-zinc-700 rounded-lg text-[var(--color-text-primary)] w-32"
+              className="px-3 py-1 bg-surface border border-border rounded-lg text-[var(--color-text-primary)] w-32"
               min="0"
             />
             <button
@@ -1121,36 +1121,36 @@ export default function SmartReportView() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="premium-card-static p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-white">
+              <h3 className="text-xl font-bold text-foreground">
                 תאריכי אימונים - {selectedTraineeData.full_name}
               </h3>
               <button
                 onClick={() => setSelectedTrainee(null)}
-                className="p-2 hover:bg-zinc-800 rounded-lg transition-all text-zinc-400"
+                className="p-2 hover:bg-surface rounded-lg transition-all text-muted"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-2">
               {selectedTraineeData.workout_dates.length === 0 ? (
-                <div className="text-center text-zinc-500 py-8">אין אימונים בחודש זה</div>
+                <div className="text-center text-muted py-8">אין אימונים בחודש זה</div>
               ) : (
                 selectedTraineeData.workout_dates.map((date, index) => {
                   const workoutNumber = selectedTraineeData.workout_numbers.get(date) || index + 1;
                   return (
                     <div
                       key={date}
-                      className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-surface rounded-lg"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-sm">
                           {workoutNumber}
                         </div>
                         <div>
-                          <div className="text-white font-medium">
+                          <div className="text-foreground font-medium">
                             {selectedTraineeData.full_name} {workoutNumber}
                           </div>
-                          <div className="text-sm text-zinc-500">{formatDate(date)}</div>
+                          <div className="text-sm text-muted">{formatDate(date)}</div>
                         </div>
                       </div>
                     </div>
@@ -1165,17 +1165,17 @@ export default function SmartReportView() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="premium-card-static p-5">
-          <div className="text-sm text-zinc-500 mb-1">סה"כ מתאמנים</div>
-          <div className="text-2xl font-bold text-white">{filteredData.length}</div>
+          <div className="text-sm text-muted mb-1">סה"כ מתאמנים</div>
+          <div className="text-2xl font-bold text-foreground">{filteredData.length}</div>
         </div>
         <div className="premium-card-static p-5">
-          <div className="text-sm text-zinc-500 mb-1">סה"כ אימונים החודש</div>
+          <div className="text-sm text-muted mb-1">סה"כ אימונים החודש</div>
           <div className="text-2xl font-bold text-purple-400">
             {filteredData.reduce((sum, row) => sum + row.workouts_this_month, 0)}
           </div>
         </div>
         <div className="premium-card-static p-5">
-          <div className="text-sm text-zinc-500 mb-1">סה"כ לחיוב</div>
+          <div className="text-sm text-muted mb-1">סה"כ לחיוב</div>
           <div className="text-2xl font-bold text-emerald-400">
             ₪{filteredData.reduce((sum, row) => sum + row.total_due, 0).toLocaleString()}
           </div>
@@ -1189,14 +1189,14 @@ export default function SmartReportView() {
             <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
           </div>
         ) : filteredData.length === 0 ? (
-          <div className="text-center py-20 text-zinc-500">
+          <div className="text-center py-20 text-muted">
             אין מתאמנים להצגה
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-zinc-800">
+                <tr className="border-b border-border">
                   <th className="text-right p-4 text-sm font-semibold text-[var(--color-text-muted)]">שם מתאמן</th>
                   <th className="text-right p-4 text-sm font-semibold text-[var(--color-text-muted)]">שיטת תשלום</th>
                   <th className="text-right p-4 text-sm font-semibold text-[var(--color-text-muted)]">שיטת ספירה</th>
@@ -1214,7 +1214,7 @@ export default function SmartReportView() {
                   const CountingIcon = row.counting_method ? COUNTING_METHOD_ICONS[row.counting_method] : null;
 
                   return (
-                    <tr key={row.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-all">
+                    <tr key={row.id} className="border-b border-border/50 hover:bg-surface/30 transition-all">
                       {/* Name - Clickable to show workout dates */}
                       <td className="p-4">
                         <button
@@ -1240,7 +1240,7 @@ export default function SmartReportView() {
                               ...editing, 
                               payment_method: e.target.value as PaymentMethod || null 
                             })}
-                            className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-[var(--color-text-primary)] text-sm w-full"
+                            className="p-2 bg-surface border border-border rounded-lg text-[var(--color-text-primary)] text-sm w-full"
                           >
                             <option value="">לא הוגדר</option>
                             <option value="standing_order">הוראת קבע</option>
@@ -1268,7 +1268,7 @@ export default function SmartReportView() {
                               ...editing, 
                               counting_method: e.target.value as CountingMethod || null 
                             })}
-                            className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-[var(--color-text-primary)] text-sm w-full"
+                            className="p-2 bg-surface border border-border rounded-lg text-[var(--color-text-primary)] text-sm w-full"
                           >
                             <option value="">לא הוגדר</option>
                             <option value="subscription">מנוי מתחדש</option>
@@ -1297,7 +1297,7 @@ export default function SmartReportView() {
                                 ...editing, 
                                 monthly_price: parseFloat(e.target.value) || 0 
                               })}
-                              className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-[var(--color-text-primary)] text-sm w-24"
+                              className="p-2 bg-surface border border-border rounded-lg text-[var(--color-text-primary)] text-sm w-24"
                               min="0"
                             />
                           </div>
@@ -1329,7 +1329,7 @@ export default function SmartReportView() {
                             {row.active_card ? (
                               <button
                                 onClick={() => openCardHistoryModal(row.id, row.full_name)}
-                                className="flex flex-col gap-1 text-right hover:bg-zinc-800/50 p-2 -m-2 rounded-lg transition-all"
+                                className="flex flex-col gap-1 text-right hover:bg-surface p-2 -m-2 rounded-lg transition-all"
                               >
                                 <div className="flex items-center gap-2">
                                   <span className={`font-medium ${row.card_remaining > 2 ? 'text-emerald-400' : row.card_remaining > 0 ? 'text-amber-400' : 'text-red-400'}`}>
@@ -1359,7 +1359,7 @@ export default function SmartReportView() {
                             )}
                           </div>
                         ) : (
-                          <span className="text-zinc-500">-</span>
+                          <span className="text-muted">-</span>
                         )}
                       </td>
 
@@ -1382,7 +1382,7 @@ export default function SmartReportView() {
                               <button
                                 onClick={cancelEditing}
                                 disabled={saving}
-                                className="p-2 bg-zinc-700/50 hover:bg-zinc-700 rounded-lg transition-all text-zinc-400"
+                                className="p-2 bg-elevated/50 hover:bg-elevated rounded-lg transition-all text-muted"
                               >
                                 <X className="w-4 h-4" />
                               </button>
@@ -1391,7 +1391,7 @@ export default function SmartReportView() {
                             <>
                               <button
                                 onClick={() => startEditing(row)}
-                                className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-lg transition-all text-zinc-400 hover:text-white"
+                                className="p-2 bg-surface hover:bg-elevated/50 rounded-lg transition-all text-muted hover:text-foreground"
                                 title="עריכה"
                               >
                                 <Edit2 className="w-4 h-4" />
@@ -1401,7 +1401,7 @@ export default function SmartReportView() {
                                 className={`p-2 rounded-lg transition-all ${
                                   hiddenTrainees.has(row.id)
                                     ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
-                                    : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50 hover:text-white'
+                                    : 'bg-surface text-muted hover:bg-elevated/50 hover:text-foreground'
                                 }`}
                                 title={hiddenTrainees.has(row.id) ? 'הצג בדוח' : 'הסתר מהדוח'}
                               >
@@ -1479,7 +1479,7 @@ export default function SmartReportView() {
               <button
                 onClick={saveNewCard}
                 disabled={savingCard || newCard.sessions_purchased < 1}
-                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 rounded-lg text-white font-medium transition-all flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 rounded-lg text-foreground font-medium transition-all flex items-center justify-center gap-2"
               >
                 {savingCard ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -1557,10 +1557,10 @@ export default function SmartReportView() {
                         </span>
                       </div>
                       {/* Progress bar */}
-                      <div className="mt-2 h-2 bg-zinc-700 rounded-full overflow-hidden">
+                      <div className="mt-2 h-2 bg-elevated rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all ${
-                            card.is_active ? 'bg-emerald-500' : 'bg-zinc-500'
+                            card.is_active ? 'bg-emerald-500' : 'bg-surface'
                           }`}
                           style={{ width: `${(card.sessions_used / card.sessions_purchased) * 100}%` }}
                         />
@@ -1577,7 +1577,7 @@ export default function SmartReportView() {
                   setShowCardHistoryModal(false);
                   openAddCardModal(selectedTraineeForCard.id, selectedTraineeForCard.name);
                 }}
-                className="w-full py-3 bg-amber-500 hover:bg-amber-600 rounded-lg text-white font-medium transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 bg-amber-500 hover:bg-amber-600 rounded-lg text-foreground font-medium transition-all flex items-center justify-center gap-2"
               >
                 <Plus className="w-5 h-5" />
                 הוסף כרטיסיה חדשה

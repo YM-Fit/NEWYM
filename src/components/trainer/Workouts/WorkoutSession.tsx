@@ -988,7 +988,7 @@ export default function WorkoutSession({
       {exercises.length > 0 && (
         <div className="premium-card-static p-3 lg:p-4 mb-4 animate-fade-in">
           {/* Progress bar */}
-          <div className="relative h-2 bg-zinc-800 rounded-full overflow-hidden mb-3">
+          <div className="relative h-2 bg-surface rounded-full overflow-hidden mb-3">
             <div 
               className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
               style={{ width: `${workoutProgress.progressPercent}%` }}
@@ -998,18 +998,18 @@ export default function WorkoutSession({
           {/* Stats row */}
           <div className="flex items-center justify-between flex-wrap gap-2 lg:gap-4">
             {/* Timer */}
-            <div className="flex items-center gap-2 bg-zinc-800/50 px-3 py-1.5 rounded-lg">
+            <div className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-lg">
               <Timer className="h-4 w-4 text-amber-400" />
-              <span className="font-mono font-semibold text-white text-sm lg:text-base">{formatTime(elapsedTime)}</span>
+              <span className="font-mono font-semibold text-foreground text-sm lg:text-base">{formatTime(elapsedTime)}</span>
             </div>
             
             {/* Sets progress */}
-            <div className="flex items-center gap-2 bg-zinc-800/50 px-3 py-1.5 rounded-lg">
+            <div className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-lg">
               <Target className="h-4 w-4 text-cyan-400" />
               <span className="text-sm lg:text-base">
                 <span className="font-semibold text-cyan-400">{workoutProgress.completedSets}</span>
-                <span className="text-zinc-500">/{workoutProgress.totalSets}</span>
-                <span className="text-zinc-400 mr-1">סטים</span>
+                <span className="text-muted">/{workoutProgress.totalSets}</span>
+                <span className="text-muted mr-1">סטים</span>
               </span>
             </div>
             
@@ -1021,19 +1021,19 @@ export default function WorkoutSession({
             </div>
             
             {/* Exercises progress */}
-            <div className="flex items-center gap-2 bg-zinc-800/50 px-3 py-1.5 rounded-lg">
+            <div className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-lg">
               <Zap className="h-4 w-4 text-purple-400" />
               <span className="text-sm lg:text-base">
                 <span className="font-semibold text-purple-400">{workoutProgress.completedExercises}</span>
-                <span className="text-zinc-500">/{workoutProgress.totalExercises}</span>
-                <span className="text-zinc-400 mr-1">תרגילים</span>
+                <span className="text-muted">/{workoutProgress.totalExercises}</span>
+                <span className="text-muted mr-1">תרגילים</span>
               </span>
             </div>
             
             {/* Progress percentage */}
             <div className="flex items-center gap-1">
-              <span className="text-lg lg:text-xl font-bold text-white">{workoutProgress.progressPercent}%</span>
-              <span className="text-xs text-zinc-500">הושלמו</span>
+              <span className="text-lg lg:text-xl font-bold text-foreground">{workoutProgress.progressPercent}%</span>
+              <span className="text-xs text-muted">הושלמו</span>
             </div>
           </div>
         </div>
@@ -1111,8 +1111,8 @@ export default function WorkoutSession({
 
       {exercises.length === 0 && !workoutId && (
         <div className="premium-card-static p-6 mb-4">
-          <h3 className="text-lg font-bold text-white mb-2">התחל אימון חדש</h3>
-          <p className="text-zinc-400 mb-4">בחר תבנית קיימת או התחל אימון ריק</p>
+          <h3 className="text-lg font-bold text-foreground mb-2">התחל אימון חדש</h3>
+          <p className="text-muted mb-4">בחר תבנית קיימת או התחל אימון ריק</p>
           <button
             type="button"
             onClick={(e) => {
@@ -1120,12 +1120,12 @@ export default function WorkoutSession({
               e.stopPropagation();
               setShowTemplateModal(true);
             }}
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold mb-3 cursor-pointer"
+            className="w-full bg-cyan-500 hover:bg-cyan-600 text-foreground py-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold mb-3 cursor-pointer"
           >
             <BookMarked className="h-5 w-5" />
             <span>טען תבנית קיימת</span>
           </button>
-          <p className="text-center text-sm text-zinc-500">או</p>
+          <p className="text-center text-sm text-muted">או</p>
         </div>
       )}
 
@@ -1136,7 +1136,7 @@ export default function WorkoutSession({
           e.stopPropagation();
           setShowExerciseSelector(true);
         }}
-        className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all touch-manipulation font-bold cursor-pointer"
+        className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-foreground py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all touch-manipulation font-bold cursor-pointer"
       >
         <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
         <span className="text-lg lg:text-xl">{exercises.length === 0 ? 'התחל אימון ריק' : 'הוסף תרגיל'}</span>
@@ -1247,27 +1247,27 @@ export default function WorkoutSession({
 
       {showSaveTemplateModal && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 rounded-xl bg-amber-500/15">
                 <BookMarked className="h-6 w-6 text-amber-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">שמור כתבנית</h3>
-                <p className="text-zinc-500 text-sm">שמור את האימון הזה כתבנית לשימוש עתידי מהיר</p>
+                <h3 className="text-xl font-bold text-foreground">שמור כתבנית</h3>
+                <p className="text-muted text-sm">שמור את האימון הזה כתבנית לשימוש עתידי מהיר</p>
               </div>
             </div>
 
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                <label className="block text-sm font-medium text-muted mb-2">
                   שם התבנית *
                 </label>
                 <input
                   type="text"
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-surface/50 border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="למשל: אימון רגליים מלא"
                   autoFocus={!preventKeyboard}
                   readOnly={preventKeyboard}
@@ -1281,13 +1281,13 @@ export default function WorkoutSession({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                <label className="block text-sm font-medium text-muted mb-2">
                   תיאור (אופציונלי)
                 </label>
                 <textarea
                   value={templateDescription}
                   onChange={(e) => setTemplateDescription(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-surface/50 border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="הוסף תיאור לתבנית..."
                   rows={3}
                   readOnly={preventKeyboard}
@@ -1316,7 +1316,7 @@ export default function WorkoutSession({
                   handleSaveAsTemplate();
                 }}
                 disabled={savingTemplate || !templateName.trim()}
-                className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
+                className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:bg-elevated disabled:text-muted disabled:cursor-not-allowed text-foreground px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
               >
                 {savingTemplate ? 'שומר...' : 'שמור תבנית'}
               </button>
@@ -1329,7 +1329,7 @@ export default function WorkoutSession({
                   setTemplateName('');
                   setTemplateDescription('');
                 }}
-                className="flex-1 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 text-zinc-300 px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
+                className="flex-1 bg-surface/50 hover:bg-surface border border-border text-foreground px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
               >
                 ביטול
               </button>
@@ -1371,7 +1371,7 @@ export default function WorkoutSession({
               addSet(lastExerciseIndex);
               toast.success('סט חדש נוסף', { duration: 1500, position: 'bottom-center' });
             }}
-            className="w-14 h-14 bg-cyan-500 hover:bg-cyan-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            className="w-14 h-14 bg-cyan-500 hover:bg-cyan-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
             title="הוסף סט (קיצור: +)"
           >
             <Plus className="h-6 w-6" />
@@ -1381,7 +1381,7 @@ export default function WorkoutSession({
           <button
             type="button"
             onClick={() => setShowExerciseSelector(true)}
-            className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
             title="הוסף תרגיל (קיצור: Ctrl+N)"
           >
             <BookMarked className="h-6 w-6" />

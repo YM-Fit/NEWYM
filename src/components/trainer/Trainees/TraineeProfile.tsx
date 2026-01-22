@@ -100,7 +100,7 @@ export default function TraineeProfile({
             <div className="flex items-center gap-4">
               <button
                 onClick={onBack}
-                className="p-2.5 rounded-xl bg-zinc-800/50 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-zinc-700/50 transition-all"
+                className="p-2.5 rounded-xl bg-surface text-muted hover:text-foreground hover:bg-elevated transition-all"
               >
                 <ArrowRight className="h-5 w-5" />
               </button>
@@ -119,7 +119,7 @@ export default function TraineeProfile({
                     <Sparkles className="w-4 h-4 text-emerald-400" />
                     <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">פרופיל מתאמן</span>
                   </div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] tracking-tight">{trainee.name}</h1>
+                  <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{trainee.name}</h1>
                 </div>
               </div>
             </div>
@@ -147,43 +147,43 @@ export default function TraineeProfile({
           {/* Info Cards */}
           {!trainee.is_pair ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30 hover:border-[var(--color-border)] transition-all">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-elevated/30 border border-border/30 hover:border-border transition-all">
                 <div className="p-2.5 rounded-xl bg-cyan-500/15">
                   <User className="h-5 w-5 text-cyan-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--color-text-muted)]">גיל</p>
-                  <p className="font-semibold text-[var(--color-text-primary)]">{trainee.age} שנים</p>
+                  <p className="text-xs text-muted">גיל</p>
+                  <p className="font-semibold text-foreground">{trainee.age} שנים</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30 hover:border-[var(--color-border)] transition-all">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-elevated/30 border border-border/30 hover:border-border transition-all">
                 <div className="p-2.5 rounded-xl bg-emerald-500/15">
                   <Phone className="h-5 w-5 text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--color-text-muted)]">טלפון</p>
-                  <p className="font-semibold text-[var(--color-text-primary)]" dir="ltr">{trainee.phone}</p>
+                  <p className="text-xs text-muted">טלפון</p>
+                  <p className="font-semibold text-foreground" dir="ltr">{trainee.phone}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30 hover:border-[var(--color-border)] transition-all">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-elevated/30 border border-border/30 hover:border-border transition-all">
                 <div className="p-2.5 rounded-xl bg-amber-500/15">
                   <Mail className="h-5 w-5 text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--color-text-muted)]">אימייל</p>
-                  <p className="font-semibold text-[var(--color-text-primary)] text-sm truncate">{trainee.email || '-'}</p>
+                  <p className="text-xs text-muted">אימייל</p>
+                  <p className="font-semibold text-foreground text-sm truncate">{trainee.email || '-'}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30 hover:border-[var(--color-border)] transition-all">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-elevated/30 border border-border/30 hover:border-border transition-all">
                 <div className="p-2.5 rounded-xl bg-teal-500/15">
                   <Calendar className="h-5 w-5 text-teal-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--color-text-muted)]">התחיל</p>
-                  <p className="font-semibold text-[var(--color-text-primary)]">{new Date(trainee.startDate).toLocaleDateString('he-IL')}</p>
+                  <p className="text-xs text-muted">התחיל</p>
+                  <p className="font-semibold text-foreground">{new Date(trainee.startDate).toLocaleDateString('he-IL')}</p>
                 </div>
               </div>
             </div>
@@ -199,20 +199,20 @@ export default function TraineeProfile({
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <p className="text-xs text-[var(--color-text-muted)]">טלפון</p>
-                      <p className="font-semibold text-[var(--color-text-primary)] text-sm" dir="ltr">{trainee.pairPhone1 || '-'}</p>
+                      <p className="text-xs text-muted">טלפון</p>
+                      <p className="font-semibold text-foreground text-sm" dir="ltr">{trainee.pairPhone1 || '-'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[var(--color-text-muted)]">אימייל</p>
-                      <p className="font-semibold text-[var(--color-text-primary)] text-sm truncate">{trainee.pairEmail1 || '-'}</p>
+                      <p className="text-xs text-muted">אימייל</p>
+                      <p className="font-semibold text-foreground text-sm truncate">{trainee.pairEmail1 || '-'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[var(--color-text-muted)]">גובה</p>
-                      <p className="font-semibold text-[var(--color-text-primary)]">{trainee.pairHeight1 || '-'} ס״מ</p>
+                      <p className="text-xs text-muted">גובה</p>
+                      <p className="font-semibold text-foreground">{trainee.pairHeight1 || '-'} ס״מ</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[var(--color-text-muted)]">מין</p>
-                      <p className="font-semibold text-[var(--color-text-primary)]">{trainee.pairGender1 === 'male' ? 'זכר' : 'נקבה'}</p>
+                      <p className="text-xs text-muted">מין</p>
+                      <p className="font-semibold text-foreground">{trainee.pairGender1 === 'male' ? 'זכר' : 'נקבה'}</p>
                     </div>
                   </div>
                 </div>
@@ -226,31 +226,31 @@ export default function TraineeProfile({
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <p className="text-xs text-[var(--color-text-muted)]">טלפון</p>
-                      <p className="font-semibold text-[var(--color-text-primary)] text-sm" dir="ltr">{trainee.pairPhone2 || '-'}</p>
+                      <p className="text-xs text-muted">טלפון</p>
+                      <p className="font-semibold text-foreground text-sm" dir="ltr">{trainee.pairPhone2 || '-'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[var(--color-text-muted)]">אימייל</p>
-                      <p className="font-semibold text-[var(--color-text-primary)] text-sm truncate">{trainee.pairEmail2 || '-'}</p>
+                      <p className="text-xs text-muted">אימייל</p>
+                      <p className="font-semibold text-foreground text-sm truncate">{trainee.pairEmail2 || '-'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[var(--color-text-muted)]">גובה</p>
-                      <p className="font-semibold text-[var(--color-text-primary)]">{trainee.pairHeight2 || '-'} ס״מ</p>
+                      <p className="text-xs text-muted">גובה</p>
+                      <p className="font-semibold text-foreground">{trainee.pairHeight2 || '-'} ס״מ</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[var(--color-text-muted)]">מין</p>
-                      <p className="font-semibold text-[var(--color-text-primary)]">{trainee.pairGender2 === 'male' ? 'זכר' : 'נקבה'}</p>
+                      <p className="text-xs text-muted">מין</p>
+                      <p className="font-semibold text-foreground">{trainee.pairGender2 === 'male' ? 'זכר' : 'נקבה'}</p>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-elevated/30 border border-border/30">
                 <div className="p-2.5 rounded-xl bg-teal-500/15">
                   <Calendar className="h-5 w-5 text-teal-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--color-text-muted)]">התחיל</p>
-                  <p className="font-semibold text-[var(--color-text-primary)]">{new Date(trainee.startDate).toLocaleDateString('he-IL')}</p>
+                  <p className="text-xs text-muted">התחיל</p>
+                  <p className="font-semibold text-foreground">{new Date(trainee.startDate).toLocaleDateString('he-IL')}</p>
                 </div>
               </div>
             </div>
@@ -267,7 +267,7 @@ export default function TraineeProfile({
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                      : 'bg-[var(--color-bg-elevated)]/30 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)]/50 border border-[var(--color-border)]/30'
+                      : 'bg-elevated/30 text-muted hover:bg-elevated/50 border border-border/30'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -288,7 +288,7 @@ export default function TraineeProfile({
               <div className="stat-card p-6 bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">משקל נוכחי</p>
+                    <p className="text-sm font-medium text-secondary mb-2">משקל נוכחי</p>
                     <p className="text-3xl font-bold text-cyan-400 tracking-tight">{latestMeasurement.weight} ק״ג</p>
                     {weightChange !== 0 && (
                       <p className={`text-sm mt-2 font-medium ${weightChange > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
@@ -305,7 +305,7 @@ export default function TraineeProfile({
               <div className="stat-card p-6 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">אחוז שומן</p>
+                    <p className="text-sm font-medium text-secondary mb-2">אחוז שומן</p>
                     <p className="text-3xl font-bold text-emerald-400 tracking-tight">{latestMeasurement.bodyFat?.toFixed(1) || '-'}%</p>
                   </div>
                   <div className="p-3.5 rounded-xl bg-emerald-500/20">
@@ -317,7 +317,7 @@ export default function TraineeProfile({
               <div className="stat-card p-6 bg-gradient-to-br from-amber-500/20 to-amber-500/5 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">מסת שריר</p>
+                    <p className="text-sm font-medium text-secondary mb-2">מסת שריר</p>
                     <p className="text-3xl font-bold text-amber-400 tracking-tight">{latestMeasurement.muscleMass?.toFixed(1) || '-'} ק״ג</p>
                   </div>
                   <div className="p-3.5 rounded-xl bg-amber-500/20">
@@ -335,34 +335,34 @@ export default function TraineeProfile({
                 <Calendar className="h-5 w-5 text-emerald-400" />
                 <span className="text-2xl font-bold text-emerald-400">{totalWorkouts}</span>
               </div>
-              <p className="text-xs text-[var(--color-text-muted)]">סה״כ אימונים</p>
+              <p className="text-xs text-muted">סה״כ אימונים</p>
             </div>
             <div className="premium-card-static p-4">
               <div className="flex items-center justify-between mb-2">
                 <TrendingUp className="h-5 w-5 text-cyan-400" />
                 <span className="text-2xl font-bold text-cyan-400">{totalVolume.toLocaleString()}</span>
               </div>
-              <p className="text-xs text-[var(--color-text-muted)]">ק״ג נפח כולל</p>
+              <p className="text-xs text-muted">ק״ג נפח כולל</p>
             </div>
             <div className="premium-card-static p-4">
               <div className="flex items-center justify-between mb-2">
                 <Scale className="h-5 w-5 text-amber-400" />
                 <span className="text-2xl font-bold text-amber-400">{measurements.length}</span>
               </div>
-              <p className="text-xs text-[var(--color-text-muted)]">מדידות</p>
+              <p className="text-xs text-muted">מדידות</p>
             </div>
             <div className="premium-card-static p-4">
               <div className="flex items-center justify-between mb-2">
                 <Home className="h-5 w-5 text-rose-400" />
                 <span className="text-2xl font-bold text-rose-400">{selfWeights.length}</span>
               </div>
-              <p className="text-xs text-[var(--color-text-muted)]">שקילות בית</p>
+              <p className="text-xs text-muted">שקילות בית</p>
             </div>
           </div>
 
           {/* Quick Actions */}
           <div className="premium-card-static p-6">
-            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-emerald-400" />
               פעולות מהירות
             </h3>
@@ -374,7 +374,7 @@ export default function TraineeProfile({
             <div className="icon-box-primary mb-2 group-hover:shadow-glow transition-all">
               <Calendar className="h-5 w-5" />
             </div>
-            <span className="text-sm font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">אימון חדש</span>
+            <span className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors">אימון חדש</span>
           </button>
 
           <button
@@ -384,7 +384,7 @@ export default function TraineeProfile({
             <div className="p-3 rounded-xl bg-cyan-500/15 text-cyan-400 mb-2 group-hover:bg-cyan-500/25 transition-all">
               <Scale className="h-5 w-5" />
             </div>
-            <span className="text-sm font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">שקילה חדשה</span>
+            <span className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors">שקילה חדשה</span>
           </button>
 
           <button
@@ -394,7 +394,7 @@ export default function TraineeProfile({
             <div className="p-3 rounded-xl bg-amber-500/15 text-amber-400 mb-2 group-hover:bg-amber-500/25 transition-all">
               <BarChart3 className="h-5 w-5" />
             </div>
-            <span className="text-sm font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">גרף משקל</span>
+            <span className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors">גרף משקל</span>
           </button>
 
           {onViewProgress && (
@@ -405,7 +405,7 @@ export default function TraineeProfile({
               <div className="p-3 rounded-xl bg-teal-500/15 text-teal-400 mb-2 group-hover:bg-teal-500/25 transition-all">
                 <TrendingUp className="h-5 w-5" />
               </div>
-              <span className="text-sm font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">גרף אימונים</span>
+              <span className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors">גרף אימונים</span>
             </button>
           )}
 
@@ -417,7 +417,7 @@ export default function TraineeProfile({
               <div className="p-3 rounded-xl bg-rose-500/15 text-rose-400 mb-2 group-hover:bg-rose-500/25 transition-all">
                 <ClipboardList className="h-5 w-5" />
               </div>
-              <span className="text-sm font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">תוכניות אימון</span>
+              <span className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors">תוכניות אימון</span>
             </button>
           )}
 
@@ -429,7 +429,7 @@ export default function TraineeProfile({
               <div className="p-3 rounded-xl bg-orange-500/15 text-orange-400 mb-2 group-hover:bg-orange-500/25 transition-all">
                 <UtensilsCrossed className="h-5 w-5" />
               </div>
-              <span className="text-sm font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">תפריט</span>
+              <span className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors">תפריט</span>
             </button>
           )}
 
@@ -441,7 +441,7 @@ export default function TraineeProfile({
               <div className="p-3 rounded-xl bg-amber-500/15 text-amber-400 mb-2 group-hover:bg-amber-500/25 transition-all">
                 <BookOpen className="h-5 w-5" />
               </div>
-              <span className="text-sm font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">יומן אכילה</span>
+              <span className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors">יומן אכילה</span>
             </button>
           )}
 
@@ -453,7 +453,7 @@ export default function TraineeProfile({
               <div className="p-3 rounded-xl bg-sky-500/15 text-sky-400 mb-2 group-hover:bg-sky-500/25 transition-all">
                 <Key className="h-5 w-5" />
               </div>
-              <span className="text-sm font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">גישה לאפליקציה</span>
+              <span className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors">גישה לאפליקציה</span>
             </button>
           )}
 
@@ -465,7 +465,7 @@ export default function TraineeProfile({
               <div className="p-3 rounded-xl bg-pink-500/15 text-pink-400 mb-2 group-hover:bg-pink-500/25 transition-all">
                 <Brain className="h-5 w-5" />
               </div>
-              <span className="text-sm font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">כלים מנטליים</span>
+              <span className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors">כלים מנטליים</span>
             </button>
           )}
 
@@ -477,7 +477,7 @@ export default function TraineeProfile({
               <div className="p-3 rounded-xl bg-sky-500/15 text-sky-400 mb-2 group-hover:bg-sky-500/25 transition-all">
                 <Activity className="h-5 w-5" />
               </div>
-              <span className="text-sm font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">אירובי</span>
+              <span className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors">אירובי</span>
             </button>
           )}
 
@@ -488,7 +488,7 @@ export default function TraineeProfile({
             <div className="p-3 rounded-xl bg-emerald-500/15 text-emerald-400 mb-2 group-hover:bg-emerald-500/25 transition-all">
               <Calculator className="h-5 w-5" />
             </div>
-            <span className="text-sm font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">מחשבון TDEE</span>
+            <span className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors">מחשבון TDEE</span>
           </button>
 
           <button
@@ -498,7 +498,7 @@ export default function TraineeProfile({
             <div className="p-3 rounded-xl bg-blue-500/15 text-blue-400 mb-2 group-hover:bg-blue-500/25 transition-all">
               <History className="h-5 w-5" />
             </div>
-            <span className="text-sm font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">ציר זמן</span>
+            <span className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors">ציר זמן</span>
           </button>
 
           <button
@@ -508,7 +508,7 @@ export default function TraineeProfile({
             <div className="p-3 rounded-xl bg-orange-500/15 text-orange-400 mb-2 group-hover:bg-orange-500/25 transition-all">
               <FileText className="h-5 w-5" />
             </div>
-            <span className="text-sm font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">הערות</span>
+            <span className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors">הערות</span>
           </button>
         </div>
       </div>
@@ -516,10 +516,10 @@ export default function TraineeProfile({
           {/* Recent Activity */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="premium-card-static h-full">
-              <div className="p-5 border-b border-zinc-800/50 flex items-center justify-between">
+              <div className="p-5 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-emerald-400" />
-                  <h3 className="text-base font-semibold text-white">אימונים אחרונים</h3>
+                  <h3 className="text-base font-semibold text-foreground">אימונים אחרונים</h3>
                 </div>
                 {onViewWorkouts && workouts.length > 0 && (
                   <button
@@ -539,18 +539,18 @@ export default function TraineeProfile({
                         className={`flex items-center justify-between p-4 rounded-xl border transition-all animate-fade-in ${
                           workout.syncedFromGoogle 
                             ? 'bg-blue-900/20 border-blue-700/30 hover:border-blue-600/50' 
-                            : 'bg-zinc-800/30 border-zinc-700/30 hover:border-zinc-600/50'
+                            : 'bg-surface/30 border-border hover:border-border-hover'
                         }`}
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <div>
-                          <p className="font-medium text-white flex items-center gap-2">
+                          <p className="font-medium text-foreground flex items-center gap-2">
                             {new Date(workout.date).toLocaleDateString('he-IL')}
                             {workout.syncedFromGoogle && (
                               <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">יומן</span>
                             )}
                           </p>
-                          <p className="text-sm text-zinc-500">
+                          <p className="text-sm text-muted">
                             {workout.syncedFromGoogle && workout.exercises.length === 0 
                               ? 'אימון מהיומן' 
                               : `${workout.exercises.length} תרגילים`}
@@ -565,7 +565,7 @@ export default function TraineeProfile({
                           ) : (
                             <>
                               <p className="text-lg font-bold text-emerald-400">{workout.totalVolume.toLocaleString()}</p>
-                              <p className="text-xs text-zinc-500">ק״ג נפח</p>
+                              <p className="text-xs text-muted">ק״ג נפח</p>
                             </>
                           )}
                         </div>
@@ -574,10 +574,10 @@ export default function TraineeProfile({
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <div className="w-12 h-12 rounded-xl bg-[var(--color-bg-elevated)]/50 flex items-center justify-center mx-auto mb-3">
-                      <Calendar className="h-6 w-6 text-[var(--color-text-muted)] opacity-20" />
+                    <div className="w-12 h-12 rounded-xl bg-elevated/50 flex items-center justify-center mx-auto mb-3">
+                      <Calendar className="h-6 w-6 text-muted opacity-20" />
                     </div>
-                    <p className="text-[var(--color-text-muted)] mb-3">אין אימונים עדיין</p>
+                    <p className="text-muted mb-3">אין אימונים עדיין</p>
                     <button
                       onClick={onNewWorkout}
                       className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-lg hover:bg-emerald-500/30 transition-all text-sm"
@@ -590,10 +590,10 @@ export default function TraineeProfile({
             </div>
 
             <div className="premium-card-static h-full">
-              <div className="p-5 border-b border-zinc-800/50 flex items-center justify-between">
+              <div className="p-5 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Scale className="h-4 w-4 text-cyan-400" />
-                  <h3 className="text-base font-semibold text-white">מדידות אחרונות</h3>
+                  <h3 className="text-base font-semibold text-foreground">מדידות אחרונות</h3>
                 </div>
                 {onViewMeasurements && measurements.length > 0 && (
                   <button
@@ -610,17 +610,17 @@ export default function TraineeProfile({
                     {recentMeasurements.map((measurement, index) => (
                       <div
                         key={measurement.id}
-                        className="flex items-center justify-between p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:border-zinc-600/50 transition-all animate-fade-in"
+                        className="flex items-center justify-between p-4 rounded-xl bg-surface/30 border border-border hover:border-border-hover transition-all animate-fade-in"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
                     <div>
-                      <p className="font-medium text-[var(--color-text-primary)]">{new Date(measurement.date).toLocaleDateString('he-IL')}</p>
-                      <p className="text-sm text-[var(--color-text-muted)]">{measurement.source === 'tanita' ? 'Tanita' : 'ידני'}</p>
+                      <p className="font-medium text-foreground">{new Date(measurement.date).toLocaleDateString('he-IL')}</p>
+                      <p className="text-sm text-muted">{measurement.source === 'tanita' ? 'Tanita' : 'ידני'}</p>
                     </div>
                     <div className="text-left">
                       <p className="text-lg font-bold text-cyan-400">{measurement.weight} ק״ג</p>
                       {measurement.bodyFat && (
-                        <p className="text-xs text-[var(--color-text-muted)]">{measurement.bodyFat.toFixed(1)}% שומן</p>
+                        <p className="text-xs text-muted">{measurement.bodyFat.toFixed(1)}% שומן</p>
                       )}
                     </div>
                       </div>
@@ -628,10 +628,10 @@ export default function TraineeProfile({
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <div className="w-12 h-12 rounded-xl bg-[var(--color-bg-elevated)]/50 flex items-center justify-center mx-auto mb-3">
-                      <Scale className="h-6 w-6 text-[var(--color-text-muted)] opacity-20" />
+                    <div className="w-12 h-12 rounded-xl bg-elevated/50 flex items-center justify-center mx-auto mb-3">
+                      <Scale className="h-6 w-6 text-muted opacity-20" />
                     </div>
-                    <p className="text-[var(--color-text-muted)] mb-3">אין מדידות עדיין</p>
+                    <p className="text-muted mb-3">אין מדידות עדיין</p>
                     <button
                       onClick={onNewMeasurement}
                       className="px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition-all text-sm"
@@ -647,14 +647,14 @@ export default function TraineeProfile({
           {/* Self Weights */}
           {selfWeights.length > 0 && (
             <div className="premium-card-static">
-              <div className="p-5 border-b border-zinc-800/50 flex items-center justify-between">
+              <div className="p-5 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 rounded-xl bg-cyan-500/15">
                     <Home className="h-5 w-5 text-cyan-400" />
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold text-[var(--color-text-primary)]">שקילות מהבית</h3>
-                    <p className="text-sm text-[var(--color-text-muted)]">משקלים שהמתאמן דיווח</p>
+                    <h3 className="text-base font-semibold text-foreground">שקילות מהבית</h3>
+                    <p className="text-sm text-muted">משקלים שהמתאמן דיווח</p>
                   </div>
                 </div>
                 {selfWeights.some(sw => !sw.is_seen_by_trainer) && onMarkSelfWeightsSeen && (
@@ -674,7 +674,7 @@ export default function TraineeProfile({
                       key={sw.id}
                       className={`flex items-center justify-between p-4 rounded-xl transition-all animate-fade-in ${
                         sw.is_seen_by_trainer
-                          ? 'bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30'
+                          ? 'bg-elevated/30 border border-border/30'
                           : 'bg-cyan-500/10 border border-cyan-500/30'
                       }`}
                       style={{ animationDelay: `${index * 50}ms` }}
@@ -684,11 +684,11 @@ export default function TraineeProfile({
                           <span className="w-2.5 h-2.5 bg-cyan-400 rounded-full animate-pulse"></span>
                         )}
                         <div>
-                          <p className="font-medium text-[var(--color-text-primary)]">
+                          <p className="font-medium text-foreground">
                             {new Date(sw.weight_date).toLocaleDateString('he-IL')}
                           </p>
                           {sw.notes && (
-                            <p className="text-sm text-[var(--color-text-muted)]">{sw.notes}</p>
+                            <p className="text-sm text-muted">{sw.notes}</p>
                           )}
                         </div>
                       </div>
@@ -709,7 +709,7 @@ export default function TraineeProfile({
                 <Sparkles className="h-4 w-4" />
                 הערות מאמן
               </h3>
-              <p className="text-[var(--color-text-primary)] opacity-80 leading-relaxed">{trainee.notes}</p>
+              <p className="text-foreground opacity-80 leading-relaxed">{trainee.notes}</p>
             </div>
           )}
         </>
@@ -719,7 +719,7 @@ export default function TraineeProfile({
         <>
           <div className="premium-card-static p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-emerald-400" />
                 אימונים
               </h3>
@@ -736,25 +736,25 @@ export default function TraineeProfile({
                 {workouts.map((workout, index) => (
                   <div
                     key={workout.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30 hover:border-[var(--color-border)] transition-all"
+                    className="flex items-center justify-between p-4 rounded-xl bg-elevated/30 border border-border/30 hover:border-border transition-all"
                   >
                     <div>
-                      <p className="font-medium text-[var(--color-text-primary)]">{new Date(workout.date).toLocaleDateString('he-IL')}</p>
-                      <p className="text-sm text-[var(--color-text-muted)]">{workout.exercises.length} תרגילים</p>
+                      <p className="font-medium text-foreground">{new Date(workout.date).toLocaleDateString('he-IL')}</p>
+                      <p className="text-sm text-muted">{workout.exercises.length} תרגילים</p>
                     </div>
                     <div className="text-left">
                       <p className="text-lg font-bold text-emerald-400">{workout.totalVolume.toLocaleString()}</p>
-                      <p className="text-xs text-[var(--color-text-muted)]">ק״ג נפח</p>
+                      <p className="text-xs text-muted">ק״ג נפח</p>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-12">
-                <div className="w-16 h-16 rounded-xl bg-[var(--color-bg-elevated)]/50 flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="h-8 w-8 text-[var(--color-text-muted)] opacity-20" />
+                <div className="w-16 h-16 rounded-xl bg-elevated/50 flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="h-8 w-8 text-muted opacity-20" />
                 </div>
-                <p className="text-[var(--color-text-muted)] mb-4">אין אימונים עדיין</p>
+                <p className="text-muted mb-4">אין אימונים עדיין</p>
                 <button
                   onClick={onNewWorkout}
                   className="px-6 py-3 bg-emerald-500/20 text-emerald-400 rounded-xl hover:bg-emerald-500/30 transition-all font-medium"
@@ -777,14 +777,14 @@ export default function TraineeProfile({
         <div className="space-y-6">
           <div className="premium-card-static p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <Scale className="h-5 w-5 text-cyan-400" />
                 מדידות
               </h3>
               <div className="flex items-center gap-2">
                 <button
                   onClick={onViewMeasurements}
-                  className="px-4 py-2 bg-[var(--color-bg-elevated)] hover:bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] rounded-xl flex items-center gap-2 transition-all font-medium border border-[var(--color-border)]"
+                  className="px-4 py-2 bg-elevated hover:bg-[var(--color-bg-surface)] text-secondary rounded-xl flex items-center gap-2 transition-all font-medium border border-border"
                 >
                   <BarChart3 className="h-4 w-4" />
                   <span>גרף התקדמות</span>
@@ -803,16 +803,16 @@ export default function TraineeProfile({
                 {measurements.map((measurement, index) => (
                   <div
                     key={measurement.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30 hover:border-[var(--color-border)] transition-all"
+                    className="flex items-center justify-between p-4 rounded-xl bg-elevated/30 border border-border/30 hover:border-border transition-all"
                   >
                     <div>
-                      <p className="font-medium text-[var(--color-text-primary)]">{new Date(measurement.date).toLocaleDateString('he-IL')}</p>
-                      <p className="text-sm text-[var(--color-text-muted)]">{measurement.source === 'tanita' ? 'Tanita' : 'ידני'}</p>
+                      <p className="font-medium text-foreground">{new Date(measurement.date).toLocaleDateString('he-IL')}</p>
+                      <p className="text-sm text-muted">{measurement.source === 'tanita' ? 'Tanita' : 'ידני'}</p>
                     </div>
                     <div className="text-left">
                       <p className="text-lg font-bold text-cyan-400">{measurement.weight} ק״ג</p>
                       {measurement.bodyFat && (
-                        <p className="text-xs text-[var(--color-text-muted)]">{measurement.bodyFat.toFixed(1)}% שומן</p>
+                        <p className="text-xs text-muted">{measurement.bodyFat.toFixed(1)}% שומן</p>
                       )}
                     </div>
                   </div>
@@ -820,10 +820,10 @@ export default function TraineeProfile({
               </div>
             ) : (
               <div className="text-center py-12">
-                <div className="w-16 h-16 rounded-xl bg-[var(--color-bg-elevated)]/50 flex items-center justify-center mx-auto mb-4">
-                  <Scale className="h-8 w-8 text-[var(--color-text-muted)] opacity-20" />
+                <div className="w-16 h-16 rounded-xl bg-elevated/50 flex items-center justify-center mx-auto mb-4">
+                  <Scale className="h-8 w-8 text-muted opacity-20" />
                 </div>
-                <p className="text-[var(--color-text-muted)] mb-4">אין מדידות עדיין</p>
+                <p className="text-muted mb-4">אין מדידות עדיין</p>
                 <button
                   onClick={onNewMeasurement}
                   className="px-6 py-3 bg-cyan-500/20 text-cyan-400 rounded-xl hover:bg-cyan-500/30 transition-all font-medium"
@@ -835,14 +835,14 @@ export default function TraineeProfile({
           </div>
           {selfWeights.length > 0 && (
             <div className="premium-card-static">
-              <div className="p-5 border-b border-zinc-800/50 flex items-center justify-between">
+              <div className="p-5 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 rounded-xl bg-cyan-500/15">
                     <Home className="h-5 w-5 text-cyan-400" />
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold text-[var(--color-text-primary)]">שקילות מהבית</h3>
-                    <p className="text-sm text-[var(--color-text-muted)]">משקלים שהמתאמן דיווח</p>
+                    <h3 className="text-base font-semibold text-foreground">שקילות מהבית</h3>
+                    <p className="text-sm text-muted">משקלים שהמתאמן דיווח</p>
                   </div>
                 </div>
                 {selfWeights.some(sw => !sw.is_seen_by_trainer) && onMarkSelfWeightsSeen && (
@@ -862,7 +862,7 @@ export default function TraineeProfile({
                       key={sw.id}
                       className={`flex items-center justify-between p-4 rounded-xl transition-all ${
                         sw.is_seen_by_trainer
-                          ? 'bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30'
+                          ? 'bg-elevated/30 border border-border/30'
                           : 'bg-cyan-500/10 border border-cyan-500/30'
                       }`}
                     >
@@ -871,11 +871,11 @@ export default function TraineeProfile({
                           <span className="w-2.5 h-2.5 bg-cyan-400 rounded-full animate-pulse"></span>
                         )}
                         <div>
-                          <p className="font-medium text-[var(--color-text-primary)]">
+                          <p className="font-medium text-foreground">
                             {new Date(sw.weight_date).toLocaleDateString('he-IL')}
                           </p>
                           {sw.notes && (
-                            <p className="text-sm text-[var(--color-text-muted)]">{sw.notes}</p>
+                            <p className="text-sm text-muted">{sw.notes}</p>
                           )}
                         </div>
                       </div>
@@ -893,7 +893,7 @@ export default function TraineeProfile({
 
       {activeTab === 'plans' && (
         <div className="premium-card-static p-6">
-          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-6 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
             <ClipboardList className="h-5 w-5 text-emerald-400" />
             תוכניות
           </h3>
@@ -901,29 +901,29 @@ export default function TraineeProfile({
             {onViewWorkoutPlans && (
               <button
                 onClick={onViewWorkoutPlans}
-                className="p-6 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30 hover:border-emerald-500/50 transition-all text-right"
+                className="p-6 rounded-xl bg-elevated/30 border border-border/30 hover:border-emerald-500/50 transition-all text-right"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="p-3 rounded-xl bg-rose-500/15 text-rose-400">
                     <ClipboardList className="h-6 w-6" />
                   </div>
-                  <h4 className="font-semibold text-[var(--color-text-primary)]">תוכניות אימון</h4>
+                  <h4 className="font-semibold text-foreground">תוכניות אימון</h4>
                 </div>
-                <p className="text-sm text-[var(--color-text-muted)]">נהל תוכניות אימון שבועיות</p>
+                <p className="text-sm text-muted">נהל תוכניות אימון שבועיות</p>
               </button>
             )}
             {onViewMealPlans && (
               <button
                 onClick={onViewMealPlans}
-                className="p-6 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30 hover:border-orange-500/50 transition-all text-right"
+                className="p-6 rounded-xl bg-elevated/30 border border-border/30 hover:border-orange-500/50 transition-all text-right"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="p-3 rounded-xl bg-orange-500/15 text-orange-400">
                     <UtensilsCrossed className="h-6 w-6" />
                   </div>
-                  <h4 className="font-semibold text-[var(--color-text-primary)]">תפריטים</h4>
+                  <h4 className="font-semibold text-foreground">תפריטים</h4>
                 </div>
-                <p className="text-sm text-[var(--color-text-muted)]">נהל תוכניות תזונה</p>
+                <p className="text-sm text-muted">נהל תוכניות תזונה</p>
               </button>
             )}
           </div>
@@ -932,7 +932,7 @@ export default function TraineeProfile({
 
       {activeTab === 'tools' && (
         <div className="premium-card-static p-6">
-          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-6 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
             <Brain className="h-5 w-5 text-emerald-400" />
             כלים ופיצ'רים
           </h3>
@@ -940,80 +940,80 @@ export default function TraineeProfile({
             {onViewMentalTools && (
               <button
                 onClick={onViewMentalTools}
-                className="p-5 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30 hover:border-pink-500/50 transition-all text-right"
+                className="p-5 rounded-xl bg-elevated/30 border border-border/30 hover:border-pink-500/50 transition-all text-right"
               >
                 <div className="p-3 rounded-xl bg-pink-500/15 text-pink-400 mb-3 w-fit">
                   <Brain className="h-5 w-5" />
                 </div>
-                <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">כלים מנטליים</h4>
-                <p className="text-sm text-[var(--color-text-muted)]">כלים פסיכולוגיים</p>
+                <h4 className="font-semibold text-foreground mb-1">כלים מנטליים</h4>
+                <p className="text-sm text-muted">כלים פסיכולוגיים</p>
               </button>
             )}
             {onViewCardio && (
               <button
                 onClick={onViewCardio}
-                className="p-5 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30 hover:border-sky-500/50 transition-all text-right"
+                className="p-5 rounded-xl bg-elevated/30 border border-border/30 hover:border-sky-500/50 transition-all text-right"
               >
                 <div className="p-3 rounded-xl bg-sky-500/15 text-sky-400 mb-3 w-fit">
                   <Activity className="h-5 w-5" />
                 </div>
-                <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">אירובי</h4>
-                <p className="text-sm text-[var(--color-text-muted)]">ניהול אימונים אירוביים</p>
+                <h4 className="font-semibold text-foreground mb-1">אירובי</h4>
+                <p className="text-sm text-muted">ניהול אימונים אירוביים</p>
               </button>
             )}
             {onViewFoodDiary && (
               <button
                 onClick={onViewFoodDiary}
-                className="p-5 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30 hover:border-amber-500/50 transition-all text-right"
+                className="p-5 rounded-xl bg-elevated/30 border border-border/30 hover:border-amber-500/50 transition-all text-right"
               >
                 <div className="p-3 rounded-xl bg-amber-500/15 text-amber-400 mb-3 w-fit">
                   <BookOpen className="h-5 w-5" />
                 </div>
-                <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">יומן אכילה</h4>
-                <p className="text-sm text-[var(--color-text-muted)]">עקוב אחר תזונה</p>
+                <h4 className="font-semibold text-foreground mb-1">יומן אכילה</h4>
+                <p className="text-sm text-muted">עקוב אחר תזונה</p>
               </button>
             )}
             {onViewTraineeAccess && (
               <button
                 onClick={onViewTraineeAccess}
-                className="p-5 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30 hover:border-sky-500/50 transition-all text-right"
+                className="p-5 rounded-xl bg-elevated/30 border border-border/30 hover:border-sky-500/50 transition-all text-right"
               >
                 <div className="p-3 rounded-xl bg-sky-500/15 text-sky-400 mb-3 w-fit">
                   <Key className="h-5 w-5" />
                 </div>
-                <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">גישה לאפליקציה</h4>
-                <p className="text-sm text-[var(--color-text-muted)]">ניהול הרשאות</p>
+                <h4 className="font-semibold text-foreground mb-1">גישה לאפליקציה</h4>
+                <p className="text-sm text-muted">ניהול הרשאות</p>
               </button>
             )}
             <button
               onClick={() => setShowTDEE(true)}
-              className="p-5 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30 hover:border-emerald-500/50 transition-all text-right"
+              className="p-5 rounded-xl bg-elevated/30 border border-border/30 hover:border-emerald-500/50 transition-all text-right"
             >
               <div className="p-3 rounded-xl bg-emerald-500/15 text-emerald-400 mb-3 w-fit">
                 <Calculator className="h-5 w-5" />
               </div>
-              <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">מחשבון TDEE</h4>
-              <p className="text-sm text-[var(--color-text-muted)]">חישוב מטבוליזם</p>
+              <h4 className="font-semibold text-foreground mb-1">מחשבון TDEE</h4>
+              <p className="text-sm text-muted">חישוב מטבוליזם</p>
             </button>
             <button
               onClick={() => setShowTimeline(true)}
-              className="p-5 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30 hover:border-blue-500/50 transition-all text-right"
+              className="p-5 rounded-xl bg-elevated/30 border border-border/30 hover:border-blue-500/50 transition-all text-right"
             >
               <div className="p-3 rounded-xl bg-blue-500/15 text-blue-400 mb-3 w-fit">
                 <History className="h-5 w-5" />
               </div>
-              <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">ציר זמן</h4>
-              <p className="text-sm text-[var(--color-text-muted)]">היסטוריית פעילות</p>
+              <h4 className="font-semibold text-foreground mb-1">ציר זמן</h4>
+              <p className="text-sm text-muted">היסטוריית פעילות</p>
             </button>
             <button
               onClick={() => setShowNotes(true)}
-              className="p-5 rounded-xl bg-[var(--color-bg-elevated)]/30 border border-[var(--color-border)]/30 hover:border-orange-500/50 transition-all text-right"
+              className="p-5 rounded-xl bg-elevated/30 border border-border/30 hover:border-orange-500/50 transition-all text-right"
             >
               <div className="p-3 rounded-xl bg-orange-500/15 text-orange-400 mb-3 w-fit">
                 <FileText className="h-5 w-5" />
               </div>
-              <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">הערות</h4>
-              <p className="text-sm text-[var(--color-text-muted)]">הערות מאמן</p>
+              <h4 className="font-semibold text-foreground mb-1">הערות</h4>
+              <p className="text-sm text-muted">הערות מאמן</p>
             </button>
           </div>
         </div>

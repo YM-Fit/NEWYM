@@ -400,7 +400,7 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
       </button>
 
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-foreground">
           <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mb-2">
             <Calendar className="w-5 h-5" />
           </div>
@@ -408,7 +408,7 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
           <p className="text-xs text-emerald-100">אימונים החודש</p>
         </div>
 
-        <div className="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl p-4 text-foreground">
           <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mb-2">
             <Activity className="w-5 h-5" />
           </div>
@@ -416,7 +416,7 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
           <p className="text-xs text-cyan-100">נפח ממוצע</p>
         </div>
 
-        <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-4 text-foreground">
           <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mb-2">
             <Trophy className="w-5 h-5" />
           </div>
@@ -599,7 +599,7 @@ function WorkoutDetail({
         <span>חזרה לרשימה</span>
       </button>
 
-      <div className="bg-gradient-to-l from-emerald-600 to-emerald-500 rounded-xl p-4 text-white shadow-lg">
+      <div className="bg-gradient-to-l from-emerald-600 to-emerald-500 rounded-xl p-4 text-foreground shadow-lg">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-lg font-bold">

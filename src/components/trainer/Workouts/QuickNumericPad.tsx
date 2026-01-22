@@ -345,7 +345,7 @@ export default function QuickNumericPad({
     >
       <div
         ref={padRef}
-        className={`bg-zinc-900 border-2 border-zinc-800 rounded-3xl shadow-2xl ${compact ? 'max-w-md w-full' : isTabletMode ? 'max-w-4xl w-full' : 'max-w-2xl w-full'} ${containerPadding} transition-all animate-scale-in`}
+        className={`bg-card border-2 border-border rounded-3xl shadow-2xl ${compact ? 'max-w-md w-full' : isTabletMode ? 'max-w-4xl w-full' : 'max-w-2xl w-full'} ${containerPadding} transition-all animate-scale-in`}
         onClick={(e) => e.stopPropagation()}
         onTouchStart={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
@@ -358,10 +358,10 @@ export default function QuickNumericPad({
           <button
             type="button"
             onClick={onClose}
-            className={`${isTabletMode ? 'p-3' : 'p-2'} hover:bg-zinc-800 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 touch-manipulation`}
+            className={`${isTabletMode ? 'p-3' : 'p-2'} hover:bg-surface rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 touch-manipulation`}
             aria-label="סגור לוח מספרים"
           >
-            <X className={`${isTabletMode ? 'h-7 w-7 md:h-8 md:w-8' : 'h-6 w-6 lg:h-7 lg:w-7'} text-zinc-500`} aria-hidden="true" />
+            <X className={`${isTabletMode ? 'h-7 w-7 md:h-8 md:w-8' : 'h-6 w-6 lg:h-7 lg:w-7'} text-muted`} aria-hidden="true" />
           </button>
         </div>
 
@@ -401,14 +401,14 @@ export default function QuickNumericPad({
             >
               {inputValue}
             </div>
-            <div className={`text-zinc-400 mt-2 font-semibold ${compact ? 'text-base' : isTabletMode ? 'text-xl md:text-2xl' : 'text-lg lg:text-xl'} select-none`} aria-hidden="true">
+            <div className={`text-muted mt-2 font-semibold ${compact ? 'text-base' : isTabletMode ? 'text-xl md:text-2xl' : 'text-lg lg:text-xl'} select-none`} aria-hidden="true">
               {allowDecimal ? 'ק״ג' : isRpeMode ? 'RPE' : 'חזרות'}
             </div>
             
             {/* Previous value hint */}
             {previousValue !== undefined && previousValue !== value && !compact && (
               <div className="mt-2 flex items-center justify-center gap-2">
-                <span className="text-zinc-500 text-sm">סט קודם:</span>
+                <span className="text-muted text-sm">סט קודם:</span>
                 <button
                   type="button"
                   onClick={() => handleAdd(previousValue, true)}
@@ -420,7 +420,7 @@ export default function QuickNumericPad({
             )}
             
             {!compact && !isRpeMode && (
-              <div className={`text-zinc-600 mt-2 font-medium ${isTabletMode ? 'text-sm' : 'text-xs'} select-none flex items-center justify-center gap-1`} aria-hidden="true">
+              <div className={`text-muted mt-2 font-medium ${isTabletMode ? 'text-sm' : 'text-xs'} select-none flex items-center justify-center gap-1`} aria-hidden="true">
                 <ChevronUp className="h-3 w-3" />
                 <span>החלק למעלה/מטה לשינוי מהיר</span>
                 <ChevronDown className="h-3 w-3" />
@@ -512,7 +512,7 @@ export default function QuickNumericPad({
                       key={key}
                       type="button"
                       onClick={handleBackspace}
-                      className="py-5 rounded-xl font-bold text-2xl transition-all active:scale-[0.95] touch-manipulation bg-zinc-800/50 border-2 border-zinc-700/50 text-zinc-400 hover:bg-zinc-700/50 flex items-center justify-center"
+                      className="py-5 rounded-xl font-bold text-2xl transition-all active:scale-[0.95] touch-manipulation bg-surface border-2 border-border text-muted hover:bg-elevated/50 flex items-center justify-center"
                       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                     >
                       <Delete className="h-6 w-6" />
@@ -524,7 +524,7 @@ export default function QuickNumericPad({
                     key={key}
                     type="button"
                     onClick={() => handleDigitInput(key)}
-                    className="py-5 rounded-xl font-bold text-2xl transition-all active:scale-[0.95] touch-manipulation bg-zinc-800/50 border-2 border-zinc-700/50 text-white hover:bg-zinc-700/50"
+                    className="py-5 rounded-xl font-bold text-2xl transition-all active:scale-[0.95] touch-manipulation bg-surface border-2 border-border text-foreground hover:bg-elevated/50"
                     style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                   >
                     {key}
@@ -552,7 +552,7 @@ export default function QuickNumericPad({
                   aria-pressed={isRpeMode && currentValue === btn.value}
                   className={`${
                     isRpeMode && currentValue === btn.value
-                      ? 'bg-emerald-500 ring-4 ring-emerald-500/40 shadow-lg shadow-emerald-500/30 text-white'
+                      ? 'bg-emerald-500 ring-4 ring-emerald-500/40 shadow-lg shadow-emerald-500/30 text-foreground'
                       : 'bg-cyan-500/15 border-2 border-cyan-500/30 hover:bg-cyan-500/25 hover:border-cyan-500/50 text-cyan-400'
                   } ${buttonSize} px-3 md:px-4 rounded-xl font-bold transition-all active:scale-[0.95] touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-500/50 select-none`}
                   style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
@@ -613,7 +613,7 @@ export default function QuickNumericPad({
             onTouchStart={(e) => e.stopPropagation()}
             onTouchEnd={(e) => e.stopPropagation()}
             aria-label={`אישור ערך${allowDecimal ? ' בקילוגרמים' : isRpeMode ? ' RPE' : ' בחזרות'}`}
-            className={`bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/30 ${compact ? 'py-3 px-4 rounded-xl text-lg' : isTabletMode ? 'py-5 md:py-6 px-4 rounded-xl text-xl md:text-2xl' : 'py-4 lg:py-5 px-4 rounded-xl text-xl lg:text-2xl'} font-bold transition-all active:scale-[0.95] touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-500/50 select-none flex items-center justify-center gap-2`}
+            className={`bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-foreground shadow-lg shadow-emerald-500/30 ${compact ? 'py-3 px-4 rounded-xl text-lg' : isTabletMode ? 'py-5 md:py-6 px-4 rounded-xl text-xl md:text-2xl' : 'py-4 lg:py-5 px-4 rounded-xl text-xl lg:text-2xl'} font-bold transition-all active:scale-[0.95] touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-500/50 select-none flex items-center justify-center gap-2`}
             style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
           >
             <Check className={`${compact ? 'h-5 w-5' : 'h-6 w-6'}`} />

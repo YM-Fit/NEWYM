@@ -184,15 +184,15 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
         </div>
       )}
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-4">
+      <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-4">
         <div className="sticky top-0 bg-emerald-500 p-6 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 rtl:space-x-reverse">
               <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                <CheckCircle className="h-7 w-7 text-white" />
+                <CheckCircle className="h-7 w-7 text-foreground" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">אימון הושלם!</h2>
+                <h2 className="text-2xl font-bold text-foreground">אימון הושלם!</h2>
                 <p className="text-sm text-emerald-100">{traineeName}</p>
               </div>
             </div>
@@ -201,13 +201,13 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 onClick={handleShare}
                 className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all"
               >
-                <Share2 className="h-5 w-5 text-white" />
+                <Share2 className="h-5 w-5 text-foreground" />
               </button>
               <button
                 onClick={onClose}
                 className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all"
               >
-                <X className="h-6 w-6 text-white" />
+                <X className="h-6 w-6 text-foreground" />
               </button>
             </div>
           </div>
@@ -218,7 +218,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 animate-pulse-slow">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center">
-                  <Trophy className="w-6 h-6 text-white" />
+                  <Trophy className="w-6 h-6 text-foreground" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-amber-400">שיאים חדשים!</h3>
@@ -230,14 +230,14 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 {personalRecords.map((pr, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/30"
+                    className="flex items-center justify-between bg-surface rounded-xl p-3 border border-border"
                   >
                     <div className="flex items-center gap-3">
                       <Star className="w-5 h-5 text-amber-500" />
-                      <span className="font-semibold text-white">{pr.exerciseName}</span>
+                      <span className="font-semibold text-foreground">{pr.exerciseName}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-zinc-500 line-through">{pr.oldValue}</span>
+                      <span className="text-sm text-muted line-through">{pr.oldValue}</span>
                       <TrendingUp className="w-4 h-4 text-emerald-400" />
                       <span className="font-bold text-emerald-400">
                         {pr.newValue} {pr.type === 'weight' ? 'ק"ג' : pr.type === 'reps' ? 'חזרות' : 'ק"ג'}
@@ -255,7 +255,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 <Dumbbell className="w-5 h-5 text-emerald-400" />
                 <span className="text-sm font-semibold text-emerald-400">נפח כולל</span>
               </div>
-              <p className="text-2xl font-bold text-white">{totalVolume.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-foreground">{totalVolume.toLocaleString()}</p>
               <p className="text-xs text-emerald-400/70">ק"ג</p>
               {volumeChange !== null && (
                 <div className={`flex items-center gap-1 mt-2 text-xs ${volumeChange >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -270,7 +270,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 <Target className="w-5 h-5 text-cyan-400" />
                 <span className="text-sm font-semibold text-cyan-400">תרגילים</span>
               </div>
-              <p className="text-2xl font-bold text-white">{exercises.length}</p>
+              <p className="text-2xl font-bold text-foreground">{exercises.length}</p>
               <p className="text-xs text-cyan-400/70">{totalSets} סטים</p>
             </div>
 
@@ -279,7 +279,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 <Clock className="w-5 h-5 text-amber-400" />
                 <span className="text-sm font-semibold text-amber-400">משך</span>
               </div>
-              <p className="text-2xl font-bold text-white">{formatDuration(duration)}</p>
+              <p className="text-2xl font-bold text-foreground">{formatDuration(duration)}</p>
             </div>
 
             <div className={`bg-red-500/10 border border-red-500/30 rounded-xl p-4 transition-all duration-500 delay-300 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -287,13 +287,13 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 <Flame className="w-5 h-5 text-red-400" />
                 <span className="text-sm font-semibold text-red-400">מאמץ</span>
               </div>
-              <p className="text-2xl font-bold text-white">{effortScore}</p>
+              <p className="text-2xl font-bold text-foreground">{effortScore}</p>
               <p className="text-xs text-red-400/70">{getEffortLabel(effortScore)}</p>
             </div>
           </div>
 
           {chartData.length > 0 && (
-            <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-2xl p-6">
+            <div className="bg-surface/30 border border-border rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 bg-emerald-500/20 border border-emerald-500/30 rounded-lg flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-emerald-400" />
@@ -348,8 +348,8 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
             </div>
           )}
 
-          <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-2xl p-6">
-            <h3 className="font-bold text-white mb-4">סיכום תרגילים</h3>
+          <div className="bg-surface/30 border border-border rounded-2xl p-6">
+            <h3 className="font-bold text-foreground mb-4">סיכום תרגילים</h3>
             <div className="space-y-2">
               {exercises.map((ex, index) => {
                 const exVolume = ex.sets.reduce((t, s) => t + (s.weight * s.reps), 0);
@@ -357,15 +357,15 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 return (
                   <div
                     key={index}
-                    className="flex items-center justify-between bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/30"
+                    className="flex items-center justify-between bg-surface rounded-xl p-3 border border-border"
                   >
                     <div>
-                      <p className="font-semibold text-white">{ex.exercise.name}</p>
-                      <p className="text-xs text-zinc-500">{ex.sets.length} סטים</p>
+                      <p className="font-semibold text-foreground">{ex.exercise.name}</p>
+                      <p className="text-xs text-muted">{ex.sets.length} סטים</p>
                     </div>
                     <div className="text-left">
                       <p className="font-bold text-emerald-400">{exVolume.toLocaleString()} ק"ג</p>
-                      <p className="text-xs text-zinc-500">מקס: {maxWeight} ק"ג</p>
+                      <p className="text-xs text-muted">מקס: {maxWeight} ק"ג</p>
                     </div>
                   </div>
                 );
@@ -374,10 +374,10 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
           </div>
         </div>
 
-        <div className="sticky bottom-0 bg-zinc-800/50 border-t border-zinc-700/30 p-6 rounded-b-2xl">
+        <div className="sticky bottom-0 bg-surface border-t border-border p-6 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all"
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-foreground px-6 py-4 rounded-xl font-bold text-lg transition-all"
           >
             סגור
           </button>

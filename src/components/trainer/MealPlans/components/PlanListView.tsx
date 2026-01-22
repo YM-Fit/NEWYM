@@ -15,23 +15,23 @@ export function PlanListView({ plans, activePlan, onActivate, onEdit, onDelete, 
     <div className="space-y-6">
       <button
         onClick={onCreateNew}
-        className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white py-4 rounded-2xl flex items-center justify-center gap-3 font-semibold transition-all duration-300 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/30 hover:scale-[1.01]"
+        className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-foreground py-4 rounded-2xl flex items-center justify-center gap-3 font-semibold transition-all duration-300 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/30 hover:scale-[1.01]"
       >
         <Plus className="h-5 w-5" />
         צור תפריט חדש
       </button>
 
       {activePlan && (
-        <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-8 text-white shadow-xl shadow-emerald-500/20">
+        <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-8 text-foreground shadow-xl shadow-emerald-500/20">
           <div className="flex items-center justify-between mb-6">
             <div>
               <span className="bg-white/20 text-xs px-3 py-1.5 rounded-xl font-semibold">תפריט פעיל</span>
-              <h3 className="text-2xl font-bold mt-3 text-white">{activePlan.name}</h3>
+              <h3 className="text-2xl font-bold mt-3 text-foreground">{activePlan.name}</h3>
               {activePlan.description && <p className="text-emerald-100 text-sm mt-2">{activePlan.description}</p>}
             </div>
             <button
               onClick={() => onEdit(activePlan)}
-              className="bg-white/20 hover:bg-white/30 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 hover:scale-105 text-white"
+              className="bg-white/20 hover:bg-white/30 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 hover:scale-105 text-foreground"
             >
               ערוך
             </button>
@@ -41,36 +41,36 @@ export function PlanListView({ plans, activePlan, onActivate, onEdit, onDelete, 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
               {activePlan.daily_calories && (
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/20 transition-all duration-300">
-                  <Flame className="h-6 w-6 mx-auto mb-2 text-white" />
-                  <p className="text-xl font-bold text-white">{activePlan.daily_calories}</p>
+                  <Flame className="h-6 w-6 mx-auto mb-2 text-foreground" />
+                  <p className="text-xl font-bold text-foreground">{activePlan.daily_calories}</p>
                   <p className="text-xs text-emerald-200">קלוריות</p>
                 </div>
               )}
               {activePlan.protein_grams && (
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/20 transition-all duration-300">
-                  <Beef className="h-6 w-6 mx-auto mb-2 text-white" />
-                  <p className="text-xl font-bold text-white">{activePlan.protein_grams}ג</p>
+                  <Beef className="h-6 w-6 mx-auto mb-2 text-foreground" />
+                  <p className="text-xl font-bold text-foreground">{activePlan.protein_grams}ג</p>
                   <p className="text-xs text-emerald-200">חלבון</p>
                 </div>
               )}
               {activePlan.carbs_grams && (
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/20 transition-all duration-300">
-                  <Wheat className="h-6 w-6 mx-auto mb-2 text-white" />
-                  <p className="text-xl font-bold text-white">{activePlan.carbs_grams}ג</p>
+                  <Wheat className="h-6 w-6 mx-auto mb-2 text-foreground" />
+                  <p className="text-xl font-bold text-foreground">{activePlan.carbs_grams}ג</p>
                   <p className="text-xs text-emerald-200">פחמימות</p>
                 </div>
               )}
               {activePlan.fat_grams && (
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/20 transition-all duration-300">
-                  <Droplet className="h-6 w-6 mx-auto mb-2 text-white" />
-                  <p className="text-xl font-bold text-white">{activePlan.fat_grams}ג</p>
+                  <Droplet className="h-6 w-6 mx-auto mb-2 text-foreground" />
+                  <p className="text-xl font-bold text-foreground">{activePlan.fat_grams}ג</p>
                   <p className="text-xs text-emerald-200">שומן</p>
                 </div>
               )}
               {activePlan.daily_water_ml && (
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/20 transition-all duration-300">
-                  <Droplets className="h-6 w-6 mx-auto mb-2 text-white" />
-                  <p className="text-xl font-bold text-white">{(activePlan.daily_water_ml / 1000).toFixed(1)} ליטר</p>
+                  <Droplets className="h-6 w-6 mx-auto mb-2 text-foreground" />
+                  <p className="text-xl font-bold text-foreground">{(activePlan.daily_water_ml / 1000).toFixed(1)} ליטר</p>
                   <p className="text-xs text-emerald-200">מים</p>
                 </div>
               )}

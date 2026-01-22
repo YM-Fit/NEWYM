@@ -121,7 +121,7 @@ export default function ClientPortal() {
     return (
       <div className="premium-card p-6">
         <div className="text-center py-12">
-          <p className="text-zinc-400">לא נמצאו נתונים</p>
+          <p className="text-muted">לא נמצאו נתונים</p>
         </div>
       </div>
     );
@@ -136,13 +136,13 @@ export default function ClientPortal() {
             <User className="h-8 w-8 text-emerald-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">{trainee.full_name}</h1>
-            <p className="text-sm text-zinc-400">פורטל לקוח</p>
+            <h1 className="text-2xl font-bold text-foreground">{trainee.full_name}</h1>
+            <p className="text-sm text-muted">פורטל לקוח</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 border-b border-zinc-800">
+        <div className="flex gap-2 border-b border-border">
           {[
             { id: 'overview' as const, label: 'סקירה', icon: User },
             { id: 'payments' as const, label: 'תשלומים', icon: DollarSign },
@@ -155,7 +155,7 @@ export default function ClientPortal() {
               className={`px-4 py-2 flex items-center gap-2 transition-all ${
                 activeTab === tab.id
                   ? 'border-b-2 border-emerald-500 text-emerald-400'
-                  : 'text-zinc-400 hover:text-white'
+                  : 'text-muted hover:text-foreground'
               }`}
             >
               <tab.icon className="h-4 w-4" />
@@ -168,20 +168,20 @@ export default function ClientPortal() {
       {/* Tab Content */}
       {activeTab === 'overview' && (
         <div className="premium-card p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">סקירה כללית</h2>
+          <h2 className="text-xl font-semibold text-foreground mb-4">סקירה כללית</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-emerald-500/10 rounded-lg p-4 border border-emerald-500/20">
-              <div className="text-sm text-zinc-400 mb-1">תשלומים ממתינים</div>
+              <div className="text-sm text-muted mb-1">תשלומים ממתינים</div>
               <div className="text-2xl font-bold text-emerald-400">
                 {payments.filter(p => p.status === 'pending').length}
               </div>
             </div>
             <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/20">
-              <div className="text-sm text-zinc-400 mb-1">מסמכים</div>
+              <div className="text-sm text-muted mb-1">מסמכים</div>
               <div className="text-2xl font-bold text-blue-400">{documents.length}</div>
             </div>
             <div className="bg-purple-500/10 rounded-lg p-4 border border-purple-500/20">
-              <div className="text-sm text-zinc-400 mb-1">הודעות</div>
+              <div className="text-sm text-muted mb-1">הודעות</div>
               <div className="text-2xl font-bold text-purple-400">{messages.length}</div>
             </div>
           </div>
@@ -190,16 +190,16 @@ export default function ClientPortal() {
 
       {activeTab === 'payments' && (
         <div className="premium-card p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">היסטוריית תשלומים</h2>
+          <h2 className="text-xl font-semibold text-foreground mb-4">היסטוריית תשלומים</h2>
           <div className="space-y-3">
             {payments.map((payment) => (
               <div key={payment.id} className="premium-card p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-semibold text-white">
+                    <div className="font-semibold text-foreground">
                       ₪{Number(payment.amount).toLocaleString()}
                     </div>
-                    <div className="text-sm text-zinc-400">
+                    <div className="text-sm text-muted">
                       תאריך תשלום: {new Date(payment.due_date).toLocaleDateString('he-IL')}
                     </div>
                     {payment.paid_date && (
@@ -231,7 +231,7 @@ export default function ClientPortal() {
               </div>
             ))}
             {payments.length === 0 && (
-              <div className="text-center py-12 text-zinc-500">אין תשלומים</div>
+              <div className="text-center py-12 text-muted">אין תשלומים</div>
             )}
           </div>
         </div>
@@ -239,15 +239,15 @@ export default function ClientPortal() {
 
       {activeTab === 'documents' && (
         <div className="premium-card p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">מסמכים</h2>
+          <h2 className="text-xl font-semibold text-foreground mb-4">מסמכים</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {documents.map((document) => (
               <div key={document.id} className="premium-card p-4">
                 <div className="flex items-center gap-3 mb-3">
                   <FileText className="h-5 w-5 text-emerald-400" />
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-white truncate">{document.file_name}</h3>
-                    <p className="text-xs text-zinc-400">
+                    <h3 className="font-semibold text-foreground truncate">{document.file_name}</h3>
+                    <p className="text-xs text-muted">
                       {new Date(document.created_at).toLocaleDateString('he-IL')}
                     </p>
                   </div>
@@ -262,7 +262,7 @@ export default function ClientPortal() {
               </div>
             ))}
             {documents.length === 0 && (
-              <div className="col-span-full text-center py-12 text-zinc-500">אין מסמכים</div>
+              <div className="col-span-full text-center py-12 text-muted">אין מסמכים</div>
             )}
           </div>
         </div>
@@ -270,17 +270,17 @@ export default function ClientPortal() {
 
       {activeTab === 'messages' && (
         <div className="premium-card p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">הודעות</h2>
+          <h2 className="text-xl font-semibold text-foreground mb-4">הודעות</h2>
           <div className="space-y-3">
             {messages.map((message) => (
               <div key={message.id} className="premium-card p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     {message.subject && (
-                      <h3 className="font-semibold text-white mb-2">{message.subject}</h3>
+                      <h3 className="font-semibold text-foreground mb-2">{message.subject}</h3>
                     )}
-                    <p className="text-sm text-zinc-400 mb-2">{message.body}</p>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-sm text-muted mb-2">{message.body}</p>
+                    <p className="text-xs text-muted">
                       {new Date(message.sent_at).toLocaleDateString('he-IL')}
                     </p>
                   </div>
@@ -288,7 +288,7 @@ export default function ClientPortal() {
               </div>
             ))}
             {messages.length === 0 && (
-              <div className="text-center py-12 text-zinc-500">אין הודעות</div>
+              <div className="text-center py-12 text-muted">אין הודעות</div>
             )}
           </div>
         </div>

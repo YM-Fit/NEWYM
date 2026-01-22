@@ -142,13 +142,13 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
   };
 
   const inputClass = (hasError: boolean) =>
-    `w-full p-4 text-base bg-zinc-800/50 border rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 transition-all ${
+    `w-full p-4 text-base bg-input border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 transition-all ${
       hasError
         ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
-        : 'border-zinc-700/50 focus:border-emerald-500/50 focus:ring-emerald-500/20'
+        : 'border-border focus:border-emerald-500/50 focus:ring-emerald-500/20'
     }`;
 
-  const labelClass = "block text-sm font-medium text-zinc-400 mb-2";
+  const labelClass = "block text-sm font-medium text-muted mb-2";
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -157,7 +157,7 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
         <div className="relative flex items-center gap-4">
           <button
             onClick={onBack}
-            className="p-3 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
+            className="p-3 rounded-xl bg-surface text-muted hover:text-foreground hover:bg-elevated transition-all"
           >
             <ArrowRight className="h-5 w-5" />
           </button>
@@ -166,8 +166,8 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
               <Sparkles className="w-4 h-4 text-emerald-400" />
               <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">עריכה</span>
             </div>
-            <h1 className="text-2xl font-bold text-white">עריכת פרופיל</h1>
-            <p className="text-zinc-500">{trainee.name}</p>
+            <h1 className="text-2xl font-bold text-foreground">עריכת פרופיל</h1>
+            <p className="text-muted">{trainee.name}</p>
           </div>
         </div>
       </div>
@@ -179,7 +179,7 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
               <div className="p-3 rounded-xl bg-emerald-500/15">
                 <User className="h-5 w-5 text-emerald-400" />
               </div>
-              <h3 className="text-lg font-semibold text-white">פרטים אישיים</h3>
+              <h3 className="text-lg font-semibold text-foreground">פרטים אישיים</h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -254,7 +254,7 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
                     className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                       formData.gender === 'male'
                         ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                        : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                        : 'border-border bg-surface text-muted hover:border-border-hover'
                     }`}
                   >
                     זכר
@@ -265,7 +265,7 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
                     className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                       formData.gender === 'female'
                         ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                        : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                        : 'border-border bg-surface text-muted hover:border-border-hover'
                     }`}
                   >
                     נקבה
@@ -280,11 +280,11 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
               <div className="p-3 rounded-xl bg-emerald-500/15">
                 <Users className="h-5 w-5 text-emerald-400" />
               </div>
-              <h3 className="text-lg font-semibold text-white">פרטי הזוג</h3>
+              <h3 className="text-lg font-semibold text-foreground">פרטי הזוג</h3>
             </div>
 
             <div className="space-y-8">
-              <div className="pb-6 border-b border-zinc-800/50">
+              <div className="pb-6 border-b border-border">
                 <h4 className="text-base font-semibold text-cyan-400 mb-4">מתאמן/ת ראשון/ה</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -344,7 +344,7 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
                         className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                           formData.pair_gender_1 === 'male'
                             ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                            : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                            : 'border-border bg-surface text-muted hover:border-border-hover'
                         }`}
                       >
                         זכר
@@ -355,7 +355,7 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
                         className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                           formData.pair_gender_1 === 'female'
                             ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                            : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                            : 'border-border bg-surface text-muted hover:border-border-hover'
                         }`}
                       >
                         נקבה
@@ -439,7 +439,7 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
                         className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                           formData.pair_gender_2 === 'male'
                             ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                            : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                            : 'border-border bg-surface text-muted hover:border-border-hover'
                         }`}
                       >
                         זכר
@@ -450,7 +450,7 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
                         className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                           formData.pair_gender_2 === 'female'
                             ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                            : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                            : 'border-border bg-surface text-muted hover:border-border-hover'
                         }`}
                       >
                         נקבה
@@ -478,11 +478,11 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
         )}
 
         <div className="premium-card-static p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">הערות מאמן</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">הערות מאמן</h3>
           <textarea
             value={formData.notes}
             onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-            className="w-full p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+            className="w-full p-4 bg-input border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
             rows={4}
             placeholder="הערות כלליות על המתאמן, מטרות, הגבלות רפואיות וכו'..."
           />
@@ -492,7 +492,7 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
           <button
             type="button"
             onClick={onBack}
-            className="px-6 py-3 rounded-xl border border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all"
+            className="px-6 py-3 rounded-xl border border-border text-muted hover:text-foreground hover:bg-surface transition-all"
           >
             ביטול
           </button>

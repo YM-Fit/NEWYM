@@ -103,8 +103,8 @@ export default function ReportsView() {
               <Sparkles className="w-4 h-4 text-emerald-400" />
               <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">סטטיסטיקות</span>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-1">דוחות וסטטיסטיקות</h1>
-            <p className="text-zinc-400 text-lg">נתונים ותובנות על הסטודיו שלך</p>
+            <h1 className="text-3xl font-bold text-foreground mb-1">דוחות וסטטיסטיקות</h1>
+            <p className="text-muted text-lg">נתונים ותובנות על הסטודיו שלך</p>
           </div>
         </div>
       </div>
@@ -117,7 +117,7 @@ export default function ReportsView() {
               className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                 activeTab === 'overview'
                   ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:text-white hover:border-zinc-600/50'
+                  : 'bg-surface text-muted border border-border hover:text-foreground hover:border-border-hover'
               }`}
             >
               סקירה חודשית
@@ -127,7 +127,7 @@ export default function ReportsView() {
               className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                 activeTab === 'progress'
                   ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:text-white hover:border-zinc-600/50'
+                  : 'bg-surface text-muted border border-border hover:text-foreground hover:border-border-hover'
               }`}
             >
               התקדמות מתאמנים
@@ -137,17 +137,17 @@ export default function ReportsView() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigateMonth('prev')}
-              className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-zinc-400 hover:text-white"
+              className="p-2 bg-surface hover:bg-elevated/50 rounded-xl transition-all text-muted hover:text-foreground"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700/50">
+            <div className="flex items-center gap-2 px-4 py-2 bg-surface rounded-xl border border-border">
               <Calendar className="w-5 h-5 text-emerald-400" />
-              <span className="font-semibold text-white">{formatMonth(selectedMonth)}</span>
+              <span className="font-semibold text-foreground">{formatMonth(selectedMonth)}</span>
             </div>
             <button
               onClick={() => navigateMonth('next')}
-              className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-zinc-400 hover:text-white disabled:opacity-50"
+              className="p-2 bg-surface hover:bg-elevated/50 rounded-xl transition-all text-muted hover:text-foreground disabled:opacity-50"
               disabled={selectedMonth >= new Date()}
             >
               <ChevronLeft className="w-5 h-5" />
@@ -165,30 +165,30 @@ export default function ReportsView() {
           ) : stats && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="premium-card-static p-6 group hover:border-zinc-600/50 transition-all">
+                <div className="premium-card-static p-6 group hover:border-border-hover transition-all">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
                       <Dumbbell className="w-6 h-6 text-emerald-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-zinc-500 font-medium">אימונים החודש</p>
-                      <p className="text-3xl font-bold text-white">{stats.totalWorkouts}</p>
+                      <p className="text-sm text-muted font-medium">אימונים החודש</p>
+                      <p className="text-3xl font-bold text-foreground">{stats.totalWorkouts}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="text-zinc-500">ממוצע למתאמן:</span>
+                    <span className="text-muted">ממוצע למתאמן:</span>
                     <span className="font-semibold text-emerald-400">{stats.averageWorkoutsPerTrainee}</span>
                   </div>
                 </div>
 
-                <div className="premium-card-static p-6 group hover:border-zinc-600/50 transition-all">
+                <div className="premium-card-static p-6 group hover:border-border-hover transition-all">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="p-3 rounded-xl bg-cyan-500/15 border border-cyan-500/30">
                       <Users className="w-6 h-6 text-cyan-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-zinc-500 font-medium">מתאמנים פעילים</p>
-                      <p className="text-3xl font-bold text-white">{stats.activeTrainees}</p>
+                      <p className="text-sm text-muted font-medium">מתאמנים פעילים</p>
+                      <p className="text-3xl font-bold text-foreground">{stats.activeTrainees}</p>
                     </div>
                   </div>
                   {stats.newTrainees > 0 && (
@@ -199,30 +199,30 @@ export default function ReportsView() {
                   )}
                 </div>
 
-                <div className="premium-card-static p-6 group hover:border-zinc-600/50 transition-all">
+                <div className="premium-card-static p-6 group hover:border-border-hover transition-all">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/30">
                       <Scale className="w-6 h-6 text-amber-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-zinc-500 font-medium">נפח כולל</p>
-                      <p className="text-3xl font-bold text-white">{(stats.totalVolume / 1000).toFixed(1)}K</p>
+                      <p className="text-sm text-muted font-medium">נפח כולל</p>
+                      <p className="text-3xl font-bold text-foreground">{(stats.totalVolume / 1000).toFixed(1)}K</p>
                     </div>
                   </div>
-                  <p className="text-sm text-zinc-500">ק"ג הורמו החודש</p>
+                  <p className="text-sm text-muted">ק"ג הורמו החודש</p>
                 </div>
 
-                <div className="premium-card-static p-6 group hover:border-zinc-600/50 transition-all">
+                <div className="premium-card-static p-6 group hover:border-border-hover transition-all">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="p-3 rounded-xl bg-yellow-500/15 border border-yellow-500/30">
                       <Trophy className="w-6 h-6 text-yellow-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-zinc-500 font-medium">שיאים אישיים</p>
-                      <p className="text-3xl font-bold text-white">{stats.personalRecords}</p>
+                      <p className="text-sm text-muted font-medium">שיאים אישיים</p>
+                      <p className="text-3xl font-bold text-foreground">{stats.personalRecords}</p>
                     </div>
                   </div>
-                  <p className="text-sm text-zinc-500">PR נשברו החודש</p>
+                  <p className="text-sm text-muted">PR נשברו החודש</p>
                 </div>
               </div>
 

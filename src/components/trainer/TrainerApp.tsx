@@ -115,10 +115,10 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
                   </div>
                 </div>
                 <div className="mr-3 flex-1">
-                  <p className="text-sm font-medium text-white">
+                  <p className="text-sm font-medium text-foreground">
                     שקילה חדשה - {reading.bestMatch!.traineeName}
                   </p>
-                  <p className="mt-1 text-sm text-gray-400">
+                  <p className="mt-1 text-sm text-muted">
                     {weight} ק"ג
                     {bodyFat && ` | ${bodyFat}% שומן`}
                   </p>
@@ -163,10 +163,10 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
                   </div>
                 </div>
                 <div className="mr-3 flex-1">
-                  <p className="text-sm font-medium text-white">
+                  <p className="text-sm font-medium text-foreground">
                     שקילה חדשה - לא זוהה
                   </p>
-                  <p className="mt-1 text-sm text-gray-400">
+                  <p className="mt-1 text-sm text-muted">
                     {weight} ק"ג
                     {bodyFat && ` | ${bodyFat}% שומן`}
                   </p>
@@ -179,7 +179,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             <div className="flex border-r border-white/10">
               <button
                 onClick={() => toast.dismiss(t.id)}
-                className="w-full border border-transparent rounded-none rounded-l-2xl p-4 flex items-center justify-center text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 focus:outline-none transition-colors"
+                className="w-full border border-transparent rounded-none rounded-l-2xl p-4 flex items-center justify-center text-sm font-medium text-muted hover:text-foreground hover:bg-white/5 focus:outline-none transition-colors"
               >
                 סגור
               </button>
@@ -1336,7 +1336,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
                   className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
                     activeView === 'dashboard'
                       ? 'text-lime-500'
-                      : 'text-gray-500 hover:text-gray-300'
+                      : 'text-muted hover:text-foreground'
                   }`}
                 >
                   <Home className={`h-6 w-6 mb-1 ${activeView === 'dashboard' ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} aria-hidden="true" />
@@ -1349,7 +1349,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
                   className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
                     activeView.includes('trainee')
                       ? 'text-lime-500'
-                      : 'text-gray-500 hover:text-gray-300'
+                      : 'text-muted hover:text-foreground'
                   }`}
                 >
                   <Users className={`h-6 w-6 mb-1 ${activeView.includes('trainee') ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} aria-hidden="true" />

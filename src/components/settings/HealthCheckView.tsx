@@ -59,7 +59,7 @@ export default function HealthCheckView() {
       case 'unhealthy':
         return <XCircle className="h-5 w-5 text-red-400" />;
       default:
-        return <Activity className="h-5 w-5 text-zinc-400" />;
+        return <Activity className="h-5 w-5 text-muted" />;
     }
   };
 
@@ -72,7 +72,7 @@ export default function HealthCheckView() {
       case 'unhealthy':
         return 'bg-red-500/20 border-red-500/30 text-red-400';
       default:
-        return 'bg-zinc-500/20 border-zinc-500/30 text-zinc-400';
+        return 'bg-surface/20 border-border text-muted';
     }
   };
 
@@ -93,16 +93,16 @@ export default function HealthCheckView() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Activity className="h-6 w-6 text-emerald-400" />
             בדיקת בריאות המערכת
           </h2>
-          <p className="text-zinc-400 mt-1">מצב המערכת ושירותיה</p>
+          <p className="text-muted mt-1">מצב המערכת ושירותיה</p>
         </div>
         <button
           onClick={checkHealth}
           disabled={loading}
-          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-4 py-2 bg-emerald-600 text-foreground rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
           רענן
@@ -112,7 +112,7 @@ export default function HealthCheckView() {
       {loading && !health && (
         <div className="premium-card p-12 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400 mx-auto"></div>
-          <p className="mt-4 text-zinc-400">בודק בריאות המערכת...</p>
+          <p className="mt-4 text-muted">בודק בריאות המערכת...</p>
         </div>
       )}
 
@@ -125,7 +125,7 @@ export default function HealthCheckView() {
                 {getStatusIcon(health.status)}
                 <div>
                   <h3 className="text-xl font-bold">מצב כללי: {health.status === 'healthy' ? 'בריא' : health.status === 'degraded' ? 'מוחלש' : 'לא בריא'}</h3>
-                  <p className="text-sm text-zinc-400">
+                  <p className="text-sm text-muted">
                     נבדק לאחרונה: {new Date(health.timestamp).toLocaleString('he-IL')}
                   </p>
                 </div>
@@ -139,7 +139,7 @@ export default function HealthCheckView() {
             <div className="premium-card p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Database className="h-6 w-6 text-blue-400" />
-                <h3 className="text-lg font-semibold text-white">מסד הנתונים</h3>
+                <h3 className="text-lg font-semibold text-foreground">מסד הנתונים</h3>
               </div>
               <div className="flex items-center gap-2 mb-2">
                 {getStatusIcon(health.checks.database.status)}
@@ -148,10 +148,10 @@ export default function HealthCheckView() {
                 </span>
               </div>
               {health.checks.database.message && (
-                <p className="text-sm text-zinc-400 mb-2">{health.checks.database.message}</p>
+                <p className="text-sm text-muted mb-2">{health.checks.database.message}</p>
               )}
               {health.checks.database.responseTime && (
-                <p className="text-xs text-zinc-500">זמן תגובה: {health.checks.database.responseTime}ms</p>
+                <p className="text-xs text-muted">זמן תגובה: {health.checks.database.responseTime}ms</p>
               )}
               {health.checks.database.error && (
                 <p className="text-xs text-red-400 mt-2">{health.checks.database.error}</p>
@@ -162,7 +162,7 @@ export default function HealthCheckView() {
             <div className="premium-card p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Server className="h-6 w-6 text-purple-400" />
-                <h3 className="text-lg font-semibold text-white">Supabase</h3>
+                <h3 className="text-lg font-semibold text-foreground">Supabase</h3>
               </div>
               <div className="flex items-center gap-2 mb-2">
                 {getStatusIcon(health.checks.supabase.status)}
@@ -171,10 +171,10 @@ export default function HealthCheckView() {
                 </span>
               </div>
               {health.checks.supabase.message && (
-                <p className="text-sm text-zinc-400 mb-2">{health.checks.supabase.message}</p>
+                <p className="text-sm text-muted mb-2">{health.checks.supabase.message}</p>
               )}
               {health.checks.supabase.responseTime && (
-                <p className="text-xs text-zinc-500">זמן תגובה: {health.checks.supabase.responseTime}ms</p>
+                <p className="text-xs text-muted">זמן תגובה: {health.checks.supabase.responseTime}ms</p>
               )}
             </div>
 
@@ -183,7 +183,7 @@ export default function HealthCheckView() {
               <div className="premium-card p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <HardDrive className="h-6 w-6 text-green-400" />
-                  <h3 className="text-lg font-semibold text-white">Cache</h3>
+                  <h3 className="text-lg font-semibold text-foreground">Cache</h3>
                 </div>
                 <div className="flex items-center gap-2 mb-2">
                   {getStatusIcon(health.checks.cache.status)}
@@ -192,7 +192,7 @@ export default function HealthCheckView() {
                   </span>
                 </div>
                 {health.checks.cache.message && (
-                  <p className="text-sm text-zinc-400 mb-2">{health.checks.cache.message}</p>
+                  <p className="text-sm text-muted mb-2">{health.checks.cache.message}</p>
                 )}
               </div>
             )}
@@ -202,7 +202,7 @@ export default function HealthCheckView() {
               <div key={name} className="premium-card p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <Globe className="h-6 w-6 text-orange-400" />
-                  <h3 className="text-lg font-semibold text-white">{name}</h3>
+                  <h3 className="text-lg font-semibold text-foreground">{name}</h3>
                 </div>
                 <div className="flex items-center gap-2 mb-2">
                   {getStatusIcon(check.status)}
@@ -211,7 +211,7 @@ export default function HealthCheckView() {
                   </span>
                 </div>
                 {check.message && (
-                  <p className="text-sm text-zinc-400 mb-2">{check.message}</p>
+                  <p className="text-sm text-muted mb-2">{check.message}</p>
                 )}
               </div>
             ))}
@@ -220,19 +220,19 @@ export default function HealthCheckView() {
           {/* Metrics */}
           {health.metrics && (
             <div className="premium-card p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">מדדים</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">מדדים</h3>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <div className="text-zinc-400 text-sm mb-1">זמן תגובה</div>
-                  <div className="text-2xl font-bold text-white">{health.metrics.responseTime}ms</div>
+                  <div className="text-muted text-sm mb-1">זמן תגובה</div>
+                  <div className="text-2xl font-bold text-foreground">{health.metrics.responseTime}ms</div>
                 </div>
                 <div>
-                  <div className="text-zinc-400 text-sm mb-1">זמן פעולה</div>
-                  <div className="text-2xl font-bold text-white">{formatUptime(health.metrics.uptime)}</div>
+                  <div className="text-muted text-sm mb-1">זמן פעולה</div>
+                  <div className="text-2xl font-bold text-foreground">{formatUptime(health.metrics.uptime)}</div>
                 </div>
                 <div>
-                  <div className="text-zinc-400 text-sm mb-1">שיעור שגיאות</div>
-                  <div className="text-2xl font-bold text-white">{(health.metrics.errorRate * 100).toFixed(1)}%</div>
+                  <div className="text-muted text-sm mb-1">שיעור שגיאות</div>
+                  <div className="text-2xl font-bold text-foreground">{(health.metrics.errorRate * 100).toFixed(1)}%</div>
                 </div>
               </div>
             </div>
@@ -241,30 +241,30 @@ export default function HealthCheckView() {
           {/* Additional Metrics */}
           {metrics && (
             <div className="premium-card p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">מדדי ביצועים</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">מדדי ביצועים</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-zinc-400 text-sm mb-1">זמן פעולה כולל</div>
-                  <div className="text-xl font-bold text-white">{formatUptime(metrics.uptime)}</div>
+                  <div className="text-muted text-sm mb-1">זמן פעולה כולל</div>
+                  <div className="text-xl font-bold text-foreground">{formatUptime(metrics.uptime)}</div>
                 </div>
                 {metrics.memoryUsage && (
                   <div>
-                    <div className="text-zinc-400 text-sm mb-1">שימוש בזיכרון</div>
-                    <div className="text-xl font-bold text-white">{(metrics.memoryUsage * 100).toFixed(1)}%</div>
+                    <div className="text-muted text-sm mb-1">שימוש בזיכרון</div>
+                    <div className="text-xl font-bold text-foreground">{(metrics.memoryUsage * 100).toFixed(1)}%</div>
                   </div>
                 )}
                 {metrics.performanceMetrics && (
                   <>
                     {metrics.performanceMetrics.loadTime && (
                       <div>
-                        <div className="text-zinc-400 text-sm mb-1">זמן טעינה</div>
-                        <div className="text-xl font-bold text-white">{metrics.performanceMetrics.loadTime}ms</div>
+                        <div className="text-muted text-sm mb-1">זמן טעינה</div>
+                        <div className="text-xl font-bold text-foreground">{metrics.performanceMetrics.loadTime}ms</div>
                       </div>
                     )}
                     {metrics.performanceMetrics.renderTime && (
                       <div>
-                        <div className="text-zinc-400 text-sm mb-1">זמן רינדור</div>
-                        <div className="text-xl font-bold text-white">{metrics.performanceMetrics.renderTime}ms</div>
+                        <div className="text-muted text-sm mb-1">זמן רינדור</div>
+                        <div className="text-xl font-bold text-foreground">{metrics.performanceMetrics.renderTime}ms</div>
                       </div>
                     )}
                   </>

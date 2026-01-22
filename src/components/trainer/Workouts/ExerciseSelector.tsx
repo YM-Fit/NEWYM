@@ -330,29 +330,29 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className={`bg-zinc-900 border border-zinc-800 rounded-2xl ${isTablet ? 'max-w-5xl' : 'max-w-4xl'} w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl transition-all animate-scale-in`}>
+      <div className={`bg-card border border-border rounded-2xl ${isTablet ? 'max-w-5xl' : 'max-w-4xl'} w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl transition-all animate-scale-in`}>
         {/* Header */}
-        <div className="bg-zinc-800/50 border-b border-zinc-700/50 p-4 lg:p-6 flex items-center justify-between">
-          <h2 className="text-xl lg:text-2xl font-bold text-white">בחר תרגיל</h2>
+        <div className="bg-surface border-b border-border p-4 lg:p-6 flex items-center justify-between">
+          <h2 className="text-xl lg:text-2xl font-bold text-foreground">בחר תרגיל</h2>
           <button
             onClick={onClose}
-            className="p-2 lg:p-3 hover:bg-zinc-700/50 rounded-xl transition-all btn-press-feedback"
+            className="p-2 lg:p-3 hover:bg-elevated/50 rounded-xl transition-all btn-press-feedback"
           >
-            <X className="h-5 w-5 lg:h-6 lg:w-6 text-zinc-400" />
+            <X className="h-5 w-5 lg:h-6 lg:w-6 text-muted" />
           </button>
         </div>
 
         {/* Search */}
-        <div className="p-4 lg:p-6 border-b border-zinc-700/30">
+        <div className="p-4 lg:p-6 border-b border-border">
           <div className="relative">
-            <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-500" />
+            <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted" />
             {preventKeyboard ? (
               <div className="flex gap-2">
                 <div
-                  className="flex-1 pr-12 pl-4 py-3 lg:py-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white min-h-[48px] lg:min-h-[56px] flex items-center text-base lg:text-lg"
+                  className="flex-1 pr-12 pl-4 py-3 lg:py-4 bg-surface border border-border rounded-xl text-foreground min-h-[48px] lg:min-h-[56px] flex items-center text-base lg:text-lg"
                   onClick={() => {}}
                 >
-                  {searchTerm || <span className="text-zinc-500">חפש תרגיל...</span>}
+                  {searchTerm || <span className="text-muted">חפש תרגיל...</span>}
                 </div>
                 {searchTerm && (
                   <button
@@ -369,7 +369,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                 placeholder="חפש תרגיל..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pr-12 pl-4 py-3 lg:py-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-base lg:text-lg"
+                className="w-full pr-12 pl-4 py-3 lg:py-4 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-base lg:text-lg"
               />
             )}
           </div>
@@ -377,15 +377,15 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
 
         {/* Recent Exercises Section */}
         {traineeId && recentExercises.length > 0 && !searchTerm && showRecentSection && (
-          <div className="p-4 lg:p-6 border-b border-zinc-700/30 bg-gradient-to-b from-emerald-500/5 to-transparent">
+          <div className="p-4 lg:p-6 border-b border-border bg-gradient-to-b from-emerald-500/5 to-transparent">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-amber-400" />
-                <h3 className="font-semibold text-zinc-300 text-sm lg:text-base">תרגילים אחרונים</h3>
+                <h3 className="font-semibold text-foreground text-sm lg:text-base">תרגילים אחרונים</h3>
               </div>
               <button
                 onClick={() => setShowRecentSection(false)}
-                className="text-xs text-zinc-500 hover:text-zinc-400 transition-all"
+                className="text-xs text-muted hover:text-muted transition-all"
               >
                 הסתר
               </button>
@@ -403,18 +403,18 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                       onClose();
                     }}
                     disabled={loadingExerciseId === exercise.id}
-                    className="p-3 lg:p-4 bg-zinc-800/50 hover:bg-emerald-500/10 border border-zinc-700/50 hover:border-emerald-500/30 rounded-xl transition-all text-right group btn-press-feedback"
+                    className="p-3 lg:p-4 bg-surface hover:bg-emerald-500/10 border border-border hover:border-emerald-500/30 rounded-xl transition-all text-right group btn-press-feedback"
                   >
-                    <div className="font-medium text-zinc-200 group-hover:text-emerald-400 text-sm lg:text-base truncate mb-1">
+                    <div className="font-medium text-foreground group-hover:text-emerald-400 text-sm lg:text-base truncate mb-1">
                       {recent.exerciseName}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-zinc-500">
+                    <div className="flex items-center gap-2 text-xs text-muted">
                       <span className="font-semibold text-emerald-400">{recent.lastWeight}</span>
                       <span>ק״ג</span>
-                      <span className="text-zinc-600">×</span>
+                      <span className="text-muted">×</span>
                       <span className="font-semibold text-cyan-400">{recent.lastReps}</span>
                     </div>
-                    <div className="text-[10px] text-zinc-600 mt-1">
+                    <div className="text-[10px] text-muted mt-1">
                       {formatRelativeDate(recent.lastDate)}
                     </div>
                   </button>
@@ -432,19 +432,19 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
           <div className="flex-1 overflow-y-auto p-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1 space-y-2">
-                <h3 className="font-semibold text-zinc-400 mb-3">קבוצות שרירים</h3>
+                <h3 className="font-semibold text-muted mb-3">קבוצות שרירים</h3>
                 {filteredGroups.map((group) => (
                   <button
                     key={group.id}
                     onClick={() => setSelectedGroup(group.id)}
                     className={`w-full text-right px-4 py-3 rounded-xl transition-all ${
                       selectedGroup === group.id
-                        ? 'bg-emerald-500 text-white font-medium'
-                        : 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 border border-zinc-700/30 hover:border-zinc-600/50'
+                        ? 'bg-emerald-500 text-foreground font-medium'
+                        : 'bg-surface hover:bg-surface text-foreground border border-border hover:border-border-hover'
                     }`}
                   >
                     {group.name}
-                    <span className={`mr-2 text-sm ${selectedGroup === group.id ? 'text-emerald-100' : 'text-zinc-500'}`}>
+                    <span className={`mr-2 text-sm ${selectedGroup === group.id ? 'text-emerald-100' : 'text-muted'}`}>
                       ({group.exercises.length})
                     </span>
                   </button>
@@ -455,10 +455,10 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                 {selectedGroup ? (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold text-zinc-400">תרגילים</h3>
+                      <h3 className="font-semibold text-muted">תרגילים</h3>
                       <button
                         onClick={() => setShowAddForm(!showAddForm)}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all text-sm font-medium"
+                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-xl transition-all text-sm font-medium"
                       >
                         <PlusCircle className="h-4 w-4" />
                         <span>תרגיל חדש</span>
@@ -475,7 +475,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                             type="text"
                             value={newExerciseName}
                             onChange={(e) => setNewExerciseName(e.target.value)}
-                            className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                             placeholder="הזן שם תרגיל..."
                             autoFocus={!preventKeyboard}
                             readOnly={preventKeyboard}
@@ -497,7 +497,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                           <textarea
                             value={newExerciseInstructions}
                             onChange={(e) => setNewExerciseInstructions(e.target.value)}
-                            className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
+                            className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
                             placeholder="הזן הוראות ביצוע מפורטות לתרגיל..."
                             rows={4}
                             readOnly={preventKeyboard}
@@ -513,7 +513,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                           <button
                             onClick={handleAddExercise}
                             disabled={savingExercise || !newExerciseName.trim()}
-                            className="flex-1 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white rounded-xl font-medium transition-all disabled:cursor-not-allowed"
+                            className="flex-1 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-elevated disabled:text-muted text-foreground rounded-xl font-medium transition-all disabled:cursor-not-allowed"
                           >
                             {savingExercise ? 'שומר...' : 'הוסף'}
                           </button>
@@ -523,7 +523,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                               setNewExerciseName('');
                               setNewExerciseInstructions('');
                             }}
-                            className="px-4 py-3 bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 rounded-xl font-medium transition-all"
+                            className="px-4 py-3 bg-surface hover:bg-surface text-foreground rounded-xl font-medium transition-all"
                           >
                             ביטול
                           </button>
@@ -580,12 +580,12 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                                 onClose();
                               }}
                               disabled={loadingExerciseId === exercise.id}
-                              className="flex-1 text-right px-4 lg:px-6 py-3 lg:py-4 bg-zinc-800/30 border border-zinc-700/30 hover:border-emerald-500/30 hover:bg-emerald-500/10 rounded-xl transition-all group disabled:opacity-50 disabled:cursor-wait btn-press-feedback"
+                              className="flex-1 text-right px-4 lg:px-6 py-3 lg:py-4 bg-surface/30 border border-border hover:border-emerald-500/30 hover:bg-emerald-500/10 rounded-xl transition-all group disabled:opacity-50 disabled:cursor-wait btn-press-feedback"
                             >
                               <div className="flex items-center justify-between gap-3">
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2">
-                                    <span className="font-semibold text-zinc-200 group-hover:text-emerald-400 text-base lg:text-lg truncate">
+                                    <span className="font-semibold text-foreground group-hover:text-emerald-400 text-base lg:text-lg truncate">
                                       {exercise.name}
                                     </span>
                                     {loadingExerciseId === exercise.id && (
@@ -595,13 +595,13 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                                   
                                   {/* Last workout data preview */}
                                   {lastData && traineeId && (
-                                    <div className="flex items-center gap-2 mt-1 text-xs text-zinc-500">
+                                    <div className="flex items-center gap-2 mt-1 text-xs text-muted">
                                       <span>אחרון:</span>
                                       <span className="font-semibold text-emerald-400">{lastData.weight}</span>
                                       <span>ק״ג</span>
-                                      <span className="text-zinc-600">×</span>
+                                      <span className="text-muted">×</span>
                                       <span className="font-semibold text-cyan-400">{lastData.reps}</span>
-                                      <span className="text-zinc-600 mr-1">({formatRelativeDate(lastData.date)})</span>
+                                      <span className="text-muted mr-1">({formatRelativeDate(lastData.date)})</span>
                                     </div>
                                   )}
                                 </div>
@@ -612,11 +612,11 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                                       <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
                                     </div>
                                   )}
-                                  <div className="p-2 bg-zinc-700/50 group-hover:bg-emerald-500/20 rounded-lg transition-all">
+                                  <div className="p-2 bg-elevated/50 group-hover:bg-emerald-500/20 rounded-lg transition-all">
                                     {loadingExerciseId === exercise.id ? (
                                       <div className="h-5 w-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                                     ) : (
-                                      <Plus className="h-5 w-5 text-zinc-500 group-hover:text-emerald-400" />
+                                      <Plus className="h-5 w-5 text-muted group-hover:text-emerald-400" />
                                     )}
                                   </div>
                                 </div>
@@ -640,11 +640,11 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <div className="text-center p-8 bg-zinc-800/30 rounded-2xl border border-zinc-700/30">
-                      <div className="w-16 h-16 bg-zinc-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Search className="h-8 w-8 text-zinc-600" />
+                    <div className="text-center p-8 bg-surface/30 rounded-2xl border border-border">
+                      <div className="w-16 h-16 bg-surface rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <Search className="h-8 w-8 text-muted" />
                       </div>
-                      <p className="text-zinc-500 font-medium">בחר קבוצת שרירים מהרשימה</p>
+                      <p className="text-muted font-medium">בחר קבוצת שרירים מהרשימה</p>
                     </div>
                   </div>
                 )}

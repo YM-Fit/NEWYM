@@ -74,7 +74,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-glow animate-pulse">
-          <Activity className="w-8 h-8 text-white" />
+          <Activity className="w-8 h-8 text-foreground" />
         </div>
       </div>
     );
@@ -84,7 +84,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-glow">
-          <Activity className="h-6 w-6 text-white" />
+          <Activity className="h-6 w-6 text-foreground" />
         </div>
         <div>
           <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">האירובי שלי</h2>

@@ -65,10 +65,10 @@ export default function ToolsView() {
       <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 rounded-2xl p-8 mb-8 shadow-xl">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-            <Wrench className="w-8 h-8 text-white" />
+            <Wrench className="w-8 h-8 text-foreground" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-white mb-1">כלים</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-1">כלים</h1>
             <p className="text-emerald-100 text-lg">מחשבונים ועוזרים לאימון</p>
           </div>
         </div>
@@ -82,13 +82,13 @@ export default function ToolsView() {
             <button
               key={tool.id}
               onClick={() => setActiveCalculator(tool.id as CalculatorType)}
-              className={`bg-white rounded-2xl shadow-xl ${tool.shadowColor} hover:shadow-2xl ${tool.hoverShadow} transition-all duration-300 p-8 text-right group hover:scale-[1.03] border border-gray-100`}
+              className={`bg-white rounded-2xl shadow-xl ${tool.shadowColor} hover:shadow-2xl ${tool.hoverShadow} transition-all duration-300 p-8 text-right group hover:scale-[1.03] border border-border100`}
             >
               <div className={`w-20 h-20 bg-gradient-to-br ${tool.gradient} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg`}>
-                <Icon className="w-10 h-10 text-white" />
+                <Icon className="w-10 h-10 text-foreground" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-emerald-700 transition-colors duration-300">{tool.name}</h3>
-              <p className="text-gray-600 text-base leading-relaxed">{tool.description}</p>
+              <h3 className="text-2xl font-bold text-muted900 mb-3 group-hover:text-emerald-700 transition-colors duration-300">{tool.name}</h3>
+              <p className="text-muted600 text-base leading-relaxed">{tool.description}</p>
 
               {/* Hover indicator */}
               <div className="mt-6 flex items-center gap-2 text-emerald-600 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">

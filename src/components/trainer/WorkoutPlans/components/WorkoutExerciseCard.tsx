@@ -53,11 +53,11 @@ export default function WorkoutExerciseCard({
       >
         <div className="flex items-center space-x-3 rtl:space-x-reverse">
           <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
-            <span className="text-lg text-white font-bold">{exerciseIndex + 1}</span>
+            <span className="text-lg text-foreground font-bold">{exerciseIndex + 1}</span>
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-900">{exercise.exercise.name}</h3>
-            <p className="text-sm text-gray-600">{exercise.sets.length} סטים</p>
+            <h3 className="text-lg font-bold text-muted900">{exercise.exercise.name}</h3>
+            <p className="text-sm text-muted600">{exercise.sets.length} סטים</p>
           </div>
         </div>
         <div className="flex items-center space-x-2 rtl:space-x-reverse">
@@ -92,12 +92,12 @@ export default function WorkoutExerciseCard({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-            <span className="text-xl text-white font-bold">{exerciseIndex + 1}</span>
+            <span className="text-xl text-foreground font-bold">{exerciseIndex + 1}</span>
           </div>
           <div>
-            <h3 className="text-lg lg:text-2xl font-bold text-gray-900">{exercise.exercise.name}</h3>
+            <h3 className="text-lg lg:text-2xl font-bold text-muted900">{exercise.exercise.name}</h3>
             {exercise.exercise.muscle_group?.name && (
-              <p className="text-sm text-gray-500">{exercise.exercise.muscle_group.name}</p>
+              <p className="text-sm text-muted500">{exercise.exercise.muscle_group.name}</p>
             )}
           </div>
         </div>
@@ -112,7 +112,7 @@ export default function WorkoutExerciseCard({
           </button>
           <button
             onClick={() => onComplete(exerciseIndex)}
-            className="px-4 py-2 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105"
+            className="px-4 py-2 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground rounded-xl transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105"
           >
             סיים תרגיל
           </button>
@@ -150,17 +150,17 @@ export default function WorkoutExerciseCard({
 
       <button
         onClick={() => onAddSet(exerciseIndex)}
-        className="w-full mt-4 py-4 lg:py-5 border-2 border-dashed border-gray-300 rounded-xl hover:border-emerald-500 hover:bg-emerald-50 text-gray-600 hover:text-emerald-700 font-bold text-base lg:text-lg transition-all duration-300"
+        className="w-full mt-4 py-4 lg:py-5 border-2 border-dashed border-border300 rounded-xl hover:border-emerald-500 hover:bg-emerald-50 text-muted600 hover:text-emerald-700 font-bold text-base lg:text-lg transition-all duration-300"
       >
         + הוסף סט
       </button>
 
       <div className="mt-4">
-        <label className="block text-sm font-semibold text-gray-700 mb-2">הערות לתרגיל</label>
+        <label className="block text-sm font-semibold text-muted700 mb-2">הערות לתרגיל</label>
         <textarea
           value={exercise.notes}
           onChange={(e) => onUpdateExercise(exerciseIndex, 'notes', e.target.value)}
-          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+          className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
           rows={2}
           placeholder="הערות לביצוע התרגיל..."
         />

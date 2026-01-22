@@ -82,8 +82,8 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-zinc-900/95 dark:bg-zinc-900/95 light:bg-white/95 backdrop-blur-sm border border-zinc-700/50 dark:border-zinc-700/50 light:border-zinc-200/50 rounded-xl p-4 shadow-2xl">
-          <p className="text-zinc-400 dark:text-zinc-400 light:text-zinc-600 text-xs mb-3 font-medium">{label}</p>
+        <div className="bg-card/95 dark:bg-card/95 light:bg-white/95 backdrop-blur-sm border border-border dark:border-border light:border-border rounded-xl p-4 shadow-2xl">
+          <p className="text-muted dark:text-muted light:text-muted text-xs mb-3 font-medium">{label}</p>
           {isPairWithBothMembers && payload.length > 1 ? (
             <div className="space-y-2">
               {payload.map((entry: any, index: number) => {
@@ -92,11 +92,11 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                 const color = index === 0 ? '#06b6d4' : '#f59e0b';
                 return (
                   <div key={index} className="flex items-baseline gap-2">
-                    <p className="text-xs text-zinc-500 dark:text-zinc-500 light:text-zinc-600 font-medium">{memberName}:</p>
+                    <p className="text-xs text-muted dark:text-muted light:text-muted font-medium">{memberName}:</p>
                     <p className="font-bold text-xl" style={{ color }}>
                       {entry.value}
                     </p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-500 light:text-zinc-600 font-medium">
+                    <p className="text-xs text-muted dark:text-muted light:text-muted font-medium">
                       {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
                     </p>
                   </div>
@@ -108,13 +108,13 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
               <p className="font-bold text-2xl" style={{ color: getMetricColor(metric) }}>
                 {payload[0].value}
               </p>
-              <p className="text-sm text-zinc-500 dark:text-zinc-500 light:text-zinc-600 font-medium">
+              <p className="text-sm text-muted dark:text-muted light:text-muted font-medium">
                 {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
               </p>
             </div>
           )}
-          <div className="mt-2 pt-2 border-t border-zinc-700/50 dark:border-zinc-700/50 light:border-zinc-200/50">
-            <p className="text-xs text-zinc-500 dark:text-zinc-500 light:text-zinc-600">{getMetricLabel(metric)}</p>
+          <div className="mt-2 pt-2 border-t border-border dark:border-border light:border-border">
+            <p className="text-xs text-muted dark:text-muted light:text-muted">{getMetricLabel(metric)}</p>
           </div>
         </div>
       );
@@ -124,9 +124,9 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
 
   if (sortedMeasurements.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-zinc-500">
+      <div className="flex items-center justify-center h-64 text-muted">
         <div className="text-center">
-          <BarChart3 className="w-12 h-12 mx-auto mb-3 text-zinc-600" />
+          <BarChart3 className="w-12 h-12 mx-auto mb-3 text-muted" />
           <p>אין נתונים להצגה עבור {getMetricLabel(metric)}</p>
         </div>
       </div>
@@ -155,15 +155,15 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
               </span>
             </div>
           )}
-          <span className="text-xs text-zinc-500">
+          <span className="text-xs text-muted">
             {sortedMeasurements.length} מדידות
           </span>
         </div>
-        <div className="flex gap-1 bg-zinc-800/50 p-1 rounded-xl border border-zinc-700/50">
+        <div className="flex gap-1 bg-surface p-1 rounded-xl border border-border">
           <button
             onClick={() => setViewMode('chart')}
             className={`p-2 rounded-lg transition-all ${
-              viewMode === 'chart' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+              viewMode === 'chart' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
             }`}
             title="גרף"
           >
@@ -172,7 +172,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
           <button
             onClick={() => setViewMode('list')}
             className={`p-2 rounded-lg transition-all ${
-              viewMode === 'list' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+              viewMode === 'list' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
             }`}
             title="רשימה"
           >
@@ -181,7 +181,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
           <button
             onClick={() => setViewMode('table')}
             className={`p-2 rounded-lg transition-all ${
-              viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+              viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
             }`}
             title="טבלה"
           >
@@ -317,7 +317,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
             return (
               <div
                 key={measurement.id}
-                className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-xl border border-zinc-700/30 hover:border-zinc-600/50 transition-all"
+                className="flex items-center justify-between p-3 bg-surface/30 rounded-xl border border-border/30 hover:border-border-hover transition-all"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -329,14 +329,14 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                     </span>
                   </div>
                   <div>
-                    <p className="text-white font-semibold">
+                    <p className="text-foreground font-semibold">
                       {new Date(measurement.date).toLocaleDateString('he-IL', {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric'
                       })}
                     </p>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-muted">
                       {new Date(measurement.date).toLocaleDateString('he-IL', { weekday: 'long' })}
                     </p>
                   </div>
@@ -380,14 +380,14 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
       {viewMode === 'table' && (
         <div className="overflow-x-auto max-h-72">
           <table className="w-full">
-            <thead className="sticky top-0 bg-zinc-900">
-              <tr className="border-b border-zinc-700/50">
-                <th className="text-right py-2 px-3 text-xs font-semibold text-zinc-400">#</th>
-                <th className="text-right py-2 px-3 text-xs font-semibold text-zinc-400">תאריך</th>
-                <th className="text-center py-2 px-3 text-xs font-semibold text-zinc-400">{getMetricLabel(metric)}</th>
-                <th className="text-center py-2 px-3 text-xs font-semibold text-zinc-400">שינוי</th>
-                <th className="text-center py-2 px-3 text-xs font-semibold text-zinc-400">שינוי %</th>
-                <th className="text-center py-2 px-3 text-xs font-semibold text-zinc-400">מהתחלה</th>
+            <thead className="sticky top-0 bg-card">
+              <tr className="border-b border-border">
+                <th className="text-right py-2 px-3 text-xs font-semibold text-muted">#</th>
+                <th className="text-right py-2 px-3 text-xs font-semibold text-muted">תאריך</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-muted">{getMetricLabel(metric)}</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-muted">שינוי</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-muted">שינוי %</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-muted">מהתחלה</th>
               </tr>
             </thead>
             <tbody>
@@ -399,10 +399,10 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                 const fromStart = firstValue ? getChange(value, firstValue) : null;
 
                 return (
-                  <tr key={measurement.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-all">
-                    <td className="py-2 px-3 text-zinc-500 text-sm">{arr.length - index}</td>
+                  <tr key={measurement.id} className="border-b border-border/50 hover:bg-surface/30 transition-all">
+                    <td className="py-2 px-3 text-muted text-sm">{arr.length - index}</td>
                     <td className="py-2 px-3">
-                      <span className="text-white text-sm">
+                      <span className="text-foreground text-sm">
                         {new Date(measurement.date).toLocaleDateString('he-IL')}
                       </span>
                     </td>
@@ -422,7 +422,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                           {change.diff > 0 ? '+' : ''}{change.diff.toFixed(1)}
                         </span>
                       ) : (
-                        <span className="text-zinc-600">-</span>
+                        <span className="text-muted">-</span>
                       )}
                     </td>
                     <td className="py-2 px-3 text-center">
@@ -433,7 +433,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                           {change.percentage}%
                         </span>
                       ) : (
-                        <span className="text-zinc-600">-</span>
+                        <span className="text-muted">-</span>
                       )}
                     </td>
                     <td className="py-2 px-3 text-center">
@@ -444,7 +444,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                           {fromStart.diff > 0 ? '+' : ''}{fromStart.diff.toFixed(1)}
                         </span>
                       ) : (
-                        <span className="text-zinc-600">-</span>
+                        <span className="text-muted">-</span>
                       )}
                     </td>
                   </tr>

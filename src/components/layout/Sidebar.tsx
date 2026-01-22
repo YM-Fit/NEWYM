@@ -101,7 +101,7 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-emerald-600" />
               <div className="flex flex-col items-start">
-                <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-muted uppercase tracking-wider">
                   תפריט
                 </span>
                 <span className="mt-0.5 inline-flex items-center rounded-full border border-emerald-700/30 bg-emerald-700/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600">
@@ -112,7 +112,7 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
           )}
           <button
             onClick={() => setIsMinimized(!isMinimized)}
-            className="p-2 rounded-xl text-zinc-500 hover:text-emerald-600 hover:bg-emerald-700/10 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-700/50"
+            className="p-2 rounded-xl text-muted hover:text-emerald-600 hover:bg-emerald-700/10 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-700/50"
             title={isMinimized ? 'הרחב' : 'מזער'}
             aria-label={isMinimized ? 'הרחב תפריט' : 'מזער תפריט'}
             aria-expanded={!isMinimized}
@@ -129,13 +129,13 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
         {!isMinimized && (
           <div className="px-4 mb-4">
             <div className="relative">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
               <input
                 type="text"
                 placeholder="חפש בתפריט..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-10 pl-4 py-2.5 text-sm bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-700/50 focus:border-emerald-700/50 transition-all"
+                className="w-full pr-10 pl-4 py-2.5 text-sm bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-emerald-700/50 focus:border-emerald-700/50 transition-all"
                 aria-label="חפש בתפריט"
                 aria-controls="main-navigation"
               />
@@ -152,7 +152,7 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
                 <button
                   key={id}
                   onClick={() => handleItemClick(id)}
-                  className="w-full flex items-center justify-center p-3 rounded-xl transition-all duration-300 group relative hover:bg-zinc-800/30 active:scale-95"
+                  className="w-full flex items-center justify-center p-3 rounded-xl transition-all duration-300 group relative hover:bg-surface active:scale-95"
                   title={label}
                   aria-label={label}
                 >
@@ -162,7 +162,7 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
                   <Icon className={`h-5 w-5 transition-all duration-300 ${
                     isActive 
                       ? 'text-emerald-600 drop-shadow-[0_0_8px_rgba(74,107,42,0.4)] scale-110' 
-                      : 'text-zinc-400 group-hover:text-white group-hover:scale-110'
+                      : 'text-muted group-hover:text-foreground group-hover:scale-110'
                   }`} />
                   {isActive && (
                     <div className="absolute inset-0 bg-emerald-700/10 rounded-xl blur-sm" />
@@ -184,7 +184,7 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
                   {category.id !== 'main' && (
                     <button
                       onClick={() => toggleCategory(category.id)}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-zinc-500 uppercase tracking-wider hover:text-zinc-400 hover:bg-zinc-800/30 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-700/50"
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-muted uppercase tracking-wider hover:text-foreground hover:bg-surface transition-all focus:outline-none focus:ring-2 focus:ring-emerald-700/50"
                       aria-expanded={isExpanded}
                       aria-controls={`sidebar-category-${category.id}`}
                       aria-label={`${category.label}, ${isExpanded ? 'מוקפל' : 'מורחב'}`}
@@ -212,7 +212,7 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
                             className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-700/50 ${
                               isActive
                                 ? 'bg-gradient-to-r from-emerald-700/20 to-emerald-700/10 text-emerald-600 shadow-lg shadow-emerald-700/10'
-                                : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                                : 'text-muted hover:bg-surface hover:text-foreground'
                             }`}
                             aria-current={isActive ? 'page' : undefined}
                             aria-label={`${label}, ${description}`}
@@ -237,7 +237,7 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
                             <div className="flex-1 text-right mr-3 z-10">
                               <div className="flex items-center justify-end gap-2">
                                 <span className={`block text-sm font-semibold transition-colors ${
-                                  isActive ? 'text-white' : 'group-hover:text-white'
+                                  isActive ? 'text-foreground' : 'group-hover:text-foreground'
                                 }`}>
                                   {label}
                                 </span>
@@ -248,7 +248,7 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
                                 )}
                               </div>
                               <span className={`block text-xs mt-0.5 transition-colors ${
-                                isActive ? 'text-zinc-500' : 'text-zinc-600 group-hover:text-zinc-500'
+                                isActive ? 'text-muted' : 'text-muted group-hover:text-muted'
                               }`}>
                                 {description}
                               </span>
@@ -266,15 +266,15 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
       </div>
 
       {!isMinimized && (
-        <div className="p-4 border-t border-zinc-800/50">
+        <div className="p-4 border-t border-border">
           <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-700/10 to-emerald-800/5 border border-emerald-700/20">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 rounded-lg bg-emerald-700/20 flex items-center justify-center">
                 <Sparkles className="h-4 w-4 text-emerald-600" />
               </div>
-              <span className="text-sm font-semibold text-white">YM Coach Pro</span>
+              <span className="text-sm font-semibold text-foreground">YM Coach Pro</span>
             </div>
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               מערכת ניהול מתאמנים מתקדמת לאימונים מקצועיים
             </p>
           </div>
