@@ -27,7 +27,7 @@ import { createGoogleCalendarEvent } from '../../../api/googleCalendarApi';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
-import { getTraineeSessionInfo, generateEventSummaryWithSession, sessionInfoCache } from '../../../utils/traineeSessionUtils';
+import { sessionInfoCache } from '../../../utils/traineeSessionUtils';
 
 interface RecurringWorkoutModalProps {
   isOpen: boolean;
@@ -126,7 +126,7 @@ export default function RecurringWorkoutModal({
     return dates;
   }, [slots, startDate, numberOfWeeks]);
 
-  // Create all workouts
+  // Create all workouts with improved error handling and retry logic
   const createWorkouts = useCallback(async () => {
     if (!user || !selectedTraineeId || workoutDates.length === 0) {
       toast.error('יש לבחור מתאמן ולהגדיר לפחות יום ושעה אחד');
@@ -143,11 +143,7 @@ export default function RecurringWorkoutModal({
     setProgress({ current: 0, total: workoutDates.length });
 
     try {
-      // Get session info once for all events
-      const sessionInfo = await getTraineeSessionInfo(selectedTraineeId, user.id);
-      const eventSummary = generateEventSummaryWithSession(selectedTrainee.full_name, sessionInfo);
-
-      // Get access token
+      // Get access token first
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         toast.error('נדרשת הרשאה - יש להתחבר מחדש');
@@ -157,9 +153,21 @@ export default function RecurringWorkoutModal({
 
       let successCount = 0;
       let failCount = 0;
+      const failedDates: Date[] = [];
+      let lastError = '';
+
+      // Process in smaller batches with longer delays
+      const BATCH_SIZE = 5;
+      const DELAY_BETWEEN_EVENTS = 500; // 500ms between events
+      const DELAY_BETWEEN_BATCHES = 2000; // 2 seconds between batches
 
       for (let i = 0; i < workoutDates.length; i++) {
         const { date } = workoutDates[i];
+        
+        // Calculate position for this event (sequential number)
+        const eventPosition = i + 1;
+        const eventSummary = `אימון - ${selectedTrainee.full_name} ${eventPosition}`;
+        
         setProgress({ current: i + 1, total: workoutDates.length });
 
         try {
@@ -181,7 +189,10 @@ export default function RecurringWorkoutModal({
 
           if (!eventResult.success || !eventResult.data) {
             failCount++;
+            lastError = eventResult.error || 'שגיאה לא ידועה';
+            failedDates.push(date);
             logger.error('Failed to create Google Calendar event', { error: eventResult.error, date: date.toISOString() }, 'RecurringWorkoutModal');
+            // Continue to next event instead of stopping
             continue;
           }
 
@@ -204,6 +215,8 @@ export default function RecurringWorkoutModal({
 
           if (workoutError) {
             failCount++;
+            lastError = workoutError.message;
+            failedDates.push(date);
             logger.error('Failed to create workout record', workoutError, 'RecurringWorkoutModal');
             continue;
           }
@@ -237,26 +250,37 @@ export default function RecurringWorkoutModal({
           successCount++;
         } catch (err) {
           failCount++;
+          lastError = err instanceof Error ? err.message : 'שגיאה לא ידועה';
+          failedDates.push(date);
           logger.error('Error creating recurring workout', err, 'RecurringWorkoutModal');
         }
 
-        // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Delay between events to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_EVENTS));
+
+        // Extra delay between batches
+        if ((i + 1) % BATCH_SIZE === 0 && i + 1 < workoutDates.length) {
+          await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+        }
       }
 
       // Invalidate session cache since we've added workouts
       sessionInfoCache.invalidate(selectedTraineeId);
 
       if (successCount > 0) {
-        toast.success(`נוצרו ${successCount} אימונים בהצלחה${failCount > 0 ? ` (${failCount} נכשלו)` : ''}`);
+        if (failCount > 0) {
+          toast.success(`נוצרו ${successCount} אימונים בהצלחה. ${failCount} נכשלו: ${lastError}`);
+        } else {
+          toast.success(`נוצרו ${successCount} אימונים בהצלחה!`);
+        }
         onWorkoutsCreated?.();
         onClose();
       } else {
-        toast.error('לא הצלחנו ליצור אימונים');
+        toast.error(`לא הצלחנו ליצור אימונים: ${lastError}`);
       }
     } catch (err) {
       logger.error('Error in createWorkouts', err, 'RecurringWorkoutModal');
-      toast.error('שגיאה ביצירת אימונים');
+      toast.error(`שגיאה ביצירת אימונים: ${err instanceof Error ? err.message : 'שגיאה לא ידועה'}`);
     } finally {
       setCreating(false);
       setProgress({ current: 0, total: 0 });

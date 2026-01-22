@@ -20,7 +20,9 @@ import { CSS } from '@dnd-kit/utilities';
 import { 
   getTraineesSessionInfo, 
   TraineeSessionInfo, 
-  formatTraineeNameWithSession,
+  formatTraineeNameWithPosition,
+  calculateEventPositions,
+  EventPositionInfo,
   sessionInfoCache 
 } from '../../../utils/traineeSessionUtils';
 
@@ -57,12 +59,14 @@ interface EventItemProps {
   onDelete?: (eventId: string) => void;
   isDragging?: boolean;
   sessionInfo?: TraineeSessionInfo | null;
+  positionInfo?: EventPositionInfo | null;
   onTraineeNameClick?: (traineeName: string, traineeId: string | null) => void;
 }
 
 interface DraggableEventItemProps extends EventItemProps {
   day: number;
   sessionInfo?: TraineeSessionInfo | null;
+  positionInfo?: EventPositionInfo | null;
   onTraineeNameClick?: (traineeName: string, traineeId: string | null) => void;
 }
 
@@ -77,6 +81,7 @@ interface DroppableDayCellProps {
   currentDate: Date;
   activeEventId: string | null;
   sessionInfoMap?: Map<string, TraineeSessionInfo>;
+  eventPositionMap?: Map<string, EventPositionInfo>;
   onTraineeNameClick?: (traineeName: string, traineeId: string | null) => void;
 }
 
@@ -89,6 +94,7 @@ interface DroppableWeekHourCellProps {
   onCellClick: (day: Date, hour: number) => void;
   activeEventId: string | null;
   sessionInfoMap?: Map<string, TraineeSessionInfo>;
+  eventPositionMap?: Map<string, EventPositionInfo>;
   onTraineeNameClick?: (traineeName: string, traineeId: string | null) => void;
 }
 
@@ -99,6 +105,7 @@ interface DraggableWeekEventItemProps {
   sourceDate: Date;
   sourceHour: number;
   sessionInfo?: TraineeSessionInfo | null;
+  positionInfo?: EventPositionInfo | null;
   onTraineeNameClick?: (traineeName: string, traineeId: string | null) => void;
 }
 
@@ -139,7 +146,7 @@ function extractTraineeName(event: CalendarEvent): string {
 }
 
 // Event Item Component (base display component)
-function EventItem({ event, onEventClick, onDelete, isDragging, sessionInfo, onTraineeNameClick }: EventItemProps) {
+function EventItem({ event, onEventClick, onDelete, isDragging, sessionInfo, positionInfo, onTraineeNameClick }: EventItemProps) {
   const [showDelete, setShowDelete] = useState(false);
 
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -172,8 +179,8 @@ function EventItem({ event, onEventClick, onDelete, isDragging, sessionInfo, onT
 
   const traineeName = extractTraineeName(event);
   
-  // Format name with session info if available
-  const displayInfo = formatTraineeNameWithSession(traineeName, sessionInfo || null);
+  // Format name with position info (sequential number 1, 2, 3...)
+  const displayInfo = formatTraineeNameWithPosition(traineeName, positionInfo || null, sessionInfo || null);
 
   // Get end time for display
   const eventEndTime = event.end.dateTime 
@@ -222,7 +229,7 @@ function EventItem({ event, onEventClick, onDelete, isDragging, sessionInfo, onT
 }
 
 // Draggable Event Item Component
-function DraggableEventItem({ event, onEventClick, onDelete, day, sessionInfo, onTraineeNameClick }: DraggableEventItemProps) {
+function DraggableEventItem({ event, onEventClick, onDelete, day, sessionInfo, positionInfo, onTraineeNameClick }: DraggableEventItemProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `event-${event.id}`,
     data: {
@@ -256,6 +263,7 @@ function DraggableEventItem({ event, onEventClick, onDelete, day, sessionInfo, o
         onDelete={onDelete}
         isDragging={isDragging}
         sessionInfo={sessionInfo}
+        positionInfo={positionInfo}
         onTraineeNameClick={onTraineeNameClick}
       />
     </div>
@@ -274,6 +282,7 @@ function DroppableDayCell({
   currentDate,
   activeEventId,
   sessionInfoMap,
+  eventPositionMap,
   onTraineeNameClick,
 }: DroppableDayCellProps) {
   const dayId = day
@@ -302,6 +311,12 @@ function DroppableDayCell({
       }
     }
     return null;
+  };
+
+  // Helper to get position info for an event
+  const getPositionInfoForEvent = (event: CalendarEvent): EventPositionInfo | null => {
+    if (!eventPositionMap) return null;
+    return eventPositionMap.get(event.id) || null;
   };
 
   return (
@@ -338,6 +353,7 @@ function DroppableDayCell({
                   onEventClick={onEventClick}
                   onDelete={activeEventId === event.id ? undefined : onDelete}
                   sessionInfo={getSessionInfoForEvent(event)}
+                  positionInfo={getPositionInfoForEvent(event)}
                   onTraineeNameClick={onTraineeNameClick}
                 />
               </div>
@@ -369,6 +385,7 @@ function DraggableWeekEventItem({
   sourceDate, 
   sourceHour,
   sessionInfo,
+  positionInfo,
   onTraineeNameClick 
 }: DraggableWeekEventItemProps) {
   const [showDelete, setShowDelete] = useState(false);
@@ -396,7 +413,7 @@ function DraggableWeekEventItem({
   const endTime = eventEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 
   const traineeName = extractTraineeName(event);
-  const displayInfo = formatTraineeNameWithSession(traineeName, sessionInfo || null);
+  const displayInfo = formatTraineeNameWithPosition(traineeName, positionInfo || null, sessionInfo || null);
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -491,6 +508,7 @@ function DroppableWeekHourCell({
   onCellClick,
   activeEventId,
   sessionInfoMap,
+  eventPositionMap,
   onTraineeNameClick,
 }: DroppableWeekHourCellProps) {
   const cellId = `week-cell-${day.getFullYear()}-${day.getMonth()}-${day.getDate()}-${hour}`;
@@ -516,6 +534,12 @@ function DroppableWeekHourCell({
     return null;
   };
 
+  // Helper to get position info for an event
+  const getPositionInfoForEvent = (event: CalendarEvent): EventPositionInfo | null => {
+    if (!eventPositionMap) return null;
+    return eventPositionMap.get(event.id) || null;
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -535,6 +559,7 @@ function DroppableWeekHourCell({
           sourceDate={day}
           sourceHour={hour}
           sessionInfo={getSessionInfoForEvent(event)}
+          positionInfo={getPositionInfoForEvent(event)}
           onTraineeNameClick={onTraineeNameClick}
         />
       ))}
@@ -564,6 +589,9 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
   
   // Session info state for displaying card counts
   const [sessionInfoMap, setSessionInfoMap] = useState<Map<string, TraineeSessionInfo>>(new Map());
+  
+  // Event position info - maps eventId to position in month (1, 2, 3...)
+  const [eventPositionMap, setEventPositionMap] = useState<Map<string, EventPositionInfo>>(new Map());
   
   // Trainee history modal state
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -705,28 +733,35 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     toast.success('יומן עודכן');
   }, [loadEvents]);
 
-  // Load session info for trainees in events
+  // Load session info for trainees in events and calculate positions
   const loadSessionInfo = useCallback(async () => {
     if (!user || events.length === 0) return;
 
     try {
-      // Extract unique trainee names from events
+      // Extract unique trainee names and prepare event data for position calculation
       const traineeNames = new Set<string>();
+      const eventsForPositionCalc: Array<{ id: string; traineeName: string; startDate: Date }> = [];
+      
       events.forEach(event => {
         const name = extractTraineeName(event);
         traineeNames.add(name);
+        
+        // Get event start date
+        const startDateStr = event.start.dateTime || event.start.date;
+        if (startDateStr) {
+          eventsForPositionCalc.push({
+            id: event.id,
+            traineeName: name,
+            startDate: new Date(startDateStr),
+          });
+        }
       });
+
+      // Calculate positions for all events
+      const positions = calculateEventPositions(eventsForPositionCalc);
+      setEventPositionMap(positions);
 
       if (traineeNames.size === 0) return;
-
-      // Check cache first
-      const cachedInfos: TraineeSessionInfo[] = [];
-      const namesToFetch: string[] = [];
-      
-      traineeNames.forEach(name => {
-        // We can't cache by name, so we'll fetch all trainees
-        namesToFetch.push(name);
-      });
 
       // Fetch trainee IDs by names
       const { data: trainees, error: traineesError } = await supabase
@@ -1416,6 +1451,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                         onCellClick={handleWeekCellClick}
                         activeEventId={activeEvent?.id || null}
                         sessionInfoMap={sessionInfoMap}
+                        eventPositionMap={eventPositionMap}
                         onTraineeNameClick={handleTraineeNameClick}
                       />
                     );
@@ -1520,6 +1556,15 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                       const heightPercent = Math.max((duration / 60) * 100, 100);
                       const startTime = eventStart.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
                       const endTime = eventEnd.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+                      const traineeName = extractTraineeName(event);
+                      const positionInfo = eventPositionMap.get(event.id) || null;
+                      const sessionInfo = (() => {
+                        for (const [, info] of sessionInfoMap) {
+                          if (info.traineeName === traineeName) return info;
+                        }
+                        return null;
+                      })();
+                      const displayInfo = formatTraineeNameWithPosition(traineeName, positionInfo, sessionInfo);
                       
                       return (
                         <div
@@ -1536,9 +1581,9 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                           }}
                           title={`${event.summary} - ${startTime}`}
                         >
-                          {/* Trainee Name - Prominent */}
+                          {/* Trainee Name with Position - Prominent */}
                           <div className="text-sm font-semibold text-white truncate">
-                            {extractTraineeName(event)}
+                            {displayInfo.displayName}
                           </div>
                           {/* Time range */}
                           <div className="text-[11px] text-white/80 mt-0.5">
@@ -1724,6 +1769,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                     currentDate={currentDate}
                     activeEventId={activeEvent?.id || null}
                     sessionInfoMap={sessionInfoMap}
+                    eventPositionMap={eventPositionMap}
                     onTraineeNameClick={handleTraineeNameClick}
                   />
                 );

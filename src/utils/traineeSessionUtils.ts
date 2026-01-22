@@ -25,6 +25,12 @@ export interface SessionDisplayInfo {
   hasSessionInfo: boolean;
 }
 
+export interface EventPositionInfo {
+  position: number;        // Sequential position (1, 2, 3...) within month
+  totalInMonth: number;    // Total workouts this month for the trainee
+  traineeName: string;
+}
+
 /**
  * Get trainee session info from database
  */
@@ -200,6 +206,7 @@ export async function getTraineesSessionInfo(
 
 /**
  * Format trainee name with session info for display
+ * This is used for card tickets - shows remaining/total
  */
 export function formatTraineeNameWithSession(
   traineeName: string,
@@ -223,21 +230,79 @@ export function formatTraineeNameWithSession(
     };
   }
 
-  // For monthly_count, show the monthly workout count
-  if (sessionInfo.countingMethod === 'monthly_count') {
-    const sessionText = `${sessionInfo.workoutsThisMonth}`;
-    return {
-      displayName: `${traineeName} ${sessionText}`,
-      sessionText,
-      hasSessionInfo: true,
-    };
-  }
-
   return {
     displayName: traineeName,
     sessionText: '',
     hasSessionInfo: false,
   };
+}
+
+/**
+ * Format trainee name with event position for display
+ * This shows the sequential position of the workout in the month (1, 2, 3...)
+ */
+export function formatTraineeNameWithPosition(
+  traineeName: string,
+  positionInfo: EventPositionInfo | null,
+  sessionInfo: TraineeSessionInfo | null
+): SessionDisplayInfo {
+  if (!positionInfo) {
+    // Fallback to session info format if no position
+    return formatTraineeNameWithSession(traineeName, sessionInfo);
+  }
+
+  // Show position number for all counting methods
+  const sessionText = `${positionInfo.position}`;
+  return {
+    displayName: `${traineeName} ${sessionText}`,
+    sessionText,
+    hasSessionInfo: true,
+  };
+}
+
+/**
+ * Calculate event positions for all events in a given list
+ * Groups events by trainee name and assigns sequential positions based on date
+ * 
+ * @param events Array of events with trainee name and date info
+ * @returns Map of eventId -> EventPositionInfo
+ */
+export function calculateEventPositions(
+  events: Array<{
+    id: string;
+    traineeName: string;
+    startDate: Date;
+  }>
+): Map<string, EventPositionInfo> {
+  const result = new Map<string, EventPositionInfo>();
+  
+  // Group events by trainee name
+  const eventsByTrainee = new Map<string, Array<{ id: string; startDate: Date }>>();
+  
+  events.forEach(event => {
+    const existing = eventsByTrainee.get(event.traineeName) || [];
+    existing.push({ id: event.id, startDate: event.startDate });
+    eventsByTrainee.set(event.traineeName, existing);
+  });
+  
+  // For each trainee, sort by date and assign positions
+  eventsByTrainee.forEach((traineeEvents, traineeName) => {
+    // Sort by date ascending
+    traineeEvents.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+    
+    const totalInMonth = traineeEvents.length;
+    
+    // Assign position (1, 2, 3...)
+    traineeEvents.forEach((event, index) => {
+      result.set(event.id, {
+        position: index + 1,
+        totalInMonth,
+        traineeName,
+      });
+    });
+  });
+  
+  return result;
 }
 
 /**
