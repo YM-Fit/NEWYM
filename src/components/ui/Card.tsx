@@ -15,9 +15,9 @@ const variantStyles = {
 
 const paddingStyles = {
   none: '',
-  sm: 'p-3',
-  md: 'p-5',
-  lg: 'p-8',
+  sm: 'p-4',      // 16px - standardized
+  md: 'p-5',      // 20px - standardized
+  lg: 'p-6',      // 24px - standardized
 };
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
@@ -30,7 +30,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={`
-          rounded-2xl shadow-xl
+          rounded-2xl shadow-lg
           ${variantStyles[variant]}
           ${paddingStyles[padding]}
           ${hoverClass}

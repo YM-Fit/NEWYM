@@ -85,7 +85,7 @@ export function Modal({
         aria-labelledby={title ? titleId : undefined}
         aria-describedby={ariaDescribedBy}
         tabIndex={-1}
-        className={`w-full ${sizeStyles[size]} bg-elevated rounded-2xl shadow-2xl border border-border/12 animate-fade-in focus:outline-none`}
+        className={`w-full ${sizeStyles[size]} bg-elevated rounded-2xl shadow-xl border border-border/12 animate-fade-in focus:outline-none`}
       >
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between p-5 border-b border-border/10">
@@ -98,7 +98,7 @@ export function Modal({
               <button
                 ref={closeButtonRef}
                 onClick={onClose}
-                className="p-2 hover:bg-surface/70 rounded-xl transition-all text-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="p-2 hover:bg-surface/70 rounded-xl transition-all duration-250 text-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 aria-label="סגור דיאלוג"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
@@ -106,7 +106,7 @@ export function Modal({
             )}
           </div>
         )}
-        <div className="p-5">{children}</div>
+        <div className="p-6">{children}</div>
       </div>
     </div>
   );

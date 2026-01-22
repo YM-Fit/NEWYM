@@ -49,16 +49,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             aria-required={required}
             required={required}
             className={`
-              w-full px-4 py-3.5 rounded-xl glass-input
+              w-full px-4 py-2.5 rounded-xl glass-input
               text-foreground placeholder-muted
-              transition-all duration-300
+              transition-all duration-250
               focus:outline-none focus:ring-2
               ${error ? 'border-danger/50 focus:border-danger focus:ring-danger/50' : ''}
               ${success && !error ? 'border-success/50 focus:border-success focus:ring-success/50' : ''}
               ${!error && !success ? 'focus:ring-primary/50 focus:border-primary/50' : ''}
               ${showPasswordToggle ? 'pr-12' : ''}
               ${(error || success) && showPasswordToggle ? 'pl-12' : ''}
-              ${isFocused ? 'shadow-lg' : ''}
+              ${isFocused ? 'shadow-md' : ''}
               ${className}
             `}
             {...props}

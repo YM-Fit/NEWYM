@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Search, X, Plus, Clock, PlusCircle, Trash2, Info, Edit2 } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Search, X, Plus, Clock, PlusCircle, Trash2, Info, Edit2, TrendingUp, Star, Zap } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
@@ -20,6 +20,15 @@ interface MuscleGroup {
   id: string;
   name: string;
   exercises: Exercise[];
+}
+
+interface RecentExercise {
+  exerciseId: string;
+  exerciseName: string;
+  lastWeight: number;
+  lastReps: number;
+  lastDate: string;
+  muscleGroupId: string;
 }
 
 interface ExerciseSelectorProps {
@@ -43,6 +52,9 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
   const [savingExercise, setSavingExercise] = useState(false);
   const [viewingInstructions, setViewingInstructions] = useState<Exercise | null>(null);
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
+  const [recentExercises, setRecentExercises] = useState<RecentExercise[]>([]);
+  const [exerciseLastData, setExerciseLastData] = useState<Map<string, { weight: number; reps: number; date: string }>>(new Map());
+  const [showRecentSection, setShowRecentSection] = useState(true);
 
   const { cachedExercises, isCacheValid, saveToCache } = useExerciseCache();
 
@@ -52,7 +64,78 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
 
   useEffect(() => {
     loadMuscleGroupsAndExercises();
-  }, []);
+    if (traineeId) {
+      loadRecentExercises();
+    }
+  }, [traineeId]);
+
+  // Load recent exercises for this trainee
+  const loadRecentExercises = async () => {
+    if (!traineeId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('workout_exercises')
+        .select(`
+          exercise_id,
+          exercises (id, name, muscle_group_id),
+          exercise_sets (weight, reps, set_number),
+          workouts!inner (workout_date, is_completed)
+        `)
+        .eq('trainee_id', traineeId)
+        .eq('workouts.is_completed', true)
+        .order('workouts(workout_date)', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        logger.error('Error loading recent exercises:', error, 'ExerciseSelector');
+        return;
+      }
+
+      if (data) {
+        // Group by exercise and get latest data
+        const exerciseMap = new Map<string, RecentExercise>();
+        const lastDataMap = new Map<string, { weight: number; reps: number; date: string }>();
+
+        data.forEach((item: any) => {
+          if (!item.exercises || !item.exercise_sets?.length) return;
+          
+          const exerciseId = item.exercises.id;
+          const bestSet = item.exercise_sets.reduce((best: any, set: any) => {
+            const volume = (set.weight || 0) * (set.reps || 0);
+            const bestVolume = (best?.weight || 0) * (best?.reps || 0);
+            return volume > bestVolume ? set : best;
+          }, item.exercise_sets[0]);
+
+          if (!exerciseMap.has(exerciseId)) {
+            exerciseMap.set(exerciseId, {
+              exerciseId,
+              exerciseName: item.exercises.name,
+              lastWeight: bestSet?.weight || 0,
+              lastReps: bestSet?.reps || 0,
+              lastDate: item.workouts.workout_date,
+              muscleGroupId: item.exercises.muscle_group_id
+            });
+          }
+
+          if (!lastDataMap.has(exerciseId)) {
+            lastDataMap.set(exerciseId, {
+              weight: bestSet?.weight || 0,
+              reps: bestSet?.reps || 0,
+              date: item.workouts.workout_date
+            });
+          }
+        });
+
+        // Get the 8 most recent unique exercises
+        const recent = Array.from(exerciseMap.values()).slice(0, 8);
+        setRecentExercises(recent);
+        setExerciseLastData(lastDataMap);
+      }
+    } catch (error) {
+      logger.error('Error loading recent exercises:', error, 'ExerciseSelector');
+    }
+  };
 
   const loadMuscleGroupsAndExercises = async () => {
     const { data: groups, error: groupsError } = await supabase
@@ -223,35 +306,58 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
     ),
   })).filter((group) => group.exercises.length > 0 || !searchTerm);
 
+  // Get exercise object from recent exercise data
+  const getExerciseFromRecent = (recent: RecentExercise): Exercise | undefined => {
+    for (const group of muscleGroups) {
+      const exercise = group.exercises.find(ex => ex.id === recent.exerciseId);
+      if (exercise) return exercise;
+    }
+    return undefined;
+  };
+
+  // Format relative date
+  const formatRelativeDate = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'היום';
+    if (diffDays === 1) return 'אתמול';
+    if (diffDays < 7) return `לפני ${diffDays} ימים`;
+    if (diffDays < 30) return `לפני ${Math.floor(diffDays / 7)} שבועות`;
+    return `לפני ${Math.floor(diffDays / 30)} חודשים`;
+  };
+
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl transition-all">
-        <div className="bg-zinc-800/50 border-b border-zinc-700/50 p-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-white">בחר תרגיל</h2>
+      <div className={`bg-zinc-900 border border-zinc-800 rounded-2xl ${isTablet ? 'max-w-5xl' : 'max-w-4xl'} w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl transition-all animate-scale-in`}>
+        {/* Header */}
+        <div className="bg-zinc-800/50 border-b border-zinc-700/50 p-4 lg:p-6 flex items-center justify-between">
+          <h2 className="text-xl lg:text-2xl font-bold text-white">בחר תרגיל</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-zinc-700/50 rounded-xl transition-all"
+            className="p-2 lg:p-3 hover:bg-zinc-700/50 rounded-xl transition-all btn-press-feedback"
           >
-            <X className="h-6 w-6 text-zinc-400" />
+            <X className="h-5 w-5 lg:h-6 lg:w-6 text-zinc-400" />
           </button>
         </div>
 
-        <div className="p-6 border-b border-zinc-700/30">
+        {/* Search */}
+        <div className="p-4 lg:p-6 border-b border-zinc-700/30">
           <div className="relative">
             <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-500" />
             {preventKeyboard ? (
-              // On touch devices, use div to prevent native keyboard from opening
               <div className="flex gap-2">
                 <div
-                  className="flex-1 pr-12 pl-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white min-h-[48px] flex items-center"
-                  onClick={() => {/* Virtual keyboard will be shown via button */}}
+                  className="flex-1 pr-12 pl-4 py-3 lg:py-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white min-h-[48px] lg:min-h-[56px] flex items-center text-base lg:text-lg"
+                  onClick={() => {}}
                 >
                   {searchTerm || <span className="text-zinc-500">חפש תרגיל...</span>}
                 </div>
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm('')}
-                    className="px-4 py-3 bg-red-500/15 border border-red-500/30 rounded-xl text-red-400 hover:bg-red-500/25 transition-all"
+                    className="px-4 py-3 lg:py-4 bg-red-500/15 border border-red-500/30 rounded-xl text-red-400 hover:bg-red-500/25 transition-all font-medium"
                   >
                     נקה
                   </button>
@@ -263,11 +369,60 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                 placeholder="חפש תרגיל..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pr-12 pl-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                className="w-full pr-12 pl-4 py-3 lg:py-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-base lg:text-lg"
               />
             )}
           </div>
         </div>
+
+        {/* Recent Exercises Section */}
+        {traineeId && recentExercises.length > 0 && !searchTerm && showRecentSection && (
+          <div className="p-4 lg:p-6 border-b border-zinc-700/30 bg-gradient-to-b from-emerald-500/5 to-transparent">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-amber-400" />
+                <h3 className="font-semibold text-zinc-300 text-sm lg:text-base">תרגילים אחרונים</h3>
+              </div>
+              <button
+                onClick={() => setShowRecentSection(false)}
+                className="text-xs text-zinc-500 hover:text-zinc-400 transition-all"
+              >
+                הסתר
+              </button>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
+              {recentExercises.map((recent) => {
+                const exercise = getExerciseFromRecent(recent);
+                if (!exercise) return null;
+                
+                return (
+                  <button
+                    key={recent.exerciseId}
+                    onClick={() => {
+                      onSelect(exercise);
+                      onClose();
+                    }}
+                    disabled={loadingExerciseId === exercise.id}
+                    className="p-3 lg:p-4 bg-zinc-800/50 hover:bg-emerald-500/10 border border-zinc-700/50 hover:border-emerald-500/30 rounded-xl transition-all text-right group btn-press-feedback"
+                  >
+                    <div className="font-medium text-zinc-200 group-hover:text-emerald-400 text-sm lg:text-base truncate mb-1">
+                      {recent.exerciseName}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-zinc-500">
+                      <span className="font-semibold text-emerald-400">{recent.lastWeight}</span>
+                      <span>ק״ג</span>
+                      <span className="text-zinc-600">×</span>
+                      <span className="font-semibold text-cyan-400">{recent.lastReps}</span>
+                    </div>
+                    <div className="text-[10px] text-zinc-600 mt-1">
+                      {formatRelativeDate(recent.lastDate)}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex-1 flex items-center justify-center p-12">
@@ -378,78 +533,110 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
 
                     {filteredGroups
                       .find((g) => g.id === selectedGroup)
-                      ?.exercises.map((exercise) => (
-                        <div key={exercise.id} className="flex items-center gap-2">
-                          {traineeId && (
+                      ?.exercises.map((exercise) => {
+                        const lastData = exerciseLastData.get(exercise.id);
+                        
+                        return (
+                          <div key={exercise.id} className="flex items-center gap-2">
+                            {/* History button */}
+                            {traineeId && (
+                              <button
+                                onClick={() => setHistoryExercise(exercise)}
+                                className="p-3 lg:p-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-xl transition-all btn-press-feedback"
+                                title="היסטוריה"
+                              >
+                                <Clock className="h-5 w-5 text-cyan-400" />
+                              </button>
+                            )}
+
+                            {/* Info button */}
                             <button
-                              onClick={() => setHistoryExercise(exercise)}
-                              className="flex items-center gap-2 px-4 py-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-xl transition-all"
-                              title="היסטוריה"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setViewingInstructions(exercise);
+                              }}
+                              className="p-3 lg:p-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-xl transition-all btn-press-feedback"
+                              title="הצג הסבר"
                             >
-                              <Clock className="h-5 w-5 text-cyan-400" />
-                              <span className="text-sm font-medium text-cyan-400">היסטוריה</span>
+                              <Info className="h-5 w-5 text-cyan-400" />
                             </button>
-                          )}
 
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setViewingInstructions(exercise);
-                            }}
-                            className="p-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-xl transition-all"
-                            title="הצג הסבר"
-                          >
-                            <Info className="h-5 w-5 text-cyan-400" />
-                          </button>
+                            {/* Edit button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingExercise(exercise);
+                              }}
+                              className="p-3 lg:p-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl transition-all btn-press-feedback"
+                              title="ערוך הסבר"
+                            >
+                              <Edit2 className="h-5 w-5 text-emerald-400" />
+                            </button>
 
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingExercise(exercise);
-                            }}
-                            className="p-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl transition-all"
-                            title="ערוך הסבר"
-                          >
-                            <Edit2 className="h-5 w-5 text-emerald-400" />
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              onSelect(exercise);
-                              onClose();
-                            }}
-                            disabled={loadingExerciseId === exercise.id}
-                            className="flex-1 text-right px-6 py-4 bg-zinc-800/30 border border-zinc-700/30 hover:border-emerald-500/30 hover:bg-emerald-500/10 rounded-xl transition-all group disabled:opacity-50 disabled:cursor-wait"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium text-zinc-200 group-hover:text-emerald-400">
-                                {exercise.name}
-                                {loadingExerciseId === exercise.id && (
-                                  <span className="mr-2 text-xs text-emerald-400">טוען...</span>
-                                )}
-                              </span>
-                              <div className="p-2 bg-zinc-700/50 group-hover:bg-emerald-500/20 rounded-lg transition-all">
-                                {loadingExerciseId === exercise.id ? (
-                                  <div className="h-5 w-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                  <Plus className="h-5 w-5 text-zinc-500 group-hover:text-emerald-400" />
-                                )}
+                            {/* Main exercise button */}
+                            <button
+                              onClick={() => {
+                                onSelect(exercise);
+                                onClose();
+                              }}
+                              disabled={loadingExerciseId === exercise.id}
+                              className="flex-1 text-right px-4 lg:px-6 py-3 lg:py-4 bg-zinc-800/30 border border-zinc-700/30 hover:border-emerald-500/30 hover:bg-emerald-500/10 rounded-xl transition-all group disabled:opacity-50 disabled:cursor-wait btn-press-feedback"
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-semibold text-zinc-200 group-hover:text-emerald-400 text-base lg:text-lg truncate">
+                                      {exercise.name}
+                                    </span>
+                                    {loadingExerciseId === exercise.id && (
+                                      <span className="text-xs text-emerald-400 animate-pulse">טוען...</span>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Last workout data preview */}
+                                  {lastData && traineeId && (
+                                    <div className="flex items-center gap-2 mt-1 text-xs text-zinc-500">
+                                      <span>אחרון:</span>
+                                      <span className="font-semibold text-emerald-400">{lastData.weight}</span>
+                                      <span>ק״ג</span>
+                                      <span className="text-zinc-600">×</span>
+                                      <span className="font-semibold text-cyan-400">{lastData.reps}</span>
+                                      <span className="text-zinc-600 mr-1">({formatRelativeDate(lastData.date)})</span>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                  {lastData && (
+                                    <div className="hidden lg:flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-lg">
+                                      <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
+                                    </div>
+                                  )}
+                                  <div className="p-2 bg-zinc-700/50 group-hover:bg-emerald-500/20 rounded-lg transition-all">
+                                    {loadingExerciseId === exercise.id ? (
+                                      <div className="h-5 w-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                      <Plus className="h-5 w-5 text-zinc-500 group-hover:text-emerald-400" />
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          </button>
+                            </button>
 
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteExercise(exercise.id, exercise.name);
-                            }}
-                            className="p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl transition-all"
-                            title="מחק תרגיל"
-                          >
-                            <Trash2 className="h-5 w-5 text-red-400" />
-                          </button>
-                        </div>
-                      ))}
+                            {/* Delete button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteExercise(exercise.id, exercise.name);
+                              }}
+                              className="p-3 lg:p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl transition-all btn-press-feedback"
+                              title="מחק תרגיל"
+                            >
+                              <Trash2 className="h-5 w-5 text-red-400" />
+                            </button>
+                          </div>
+                        );
+                      })}
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full">

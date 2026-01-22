@@ -46,20 +46,20 @@ export default function StatsCard({ title, value, change, icon: Icon, color }: S
   const config = colorConfig[color];
 
   return (
-    <div className={`stat-card p-6 bg-gradient-to-br ${config.bg} ${config.glow}`}>
-      <div className="flex items-start justify-between">
+    <div className={`stat-card p-5 bg-gradient-to-br ${config.bg} ${config.glow}`}>
+      <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
-          <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">{title}</p>
+          <p className="text-sm font-medium text-secondary mb-2">{title}</p>
           <p className={`text-3xl font-bold ${config.value} tracking-tight animate-count-up`}>
             {value}
           </p>
           {change && (
-            <p className="text-sm text-[var(--color-text-muted)] mt-2 font-medium">
+            <p className="text-sm text-muted mt-2 font-medium">
               {change}
             </p>
           )}
         </div>
-        <div className={`p-3.5 rounded-xl ${config.icon}`}>
+        <div className={`p-3 rounded-xl ${config.icon}`}>
           <Icon className="h-6 w-6" />
         </div>
       </div>

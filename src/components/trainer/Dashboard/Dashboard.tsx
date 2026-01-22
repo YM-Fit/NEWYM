@@ -115,40 +115,40 @@ export default function Dashboard({
     return (
       <div className="space-y-6 animate-fade-in">
         <div className="premium-card-static p-6 md:p-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+          <div className="absolute top-0 left-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
           <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex-1 text-center md:text-right">
               <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-xs font-semibold text-primary uppercase tracking-wider">
                   {getGreeting()}
                 </span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2 tracking-tight">
                 {trainerName ? `שלום, ${trainerName}` : 'שלום'}
               </h1>
-              <p className="text-zinc-400">
+              <p className="text-secondary">
                 התחל לנהל את הסטודיו שלך
               </p>
             </div>
 
-            <div className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700/50">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-sm text-zinc-400">
+            <div className="flex items-center gap-2 px-4 py-2 bg-surface/50 rounded-xl border border-border/10">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-sm text-secondary">
                 {new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="premium-card-static p-8 md:p-12 text-center border border-emerald-500/20">
-          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 flex items-center justify-center">
-            <Users className="w-8 h-8 text-emerald-400" />
+        <div className="premium-card-static p-8 md:p-10 text-center border border-primary/20">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/20 to-primary-dark/10 flex items-center justify-center">
+            <Users className="w-8 h-8 text-primary" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-3">התחל עכשיו!</h3>
-          <p className="text-zinc-400 mb-6 max-w-md mx-auto">
+          <h3 className="text-xl font-bold text-foreground mb-3">התחל עכשיו!</h3>
+          <p className="text-secondary mb-6 max-w-md mx-auto">
             הוסף את המתאמן הראשון שלך כדי להתחיל לעבוד עם המערכת
           </p>
           <button
@@ -166,26 +166,26 @@ export default function Dashboard({
     <div className="space-y-4 md:space-y-6 animate-fade-in">
       {/* Header with inline stats */}
       <div className="premium-card-static p-5 md:p-6 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+        <div className="absolute top-0 left-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
         <div className="relative">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-xs font-semibold text-primary uppercase tracking-wider">
                   {getGreeting()}
                 </span>
               </div>
-              <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">
+              <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
                 {trainerName ? `שלום, ${trainerName}` : 'שלום'}
               </h1>
             </div>
 
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800/50 rounded-lg border border-zinc-700/50">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs text-zinc-400">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-surface/50 rounded-lg border border-border/10">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-xs text-secondary">
                 {new Date().toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })}
               </span>
             </div>
@@ -193,40 +193,40 @@ export default function Dashboard({
 
           {/* Inline stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-zinc-800/30 border border-zinc-700/30">
-              <div className="p-2 rounded-lg bg-emerald-500/20">
-                <Users className="w-4 h-4 text-emerald-400" />
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10">
+              <div className="p-2 rounded-lg bg-primary/20">
+                <Users className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <p className="text-xs text-zinc-400">מתאמנים</p>
-                <p className="text-lg font-bold text-white">{trainees.length}</p>
+                <p className="text-xs text-secondary">מתאמנים</p>
+                <p className="text-lg font-bold text-foreground">{trainees.length}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-zinc-800/30 border border-zinc-700/30">
-              <div className="p-2 rounded-lg bg-cyan-500/20">
-                <Activity className="w-4 h-4 text-cyan-400" />
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10">
+              <div className="p-2 rounded-lg bg-info/20">
+                <Activity className="w-4 h-4 text-info" />
               </div>
               <div>
-                <p className="text-xs text-zinc-400">אימונים היום</p>
-                <p className="text-lg font-bold text-white">{todayWorkouts}</p>
+                <p className="text-xs text-secondary">אימונים היום</p>
+                <p className="text-lg font-bold text-foreground">{todayWorkouts}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-zinc-800/30 border border-zinc-700/30">
-              <div className="p-2 rounded-lg bg-teal-500/20">
-                <Target className="w-4 h-4 text-teal-400" />
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10">
+              <div className="p-2 rounded-lg bg-success/20">
+                <Target className="w-4 h-4 text-success" />
               </div>
               <div>
-                <p className="text-xs text-zinc-400">מדידות (7 ימים)</p>
-                <p className="text-lg font-bold text-white">{recentMeasurements}</p>
+                <p className="text-xs text-secondary">מדידות (7 ימים)</p>
+                <p className="text-lg font-bold text-foreground">{recentMeasurements}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-zinc-800/30 border border-zinc-700/30">
-              <div className="p-2 rounded-lg bg-amber-500/20">
-                <AlertCircle className="w-4 h-4 text-amber-400" />
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-surface/50 border border-border/10">
+              <div className="p-2 rounded-lg bg-warning/20">
+                <AlertCircle className="w-4 h-4 text-warning" />
               </div>
               <div>
-                <p className="text-xs text-zinc-400">קריאות מאזניים</p>
-                <p className="text-lg font-bold text-white">{scaleReadings.length}</p>
+                <p className="text-xs text-secondary">קריאות מאזניים</p>
+                <p className="text-lg font-bold text-foreground">{scaleReadings.length}</p>
               </div>
             </div>
           </div>

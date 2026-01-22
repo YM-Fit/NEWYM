@@ -1,5 +1,45 @@
 @layer base {
   :root {
+    /* Design Tokens - Spacing Scale */
+    --spacing-xs: 0.5rem;      /* 8px */
+    --spacing-sm: 0.75rem;     /* 12px */
+    --spacing-md: 1rem;        /* 16px */
+    --spacing-lg: 1.25rem;     /* 20px */
+    --spacing-xl: 1.5rem;      /* 24px */
+    --spacing-2xl: 2rem;       /* 32px */
+    --spacing-3xl: 2.5rem;     /* 40px */
+    --spacing-4xl: 3rem;       /* 48px */
+
+    /* Design Tokens - Border Radius Scale */
+    --radius-xs: 0.5rem;       /* 8px */
+    --radius-sm: 0.75rem;      /* 12px */
+    --radius-md: 1rem;         /* 16px */
+    --radius-lg: 1.25rem;      /* 20px */
+    --radius-xl: 1.5rem;       /* 24px */
+    --radius-2xl: 1.75rem;     /* 28px */
+    --radius-3xl: 2rem;        /* 32px */
+
+    /* Design Tokens - Typography Scale */
+    --font-size-xs: 0.75rem;      /* 12px */
+    --font-size-sm: 0.875rem;     /* 14px */
+    --font-size-base: 1rem;       /* 16px */
+    --font-size-lg: 1.125rem;     /* 18px */
+    --font-size-xl: 1.25rem;      /* 20px */
+    --font-size-2xl: 1.5rem;      /* 24px */
+    --font-size-3xl: 1.875rem;    /* 30px */
+    --font-size-4xl: 2.25rem;     /* 36px */
+    --font-size-5xl: 3rem;        /* 48px */
+
+    --line-height-tight: 1.25;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.75;
+    --line-height-loose: 2;
+
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
     /* Brand */
     --color-primary: 16 185 129;
     --color-primary-light: 52 211 153;

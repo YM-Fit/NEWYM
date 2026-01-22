@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, BookMarked } from 'lucide-react';
+import { Plus, BookMarked, Timer, Target, TrendingUp, Zap } from 'lucide-react';
 import { supabase, logSupabaseError } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useAutoSave } from '../../../hooks/useAutoSave';
@@ -234,7 +234,7 @@ export default function WorkoutSession({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty, exercises.length, workoutId]);
 
-  // Keyboard shortcuts for better UX
+  // Enhanced keyboard shortcuts for better UX (especially on tablet with external keyboard)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle shortcuts when modals are open or input is focused
@@ -248,12 +248,16 @@ export default function WorkoutSession({
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         if (exercises.length > 0 && !saving && user) {
-          // Call handleSave directly - it's defined in the component scope
           handleSave();
         }
       }
-      // Ctrl/Cmd + N to add exercise
+      // Ctrl/Cmd + N or just N to add exercise
       else if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        setShowExerciseSelector(true);
+      }
+      // Just N (without modifier) to add exercise when no exercises
+      else if (e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.metaKey && exercises.length === 0) {
         e.preventDefault();
         setShowExerciseSelector(true);
       }
@@ -264,6 +268,50 @@ export default function WorkoutSession({
           setShowTemplateModal(true);
         }
       }
+      // Plus key to add set to last exercise
+      else if (e.key === '+' || e.key === '=') {
+        e.preventDefault();
+        if (exercises.length > 0) {
+          const lastExerciseIndex = exercises.length - 1;
+          addSet(lastExerciseIndex);
+          toast.success('סט חדש נוסף', { duration: 1500, position: 'bottom-center' });
+        }
+      }
+      // Escape to go back (with confirmation if dirty)
+      else if (e.key === 'Escape') {
+        if (exercises.length > 0 && isDirty) {
+          if (confirm('יש שינויים שלא נשמרו. בטוח שברצונך לצאת?')) {
+            onBack();
+          }
+        } else if (exercises.length === 0) {
+          onBack();
+        }
+      }
+      // Arrow down to expand next collapsed set
+      else if (e.key === 'ArrowDown' && !e.ctrlKey && !e.metaKey) {
+        const firstCollapsedSet = collapsedSets[0];
+        if (firstCollapsedSet) {
+          toggleCollapseSet(firstCollapsedSet);
+        }
+      }
+      // Enter to complete current set (first non-collapsed exercise, first non-collapsed set)
+      else if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
+        // Find the first non-minimized exercise with a non-collapsed set
+        for (let i = 0; i < exercises.length; i++) {
+          if (!minimizedExercises.includes(exercises[i].tempId)) {
+            const exercise = exercises[i];
+            for (let j = 0; j < exercise.sets.length; j++) {
+              if (!collapsedSets.includes(exercise.sets[j].id)) {
+                // This is the active set - complete it
+                completeSetAndMoveNext(i, j);
+                toast.success('סט הושלם', { duration: 1500, position: 'bottom-center' });
+                break;
+              }
+            }
+            break;
+          }
+        }
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -271,7 +319,7 @@ export default function WorkoutSession({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showExerciseSelector, numericPad, equipmentSelector, supersetSelector, 
       showDraftModal, showTemplateModal, showSaveTemplateModal, showSummary, 
-      exercises.length, saving]);
+      exercises.length, saving, isDirty, collapsedSets, minimizedExercises]);
 
   useEffect(() => {
     const loadMuscleGroups = async () => {
@@ -868,6 +916,48 @@ export default function WorkoutSession({
 
   const totalVolume = useMemo(() => calculateTotalVolume(), [exercises]);
 
+  // Calculate workout progress stats
+  const workoutProgress = useMemo(() => {
+    let totalSets = 0;
+    let completedSets = 0;
+    
+    exercises.forEach(ex => {
+      totalSets += ex.sets.length;
+      ex.sets.forEach(set => {
+        if (set.weight > 0 && set.reps > 0) {
+          completedSets++;
+        }
+      });
+    });
+    
+    const progressPercent = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
+    
+    return {
+      totalSets,
+      completedSets,
+      progressPercent,
+      totalExercises: exercises.length,
+      completedExercises: minimizedExercises.length,
+    };
+  }, [exercises, minimizedExercises]);
+
+  // Workout timer display
+  const [elapsedTime, setElapsedTime] = useState(0);
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - workoutStartTime.current) / 1000));
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
+  
+  const formatTime = useCallback((seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }, []);
+
   return (
     <div
       className={`trainer-workout-session min-h-screen bg-[var(--color-bg-base)] p-4 lg:p-6 transition-colors duration-300 ${
@@ -893,6 +983,61 @@ export default function WorkoutSession({
         onWorkoutTypeChange={setWorkoutType}
         isTablet={isTablet}
       />
+
+      {/* Workout Progress Bar - Only show when workout has exercises */}
+      {exercises.length > 0 && (
+        <div className="premium-card-static p-3 lg:p-4 mb-4 animate-fade-in">
+          {/* Progress bar */}
+          <div className="relative h-2 bg-zinc-800 rounded-full overflow-hidden mb-3">
+            <div 
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+              style={{ width: `${workoutProgress.progressPercent}%` }}
+            />
+          </div>
+          
+          {/* Stats row */}
+          <div className="flex items-center justify-between flex-wrap gap-2 lg:gap-4">
+            {/* Timer */}
+            <div className="flex items-center gap-2 bg-zinc-800/50 px-3 py-1.5 rounded-lg">
+              <Timer className="h-4 w-4 text-amber-400" />
+              <span className="font-mono font-semibold text-white text-sm lg:text-base">{formatTime(elapsedTime)}</span>
+            </div>
+            
+            {/* Sets progress */}
+            <div className="flex items-center gap-2 bg-zinc-800/50 px-3 py-1.5 rounded-lg">
+              <Target className="h-4 w-4 text-cyan-400" />
+              <span className="text-sm lg:text-base">
+                <span className="font-semibold text-cyan-400">{workoutProgress.completedSets}</span>
+                <span className="text-zinc-500">/{workoutProgress.totalSets}</span>
+                <span className="text-zinc-400 mr-1">סטים</span>
+              </span>
+            </div>
+            
+            {/* Volume */}
+            <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/30">
+              <TrendingUp className="h-4 w-4 text-emerald-400" />
+              <span className="font-semibold text-emerald-400 text-sm lg:text-base">{totalVolume.toLocaleString()}</span>
+              <span className="text-emerald-400/70 text-xs">ק״ג</span>
+            </div>
+            
+            {/* Exercises progress */}
+            <div className="flex items-center gap-2 bg-zinc-800/50 px-3 py-1.5 rounded-lg">
+              <Zap className="h-4 w-4 text-purple-400" />
+              <span className="text-sm lg:text-base">
+                <span className="font-semibold text-purple-400">{workoutProgress.completedExercises}</span>
+                <span className="text-zinc-500">/{workoutProgress.totalExercises}</span>
+                <span className="text-zinc-400 mr-1">תרגילים</span>
+              </span>
+            </div>
+            
+            {/* Progress percentage */}
+            <div className="flex items-center gap-1">
+              <span className="text-lg lg:text-xl font-bold text-white">{workoutProgress.progressPercent}%</span>
+              <span className="text-xs text-zinc-500">הושלמו</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={isTablet ? 'trainer-workout-layout grid gap-4' : 'space-y-4'}>
         {exercises.map((workoutExercise, exerciseIndex) => (
@@ -1213,6 +1358,35 @@ export default function WorkoutSession({
           } : null}
           personalRecords={personalRecords}
         />
+      )}
+
+      {/* Floating Action Button for tablet - Quick actions */}
+      {isTablet && exercises.length > 0 && !showExerciseSelector && !numericPad && !showSummary && (
+        <div className="fixed bottom-6 left-6 z-40 flex flex-col gap-3 animate-fade-in">
+          {/* Add set to last exercise */}
+          <button
+            type="button"
+            onClick={() => {
+              const lastExerciseIndex = exercises.length - 1;
+              addSet(lastExerciseIndex);
+              toast.success('סט חדש נוסף', { duration: 1500, position: 'bottom-center' });
+            }}
+            className="w-14 h-14 bg-cyan-500 hover:bg-cyan-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            title="הוסף סט (קיצור: +)"
+          >
+            <Plus className="h-6 w-6" />
+          </button>
+          
+          {/* Add exercise */}
+          <button
+            type="button"
+            onClick={() => setShowExerciseSelector(true)}
+            className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            title="הוסף תרגיל (קיצור: Ctrl+N)"
+          >
+            <BookMarked className="h-6 w-6" />
+          </button>
+        </div>
       )}
     </div>
   );
