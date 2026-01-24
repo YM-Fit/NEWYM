@@ -41,6 +41,7 @@ const SmartReportView = lazy(() => import('./Reports/SmartReportView'));
 // Settings & Management Components
 const HealthCheckView = lazy(() => import('../settings/HealthCheckView'));
 const ErrorReportingSettings = lazy(() => import('../settings/ErrorReportingSettings'));
+const StudioTvView = lazy(() => import('./Studio/StudioTvView'));
 
 interface Trainee {
   id: string;
@@ -1256,6 +1257,21 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
 
   if (isThemeShowcase) {
     return <ThemeShowcase />;
+  }
+
+  // Full-screen Studio TV mode – no sidebars/header, only the TV view
+  if (activeView === 'studio-tv') {
+    return (
+      <Suspense
+        fallback={
+          <div className="min-h-screen bg-gradient-to-br from-zinc-950 to-black flex items-center justify-center">
+            <LoadingSpinner size="lg" text="טוען מצב טלוויזיה..." />
+          </div>
+        }
+      >
+        <StudioTvView />
+      </Suspense>
+    );
   }
 
   return (

@@ -223,6 +223,15 @@ export default function Dashboard({
                 <span className="text-base font-extrabold text-foreground">{todayWorkouts}</span>
               </div>
             </div>
+
+            {/* Studio TV mode button */}
+            <button
+              type="button"
+              onClick={() => onViewChange('studio-tv')}
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-lime-500 text-black font-semibold text-sm shadow-lg shadow-emerald-700/30 hover:shadow-emerald-500/50 hover:scale-[1.03] active:scale-[0.99] transition-all"
+            >
+              <span>מצב טלוויזיה לסטודיו</span>
+            </button>
           </div>
         </div>
       </div>

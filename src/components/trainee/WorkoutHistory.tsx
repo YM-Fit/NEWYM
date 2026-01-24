@@ -94,6 +94,7 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
   const [showFilters, setShowFilters] = useState(false);
   const [previousExerciseData, setPreviousExerciseData] = useState<Map<string, { weight: number; reps: number }>>(new Map());
   const [showSelfWorkout, setShowSelfWorkout] = useState(false);
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
 
   useEffect(() => {
     if (traineeId) {
@@ -221,9 +222,16 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
   };
 
   const getFilteredWorkouts = () => {
+    const now = new Date();
     return workouts.filter((w) => {
+      const date = new Date(w.workout_date);
+
+      // אל תכלול אימונים עתידיים בהיסטוריה
+      if (date.getTime() > now.getTime()) {
+        return false;
+      }
+
       if (selectedMonth !== 'all') {
-        const date = new Date(w.workout_date);
         const workoutMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         if (workoutMonth !== selectedMonth) return false;
       }
@@ -335,9 +343,59 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
     return `${months[parseInt(month) - 1]} ${year}`;
   };
 
+  const getCurrentMonthKey = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  };
+
+  const getCalendarMonthInfo = () => {
+    const monthKey = selectedMonth === 'all' ? getCurrentMonthKey() : selectedMonth;
+    const [yearStr, monthStr] = monthKey.split('-');
+    const year = parseInt(yearStr, 10);
+    const monthIndex = parseInt(monthStr, 10) - 1; // 0-based
+    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+    return { monthKey, year, monthIndex, daysInMonth };
+  };
+
+  const getMonthCalendarData = () => {
+    const now = new Date();
+    const { monthKey, year, monthIndex, daysInMonth } = getCalendarMonthInfo();
+    const days: Record<number, Workout[]> = {};
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      days[day] = [];
+    }
+
+    workouts.forEach((w) => {
+      const date = new Date(w.workout_date);
+      // רק עבר והיום, לא עתיד
+      if (date.getTime() > now.getTime()) return;
+      if (date.getFullYear() !== year || date.getMonth() !== monthIndex) return;
+      const day = date.getDate();
+      if (!days[day]) {
+        days[day] = [];
+      }
+      days[day].push(w);
+    });
+
+    return { monthKey, year, monthIndex, daysInMonth, days };
+  };
+
+  const getPlannedWorkouts = () => {
+    const now = new Date();
+    return workouts
+      .filter((w) => {
+        const date = new Date(w.workout_date);
+        return date.getTime() > now.getTime();
+      })
+      .sort((a, b) => new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime());
+  };
+
   const stats = useMemo(() => getMonthlyStats(), [workouts]);
   const latestPR = useMemo(() => getLatestPR(), [workouts, previousExerciseData]);
   const filteredWorkoutsMemo = useMemo(() => getFilteredWorkouts(), [workouts, selectedMonth, selectedMuscleGroup]);
+  const calendarData = useMemo(() => getMonthCalendarData(), [workouts, selectedMonth]);
+  const plannedWorkouts = useMemo(() => getPlannedWorkouts(), [workouts]);
 
   if (loading) {
     return (
@@ -434,6 +492,48 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
         </div>
       </div>
 
+      {plannedWorkouts.length > 0 && (
+        <div className="premium-card-static overflow-hidden">
+          <div className="bg-[var(--color-bg-surface)] px-4 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
+            <h3 className="font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+              <Clock className="w-4 h-4 text-blue-400" />
+              אימונים מתוכננים
+            </h3>
+            <span className="text-xs text-[var(--color-text-muted)]">
+              {plannedWorkouts.length} אימונים קדימה
+            </span>
+          </div>
+          <div className="divide-y divide-[var(--color-border)]">
+            {plannedWorkouts.slice(0, 5).map((workout) => (
+              <button
+                key={workout.id}
+                onClick={() => setSelectedWorkout(workout)}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-[var(--color-bg-surface)] transition-colors text-right"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center border bg-blue-500/10 border-blue-500/30">
+                    <Clock className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-[var(--color-text-primary)]">
+                      {new Date(workout.workout_date).toLocaleDateString('he-IL', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                      })}
+                    </p>
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      אימון מתוכנן • {workout.workout_exercises?.length || 0} תרגילים
+                    </p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="premium-card-static overflow-hidden">
       <div className="premium-card-static overflow-hidden">
         <button
           onClick={() => setShowFilters(!showFilters)}
@@ -459,7 +559,7 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
                 onChange={(e) => setSelectedMonth(e.target.value)}
                 className="glass-input w-full p-2"
               >
-                <option value="all">כל החודשים</option>
+                <option value="all">חודש נוכחי</option>
                 {getAvailableMonths().map((month) => (
                   <option key={month} value={month}>
                     {formatMonthName(month)}
@@ -488,20 +588,147 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
       </div>
 
       <div className="premium-card-static overflow-hidden">
-        <div className="bg-[var(--color-bg-surface)] px-4 py-3 border-b border-[var(--color-border)]">
-          <h3 className="font-bold text-[var(--color-text-primary)]">היסטוריית אימונים</h3>
+        <div className="bg-[var(--color-bg-surface)] px-4 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-[var(--color-text-primary)]">היסטוריית אימונים</h3>
+            <p className="text-xs text-[var(--color-text-muted)]">
+              תצוגה לפי חודש, מסומנים הימים שבהם ביצעת אימון
+            </p>
+          </div>
+          <div className="inline-flex items-center rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] overflow-hidden text-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode('calendar')}
+              className={`px-3 py-1.5 ${
+                viewMode === 'calendar'
+                  ? 'bg-emerald-500/15 text-emerald-400'
+                  : 'text-[var(--color-text-muted)]'
+              }`}
+            >
+              לוח חודשי
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1.5 ${
+                viewMode === 'list'
+                  ? 'bg-emerald-500/15 text-emerald-400'
+                  : 'text-[var(--color-text-muted)]'
+              }`}
+            >
+              רשימה
+            </button>
+          </div>
         </div>
 
-        {filteredWorkoutsMemo.length === 0 ? (
+        {viewMode === 'calendar' ? (
+          <div>
+            <div className="px-4 pt-3 pb-2 flex items-center justify-between text-xs text-[var(--color-text-muted)]">
+              <span>{formatMonthName(calendarData.monthKey)}</span>
+              <span>לחיצה על יום עם אימון תפתח את פירוט האימון</span>
+            </div>
+            {calendarData.daysInMonth === 0 ? (
+              <div className="p-6">
+                <EmptyState
+                  icon={Dumbbell}
+                  title="לא נמצאו אימונים בחודש זה"
+                  description="בחר חודש אחר או התחל באימון הראשון שלך"
+                  action={
+                    workouts.length === 0
+                      ? {
+                          label: 'התחל אימון',
+                          onClick: () => setShowSelfWorkout(true),
+                        }
+                      : undefined
+                  }
+                />
+              </div>
+            ) : (
+              <div className="px-2 pb-4">
+                {/* כותרת ימי השבוע */}
+                <div className="grid grid-cols-7 gap-1 px-2 pb-2 text-center text-[10px] text-[var(--color-text-muted)]">
+                  <div>א׳</div>
+                  <div>ב׳</div>
+                  <div>ג׳</div>
+                  <div>ד׳</div>
+                  <div>ה׳</div>
+                  <div>ו׳</div>
+                  <div>ש׳</div>
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {(() => {
+                    const firstDayOfWeek = new Date(
+                      calendarData.year,
+                      calendarData.monthIndex,
+                      1
+                    ).getDay(); // 0 = Sunday
+                    const blanks = Array.from({ length: firstDayOfWeek }, (_, index) => (
+                      <div key={`blank-${index}`} className="h-12" />
+                    ));
+                    const dayCells = Array.from(
+                      { length: calendarData.daysInMonth },
+                      (_, index) => {
+                        const day = index + 1;
+                        const dayWorkouts = calendarData.days[day] || [];
+                        const hasWorkout = dayWorkouts.length > 0;
+                        const workout = hasWorkout ? dayWorkouts[0] : null;
+
+                        const cellContent = (
+                          <div
+                            className={`w-full h-12 rounded-xl border flex flex-col items-center justify-center text-xs ${
+                              hasWorkout
+                                ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400'
+                                : 'bg-[var(--color-bg-surface)] border-[var(--color-border)] text-[var(--color-text-muted)]'
+                            }`}
+                          >
+                            <span className="text-sm font-medium">{day}</span>
+                            {hasWorkout && workout && (
+                              <span className="text-[10px]">
+                                {workout.workout_exercises?.length || 0} תרגילים
+                              </span>
+                            )}
+                          </div>
+                        );
+
+                        return hasWorkout ? (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => setSelectedWorkout(dayWorkouts[0])}
+                            className="w-full"
+                          >
+                            {cellContent}
+                          </button>
+                        ) : (
+                          <div key={day}>{cellContent}</div>
+                        );
+                      }
+                    );
+
+                    return [...blanks, ...dayCells];
+                  })()}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : filteredWorkoutsMemo.length === 0 ? (
           <div className="p-8">
             <EmptyState
               icon={Dumbbell}
-              title={workouts.length === 0 ? "אין אימונים עדיין" : "לא נמצאו אימונים"}
-              description={workouts.length === 0 ? "התחל באימון הראשון שלך" : "לא נמצאו אימונים בתקופה שנבחרה"}
-              action={workouts.length === 0 ? {
-                label: 'התחל אימון',
-                onClick: () => setShowSelfWorkout(true)
-              } : undefined}
+              title={workouts.length === 0 ? 'אין אימונים עדיין' : 'לא נמצאו אימונים'}
+              description={
+                workouts.length === 0
+                  ? 'התחל באימון הראשון שלך'
+                  : 'לא נמצאו אימונים בתקופה שנבחרה'
+              }
+              action={
+                workouts.length === 0
+                  ? {
+                      label: 'התחל אימון',
+                      onClick: () => setShowSelfWorkout(true),
+                    }
+                  : undefined
+              }
             />
           </div>
         ) : (
@@ -515,7 +742,9 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-10 h-10 rounded-lg flex items-center justify-center border ${
-                      workout.is_completed ? 'bg-emerald-500/15 border-emerald-500/30' : 'bg-[var(--color-bg-surface)] border-[var(--color-border)]'
+                      workout.is_completed
+                        ? 'bg-emerald-500/15 border-emerald-500/30'
+                        : 'bg-[var(--color-bg-surface)] border-[var(--color-border)]'
                     }`}
                   >
                     {workout.is_completed ? (

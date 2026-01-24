@@ -1,4 +1,4 @@
-import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3, Search, LucideIcon, Calendar, Activity, Settings, FileSpreadsheet } from 'lucide-react';
+import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3, Search, LucideIcon, Calendar, Activity, Settings, FileSpreadsheet, Monitor } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { getFromStorage, setToStorage, STORAGE_KEYS } from '../../utils/storage';
 
@@ -29,20 +29,24 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
     setToStorage(STORAGE_KEYS.SIDEBAR_MINIMIZED, isMinimized);
   }, [isMinimized]);
 
-  const menuItems: MenuItem[] = useMemo(() => [
-    // Main Navigation
-    { id: 'dashboard', label: 'דף הבית', icon: Home, description: 'סקירה כללית', category: 'main' },
-    { id: 'trainees', label: 'מתאמנים', icon: Users, description: 'ניהול מתאמנים', category: 'main' },
-    { id: 'calendar', label: 'יומן', icon: Calendar, description: 'Google Calendar', category: 'main' },
-    
-    // Tools & Analytics
-    { id: 'tools', label: 'כלים', icon: Calculator, description: 'מחשבונים וכלים', category: 'tools' },
-    { id: 'reports', label: 'דוחות', icon: BarChart3, description: 'סטטיסטיקות ונתונים', category: 'tools' },
-    { id: 'smart-report', label: 'דוח חכם', icon: FileSpreadsheet, description: 'ניהול תשלומים חודשי', category: 'tools' },
-    
-    // Settings & Management
-    { id: 'health-check', label: 'בדיקת בריאות', icon: Activity, description: 'מצב המערכת', category: 'settings' },
-  ], []);
+  const menuItems: MenuItem[] = useMemo(
+    () => [
+      // Main Navigation
+      { id: 'dashboard', label: 'דף הבית', icon: Home, description: 'סקירה כללית', category: 'main' },
+      { id: 'trainees', label: 'מתאמנים', icon: Users, description: 'ניהול מתאמנים', category: 'main' },
+      { id: 'calendar', label: 'יומן', icon: Calendar, description: 'Google Calendar', category: 'main' },
+      { id: 'studio-tv', label: 'מצב טלוויזיה', icon: Monitor, description: 'תצוגת אימון למסך הגדול', category: 'main' },
+
+      // Tools & Analytics
+      { id: 'tools', label: 'כלים', icon: Calculator, description: 'מחשבונים וכלים', category: 'tools' },
+      { id: 'reports', label: 'דוחות', icon: BarChart3, description: 'סטטיסטיקות ונתונים', category: 'tools' },
+      { id: 'smart-report', label: 'דוח חכם', icon: FileSpreadsheet, description: 'ניהול תשלומים חודשי', category: 'tools' },
+
+      // Settings & Management
+      { id: 'health-check', label: 'בדיקת בריאות', icon: Activity, description: 'מצב המערכת', category: 'settings' },
+    ],
+    []
+  );
 
   const categories = useMemo(() => [
     { id: 'main', label: 'ניווט ראשי', icon: Home },

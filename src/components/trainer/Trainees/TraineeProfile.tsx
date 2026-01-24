@@ -75,10 +75,36 @@ export default function TraineeProfile({
     ? latestMeasurement.weight - previousMeasurement.weight
     : 0;
 
+  const now = new Date();
+
   const totalWorkouts = workouts.length;
   const totalVolume = workouts.reduce((sum, w) => sum + (w.totalVolume || 0), 0);
-  const recentWorkouts = workouts.slice(0, 5);
+
+  const currentMonthWorkouts = workouts.filter((w) => {
+    const date = new Date(w.date);
+    return (
+      date.getFullYear() === now.getFullYear() &&
+      date.getMonth() === now.getMonth() &&
+      date.getTime() <= now.getTime()
+    );
+  });
+
+  const plannedWorkouts = workouts.filter((w) => {
+    const date = new Date(w.date);
+    return date.getTime() > now.getTime();
+  });
+
+  const recentWorkouts = currentMonthWorkouts
+    .slice()
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+
   const recentMeasurements = measurements.slice(0, 5);
+
+  const currentMonthLabel = new Intl.DateTimeFormat('he-IL', {
+    month: 'long',
+    year: 'numeric',
+  }).format(now);
 
   const tabs: { id: TabType; label: string; icon: React.ComponentType<{ className?: string; size?: number }> }[] = [
     { id: 'overview', label: 'סקירה', icon: Sparkles },
@@ -519,19 +545,33 @@ export default function TraineeProfile({
               <div className="p-5 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-emerald-400" />
-                  <h3 className="text-base font-semibold text-foreground">אימונים אחרונים</h3>
+                  <div className="flex flex-col">
+                    <h3 className="text-base font-semibold text-foreground">אימונים החודש</h3>
+                    <span className="text-xs text-muted">{currentMonthLabel}</span>
+                  </div>
                 </div>
-                {onViewWorkouts && workouts.length > 0 && (
-                  <button
-                    onClick={onViewWorkouts}
-                    className="text-sm text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
-                  >
-                    כל האימונים
-                  </button>
-                )}
+                <div className="flex flex-col items-end gap-1">
+                  {onViewWorkouts && workouts.length > 0 && (
+                    <button
+                      onClick={onViewWorkouts}
+                      className="text-sm text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+                    >
+                      כל האימונים
+                    </button>
+                  )}
+                  {plannedWorkouts.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={onViewWorkouts}
+                      className="text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
+                    >
+                      {plannedWorkouts.length} אימונים מתוכננים קדימה
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="p-5">
-                {workouts.length > 0 ? (
+                {recentWorkouts.length > 0 ? (
                   <div className="space-y-3">
                     {recentWorkouts.map((workout, index) => (
                       <div
