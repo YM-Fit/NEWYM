@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Search, X, Plus, Clock, PlusCircle, Trash2, Info, Edit2, TrendingUp, Star, Zap } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Search, X, Plus, Clock, PlusCircle, Trash2, Info, Edit2, TrendingUp, Star, Zap, Pencil } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
@@ -55,6 +55,12 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
   const [recentExercises, setRecentExercises] = useState<RecentExercise[]>([]);
   const [exerciseLastData, setExerciseLastData] = useState<Map<string, { weight: number; reps: number; date: string }>>(new Map());
   const [showRecentSection, setShowRecentSection] = useState(true);
+
+  // Enable on-screen keyboard for specific fields on tablet/touch devices
+  const [nameKeyboardEnabled, setNameKeyboardEnabled] = useState(false);
+  const [instructionsKeyboardEnabled, setInstructionsKeyboardEnabled] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
+  const instructionsRef = useRef<HTMLTextAreaElement | null>(null);
 
   const { cachedExercises, isCacheValid, saveToCache } = useExerciseCache();
 
@@ -468,20 +474,41 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                     {showAddForm && (
                       <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-4 space-y-4">
                         <div>
-                          <label className="block text-sm font-medium text-emerald-400 mb-2">
-                            שם התרגיל החדש
-                          </label>
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="block text-sm font-medium text-emerald-400">
+                              שם התרגיל החדש
+                            </label>
+                            {preventKeyboard && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setNameKeyboardEnabled(true);
+                                  // קטן timeout כדי לאפשר ל-React לעדכן את ה-readOnly לפני focus
+                                  setTimeout(() => {
+                                    nameInputRef.current?.focus();
+                                  }, 0);
+                                }}
+                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-medium"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                                <span>אפשר כתיבה</span>
+                              </button>
+                            )}
+                          </div>
                           <input
                             type="text"
+                            ref={nameInputRef}
                             value={newExerciseName}
                             onChange={(e) => setNewExerciseName(e.target.value)}
                             className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                             placeholder="הזן שם תרגיל..."
                             autoFocus={!preventKeyboard}
-                            readOnly={preventKeyboard}
-                            inputMode={preventKeyboard ? 'none' : 'text'}
+                            readOnly={preventKeyboard && !nameKeyboardEnabled}
+                            inputMode={preventKeyboard && !nameKeyboardEnabled ? 'none' : 'text'}
                             onFocus={(e) => {
-                              if (preventKeyboard) {
+                              if (preventKeyboard && !nameKeyboardEnabled) {
                                 e.target.blur();
                               }
                             }}
@@ -491,19 +518,39 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-emerald-400 mb-2">
-                            הוראות ביצוע (אופציונלי)
-                          </label>
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="block text-sm font-medium text-emerald-400">
+                              הוראות ביצוע (אופציונלי)
+                            </label>
+                            {preventKeyboard && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setInstructionsKeyboardEnabled(true);
+                                  setTimeout(() => {
+                                    instructionsRef.current?.focus();
+                                  }, 0);
+                                }}
+                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-medium"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                                <span>אפשר כתיבה</span>
+                              </button>
+                            )}
+                          </div>
                           <textarea
+                            ref={instructionsRef}
                             value={newExerciseInstructions}
                             onChange={(e) => setNewExerciseInstructions(e.target.value)}
                             className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
                             placeholder="הזן הוראות ביצוע מפורטות לתרגיל..."
                             rows={4}
-                            readOnly={preventKeyboard}
-                            inputMode={preventKeyboard ? 'none' : 'text'}
+                            readOnly={preventKeyboard && !instructionsKeyboardEnabled}
+                            inputMode={preventKeyboard && !instructionsKeyboardEnabled ? 'none' : 'text'}
                             onFocus={(e) => {
-                              if (preventKeyboard) {
+                              if (preventKeyboard && !instructionsKeyboardEnabled) {
                                 e.target.blur();
                               }
                             }}

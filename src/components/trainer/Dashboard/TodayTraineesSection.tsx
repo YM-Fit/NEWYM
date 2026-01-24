@@ -108,12 +108,22 @@ export default function TodayTraineesSection({
         return;
       }
 
+      // Get trainer_id from the first trainee (all trainees belong to the same trainer)
+      const trainerId = trainees[0]?.trainer_id;
+      if (!trainerId) {
+        setTodayTrainees([]);
+        setLoading(false);
+        isLoadingRef.current = false;
+        return;
+      }
+
       // First, get today's workouts for the trainer
       let workoutsData, workoutsError;
       try {
         const result = await supabase
           .from('workouts')
-          .select('id, workout_date, workout_type, is_completed, notes, created_at')
+          .select('id, workout_date, workout_type, is_completed, notes, created_at, trainer_id')
+          .eq('trainer_id', trainerId)
           .gte('workout_date', todayStr)
           .lt('workout_date', tomorrowStr)
           .order('workout_date', { ascending: true });

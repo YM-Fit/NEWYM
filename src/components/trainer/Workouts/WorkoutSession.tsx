@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, BookMarked, Timer, Target, TrendingUp, Zap } from 'lucide-react';
+import { Plus, BookMarked, Timer, Target, TrendingUp, Zap, Pencil, CheckCircle2, History } from 'lucide-react';
 import { supabase, logSupabaseError } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useAutoSave } from '../../../hooks/useAutoSave';
@@ -17,6 +17,7 @@ import DraftModal from '../../common/DraftModal';
 import WorkoutTemplates from './WorkoutTemplates';
 import { WorkoutHeader } from './WorkoutHeader';
 import { WorkoutExerciseCard } from './WorkoutExerciseCard';
+import WorkoutHistoryModal from './WorkoutHistoryModal';
 import { WorkoutTemplate, WorkoutTemplateExercise, Trainee, Workout } from '../../../types';
 
 interface Exercise {
@@ -171,6 +172,8 @@ export default function WorkoutSession({
   const [templateName, setTemplateName] = useState('');
   const [templateDescription, setTemplateDescription] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateNameKeyboardEnabled, setTemplateNameKeyboardEnabled] = useState(false);
+  const [templateDescriptionKeyboardEnabled, setTemplateDescriptionKeyboardEnabled] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [savedWorkout, setSavedWorkout] = useState<Workout | null>(null);
   const [muscleGroups, setMuscleGroups] = useState<{ id: string; name: string }[]>([]);
@@ -178,6 +181,7 @@ export default function WorkoutSession({
   const workoutStartTime = useRef(Date.now());
   const exerciseCacheRef = useRef<Map<string, { sets: SetData[]; timestamp: number }>>(new Map());
   const [loadingExercise, setLoadingExercise] = useState<string | null>(null);
+  const [showWorkoutHistory, setShowWorkoutHistory] = useState(false);
 
   const workoutData = {
     exercises,
@@ -1260,9 +1264,25 @@ export default function WorkoutSession({
 
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-muted mb-2">
-                  שם התבנית *
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-muted">
+                    שם התבנית *
+                  </label>
+                  {preventKeyboard && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setTemplateNameKeyboardEnabled(true);
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-medium"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      <span>אפשר כתיבה</span>
+                    </button>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={templateName}
@@ -1270,10 +1290,10 @@ export default function WorkoutSession({
                   className="w-full px-4 py-3 bg-surface/50 border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="למשל: אימון רגליים מלא"
                   autoFocus={!preventKeyboard}
-                  readOnly={preventKeyboard}
-                  inputMode={preventKeyboard ? 'none' : 'text'}
+                  readOnly={preventKeyboard && !templateNameKeyboardEnabled}
+                  inputMode={preventKeyboard && !templateNameKeyboardEnabled ? 'none' : 'text'}
                   onFocus={(e) => {
-                    if (preventKeyboard) {
+                    if (preventKeyboard && !templateNameKeyboardEnabled) {
                       e.target.blur();
                     }
                   }}
@@ -1281,19 +1301,35 @@ export default function WorkoutSession({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-muted mb-2">
-                  תיאור (אופציונלי)
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-muted">
+                    תיאור (אופציונלי)
+                  </label>
+                  {preventKeyboard && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setTemplateDescriptionKeyboardEnabled(true);
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-medium"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      <span>אפשר כתיבה</span>
+                    </button>
+                  )}
+                </div>
                 <textarea
                   value={templateDescription}
                   onChange={(e) => setTemplateDescription(e.target.value)}
                   className="w-full px-4 py-3 bg-surface/50 border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="הוסף תיאור לתבנית..."
                   rows={3}
-                  readOnly={preventKeyboard}
-                  inputMode={preventKeyboard ? 'none' : 'text'}
+                  readOnly={preventKeyboard && !templateDescriptionKeyboardEnabled}
+                  inputMode={preventKeyboard && !templateDescriptionKeyboardEnabled ? 'none' : 'text'}
                   onFocus={(e) => {
-                    if (preventKeyboard) {
+                    if (preventKeyboard && !templateDescriptionKeyboardEnabled) {
                       e.target.blur();
                     }
                   }}
@@ -1360,9 +1396,42 @@ export default function WorkoutSession({
         />
       )}
 
-      {/* Floating Action Button for tablet - Quick actions */}
+      {showWorkoutHistory && (
+        <WorkoutHistoryModal
+          traineeId={trainee.id}
+          exercises={exercises}
+          onClose={() => setShowWorkoutHistory(false)}
+        />
+      )}
+
+      {/* Floating Action Buttons for tablet - Quick actions + finish + history */}
       {isTablet && exercises.length > 0 && !showExerciseSelector && !numericPad && !showSummary && (
         <div className="fixed bottom-6 left-6 z-40 flex flex-col gap-3 animate-fade-in">
+          {/* Finish workout */}
+          <button
+            type="button"
+            onClick={() => {
+              if (!saving) {
+                handleSave();
+              }
+            }}
+            className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback disabled:opacity-60"
+            title="סיים אימון"
+            disabled={saving || exercises.length === 0}
+          >
+            <CheckCircle2 className="h-6 w-6" />
+          </button>
+
+          {/* Workout history */}
+          <button
+            type="button"
+            onClick={() => setShowWorkoutHistory(true)}
+            className="w-14 h-14 bg-cyan-500 hover:bg-cyan-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            title="היסטוריית אימונים לתרגילים"
+          >
+            <History className="h-6 w-6" />
+          </button>
+
           {/* Add set to last exercise */}
           <button
             type="button"
@@ -1381,7 +1450,7 @@ export default function WorkoutSession({
           <button
             type="button"
             onClick={() => setShowExerciseSelector(true)}
-            className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            className="w-14 h-14 bg-emerלד-500 hover:bg-emerald-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
             title="הוסף תרגיל (קיצור: Ctrl+N)"
           >
             <BookMarked className="h-6 w-6" />
