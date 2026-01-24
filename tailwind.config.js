@@ -1,10 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  // Dark mode disabled - using unified light theme
   darkMode: 'class',
   theme: {
     extend: {
       colors: {
+        // Design token colors from CSS variables
         base: 'rgb(var(--color-bg-base) / <alpha-value>)',
         elevated: 'rgb(var(--color-bg-elevated) / <alpha-value>)',
         surface: 'rgb(var(--color-bg-surface) / <alpha-value>)',
@@ -26,19 +28,53 @@ export default {
         info: 'rgb(var(--color-info) / <alpha-value>)',
         'accent-bg': 'rgb(var(--color-accent-bg) / <alpha-value>)',
         'accent-bg-hover': 'rgb(var(--color-accent-bg-hover) / <alpha-value>)',
-        emerald: {
-          50: '#f0f5ed',
-          100: '#e8f0e0',
-          200: '#d4e4c8',
-          300: '#b8d4a0',
-          400: '#9bc278',
-          500: '#7fa05a',
-          600: '#6b8e4a',
-          700: '#4a6b2a',
-          800: '#3d5a1f',
-          900: '#2d5016',
-          950: '#1a2e16',
+
+        // Elegant Sage Green Scale - Primary palette
+        sage: {
+          50: '#F8FAF6',   // lightest - base background
+          100: '#EFF3EC',  // surface
+          200: '#D2DDD0',  // borders
+          300: '#B8C7B5',  // border hover
+          400: '#9FB39C',  // border strong
+          500: '#7A9C7C',  // primary light
+          600: '#5C7C5E',  // primary
+          700: '#4A634C',  // primary dark
+          800: '#3A4D3C',  // deep sage
+          900: '#2B3B2D',  // text primary
+          950: '#1E2920',  // darkest
         },
+
+        // Warm Gray Scale - For neutrals
+        warmgray: {
+          50: '#FAFAF9',
+          100: '#F5F5F4',
+          200: '#E7E5E4',
+          300: '#D6D3D1',
+          400: '#A8A29E',
+          500: '#78716C',
+          600: '#57534E',
+          700: '#44403C',
+          800: '#292524',
+          900: '#1C1917',
+          950: '#0C0A09',
+        },
+
+        // Legacy emerald scale - mapped to sage
+        emerald: {
+          50: '#F8FAF6',
+          100: '#EFF3EC',
+          200: '#D2DDD0',
+          300: '#B8C7B5',
+          400: '#9FB39C',
+          500: '#7A9C7C',
+          600: '#5C7C5E',
+          700: '#4A634C',
+          800: '#3A4D3C',
+          900: '#2B3B2D',
+          950: '#1E2920',
+        },
+
+        // Standard slate for compatibility
         slate: {
           50: '#f8fafc',
           100: '#f1f5f9',
@@ -52,36 +88,30 @@ export default {
           900: '#0f172a',
           950: '#020617',
         },
+
+        // Zinc mapped to warm sage tones for light theme
         zinc: {
-          50: '#fafafa',
-          100: '#f4f4f5',
-          200: '#e4e4e7',
-          300: '#d4d4d8',
-          400: '#a1a1aa',
-          500: '#71717a',
-          600: '#52525b',
-          700: '#3f3f46',
-          800: '#27272a',
+          50: '#FAFAF9',
+          100: '#F5F5F4',
+          200: '#E7E5E4',
+          300: '#D6D3D1',
+          400: '#A8A29E',
+          500: '#78716C',
+          600: '#57534E',
+          700: '#44403C',
+          800: '#292524',
           850: '#1f1f23',
-          900: '#18181b',
-          950: '#09090b',
+          900: '#1C1917',
+          950: '#0C0A09',
         },
-        dark: {
-          50: '#27272a',
-          100: '#1f1f23',
-          200: '#18181b',
-          300: '#121214',
-          400: '#0c0c0e',
-          500: '#09090b',
-          600: '#050506',
-          card: 'rgba(24, 24, 27, 0.8)',
-          glass: 'rgba(15, 15, 17, 0.9)',
-        },
+
+        // Accent colors - muted luxury tones
         accent: {
-          cyan: '#06b6d4',
-          amber: '#f59e0b',
-          rose: '#f43f5e',
-          teal: '#14b8a6',
+          gold: '#C4A670',      // luxury gold
+          rose: '#B45F5F',      // muted rose
+          teal: '#5A9A8A',      // sage teal
+          amber: '#C4A670',     // warm gold
+          cyan: '#5A8A9A',      // muted cyan
         },
       },
       screens: {
@@ -93,16 +123,18 @@ export default {
         xs: '2px',
       },
       boxShadow: {
-        'glow': '0 0 20px rgba(74, 107, 42, 0.2)',
-        'glow-sm': '0 0 10px rgba(74, 107, 42, 0.12)',
-        'glow-lg': '0 0 40px rgba(74, 107, 42, 0.3)',
-        'glow-xl': '0 0 60px rgba(74, 107, 42, 0.35)',
-        'dark': '0 4px 20px rgba(26, 46, 22, 0.4)',
-        'dark-lg': '0 8px 40px rgba(26, 46, 22, 0.5)',
-        'dark-xl': '0 12px 60px rgba(26, 46, 22, 0.6)',
-        'inner-glow': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05)',
-        'card': '0 4px 24px -4px rgba(26, 46, 22, 0.25)',
-        'card-hover': '0 8px 32px -4px rgba(26, 46, 22, 0.35)',
+        'glow': '0 0 20px rgba(92, 124, 94, 0.15)',
+        'glow-sm': '0 0 10px rgba(92, 124, 94, 0.10)',
+        'glow-lg': '0 0 40px rgba(92, 124, 94, 0.20)',
+        'glow-xl': '0 0 60px rgba(92, 124, 94, 0.25)',
+        'soft': '0 4px 20px rgba(92, 124, 94, 0.08)',
+        'soft-lg': '0 8px 40px rgba(92, 124, 94, 0.10)',
+        'soft-xl': '0 12px 60px rgba(92, 124, 94, 0.12)',
+        'inner-glow': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.5)',
+        'card': '0 4px 24px -4px rgba(92, 124, 94, 0.10)',
+        'card-hover': '0 8px 32px -4px rgba(92, 124, 94, 0.15)',
+        'elegant': '0 2px 8px rgba(43, 59, 45, 0.08), 0 4px 16px rgba(92, 124, 94, 0.06)',
+        'elegant-lg': '0 4px 12px rgba(43, 59, 45, 0.10), 0 8px 24px rgba(92, 124, 94, 0.08)',
       },
       borderRadius: {
         'xs': '0.5rem',      // 8px
@@ -186,8 +218,8 @@ export default {
       },
       keyframes: {
         'glow-pulse': {
-          '0%, 100%': { boxShadow: '0 0 20px rgba(74, 107, 42, 0.2)' },
-          '50%': { boxShadow: '0 0 35px rgba(74, 107, 42, 0.35)' },
+          '0%, 100%': { boxShadow: '0 0 20px rgba(92, 124, 94, 0.15)' },
+          '50%': { boxShadow: '0 0 35px rgba(92, 124, 94, 0.25)' },
         },
         'float': {
           '0%, 100%': { transform: 'translateY(0)' },
@@ -233,7 +265,7 @@ export default {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'gradient-shine': 'linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.1) 50%, transparent 75%)',
+        'gradient-shine': 'linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.3) 50%, transparent 75%)',
       },
       transitionDuration: {
         '150': '150ms',

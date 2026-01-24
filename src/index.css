@@ -3,1116 +3,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =============================================
+   YM Coach - Elegant Light Theme
+
+   Design Philosophy:
+   - רוגע (Calm): Soft, muted sage greens
+   - בריאות (Health): Natural, organic color palette
+   - אלגנטיות (Elegance): Refined grays, subtle contrasts
+   - חוכמה (Wisdom): Deep, thoughtful accent colors
+   - יוקרה (Luxury): Clean whites, sophisticated tones
+   ============================================= */
+
 @layer base {
-  /* ============================================
-     Global Text Color Override - All text is black everywhere
-     ============================================ */
-  * {
-    color: #000000 !important;
-  }
-  
-  /* ============================================
-     Accessibility - Focus Indicators
-     ============================================ */
+  /* Accessibility - Focus Indicators */
   *:focus-visible {
     outline: 2px solid rgb(var(--color-primary));
     outline-offset: 2px;
     border-radius: 0.25rem;
   }
 
-  /* Theme CSS variables are defined in styles/theme.css */
-
-  /* ============================================
-     Light Mode Global Overrides
-     These automatically fix Tailwind classes
-     ============================================ */
-
-  /* Text colors - override all text to black */
-  .light .text-white,
-  .dark .text-white,
-  :root .text-white {
-    color: #000000 !important;
-  }
-
-  /* Override text-white on all backgrounds to black */
-  .light .bg-zinc-800 .text-white,
-  .light .bg-zinc-800\/50 .text-white,
-  .light .bg-zinc-800\/80 .text-white,
-  .light .bg-zinc-700 .text-white,
-  .light .bg-zinc-900 .text-white,
-  .light .bg-zinc-900\/90 .text-white,
-  .light .bg-zinc-900\/80 .text-white,
-  .light .bg-gray-800 .text-white,
-  .light .bg-gray-700 .text-white,
-  .light .bg-gray-900 .text-white,
-  .light .bg-white .text-white,
-  .light .bg-\[\#ffffff\] .text-white,
-  .light .bg-\[\#f8faf9\] .text-white,
-  .light .bg-\[\#ecf0ed\] .text-white,
-  .dark .bg-zinc-800 .text-white,
-  .dark .bg-zinc-800\/50 .text-white,
-  .dark .bg-zinc-800\/80 .text-white,
-  .dark .bg-zinc-700 .text-white,
-  .dark .bg-zinc-900 .text-white,
-  .dark .bg-zinc-900\/90 .text-white,
-  .dark .bg-zinc-900\/80 .text-white,
-  .dark .bg-gray-800 .text-white,
-  .dark .bg-gray-700 .text-white,
-  .dark .bg-gray-900 .text-white,
-  :root .bg-zinc-800 .text-white,
-  :root .bg-zinc-800\/50 .text-white,
-  :root .bg-zinc-800\/80 .text-white,
-  :root .bg-zinc-700 .text-white,
-  :root .bg-zinc-900 .text-white,
-  :root .bg-zinc-900\/90 .text-white,
-  :root .bg-zinc-900\/80 .text-white,
-  :root .bg-gray-800 .text-white,
-  :root .bg-gray-700 .text-white,
-  :root .bg-gray-900 .text-white {
-    color: #000000 !important;
-  }
-
-  .light .text-zinc-100,
-  .light .text-zinc-200,
-  .dark .text-zinc-100,
-  .dark .text-zinc-200,
-  :root .text-zinc-100,
-  :root .text-zinc-200 {
-    color: #000000 !important;
-  }
-
-  .light .text-zinc-300,
-  .dark .text-zinc-300,
-  :root .text-zinc-300 {
-    color: #000000 !important;
-  }
-
-  .light .text-zinc-400,
-  .dark .text-zinc-400,
-  :root .text-zinc-400 {
-    color: #000000 !important;
-  }
-
-  .light .text-zinc-500,
-  .dark .text-zinc-500,
-  :root .text-zinc-500 {
-    color: #000000 !important;
-  }
-
-  .light .text-gray-400,
-  .dark .text-gray-400,
-  :root .text-gray-400 {
-    color: #000000 !important;
-  }
-
-  .light .text-gray-500,
-  .dark .text-gray-500,
-  :root .text-gray-500 {
-    color: #000000 !important;
-  }
-
-  /* Background colors */
-  .light .bg-zinc-950 {
-    background-color: #f8faf9 !important;
-  }
-
-  .light .bg-zinc-900 {
-    background-color: #ffffff !important;
-  }
-
-  .light .bg-zinc-900\/90 {
-    background-color: rgba(255, 255, 255, 0.95) !important;
-  }
-
-  .light .bg-zinc-900\/80 {
-    background-color: rgba(255, 255, 255, 0.9) !important;
-  }
-
-  .light .bg-zinc-900\/50 {
-    background-color: rgba(255, 255, 255, 0.7) !important;
-  }
-
-  .light .bg-zinc-800 {
-    background-color: #ecf0ed !important;
-  }
-
-  .light .bg-zinc-800\/30 {
-    background-color: rgba(236, 240, 237, 0.6) !important;
-  }
-
-  .light .bg-zinc-800\/50,
-  .light .bg-zinc-800\/80 {
-    background-color: rgba(236, 240, 237, 0.8) !important;
-  }
-
-  .light .bg-black\/70,
-  .light .bg-black\/60,
-  .light .bg-black\/50 {
-    background-color: rgba(26, 46, 34, 0.5) !important;
-  }
-
-  /* Border colors */
-  .light .border-zinc-800 {
-    border-color: rgba(74, 107, 42, 0.15) !important;
-  }
-
-  .light .border-zinc-800\/50,
-  .light .border-zinc-800\/80 {
-    border-color: rgba(74, 107, 42, 0.12) !important;
-  }
-
-  .light .border-zinc-700 {
-    border-color: rgba(74, 107, 42, 0.2) !important;
-  }
-
-  .light .border-zinc-700\/30 {
-    border-color: rgba(74, 107, 42, 0.12) !important;
-  }
-
-  .light .border-zinc-700\/50 {
-    border-color: rgba(74, 107, 42, 0.15) !important;
-  }
-
-  /* Placeholder colors */
-  .light .placeholder-zinc-500::placeholder,
-  .light .placeholder-zinc-400::placeholder {
-    color: #6b7f72 !important;
-  }
-
-  /* Hover states */
-  .light .hover\:text-white:hover,
-  .dark .hover\:text-white:hover,
-  :root .hover\:text-white:hover {
-    color: #000000 !important;
-  }
-
-  /* Fix hover states for buttons on light backgrounds */
-  .light button:hover.text-white:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]):not(.btn-primary):not(.btn-lime):not(.btn-danger):not(.action-btn-emerald):not(.action-btn-cyan):not(.action-btn-amber):not(.action-btn-teal):not(.action-btn-rose):not(.action-btn-slate),
-  .light a:hover.text-white:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) {
-    color: #1a2e22 !important;
-  }
-
-  .light .hover\:text-zinc-100:hover,
-  .light .hover\:text-zinc-200:hover,
-  .light .hover\:text-gray-100:hover,
-  .light .hover\:text-gray-200:hover,
-  .dark .hover\:text-zinc-100:hover,
-  .dark .hover\:text-zinc-200:hover,
-  .dark .hover\:text-gray-100:hover,
-  .dark .hover\:text-gray-200:hover,
-  :root .hover\:text-zinc-100:hover,
-  :root .hover\:text-zinc-200:hover,
-  :root .hover\:text-gray-100:hover,
-  :root .hover\:text-gray-200:hover {
-    color: #000000 !important;
-  }
-
-  .light .hover\:bg-zinc-800:hover {
-    background-color: #ecf0ed !important;
-  }
-
-  .light .hover\:bg-zinc-800\/30:hover {
-    background-color: rgba(236, 240, 237, 0.6) !important;
-  }
-
-  .light .hover\:bg-zinc-800\/50:hover {
-    background-color: rgba(236, 240, 237, 0.7) !important;
-  }
-
-  .light .hover\:bg-white\/5:hover {
-    background-color: rgba(74, 107, 42, 0.08) !important;
-  }
-
-  /* Ring and focus colors */
-  .light .ring-zinc-800 {
-    --tw-ring-color: rgba(74, 107, 42, 0.2) !important;
-  }
-
-  .light .focus\:ring-zinc-700:focus {
-    --tw-ring-color: rgba(74, 107, 42, 0.3) !important;
-  }
-
-  /* Shadow adjustments */
-  .light .shadow-dark-lg,
-  .light .shadow-dark-xl {
-    box-shadow: 0 10px 40px -10px rgba(74, 107, 42, 0.12) !important;
-  }
-
-  /* Additional text colors */
-  .light .text-e4e4e7,
-  .light [class*="text-\[#e4e4e7\]"],
-  .dark .text-e4e4e7,
-  .dark [class*="text-\[#e4e4e7\]"],
-  :root .text-e4e4e7,
-  :root [class*="text-\[#e4e4e7\]"] {
-    color: #000000 !important;
-  }
-
-  /* Divide colors */
-  .light .divide-zinc-800 > :not([hidden]) ~ :not([hidden]) {
-    border-color: rgba(74, 107, 42, 0.12) !important;
-  }
-
-  /* From colors (gradients) - keep emerald visible */
-  .light .from-zinc-900,
-  .light .to-zinc-900 {
-    --tw-gradient-from: #ffffff !important;
-    --tw-gradient-to: #f8faf9 !important;
-  }
-
-  /* Specific rgba backgrounds */
-  .light [class*="bg-\[rgba(24"] {
-    background-color: rgba(255, 255, 255, 0.95) !important;
-  }
-
-  .light [class*="bg-\[rgba(15"] {
-    background-color: rgba(255, 255, 255, 0.9) !important;
-  }
-
-  .light [class*="bg-\[rgba(39"] {
-    background-color: rgba(248, 250, 249, 0.9) !important;
-  }
-
-  /* Fix zinc text with opacity */
-  .light .text-zinc-400\/60,
-  .light .text-zinc-500\/60,
-  .dark .text-zinc-400\/60,
-  .dark .text-zinc-500\/60,
-  :root .text-zinc-400\/60,
-  :root .text-zinc-500\/60 {
-    color: #000000 !important;
-  }
-
-  /* Fix white with opacity */
-  .light .text-white\/80,
-  .light .text-white\/70,
-  .light .text-white\/60,
-  .light .text-white\/50,
-  .light .text-white\/40,
-  .light .text-white\/30,
-  .dark .text-white\/80,
-  .dark .text-white\/70,
-  .dark .text-white\/60,
-  .dark .text-white\/50,
-  .dark .text-white\/40,
-  .dark .text-white\/30,
-  :root .text-white\/80,
-  :root .text-white\/70,
-  :root .text-white\/60,
-  :root .text-white\/50,
-  :root .text-white\/40,
-  :root .text-white\/30 {
-    color: #000000 !important;
-  }
-
-  /* Fix white text with opacity - all black */
-  .light .bg-zinc-800 .text-white\/80,
-  .light .bg-zinc-800\/50 .text-white\/80,
-  .light .bg-zinc-800\/80 .text-white\/80,
-  .light .bg-zinc-700 .text-white\/80,
-  .light .bg-zinc-900 .text-white\/80,
-  .light .bg-gray-800 .text-white\/80,
-  .light .bg-gray-700 .text-white\/80,
-  .light .bg-gray-900 .text-white\/80,
-  .dark .bg-zinc-800 .text-white\/80,
-  .dark .bg-zinc-800\/50 .text-white\/80,
-  .dark .bg-zinc-800\/80 .text-white\/80,
-  .dark .bg-zinc-700 .text-white\/80,
-  .dark .bg-zinc-900 .text-white\/80,
-  .dark .bg-gray-800 .text-white\/80,
-  .dark .bg-gray-700 .text-white\/80,
-  .dark .bg-gray-900 .text-white\/80,
-  :root .bg-zinc-800 .text-white\/80,
-  :root .bg-zinc-800\/50 .text-white\/80,
-  :root .bg-zinc-800\/80 .text-white\/80,
-  :root .bg-zinc-700 .text-white\/80,
-  :root .bg-zinc-900 .text-white\/80,
-  :root .bg-gray-800 .text-white\/80,
-  :root .bg-gray-700 .text-white\/80,
-  :root .bg-gray-900 .text-white\/80 {
-    color: #000000 !important;
-  }
-
-  /* Fix bg with white opacity */
-  .light .bg-white\/5,
-  .light .bg-white\/10 {
-    background-color: rgba(16, 185, 129, 0.05) !important;
-  }
-
-  /* Inset shadows and borders */
-  .light [class*="inset"] {
-    --tw-shadow-color: rgba(16, 185, 129, 0.1) !important;
-  }
-
-  /* Fix fill colors for icons */
-  .light .fill-zinc-400,
-  .light .fill-zinc-500 {
-    fill: #6b7f72 !important;
-  }
-
-  /* Fix stroke colors */
-  .light .stroke-zinc-400,
-  .light .stroke-zinc-500 {
-    stroke: #6b7f72 !important;
-  }
-
-  /* All text is black, even on colored backgrounds */
-  .light .bg-gradient-to-br .text-white,
-  .light .bg-gradient-to-r .text-white,
-  .light .bg-emerald-500 .text-white,
-  .light .bg-emerald-600 .text-white,
-  .light .bg-emerald-700 .text-white,
-  .light .bg-emerald-400 .text-white,
-  .light .bg-green-500 .text-white,
-  .light .bg-green-600 .text-white,
-  .light .bg-cyan-500 .text-white,
-  .light .bg-cyan-600 .text-white,
-  .light .bg-amber-500 .text-white,
-  .light .bg-amber-600 .text-white,
-  .light .bg-teal-500 .text-white,
-  .light .bg-teal-600 .text-white,
-  .light .bg-rose-500 .text-white,
-  .light .bg-rose-600 .text-white,
-  .light .bg-red-500 .text-white,
-  .light .bg-red-600 .text-white,
-  .light .bg-slate-500 .text-white,
-  .light .bg-slate-600 .text-white,
-  .light .bg-lime-500 .text-white,
-  .light .bg-lime-600 .text-white,
-  .light .btn-primary .text-white,
-  .light .action-btn-emerald .text-white,
-  .light .action-btn-cyan .text-white,
-  .light .action-btn-amber .text-white,
-  .light .action-btn-rose .text-white,
-  .light [class*="from-emerald"] .text-white,
-  .light [class*="bg-gradient"] .text-white,
-  .light [class*="\[\.light_\&\]\:text-white"],
-  .dark .bg-gradient-to-br .text-white,
-  .dark .bg-gradient-to-r .text-white,
-  .dark .bg-emerald-500 .text-white,
-  .dark .bg-emerald-600 .text-white,
-  .dark .bg-emerald-700 .text-white,
-  .dark .bg-emerald-400 .text-white,
-  .dark .bg-green-500 .text-white,
-  .dark .bg-green-600 .text-white,
-  .dark .bg-cyan-500 .text-white,
-  .dark .bg-cyan-600 .text-white,
-  .dark .bg-amber-500 .text-white,
-  .dark .bg-amber-600 .text-white,
-  .dark .bg-teal-500 .text-white,
-  .dark .bg-teal-600 .text-white,
-  .dark .bg-rose-500 .text-white,
-  .dark .bg-rose-600 .text-white,
-  .dark .bg-red-500 .text-white,
-  .dark .bg-red-600 .text-white,
-  .dark .bg-slate-500 .text-white,
-  .dark .bg-slate-600 .text-white,
-  .dark .bg-lime-500 .text-white,
-  .dark .bg-lime-600 .text-white,
-  .dark .btn-primary .text-white,
-  .dark .action-btn-emerald .text-white,
-  .dark .action-btn-cyan .text-white,
-  .dark .action-btn-amber .text-white,
-  .dark .action-btn-rose .text-white,
-  .dark [class*="from-emerald"] .text-white,
-  .dark [class*="bg-gradient"] .text-white,
-  :root .bg-gradient-to-br .text-white,
-  :root .bg-gradient-to-r .text-white,
-  :root .bg-emerald-500 .text-white,
-  :root .bg-emerald-600 .text-white,
-  :root .bg-emerald-700 .text-white,
-  :root .bg-emerald-400 .text-white,
-  :root .bg-green-500 .text-white,
-  :root .bg-green-600 .text-white,
-  :root .bg-cyan-500 .text-white,
-  :root .bg-cyan-600 .text-white,
-  :root .bg-amber-500 .text-white,
-  :root .bg-amber-600 .text-white,
-  :root .bg-teal-500 .text-white,
-  :root .bg-teal-600 .text-white,
-  :root .bg-rose-500 .text-white,
-  :root .bg-rose-600 .text-white,
-  :root .bg-red-500 .text-white,
-  :root .bg-red-600 .text-white,
-  :root .bg-slate-500 .text-white,
-  :root .bg-slate-600 .text-white,
-  :root .bg-lime-500 .text-white,
-  :root .bg-lime-600 .text-white,
-  :root .btn-primary .text-white,
-  :root .action-btn-emerald .text-white,
-  :root .action-btn-cyan .text-white,
-  :root .action-btn-amber .text-white,
-  :root .action-btn-rose .text-white,
-  :root [class*="from-emerald"] .text-white,
-  :root [class*="bg-gradient"] .text-white {
-    color: #000000 !important;
-  }
-
-  /* All buttons have black text */
-  .light .btn-primary,
-  .light .btn-lime,
-  .light .btn-danger,
-  .light .action-btn-emerald,
-  .light .action-btn-cyan,
-  .light .action-btn-amber,
-  .light .action-btn-teal,
-  .light .action-btn-rose,
-  .light .action-btn-slate,
-  .light button[class*="bg-emerald"],
-  .light button[class*="bg-cyan"],
-  .light button[class*="bg-amber"],
-  .light button[class*="bg-teal"],
-  .light button[class*="bg-rose"],
-  .light button[class*="bg-red"],
-  .light button[class*="bg-green"],
-  .light button[class*="bg-lime"],
-  .light button[class*="bg-slate"],
-  .dark .btn-primary,
-  .dark .btn-lime,
-  .dark .btn-danger,
-  .dark .action-btn-emerald,
-  .dark .action-btn-cyan,
-  .dark .action-btn-amber,
-  .dark .action-btn-teal,
-  .dark .action-btn-rose,
-  .dark .action-btn-slate,
-  .dark button[class*="bg-emerald"],
-  .dark button[class*="bg-cyan"],
-  .dark button[class*="bg-amber"],
-  .dark button[class*="bg-teal"],
-  .dark button[class*="bg-rose"],
-  .dark button[class*="bg-red"],
-  .dark button[class*="bg-green"],
-  .dark button[class*="bg-lime"],
-  .dark button[class*="bg-slate"],
-  :root .btn-primary,
-  :root .btn-lime,
-  :root .btn-danger,
-  :root .action-btn-emerald,
-  :root .action-btn-cyan,
-  :root .action-btn-amber,
-  :root .action-btn-teal,
-  :root .action-btn-rose,
-  :root .action-btn-slate,
-  :root button[class*="bg-emerald"],
-  :root button[class*="bg-cyan"],
-  :root button[class*="bg-amber"],
-  :root button[class*="bg-teal"],
-  :root button[class*="bg-rose"],
-  :root button[class*="bg-red"],
-  :root button[class*="bg-green"],
-  :root button[class*="bg-lime"],
-  :root button[class*="bg-slate"] {
-    color: #000000 !important;
-  }
-
-  /* Fix buttons with light backgrounds - ensure dark text */
-  .light button.bg-zinc-800,
-  .light button.bg-zinc-800\/50,
-  .light button.bg-zinc-800\/80,
-  .light button.bg-zinc-700,
-  .light button.bg-zinc-900,
-  .light button.bg-gray-800,
-  .light button.bg-gray-700,
-  .light button.bg-gray-900,
-  .light button[class*="bg-zinc-8"],
-  .light button[class*="bg-zinc-9"],
-  .light button[class*="bg-gray-8"],
-  .light button[class*="bg-gray-9"] {
-    color: #1a2e22 !important;
-  }
-
-  /* Fix text-white on light backgrounds (not on colored buttons) */
-  .light button:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]):not(.btn-primary):not(.btn-lime):not(.btn-danger):not(.action-btn-emerald):not(.action-btn-cyan):not(.action-btn-amber):not(.action-btn-teal):not(.action-btn-rose):not(.action-btn-slate).text-white {
-    color: #1a2e22 !important;
-  }
-
-  /* All badges have black text */
-  .light .calendar-day.has-workout,
-  .dark .calendar-day.has-workout,
-  :root .calendar-day.has-workout {
-    color: #000000 !important;
-  }
-
-  /* ============================================
-     Extended Light Mode Overrides
-     Comprehensive coverage for all components
-     ============================================ */
-
-  /* Additional background colors */
-  .light .bg-zinc-700 {
-    background-color: #e8ece9 !important;
-  }
-
-  .light .bg-zinc-700\/50,
-  .light .bg-zinc-700\/30 {
-    background-color: rgba(232, 236, 233, 0.7) !important;
-  }
-
-  .light .bg-zinc-600 {
-    background-color: #dce2dd !important;
-  }
-
-  .light .bg-\[\#18181b\] {
-    background-color: #ffffff !important;
-  }
-
-  .light .bg-\[\#09090b\] {
-    background-color: #f8faf9 !important;
-  }
-
-  .light .bg-\[\#27272a\] {
-    background-color: #ecf0ed !important;
-  }
-
-  .light .bg-gray-900 {
-    background-color: #ffffff !important;
-  }
-
-  .light .bg-gray-800 {
-    background-color: #ecf0ed !important;
-  }
-
-  /* Text color overrides for zinc-600 and below - all black */
-  .light .text-zinc-600,
-  .dark .text-zinc-600,
-  :root .text-zinc-600 {
-    color: #000000 !important;
-  }
-
-  .light .text-zinc-700,
-  .dark .text-zinc-700,
-  :root .text-zinc-700 {
-    color: #000000 !important;
-  }
-
-  .light .text-zinc-800,
-  .dark .text-zinc-800,
-  :root .text-zinc-800 {
-    color: #000000 !important;
-  }
-
-  .light .text-zinc-900,
-  .dark .text-zinc-900,
-  :root .text-zinc-900 {
-    color: #000000 !important;
-  }
-
-  .light .text-gray-300,
-  .dark .text-gray-300,
-  :root .text-gray-300 {
-    color: #000000 !important;
-  }
-
-  .light .text-gray-200,
-  .dark .text-gray-200,
-  :root .text-gray-200 {
-    color: #000000 !important;
-  }
-
-  .light .text-gray-100,
-  .dark .text-gray-100,
-  :root .text-gray-100 {
-    color: #000000 !important;
-  }
-
-  .light .text-gray-600,
-  .dark .text-gray-600,
-  :root .text-gray-600 {
-    color: #000000 !important;
-  }
-
-  .light .text-zinc-200 {
-    color: #2d4a38 !important;
-  }
-
-  /* Additional text color fixes - all black */
-  .light .text-zinc-100\/80,
-  .light .text-zinc-100\/90,
-  .light .text-zinc-200\/80,
-  .light .text-zinc-200\/90,
-  .dark .text-zinc-100\/80,
-  .dark .text-zinc-100\/90,
-  .dark .text-zinc-200\/80,
-  .dark .text-zinc-200\/90,
-  :root .text-zinc-100\/80,
-  :root .text-zinc-100\/90,
-  :root .text-zinc-200\/80,
-  :root .text-zinc-200\/90 {
-    color: #000000 !important;
-  }
-
-  /* Fix text-gray-100 and text-gray-200 - all black */
-  .light .text-gray-100,
-  .light .text-gray-200,
-  .dark .text-gray-100,
-  .dark .text-gray-200,
-  :root .text-gray-100,
-  :root .text-gray-200 {
-    color: #000000 !important;
-  }
-
-  .light .text-gray-100\/80,
-  .light .text-gray-100\/90,
-  .light .text-gray-200\/80,
-  .light .text-gray-200\/90,
-  .dark .text-gray-100\/80,
-  .dark .text-gray-100\/90,
-  .dark .text-gray-200\/80,
-  .dark .text-gray-200\/90,
-  :root .text-gray-100\/80,
-  :root .text-gray-100\/90,
-  :root .text-gray-200\/80,
-  :root .text-gray-200\/90 {
-    color: #000000 !important;
-  }
-
-  /* Border color extensions */
-  .light .border-zinc-600 {
-    border-color: rgba(74, 107, 42, 0.2) !important;
-  }
-
-  .light .border-zinc-900 {
-    border-color: rgba(74, 107, 42, 0.15) !important;
-  }
-
-  .light .border-gray-700,
-  .light .border-gray-800 {
-    border-color: rgba(74, 107, 42, 0.15) !important;
-  }
-
-  .light .border-white\/10,
-  .light .border-white\/5 {
-    border-color: rgba(74, 107, 42, 0.1) !important;
-  }
-
-  /* Additional hover states */
-  .light .hover\:bg-zinc-700:hover {
-    background-color: #e0e5e1 !important;
-  }
-
-  .light .hover\:bg-zinc-900:hover {
-    background-color: #ecf0ed !important;
-  }
-
-  .light .hover\:bg-zinc-900\/50:hover {
-    background-color: rgba(236, 240, 237, 0.7) !important;
-  }
-
-  .light .hover\:text-zinc-100:hover,
-  .light .hover\:text-zinc-200:hover,
-  .light .hover\:text-zinc-300:hover,
-  .dark .hover\:text-zinc-100:hover,
-  .dark .hover\:text-zinc-200:hover,
-  .dark .hover\:text-zinc-300:hover,
-  :root .hover\:text-zinc-100:hover,
-  :root .hover\:text-zinc-200:hover,
-  :root .hover\:text-zinc-300:hover {
-    color: #000000 !important;
-  }
-
-  .light .hover\:border-zinc-700:hover {
-    border-color: rgba(74, 107, 42, 0.25) !important;
-  }
-
-  .light .hover\:border-zinc-600:hover {
-    border-color: rgba(74, 107, 42, 0.3) !important;
-  }
-
-  /* Focus states */
-  .light .focus\:bg-zinc-800:focus {
-    background-color: #e8f0e0 !important;
-  }
-
-  .light .focus\:border-zinc-600:focus,
-  .light .focus\:border-zinc-700:focus {
-    border-color: rgba(74, 107, 42, 0.4) !important;
-  }
-
-  .light .focus\:ring-zinc-600:focus {
-    --tw-ring-color: rgba(74, 107, 42, 0.25) !important;
-  }
-
-  /* Active and Group hover states */
-  .light .active\:bg-zinc-800:active {
-    background-color: #dce2dd !important;
-  }
-
-  .light .active\:bg-zinc-800\/70:active {
-    background-color: rgba(236, 240, 237, 0.8) !important;
-  }
-
-  .light .group:hover .group-hover\:text-white,
-  .dark .group:hover .group-hover\:text-white,
-  :root .group:hover .group-hover\:text-white {
-    color: #000000 !important;
-  }
-
-  .light .group:hover .group-hover\:bg-zinc-800 {
-    background-color: #ecf0ed !important;
-  }
-
-  /* Preserve white text on emerald/green backgrounds */
-  .light .bg-emerald-500,
-  .light .bg-emerald-600,
-  .light .bg-emerald-700,
-  .light .bg-green-500,
-  .light .bg-green-600 {
-    color: #ffffff !important;
-  }
-
-  .light .bg-emerald-500 *,
-  .light .bg-emerald-600 *,
-  .light [class*="from-emerald"][class*="to-emerald"] * {
-    color: inherit !important;
-  }
-
-  /* Preserve colors on icon backgrounds with opacity */
-  .light .bg-emerald-500\/10,
-  .light .bg-emerald-500\/20,
-  .light .bg-emerald-400\/10,
-  .light .bg-emerald-400\/20 {
-    background-color: rgba(74, 107, 42, 0.12) !important;
-  }
-
-  .light .bg-cyan-500\/10,
-  .light .bg-cyan-500\/20 {
-    background-color: rgba(6, 182, 212, 0.12) !important;
-  }
-
-  .light .bg-amber-500\/10,
-  .light .bg-amber-500\/20 {
-    background-color: rgba(245, 158, 11, 0.12) !important;
-  }
-
-  .light .bg-red-500\/10,
-  .light .bg-red-500\/20,
-  .light .bg-rose-500\/10,
-  .light .bg-rose-500\/20 {
-    background-color: rgba(239, 68, 68, 0.12) !important;
-  }
-
-  /* Modal and overlay backgrounds */
-  .light .bg-black\/80,
-  .light .bg-black\/90 {
-    background-color: rgba(26, 46, 34, 0.7) !important;
-  }
-
-  .light .bg-black\/40,
-  .light .bg-black\/30 {
-    background-color: rgba(26, 46, 34, 0.3) !important;
-  }
-
-  /* Fix modals and dialogs */
-  .light [role="dialog"],
-  .light [role="alertdialog"] {
-    background-color: #ffffff !important;
-    border-color: rgba(16, 185, 129, 0.15) !important;
-  }
-
-  /* Input and form fields - all black text */
-  .light input,
-  .light textarea,
-  .light select,
-  .dark input,
-  .dark textarea,
-  .dark select,
-  :root input,
-  :root textarea,
-  :root select {
-    background-color: rgba(255, 255, 255, 0.95) !important;
-    color: #000000 !important;
-    border-color: rgba(74, 107, 42, 0.2) !important;
-  }
-
-  .light input::placeholder,
-  .light textarea::placeholder {
-    color: #6b7f72 !important;
-  }
-
-  .light input:focus,
-  .light textarea:focus,
-  .light select:focus {
-    border-color: rgba(74, 107, 42, 0.5) !important;
-    background-color: #ffffff !important;
-  }
-
-  /* Table styles - all black text */
-  .light th,
-  .dark th,
-  :root th {
-    background-color: rgba(232, 240, 224, 0.8) !important;
-    color: #000000 !important;
-  }
-
-  .light td {
-    border-color: rgba(74, 107, 42, 0.1) !important;
-  }
-
-  .light tr:hover td {
-    background-color: rgba(74, 107, 42, 0.05) !important;
-  }
-
-  /* Shadow overrides for light mode */
-  .light .shadow-lg,
-  .light .shadow-xl,
-  .light .shadow-2xl {
-    box-shadow: 0 10px 40px -10px rgba(74, 107, 42, 0.1) !important;
-  }
-
-  .light .shadow-md {
-    box-shadow: 0 4px 16px -4px rgba(74, 107, 42, 0.08) !important;
-  }
-
-  .light .shadow-sm {
-    box-shadow: 0 2px 8px -2px rgba(74, 107, 42, 0.06) !important;
-  }
-
-  /* Gradient overrides */
-  .light .from-zinc-800 {
-    --tw-gradient-from: #e8f0e0 !important;
-  }
-
-  .light .to-zinc-800 {
-    --tw-gradient-to: #dce8d0 !important;
-  }
-
-  .light .via-zinc-800 {
-    --tw-gradient-via: #e0ead8 !important;
-  }
-
-  .light .from-zinc-950 {
-    --tw-gradient-from: #f0f5ed !important;
-  }
-
-  .light .to-zinc-950 {
-    --tw-gradient-to: #e8f0e0 !important;
-  }
-
-  /* Backdrop blur backgrounds */
-  .light .backdrop-blur-sm,
-  .light .backdrop-blur,
-  .light .backdrop-blur-md,
-  .light .backdrop-blur-lg,
-  .light .backdrop-blur-xl {
-    background-color: rgba(240, 245, 237, 0.85) !important;
-  }
-
-  /* Specific rgba class overrides */
-  .light [class*="rgba(24,"] {
-    background-color: rgba(255, 255, 255, 0.95) !important;
-  }
-
-  .light [class*="rgba(39,"] {
-    background-color: rgba(248, 250, 249, 0.9) !important;
-  }
-
-  /* Opacity text variations */
-  .light .text-zinc-300\/50,
-  .light .text-zinc-400\/50 {
-    color: rgba(61, 83, 71, 0.6) !important;
-  }
-
-  .light .text-zinc-100\/80,
-  .light .text-zinc-100\/90 {
-    color: rgba(26, 46, 34, 0.9) !important;
-  }
-
-  /* Ensure emerald text is black */
-  .light .text-emerald-400,
-  .dark .text-emerald-400,
-  :root .text-emerald-400 {
-    color: #000000 !important;
-  }
-
-  .light .text-emerald-300,
-  .dark .text-emerald-300,
-  :root .text-emerald-300 {
-    color: #000000 !important;
-  }
-
-  /* Dropdown and menu backgrounds */
-  .light [data-radix-popper-content-wrapper],
-  .light [data-state="open"] {
-    background-color: #ffffff !important;
-  }
-
-  /* Fix specific component classes found in the codebase */
-  .light .bg-gradient-to-b.from-zinc-900.to-zinc-950,
-  .light .bg-gradient-to-br.from-zinc-900.to-zinc-950 {
-    background: linear-gradient(to bottom, #ffffff, #f0f5ed) !important;
-  }
-
-  .light .bg-gradient-to-r.from-zinc-800.to-zinc-900 {
-    background: linear-gradient(to right, #e8f0e0, #ffffff) !important;
-  }
-
-  /* ============================================
-     Gray Color Overrides (for gray-* classes)
-     Used in RecentScaleReadings, RecentActivity, etc.
-     ============================================ */
-
-  /* Gray backgrounds - important for scale readings and activity components */
-  .light .bg-gray-900\/90,
-  .light .bg-gray-900\/80 {
-    background-color: rgba(255, 255, 255, 0.95) !important;
-  }
-
-  .light .bg-gray-800\/90,
-  .light .bg-gray-800\/80,
-  .light .bg-gray-800\/50 {
-    background-color: rgba(236, 240, 237, 0.9) !important;
-  }
-
-  .light .bg-gray-700,
-  .light .bg-gray-700\/50 {
-    background-color: rgba(232, 236, 233, 0.8) !important;
-  }
-
-  .light .bg-gray-600 {
-    background-color: #dce2dd !important;
-  }
-
-  .light .bg-gray-500\/20 {
-    background-color: rgba(107, 127, 114, 0.15) !important;
-  }
-
-  /* Gray text colors */
-  .light .text-gray-600 {
-    color: #6b7f72 !important;
-  }
-
-  .light .text-gray-500 {
-    color: #6b7f72 !important;
-  }
-
-  .light .text-gray-400 {
-    color: #3d5347 !important;
-  }
-
-  /* Gray gradient backgrounds - used in RecentScaleReadings */
-  .light .bg-gradient-to-br.from-gray-900\/90.to-gray-800\/90,
-  .light .bg-gradient-to-br.from-gray-900.to-gray-800 {
-    background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.98), rgba(240, 245, 237, 0.95)) !important;
-    border-color: rgba(74, 107, 42, 0.15) !important;
-  }
-
-  /* Fix for specific gray hover states */
-  .light .hover\:bg-gray-700:hover,
-  .light .hover\:bg-gray-700\/50:hover {
-    background-color: #e0e5e1 !important;
-  }
-
-  .light .hover\:text-gray-300:hover {
-    color: #1a2e22 !important;
-  }
-
-  /* Fix border-white with opacity */
-  .light .border-white\/10,
-  .light .border-white\/5,
-  .light .border-white\/20 {
-    border-color: rgba(74, 107, 42, 0.12) !important;
-  }
-
-  /* Fix bg-white with low opacity */
-  .light .bg-white\/5,
-  .light .bg-white\/10 {
-    background-color: rgba(74, 107, 42, 0.06) !important;
-  }
-
-  .light .hover\:bg-white\/5:hover,
-  .light .hover\:bg-white\/10:hover {
-    background-color: rgba(74, 107, 42, 0.1) !important;
-  }
-
-  /* Fix lime/emerald text - all black */
-  .light .text-lime-500,
-  .light .text-lime-400,
-  .dark .text-lime-500,
-  .dark .text-lime-400,
-  :root .text-lime-500,
-  :root .text-lime-400 {
-    color: #000000 !important;
-  }
-
-  /* Fix dark text classes - all black */
-  .light .text-dark-500,
-  .dark .text-dark-500,
-  :root .text-dark-500 {
-    color: #000000 !important;
-  }
-
-  /* Fix teal colors - all black */
-  .light .text-teal-400,
-  .dark .text-teal-400,
-  :root .text-teal-400 {
-    color: #000000 !important;
-  }
-
-  /* ============================================
-     Comprehensive Button Text Color Fixes
-     Ensure buttons with light backgrounds have dark text
-     ============================================ */
-
-  /* Buttons with light backgrounds should have dark text */
-  .light button.bg-zinc-800.text-white,
-  .light button.bg-zinc-800\/50.text-white,
-  .light button.bg-zinc-800\/80.text-white,
-  .light button.bg-zinc-700.text-white,
-  .light button.bg-zinc-900.text-white,
-  .light button.bg-gray-800.text-white,
-  .light button.bg-gray-700.text-white,
-  .light button.bg-gray-900.text-white,
-  .light a.bg-zinc-800.text-white,
-  .light a.bg-zinc-800\/50.text-white,
-  .light a.bg-zinc-800\/80.text-white,
-  .light a.bg-zinc-700.text-white,
-  .light a.bg-zinc-900.text-white,
-  .light a.bg-gray-800.text-white,
-  .light a.bg-gray-700.text-white,
-  .light a.bg-gray-900.text-white {
-    color: #1a2e22 !important;
-  }
-
-  /* Fix text-white in buttons/links on light card backgrounds */
-  .light .premium-card button.text-white:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]),
-  .light .glass-card button.text-white:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]),
-  .light .stat-card button.text-white:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) {
-    color: #1a2e22 !important;
-  }
-
-  /* Fix text-white in divs/spans on light backgrounds */
-  .light div.bg-zinc-800 .text-white,
-  .light div.bg-zinc-800\/50 .text-white,
-  .light div.bg-zinc-800\/80 .text-white,
-  .light div.bg-zinc-700 .text-white,
-  .light div.bg-zinc-900 .text-white,
-  .light div.bg-gray-800 .text-white,
-  .light div.bg-gray-700 .text-white,
-  .light div.bg-gray-900 .text-white,
-  .light span.bg-zinc-800 .text-white,
-  .light span.bg-zinc-800\/50 .text-white,
-  .light span.bg-zinc-800\/80 .text-white,
-  .light span.bg-zinc-700 .text-white,
-  .light span.bg-zinc-900 .text-white,
-  .light span.bg-gray-800 .text-white,
-  .light span.bg-gray-700 .text-white,
-  .light span.bg-gray-900 .text-white {
-    color: #1a2e22 !important;
-  }
-
-  /* Ensure text-white on elements with light background colors gets dark text */
-  .light [class*="bg-zinc-8"]:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) .text-white,
-  .light [class*="bg-zinc-9"]:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) .text-white,
-  .light [class*="bg-gray-8"]:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) .text-white,
-  .light [class*="bg-gray-9"]:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) .text-white {
-    color: #1a2e22 !important;
-  }
-
-  /* ============================================
-     Trainer Workout Session - Tablet Layout
-     ============================================ */
-
+  /* Tablet workout session layout */
   .tablet .trainer-workout-session {
     max-width: 1180px;
     margin: 0 auto;
@@ -1137,185 +47,113 @@
   body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background: rgb(var(--color-bg-base));
+    background: linear-gradient(145deg, #F8FAF6 0%, #ffffff 40%, #EFF3EC 100%);
     min-height: 100vh;
-    color: #000000 !important;
+    color: rgb(var(--color-text-primary));
     font-feature-settings: 'cv11', 'ss01';
     letter-spacing: -0.01em;
-    transition: background-color 0.3s ease, color 0.3s ease;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   }
 
-  /* Enhanced typography hierarchy - Standardized Design Tokens */
+  /* Typography Hierarchy */
   h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1.2;
-    color: #000000 !important;
+    color: rgb(var(--color-text-primary));
   }
 
-  h1 {
-    font-size: 2.5rem;      /* 40px */
-    line-height: 1.1;
-    margin-bottom: 1rem;    /* 16px */
-  }
-
-  h2 {
-    font-size: 2rem;        /* 32px */
-    line-height: 1.2;
-    margin-bottom: 0.875rem; /* 14px */
-  }
-
-  h3 {
-    font-size: 1.5rem;      /* 24px */
-    line-height: 1.3;
-    margin-bottom: 0.75rem; /* 12px */
-  }
-
-  h4 {
-    font-size: 1.25rem;     /* 20px */
-    line-height: 1.4;
-    margin-bottom: 0.625rem; /* 10px */
-  }
-
-  h5 {
-    font-size: 1.125rem;    /* 18px */
-    line-height: 1.4;
-    margin-bottom: 0.5rem;  /* 8px */
-  }
-
-  h6 {
-    font-size: 1rem;        /* 16px */
-    line-height: 1.5;
-    margin-bottom: 0.5rem;  /* 8px */
-  }
+  h1 { font-size: 2.5rem; line-height: 1.1; margin-bottom: 1rem; }
+  h2 { font-size: 2rem; line-height: 1.2; margin-bottom: 0.875rem; }
+  h3 { font-size: 1.5rem; line-height: 1.3; margin-bottom: 0.75rem; }
+  h4 { font-size: 1.25rem; line-height: 1.4; margin-bottom: 0.625rem; }
+  h5 { font-size: 1.125rem; line-height: 1.4; margin-bottom: 0.5rem; }
+  h6 { font-size: 1rem; line-height: 1.5; margin-bottom: 0.5rem; }
 
   p {
     line-height: 1.6;
-    margin-bottom: 1rem;    /* 16px */
-    color: #000000 !important;
+    margin-bottom: 1rem;
+    color: rgb(var(--color-text-primary));
   }
 
-  /* Standardized spacing for common elements */
-  section {
-    margin-bottom: 1.5rem;  /* 24px */
-  }
+  section { margin-bottom: 1.5rem; }
+  article { margin-bottom: 1.25rem; }
+  ul, ol { margin-bottom: 1rem; padding-right: 1.5rem; }
+  li { margin-bottom: 0.5rem; }
 
-  article {
-    margin-bottom: 1.25rem; /* 20px */
-  }
-
-  /* Improved spacing for lists */
-  ul, ol {
-    margin-bottom: 1rem;    /* 16px */
-    padding-right: 1.5rem;  /* 24px */
-  }
-
-  li {
-    margin-bottom: 0.5rem;  /* 8px */
-  }
-
-  /* Better text selection */
+  /* Text Selection */
   ::selection {
-    background: rgba(74, 107, 42, 0.3);
-    color: #ffffff;
+    background: rgba(92, 124, 94, 0.25);
+    color: #2B3B2D;
   }
 
-  .light ::selection {
-    background: rgba(74, 107, 42, 0.25);
-    color: #1a2e16;
-  }
-
-  /* Dark mode gradient background - Nature-inspired */
-  .dark body,
-  :root body {
-    background: linear-gradient(145deg, #1a2e16 0%, #24321c 50%, #2d3a24 100%);
-  }
-
-  /* Light mode nature-inspired soft green gradient */
-  .light body {
-    background: linear-gradient(145deg, #f0f5ed 0%, #ffffff 40%, #e8f0e0 100%);
-  }
-
-  /* Light mode scrollbar */
-  .light ::-webkit-scrollbar-track {
-    background: rgba(74, 107, 42, 0.05);
-  }
-
-  .light ::-webkit-scrollbar-thumb {
-    background: rgba(74, 107, 42, 0.25);
-  }
-
-  .light ::-webkit-scrollbar-thumb:hover {
-    background: rgba(74, 107, 42, 0.4);
-  }
-
-  .light ::selection {
-    background: rgba(74, 107, 42, 0.2);
-    color: #1a2e16;
-  }
-
+  /* Form Elements */
   button, input, select, textarea {
     min-height: 44px;
     touch-action: manipulation;
   }
 
-  /* All buttons have black text */
-  button {
-    color: #000000 !important;
+  input, textarea, select {
+    background-color: rgba(255, 255, 255, 0.95);
+    color: rgb(var(--color-text-primary));
+    border-color: rgb(var(--color-border));
   }
 
-  button:hover {
-    color: #000000 !important;
+  input::placeholder, textarea::placeholder {
+    color: rgb(var(--color-text-muted));
   }
 
-  button:active {
-    color: #000000 !important;
+  input:focus, textarea:focus, select:focus {
+    border-color: rgb(var(--color-primary));
+    background-color: #ffffff;
   }
 
-  button:focus {
-    color: #000000 !important;
+  /* Table Styles */
+  th {
+    background-color: rgba(239, 243, 236, 0.8);
+    color: rgb(var(--color-text-primary));
   }
 
-  button:disabled {
-    color: #000000 !important;
+  td {
+    border-color: rgba(210, 221, 208, 0.5);
   }
 
+  tr:hover td {
+    background-color: rgba(92, 124, 94, 0.05);
+  }
+
+  /* Scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    background: rgba(24, 24, 27, 0.5);
+    background: rgba(92, 124, 94, 0.05);
     border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(74, 107, 42, 0.3);
+    background: rgba(92, 124, 94, 0.25);
     border-radius: 4px;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(74, 107, 42, 0.5);
-  }
-
-  ::selection {
-    background: rgba(74, 107, 42, 0.3);
-    color: #ffffff;
+    background: rgba(92, 124, 94, 0.4);
   }
 }
 
 @layer components {
+  /* Premium Card */
   .premium-card {
-    background: linear-gradient(135deg, rgba(24, 24, 27, 0.9) 0%, rgba(24, 24, 27, 0.7) 100%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(239, 243, 236, 0.9) 100%);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(92, 124, 94, 0.15);
     border-radius: 16px;
-    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
+    box-shadow: 0 4px 24px -4px rgba(92, 124, 94, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
@@ -1328,7 +166,7 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
     transition: left 0.5s ease;
   }
 
@@ -1337,8 +175,8 @@
   }
 
   .premium-card:hover {
-    border-color: rgba(74, 107, 42, 0.3);
-    box-shadow: 0 12px 40px -8px rgba(26, 46, 22, 0.4), 0 0 30px rgba(74, 107, 42, 0.12), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    border-color: rgba(92, 124, 94, 0.3);
+    box-shadow: 0 8px 32px -4px rgba(92, 124, 94, 0.12), 0 0 20px rgba(92, 124, 94, 0.06);
     transform: translateY(-4px) scale(1.01);
   }
 
@@ -1348,66 +186,36 @@
   }
 
   .premium-card-static {
-    background: linear-gradient(135deg, rgba(24, 24, 27, 0.9) 0%, rgba(24, 24, 27, 0.7) 100%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(239, 243, 236, 0.9) 100%);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(92, 124, 94, 0.15);
     border-radius: 16px;
-    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
+    box-shadow: 0 4px 24px -4px rgba(92, 124, 94, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
   }
 
-  /* Light mode premium cards */
-  .light .premium-card,
-  .light .premium-card-static {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 245, 237, 0.9) 100%);
-    border: 1px solid rgba(74, 107, 42, 0.15);
-    box-shadow: 0 4px 24px -4px rgba(74, 107, 42, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
-  }
-
-  .light .premium-card:hover {
-    border-color: rgba(74, 107, 42, 0.3);
-    box-shadow: 0 8px 32px -4px rgba(74, 107, 42, 0.12), 0 0 20px rgba(74, 107, 42, 0.06);
-  }
-
+  /* Glass Card */
   .glass-card {
-    background: rgb(var(--color-bg-card) / 0.9);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.8) 100%);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgb(var(--color-border) / 0.1);
+    border: 1px solid rgba(92, 124, 94, 0.12);
     border-radius: 16px;
-    box-shadow: 0 4px 24px -4px rgb(var(--color-shadow) / 0.3);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-  }
-
-  /* Dark mode glass card */
-  .dark .glass-card,
-  :root .glass-card {
-    background: linear-gradient(135deg, rgba(24, 24, 27, 0.85) 0%, rgba(24, 24, 27, 0.65) 100%);
-  }
-
-  /* Light mode glass card */
-  .light .glass-card {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.8) 100%);
-    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 24px -4px rgba(92, 124, 94, 0.08);
   }
 
   .glass-card-light {
-    background: rgba(39, 39, 42, 0.5);
+    background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(92, 124, 94, 0.08);
     border-radius: 12px;
   }
 
-  /* Light mode glass-card-light */
-  .light .glass-card-light {
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(16, 185, 129, 0.08);
-  }
-
+  /* Glass Input */
   .glass-input {
-    background: rgb(var(--color-bg-input) / 0.9);
-    border: 1px solid rgb(var(--color-border) / 0.1);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(92, 124, 94, 0.15);
     color: rgb(var(--color-text-primary));
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 12px;
@@ -1415,20 +223,20 @@
   }
 
   .glass-input:hover:not(:disabled):not(:focus) {
-    border-color: rgb(var(--color-border-hover) / 0.2);
-    background: rgb(var(--color-bg-elevated));
+    border-color: rgba(92, 124, 94, 0.25);
+    background: rgba(255, 255, 255, 0.95);
   }
 
   .glass-input:focus {
-    border-color: rgba(74, 107, 42, 0.6);
-    box-shadow: 0 0 0 4px rgba(74, 107, 42, 0.15), 0 0 30px rgba(74, 107, 42, 0.12), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    border-color: rgb(var(--color-primary));
+    box-shadow: 0 0 0 4px rgba(92, 124, 94, 0.12), 0 0 30px rgba(92, 124, 94, 0.08);
     outline: none;
     transform: translateY(-1px);
+    background: #ffffff;
   }
 
-  .glass-input:focus::placeholder {
+  .glass-input::placeholder {
     color: rgb(var(--color-text-muted));
-    opacity: 0.7;
   }
 
   .glass-input:disabled {
@@ -1436,35 +244,16 @@
     cursor: not-allowed;
   }
 
-  .dark .glass-input:focus,
-  :root .glass-input:focus {
-    background: rgba(15, 15, 17, 0.95);
-  }
-
-  .light .glass-input:focus {
-    background: rgba(255, 255, 255, 1);
-  }
-
-  .glass-input::placeholder {
-    color: rgb(var(--color-text-muted));
-  }
-
-  /* Light mode specific input styles */
-  .light .glass-input {
-    background: rgba(255, 255, 255, 0.9);
-    border-color: rgba(74, 107, 42, 0.15);
-  }
-
+  /* Primary Button */
   .btn-primary {
-    background: linear-gradient(135deg, #4a6b2a 0%, #3d5a1f 100%);
-    color: #000000 !important;
+    background: linear-gradient(135deg, #5C7C5E 0%, #4A634C 100%);
+    color: #ffffff;
     font-weight: 600;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 16px rgba(74, 107, 42, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 16px rgba(92, 124, 94, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
     border-radius: 12px;
     position: relative;
     overflow: hidden;
-    transform-origin: center;
   }
 
   .btn-primary::before {
@@ -1477,18 +266,9 @@
     transform: translateX(-100%);
   }
 
-  .btn-primary::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
   .btn-primary:hover {
-    background: linear-gradient(135deg, #6b8e4a 0%, #4a6b2a 100%);
-    box-shadow: 0 8px 32px rgba(74, 107, 42, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 0 0 20px rgba(74, 107, 42, 0.25);
+    background: linear-gradient(135deg, #7A9C7C 0%, #5C7C5E 100%);
+    box-shadow: 0 8px 32px rgba(92, 124, 94, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 0 0 20px rgba(92, 124, 94, 0.2);
     transform: translateY(-2px) scale(1.02);
   }
 
@@ -1497,14 +277,9 @@
     transform: translateX(100%);
   }
 
-  .btn-primary:hover::after {
-    opacity: 1;
-  }
-
   .btn-primary:active {
     transform: translateY(0) scale(0.98);
-    box-shadow: 0 2px 8px rgba(74, 107, 42, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
-    transition: all 0.1s ease;
+    box-shadow: 0 2px 8px rgba(92, 124, 94, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
   }
 
   .btn-primary:disabled {
@@ -1515,22 +290,23 @@
   }
 
   .btn-primary:focus-visible {
-    outline: 2px solid rgba(74, 107, 42, 0.5);
+    outline: 2px solid rgba(92, 124, 94, 0.5);
     outline-offset: 2px;
   }
 
+  /* Lime Button */
   .btn-lime {
-    background: linear-gradient(135deg, #4a6b2a 0%, #3d5a1f 100%);
-    color: #000000 !important;
+    background: linear-gradient(135deg, #5C7C5E 0%, #4A634C 100%);
+    color: #ffffff;
     font-weight: 600;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 16px rgba(74, 107, 42, 0.2);
+    box-shadow: 0 4px 16px rgba(92, 124, 94, 0.2);
     border-radius: 12px;
   }
 
   .btn-lime:hover {
-    background: linear-gradient(135deg, #6b8e4a 0%, #4a6b2a 100%);
-    box-shadow: 0 6px 24px rgba(74, 107, 42, 0.3);
+    background: linear-gradient(135deg, #7A9C7C 0%, #5C7C5E 100%);
+    box-shadow: 0 6px 24px rgba(92, 124, 94, 0.3);
     transform: translateY(-1px);
   }
 
@@ -1544,122 +320,90 @@
     transform: none;
   }
 
+  /* Secondary Button */
   .btn-secondary {
-    background: rgba(39, 39, 42, 0.8);
+    background: rgba(239, 243, 236, 0.9);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #000000 !important;
+    border: 1px solid rgba(92, 124, 94, 0.15);
+    color: rgb(var(--color-text-primary));
     font-weight: 500;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 12px;
   }
 
   .btn-secondary:hover {
-    background: rgba(63, 63, 70, 0.8);
-    border-color: rgba(74, 107, 42, 0.3);
-    color: #000000 !important;
-  }
-
-  /* Light mode secondary button */
-  .light .btn-secondary {
-    background: rgba(240, 245, 237, 0.9);
-    border: 1px solid rgba(74, 107, 42, 0.15);
-    color: #000000 !important;
-  }
-
-  .light .btn-secondary:hover {
     background: rgba(232, 240, 224, 0.95);
-    border-color: rgba(74, 107, 42, 0.3);
-    color: #000000 !important;
+    border-color: rgba(92, 124, 94, 0.3);
   }
 
+  /* Glass Button */
   .btn-glass {
-    background: rgba(39, 39, 42, 0.6);
+    background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #000000 !important;
+    border: 1px solid rgba(92, 124, 94, 0.12);
+    color: rgb(var(--color-text-primary));
     transition: all 0.25s ease;
     border-radius: 12px;
   }
 
   .btn-glass:hover {
-    background: rgba(63, 63, 70, 0.6);
-    border-color: rgba(74, 107, 42, 0.3);
-    color: #000000 !important;
-  }
-
-  /* Light mode glass button */
-  .light .btn-glass {
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(74, 107, 42, 0.12);
-    color: #000000 !important;
-  }
-
-  .light .btn-glass:hover {
     background: rgba(255, 255, 255, 0.9);
-    border-color: rgba(74, 107, 42, 0.25);
-    color: #000000 !important;
+    border-color: rgba(92, 124, 94, 0.25);
   }
 
+  /* Ghost Button */
   .btn-ghost {
     background: transparent;
     border: 1px solid transparent;
-    color: #000000 !important;
+    color: rgb(var(--color-text-primary));
     font-weight: 500;
     transition: all 0.25s ease;
     border-radius: 12px;
   }
 
   .btn-ghost:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: #000000 !important;
+    background: rgba(92, 124, 94, 0.08);
   }
 
-  /* Light mode ghost button */
-  .light .btn-ghost {
-    color: #000000 !important;
-  }
-
-  .light .btn-ghost:hover {
-    background: rgba(74, 107, 42, 0.08);
-    color: #000000 !important;
-  }
-
+  /* Danger Button */
   .btn-danger {
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-    color: #000000 !important;
+    background: linear-gradient(135deg, #B45F5F 0%, #944F4F 100%);
+    color: #ffffff;
     font-weight: 600;
     transition: all 0.25s ease;
-    box-shadow: 0 4px 16px rgba(220, 38, 38, 0.25);
+    box-shadow: 0 4px 16px rgba(180, 95, 95, 0.25);
     border-radius: 12px;
   }
 
   .btn-danger:hover {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    box-shadow: 0 6px 24px rgba(220, 38, 38, 0.35);
+    background: linear-gradient(135deg, #C47070 0%, #B45F5F 100%);
+    box-shadow: 0 6px 24px rgba(180, 95, 95, 0.35);
     transform: translateY(-1px);
   }
 
+  /* Glow Effects */
   .glow-text {
-    text-shadow: 0 0 30px rgba(74, 107, 42, 0.35);
+    text-shadow: 0 0 30px rgba(92, 124, 94, 0.25);
   }
 
   .glow-border {
-    box-shadow: 0 0 20px rgba(74, 107, 42, 0.15);
-    border-color: rgba(74, 107, 42, 0.5);
+    box-shadow: 0 0 20px rgba(92, 124, 94, 0.12);
+    border-color: rgba(92, 124, 94, 0.4);
   }
 
+  /* Stat Card */
   .stat-card {
-    background: linear-gradient(135deg, rgba(24, 24, 27, 0.9) 0%, rgba(24, 24, 27, 0.7) 100%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(239, 243, 236, 0.9) 100%);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(92, 124, 94, 0.1);
     border-radius: 20px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    box-shadow: 0 4px 16px -4px rgba(92, 124, 94, 0.06);
   }
 
   .stat-card::before {
@@ -1669,31 +413,16 @@
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    background: linear-gradient(90deg, transparent, rgba(92, 124, 94, 0.12), transparent);
   }
 
   .stat-card:hover {
-    border-color: rgba(74, 107, 42, 0.2);
+    border-color: rgba(92, 124, 94, 0.25);
     transform: translateY(-4px);
-    box-shadow: 0 12px 40px -8px rgba(26, 46, 22, 0.35);
+    box-shadow: 0 12px 40px -8px rgba(92, 124, 94, 0.1);
   }
 
-  /* Light mode stat card */
-  .light .stat-card {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 245, 237, 0.9) 100%);
-    border: 1px solid rgba(74, 107, 42, 0.1);
-    box-shadow: 0 4px 16px -4px rgba(74, 107, 42, 0.06);
-  }
-
-  .light .stat-card::before {
-    background: linear-gradient(90deg, transparent, rgba(74, 107, 42, 0.12), transparent);
-  }
-
-  .light .stat-card:hover {
-    border-color: rgba(74, 107, 42, 0.25);
-    box-shadow: 0 12px 40px -8px rgba(74, 107, 42, 0.1);
-  }
-
+  /* Navigation Item */
   .nav-item {
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 12px;
@@ -1701,8 +430,8 @@
   }
 
   .nav-item.active {
-    color: #6b8e4a;
-    background: rgba(74, 107, 42, 0.1);
+    color: #5C7C5E;
+    background: rgba(92, 124, 94, 0.1);
   }
 
   .nav-item.active::before {
@@ -1713,14 +442,15 @@
     transform: translateY(-50%);
     width: 3px;
     height: 60%;
-    background: linear-gradient(180deg, #6b8e4a 0%, #4a6b2a 100%);
+    background: linear-gradient(180deg, #7A9C7C 0%, #5C7C5E 100%);
     border-radius: 2px;
   }
 
   .nav-item.active .nav-icon {
-    filter: drop-shadow(0 0 8px rgba(74, 107, 42, 0.4));
+    filter: drop-shadow(0 0 8px rgba(92, 124, 94, 0.4));
   }
 
+  /* Calendar Day */
   .calendar-day {
     width: 40px;
     height: 40px;
@@ -1734,31 +464,26 @@
   }
 
   .calendar-day.has-workout {
-    background: linear-gradient(135deg, #4a6b2a 0%, #3d5a1f 100%);
-    color: #000000 !important;
-    box-shadow: 0 4px 16px rgba(74, 107, 42, 0.25);
+    background: linear-gradient(135deg, #5C7C5E 0%, #4A634C 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(92, 124, 94, 0.25);
   }
 
   .calendar-day.today {
-    border: 2px solid #6b8e4a;
-    box-shadow: 0 0 12px rgba(74, 107, 42, 0.2);
+    border: 2px solid #7A9C7C;
+    box-shadow: 0 0 12px rgba(92, 124, 94, 0.2);
   }
 
   .calendar-day.empty {
-    background: rgba(39, 39, 42, 0.5);
-    color: rgba(161, 161, 170, 0.6);
+    background: rgba(239, 243, 236, 0.5);
+    color: rgba(122, 140, 124, 0.6);
   }
 
-  /* Light mode calendar day */
-  .light .calendar-day.empty {
-    background: rgba(236, 240, 237, 0.5);
-    color: rgba(107, 127, 114, 0.6);
-  }
-
+  /* Badges */
   .badge-primary {
-    background: linear-gradient(135deg, rgba(74, 107, 42, 0.2) 0%, rgba(74, 107, 42, 0.1) 100%);
-    color: #7fa05a;
-    border: 1px solid rgba(74, 107, 42, 0.2);
+    background: linear-gradient(135deg, rgba(92, 124, 94, 0.2) 0%, rgba(92, 124, 94, 0.1) 100%);
+    color: #5C7C5E;
+    border: 1px solid rgba(92, 124, 94, 0.2);
     font-weight: 600;
     font-size: 12px;
     padding: 4px 10px;
@@ -1766,9 +491,9 @@
   }
 
   .badge-warning {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%);
-    color: #fbbf24;
-    border: 1px solid rgba(245, 158, 11, 0.2);
+    background: linear-gradient(135deg, rgba(196, 166, 112, 0.2) 0%, rgba(196, 166, 112, 0.1) 100%);
+    color: #8B7355;
+    border: 1px solid rgba(196, 166, 112, 0.2);
     font-weight: 600;
     font-size: 12px;
     padding: 4px 10px;
@@ -1776,9 +501,9 @@
   }
 
   .badge-danger {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
-    color: #f87171;
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: linear-gradient(135deg, rgba(180, 95, 95, 0.2) 0%, rgba(180, 95, 95, 0.1) 100%);
+    color: #B45F5F;
+    border: 1px solid rgba(180, 95, 95, 0.2);
     font-weight: 600;
     font-size: 12px;
     padding: 4px 10px;
@@ -1786,58 +511,47 @@
   }
 
   .badge-info {
-    background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(6, 182, 212, 0.1) 100%);
-    color: #22d3ee;
-    border: 1px solid rgba(6, 182, 212, 0.2);
+    background: linear-gradient(135deg, rgba(90, 138, 154, 0.2) 0%, rgba(90, 138, 154, 0.1) 100%);
+    color: #5A8A9A;
+    border: 1px solid rgba(90, 138, 154, 0.2);
     font-weight: 600;
     font-size: 12px;
     padding: 4px 10px;
     border-radius: 8px;
   }
 
+  /* Divider */
   .divider {
     height: 1px;
-    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.06) 50%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, rgba(92, 124, 94, 0.12) 50%, transparent 100%);
   }
 
-  /* Light mode divider */
-  .light .divider {
-    background: linear-gradient(90deg, transparent 0%, rgba(74, 107, 42, 0.12) 50%, transparent 100%);
-  }
-
+  /* Section Title */
   .section-title {
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #71717a;
+    color: rgb(var(--color-text-muted));
   }
 
-  /* Light mode section title */
-  .light .section-title {
-    color: #6b7f72;
-  }
-
+  /* Avatar Ring */
   .avatar-ring {
     padding: 2px;
-    background: linear-gradient(135deg, #4a6b2a 0%, #3d5a1f 100%);
+    background: linear-gradient(135deg, #5C7C5E 0%, #4A634C 100%);
     border-radius: 16px;
   }
 
+  /* Input Label */
   .input-label {
     font-size: 13px;
     font-weight: 600;
-    color: #a1a1aa;
+    color: rgb(var(--color-text-secondary));
     margin-bottom: 8px;
     display: block;
   }
 
-  /* Light mode input label */
-  .light .input-label {
-    color: #3d5347;
-  }
-
-
+  /* Icon Boxes */
   .icon-box {
     width: 48px;
     height: 48px;
@@ -1849,28 +563,29 @@
   }
 
   .icon-box-primary {
-    background: linear-gradient(135deg, rgba(74, 107, 42, 0.2) 0%, rgba(74, 107, 42, 0.1) 100%);
-    color: #6b8e4a;
+    background: linear-gradient(135deg, rgba(92, 124, 94, 0.2) 0%, rgba(92, 124, 94, 0.1) 100%);
+    color: #5C7C5E;
   }
 
   .icon-box-secondary {
-    background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(6, 182, 212, 0.1) 100%);
-    color: #06b6d4;
+    background: linear-gradient(135deg, rgba(90, 138, 154, 0.2) 0%, rgba(90, 138, 154, 0.1) 100%);
+    color: #5A8A9A;
   }
 
   .icon-box-warning {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%);
-    color: #f59e0b;
+    background: linear-gradient(135deg, rgba(196, 166, 112, 0.2) 0%, rgba(196, 166, 112, 0.1) 100%);
+    color: #C4A670;
   }
 
   .icon-box-danger {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
-    color: #ef4444;
+    background: linear-gradient(135deg, rgba(180, 95, 95, 0.2) 0%, rgba(180, 95, 95, 0.1) 100%);
+    color: #B45F5F;
   }
 
+  /* Action Buttons */
   .action-btn {
-    background: rgb(var(--color-bg-surface) / 0.6);
-    border: 1px solid rgb(var(--color-border) / 0.12);
+    background: rgba(239, 243, 236, 0.6);
+    border: 1px solid rgba(92, 124, 94, 0.12);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1878,14 +593,14 @@
     padding: 1rem 1.5rem;
     border-radius: 14px;
     font-weight: 600;
-    color: #000000 !important;
+    color: rgb(var(--color-text-primary));
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     min-height: 52px;
   }
 
   .action-btn:hover {
-    background: rgb(var(--color-bg-elevated) / 0.85);
-    border-color: rgb(var(--color-border) / 0.2);
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(92, 124, 94, 0.2);
     transform: translateY(-2px);
   }
 
@@ -1894,68 +609,68 @@
   }
 
   .action-btn-emerald {
-    background: linear-gradient(135deg, #4a6b2a 0%, #3d5a1f 100%);
-    color: #000000 !important;
-    box-shadow: 0 4px 16px rgba(74, 107, 42, 0.2);
+    background: linear-gradient(135deg, #5C7C5E 0%, #4A634C 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(92, 124, 94, 0.2);
   }
 
   .action-btn-emerald:hover {
-    box-shadow: 0 6px 24px rgba(74, 107, 42, 0.3);
+    box-shadow: 0 6px 24px rgba(92, 124, 94, 0.3);
   }
 
   .action-btn-cyan {
-    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-    color: #000000 !important;
-    box-shadow: 0 4px 16px rgba(6, 182, 212, 0.25);
+    background: linear-gradient(135deg, #5A8A9A 0%, #4A7A8A 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(90, 138, 154, 0.25);
   }
 
   .action-btn-cyan:hover {
-    box-shadow: 0 6px 24px rgba(6, 182, 212, 0.35);
+    box-shadow: 0 6px 24px rgba(90, 138, 154, 0.35);
   }
 
   .action-btn-amber {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: #000000 !important;
-    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.25);
+    background: linear-gradient(135deg, #C4A670 0%, #A48A5A 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(196, 166, 112, 0.25);
   }
 
   .action-btn-amber:hover {
-    box-shadow: 0 6px 24px rgba(245, 158, 11, 0.35);
+    box-shadow: 0 6px 24px rgba(196, 166, 112, 0.35);
   }
 
   .action-btn-teal {
-    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
-    color: #000000 !important;
-    box-shadow: 0 4px 16px rgba(20, 184, 166, 0.25);
+    background: linear-gradient(135deg, #5A9A8A 0%, #4A8A7A 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(90, 154, 138, 0.25);
   }
 
   .action-btn-teal:hover {
-    box-shadow: 0 6px 24px rgba(20, 184, 166, 0.35);
+    box-shadow: 0 6px 24px rgba(90, 154, 138, 0.35);
   }
 
   .action-btn-slate {
-    background: linear-gradient(135deg, #475569 0%, #334155 100%);
-    color: #000000 !important;
-    box-shadow: 0 4px 16px rgba(71, 85, 105, 0.25);
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(100, 116, 139, 0.25);
   }
 
   .action-btn-slate:hover {
-    box-shadow: 0 6px 24px rgba(71, 85, 105, 0.35);
+    box-shadow: 0 6px 24px rgba(100, 116, 139, 0.35);
   }
 
   .action-btn-rose {
-    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
-    color: #000000 !important;
-    box-shadow: 0 4px 16px rgba(244, 63, 94, 0.25);
+    background: linear-gradient(135deg, #B45F5F 0%, #944F4F 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(180, 95, 95, 0.25);
   }
 
   .action-btn-rose:hover {
-    box-shadow: 0 6px 24px rgba(244, 63, 94, 0.35);
+    box-shadow: 0 6px 24px rgba(180, 95, 95, 0.35);
   }
 }
 
 @layer utilities {
-  /* Screen reader only - visually hidden but accessible to screen readers */
+  /* Screen Reader Only */
   .sr-only {
     position: absolute;
     width: 1px;
@@ -1988,509 +703,224 @@
     border-radius: 0 0 0.5rem 0.5rem;
     transition: top 0.3s ease;
     z-index: 1000;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   }
 
-  .skip-link:focus,
-  .skip-link-focused {
+  .skip-link:focus {
     top: 0;
     outline: 3px solid white;
     outline-offset: 2px;
   }
+
   .touch-manipulation {
     touch-action: manipulation;
   }
 
+  /* Gradients */
   .text-gradient-primary {
-    background: linear-gradient(135deg, #7fa05a 0%, #6b8e4a 100%);
+    background: linear-gradient(135deg, #7A9C7C 0%, #5C7C5E 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* Theme-aware text colors based on CSS variables */
-  .text-theme-primary {
-    color: rgb(var(--color-text-primary));
-  }
-
-  .text-theme-secondary {
-    color: rgb(var(--color-text-secondary));
-  }
-
-  .text-theme-muted {
-    color: rgb(var(--color-text-muted));
-  }
-
   .bg-gradient-primary {
-    background: linear-gradient(135deg, #4a6b2a 0%, #3d5a1f 100%);
+    background: linear-gradient(135deg, #5C7C5E 0%, #4A634C 100%);
   }
 
   .bg-gradient-dark {
-    background: linear-gradient(145deg, #09090b 0%, #18181b 50%, #0c1a14 100%);
+    background: linear-gradient(145deg, #F8FAF6 0%, #ffffff 40%, #EFF3EC 100%);
   }
 
-  /* Light mode gradient background */
-  .light .bg-gradient-dark {
-    background: linear-gradient(145deg, #f0f5ed 0%, #ffffff 40%, #e8f0e0 100%);
-  }
+  /* Theme Text Colors */
+  .text-theme-primary { color: rgb(var(--color-text-primary)); }
+  .text-theme-secondary { color: rgb(var(--color-text-secondary)); }
+  .text-theme-muted { color: rgb(var(--color-text-muted)); }
 
+  /* Mobile Utilities */
   @media (max-width: 767px) {
-    .mobile-text-lg {
-      font-size: 1.125rem;
-    }
-
-    .mobile-button {
-      padding: 0.875rem 1.25rem;
-      font-size: 1rem;
-      min-height: 52px;
-    }
-
-    .mobile-input {
-      font-size: 16px;
-      min-height: 52px;
-    }
-
-    .mobile-card {
-      padding: 1rem;
-    }
-
-    .mobile-spacing {
-      gap: 0.75rem;
-    }
-
-    .mobile-full {
-      width: 100%;
-    }
-
-    /* Enhanced mobile touch interactions */
-    .mobile-touch-target {
-      min-height: 44px;
-      min-width: 44px;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: rgba(74, 107, 42, 0.2);
-    }
-
-    /* Better mobile spacing */
-    .mobile-padding {
-      padding: 1rem;
-    }
-
-    .mobile-margin {
-      margin: 1rem;
-    }
-
-    /* Mobile card improvements */
-    .mobile-card-enhanced {
-      border-radius: 1rem;
-      padding: 1.25rem;
-      margin-bottom: 1rem;
-    }
-
-    /* Mobile text improvements */
-    .mobile-text-base {
-      font-size: 1rem;
-      line-height: 1.6;
-    }
-
-    /* Mobile button improvements */
-    .mobile-btn-enhanced {
-      width: 100%;
-      padding: 1rem;
-      font-size: 1rem;
-      font-weight: 600;
-      border-radius: 0.875rem;
-      min-height: 52px;
-    }
+    .mobile-text-lg { font-size: 1.125rem; }
+    .mobile-button { padding: 0.875rem 1.25rem; font-size: 1rem; min-height: 52px; }
+    .mobile-input { font-size: 16px; min-height: 52px; }
+    .mobile-card { padding: 1rem; }
+    .mobile-spacing { gap: 0.75rem; }
+    .mobile-full { width: 100%; }
+    .mobile-touch-target { min-height: 44px; min-width: 44px; touch-action: manipulation; -webkit-tap-highlight-color: rgba(92, 124, 94, 0.2); }
+    .mobile-padding { padding: 1rem; }
+    .mobile-margin { margin: 1rem; }
+    .mobile-card-enhanced { border-radius: 1rem; padding: 1.25rem; margin-bottom: 1rem; }
+    .mobile-text-base { font-size: 1rem; line-height: 1.6; }
+    .mobile-btn-enhanced { width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; border-radius: 0.875rem; min-height: 52px; }
   }
 
   @media (min-width: 768px) and (max-width: 1024px) {
-    .tablet-padding {
-      padding: 1.5rem;
-    }
-
-    .tablet-text {
-      font-size: 1.125rem;
-    }
-
-    .tablet-button {
-      padding: 1rem 1.5rem;
-      font-size: 1.125rem;
-    }
+    .tablet-padding { padding: 1.5rem; }
+    .tablet-text { font-size: 1.125rem; }
+    .tablet-button { padding: 1rem 1.5rem; font-size: 1.125rem; }
   }
 
   @media (orientation: portrait) and (max-width: 767px) {
-    .portrait-full-width {
-      width: 100vw;
-      margin-left: calc(-50vw + 50%);
-      margin-right: calc(-50vw + 50%);
-    }
-
-    .portrait-bottom-safe {
-      padding-bottom: max(env(safe-area-inset-bottom), 1rem);
-    }
+    .portrait-full-width { width: 100vw; margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); }
+    .portrait-bottom-safe { padding-bottom: max(env(safe-area-inset-bottom), 1rem); }
   }
 
   @media (orientation: landscape) and (max-height: 768px) {
-    .landscape-compact {
-      padding-top: 0.5rem;
-      padding-bottom: 0.5rem;
-    }
-
-    .landscape-hide-header {
-      display: none;
-    }
-
-    .landscape-compact-spacing {
-      gap: 0.5rem;
-    }
-
-    .landscape-max-h {
-      max-height: 90vh;
-      overflow-y: auto;
-    }
+    .landscape-compact { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    .landscape-hide-header { display: none; }
+    .landscape-compact-spacing { gap: 0.5rem; }
+    .landscape-max-h { max-height: 90vh; overflow-y: auto; }
   }
 
-  .animate-enter {
-    animation: fade-in-up 0.3s ease-out;
-  }
-
-  .animate-leave {
-    animation: fade-out-down 0.2s ease-in forwards;
-  }
+  /* Animations */
+  .animate-enter { animation: fade-in-up 0.3s ease-out; }
+  .animate-leave { animation: fade-out-down 0.2s ease-in forwards; }
+  .animate-slide-in-top { animation: slide-in-top 0.3s ease-out; }
+  .animate-highlight-pulse { animation: highlight-pulse 1s ease-out 2; }
+  .animate-scale-bounce { animation: scale-bounce 1s ease-in-out infinite; }
+  .animate-fade-in { animation: fade-in 0.4s ease-out; }
+  .animate-count-up { animation: count-up 0.6s ease-out; }
+  .animate-slide-in-right { animation: slide-in-right 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+  .animate-slide-in-left { animation: slide-in-left 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+  .animate-scale-in { animation: scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .animate-ripple { animation: ripple 0.6s ease-out; }
+  .animate-glow-slow { animation: glow-slow 3s ease-in-out infinite; }
+  .animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
+  .animate-gradient-x { animation: gradient-x 3s ease infinite; background-size: 200% 200%; }
+  .animate-shimmer { animation: shimmer 2s infinite linear; background: linear-gradient(to right, rgba(92, 124, 94, 0.05) 0%, rgba(92, 124, 94, 0.1) 50%, rgba(92, 124, 94, 0.05) 100%); background-size: 1000px 100%; }
+  .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; opacity: 0; }
 
   @keyframes fade-in-up {
-    0% {
-      opacity: 0;
-      transform: translateY(16px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    0% { opacity: 0; transform: translateY(16px); }
+    100% { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes fade-out-down {
-    0% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    100% {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-  }
-
-  .animate-slide-in-top {
-    animation: slide-in-top 0.3s ease-out;
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(8px); }
   }
 
   @keyframes slide-in-top {
-    0% {
-      transform: translateY(-100%);
-      opacity: 0;
-    }
-    100% {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  .animate-highlight-pulse {
-    animation: highlight-pulse 1s ease-out 2;
+    0% { transform: translateY(-100%); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
   }
 
   @keyframes highlight-pulse {
-    0% {
-      box-shadow: 0 0 0 0 rgba(74, 107, 42, 0.5);
-    }
-    50% {
-      box-shadow: 0 0 0 12px rgba(74, 107, 42, 0);
-    }
-    100% {
-      box-shadow: 0 0 0 0 rgba(74, 107, 42, 0);
-    }
-  }
-
-  .animate-scale-bounce {
-    animation: scale-bounce 1s ease-in-out infinite;
+    0% { box-shadow: 0 0 0 0 rgba(92, 124, 94, 0.5); }
+    50% { box-shadow: 0 0 0 12px rgba(92, 124, 94, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(92, 124, 94, 0); }
   }
 
   @keyframes scale-bounce {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-6px);
-    }
-  }
-
-  .animate-fade-in {
-    animation: fade-in 0.4s ease-out;
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
   }
 
   @keyframes fade-in {
-    0% {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .animate-count-up {
-    animation: count-up 0.6s ease-out;
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes count-up {
-    0% {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* Enhanced animations for premium UX */
-  .animate-slide-in-right {
-    animation: slide-in-right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes slide-in-right {
-    0% {
-      opacity: 0;
-      transform: translateX(20px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  .animate-slide-in-left {
-    animation: slide-in-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    0% { opacity: 0; transform: translateX(20px); }
+    100% { opacity: 1; transform: translateX(0); }
   }
 
   @keyframes slide-in-left {
-    0% {
-      opacity: 0;
-      transform: translateX(-20px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  .animate-scale-in {
-    animation: scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    0% { opacity: 0; transform: translateX(-20px); }
+    100% { opacity: 1; transform: translateX(0); }
   }
 
   @keyframes scale-in {
-    0% {
-      opacity: 0;
-      transform: scale(0.9);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  .animate-ripple {
-    animation: ripple 0.6s ease-out;
+    0% { opacity: 0; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
   }
 
   @keyframes ripple {
-    0% {
-      transform: scale(0);
-      opacity: 1;
-    }
-    100% {
-      transform: scale(4);
-      opacity: 0;
-    }
-  }
-
-  .animate-glow-slow {
-    animation: glow-slow 3s ease-in-out infinite;
+    0% { transform: scale(0); opacity: 1; }
+    100% { transform: scale(4); opacity: 0; }
   }
 
   @keyframes glow-slow {
-    0%, 100% {
-      box-shadow: 0 0 20px rgba(74, 107, 42, 0.25);
-    }
-    50% {
-      box-shadow: 0 0 40px rgba(74, 107, 42, 0.4);
-    }
-  }
-
-  .animate-float-slow {
-    animation: float-slow 6s ease-in-out infinite;
+    0%, 100% { box-shadow: 0 0 20px rgba(92, 124, 94, 0.2); }
+    50% { box-shadow: 0 0 40px rgba(92, 124, 94, 0.35); }
   }
 
   @keyframes float-slow {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-
-  .animate-gradient-x {
-    animation: gradient-x 3s ease infinite;
-    background-size: 200% 200%;
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
   }
 
   @keyframes gradient-x {
-    0%, 100% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
   }
 
   @keyframes shimmer {
-    0% {
-      background-position: -1000px 0;
-    }
-    100% {
-      background-position: 1000px 0;
-    }
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
   }
 
-  .animate-shimmer {
-    animation: shimmer 2s infinite linear;
-    background: linear-gradient(
-      to right,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.1) 50%,
-      rgba(255, 255, 255, 0.05) 100%
-    );
-    background-size: 1000px 100%;
-  }
+  /* Scrollbar Utilities */
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
 
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+  /* Safe Area Utilities */
+  .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 16px); }
+  .safe-top { padding-top: max(env(safe-area-inset-top), 16px); }
 
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-
-  .safe-bottom {
-    padding-bottom: max(env(safe-area-inset-bottom), 16px);
-  }
-
-  .safe-top {
-    padding-top: max(env(safe-area-inset-top), 16px);
-  }
-
-  /* ============================================
-     Workout Set Transitions & Animations
-     ============================================ */
-
-  /* Set complete animation - success pulse */
-  .animate-set-complete {
-    animation: set-complete 0.5s ease-out;
-  }
+  /* Workout Set Animations */
+  .animate-set-complete { animation: set-complete 0.5s ease-out; }
+  .animate-set-collapse { animation: set-collapse 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+  .animate-set-expand { animation: set-expand 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+  .animate-volume-pop { animation: volume-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
   @keyframes set-complete {
-    0% {
-      transform: scale(1);
-      box-shadow: 0 0 0 0 rgba(74, 107, 42, 0.5);
-    }
-    30% {
-      transform: scale(1.02);
-      box-shadow: 0 0 0 8px rgba(74, 107, 42, 0.25);
-    }
-    100% {
-      transform: scale(1);
-      box-shadow: 0 0 0 0 rgba(74, 107, 42, 0);
-    }
-  }
-
-  /* Set collapse animation - slide up and fade */
-  .animate-set-collapse {
-    animation: set-collapse 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(92, 124, 94, 0.5); }
+    30% { transform: scale(1.02); box-shadow: 0 0 0 8px rgba(92, 124, 94, 0.25); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(92, 124, 94, 0); }
   }
 
   @keyframes set-collapse {
-    0% {
-      opacity: 1;
-      max-height: 600px;
-      transform: translateY(0);
-    }
-    100% {
-      opacity: 0.95;
-      max-height: 70px;
-      transform: translateY(-5px);
-    }
-  }
-
-  /* Set expand animation - slide down and reveal */
-  .animate-set-expand {
-    animation: set-expand 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    0% { opacity: 1; max-height: 600px; transform: translateY(0); }
+    100% { opacity: 0.95; max-height: 70px; transform: translateY(-5px); }
   }
 
   @keyframes set-expand {
-    0% {
-      opacity: 0.95;
-      max-height: 70px;
-      transform: translateY(-5px);
-    }
-    100% {
-      opacity: 1;
-      max-height: 600px;
-      transform: translateY(0);
-    }
+    0% { opacity: 0.95; max-height: 70px; transform: translateY(-5px); }
+    100% { opacity: 1; max-height: 600px; transform: translateY(0); }
   }
 
-  /* Active set highlight - glowing border */
+  @keyframes volume-pop {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Set Card States */
   .set-card-active {
-    border-color: rgba(74, 107, 42, 0.5) !important;
-    box-shadow: 0 0 0 3px rgba(74, 107, 42, 0.15), 0 4px 20px rgba(74, 107, 42, 0.12);
+    border-color: rgba(92, 124, 94, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(92, 124, 94, 0.15), 0 4px 20px rgba(92, 124, 94, 0.12);
   }
 
-  /* Completed set style */
   .set-card-completed {
-    border-color: rgba(74, 107, 42, 0.3) !important;
-    background: linear-gradient(135deg, rgba(74, 107, 42, 0.08), rgba(107, 142, 74, 0.05)) !important;
+    border-color: rgba(92, 124, 94, 0.3) !important;
+    background: linear-gradient(135deg, rgba(92, 124, 94, 0.08), rgba(122, 156, 124, 0.05)) !important;
   }
 
-  /* Collapsed set hover effect */
   .set-collapsed-hover {
     transition: all 0.25s ease;
   }
 
   .set-collapsed-hover:hover {
     transform: translateX(4px);
-    border-color: rgba(74, 107, 42, 0.4);
+    border-color: rgba(92, 124, 94, 0.4);
   }
 
-  /* Volume badge animation */
-  .animate-volume-pop {
-    animation: volume-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  @keyframes volume-pop {
-    0% {
-      transform: scale(0.8);
-      opacity: 0;
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-
-  /* Button press feedback for tablet */
+  /* Button Press Feedback */
   .btn-press-feedback {
     transition: transform 0.1s ease, box-shadow 0.1s ease;
   }
@@ -2499,21 +929,17 @@
     transform: scale(0.97);
   }
 
-  /* Smooth scroll target highlight */
+  /* Scroll Target Highlight */
   .scroll-target-highlight {
     animation: scroll-highlight 0.8s ease-out;
   }
 
   @keyframes scroll-highlight {
-    0% {
-      box-shadow: 0 0 0 4px rgba(74, 107, 42, 0.4);
-    }
-    100% {
-      box-shadow: 0 0 0 0 rgba(74, 107, 42, 0);
-    }
+    0% { box-shadow: 0 0 0 4px rgba(92, 124, 94, 0.4); }
+    100% { box-shadow: 0 0 0 0 rgba(92, 124, 94, 0); }
   }
 
-  /* Quick increment button animations */
+  /* Quick Increment Button */
   .quick-increment-btn {
     transition: all 0.15s ease;
   }
@@ -2526,158 +952,55 @@
     transform: scale(0.95);
   }
 
-  /* Set number badge animation */
+  /* Set Number Badge */
   .set-number-badge {
     transition: all 0.2s ease;
   }
 
   .set-number-badge.completed {
-    background: linear-gradient(135deg, #4a6b2a, #6b8e4a) !important;
-    box-shadow: 0 2px 8px rgba(74, 107, 42, 0.3);
+    background: linear-gradient(135deg, #5C7C5E, #7A9C7C) !important;
+    box-shadow: 0 2px 8px rgba(92, 124, 94, 0.3);
   }
 
-  /* Tablet specific workout styles */
-  .tablet .workout-set-card {
-    min-height: 60px;
-  }
-
-  .tablet .workout-input-btn {
-    min-height: 56px;
-    font-size: 1.75rem;
-  }
-
-  /* Progress indicator */
+  /* Progress Ring */
   .progress-ring {
     transition: stroke-dashoffset 0.35s ease;
     transform: rotate(-90deg);
     transform-origin: 50% 50%;
   }
 
-  /* ============================================
-     Enhanced Tablet Optimization
-     ============================================ */
+  /* Tablet Specific Styles */
+  .tablet .workout-set-card { min-height: 60px; }
+  .tablet .workout-input-btn { min-height: 56px; font-size: 1.75rem; }
+  .tablet .touch-target-lg { min-height: 56px; min-width: 56px; }
+  .tablet .workout-exercise-card { padding: 1.5rem; }
+  .tablet .workout-session-container { padding: 1.5rem; gap: 1.5rem; }
+  .tablet .workout-header { padding: 1rem 1.5rem; gap: 1rem; }
+  .tablet .numeric-input-btn { min-height: 64px; font-size: 2rem; font-weight: 700; }
+  .tablet .set-type-btn { min-height: 48px; font-size: 1rem; }
+  .tablet .action-btn-lg { min-height: 52px; padding: 0.875rem 1.25rem; font-size: 1.125rem; }
+  .tablet .complete-set-btn { min-height: 64px; font-size: 1.25rem; padding: 1rem 1.5rem; }
+  .tablet .exercise-selector { max-width: 90vw; max-height: 85vh; }
+  .tablet .exercise-item { min-height: 60px; padding: 1rem; }
+  .tablet .muscle-group-btn { min-height: 52px; padding: 0.875rem 1rem; font-size: 1rem; }
+  .tablet .numeric-pad-container { max-width: 90vw; padding: 1.5rem; }
+  .tablet .numeric-pad-btn { min-height: 64px; font-size: 1.5rem; font-weight: 700; }
+  .tablet .numeric-pad-display { font-size: 4rem; padding: 1.5rem; }
+  .tablet .collapsed-set-card { padding: 1rem 1.25rem; min-height: 56px; }
+  .tablet .summary-card { padding: 1rem; min-height: 60px; }
+  .tablet .add-set-btn { min-height: 56px; font-size: 1.125rem; }
 
-  /* Larger touch targets for tablet */
-  .tablet .touch-target-lg {
-    min-height: 56px;
-    min-width: 56px;
-  }
-
-  /* Workout exercise card spacing */
-  .tablet .workout-exercise-card {
-    padding: 1.5rem;
-  }
-
-  /* Better spacing for tablet workout session */
-  .tablet .workout-session-container {
-    padding: 1.5rem;
-    gap: 1.5rem;
-  }
-
-  /* Tablet header improvements */
-  .tablet .workout-header {
-    padding: 1rem 1.5rem;
-    gap: 1rem;
-  }
-
-  /* Input buttons larger on tablet */
-  .tablet .numeric-input-btn {
-    min-height: 64px;
-    font-size: 2rem;
-    font-weight: 700;
-  }
-
-  /* Set type buttons larger on tablet */
-  .tablet .set-type-btn {
-    min-height: 48px;
-    font-size: 1rem;
-  }
-
-  /* Action buttons larger on tablet */
-  .tablet .action-btn-lg {
-    min-height: 52px;
-    padding: 0.875rem 1.25rem;
-    font-size: 1.125rem;
-  }
-
-  /* Complete set button extra large on tablet */
-  .tablet .complete-set-btn {
-    min-height: 64px;
-    font-size: 1.25rem;
-    padding: 1rem 1.5rem;
-  }
-
-  /* Exercise selector improvements for tablet */
-  .tablet .exercise-selector {
-    max-width: 90vw;
-    max-height: 85vh;
-  }
-
-  .tablet .exercise-item {
-    min-height: 60px;
-    padding: 1rem;
-  }
-
-  /* Muscle group buttons larger on tablet */
-  .tablet .muscle-group-btn {
-    min-height: 52px;
-    padding: 0.875rem 1rem;
-    font-size: 1rem;
-  }
-
-  /* Numeric pad improvements for tablet */
-  .tablet .numeric-pad-container {
-    max-width: 90vw;
-    padding: 1.5rem;
-  }
-
-  .tablet .numeric-pad-btn {
-    min-height: 64px;
-    font-size: 1.5rem;
-    font-weight: 700;
-  }
-
-  .tablet .numeric-pad-display {
-    font-size: 4rem;
-    padding: 1.5rem;
-  }
-
-  /* Collapsed set card improvements */
-  .tablet .collapsed-set-card {
-    padding: 1rem 1.25rem;
-    min-height: 56px;
-  }
-
-  /* Summary cards larger on tablet */
-  .tablet .summary-card {
-    padding: 1rem;
-    min-height: 60px;
-  }
-
-  /* Add set button larger on tablet */
-  .tablet .add-set-btn {
-    min-height: 56px;
-    font-size: 1.125rem;
-  }
-
-  /* Scroll snap for smooth set navigation on tablet */
   @media (hover: none) and (pointer: coarse) {
-    .tablet .sets-container {
-      scroll-snap-type: y proximity;
-    }
-    
-    .tablet .workout-set-card {
-      scroll-snap-align: start;
-    }
+    .tablet .sets-container { scroll-snap-type: y proximity; }
+    .tablet .workout-set-card { scroll-snap-align: start; }
   }
 
-  /* Better focus states for tablet */
   .tablet button:focus-visible {
-    outline: 3px solid rgb(74, 107, 42);
+    outline: 3px solid rgb(92, 124, 94);
     outline-offset: 3px;
   }
 
-  /* Swipe hint indicator */
+  /* Swipe Hint */
   .swipe-hint {
     position: relative;
     overflow: hidden;
@@ -2691,60 +1014,18 @@
     transform: translateY(-50%);
     width: 40px;
     height: 4px;
-    background: linear-gradient(90deg, rgba(74, 107, 42, 0.25), transparent);
+    background: linear-gradient(90deg, rgba(92, 124, 94, 0.25), transparent);
     border-radius: 2px;
   }
 
-  /* Shimmer effect for skeleton loaders */
-  @keyframes shimmer {
-    0% {
-      background-position: -1000px 0;
-    }
-    100% {
-      background-position: 1000px 0;
-    }
-  }
-
+  /* Skeleton Shimmer */
   .skeleton-shimmer {
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.1) 50%,
-      rgba(255, 255, 255, 0.05) 100%
-    );
+    background: linear-gradient(90deg, rgba(92, 124, 94, 0.05) 0%, rgba(92, 124, 94, 0.1) 50%, rgba(92, 124, 94, 0.05) 100%);
     background-size: 1000px 100%;
     animation: shimmer 2s infinite;
   }
 
-  /* Light mode shimmer */
-  .light .skeleton-shimmer {
-    background: linear-gradient(
-      90deg,
-      rgba(74, 107, 42, 0.05) 0%,
-      rgba(74, 107, 42, 0.1) 50%,
-      rgba(74, 107, 42, 0.05) 100%
-    );
-    background-size: 1000px 100%;
-  }
-
-  /* Enhanced fade-in-up animation for stagger effects */
-  .animate-fade-in-up {
-    animation: fade-in-up 0.5s ease-out forwards;
-    opacity: 0;
-  }
-
-  @keyframes swipe-hint-pulse {
-    0%, 100% {
-      opacity: 0;
-      transform: translateY(-50%) translateX(0);
-    }
-    50% {
-      opacity: 1;
-      transform: translateY(-50%) translateX(-10px);
-    }
-  }
-
-  /* Keyboard shortcut hint */
+  /* Keyboard Hint */
   .kbd-hint {
     display: inline-flex;
     align-items: center;
@@ -2752,11 +1033,11 @@
     min-width: 24px;
     height: 24px;
     padding: 0 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(92, 124, 94, 0.1);
+    border: 1px solid rgba(92, 124, 94, 0.2);
     border-radius: 4px;
     font-size: 12px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgb(var(--color-text-secondary));
   }
 }

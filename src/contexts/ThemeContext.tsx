@@ -1,12 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useEffect, ReactNode } from 'react';
 
-export type Theme = 'dark' | 'light';
+// Theme is always 'light' - elegant sage green palette
+export type Theme = 'light';
 
 interface ThemeContextType {
   theme: Theme;
-  toggleTheme: () => void;
-  setTheme: (theme: Theme) => void;
-  isDark: boolean;
   isLight: boolean;
 }
 
@@ -14,58 +12,34 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 interface ThemeProviderProps {
   children: ReactNode;
-  defaultTheme?: Theme;
 }
 
-export function ThemeProvider({ children, defaultTheme = 'dark' }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    try {
-      const saved = localStorage.getItem('ym-coach-theme');
-      if (saved === 'light' || saved === 'dark') {
-        return saved;
-      }
-    } catch {
-      // localStorage not available
-    }
-    return defaultTheme;
-  });
+export function ThemeProvider({ children }: ThemeProviderProps) {
+  const theme: Theme = 'light';
 
   useEffect(() => {
-    try {
-      localStorage.setItem('ym-coach-theme', theme);
-    } catch {
-      // localStorage not available
-    }
-
-    // Update document class for Tailwind dark mode
+    // Set light theme class on document
     const root = document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
+    root.classList.remove('dark');
+    root.classList.add('light');
 
     // Update meta theme-color for mobile browsers
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute(
-        'content',
-        theme === 'dark' ? '#1a2e16' : '#f0f5ed'
-      );
+      metaThemeColor.setAttribute('content', '#F8FAF6');
     }
-  }, [theme]);
 
-  const toggleTheme = () => {
-    setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-  };
+    // Clear any stored theme preference (always light now)
+    try {
+      localStorage.removeItem('ym-coach-theme');
+    } catch {
+      // localStorage not available
+    }
+  }, []);
 
   const value: ThemeContextType = {
     theme,
-    toggleTheme,
-    setTheme,
-    isDark: theme === 'dark',
-    isLight: theme === 'light',
+    isLight: true,
   };
 
   return (
@@ -85,8 +59,6 @@ export function useTheme(): ThemeContextType {
 
 // Hook for components that need theme-aware classes
 export function useThemeClasses() {
-  const { isDark } = useTheme();
-
   return {
     // Background classes - use design tokens
     bgBase: 'bg-base',

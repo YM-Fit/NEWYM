@@ -40,67 +40,84 @@
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
 
-    /* Brand - Nature-inspired colors */
-    --color-primary: 74 107 42;        /* #4a6b2a - olive green */
-    --color-primary-light: 107 142 74; /* #6b8e4a - soft green */
-    --color-primary-dark: 61 90 31;    /* #3d5a1f - dark olive */
-    --color-on-primary: 255 255 255;
+    /* =============================================
+       Elegant Light Theme - Sage Green & Warm Gray
+
+       Design Philosophy:
+       - רוגע (Calm): Soft, muted sage greens
+       - בריאות (Health): Natural, organic color palette
+       - אלגנטיות (Elegance): Refined grays, subtle contrasts
+       - חוכמה (Wisdom): Deep, thoughtful accent colors
+       - יוקרה (Luxury): Clean whites, sophisticated tones
+       ============================================= */
+
+    /* Brand - Sage Green Primary Colors */
+    --color-primary: 92 124 94;           /* #5C7C5E - refined sage green */
+    --color-primary-light: 122 156 124;   /* #7A9C7C - soft sage */
+    --color-primary-dark: 74 99 76;       /* #4A634C - deep sage */
+    --color-on-primary: 255 255 255;      /* white text on primary */
     --color-primary-foreground: 255 255 255;
-    --color-success: 74 107 42;
-    --color-warning: 245 158 11;
-    --color-danger: 220 38 38;
-    --color-info: 107 142 74;
 
-    /* Dark theme (default) - Nature-inspired dark greens */
-    --color-bg-base: 26 46 22;         /* #1a2e16 - deep dark green */
-    --color-bg-elevated: 36 50 28;    /* #24321c - medium dark green */
-    --color-bg-surface: 45 58 36;      /* #2d3a24 - lighter dark green */
-    --color-bg-card: 36 50 28;
-    --color-bg-input: 26 46 22;
-    --color-bg-overlay: 0 0 0;
+    /* Semantic Colors */
+    --color-success: 92 124 94;           /* sage green */
+    --color-warning: 196 166 112;         /* muted gold - luxury accent */
+    --color-danger: 180 95 95;            /* muted rose - elegant */
+    --color-info: 122 156 124;            /* soft sage */
 
-    --color-text-primary: 0 0 0;
-    --color-text-secondary: 0 0 0;
-    --color-text-muted: 0 0 0;
-    --color-text-inverse: 0 0 0;
+    /* Elegant Light Backgrounds */
+    --color-bg-base: 248 250 246;         /* #F8FAF6 - warm off-white with green tint */
+    --color-bg-elevated: 255 255 255;     /* #FFFFFF - pure white for cards */
+    --color-bg-surface: 239 243 236;      /* #EFF3EC - soft sage surface */
+    --color-bg-card: 255 255 255;         /* #FFFFFF - clean white cards */
+    --color-bg-input: 255 255 255;        /* #FFFFFF - white inputs */
+    --color-bg-overlay: 43 59 45;         /* #2B3B2D - deep forest overlay */
 
-    --color-border: 74 107 42;
-    --color-border-hover: 107 142 74;
-    --color-border-strong: 61 90 31;
+    /* Sophisticated Text Colors */
+    --color-text-primary: 43 59 45;       /* #2B3B2D - deep forest - main text */
+    --color-text-secondary: 74 92 76;     /* #4A5C4C - medium sage - secondary */
+    --color-text-muted: 122 140 124;      /* #7A8C7C - soft sage - muted */
+    --color-text-inverse: 255 255 255;    /* white - for dark backgrounds */
 
-    --color-accent-bg: 74 107 42;
-    --color-accent-bg-hover: 107 142 74;
+    /* Refined Border Colors */
+    --color-border: 210 221 208;          /* #D2DDD0 - soft sage border */
+    --color-border-hover: 184 199 181;    /* #B8C7B5 - medium sage */
+    --color-border-strong: 159 179 156;   /* #9FB39C - prominent sage */
 
-    --color-shadow: 0 0 0;
-    --color-shadow-strong: 0 0 0;
-    --shadow-soft: rgba(26, 46, 22, 0.4);
-    --shadow-strong: rgba(26, 46, 22, 0.6);
+    /* Accent Backgrounds */
+    --color-accent-bg: 92 124 94;         /* sage green */
+    --color-accent-bg-hover: 122 156 124; /* lighter sage on hover */
+
+    /* Luxury Shadow System */
+    --color-shadow: 92 124 94;            /* sage-tinted shadows */
+    --color-shadow-strong: 74 99 76;      /* deeper sage shadows */
+    --shadow-soft: rgba(92, 124, 94, 0.08);
+    --shadow-strong: rgba(92, 124, 94, 0.15);
   }
 
+  /* Light class (for backwards compatibility - same as root) */
   .light {
-    /* Light theme - Nature-inspired soft greens */
-    --color-bg-base: 240 245 237;      /* #f0f5ed - soft light green */
-    --color-bg-elevated: 255 255 255;  /* #ffffff - white */
-    --color-bg-surface: 232 240 224;  /* #e8f0e0 - light green */
+    --color-bg-base: 248 250 246;
+    --color-bg-elevated: 255 255 255;
+    --color-bg-surface: 239 243 236;
     --color-bg-card: 255 255 255;
     --color-bg-input: 255 255 255;
-    --color-bg-overlay: 26 46 22;
+    --color-bg-overlay: 43 59 45;
 
-    --color-text-primary: 0 0 0;    /* black */
-    --color-text-secondary: 0 0 0;  /* black */
-    --color-text-muted: 0 0 0;   /* black */
-    --color-text-inverse: 0 0 0;
+    --color-text-primary: 43 59 45;
+    --color-text-secondary: 74 92 76;
+    --color-text-muted: 122 140 124;
+    --color-text-inverse: 255 255 255;
 
-    --color-border: 74 107 42;         /* #4a6b2a - olive green */
-    --color-border-hover: 107 142 74;  /* #6b8e4a - soft green */
-    --color-border-strong: 61 90 31;    /* #3d5a1f - dark olive */
+    --color-border: 210 221 208;
+    --color-border-hover: 184 199 181;
+    --color-border-strong: 159 179 156;
 
-    --color-accent-bg: 74 107 42;
-    --color-accent-bg-hover: 107 142 74;
+    --color-accent-bg: 92 124 94;
+    --color-accent-bg-hover: 122 156 124;
 
-    --color-shadow: 74 107 42;
-    --color-shadow-strong: 61 90 31;
-    --shadow-soft: rgba(74, 107, 42, 0.1);
-    --shadow-strong: rgba(74, 107, 42, 0.2);
+    --color-shadow: 92 124 94;
+    --color-shadow-strong: 74 99 76;
+    --shadow-soft: rgba(92, 124, 94, 0.08);
+    --shadow-strong: rgba(92, 124, 94, 0.15);
   }
 }
