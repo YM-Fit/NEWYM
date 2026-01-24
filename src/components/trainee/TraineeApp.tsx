@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
 import { supabase } from '../../lib/supabase';
-import { Home, Dumbbell, Scale, LogOut, ClipboardList, Calendar, Brain, Utensils, Activity, Plus, Sun, Moon } from 'lucide-react';
+import { Home, Dumbbell, Scale, LogOut, ClipboardList, Calendar, Brain, Utensils, Activity, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import TraineeDashboard from './TraineeDashboard';
 import MyMeasurements from './MyMeasurements';
@@ -27,7 +26,6 @@ interface Trainee {
 
 export default function TraineeApp() {
   const { signOut, traineeId } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const [trainee, setTrainee] = useState<Trainee | null>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
@@ -97,14 +95,6 @@ export default function TraineeApp() {
               </p>
             </div>
           </div>
-          <button
-            onClick={toggleTheme}
-            className="p-2.5 rounded-xl text-[var(--color-text-secondary)] hover:text-amber-400 hover:bg-amber-500/10 transition-all border border-[var(--color-border)] hover:border-amber-500/30"
-            title={theme === 'dark' ? 'מצב בהיר' : 'מצב כהה'}
-            aria-label={theme === 'dark' ? 'עבור למצב בהיר' : 'עבור למצב כהה'}
-          >
-            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
           <button
             onClick={signOut}
             className="p-2.5 text-[var(--color-text-secondary)] hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-all border border-[var(--color-border)] hover:border-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500/50"

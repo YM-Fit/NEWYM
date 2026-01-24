@@ -66,13 +66,13 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-sage-50 to-sage-100 flex items-center justify-center">
         <div className="text-center animate-fade-in">
           <div className="relative inline-block">
-            <div className="absolute inset-0 bg-emerald-700/20 rounded-full blur-xl animate-pulse-soft" />
-            <div className="relative inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-700/30 border-t-emerald-600"></div>
+            <div className="absolute inset-0 bg-sage-600/20 rounded-full blur-xl animate-pulse-soft" />
+            <div className="relative inline-block animate-spin rounded-full h-12 w-12 border-4 border-sage-600/30 border-t-sage-600"></div>
           </div>
-          <p className="mt-6 text-emerald-900 dark:text-muted font-medium animate-fade-in-up" style={{ animationDelay: '0.2s' }}>טוען...</p>
+          <p className="mt-6 text-sage-900 font-medium animate-fade-in-up" style={{ animationDelay: '0.2s' }}>טוען...</p>
         </div>
       </div>
     );
@@ -91,7 +91,7 @@ function AppContent() {
       <ComponentErrorBoundary componentName="אפליקציית מתאמן">
         <Suspense
           fallback={
-            <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-sage-50 to-sage-100  flex items-center justify-center">
               <LoadingSpinner size="lg" variant="ring" text="טוען אפליקציה..." />
             </div>
           }
@@ -106,7 +106,7 @@ function AppContent() {
     <ComponentErrorBoundary componentName="אפליקציית מאמן">
       <Suspense
         fallback={
-          <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center">
+          <div className="min-h-screen bg-gradient-to-br from-sage-50 to-sage-100  flex items-center justify-center">
             <LoadingSpinner size="lg" />
           </div>
         }
@@ -120,7 +120,7 @@ function AppContent() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="dark">
+      <ThemeProvider>
         <AuthProvider>
           <SkipLinks />
           {/* Aria live region for announcements */}

@@ -8,10 +8,8 @@ import { Radio } from './Radio';
 import { Pagination } from './Pagination';
 import { LoadingSpinner } from './LoadingSpinner';
 import { Modal } from './Modal';
-import { useTheme } from '../../contexts/ThemeContext';
 
 export function ThemeShowcase() {
-  const { theme, toggleTheme } = useTheme();
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
@@ -21,9 +19,6 @@ export function ThemeShowcase() {
           <h1 className="text-3xl font-bold">Theme Showcase</h1>
           <p className="text-muted mt-2">סקירה מהירה של קומפוננטות וטוקנים</p>
         </div>
-        <Button variant="secondary" onClick={toggleTheme}>
-          החלף מצב ({theme === 'dark' ? 'כהה' : 'בהיר'})
-        </Button>
       </header>
 
       <section className="grid gap-6 md:grid-cols-2">
@@ -129,7 +124,7 @@ export function ThemeShowcase() {
       </section>
 
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Modal Example">
-        <p className="text-secondary">בדיקת קומפוננטת מודאל במצב {theme}.</p>
+        <p className="text-secondary">בדיקת קומפוננטת מודאל.</p>
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setModalOpen(false)}>
             סגור
