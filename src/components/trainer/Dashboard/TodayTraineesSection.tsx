@@ -25,6 +25,7 @@ interface TodayTraineesSectionProps {
   onNewWorkout: (trainee: Trainee) => void;
   onViewWorkoutPlan: (trainee: Trainee) => void;
   onViewMealPlan: (trainee: Trainee) => void;
+  onTraineeClick?: (trainee: Trainee) => void;
 }
 
 // Helper function to get last workout date
@@ -66,7 +67,8 @@ export default function TodayTraineesSection({
   trainees,
   onNewWorkout,
   onViewWorkoutPlan,
-  onViewMealPlan
+  onViewMealPlan,
+  onTraineeClick
 }: TodayTraineesSectionProps) {
   const [todayTrainees, setTodayTrainees] = useState<TodayTrainee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -417,6 +419,7 @@ export default function TodayTraineesSection({
                 onNewWorkout={onNewWorkout}
                 onViewWorkoutPlan={onViewWorkoutPlan}
                 onViewMealPlan={onViewMealPlan}
+                onTraineeClick={onTraineeClick}
               />
             ))}
           </div>
@@ -446,6 +449,7 @@ interface TraineeCardTodayProps {
   onNewWorkout: (trainee: Trainee) => void;
   onViewWorkoutPlan: (trainee: Trainee) => void;
   onViewMealPlan: (trainee: Trainee) => void;
+  onTraineeClick?: (trainee: Trainee) => void;
 }
 
 function TraineeCardToday({
@@ -453,7 +457,8 @@ function TraineeCardToday({
   index,
   onNewWorkout,
   onViewWorkoutPlan,
-  onViewMealPlan
+  onViewMealPlan,
+  onTraineeClick
 }: TraineeCardTodayProps) {
   const { trainee, workout, status, daysSinceLastWorkout, unseenWeightsCount } = todayTrainee;
   const isActive = daysSinceLastWorkout !== null && daysSinceLastWorkout <= 7;
@@ -546,10 +551,22 @@ function TraineeCardToday({
 
             {/* Name & Info */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-2 
-                           group-hover:text-primary transition-colors duration-300 truncate">
-                {trainee.full_name}
-              </h3>
+              {onTraineeClick ? (
+                <button
+                  onClick={() => onTraineeClick(trainee)}
+                  className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-2
+                           hover:text-primary transition-colors duration-300 truncate
+                           text-right w-full focus:outline-none focus:ring-2 focus:ring-primary/50 rounded"
+                  title={`צפה בכרטיס של ${trainee.full_name}`}
+                >
+                  {trainee.full_name}
+                </button>
+              ) : (
+                <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-2
+                             group-hover:text-primary transition-colors duration-300 truncate">
+                  {trainee.full_name}
+                </h3>
+              )}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wide
                                 border shadow-sm ${config.badge}
