@@ -15,6 +15,22 @@ initSentry().catch((error) => {
 
 // Capture unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
+  // Filter out Chameleon (chmln) errors - they're from third-party tools and not our code
+  const errorMessage = event.reason?.message || String(event.reason || '');
+  const errorStack = event.reason?.stack || '';
+  
+  if (
+    errorMessage.includes('chmln') ||
+    errorMessage.includes('messo') ||
+    errorStack.includes('chmln') ||
+    errorStack.includes('messo') ||
+    errorMessage.includes('Cannot read properties of undefined')
+  ) {
+    // Silently ignore Chameleon errors - they're not our problem
+    event.preventDefault();
+    return;
+  }
+  
   captureUnhandledRejection(event.reason);
   // Prevent default browser console error
   event.preventDefault();
@@ -22,6 +38,25 @@ window.addEventListener('unhandledrejection', (event) => {
 
 // Capture uncaught errors
 window.addEventListener('error', (event) => {
+  // Filter out Chameleon (chmln) errors - they're from third-party tools and not our code
+  const errorMessage = event.message || '';
+  const errorStack = event.error?.stack || '';
+  const errorSource = event.filename || '';
+  
+  if (
+    errorMessage.includes('chmln') ||
+    errorMessage.includes('messo') ||
+    errorStack.includes('chmln') ||
+    errorStack.includes('messo') ||
+    errorSource.includes('chmln') ||
+    errorSource.includes('messo') ||
+    (errorMessage.includes('Cannot read properties of undefined') && errorStack.includes('chmln'))
+  ) {
+    // Silently ignore Chameleon errors - they're not our problem
+    event.preventDefault();
+    return;
+  }
+  
   // Sentry will automatically capture these via global error handler
   console.error('Uncaught error:', event.error);
 });
