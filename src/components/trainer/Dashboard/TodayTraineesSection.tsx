@@ -4,6 +4,7 @@ import { Trainee } from '../../../types';
 import { supabase } from '../../../lib/supabase';
 import { logger } from '../../../utils/logger';
 import { LoadingSpinner } from '../../ui/LoadingSpinner';
+import { Skeleton } from '../../ui/Skeleton';
 import { getScheduledWorkoutsForTodayAndTomorrow } from '../../../api/workoutApi';
 import { useAuth } from '../../../contexts/AuthContext';
 
@@ -154,9 +155,69 @@ export default function TodayTraineesSection({
         return;
       }
 
+      // Batch load additional data for all trainees (today + tomorrow) to improve performance
+      const allTraineeIds = [
+        ...new Set([
+          ...result.data.today.map(item => item.trainee?.id),
+          ...result.data.tomorrow.map(item => item.trainee?.id)
+        ].filter(Boolean) as string[])
+      ];
+      
+      // Batch load last workout dates
+      const lastWorkoutDatesMap = new Map<string, string | null>();
+      if (allTraineeIds.length > 0) {
+        try {
+          const { data: lastWorkoutsData } = await supabase
+            .from('workout_trainees')
+            .select('trainee_id, workouts!inner(workout_date)')
+            .in('trainee_id', allTraineeIds)
+            .eq('workouts.is_completed', true)
+            .order('workouts.workout_date', { ascending: false });
+          
+          if (lastWorkoutsData) {
+            // Group by trainee_id and get the most recent
+            const traineeLastWorkouts = new Map<string, string>();
+            lastWorkoutsData.forEach((wt: any) => {
+              if (wt.trainee_id && wt.workouts?.workout_date) {
+                const existing = traineeLastWorkouts.get(wt.trainee_id);
+                if (!existing || new Date(wt.workouts.workout_date) > new Date(existing)) {
+                  traineeLastWorkouts.set(wt.trainee_id, wt.workouts.workout_date);
+                }
+              }
+            });
+            traineeLastWorkouts.forEach((date, traineeId) => {
+              lastWorkoutDatesMap.set(traineeId, date);
+            });
+          }
+        } catch (err) {
+          logger.debug('Error batch loading last workout dates:', err, 'TodayTraineesSection');
+        }
+      }
+      
+      // Batch load unseen weights counts
+      const unseenWeightsCountMap = new Map<string, number>();
+      if (allTraineeIds.length > 0) {
+        try {
+          const { data: weightsData } = await supabase
+            .from('trainee_self_weights')
+            .select('trainee_id')
+            .in('trainee_id', allTraineeIds)
+            .eq('is_seen_by_trainer', false);
+          
+          if (weightsData) {
+            weightsData.forEach((w: any) => {
+              if (w.trainee_id) {
+                unseenWeightsCountMap.set(w.trainee_id, (unseenWeightsCountMap.get(w.trainee_id) || 0) + 1);
+              }
+            });
+          }
+        } catch (err) {
+          logger.debug('Error batch loading unseen weights:', err, 'TodayTraineesSection');
+        }
+      }
+
       // Process today's workouts
-      const processedToday = await Promise.all(
-        result.data.today.map(async (item) => {
+      const processedToday = result.data.today.map((item) => {
           try {
             const trainee = item.trainee;
             const workout = item.workout;
@@ -165,27 +226,13 @@ export default function TodayTraineesSection({
               return null;
             }
             
-            // חישוב ימים מאז אימון אחרון
-            let lastWorkout: string | null = null;
-            let daysSinceLastWorkout: number | null = null;
-            try {
-              lastWorkout = await getLastWorkoutDate(trainee.id);
-              daysSinceLastWorkout = lastWorkout 
-                ? Math.floor((new Date().getTime() - new Date(lastWorkout).getTime()) / (1000 * 60 * 60 * 24))
-                : null;
-            } catch (err) {
-              // If getting last workout fails, continue without it
-              logger.debug('Error getting last workout date:', err, 'TodayTraineesSection');
-            }
+            // Get pre-loaded data
+            const lastWorkout = lastWorkoutDatesMap.get(trainee.id) || null;
+            const daysSinceLastWorkout = lastWorkout 
+              ? Math.floor((new Date().getTime() - new Date(lastWorkout).getTime()) / (1000 * 60 * 60 * 24))
+              : null;
             
-            // חישוב מספר שקילות חדשות
-            let unseenWeightsCount = 0;
-            try {
-              unseenWeightsCount = await getUnseenWeightsCount(trainee.id);
-            } catch (err) {
-              // If getting unseen weights fails, continue without it
-              logger.debug('Error getting unseen weights count:', err, 'TodayTraineesSection');
-            }
+            const unseenWeightsCount = unseenWeightsCountMap.get(trainee.id) || 0;
           
           // חילוץ זמן האימון - שימוש ב-timezone של ישראל לעקביות
           // For Google Calendar workouts, use eventStartTime if available for accurate time
@@ -249,9 +296,8 @@ export default function TodayTraineesSection({
         })
       );
 
-      // Process tomorrow's workouts
-      const processedTomorrow = await Promise.all(
-        result.data.tomorrow.map(async (item) => {
+      // Process tomorrow's workouts (using pre-loaded data)
+      const processedTomorrow = result.data.tomorrow.map((item) => {
           try {
             const trainee = item.trainee;
             const workout = item.workout;
@@ -260,27 +306,13 @@ export default function TodayTraineesSection({
               return null;
             }
             
-            // חישוב ימים מאז אימון אחרון
-            let lastWorkout: string | null = null;
-            let daysSinceLastWorkout: number | null = null;
-            try {
-              lastWorkout = await getLastWorkoutDate(trainee.id);
-              daysSinceLastWorkout = lastWorkout 
-                ? Math.floor((new Date().getTime() - new Date(lastWorkout).getTime()) / (1000 * 60 * 60 * 24))
-                : null;
-            } catch (err) {
-              // If getting last workout fails, continue without it
-              logger.debug('Error getting last workout date:', err, 'TodayTraineesSection');
-            }
+            // Get pre-loaded data
+            const lastWorkout = lastWorkoutDatesMap.get(trainee.id) || null;
+            const daysSinceLastWorkout = lastWorkout 
+              ? Math.floor((new Date().getTime() - new Date(lastWorkout).getTime()) / (1000 * 60 * 60 * 24))
+              : null;
             
-            // חישוב מספר שקילות חדשות
-            let unseenWeightsCount = 0;
-            try {
-              unseenWeightsCount = await getUnseenWeightsCount(trainee.id);
-            } catch (err) {
-              // If getting unseen weights fails, continue without it
-              logger.debug('Error getting unseen weights count:', err, 'TodayTraineesSection');
-            }
+            const unseenWeightsCount = unseenWeightsCountMap.get(trainee.id) || 0;
           
           // חילוץ זמן האימון - שימוש ב-timezone של ישראל לעקביות
           // For Google Calendar workouts, use eventStartTime if available for accurate time
@@ -364,11 +396,72 @@ export default function TodayTraineesSection({
     }
   }, [traineeIdsString, trainees.length, loadTodayTrainees]);
 
+  // Skeleton loader component to prevent layout shift
+  const TableSkeleton = () => (
+    <div className="overflow-x-auto rounded-xl border border-border/20 -mx-2 sm:mx-0">
+      <div className="min-w-full inline-block align-middle">
+        <table className="w-full min-w-[600px] md:min-w-0">
+          <thead className="bg-surface/50">
+            <tr className="border-b-2 border-primary/20">
+              <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[150px]">מתאמן</th>
+              <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[100px]">שעה</th>
+              <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[120px]">סטטוס</th>
+              <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[180px]">פעולות</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <tr key={i} className="border-b border-border/20">
+                <td className="py-3 px-3 md:py-4 md:px-4">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <Skeleton variant="circular" width={40} height={40} className="flex-shrink-0" />
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <Skeleton variant="text" height={16} width="60%" />
+                      <Skeleton variant="text" height={12} width="40%" />
+                    </div>
+                  </div>
+                </td>
+                <td className="py-3 px-3 md:py-4 md:px-4">
+                  <Skeleton variant="text" height={16} width={60} />
+                </td>
+                <td className="py-3 px-3 md:py-4 md:px-4">
+                  <Skeleton variant="rounded" height={28} width={100} />
+                </td>
+                <td className="py-3 px-3 md:py-4 md:px-4">
+                  <div className="flex items-center gap-1.5 md:gap-2">
+                    <Skeleton variant="rounded" height={36} width={80} />
+                    <Skeleton variant="rounded" height={36} width={36} />
+                    <Skeleton variant="rounded" height={36} width={36} />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
-      <div className="premium-card-static p-6">
-        <div className="flex items-center justify-center py-12">
-          <LoadingSpinner size="lg" text="טוען מתאמנים של היום..." />
+      <div className="premium-card-static p-6 md:p-8 lg:p-10 relative overflow-hidden
+                      border-2 border-primary/10">
+        <div className="relative z-10">
+          {/* Header skeleton */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+            <div className="flex-1">
+              <div className="flex items-center gap-4 mb-3">
+                <Skeleton variant="rounded" width={56} height={56} />
+                <div className="space-y-2">
+                  <Skeleton variant="text" height={32} width={200} />
+                  <Skeleton variant="text" height={16} width={300} />
+                </div>
+              </div>
+            </div>
+            <Skeleton variant="rounded" width={120} height={60} />
+          </div>
+          {/* Table skeleton */}
+          <TableSkeleton />
         </div>
       </div>
     );
@@ -450,9 +543,9 @@ export default function TodayTraineesSection({
             </div>
           </div>
 
-          {/* Trainees Table */}
+          {/* Trainees Table - Fixed height to prevent layout shift */}
           {todayTrainees.length > 0 ? (
-            <div className="overflow-x-auto rounded-xl border border-border/20 -mx-2 sm:mx-0">
+            <div className="overflow-x-auto rounded-xl border border-border/20 -mx-2 sm:mx-0 min-h-[200px]">
               <div className="min-w-full inline-block align-middle">
                 <table className="w-full min-w-[600px] md:min-w-0">
                   <thead className="bg-surface/50">
@@ -544,8 +637,8 @@ export default function TodayTraineesSection({
               </div>
             </div>
 
-            {/* Trainees Table */}
-            <div className="overflow-x-auto rounded-xl border border-border/20 -mx-2 sm:mx-0">
+            {/* Trainees Table - Fixed height to prevent layout shift */}
+            <div className="overflow-x-auto rounded-xl border border-border/20 -mx-2 sm:mx-0 min-h-[200px]">
               <div className="min-w-full inline-block align-middle">
                 <table className="w-full min-w-[600px] md:min-w-0">
                   <thead className="bg-surface/50">
