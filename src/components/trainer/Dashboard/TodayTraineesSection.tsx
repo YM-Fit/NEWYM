@@ -114,7 +114,10 @@ export default function TodayTraineesSection({
 
       // Get trainer_id from the first trainee (all trainees belong to the same trainer)
       const trainerId = trainees[0]?.trainer_id;
+      console.log('[TodayTrainees] Query params:', { trainerId, todayDateStr, tomorrowDateStr, traineeCount: trainees.length });
+
       if (!trainerId) {
+        console.log('[TodayTrainees] No trainer_id found, returning empty');
         setTodayTrainees([]);
         setLoading(false);
         isLoadingRef.current = false;
@@ -134,7 +137,9 @@ export default function TodayTraineesSection({
           .order('workout_date', { ascending: true });
         workoutsData = result.data;
         workoutsError = result.error;
+        console.log('[TodayTrainees] Workouts query result:', { data: workoutsData?.length, error: workoutsError });
       } catch (networkErr) {
+        console.log('[TodayTrainees] Network error:', networkErr);
         // Network error - likely WebContainer limitation, fail silently
         setTodayTrainees([]);
         setLoading(false);
@@ -143,8 +148,7 @@ export default function TodayTraineesSection({
       }
 
       if (workoutsError) {
-        // Log but don't crash - show empty state
-        logger.debug('Workouts query returned error:', workoutsError, 'TodayTraineesSection');
+        console.log('[TodayTrainees] Workouts query error:', workoutsError);
         setTodayTrainees([]);
         setLoading(false);
         isLoadingRef.current = false;
@@ -152,6 +156,7 @@ export default function TodayTraineesSection({
       }
 
       if (!workoutsData || workoutsData.length === 0) {
+        console.log('[TodayTrainees] No workouts found for today');
         setTodayTrainees([]);
         setLoading(false);
         isLoadingRef.current = false;
