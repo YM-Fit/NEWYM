@@ -583,6 +583,15 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
 
     // Separate into today and tomorrow, and sort by time
     // Use the 'now' variable that was already declared at the beginning of the function
+    // Group by trainee to handle multiple workouts per trainee per day
+    const workoutsByTrainee = new Map<string, typeof allWorkouts>();
+    allWorkouts.forEach(item => {
+      const key = item.trainee.id;
+      if (!workoutsByTrainee.has(key)) {
+        workoutsByTrainee.set(key, []);
+      }
+      workoutsByTrainee.get(key)!.push(item);
+    });
     
     const todayWorkouts = allWorkouts
       .filter(item => {
@@ -607,6 +616,20 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       .sort((a, b) => {
         // Sort by workout time (ascending)
         return a.workoutDate.getTime() - b.workoutDate.getTime();
+      })
+      // If there are multiple workouts for the same trainee on the same day,
+      // prefer the scheduled one (is_completed=false) over completed ones
+      .filter((item, index, arr) => {
+        // Check if there are multiple workouts for this trainee
+        const sameTraineeWorkouts = arr.filter(w => w.trainee.id === item.trainee.id);
+        if (sameTraineeWorkouts.length > 1) {
+          // If this is a completed workout and there's a scheduled one, filter it out
+          if (item.workout.is_completed) {
+            const hasScheduled = sameTraineeWorkouts.some(w => !w.workout.is_completed);
+            return !hasScheduled; // Keep only if there's no scheduled workout
+          }
+        }
+        return true; // Keep all other workouts
       })
       .map(item => ({
         trainee: item.trainee,

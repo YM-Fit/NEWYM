@@ -186,13 +186,18 @@ export default function TodayTraineesSection({
               logger.debug('Error getting unseen weights count:', err, 'TodayTraineesSection');
             }
           
-          // חילוץ זמן האימון
+          // חילוץ זמן האימון - שימוש ב-timezone של ישראל לעקביות
           let workoutTime: string | undefined;
           if (workout.workout_date && typeof workout.workout_date === 'string') {
             try {
               const workoutDate = new Date(workout.workout_date);
               if (!isNaN(workoutDate.getTime())) {
-                workoutTime = workoutDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+                // Use Israel timezone (Asia/Jerusalem) for consistent display
+                workoutTime = workoutDate.toLocaleTimeString('he-IL', { 
+                  hour: '2-digit', 
+                  minute: '2-digit',
+                  timeZone: 'Asia/Jerusalem'
+                });
               }
             } catch (e) {
               // Ignore date parsing errors
@@ -273,13 +278,18 @@ export default function TodayTraineesSection({
               logger.debug('Error getting unseen weights count:', err, 'TodayTraineesSection');
             }
           
-          // חילוץ זמן האימון
+          // חילוץ זמן האימון - שימוש ב-timezone של ישראל לעקביות
           let workoutTime: string | undefined;
           if (workout.workout_date && typeof workout.workout_date === 'string') {
             try {
               const workoutDate = new Date(workout.workout_date);
               if (!isNaN(workoutDate.getTime())) {
-                workoutTime = workoutDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+                // Use Israel timezone (Asia/Jerusalem) for consistent display
+                workoutTime = workoutDate.toLocaleTimeString('he-IL', { 
+                  hour: '2-digit', 
+                  minute: '2-digit',
+                  timeZone: 'Asia/Jerusalem'
+                });
               }
             } catch (e) {
               // Ignore date parsing errors
@@ -587,10 +597,6 @@ function TraineeTableRow({
     // If the scheduled time has passed, show "בוצע" with green checkmark
     statusDisplay = '✓ בוצע';
     statusColor = 'text-success bg-success/20 border-success/30';
-  } else if (workout.hasCompletedWorkout) {
-    // If there's a completed workout for this date, show "אימון חדש נוסף" in gray
-    statusDisplay = 'אימון חדש נוסף';
-    statusColor = 'text-secondary bg-surface/60 border-border/30';
   } else {
     // Default status based on the workout status
     statusDisplay = status === 'completed' ? '✓ הושלם' :
@@ -669,7 +675,8 @@ function TraineeTableRow({
           <span className={`px-2 md:px-3 py-1 md:py-1.5 rounded-xl text-[10px] md:text-xs font-bold tracking-wide border ${statusColor} whitespace-nowrap`}>
             {statusDisplay}
           </span>
-          {workout.hasCompletedWorkout && (
+          {/* Show "אימון חדש נוסף" only if there's a completed workout AND the scheduled time has passed */}
+          {workout.hasCompletedWorkout && workout.isTimePassed && (
             <span className="px-1.5 md:px-2 py-0.5 rounded-lg text-[10px] md:text-xs font-semibold text-secondary bg-surface/60 border border-border/30 whitespace-nowrap">
               אימון חדש נוסף
             </span>
