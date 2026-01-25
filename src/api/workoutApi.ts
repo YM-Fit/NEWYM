@@ -419,7 +419,6 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
 
     // Get workouts from workouts table - only SCHEDULED workouts (not completed)
     // Scheduled workouts are those with is_completed=false (future/pending workouts)
-    // We don't show completed workouts here - they should be in workout history
     const { data: workoutsData, error: workoutsError } = await supabase
       .from('workouts')
       .select(`
@@ -436,6 +435,20 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       .gte('workout_date', todayStr)
       .lt('workout_date', dayAfterTomorrowStr)
       .order('workout_date', { ascending: true });
+
+    // Also get completed workouts for the same date range to check if there's a completed workout
+    // for the same trainee and date (to show "אימון חדש נוסף")
+    const { data: completedWorkoutsData } = await supabase
+      .from('workouts')
+      .select(`
+        id,
+        workout_date,
+        trainer_id
+      `)
+      .eq('trainer_id', trainerId)
+      .eq('is_completed', true) // Only completed workouts
+      .gte('workout_date', todayStr)
+      .lt('workout_date', dayAfterTomorrowStr);
 
     if (workoutsError) {
       // Log error but return empty result instead of failing completely
@@ -514,6 +527,29 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     const traineesMap = new Map((traineesData || []).map(t => [t.id, t]));
     const workoutsMap = new Map(workoutsData.map(w => [w.id, w]));
 
+    // Create a map of completed workouts by trainee and date (YYYY-MM-DD)
+    // Format: "traineeId:YYYY-MM-DD" -> true
+    const completedWorkoutsByTraineeAndDate = new Map<string, boolean>();
+    if (completedWorkoutsData && completedWorkoutsData.length > 0) {
+      const completedWorkoutIds = completedWorkoutsData.map(w => w.id);
+      const { data: completedWorkoutTrainees } = await supabase
+        .from('workout_trainees')
+        .select('trainee_id, workout_id')
+        .in('workout_id', completedWorkoutIds)
+        .in('trainee_id', traineeIds);
+
+      if (completedWorkoutTrainees) {
+        completedWorkoutTrainees.forEach(wt => {
+          const workout = completedWorkoutsData.find(w => w.id === wt.workout_id);
+          if (workout) {
+            const workoutDate = new Date(workout.workout_date);
+            const dateKey = `${workoutDate.getFullYear()}-${String(workoutDate.getMonth() + 1).padStart(2, '0')}-${String(workoutDate.getDate()).padStart(2, '0')}`;
+            completedWorkoutsByTraineeAndDate.set(`${wt.trainee_id}:${dateKey}`, true);
+          }
+        });
+      }
+    }
+
     // Build the data structure - combine workout_trainees with workouts and trainees
     const allWorkouts = workoutTraineesData
       .map(wt => {
@@ -524,6 +560,10 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
 
         const workoutDate = new Date(workout.workout_date);
         const isFromGoogle = googleSyncedWorkoutIds.has(workout.id);
+        
+        // Check if there's a completed workout for this trainee on the same date
+        const dateKey = `${workoutDate.getFullYear()}-${String(workoutDate.getMonth() + 1).padStart(2, '0')}-${String(workoutDate.getDate()).padStart(2, '0')}`;
+        const hasCompletedWorkout = completedWorkoutsByTraineeAndDate.get(`${trainee.id}:${dateKey}`) || false;
 
         return {
           trainee,
@@ -533,24 +573,45 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
             workout_type: workout.workout_type,
             is_completed: workout.is_completed,
             notes: workout.notes,
-            isFromGoogle
+            isFromGoogle,
+            hasCompletedWorkout // Flag to indicate if there's a completed workout for this date
           },
           workoutDate
         };
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
 
-    // Separate into today and tomorrow
+    // Separate into today and tomorrow, and sort by time
+    const now = new Date();
+    
     const todayWorkouts = allWorkouts
       .filter(item => {
         const itemDate = new Date(item.workoutDate);
         itemDate.setHours(0, 0, 0, 0);
         return itemDate.getTime() === today.getTime();
       })
+      .map(item => {
+        const workoutDate = new Date(item.workout.workout_date);
+        const isTimePassed = workoutDate < now; // Check if the scheduled time has passed
+        
+        return {
+          trainee: item.trainee,
+          workout: {
+            ...item.workout,
+            isTimePassed // Flag to indicate if the scheduled time has passed
+          },
+          isFromGoogle: item.workout.isFromGoogle,
+          workoutDate: item.workoutDate // Keep for sorting
+        };
+      })
+      .sort((a, b) => {
+        // Sort by workout time (ascending)
+        return a.workoutDate.getTime() - b.workoutDate.getTime();
+      })
       .map(item => ({
         trainee: item.trainee,
         workout: item.workout,
-        isFromGoogle: item.workout.isFromGoogle
+        isFromGoogle: item.isFromGoogle
       }));
 
     const tomorrowWorkouts = allWorkouts
@@ -559,10 +620,28 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         itemDate.setHours(0, 0, 0, 0);
         return itemDate.getTime() === tomorrow.getTime();
       })
+      .map(item => {
+        const workoutDate = new Date(item.workout.workout_date);
+        const isTimePassed = workoutDate < now; // Check if the scheduled time has passed
+        
+        return {
+          trainee: item.trainee,
+          workout: {
+            ...item.workout,
+            isTimePassed // Flag to indicate if the scheduled time has passed
+          },
+          isFromGoogle: item.workout.isFromGoogle,
+          workoutDate: item.workoutDate // Keep for sorting
+        };
+      })
+      .sort((a, b) => {
+        // Sort by workout time (ascending)
+        return a.workoutDate.getTime() - b.workoutDate.getTime();
+      })
       .map(item => ({
         trainee: item.trainee,
         workout: item.workout,
-        isFromGoogle: item.workout.isFromGoogle
+        isFromGoogle: item.isFromGoogle
       }));
 
     return {

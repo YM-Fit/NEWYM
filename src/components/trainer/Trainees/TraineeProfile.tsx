@@ -1,6 +1,6 @@
-import { ArrowRight, CreditCard as Edit, Calendar, Scale, BarChart3, User, Phone, Mail, Trash2, TrendingUp, ClipboardList, UtensilsCrossed, Key, Home, CheckCircle, Brain, BookOpen, Calculator, Sparkles, Users, Activity, History, FileText, CalendarDays, Bell, TrendingDown, Copy } from 'lucide-react';
+import { ArrowRight, CreditCard as Edit, Calendar, Scale, BarChart3, User, Phone, Mail, Trash2, TrendingUp, ClipboardList, UtensilsCrossed, Key, Home, CheckCircle, Brain, BookOpen, Calculator, Sparkles, Users, Activity, History, FileText, CalendarDays, Bell, TrendingDown, Copy, ChevronDown, ChevronUp } from 'lucide-react';
 import { Trainee, BodyMeasurement, Workout } from '../../../types';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TDEECalculator from '../Tools/TDEECalculator';
 import TraineeTimeline from './TraineeTimeline';
 import TraineeNotes from './TraineeNotes';
@@ -69,6 +69,30 @@ export default function TraineeProfile({
   const [showTDEE, setShowTDEE] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
+
+  // Expand first month by default when workouts tab is active
+  useEffect(() => {
+    if (activeTab === 'workouts' && workouts.length > 0 && expandedMonths.size === 0) {
+      const workoutsByMonth = workouts.reduce((acc, workout) => {
+        const date = new Date(workout.date);
+        const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+        if (!acc[monthKey]) {
+          acc[monthKey] = [];
+        }
+        acc[monthKey].push(workout);
+        return acc;
+      }, {} as Record<string, Workout[]>);
+
+      const sortedMonths = Object.entries(workoutsByMonth).sort((a, b) => {
+        return b[0].localeCompare(a[0]);
+      });
+
+      if (sortedMonths.length > 0) {
+        setExpandedMonths(new Set([sortedMonths[0][0]]));
+      }
+    }
+  }, [activeTab, workouts, expandedMonths.size]);
 
   const latestMeasurement = measurements[0];
   const previousMeasurement = measurements[1];
@@ -778,7 +802,7 @@ export default function TraineeProfile({
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-emerald-400" />
-                אימונים
+                אימונים אחרונים
               </h3>
               <button
                 onClick={onNewWorkout}
@@ -790,21 +814,151 @@ export default function TraineeProfile({
             </div>
             {workouts.length > 0 ? (
               <div className="space-y-3">
-                {workouts.map((workout, index) => (
-                  <div
-                    key={workout.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-elevated/30 border border-border/30 hover:border-border transition-all"
-                  >
-                    <div>
-                      <p className="font-medium text-foreground">{new Date(workout.date).toLocaleDateString('he-IL')}</p>
-                      <p className="text-sm text-muted">{workout.exercises.length} תרגילים</p>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-lg font-bold text-emerald-400">{workout.totalVolume.toLocaleString()}</p>
-                      <p className="text-xs text-muted">ק״ג נפח</p>
-                    </div>
-                  </div>
-                ))}
+                {(() => {
+                  // Group workouts by month
+                  const workoutsByMonth = workouts.reduce((acc, workout) => {
+                    const date = new Date(workout.date);
+                    const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+                    const monthLabel = new Intl.DateTimeFormat('he-IL', {
+                      month: 'long',
+                      year: 'numeric',
+                    }).format(date);
+                    
+                    if (!acc[monthKey]) {
+                      acc[monthKey] = {
+                        label: monthLabel,
+                        workouts: [],
+                      };
+                    }
+                    acc[monthKey].workouts.push(workout);
+                    return acc;
+                  }, {} as Record<string, { label: string; workouts: Workout[] }>);
+
+                  // Sort months by date (newest first)
+                  const sortedMonths = Object.entries(workoutsByMonth).sort((a, b) => {
+                    return b[0].localeCompare(a[0]);
+                  });
+
+                  return sortedMonths.map(([monthKey, { label, workouts: monthWorkouts }]) => {
+                    const isExpanded = expandedMonths.has(monthKey);
+                    const totalVolume = monthWorkouts.reduce((sum, w) => sum + (w.totalVolume || 0), 0);
+                    const totalExercises = monthWorkouts.reduce((sum, w) => sum + w.exercises.length, 0);
+
+                    return (
+                      <div
+                        key={monthKey}
+                        className="border border-border/30 rounded-xl overflow-hidden bg-elevated/20"
+                      >
+                        <button
+                          onClick={() => {
+                            const newExpanded = new Set(expandedMonths);
+                            if (isExpanded) {
+                              newExpanded.delete(monthKey);
+                            } else {
+                              newExpanded.add(monthKey);
+                            }
+                            setExpandedMonths(newExpanded);
+                          }}
+                          className="w-full p-4 flex items-center justify-between hover:bg-elevated/40 transition-all"
+                        >
+                          <div className="flex items-center gap-3 flex-1 text-right">
+                            <Calendar className="h-5 w-5 text-emerald-400" />
+                            <div>
+                              <h4 className="font-semibold text-foreground">{label}</h4>
+                              <p className="text-sm text-muted">
+                                {monthWorkouts.length} אימונים • {totalExercises} תרגילים • {totalVolume.toLocaleString()} ק״ג נפח
+                              </p>
+                            </div>
+                          </div>
+                          {isExpanded ? (
+                            <ChevronUp className="h-5 w-5 text-muted" />
+                          ) : (
+                            <ChevronDown className="h-5 w-5 text-muted" />
+                          )}
+                        </button>
+                        
+                        {isExpanded && (
+                          <div className="border-t border-border/30">
+                            <div className="overflow-x-auto">
+                              <table className="w-full">
+                                <thead>
+                                  <tr className="bg-elevated/30 border-b border-border/30">
+                                    <th className="text-right p-3 text-sm font-semibold text-foreground">תאריך</th>
+                                    <th className="text-right p-3 text-sm font-semibold text-foreground">תרגילים</th>
+                                    <th className="text-right p-3 text-sm font-semibold text-foreground">נפח (ק״ג)</th>
+                                    <th className="text-right p-3 text-sm font-semibold text-foreground">פעולות</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {monthWorkouts
+                                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                    .map((workout) => (
+                                      <tr
+                                        key={workout.id}
+                                        onClick={() => {
+                                          if (onViewWorkouts) {
+                                            onViewWorkouts();
+                                          }
+                                        }}
+                                        className={`border-b border-border/20 hover:bg-elevated/20 transition-colors ${
+                                          onViewWorkouts ? 'cursor-pointer' : ''
+                                        }`}
+                                      >
+                                        <td className="p-3">
+                                          <div className="flex items-center gap-2">
+                                            {workout.syncedFromGoogle && (
+                                              <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">יומן</span>
+                                            )}
+                                            <span className="font-medium text-foreground">
+                                              {new Date(workout.date).toLocaleDateString('he-IL', {
+                                                day: 'numeric',
+                                                month: 'numeric',
+                                                year: 'numeric'
+                                              })}
+                                            </span>
+                                          </div>
+                                        </td>
+                                        <td className="p-3 text-muted text-sm">
+                                          {workout.syncedFromGoogle && workout.exercises.length === 0 
+                                            ? 'אימון מהיומן' 
+                                            : `${workout.exercises.length} תרגילים`}
+                                        </td>
+                                        <td className="p-3">
+                                          {workout.syncedFromGoogle && workout.totalVolume === 0 ? (
+                                            <span className="text-sm text-blue-400">סונכרן</span>
+                                          ) : (
+                                            <span className="font-bold text-emerald-400">
+                                              {workout.totalVolume.toLocaleString()}
+                                            </span>
+                                          )}
+                                        </td>
+                                        <td className="p-3">
+                                          <div className="flex items-center gap-2 justify-end">
+                                            {onDuplicateWorkout && workout.exercises.length > 0 && (
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  onDuplicateWorkout(workout);
+                                                }}
+                                                className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 transition-all"
+                                                title="שכפל אימון"
+                                              >
+                                                <Copy className="h-4 w-4" />
+                                              </button>
+                                            )}
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             ) : (
               <div className="text-center py-12">

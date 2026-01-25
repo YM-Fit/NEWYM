@@ -88,6 +88,7 @@ export default {
         'landscape': { 'raw': '(orientation: landscape)' },
         'portrait': { 'raw': '(orientation: portrait)' },
         'xs': '475px',
+        '3xl': '1920px',  // For large TV screens (55" and above)
       },
       backdropBlur: {
         xs: '2px',

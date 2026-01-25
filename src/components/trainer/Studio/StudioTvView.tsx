@@ -1,8 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useCurrentTvSession } from '../../../hooks/useCurrentTvSession';
+import { useTraineeProgressData } from '../../../hooks/useTraineeProgressData';
+import { usePersonalRecordDetection } from '../../../hooks/usePersonalRecordDetection';
 import { Card } from '../../ui/Card';
 import { useThemeClasses } from '../../../contexts/ThemeContext';
+import { Flame, TrendingUp, Trophy, Calendar, Target } from 'lucide-react';
 
 interface StudioTvViewProps {
   pollIntervalMs?: number;
@@ -30,6 +33,36 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   });
   const themeClasses = useThemeClasses();
 
+  // Load progress data
+  const progressData = useTraineeProgressData(session?.trainee?.id || null);
+
+  // Detect personal records
+  const { records: prRecords, latestRecord } = usePersonalRecordDetection(
+    session?.trainee?.id || null,
+    session?.workout || null
+  );
+
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showPRMessage, setShowPRMessage] = useState(false);
+
+  // Show confetti when a new PR is detected
+  useEffect(() => {
+    if (latestRecord) {
+      setShowConfetti(true);
+      setShowPRMessage(true);
+      const timer = setTimeout(() => {
+        setShowConfetti(false);
+      }, 3000);
+      const messageTimer = setTimeout(() => {
+        setShowPRMessage(false);
+      }, 5000);
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(messageTimer);
+      };
+    }
+  }, [latestRecord]);
+
   const now = useMemo(() => new Date(), []);
 
   const initials = useMemo(() => {
@@ -38,6 +71,47 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
     if (parts.length === 1) return parts[0].slice(0, 2);
     return `${parts[0][0]}${parts[1][0]}`;
   }, [session?.trainee?.full_name]);
+
+  // Get current exercise (first one)
+  const currentExercise = useMemo(() => {
+    if (!session?.workout?.exercises || session.workout.exercises.length === 0) return null;
+    return session.workout.exercises[0];
+  }, [session?.workout?.exercises]);
+
+  // Get latest set from current exercise
+  const latestSet = useMemo(() => {
+    if (!currentExercise || !currentExercise.sets || currentExercise.sets.length === 0) return null;
+    // Get the set with the highest set_number (most recent)
+    return currentExercise.sets.reduce((latest, set) => {
+      return (set.set_number || 0) > (latest.set_number || 0) ? set : latest;
+    }, currentExercise.sets[0]);
+  }, [currentExercise]);
+
+  // Get progress comparison for current exercise
+  const progressComparison = useMemo(() => {
+    if (!currentExercise || !latestSet || !progressData.previousWorkoutData) return null;
+    
+    const previous = progressData.previousWorkoutData.get(currentExercise.id);
+    if (!previous) return null;
+
+    const currentWeight = latestSet.weight || 0;
+    const currentReps = latestSet.reps || 0;
+    const currentVolume = currentWeight * currentReps;
+    const previousVolume = previous.weight * previous.reps;
+
+    if (currentVolume === 0 || previousVolume === 0) return null;
+
+    const improvement = ((currentVolume - previousVolume) / previousVolume) * 100;
+
+    return {
+      previousWeight: previous.weight,
+      previousReps: previous.reps,
+      currentWeight,
+      currentReps,
+      improvement: Math.round(improvement * 10) / 10,
+      isImprovement: improvement > 0,
+    };
+  }, [currentExercise, latestSet, progressData.previousWorkoutData]);
 
   const firstExercises = useMemo(() => {
     if (!session?.workout?.exercises) return [];
@@ -49,30 +123,76 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   const isUnauthorized = !user || userType !== 'trainer';
 
   return (
-    <div className={`h-screen w-screen overflow-hidden ${themeClasses.bgBase} ${themeClasses.textPrimary} flex flex-col`}>
+    <div className={`h-screen w-screen overflow-hidden ${themeClasses.bgBase} ${themeClasses.textPrimary} flex flex-col relative`}>
+      {/* Confetti animation */}
+      {showConfetti && (
+        <div className="fixed inset-0 pointer-events-none z-50">
+          {[...Array(50)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute animate-confetti"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: '-10px',
+                animationDelay: `${Math.random() * 2}s`,
+                animationDuration: `${2 + Math.random() * 2}s`,
+              }}
+            >
+              <div
+                className="w-3 h-3 rounded-sm"
+                style={{
+                  backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#06b6d4', '#8b5cf6'][Math.floor(Math.random() * 5)],
+                  transform: `rotate(${Math.random() * 360}deg)`,
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Personal Record Celebration Message */}
+      {showPRMessage && latestRecord && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white px-12 py-8 2xl:px-20 2xl:py-12 rounded-3xl 2xl:rounded-[2rem] shadow-2xl animate-scale-in border-4 2xl:border-[6px] border-white/30">
+            <div className="flex flex-col items-center gap-4 2xl:gap-6">
+              <Trophy className="w-16 h-16 2xl:w-24 2xl:h-24 animate-bounce" />
+              <div className="text-5xl 2xl:text-7xl font-extrabold">שיא אישי חדש!</div>
+              <div className="text-2xl 2xl:text-4xl font-semibold text-center">
+                {latestRecord.exerciseName}
+              </div>
+              <div className="text-xl 2xl:text-3xl">
+                {latestRecord.type === 'max_weight' && `${latestRecord.newValue} ק״ג`}
+                {latestRecord.type === 'max_reps' && `${latestRecord.newValue} חזרות`}
+                {latestRecord.type === 'max_volume' && `${Math.round(latestRecord.newValue)} ק״ג`}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top bar */}
-      <header className={`flex items-center justify-between px-6 md:px-12 py-6 ${themeClasses.bgElevated} ${themeClasses.border} border-b backdrop-blur-xl shadow-lg`}>
-        <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-            <span className="text-2xl font-extrabold tracking-tight text-white">N</span>
+      <header className={`flex items-center justify-between px-6 md:px-12 2xl:px-16 py-6 2xl:py-8 ${themeClasses.bgElevated} ${themeClasses.border} border-b backdrop-blur-xl shadow-lg`}>
+        <div className="flex items-center gap-4 2xl:gap-6">
+          <div className="h-14 w-14 2xl:h-20 2xl:w-20 rounded-2xl 2xl:rounded-3xl bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+            <span className="text-2xl 2xl:text-4xl font-extrabold tracking-tight text-white">N</span>
           </div>
           <div>
-            <div className={`text-sm ${themeClasses.textMuted}`}>מצב טלוויזיה · סטודיו</div>
-            <div className={`text-xl font-semibold ${themeClasses.textPrimary}`}>
+            <div className={`text-sm 2xl:text-xl ${themeClasses.textMuted}`}>מצב טלוויזיה · סטודיו</div>
+            <div className={`text-xl 2xl:text-3xl font-semibold ${themeClasses.textPrimary}`}>
               {user?.email ? `מאמן: ${user.email}` : 'מחכה לחיבור מאמן'}
             </div>
           </div>
         </div>
 
-        <div className="flex items-end gap-8">
+        <div className="flex items-end gap-8 2xl:gap-12">
           <div className="text-right">
-            <div className={`text-3xl md:text-5xl font-bold tracking-tight leading-none ${themeClasses.textPrimary}`}>
+            <div className={`text-3xl md:text-5xl 2xl:text-7xl font-bold tracking-tight leading-none ${themeClasses.textPrimary}`}>
               {formatClock(now)}
             </div>
-            <div className={`text-lg ${themeClasses.textMuted} mt-1`}>{formatDate(now)}</div>
+            <div className={`text-lg 2xl:text-2xl ${themeClasses.textMuted} mt-1`}>{formatDate(now)}</div>
           </div>
           {lastUpdated && (
-            <div className={`text-sm ${themeClasses.textMuted}`}>
+            <div className={`text-sm 2xl:text-lg ${themeClasses.textMuted}`}>
               עדכון אחרון:{' '}
               {new Date(lastUpdated).toLocaleTimeString('he-IL', {
                 hour: '2-digit',
@@ -116,27 +236,130 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
             </div>
           ) : (
             <>
-              {/* Trainee header */}
-              <div className="flex items-center gap-4 md:gap-8 mb-6 md:mb-10">
-                <div className="h-24 w-24 md:h-32 md:w-32 rounded-3xl bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/40 transition-transform hover:scale-105">
-                  <span className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
-                    {initials || '?'}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <div className={`text-sm uppercase tracking-[0.25em] ${themeClasses.textMuted}`}>
-                    מתאמן נוכחי
+              {/* Enhanced Trainee "On Stage" Display */}
+              <div className="mb-8 md:mb-12 2xl:mb-16">
+                <div className="flex items-center gap-6 md:gap-12 2xl:gap-16 mb-6 2xl:mb-8">
+                  <div className="h-32 w-32 md:h-40 md:w-40 2xl:h-56 2xl:w-56 rounded-3xl 2xl:rounded-[2rem] bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center shadow-2xl shadow-emerald-500/50 transition-transform hover:scale-105 animate-pulse-slow">
+                    <span className="text-5xl md:text-6xl 2xl:text-8xl font-extrabold tracking-tight text-white">
+                      {initials || '?'}
+                    </span>
                   </div>
-                  <div className={`text-2xl md:text-4xl font-bold tracking-tight ${themeClasses.textPrimary}`}>
-                    {session.trainee?.full_name ?? 'לא זוהה מתאמן'}
-                  </div>
-                  {session.calendarEvent?.summary && (
-                    <div className={`text-xl ${themeClasses.textMuted}`}>
-                      {session.calendarEvent.summary}
+                  <div className="flex flex-col gap-3 2xl:gap-4 flex-1">
+                    <div className={`text-sm md:text-base 2xl:text-xl uppercase tracking-[0.25em] ${themeClasses.textMuted} mb-1`}>
+                      מתאמן נוכחי
                     </div>
+                    <div className={`text-4xl md:text-6xl lg:text-7xl 2xl:text-8xl 3xl:text-[10rem] font-extrabold tracking-tight ${themeClasses.textPrimary} leading-tight`}>
+                      {session.trainee?.full_name ?? 'לא זוהה מתאמן'}
+                    </div>
+                    <div className={`text-xl md:text-2xl 2xl:text-4xl ${themeClasses.textMuted} mt-2 animate-fade-in`}>
+                      הנה אני על המסך! 🎬
+                    </div>
+                    {session.calendarEvent?.summary && (
+                      <div className={`text-lg md:text-xl 2xl:text-3xl ${themeClasses.textMuted} mt-1`}>
+                        {session.calendarEvent.summary}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Trainee Story - Streak, Monthly Workouts, Progress */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 2xl:gap-6 mb-6 2xl:mb-8">
+                  {progressData.streakDays > 0 && (
+                    <Card variant="glass" className="p-4 md:p-6 2xl:p-8" padding="none">
+                      <div className="flex items-center gap-3 2xl:gap-4">
+                        <Flame className="w-8 h-8 2xl:w-12 2xl:h-12 text-orange-500" />
+                        <div>
+                          <div className={`text-sm 2xl:text-xl ${themeClasses.textMuted}`}>רצף אימונים</div>
+                          <div className={`text-2xl md:text-3xl 2xl:text-5xl font-bold ${themeClasses.textPrimary}`}>
+                            🔥 {progressData.streakDays} ימים
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
                   )}
+                  <Card variant="glass" className="p-4 md:p-6 2xl:p-8" padding="none">
+                    <div className="flex items-center gap-3 2xl:gap-4">
+                      <Calendar className="w-8 h-8 2xl:w-12 2xl:h-12 text-emerald-500" />
+                      <div>
+                        <div className={`text-sm 2xl:text-xl ${themeClasses.textMuted}`}>אימונים החודש</div>
+                        <div className={`text-2xl md:text-3xl 2xl:text-5xl font-bold ${themeClasses.textPrimary}`}>
+                          {progressData.workoutsThisMonth}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                  <Card variant="glass" className="p-4 md:p-6 2xl:p-8" padding="none">
+                    <div className="flex items-center gap-3 2xl:gap-4">
+                      <Target className="w-8 h-8 2xl:w-12 2xl:h-12 text-blue-500" />
+                      <div>
+                        <div className={`text-sm 2xl:text-xl ${themeClasses.textMuted}`}>סה״כ אימונים</div>
+                        <div className={`text-2xl md:text-3xl 2xl:text-5xl font-bold ${themeClasses.textPrimary}`}>
+                          {progressData.totalWorkouts}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
                 </div>
               </div>
+
+              {/* LIVE Current Exercise Display */}
+              {currentExercise && latestSet && (
+                <Card variant="premium" className="mb-6 2xl:mb-8 p-6 md:p-8 2xl:p-12 border-primary border-4 2xl:border-[6px] shadow-2xl shadow-primary/30 animate-pulse-slow" padding="none">
+                  <div className="flex items-center justify-between mb-4 2xl:mb-6">
+                    <div className="flex items-center gap-3 2xl:gap-4">
+                      <span className="px-4 py-2 2xl:px-6 2xl:py-3 rounded-full bg-red-500 text-white text-sm md:text-base 2xl:text-2xl font-bold animate-pulse">
+                        🔴 LIVE
+                      </span>
+                      <div className={`text-xl md:text-2xl 2xl:text-4xl font-semibold ${themeClasses.textPrimary}`}>
+                        מה עכשיו קורה
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 2xl:gap-8">
+                    <div>
+                      <div className={`text-lg md:text-xl 2xl:text-3xl ${themeClasses.textMuted} mb-2 2xl:mb-4`}>תרגיל נוכחי</div>
+                      <div className={`text-3xl md:text-4xl 2xl:text-6xl font-bold ${themeClasses.textPrimary} mb-4 2xl:mb-6`}>
+                        {currentExercise.name}
+                      </div>
+                      <div className={`text-base md:text-lg 2xl:text-2xl ${themeClasses.textMuted}`}>
+                        סט {latestSet.set_number} מתוך {currentExercise.sets.length}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className={`text-lg md:text-xl 2xl:text-3xl ${themeClasses.textMuted} mb-2 2xl:mb-4`}>ביצוע נוכחי</div>
+                      <div className={`text-5xl md:text-7xl 2xl:text-9xl 3xl:text-[12rem] font-extrabold ${themeClasses.textPrimary} mb-2 2xl:mb-4`}>
+                        {latestSet.weight ?? 0} <span className="text-3xl md:text-5xl 2xl:text-7xl 3xl:text-9xl">ק״ג</span>
+                      </div>
+                      <div className={`text-5xl md:text-7xl 2xl:text-9xl 3xl:text-[12rem] font-extrabold ${themeClasses.textPrimary}`}>
+                        × {latestSet.reps ?? 0} <span className="text-3xl md:text-5xl 2xl:text-7xl 3xl:text-9xl">חזרות</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress Comparison */}
+                  {progressComparison && progressComparison.isImprovement && (
+                    <div className="mt-6 2xl:mt-8 p-4 md:p-6 2xl:p-8 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl 2xl:rounded-3xl">
+                      <div className="flex items-center gap-3 2xl:gap-4 mb-2 2xl:mb-4">
+                        <TrendingUp className="w-6 h-6 2xl:w-10 2xl:h-10 text-emerald-500" />
+                        <div className={`text-lg md:text-xl 2xl:text-3xl font-semibold text-emerald-600`}>
+                          התקדמות!
+                        </div>
+                      </div>
+                      <div className={`text-base md:text-lg 2xl:text-2xl ${themeClasses.textPrimary}`}>
+                        בפעם הקודמת: {progressComparison.previousWeight} ק״ג × {progressComparison.previousReps} חזרות
+                      </div>
+                      <div className={`text-base md:text-lg 2xl:text-2xl ${themeClasses.textPrimary} font-semibold`}>
+                        היום: {progressComparison.currentWeight} ק״ג × {progressComparison.currentReps} חזרות
+                      </div>
+                      <div className={`text-xl md:text-2xl 2xl:text-4xl font-bold text-emerald-600 mt-2 2xl:mt-4`}>
+                        שיפור של +{progressComparison.improvement}% 🎉
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              )}
 
               {/* Exercises grid */}
               <div className="flex-1 flex flex-col gap-4">
@@ -373,6 +596,22 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
           </div>
         </Card>
       </div>
+
+      <style>{`
+        @keyframes confetti {
+          0% {
+            transform: translateY(0) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(100vh) rotate(720deg);
+            opacity: 0;
+          }
+        }
+        .animate-confetti {
+          animation: confetti linear forwards;
+        }
+      `}</style>
     </div>
   );
 }

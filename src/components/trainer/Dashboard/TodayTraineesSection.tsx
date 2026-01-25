@@ -17,6 +17,8 @@ export interface TodayTrainee {
     workout_time?: string;
     notes?: string;
     isFromGoogle?: boolean;
+    isTimePassed?: boolean; // Whether the scheduled time has passed
+    hasCompletedWorkout?: boolean; // Whether there's a completed workout for this date
   };
   daysSinceLastWorkout?: number | null;
   unseenWeightsCount?: number;
@@ -222,7 +224,9 @@ export default function TodayTraineesSection({
               is_completed: workout.is_completed,
               workout_time: workoutTime,
               notes: workout.notes,
-              isFromGoogle: workout.isFromGoogle || false
+              isFromGoogle: workout.isFromGoogle || false,
+              isTimePassed: workout.isTimePassed || false,
+              hasCompletedWorkout: workout.hasCompletedWorkout || false
             },
             daysSinceLastWorkout,
             unseenWeightsCount,
@@ -294,7 +298,9 @@ export default function TodayTraineesSection({
               is_completed: workout.is_completed,
               workout_time: workoutTime,
               notes: workout.notes,
-              isFromGoogle: workout.isFromGoogle || false
+              isFromGoogle: workout.isFromGoogle || false,
+              isTimePassed: workout.isTimePassed || false,
+              hasCompletedWorkout: workout.hasCompletedWorkout || false
             },
             daysSinceLastWorkout,
             unseenWeightsCount,
@@ -429,29 +435,31 @@ export default function TodayTraineesSection({
 
           {/* Trainees Table */}
           {todayTrainees.length > 0 ? (
-            <div className="overflow-x-auto rounded-xl border border-border/20">
-              <table className="w-full">
-                <thead className="bg-surface/50">
-                  <tr className="border-b-2 border-primary/20">
-                    <th className="text-right py-4 px-4 font-bold text-foreground">מתאמן</th>
-                    <th className="text-right py-4 px-4 font-bold text-foreground">שעה</th>
-                    <th className="text-right py-4 px-4 font-bold text-foreground">סטטוס</th>
-                    <th className="text-right py-4 px-4 font-bold text-foreground">פעולות</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {todayTrainees.map((item, index) => (
-                    <TraineeTableRow
-                      key={`${item.trainee.id}-${item.workout.id}`}
-                      todayTrainee={item}
-                      index={index}
-                      onNewWorkout={onNewWorkout}
-                      onViewWorkoutPlan={onViewWorkoutPlan}
-                      onViewMealPlan={onViewMealPlan}
-                    />
-                  ))}
-                </tbody>
-              </table>
+            <div className="overflow-x-auto rounded-xl border border-border/20 -mx-2 sm:mx-0">
+              <div className="min-w-full inline-block align-middle">
+                <table className="w-full min-w-[600px] md:min-w-0">
+                  <thead className="bg-surface/50">
+                    <tr className="border-b-2 border-primary/20">
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[150px]">מתאמן</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[100px]">שעה</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[120px]">סטטוס</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[180px]">פעולות</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {todayTrainees.map((item, index) => (
+                      <TraineeTableRow
+                        key={`${item.trainee.id}-${item.workout.id}`}
+                        todayTrainee={item}
+                        index={index}
+                        onNewWorkout={onNewWorkout}
+                        onViewWorkoutPlan={onViewWorkoutPlan}
+                        onViewMealPlan={onViewMealPlan}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ) : (
             <div className="text-center py-12">
@@ -520,29 +528,31 @@ export default function TodayTraineesSection({
             </div>
 
             {/* Trainees Table */}
-            <div className="overflow-x-auto rounded-xl border border-border/20">
-              <table className="w-full">
-                <thead className="bg-surface/50">
-                  <tr className="border-b-2 border-warning/20">
-                    <th className="text-right py-4 px-4 font-bold text-foreground">מתאמן</th>
-                    <th className="text-right py-4 px-4 font-bold text-foreground">שעה</th>
-                    <th className="text-right py-4 px-4 font-bold text-foreground">סטטוס</th>
-                    <th className="text-right py-4 px-4 font-bold text-foreground">פעולות</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tomorrowTrainees.map((item, index) => (
-                    <TraineeTableRow
-                      key={`${item.trainee.id}-${item.workout.id}-tomorrow`}
-                      todayTrainee={item}
-                      index={index}
-                      onNewWorkout={onNewWorkout}
-                      onViewWorkoutPlan={onViewWorkoutPlan}
-                      onViewMealPlan={onViewMealPlan}
-                    />
-                  ))}
-                </tbody>
-              </table>
+            <div className="overflow-x-auto rounded-xl border border-border/20 -mx-2 sm:mx-0">
+              <div className="min-w-full inline-block align-middle">
+                <table className="w-full min-w-[600px] md:min-w-0">
+                  <thead className="bg-surface/50">
+                    <tr className="border-b-2 border-warning/20">
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[150px]">מתאמן</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[100px]">שעה</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[120px]">סטטוס</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[180px]">פעולות</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tomorrowTrainees.map((item, index) => (
+                      <TraineeTableRow
+                        key={`${item.trainee.id}-${item.workout.id}-tomorrow`}
+                        todayTrainee={item}
+                        index={index}
+                        onNewWorkout={onNewWorkout}
+                        onViewWorkoutPlan={onViewWorkoutPlan}
+                        onViewMealPlan={onViewMealPlan}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -569,33 +579,46 @@ function TraineeTableRow({
   const { trainee, workout, status, daysSinceLastWorkout, unseenWeightsCount } = todayTrainee;
   const isActive = daysSinceLastWorkout !== null && daysSinceLastWorkout <= 7;
 
-  // Get status display
-  const statusDisplay = status === 'completed' ? '✓ הושלם' :
-                         status === 'scheduled' ? '📅 מתוזמן' :
-                         '⏰ מתקרב';
-
-  const statusColor = status === 'completed' ? 'text-success' :
-                      status === 'scheduled' ? 'text-primary' :
-                      'text-warning';
+  // Determine status display based on time passed and completed workout
+  let statusDisplay: string;
+  let statusColor: string;
+  
+  if (workout.isTimePassed) {
+    // If the scheduled time has passed, show "בוצע" with green checkmark
+    statusDisplay = '✓ בוצע';
+    statusColor = 'text-success bg-success/20 border-success/30';
+  } else if (workout.hasCompletedWorkout) {
+    // If there's a completed workout for this date, show "אימון חדש נוסף" in gray
+    statusDisplay = 'אימון חדש נוסף';
+    statusColor = 'text-secondary bg-surface/60 border-border/30';
+  } else {
+    // Default status based on the workout status
+    statusDisplay = status === 'completed' ? '✓ הושלם' :
+                     status === 'scheduled' ? '📅 מתוזמן' :
+                     '⏰ מתקרב';
+    statusColor = status === 'completed' ? 'text-success bg-success/20 border-success/30' :
+                  status === 'scheduled' ? 'text-primary bg-primary/20 border-primary/30' :
+                  'text-warning bg-warning/20 border-warning/30';
+  }
 
   return (
     <tr className="border-b border-border/20 hover:bg-surface/50 transition-colors duration-200 group">
       {/* Trainee Name */}
-      <td className="py-4 px-4">
-        <div className="flex items-center gap-3">
+      <td className="py-3 px-3 md:py-4 md:px-4">
+        <div className="flex items-center gap-2 md:gap-3">
           <div className="relative flex-shrink-0">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/25 via-primary/15 to-primary-dark/10 
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-primary/25 via-primary/15 to-primary-dark/10 
                           flex items-center justify-center border-2 border-primary/20">
               {trainee.is_pair ? (
-                <Users className="w-5 h-5 text-primary" />
+                <Users className="w-4 h-4 md:w-5 md:h-5 text-primary" />
               ) : (
-                <span className="text-lg font-bold text-primary">
+                <span className="text-base md:text-lg font-bold text-primary">
                   {trainee.full_name.charAt(0)}
                 </span>
               )}
             </div>
             {unseenWeightsCount && unseenWeightsCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5
+              <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5
                              bg-gradient-to-br from-info to-cyan-500 rounded-full 
                              flex items-center justify-center 
                              text-xs font-bold text-inverse border-2 border-elevated 
@@ -605,17 +628,17 @@ function TraineeTableRow({
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-foreground truncate">{trainee.full_name}</div>
-            <div className="flex items-center gap-2 mt-1 flex-wrap">
+            <div className="font-bold text-sm md:text-base text-foreground truncate">{trainee.full_name}</div>
+            <div className="flex items-center gap-1.5 md:gap-2 mt-1 flex-wrap">
               {workout.isFromGoogle && (
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg 
+                <div className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 rounded-lg 
                               bg-info/15 border border-info/30">
-                  <Calendar className="w-3 h-3 text-info" />
-                  <span className="text-xs font-semibold text-info">גוגל</span>
+                  <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3 text-info" />
+                  <span className="text-[10px] md:text-xs font-semibold text-info">גוגל</span>
                 </div>
               )}
               {daysSinceLastWorkout !== null && (
-                <div className={`px-2 py-0.5 rounded-lg text-xs font-semibold border ${
+                <div className={`px-1.5 md:px-2 py-0.5 rounded-lg text-[10px] md:text-xs font-semibold border ${
                   isActive
                     ? 'bg-success/15 text-success border-success/30'
                     : 'bg-danger/15 text-danger border-danger/30'
@@ -629,62 +652,69 @@ function TraineeTableRow({
       </td>
 
       {/* Time */}
-      <td className="py-4 px-4">
+      <td className="py-3 px-3 md:py-4 md:px-4">
         {workout.workout_time ? (
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-primary" />
-            <span className="font-semibold text-foreground">{workout.workout_time}</span>
+          <div className="flex items-center gap-1.5 md:gap-2">
+            <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary flex-shrink-0" />
+            <span className="font-semibold text-sm md:text-base text-foreground whitespace-nowrap">{workout.workout_time}</span>
           </div>
         ) : (
-          <span className="text-secondary text-sm">-</span>
+          <span className="text-secondary text-xs md:text-sm">-</span>
         )}
       </td>
 
       {/* Status */}
-      <td className="py-4 px-4">
-        <span className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wide border ${statusColor}`}>
-          {statusDisplay}
-        </span>
+      <td className="py-3 px-3 md:py-4 md:px-4">
+        <div className="flex flex-col gap-1">
+          <span className={`px-2 md:px-3 py-1 md:py-1.5 rounded-xl text-[10px] md:text-xs font-bold tracking-wide border ${statusColor} whitespace-nowrap`}>
+            {statusDisplay}
+          </span>
+          {workout.hasCompletedWorkout && (
+            <span className="px-1.5 md:px-2 py-0.5 rounded-lg text-[10px] md:text-xs font-semibold text-secondary bg-surface/60 border border-border/30 whitespace-nowrap">
+              אימון חדש נוסף
+            </span>
+          )}
+        </div>
       </td>
 
       {/* Actions */}
-      <td className="py-4 px-4">
-        <div className="flex items-center gap-2">
+      <td className="py-3 px-3 md:py-4 md:px-4">
+        <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
           <button
             onClick={() => onNewWorkout(trainee)}
-            className="btn-primary p-2 rounded-lg flex items-center gap-1.5
+            className="btn-primary p-1.5 md:p-2 rounded-lg flex items-center gap-1 md:gap-1.5
                        hover:scale-110 active:scale-95 transition-all duration-300
                        shadow-lg shadow-emerald-700/50 hover:shadow-2xl hover:shadow-emerald-700/70
                        focus:outline-none focus:ring-2 focus:ring-emerald-700/50 focus:ring-offset-2"
             aria-label={`הוסף אימון חדש ל${trainee.full_name}`}
             title="אימון חדש"
           >
-            <Dumbbell className="w-4 h-4" />
-            <span className="text-xs font-bold">אימון</span>
+            <Dumbbell className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <span className="text-[10px] md:text-xs font-bold hidden sm:inline">אימון</span>
           </button>
           <button
             onClick={() => onViewWorkoutPlan(trainee)}
             className="bg-surface/60 hover:bg-surface border-2 border-border/20 
-                       hover:border-primary/50 p-2 rounded-lg flex items-center gap-1.5
+                       hover:border-primary/50 p-1.5 md:p-2 rounded-lg flex items-center gap-1 md:gap-1.5
                        transition-all duration-300 hover:scale-105 active:scale-95
                        hover:shadow-lg hover:shadow-primary/20
                        focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
             aria-label={`צפה בתוכנית אימון של ${trainee.full_name}`}
             title="תוכנית אימון"
           >
-            <ClipboardList className="w-4 h-4 text-primary" />
+            <ClipboardList className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
           </button>
           <button
             onClick={() => onViewMealPlan(trainee)}
             className="bg-surface/60 hover:bg-surface border-2 border-border/20 
-                       hover:border-primary/50 p-2 rounded-lg flex items-center gap-1.5
+                       hover:border-primary/50 p-1.5 md:p-2 rounded-lg flex items-center gap-1 md:gap-1.5
                        transition-all duration-300 hover:scale-105 active:scale-95
                        hover:shadow-lg hover:shadow-primary/20
                        focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
             aria-label={`צפה בתפריט של ${trainee.full_name}`}
             title="תפריט"
           >
-            <UtensilsCrossed className="w-4 h-4 text-primary" />
+            <UtensilsCrossed className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
           </button>
         </div>
       </td>
