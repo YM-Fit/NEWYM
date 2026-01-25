@@ -333,11 +333,8 @@ export default function App() {
   const tvParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tv') : null;
   const isTvTest = tvParam === 'test';
   
-  console.log('[App] TV test mode check:', { tvParam, isTvTest, search: window.location.search });
-  
   // Show simple TV test page to verify browser works
   if (isTvTest) {
-    console.log('[App] Rendering TV Test Page');
     return <TvTestPage />;
   }
 

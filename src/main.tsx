@@ -157,6 +157,9 @@ measureWebVitals((metric) => {
   // In production, send to analytics
 });
 
+// Track if React has mounted to prevent innerHTML conflicts
+let reactMounted = false;
+
 // Wait for DOM to be ready before rendering
 function initApp() {
   console.log('[App Init] Starting app initialization...');
@@ -174,26 +177,32 @@ function initApp() {
   
   if (!rootElement) {
     console.error('[App] Root element not found!');
-    document.body.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;">
-        <h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1>
-        <p style="font-size: 1.2rem; opacity: 0.9;">אלמנט השורש לא נמצא. אנא רענן את הדף.</p>
-        <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button>
-      </div>
-    `;
+    // Only use innerHTML if React hasn't mounted
+    if (!reactMounted) {
+      document.body.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;">
+          <h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1>
+          <p style="font-size: 1.2rem; opacity: 0.9;">אלמנט השורש לא נמצא. אנא רענן את הדף.</p>
+          <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button>
+        </div>
+      `;
+    }
     return;
   }
 
   // Check if React is available
   if (typeof createRoot === 'undefined') {
     console.error('[App] React createRoot is not available!');
-    rootElement.innerHTML = `
-      <div style="display: flex; align-items: center; justify-center: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;">
-        <h1 style="font-size: 2rem;">שגיאה בטעינת React</h1>
-        <p style="font-size: 1.2rem; opacity: 0.9;">ספריית React לא נטענה. אנא בדוק את החיבור לאינטרנט ורענן את הדף.</p>
-        <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button>
-      </div>
-    `;
+    // Only use innerHTML if React hasn't mounted
+    if (!reactMounted) {
+      rootElement.innerHTML = `
+        <div style="display: flex; align-items: center; justify-center: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;">
+          <h1 style="font-size: 2rem;">שגיאה בטעינת React</h1>
+          <p style="font-size: 1.2rem; opacity: 0.9;">ספריית React לא נטענה. אנא בדוק את החיבור לאינטרנט ורענן את הדף.</p>
+          <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button>
+        </div>
+      `;
+    }
     return;
   }
 
@@ -208,6 +217,9 @@ function initApp() {
     );
     console.log('[App Init] App rendered successfully!');
     
+    // Mark React as mounted - after this point, don't use innerHTML
+    reactMounted = true;
+    
     // Dispatch event to signal app loaded
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('app-loaded'));
@@ -218,13 +230,29 @@ function initApp() {
     const errorStack = error instanceof Error ? error.stack : '';
     console.error('[App] Error stack:', errorStack);
     
-    rootElement.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;">
-        <h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1>
-        <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 1rem;">${errorMessage}</p>
-        <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button>
-      </div>
-    `;
+    // Only use innerHTML if React hasn't mounted yet
+    // After React mounts, errors should be handled by ErrorBoundary
+    if (!reactMounted && rootElement) {
+      // Clear any existing React content safely
+      try {
+        // Try to unmount React first if it was partially mounted
+        const reactRoot = (rootElement as any)._reactRootContainer;
+        if (reactRoot) {
+          // React is partially mounted, let it handle cleanup
+          return;
+        }
+      } catch (e) {
+        // Ignore errors during cleanup check
+      }
+      
+      rootElement.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;">
+          <h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1>
+          <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 1rem;">${errorMessage}</p>
+          <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button>
+        </div>
+      `;
+    }
   }
 }
 
