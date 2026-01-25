@@ -39,9 +39,9 @@ function isWebContainerEnvironment(): boolean {
 
 const isWebContainer = isWebContainerEnvironment();
 
-// Suppress WebSocket connection errors in WebContainer environments
+// Suppress WebSocket connection errors and WebContainer deployment errors
 if (isWebContainer && typeof window !== 'undefined') {
-  // Suppress console.error for WebSocket connection failures
+  // Suppress console.error for WebSocket connection failures and deployment errors
   const originalError = console.error;
   console.error = (...args: any[]) => {
     const message = args[0]?.toString() || '';
@@ -52,6 +52,14 @@ if (isWebContainer && typeof window !== 'undefined') {
       (message.includes('supabase.co/realtime') || fullMessage.includes('supabase.co/realtime') || fullMessage.includes('realtime/v1/websocket'))
     ) {
       // Silently ignore WebSocket errors in WebContainer
+      return;
+    }
+    // Suppress WebContainer deployment errors (not actionable by user)
+    if (
+      message.includes('DeploymentError') ||
+      fullMessage.includes('Deployment failed') ||
+      fullMessage.includes('DeploymentError')
+    ) {
       return;
     }
     originalError.apply(console, args);
@@ -71,26 +79,52 @@ if (isWebContainer && typeof window !== 'undefined') {
     originalWarn.apply(console, args);
   };
   
-  // Suppress unhandled promise rejections related to WebSockets
+  // Suppress unhandled promise rejections related to WebSockets and deployments
   window.addEventListener('unhandledrejection', (event) => {
     const reason = event.reason?.toString() || '';
+    const errorName = event.reason?.constructor?.name || '';
+    // Suppress WebSocket errors
     if (
       reason.includes('WebSocket') &&
       (reason.includes('supabase.co/realtime') || reason.includes('realtime/v1/websocket'))
     ) {
       event.preventDefault();
+      return;
+    }
+    // Suppress DeploymentError from WebContainer runtime
+    if (
+      errorName === 'DeploymentError' ||
+      reason.includes('DeploymentError') ||
+      reason.includes('Deployment failed')
+    ) {
+      event.preventDefault();
+      return;
     }
   });
   
-  // Suppress global error events for WebSocket failures
+  // Suppress global error events for WebSocket failures and deployment errors
   window.addEventListener('error', (event) => {
     const message = event.message || '';
     const source = event.filename || '';
+    const errorName = event.error?.constructor?.name || '';
+    // Suppress WebSocket errors
     if (
       message.includes('WebSocket') &&
       (message.includes('supabase.co/realtime') || message.includes('realtime/v1/websocket') || source.includes('supabase'))
     ) {
       event.preventDefault();
+      return;
+    }
+    // Suppress DeploymentError from WebContainer runtime
+    if (
+      errorName === 'DeploymentError' ||
+      message.includes('DeploymentError') ||
+      message.includes('Deployment failed') ||
+      source.includes('entry.client') ||
+      source.includes('workbench')
+    ) {
+      event.preventDefault();
+      return;
     }
   }, true);
 }
