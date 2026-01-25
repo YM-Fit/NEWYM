@@ -51,7 +51,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   return (
     <div className={`h-screen w-screen overflow-hidden ${themeClasses.bgBase} ${themeClasses.textPrimary} flex flex-col`}>
       {/* Top bar */}
-      <header className={`flex items-center justify-between px-12 py-6 ${themeClasses.bgElevated} ${themeClasses.border} border-b backdrop-blur-xl shadow-lg`}>
+      <header className={`flex items-center justify-between px-6 md:px-12 py-6 ${themeClasses.bgElevated} ${themeClasses.border} border-b backdrop-blur-xl shadow-lg`}>
         <div className="flex items-center gap-4">
           <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/30">
             <span className="text-2xl font-extrabold tracking-tight text-white">N</span>
@@ -66,7 +66,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
         <div className="flex items-end gap-8">
           <div className="text-right">
-            <div className={`text-5xl font-bold tracking-tight leading-none ${themeClasses.textPrimary}`}>
+            <div className={`text-3xl md:text-5xl font-bold tracking-tight leading-none ${themeClasses.textPrimary}`}>
               {formatClock(now)}
             </div>
             <div className={`text-lg ${themeClasses.textMuted} mt-1`}>{formatDate(now)}</div>
@@ -85,7 +85,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       </header>
 
       {/* Main layout */}
-      <div className="flex flex-1 gap-6 px-12 py-6">
+      <div className="flex flex-1 gap-6 px-6 md:px-12 py-6 overflow-hidden">
         {/* Main workout area */}
         <Card variant="premium" className="flex-1 p-8 flex flex-col" padding="none">
           {isUnauthorized ? (
@@ -117,9 +117,9 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
           ) : (
             <>
               {/* Trainee header */}
-              <div className="flex items-center gap-8 mb-10">
-                <div className="h-32 w-32 rounded-3xl bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/40">
-                  <span className="text-4xl font-extrabold tracking-tight text-white">
+              <div className="flex items-center gap-4 md:gap-8 mb-6 md:mb-10">
+                <div className="h-24 w-24 md:h-32 md:w-32 rounded-3xl bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/40 transition-transform hover:scale-105">
+                  <span className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
                     {initials || '?'}
                   </span>
                 </div>
@@ -127,7 +127,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                   <div className={`text-sm uppercase tracking-[0.25em] ${themeClasses.textMuted}`}>
                     מתאמן נוכחי
                   </div>
-                  <div className={`text-4xl font-bold tracking-tight ${themeClasses.textPrimary}`}>
+                  <div className={`text-2xl md:text-4xl font-bold tracking-tight ${themeClasses.textPrimary}`}>
                     {session.trainee?.full_name ?? 'לא זוהה מתאמן'}
                   </div>
                   {session.calendarEvent?.summary && (
@@ -162,7 +162,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 flex-1">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 flex-1 overflow-y-auto">
                     {firstExercises.map((exercise, index) => {
                       const totalSets = exercise.sets.length;
                       const totalReps = exercise.sets.reduce(
@@ -267,24 +267,24 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         </Card>
 
         {/* Proof / diagnostics panel */}
-        <aside className="w-[380px] rounded-3xl bg-black/70 border border-lime-400/40 shadow-[0_0_40px_rgba(190,242,100,0.4)] p-6 flex flex-col">
-          <h2 className="text-xl font-semibold mb-4 flex items-center justify-between">
+        <Card variant="premium" className="w-full md:w-[380px] flex flex-col flex-shrink-0" padding="lg">
+          <h2 className={`text-xl font-semibold mb-4 flex items-center justify-between ${themeClasses.textPrimary}`}>
             מסך הוכחה
-            <span className="text-xs font-normal text-lime-300/80 px-2 py-0.5 rounded-full bg-lime-400/10">
+            <span className={`text-xs font-normal text-primary px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20`}>
               מצב בדיקה
             </span>
           </h2>
 
           <div className="space-y-3 mb-5 text-sm">
             <div className="flex items-center justify-between">
-              <span className="text-zinc-400">סטטוס:</span>
+              <span className={themeClasses.textMuted}>סטטוס:</span>
               <span
                 className={`font-semibold ${
                   error
-                    ? 'text-red-400'
+                    ? 'text-danger'
                     : session
-                    ? 'text-lime-300'
-                    : 'text-zinc-300'
+                    ? 'text-success'
+                    : themeClasses.textPrimary
                 }`}
               >
                 {error
@@ -295,53 +295,55 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-zinc-400">אירוע יומן:</span>
-              <span className="text-sm truncate max-w-[210px] text-zinc-200">
+              <span className={themeClasses.textMuted}>אירוע יומן:</span>
+              <span className={`text-sm truncate max-w-[210px] ${themeClasses.textPrimary}`}>
                 {session?.calendarEvent?.summary ?? '—'}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-zinc-400">מתאמן:</span>
-              <span className="text-sm text-zinc-200">
+              <span className={themeClasses.textMuted}>מתאמן:</span>
+              <span className={`text-sm ${themeClasses.textPrimary}`}>
                 {session?.trainee?.full_name ?? '—'}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-zinc-400">מזהה אימון:</span>
-              <span className="text-xs text-zinc-300">
+              <span className={themeClasses.textMuted}>מזהה אימון:</span>
+              <span className={`text-xs ${themeClasses.textMuted}`}>
                 {session?.workout?.id ?? '—'}
               </span>
             </div>
           </div>
 
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-zinc-300">יומן אירועים (TV)</h3>
-            <span className="text-[11px] text-zinc-500">
+            <h3 className={`text-sm font-medium ${themeClasses.textPrimary}`}>יומן אירועים (TV)</h3>
+            <span className={`text-[11px] ${themeClasses.textMuted}`}>
               מציג {latestLogs.length} / {logs.length} אירועים
             </span>
           </div>
 
-          <div className="flex-1 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 p-3 overflow-hidden">
+          <Card variant="glass" className="flex-1 p-3 overflow-hidden" padding="none">
             <div className="h-full overflow-y-auto space-y-2 pr-1">
               {latestLogs.length === 0 ? (
-                <div className="text-xs text-zinc-500">
+                <div className={`text-xs ${themeClasses.textMuted}`}>
                   טרם נרשמו אירועים. המסך יציג כאן את כל מה שקורה מאחורי הקלעים (זיהוי
                   יומן, טעינת אימון, שגיאות ועוד).
                 </div>
               ) : (
                 latestLogs.map(log => (
-                  <div
+                  <Card
                     key={log.id}
-                    className="text-xs rounded-xl px-2.5 py-2 bg-zinc-900/80 border border-zinc-800/80"
+                    variant="glass"
+                    className="px-2.5 py-2"
+                    padding="none"
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span
                         className={`inline-flex items-center gap-1 text-[11px] ${
                           log.level === 'error'
-                            ? 'text-red-400'
+                            ? 'text-danger'
                             : log.level === 'warning'
-                            ? 'text-amber-300'
-                            : 'text-lime-300'
+                            ? 'text-warning'
+                            : 'text-success'
                         }`}
                       >
                         {log.level === 'error'
@@ -350,7 +352,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                           ? 'אזהרה'
                           : 'מידע'}
                       </span>
-                      <span className="text-[10px] text-zinc-500">
+                      <span className={`text-[10px] ${themeClasses.textMuted}`}>
                         {new Date(log.timestamp).toLocaleTimeString('he-IL', {
                           hour: '2-digit',
                           minute: '2-digit',
@@ -358,18 +360,18 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                         })}
                       </span>
                     </div>
-                    <div className="text-[11px] text-zinc-200">{log.message}</div>
-                  </div>
+                    <div className={`text-[11px] ${themeClasses.textPrimary}`}>{log.message}</div>
+                  </Card>
                 ))
               )}
             </div>
-          </div>
+          </Card>
 
-          <div className="mt-4 text-[11px] text-zinc-500 leading-relaxed">
+          <div className={`mt-4 text-[11px] ${themeClasses.textMuted} leading-relaxed`}>
             המידע המוצג כאן נועד לבדוק שהחיבור ליומן Google ולבסיס הנתונים תקין. במצב
             קהל ניתן יהיה להסתיר פאנל זה.
           </div>
-        </aside>
+        </Card>
       </div>
     </div>
   );

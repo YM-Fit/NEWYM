@@ -829,8 +829,19 @@ export default function WorkoutSession({
       const result = await saveWorkout(requestBody, session.access_token);
 
       if (result.error || !result.data) {
-        logger.error('Save workout error:', result, 'WorkoutSession');
-        toast.error(result.error || 'שגיאה בשמירת האימון');
+        // Extract error message for better logging
+        const errorMessage = result.error || 'Unknown error saving workout';
+        const errorDetails = result.error 
+          ? { error: result.error, fullResult: result }
+          : { message: 'No error message provided', fullResult: result };
+        
+        logger.error('Save workout error:', errorDetails, 'WorkoutSession');
+        
+        // Show user-friendly error message
+        const userMessage = typeof errorMessage === 'string' 
+          ? errorMessage 
+          : 'שגיאה בשמירת האימון. נסה שוב.';
+        toast.error(userMessage);
         setSaving(false);
         return;
       }
