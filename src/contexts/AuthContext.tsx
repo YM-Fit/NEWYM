@@ -151,13 +151,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }, 6000);
     
-    return () => {
-      clearTimeout(loadingTimeout);
-      clearTimeout(fallbackTimeout);
-    };
-
+    // Set up auth state change listener - MUST be before return statement!
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       clearTimeout(loadingTimeout);
+      clearTimeout(fallbackTimeout);
       
       hydrateAuthFromSession(
         session,
@@ -181,8 +178,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
+    // Cleanup function - must unsubscribe and clear all timeouts
     return () => {
       clearTimeout(loadingTimeout);
+      clearTimeout(fallbackTimeout);
       subscription.unsubscribe();
     };
   }, []);
