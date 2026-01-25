@@ -151,8 +151,56 @@ measureWebVitals((metric) => {
   // In production, send to analytics
 });
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+// Wait for DOM to be ready before rendering
+function initApp() {
+  const rootElement = document.getElementById('root');
+  
+  // Hide loading indicator
+  const loadingEl = document.getElementById('app-loading');
+  if (loadingEl) {
+    loadingEl.style.display = 'none';
+  }
+  
+  if (!rootElement) {
+    console.error('[App] Root element not found!');
+    document.body.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(to bottom right, #064e3b, #022c22); color: white; text-align: center; padding: 2rem; direction: rtl;">
+        <div>
+          <h1 style="font-size: 2rem; margin-bottom: 1rem;">שגיאה בטעינת האפליקציה</h1>
+          <p style="font-size: 1.2rem; opacity: 0.9;">אלמנט השורש לא נמצא. אנא רענן את הדף.</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    const root = createRoot(rootElement);
+    root.render(
+      <StrictMode>
+        <App />
+      </StrictMode>
+    );
+  } catch (error) {
+    console.error('[App] Failed to render:', error);
+    rootElement.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(to bottom right, #064e3b, #022c22); color: white; text-align: center; padding: 2rem; direction: rtl;">
+        <div>
+          <h1 style="font-size: 2rem; margin-bottom: 1rem;">שגיאה בטעינת האפליקציה</h1>
+          <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 1rem;">${error instanceof Error ? error.message : 'שגיאה לא ידועה'}</p>
+          <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: white; color: #064e3b; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer;">
+            רענן דף
+          </button>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// Initialize app when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  // DOM is already ready
+  initApp();
+}
