@@ -5,7 +5,8 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   build: {
-    target: 'esnext',
+    // Use ES2020 for better TV browser compatibility (LG webOS)
+    target: 'es2020',
     minify: 'esbuild',
     rollupOptions: {
       output: {
@@ -107,9 +108,9 @@ export default defineConfig({
       '@dnd-kit/sortable',
       '@dnd-kit/utilities',
     ],
-    // Pre-bundle heavy dependencies
+    // Pre-bundle heavy dependencies - use ES2020 for TV compatibility
     esbuildOptions: {
-      target: 'esnext',
+      target: 'es2020',
     },
   },
 });

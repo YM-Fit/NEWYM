@@ -40,9 +40,25 @@
       console.log('[TV Debug] Document ready state:', document.readyState);
       
       // Check if module scripts are supported
-      if (!HTMLScriptElement.prototype.supports || !HTMLScriptElement.prototype.supports('module')) {
+      var supportsModules = 'noModule' in HTMLScriptElement.prototype;
+      console.log('[TV Debug] Module scripts supported:', supportsModules);
+      
+      if (!supportsModules) {
         console.warn('[TV Debug] Module scripts may not be supported');
       }
+      
+      // Check for script loading errors
+      window.addEventListener('error', function(e) {
+        if (e.target && e.target.tagName === 'SCRIPT') {
+          console.error('[TV Debug] Script loading error:', e.target.src, e.message);
+          var root = document.getElementById('root');
+          var loadingEl = document.getElementById('app-loading');
+          if (loadingEl) loadingEl.style.display = 'none';
+          if (root && root.children.length === 1 && root.children[0].id === 'app-loading') {
+            root.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;"><h1 style="font-size: 2rem;">שגיאה בטעינת קבצים</h1><p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 0.5rem;">קובץ JavaScript לא נטען: ' + (e.target.src || 'לא ידוע') + '</p><p style="font-size: 1rem; opacity: 0.7; margin-bottom: 1rem;">אנא בדוק את החיבור לאינטרנט ורענן את הדף.</p><button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button></div>';
+          }
+        }
+      }, true);
       
       // Fallback: Show error if app doesn't load within 20 seconds
       var appLoadTimeout = setTimeout(function() {
@@ -63,6 +79,29 @@
       window.addEventListener('app-loaded', function() {
         clearTimeout(appLoadTimeout);
       });
+    </script>
+    <script type="module">
+      // Check if module scripts are actually supported
+      try {
+        // Try to load the main module
+        import('/src/main.tsx').catch(function(error) {
+          console.error('[TV Debug] Failed to load main module:', error);
+          var root = document.getElementById('root');
+          var loadingEl = document.getElementById('app-loading');
+          if (loadingEl) loadingEl.style.display = 'none';
+          if (root) {
+            root.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;"><h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1><p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 0.5rem;">הדפדפן לא תומך ב-ES Modules.</p><p style="font-size: 1rem; opacity: 0.7; margin-bottom: 1rem;">אנא עדכן את דפדפן הטלוויזיה או נסה בדפדפן אחר.</p><button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button></div>';
+          }
+        });
+      } catch (e) {
+        console.error('[TV Debug] Module import not supported:', e);
+        var root = document.getElementById('root');
+        var loadingEl = document.getElementById('app-loading');
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (root) {
+          root.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;"><h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1><p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 0.5rem;">הדפדפן לא תומך ב-ES Modules.</p><p style="font-size: 1rem; opacity: 0.7; margin-bottom: 1rem;">אנא עדכן את דפדפן הטלוויזיה או נסה בדפדפן אחר.</p><button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button></div>';
+        }
+      }
     </script>
     <script type="module" src="/src/main.tsx"></script>
     <script>
