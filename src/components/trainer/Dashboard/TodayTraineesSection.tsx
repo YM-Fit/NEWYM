@@ -19,6 +19,7 @@ export interface TodayTrainee {
     isFromGoogle?: boolean;
     isTimePassed?: boolean; // Whether the scheduled time has passed
     hasCompletedWorkout?: boolean; // Whether there's a completed workout for this date
+    eventStartTime?: string; // For Google Calendar workouts, the actual event start time
   };
   daysSinceLastWorkout?: number | null;
   unseenWeightsCount?: number;
@@ -187,10 +188,12 @@ export default function TodayTraineesSection({
             }
           
           // חילוץ זמן האימון - שימוש ב-timezone של ישראל לעקביות
+          // For Google Calendar workouts, use eventStartTime if available for accurate time
           let workoutTime: string | undefined;
-          if (workout.workout_date && typeof workout.workout_date === 'string') {
+          const timeSource = workout.eventStartTime || workout.workout_date;
+          if (timeSource && typeof timeSource === 'string') {
             try {
-              const workoutDate = new Date(workout.workout_date);
+              const workoutDate = new Date(timeSource);
               if (!isNaN(workoutDate.getTime())) {
                 // Use Israel timezone (Asia/Jerusalem) for consistent display
                 workoutTime = workoutDate.toLocaleTimeString('he-IL', { 
@@ -231,7 +234,8 @@ export default function TodayTraineesSection({
               notes: workout.notes,
               isFromGoogle: workout.isFromGoogle || false,
               isTimePassed: workout.isTimePassed || false,
-              hasCompletedWorkout: workout.hasCompletedWorkout || false
+              hasCompletedWorkout: workout.hasCompletedWorkout || false,
+              eventStartTime: workout.eventStartTime // For Google Calendar workouts
             },
             daysSinceLastWorkout,
             unseenWeightsCount,
@@ -279,10 +283,12 @@ export default function TodayTraineesSection({
             }
           
           // חילוץ זמן האימון - שימוש ב-timezone של ישראל לעקביות
+          // For Google Calendar workouts, use eventStartTime if available for accurate time
           let workoutTime: string | undefined;
-          if (workout.workout_date && typeof workout.workout_date === 'string') {
+          const timeSource = workout.eventStartTime || workout.workout_date;
+          if (timeSource && typeof timeSource === 'string') {
             try {
-              const workoutDate = new Date(workout.workout_date);
+              const workoutDate = new Date(timeSource);
               if (!isNaN(workoutDate.getTime())) {
                 // Use Israel timezone (Asia/Jerusalem) for consistent display
                 workoutTime = workoutDate.toLocaleTimeString('he-IL', { 
@@ -310,7 +316,8 @@ export default function TodayTraineesSection({
               notes: workout.notes,
               isFromGoogle: workout.isFromGoogle || false,
               isTimePassed: workout.isTimePassed || false,
-              hasCompletedWorkout: workout.hasCompletedWorkout || false
+              hasCompletedWorkout: workout.hasCompletedWorkout || false,
+              eventStartTime: workout.eventStartTime // For Google Calendar workouts
             },
             daysSinceLastWorkout,
             unseenWeightsCount,

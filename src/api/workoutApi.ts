@@ -502,24 +502,29 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       return { data: { today: [], tomorrow: [] }, success: true };
     }
 
-    // Check which workouts are synced from Google Calendar
+    // Check which workouts are synced from Google Calendar and get their event_start_time
     // Only query if we have workout IDs
     let googleSyncedWorkoutIds = new Set<string>();
+    const googleSyncEventTimes = new Map<string, string>(); // Map workout_id -> event_start_time
     if (workoutIds.length > 0) {
       const { data: googleSyncData, error: googleSyncError } = await supabase
         .from('google_calendar_sync')
-        .select('workout_id, sync_direction')
+        .select('workout_id, sync_direction, event_start_time')
         .in('workout_id', workoutIds)
         .eq('sync_status', 'synced');
 
       // If there's an error (e.g., RLS policy issue), just continue without Google sync info
       // This is not critical - the workouts will still show, just without the Google indicator
       if (!googleSyncError && googleSyncData) {
-        googleSyncedWorkoutIds = new Set(
-          googleSyncData
-            .filter(sync => sync.workout_id && (sync.sync_direction === 'from_google' || sync.sync_direction === 'bidirectional'))
-            .map(sync => sync.workout_id!)
-        );
+        googleSyncData
+          .filter(sync => sync.workout_id && (sync.sync_direction === 'from_google' || sync.sync_direction === 'bidirectional'))
+          .forEach(sync => {
+            googleSyncedWorkoutIds.add(sync.workout_id!);
+            // Store event_start_time for accurate time display
+            if (sync.event_start_time) {
+              googleSyncEventTimes.set(sync.workout_id!, sync.event_start_time);
+            }
+          });
       }
     }
 
@@ -565,6 +570,13 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         const dateKey = `${workoutDate.getFullYear()}-${String(workoutDate.getMonth() + 1).padStart(2, '0')}-${String(workoutDate.getDate()).padStart(2, '0')}`;
         const hasCompletedWorkout = completedWorkoutsByTraineeAndDate.get(`${trainee.id}:${dateKey}`) || false;
 
+        // For Google Calendar workouts, use event_start_time if available for accurate time
+        let actualWorkoutDate = workoutDate;
+        if (isFromGoogle && googleSyncEventTimes.has(workout.id)) {
+          const eventStartTime = googleSyncEventTimes.get(workout.id)!;
+          actualWorkoutDate = new Date(eventStartTime);
+        }
+
         return {
           trainee,
           workout: {
@@ -574,9 +586,12 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
             is_completed: workout.is_completed,
             notes: workout.notes,
             isFromGoogle,
-            hasCompletedWorkout // Flag to indicate if there's a completed workout for this date
+            hasCompletedWorkout, // Flag to indicate if there's a completed workout for this date
+            eventStartTime: isFromGoogle && googleSyncEventTimes.has(workout.id) 
+              ? googleSyncEventTimes.get(workout.id)! 
+              : undefined // Store event_start_time for accurate time display
           },
-          workoutDate
+          workoutDate: actualWorkoutDate // Use actual date/time for sorting and display
         };
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
@@ -600,7 +615,9 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         return itemDate.getTime() === today.getTime();
       })
       .map(item => {
-        const workoutDate = new Date(item.workout.workout_date);
+        // For Google Calendar workouts, use eventStartTime if available for accurate time comparison
+        const timeSource = item.workout.eventStartTime || item.workout.workout_date;
+        const workoutDate = new Date(timeSource);
         const isTimePassed = workoutDate < now; // Check if the scheduled time has passed
         
         return {
@@ -644,7 +661,9 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         return itemDate.getTime() === tomorrow.getTime();
       })
       .map(item => {
-        const workoutDate = new Date(item.workout.workout_date);
+        // For Google Calendar workouts, use eventStartTime if available for accurate time comparison
+        const timeSource = item.workout.eventStartTime || item.workout.workout_date;
+        const workoutDate = new Date(timeSource);
         const isTimePassed = workoutDate < now; // Check if the scheduled time has passed
         
         return {
