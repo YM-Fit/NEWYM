@@ -2790,16 +2790,23 @@
     color: rgba(255, 255, 255, 0.7);
   }
 
-  /* ============================================
-     TV View Override - Force white text for TV display
-     This overrides the global black text rule for the TV view
-     ============================================ */
-  .tv-view-container,
-  .tv-view-container * {
-    color: #ffffff !important;
-  }
-  
-  .tv-view-container .text-muted-tv {
-    color: #a3a3a3 !important;
-  }
+}
+
+/* ============================================
+   TV View Override - Force white text for TV display
+   This overrides the global black text rule for the TV view
+   MUST be outside @layer for proper cascade ordering
+   ============================================ */
+html body .tv-view-container,
+html body .tv-view-container *,
+html body .tv-view-container *::before,
+html body .tv-view-container *::after,
+.tv-view-container,
+.tv-view-container * {
+  color: #ffffff !important;
+}
+
+html body .tv-view-container .text-muted-tv,
+.tv-view-container .text-muted-tv {
+  color: #a3a3a3 !important;
 }
