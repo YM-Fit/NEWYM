@@ -33,6 +33,37 @@
         </style>
       </div>
     </div>
+    <script>
+      // Debug: Log browser info
+      console.log('[TV Debug] User Agent:', navigator.userAgent);
+      console.log('[TV Debug] Screen size:', window.innerWidth, 'x', window.innerHeight);
+      console.log('[TV Debug] Document ready state:', document.readyState);
+      
+      // Check if module scripts are supported
+      if (!HTMLScriptElement.prototype.supports || !HTMLScriptElement.prototype.supports('module')) {
+        console.warn('[TV Debug] Module scripts may not be supported');
+      }
+      
+      // Fallback: Show error if app doesn't load within 20 seconds
+      var appLoadTimeout = setTimeout(function() {
+        var root = document.getElementById('root');
+        var loadingEl = document.getElementById('app-loading');
+        var hasContent = root && root.children.length > 0 && root.children[0].id !== 'app-loading';
+        
+        if (!hasContent && loadingEl && loadingEl.style.display !== 'none') {
+          console.error('[TV Debug] App failed to load after 20 seconds');
+          console.error('[TV Debug] Root children:', root ? root.children.length : 0);
+          if (root) {
+            root.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;"><h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1><p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 0.5rem;">האפליקציה לא נטענה תוך 20 שניות.</p><p style="font-size: 1rem; opacity: 0.7; margin-bottom: 1rem;">אנא בדוק את החיבור לאינטרנט ורענן את הדף.</p><button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button></div>';
+          }
+        }
+      }, 20000);
+      
+      // Clear timeout if app loads successfully
+      window.addEventListener('app-loaded', function() {
+        clearTimeout(appLoadTimeout);
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
     <script>
       // Hide loading indicator once React takes over

@@ -6,6 +6,12 @@ import { initSentry, captureUnhandledRejection } from './utils/sentry';
 import { registerServiceWorker } from './utils/serviceWorker';
 import { measureWebVitals } from './utils/performanceMonitor';
 
+// Make React available globally for debugging
+if (typeof window !== 'undefined') {
+  (window as any).React = { StrictMode };
+  (window as any).ReactDOM = { createRoot };
+}
+
 // Suppress WebContainer/StackBlitz preview script errors
 // These are from the development environment intercepting Supabase requests
 if (typeof window !== 'undefined' && import.meta.env.DEV) {
@@ -153,45 +159,70 @@ measureWebVitals((metric) => {
 
 // Wait for DOM to be ready before rendering
 function initApp() {
+  console.log('[App Init] Starting app initialization...');
+  console.log('[App Init] User Agent:', navigator.userAgent);
+  console.log('[App Init] Screen:', window.innerWidth, 'x', window.innerHeight);
+  
   const rootElement = document.getElementById('root');
   
   // Hide loading indicator
   const loadingEl = document.getElementById('app-loading');
   if (loadingEl) {
+    console.log('[App Init] Hiding loading indicator');
     loadingEl.style.display = 'none';
   }
   
   if (!rootElement) {
     console.error('[App] Root element not found!');
     document.body.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(to bottom right, #064e3b, #022c22); color: white; text-align: center; padding: 2rem; direction: rtl;">
-        <div>
-          <h1 style="font-size: 2rem; margin-bottom: 1rem;">שגיאה בטעינת האפליקציה</h1>
-          <p style="font-size: 1.2rem; opacity: 0.9;">אלמנט השורש לא נמצא. אנא רענן את הדף.</p>
-        </div>
+      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;">
+        <h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1>
+        <p style="font-size: 1.2rem; opacity: 0.9;">אלמנט השורש לא נמצא. אנא רענן את הדף.</p>
+        <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button>
+      </div>
+    `;
+    return;
+  }
+
+  // Check if React is available
+  if (typeof createRoot === 'undefined') {
+    console.error('[App] React createRoot is not available!');
+    rootElement.innerHTML = `
+      <div style="display: flex; align-items: center; justify-center: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;">
+        <h1 style="font-size: 2rem;">שגיאה בטעינת React</h1>
+        <p style="font-size: 1.2rem; opacity: 0.9;">ספריית React לא נטענה. אנא בדוק את החיבור לאינטרנט ורענן את הדף.</p>
+        <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button>
       </div>
     `;
     return;
   }
 
   try {
+    console.log('[App Init] Creating React root...');
     const root = createRoot(rootElement);
+    console.log('[App Init] Rendering App component...');
     root.render(
       <StrictMode>
         <App />
       </StrictMode>
     );
+    console.log('[App Init] App rendered successfully!');
+    
+    // Dispatch event to signal app loaded
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('app-loaded'));
+    }
   } catch (error) {
     console.error('[App] Failed to render:', error);
+    const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
+    const errorStack = error instanceof Error ? error.stack : '';
+    console.error('[App] Error stack:', errorStack);
+    
     rootElement.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(to bottom right, #064e3b, #022c22); color: white; text-align: center; padding: 2rem; direction: rtl;">
-        <div>
-          <h1 style="font-size: 2rem; margin-bottom: 1rem;">שגיאה בטעינת האפליקציה</h1>
-          <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 1rem;">${error instanceof Error ? error.message : 'שגיאה לא ידועה'}</p>
-          <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: white; color: #064e3b; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer;">
-            רענן דף
-          </button>
-        </div>
+      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;">
+        <h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1>
+        <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 1rem;">${errorMessage}</p>
+        <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button>
       </div>
     `;
   }

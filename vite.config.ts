@@ -87,7 +87,8 @@ export default defineConfig({
   },
   esbuild: {
     treeShaking: true,
-    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+    // Keep console.log for debugging on TV - only drop debugger
+    drop: process.env.NODE_ENV === 'production' ? ['debugger'] : [],
     legalComments: 'none', // Remove all comments for smaller bundle
     // Optimize for smaller bundle
     minifyIdentifiers: true,
