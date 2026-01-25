@@ -6,6 +6,55 @@ import { initSentry, captureUnhandledRejection } from './utils/sentry';
 import { registerServiceWorker } from './utils/serviceWorker';
 import { measureWebVitals } from './utils/performanceMonitor';
 
+// Suppress WebContainer/StackBlitz preview script errors
+// These are from the development environment intercepting Supabase requests
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  const originalConsoleError = console.error;
+  console.error = (...args: any[]) => {
+    // Get stack trace to check where the error comes from
+    const stackTrace = new Error().stack || '';
+    
+    // Check if this error originates from preview-script or webcontainer
+    const isFromPreviewScript = stackTrace.includes('preview-script') || 
+                                 stackTrace.includes('webcontainer') ||
+                                 stackTrace.includes('.webcontainer@runtime');
+    
+    // Check if the error message is about Supabase
+    const errorMessages = args.map(arg => {
+      if (typeof arg === 'string') return arg;
+      if (arg && typeof arg === 'object') {
+        // Check for common Supabase error patterns
+        if ('message' in arg && typeof arg.message === 'string') {
+          return arg.message;
+        }
+        if ('error' in arg && typeof arg.error === 'string') {
+          return arg.error;
+        }
+        try {
+          const str = JSON.stringify(arg);
+          return str;
+        } catch {
+          return String(arg);
+        }
+      }
+      return String(arg);
+    }).join(' ').toLowerCase();
+    
+    const isSupabaseError = errorMessages.includes('supabase request failed') ||
+                           errorMessages.includes('supabase') ||
+                           (args[0] && typeof args[0] === 'object' && 'code' in args[0]);
+    
+    // Filter out Supabase errors from preview-script/webcontainer
+    if (isFromPreviewScript && isSupabaseError) {
+      // Silently ignore - these are from the dev environment intercepting requests, not our code
+      return;
+    }
+    
+    // Call original console.error for everything else
+    originalConsoleError.apply(console, args);
+  };
+}
+
 // Initialize Sentry error tracking (async, don't block app startup)
 initSentry().catch((error) => {
   if (import.meta.env.DEV) {
