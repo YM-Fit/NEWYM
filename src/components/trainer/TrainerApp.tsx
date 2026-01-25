@@ -866,6 +866,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             onNewWorkout={handleNewWorkout}
             onViewWorkoutPlan={handleViewWorkoutPlan}
             onViewMealPlan={handleViewMealPlan}
+            onNewMeasurement={handleNewMeasurement}
           />
           </Suspense>
         );

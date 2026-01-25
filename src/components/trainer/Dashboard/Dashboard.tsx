@@ -26,6 +26,7 @@ interface DashboardProps {
   onNewWorkout?: (trainee: Trainee) => void;
   onViewWorkoutPlan?: (trainee: Trainee) => void;
   onViewMealPlan?: (trainee: Trainee) => void;
+  onNewMeasurement?: (trainee: Trainee) => void;
 }
 
 export default function Dashboard({
@@ -38,7 +39,8 @@ export default function Dashboard({
   onSaveMeasurement,
   onNewWorkout,
   onViewWorkoutPlan,
-  onViewMealPlan
+  onViewMealPlan,
+  onNewMeasurement
 }: DashboardProps) {
   const { user } = useAuth();
   const [todayWorkouts, setTodayWorkouts] = useState(0);
@@ -243,6 +245,7 @@ export default function Dashboard({
           onNewWorkout={onNewWorkout}
           onViewWorkoutPlan={onViewWorkoutPlan}
           onViewMealPlan={onViewMealPlan}
+          onNewMeasurement={onNewMeasurement}
           onTraineeClick={onTraineeClick ? (trainee) => onTraineeClick(trainee.id) : undefined}
         />
       ) : (

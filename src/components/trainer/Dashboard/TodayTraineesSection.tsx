@@ -25,6 +25,7 @@ interface TodayTraineesSectionProps {
   onNewWorkout: (trainee: Trainee) => void;
   onViewWorkoutPlan: (trainee: Trainee) => void;
   onViewMealPlan: (trainee: Trainee) => void;
+  onNewMeasurement?: (trainee: Trainee) => void;
   onTraineeClick?: (trainee: Trainee) => void;
 }
 
@@ -68,6 +69,7 @@ export default function TodayTraineesSection({
   onNewWorkout,
   onViewWorkoutPlan,
   onViewMealPlan,
+  onNewMeasurement,
   onTraineeClick
 }: TodayTraineesSectionProps) {
   const [todayTrainees, setTodayTrainees] = useState<TodayTrainee[]>([]);
@@ -419,6 +421,7 @@ export default function TodayTraineesSection({
                 onNewWorkout={onNewWorkout}
                 onViewWorkoutPlan={onViewWorkoutPlan}
                 onViewMealPlan={onViewMealPlan}
+                onNewMeasurement={onNewMeasurement}
                 onTraineeClick={onTraineeClick}
               />
             ))}
@@ -449,6 +452,7 @@ interface TraineeCardTodayProps {
   onNewWorkout: (trainee: Trainee) => void;
   onViewWorkoutPlan: (trainee: Trainee) => void;
   onViewMealPlan: (trainee: Trainee) => void;
+  onNewMeasurement?: (trainee: Trainee) => void;
   onTraineeClick?: (trainee: Trainee) => void;
 }
 
@@ -458,6 +462,7 @@ function TraineeCardToday({
   onNewWorkout,
   onViewWorkoutPlan,
   onViewMealPlan,
+  onNewMeasurement,
   onTraineeClick
 }: TraineeCardTodayProps) {
   const { trainee, workout, status, daysSinceLastWorkout, unseenWeightsCount } = todayTrainee;
@@ -603,7 +608,7 @@ function TraineeCardToday({
         </div>
 
         {/* Enhanced Action Buttons */}
-        <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+        <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
           {/* אימון חדש - Primary */}
           <button
             onClick={() => onNewWorkout(trainee)}
@@ -613,18 +618,18 @@ function TraineeCardToday({
                 onNewWorkout(trainee);
               }
             }}
-            className="btn-primary p-4 sm:p-5 rounded-xl flex flex-col items-center gap-2
+            className="btn-primary p-3 sm:p-4 rounded-xl flex flex-col items-center gap-1.5
                        hover:scale-110 active:scale-95 transition-all duration-300
                        shadow-lg shadow-emerald-700/50 hover:shadow-2xl hover:shadow-emerald-700/70
                        focus:outline-none focus:ring-2 focus:ring-emerald-700/50 focus:ring-offset-2
                        group/btn relative overflow-hidden"
             aria-label={`הוסף אימון חדש ל${trainee.full_name}`}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
-                          translate-x-[-100%] group-hover/btn:translate-x-[100%] 
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent
+                          translate-x-[-100%] group-hover/btn:translate-x-[100%]
                           transition-transform duration-700" />
-            <Dumbbell className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" aria-hidden="true" />
-            <span className="text-xs sm:text-sm font-bold relative z-10">אימון חדש</span>
+            <Dumbbell className="w-4 h-4 sm:w-5 sm:h-5 relative z-10" aria-hidden="true" />
+            <span className="text-[10px] sm:text-xs font-bold relative z-10">אימון</span>
           </button>
 
           {/* תוכנית אימון */}
@@ -636,19 +641,19 @@ function TraineeCardToday({
                 onViewWorkoutPlan(trainee);
               }
             }}
-            className="bg-surface/60 hover:bg-surface border-2 border-border/20 
-                       hover:border-primary/50 p-4 sm:p-5 rounded-xl flex flex-col items-center gap-2
+            className="bg-surface/60 hover:bg-surface border-2 border-border/20
+                       hover:border-primary/50 p-3 sm:p-4 rounded-xl flex flex-col items-center gap-1.5
                        transition-all duration-300 hover:scale-105 active:scale-95
                        hover:shadow-lg hover:shadow-primary/20
                        focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
                        group/btn relative overflow-hidden"
             aria-label={`צפה בתוכנית אימון של ${trainee.full_name}`}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent 
-                          translate-x-[-100%] group-hover/btn:translate-x-[100%] 
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent
+                          translate-x-[-100%] group-hover/btn:translate-x-[100%]
                           transition-transform duration-700" />
-            <ClipboardList className="w-5 h-5 sm:w-6 sm:h-6 text-primary relative z-10" aria-hidden="true" />
-            <span className="text-xs sm:text-sm font-bold text-foreground relative z-10">תוכנית</span>
+            <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 text-primary relative z-10" aria-hidden="true" />
+            <span className="text-[10px] sm:text-xs font-bold text-foreground relative z-10">תוכנית</span>
           </button>
 
           {/* תפריט */}
@@ -660,20 +665,46 @@ function TraineeCardToday({
                 onViewMealPlan(trainee);
               }
             }}
-            className="bg-surface/60 hover:bg-surface border-2 border-border/20 
-                       hover:border-primary/50 p-4 sm:p-5 rounded-xl flex flex-col items-center gap-2
+            className="bg-surface/60 hover:bg-surface border-2 border-border/20
+                       hover:border-primary/50 p-3 sm:p-4 rounded-xl flex flex-col items-center gap-1.5
                        transition-all duration-300 hover:scale-105 active:scale-95
                        hover:shadow-lg hover:shadow-primary/20
                        focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
                        group/btn relative overflow-hidden"
             aria-label={`צפה בתפריט של ${trainee.full_name}`}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent 
-                          translate-x-[-100%] group-hover/btn:translate-x-[100%] 
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent
+                          translate-x-[-100%] group-hover/btn:translate-x-[100%]
                           transition-transform duration-700" />
-            <UtensilsCrossed className="w-5 h-5 sm:w-6 sm:h-6 text-primary relative z-10" aria-hidden="true" />
-            <span className="text-xs sm:text-sm font-bold text-foreground relative z-10">תפריט</span>
+            <UtensilsCrossed className="w-4 h-4 sm:w-5 sm:h-5 text-primary relative z-10" aria-hidden="true" />
+            <span className="text-[10px] sm:text-xs font-bold text-foreground relative z-10">תפריט</span>
           </button>
+
+          {/* שקילה חדשה */}
+          {onNewMeasurement && (
+            <button
+              onClick={() => onNewMeasurement(trainee)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onNewMeasurement(trainee);
+                }
+              }}
+              className="bg-surface/60 hover:bg-surface border-2 border-border/20
+                         hover:border-info/50 p-3 sm:p-4 rounded-xl flex flex-col items-center gap-1.5
+                         transition-all duration-300 hover:scale-105 active:scale-95
+                         hover:shadow-lg hover:shadow-info/20
+                         focus:outline-none focus:ring-2 focus:ring-info/50 focus:ring-offset-2
+                         group/btn relative overflow-hidden"
+              aria-label={`הוסף שקילה חדשה ל${trainee.full_name}`}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-info/10 to-transparent
+                            translate-x-[-100%] group-hover/btn:translate-x-[100%]
+                            transition-transform duration-700" />
+              <Scale className="w-4 h-4 sm:w-5 sm:h-5 text-info relative z-10" aria-hidden="true" />
+              <span className="text-[10px] sm:text-xs font-bold text-foreground relative z-10">שקילה</span>
+            </button>
+          )}
         </div>
       </div>
     </div>
