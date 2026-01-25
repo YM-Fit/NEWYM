@@ -21,11 +21,25 @@ const TraineeApp = lazy(() => import('./components/trainee/TraineeApp'));
 
 function AppContent() {
   const { user, loading, userType } = useAuth();
+  const [forceShowLogin, setForceShowLogin] = useState(false);
 
   // Debug logging
   useEffect(() => {
-    console.log('[AppContent] State:', { user: !!user, loading, userType });
-  }, [user, loading, userType]);
+    console.log('[AppContent] State:', { user: !!user, loading, userType, forceShowLogin });
+  }, [user, loading, userType, forceShowLogin]);
+
+  // Force show login after 3 seconds if still loading
+  useEffect(() => {
+    if (loading) {
+      const timeout = setTimeout(() => {
+        console.warn('[AppContent] Loading timeout - forcing login screen');
+        setForceShowLogin(true);
+      }, 3000);
+      return () => clearTimeout(timeout);
+    } else {
+      setForceShowLogin(false);
+    }
+  }, [loading]);
 
   // Track Web Vitals and performance metrics
   useEffect(() => {
@@ -69,7 +83,8 @@ function AppContent() {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const isTablet = useIsTablet();
 
-  if (loading) {
+  // Show login immediately if forced or if loading for too long
+  if (loading && !forceShowLogin) {
     return (
       <div 
         className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center"
