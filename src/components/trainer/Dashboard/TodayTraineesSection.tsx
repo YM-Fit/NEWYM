@@ -94,15 +94,15 @@ export default function TodayTraineesSection({
     setError(null);
     
     try {
+      // Use date strings for comparison (works with both date and timestamptz columns)
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
-      
-      // Use full ISO timestamp strings for timestamptz comparison
-      const todayStr = today.toISOString();
-      const tomorrowStr = tomorrow.toISOString();
-      
+
+      // Format as YYYY-MM-DD for reliable comparison
+      const todayDateStr = today.toISOString().split('T')[0];
+      const tomorrowDateStr = tomorrow.toISOString().split('T')[0];
+
       const traineeIds = trainees.map(t => t.id);
       
       if (traineeIds.length === 0) {
@@ -122,14 +122,15 @@ export default function TodayTraineesSection({
       }
 
       // First, get today's workouts for the trainer
+      // Query workouts where workout_date starts with today's date (works for both date and timestamp)
       let workoutsData, workoutsError;
       try {
         const result = await supabase
           .from('workouts')
           .select('id, workout_date, workout_type, is_completed, notes, created_at, trainer_id')
           .eq('trainer_id', trainerId)
-          .gte('workout_date', todayStr)
-          .lt('workout_date', tomorrowStr)
+          .gte('workout_date', todayDateStr)
+          .lt('workout_date', tomorrowDateStr)
           .order('workout_date', { ascending: true });
         workoutsData = result.data;
         workoutsError = result.error;
