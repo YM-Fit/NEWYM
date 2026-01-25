@@ -85,7 +85,16 @@ export default function ClientPortal() {
         a.download = `invoice-${payment.invoice_number || payment.id}.pdf`;
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
+        // Safely remove the element if it's still in the DOM
+        setTimeout(() => {
+          try {
+            if (a.parentNode) {
+              a.parentNode.removeChild(a);
+            }
+          } catch (e) {
+            // Element may have already been removed, ignore
+          }
+        }, 0);
         URL.revokeObjectURL(url);
         toast.success('חשבונית הורדה');
       }

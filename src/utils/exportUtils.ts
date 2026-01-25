@@ -57,7 +57,16 @@ export function downloadCSV(csvContent: string, filename: string): void {
   
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
+  // Safely remove the element if it's still in the DOM
+  setTimeout(() => {
+    try {
+      if (link.parentNode) {
+        link.parentNode.removeChild(link);
+      }
+    } catch (e) {
+      // Element may have already been removed, ignore
+    }
+  }, 0);
   
   URL.revokeObjectURL(url);
 }
