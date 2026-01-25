@@ -19,6 +19,124 @@ import './utils/supabaseDebug';
 const TrainerApp = lazy(() => import('./components/trainer/TrainerApp'));
 const TraineeApp = lazy(() => import('./components/trainee/TraineeApp'));
 
+// Simple TV Test Page - shows browser info and tests basic rendering
+// This is a pure functional component without hooks to ensure maximum compatibility
+function TvTestPage() {
+  // Get current time (static - will show load time)
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('he-IL');
+  
+  const browserInfo = {
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
+    screen: typeof window !== 'undefined' ? `${window.innerWidth} x ${window.innerHeight}` : 'N/A',
+    language: typeof navigator !== 'undefined' ? navigator.language : 'N/A',
+    cookiesEnabled: typeof navigator !== 'undefined' ? navigator.cookieEnabled : false,
+    localStorage: typeof localStorage !== 'undefined',
+  };
+  
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: '#1a1a2e',
+      color: '#ffffff',
+      fontFamily: 'Arial, sans-serif',
+      padding: '40px',
+      overflow: 'auto',
+      direction: 'rtl',
+    }}>
+      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <h1 style={{ 
+          fontSize: '48px', 
+          marginBottom: '20px', 
+          color: '#10b981',
+          textAlign: 'center',
+        }}>
+          ✅ הדפדפן עובד!
+        </h1>
+        
+        <div style={{
+          backgroundColor: '#2a2a3e',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+          border: '2px solid #10b981',
+        }}>
+          <h2 style={{ fontSize: '32px', marginBottom: '16px', color: '#10b981' }}>
+            🕐 שעת טעינה
+          </h2>
+          <p style={{ fontSize: '64px', fontWeight: 'bold', textAlign: 'center' }}>
+            {timeStr}
+          </p>
+        </div>
+        
+        <div style={{
+          backgroundColor: '#2a2a3e',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+        }}>
+          <h2 style={{ fontSize: '24px', marginBottom: '16px', color: '#10b981' }}>
+            📺 מידע על הדפדפן
+          </h2>
+          <div style={{ fontSize: '18px', lineHeight: '2' }}>
+            <p><strong>גודל מסך:</strong> {browserInfo.screen}</p>
+            <p><strong>שפה:</strong> {browserInfo.language}</p>
+            <p><strong>Cookies:</strong> {browserInfo.cookiesEnabled ? 'פעיל' : 'כבוי'}</p>
+            <p><strong>LocalStorage:</strong> {browserInfo.localStorage ? 'זמין' : 'לא זמין'}</p>
+          </div>
+        </div>
+        
+        <div style={{
+          backgroundColor: '#2a2a3e',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+        }}>
+          <h2 style={{ fontSize: '24px', marginBottom: '16px', color: '#f59e0b' }}>
+            🔧 User Agent
+          </h2>
+          <p style={{ 
+            fontSize: '14px', 
+            wordBreak: 'break-all',
+            backgroundColor: '#1a1a2e',
+            padding: '12px',
+            borderRadius: '8px',
+            direction: 'ltr',
+            textAlign: 'left',
+          }}>
+            {browserInfo.userAgent}
+          </p>
+        </div>
+        
+        <div style={{ textAlign: 'center', marginTop: '32px' }}>
+          <p style={{ fontSize: '20px', color: '#a3a3a3', marginBottom: '16px' }}>
+            אם אתה רואה את הדף הזה, הדפדפן של הטלוויזיה עובד!
+          </p>
+          <button
+            onClick={() => { window.location.href = '/'; }}
+            style={{
+              backgroundColor: '#10b981',
+              color: '#ffffff',
+              border: 'none',
+              padding: '16px 32px',
+              fontSize: '20px',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+            }}
+          >
+            חזור לאפליקציה
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AppContent() {
   const { user, loading, userType } = useAuth();
   const [forceShowLogin, setForceShowLogin] = useState(false);
@@ -206,6 +324,18 @@ function AppContent() {
 }
 
 export default function App() {
+  // Check for TV test mode via URL parameter (?tv=test)
+  const tvParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tv') : null;
+  const isTvTest = tvParam === 'test';
+  
+  console.log('[App] TV test mode check:', { tvParam, isTvTest, search: window.location.search });
+  
+  // Show simple TV test page to verify browser works
+  if (isTvTest) {
+    console.log('[App] Rendering TV Test Page');
+    return <TvTestPage />;
+  }
+
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">

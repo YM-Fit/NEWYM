@@ -77,7 +77,12 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const { signOut, user } = useAuth();
   const { handleError } = useErrorHandler();
   const { loadTraineeData } = useTraineeData();
-  const [activeView, setActiveView] = useState('dashboard');
+  
+  // Check if we're on the /tv route and set initial view accordingly
+  const initialView = typeof window !== 'undefined' && window.location.pathname === '/tv' 
+    ? 'studio-tv' 
+    : 'dashboard';
+  const [activeView, setActiveView] = useState(initialView);
   const [selectedTrainee, setSelectedTrainee] = useState<Trainee | null>(null);
   const [selectedWorkout, setSelectedWorkout] = useState<any | null>(null);
   const [previousWorkoutForNew, setPreviousWorkoutForNew] = useState<any | null>(null);

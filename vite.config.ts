@@ -1,12 +1,23 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import legacy from '@vitejs/plugin-legacy';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Legacy plugin for older browsers (LG WebOS, Samsung Tizen Smart TVs)
+    legacy({
+      targets: ['chrome >= 53', 'safari >= 10', 'ios >= 10'],
+      additionalLegacyPolyfills: ['regenerator-runtime/runtime'],
+      renderLegacyChunks: true,
+      modernPolyfills: true,
+    }),
+  ],
   build: {
-    // Use ES2020 for better TV browser compatibility (LG webOS)
-    target: 'es2020',
+    // Use ES2015 for maximum TV browser compatibility (LG webOS, Samsung Tizen, etc.)
+    // Older WebOS versions use Chrome 53-68 which don't support ES2020 features
+    target: 'es2015',
     minify: 'esbuild',
     rollupOptions: {
       output: {
@@ -108,9 +119,9 @@ export default defineConfig({
       '@dnd-kit/sortable',
       '@dnd-kit/utilities',
     ],
-    // Pre-bundle heavy dependencies - use ES2020 for TV compatibility
+    // Pre-bundle heavy dependencies - use ES2015 for TV compatibility
     esbuildOptions: {
-      target: 'es2020',
+      target: 'es2015',
     },
   },
 });

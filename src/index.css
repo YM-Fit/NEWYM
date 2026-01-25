@@ -2789,4 +2789,17 @@
     font-weight: 600;
     color: rgba(255, 255, 255, 0.7);
   }
+
+  /* ============================================
+     TV View Override - Force white text for TV display
+     This overrides the global black text rule for the TV view
+     ============================================ */
+  .tv-view-container,
+  .tv-view-container * {
+    color: #ffffff !important;
+  }
+  
+  .tv-view-container .text-muted-tv {
+    color: #a3a3a3 !important;
+  }
 }
