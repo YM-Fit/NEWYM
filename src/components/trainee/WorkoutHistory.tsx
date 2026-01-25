@@ -534,7 +534,6 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
       )}
 
       <div className="premium-card-static overflow-hidden">
-      <div className="premium-card-static overflow-hidden">
         <button
           onClick={() => setShowFilters(!showFilters)}
           className="w-full px-4 py-3 flex items-center justify-between bg-[var(--color-bg-surface)] border-b border-[var(--color-border)]"
