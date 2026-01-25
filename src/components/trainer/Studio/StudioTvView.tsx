@@ -44,6 +44,29 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
   const [showConfetti, setShowConfetti] = useState(false);
   const [showPRMessage, setShowPRMessage] = useState(false);
+  
+  // TV-optimized inline styles to ensure compatibility with WebOS and other Smart TV browsers
+  // These override CSS that may not work correctly on TV browsers
+  const tvStyles = {
+    container: {
+      backgroundColor: '#1a2e16',
+      color: '#ffffff',
+    },
+    text: {
+      color: '#ffffff',
+    },
+    textMuted: {
+      color: '#a3a3a3',
+    },
+    card: {
+      backgroundColor: '#24321c',
+      borderColor: 'rgba(74, 107, 42, 0.3)',
+    },
+    header: {
+      backgroundColor: '#24321c',
+      borderColor: 'rgba(74, 107, 42, 0.3)',
+    },
+  };
 
   // Show confetti when a new PR is detected
   useEffect(() => {
@@ -123,7 +146,10 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   const isUnauthorized = !user || userType !== 'trainer';
 
   return (
-    <div className={`h-screen w-screen overflow-hidden ${themeClasses.bgBase} ${themeClasses.textPrimary} flex flex-col relative`}>
+    <div 
+      className={`h-screen w-screen overflow-hidden flex flex-col relative tv-view-container`}
+      style={tvStyles.container}
+    >
       {/* Confetti animation */}
       {showConfetti && (
         <div className="fixed inset-0 pointer-events-none z-50">
@@ -171,14 +197,20 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       )}
 
       {/* Top bar */}
-      <header className={`flex items-center justify-between px-6 md:px-12 2xl:px-16 py-6 2xl:py-8 ${themeClasses.bgElevated} ${themeClasses.border} border-b backdrop-blur-xl shadow-lg`}>
+      <header 
+        className="flex items-center justify-between px-6 md:px-12 2xl:px-16 py-6 2xl:py-8 border-b shadow-lg"
+        style={tvStyles.header}
+      >
         <div className="flex items-center gap-4 2xl:gap-6">
-          <div className="h-14 w-14 2xl:h-20 2xl:w-20 rounded-2xl 2xl:rounded-3xl bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-            <span className="text-2xl 2xl:text-4xl font-extrabold tracking-tight text-white">N</span>
+          <div 
+            className="h-14 w-14 2xl:h-20 2xl:w-20 rounded-2xl 2xl:rounded-3xl flex items-center justify-center shadow-lg"
+            style={{ backgroundColor: '#4a6b2a' }}
+          >
+            <span className="text-2xl 2xl:text-4xl font-extrabold tracking-tight" style={{ color: '#ffffff' }}>N</span>
           </div>
           <div>
-            <div className={`text-sm 2xl:text-xl ${themeClasses.textMuted}`}>מצב טלוויזיה · סטודיו</div>
-            <div className={`text-xl 2xl:text-3xl font-semibold ${themeClasses.textPrimary}`}>
+            <div className="text-sm 2xl:text-xl" style={tvStyles.textMuted}>מצב טלוויזיה · סטודיו</div>
+            <div className="text-xl 2xl:text-3xl font-semibold" style={tvStyles.text}>
               {user?.email ? `מאמן: ${user.email}` : 'מחכה לחיבור מאמן'}
             </div>
           </div>
@@ -186,13 +218,13 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
         <div className="flex items-end gap-8 2xl:gap-12">
           <div className="text-right">
-            <div className={`text-3xl md:text-5xl 2xl:text-7xl font-bold tracking-tight leading-none ${themeClasses.textPrimary}`}>
+            <div className="text-3xl md:text-5xl 2xl:text-7xl font-bold tracking-tight leading-none" style={tvStyles.text}>
               {formatClock(now)}
             </div>
-            <div className={`text-lg 2xl:text-2xl ${themeClasses.textMuted} mt-1`}>{formatDate(now)}</div>
+            <div className="text-lg 2xl:text-2xl mt-1" style={tvStyles.textMuted}>{formatDate(now)}</div>
           </div>
           {lastUpdated && (
-            <div className={`text-sm 2xl:text-lg ${themeClasses.textMuted}`}>
+            <div className="text-sm 2xl:text-lg" style={tvStyles.textMuted}>
               עדכון אחרון:{' '}
               {new Date(lastUpdated).toLocaleTimeString('he-IL', {
                 hour: '2-digit',
@@ -207,29 +239,29 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       {/* Main layout */}
       <div className="flex flex-1 gap-6 px-6 md:px-12 py-6 overflow-hidden">
         {/* Main workout area */}
-        <Card variant="premium" className="flex-1 p-8 flex flex-col" padding="none">
+        <Card variant="premium" className="flex-1 p-8 flex flex-col tv-card" padding="none" style={tvStyles.card}>
           {isUnauthorized ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
-              <div className={`text-3xl font-semibold ${themeClasses.textPrimary}`}>התחברות נדרשת</div>
-              <p className={`text-xl ${themeClasses.textMuted} max-w-xl text-center`}>
+              <div className="text-3xl font-semibold" style={tvStyles.text}>התחברות נדרשת</div>
+              <p className="text-xl max-w-xl text-center" style={tvStyles.textMuted}>
                 כדי להשתמש במצב טלוויזיה, התחבר כמדריך מהמכשיר הזה.
                 לאחר ההתחברות, המסך יזהה אוטומטית את האימון הפעיל מהיומן.
               </p>
             </div>
           ) : loading && !session ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
-              <div className="h-20 w-20 border-4 border-primary/40 border-t-primary rounded-full animate-spin" />
-              <div className={`text-2xl ${themeClasses.textPrimary}`}>טוען את האימון הנוכחי מהיומן...</div>
+              <div className="h-20 w-20 border-4 rounded-full animate-spin" style={{ borderColor: 'rgba(74, 107, 42, 0.4)', borderTopColor: '#4a6b2a' }} />
+              <div className="text-2xl" style={tvStyles.text}>טוען את האימון הנוכחי מהיומן...</div>
             </div>
           ) : error && !session ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-4">
-              <div className="text-3xl font-semibold text-danger">שגיאה במצב טלוויזיה</div>
-              <p className={`text-xl ${themeClasses.textPrimary}`}>{error}</p>
+              <div className="text-3xl font-semibold" style={{ color: '#ef4444' }}>שגיאה במצב טלוויזיה</div>
+              <p className="text-xl" style={tvStyles.text}>{error}</p>
             </div>
           ) : !session ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
-              <div className={`text-4xl font-semibold ${themeClasses.textPrimary}`}>אין אימון פעיל כרגע</div>
-              <p className={`text-xl ${themeClasses.textMuted} max-w-2xl text-center leading-relaxed`}>
+              <div className="text-4xl font-semibold" style={tvStyles.text}>אין אימון פעיל כרגע</div>
+              <p className="text-xl max-w-2xl text-center leading-relaxed" style={tvStyles.textMuted}>
                 לא נמצא אירוע יומן פעיל לסטודיו בזמן הנוכחי.
                 ודא שהאימונים שלך מסונכרנים ליומן Google וששעת האימון תואמת לשעה הנוכחית.
               </p>
@@ -239,23 +271,26 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
               {/* Enhanced Trainee "On Stage" Display */}
               <div className="mb-8 md:mb-12 2xl:mb-16">
                 <div className="flex items-center gap-6 md:gap-12 2xl:gap-16 mb-6 2xl:mb-8">
-                  <div className="h-32 w-32 md:h-40 md:w-40 2xl:h-56 2xl:w-56 rounded-3xl 2xl:rounded-[2rem] bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center shadow-2xl shadow-emerald-500/50 transition-transform hover:scale-105 animate-pulse-slow">
-                    <span className="text-5xl md:text-6xl 2xl:text-8xl font-extrabold tracking-tight text-white">
+                  <div 
+                    className="h-32 w-32 md:h-40 md:w-40 2xl:h-56 2xl:w-56 rounded-3xl 2xl:rounded-[2rem] flex items-center justify-center shadow-2xl transition-transform hover:scale-105 animate-pulse-slow tv-badge-primary"
+                    style={{ backgroundColor: '#4a6b2a' }}
+                  >
+                    <span className="text-5xl md:text-6xl 2xl:text-8xl font-extrabold tracking-tight" style={{ color: '#ffffff' }}>
                       {initials || '?'}
                     </span>
                   </div>
                   <div className="flex flex-col gap-3 2xl:gap-4 flex-1">
-                    <div className={`text-sm md:text-base 2xl:text-xl uppercase tracking-[0.25em] ${themeClasses.textMuted} mb-1`}>
+                    <div className="text-sm md:text-base 2xl:text-xl uppercase tracking-[0.25em] mb-1 text-muted-tv" style={tvStyles.textMuted}>
                       מתאמן נוכחי
                     </div>
-                    <div className={`text-4xl md:text-6xl lg:text-7xl 2xl:text-8xl 3xl:text-[10rem] font-extrabold tracking-tight ${themeClasses.textPrimary} leading-tight`}>
+                    <div className="text-4xl md:text-6xl lg:text-7xl 2xl:text-8xl 3xl:text-[10rem] font-extrabold tracking-tight leading-tight" style={tvStyles.text}>
                       {session.trainee?.full_name ?? 'לא זוהה מתאמן'}
                     </div>
-                    <div className={`text-xl md:text-2xl 2xl:text-4xl ${themeClasses.textMuted} mt-2 animate-fade-in`}>
+                    <div className="text-xl md:text-2xl 2xl:text-4xl mt-2 animate-fade-in text-muted-tv" style={tvStyles.textMuted}>
                       הנה אני על המסך! 🎬
                     </div>
                     {session.calendarEvent?.summary && (
-                      <div className={`text-lg md:text-xl 2xl:text-3xl ${themeClasses.textMuted} mt-1`}>
+                      <div className="text-lg md:text-xl 2xl:text-3xl mt-1 text-muted-tv" style={tvStyles.textMuted}>
                         {session.calendarEvent.summary}
                       </div>
                     )}
@@ -490,25 +525,20 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         </Card>
 
         {/* Proof / diagnostics panel */}
-        <Card variant="premium" className="w-full md:w-[380px] flex flex-col flex-shrink-0" padding="lg">
-          <h2 className={`text-xl font-semibold mb-4 flex items-center justify-between ${themeClasses.textPrimary}`}>
+        <Card variant="premium" className="w-full md:w-[380px] flex flex-col flex-shrink-0 tv-card" padding="lg" style={tvStyles.card}>
+          <h2 className="text-xl font-semibold mb-4 flex items-center justify-between" style={tvStyles.text}>
             מסך הוכחה
-            <span className={`text-xs font-normal text-primary px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20`}>
+            <span className="text-xs font-normal px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(74, 107, 42, 0.2)', color: '#6b8e4a', border: '1px solid rgba(74, 107, 42, 0.3)' }}>
               מצב בדיקה
             </span>
           </h2>
 
           <div className="space-y-3 mb-5 text-sm">
             <div className="flex items-center justify-between">
-              <span className={themeClasses.textMuted}>סטטוס:</span>
+              <span style={tvStyles.textMuted}>סטטוס:</span>
               <span
-                className={`font-semibold ${
-                  error
-                    ? 'text-danger'
-                    : session
-                    ? 'text-success'
-                    : themeClasses.textPrimary
-                }`}
+                className="font-semibold"
+                style={{ color: error ? '#ef4444' : session ? '#22c55e' : '#ffffff' }}
               >
                 {error
                   ? 'שגיאה'
@@ -518,36 +548,36 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className={themeClasses.textMuted}>אירוע יומן:</span>
-              <span className={`text-sm truncate max-w-[210px] ${themeClasses.textPrimary}`}>
+              <span style={tvStyles.textMuted}>אירוע יומן:</span>
+              <span className="text-sm truncate max-w-[210px]" style={tvStyles.text}>
                 {session?.calendarEvent?.summary ?? '—'}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className={themeClasses.textMuted}>מתאמן:</span>
-              <span className={`text-sm ${themeClasses.textPrimary}`}>
+              <span style={tvStyles.textMuted}>מתאמן:</span>
+              <span className="text-sm" style={tvStyles.text}>
                 {session?.trainee?.full_name ?? '—'}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className={themeClasses.textMuted}>מזהה אימון:</span>
-              <span className={`text-xs ${themeClasses.textMuted}`}>
+              <span style={tvStyles.textMuted}>מזהה אימון:</span>
+              <span className="text-xs" style={tvStyles.textMuted}>
                 {session?.workout?.id ?? '—'}
               </span>
             </div>
           </div>
 
           <div className="flex items-center justify-between mb-2">
-            <h3 className={`text-sm font-medium ${themeClasses.textPrimary}`}>יומן אירועים (TV)</h3>
-            <span className={`text-[11px] ${themeClasses.textMuted}`}>
+            <h3 className="text-sm font-medium" style={tvStyles.text}>יומן אירועים (TV)</h3>
+            <span className="text-[11px]" style={tvStyles.textMuted}>
               מציג {latestLogs.length} / {logs.length} אירועים
             </span>
           </div>
 
-          <Card variant="glass" className="flex-1 p-3 overflow-hidden" padding="none">
+          <Card variant="glass" className="flex-1 p-3 overflow-hidden tv-card" padding="none" style={tvStyles.card}>
             <div className="h-full overflow-y-auto space-y-2 pr-1">
               {latestLogs.length === 0 ? (
-                <div className={`text-xs ${themeClasses.textMuted}`}>
+                <div className="text-xs" style={tvStyles.textMuted}>
                   טרם נרשמו אירועים. המסך יציג כאן את כל מה שקורה מאחורי הקלעים (זיהוי
                   יומן, טעינת אימון, שגיאות ועוד).
                 </div>
@@ -556,18 +586,14 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                   <Card
                     key={log.id}
                     variant="glass"
-                    className="px-2.5 py-2"
+                    className="px-2.5 py-2 tv-card"
                     padding="none"
+                    style={tvStyles.card}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span
-                        className={`inline-flex items-center gap-1 text-[11px] ${
-                          log.level === 'error'
-                            ? 'text-danger'
-                            : log.level === 'warning'
-                            ? 'text-warning'
-                            : 'text-success'
-                        }`}
+                        className="inline-flex items-center gap-1 text-[11px]"
+                        style={{ color: log.level === 'error' ? '#ef4444' : log.level === 'warning' ? '#f59e0b' : '#22c55e' }}
                       >
                         {log.level === 'error'
                           ? 'שגיאה'
@@ -575,7 +601,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                           ? 'אזהרה'
                           : 'מידע'}
                       </span>
-                      <span className={`text-[10px] ${themeClasses.textMuted}`}>
+                      <span className="text-[10px]" style={tvStyles.textMuted}>
                         {new Date(log.timestamp).toLocaleTimeString('he-IL', {
                           hour: '2-digit',
                           minute: '2-digit',
@@ -583,14 +609,14 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                         })}
                       </span>
                     </div>
-                    <div className={`text-[11px] ${themeClasses.textPrimary}`}>{log.message}</div>
+                    <div className="text-[11px]" style={tvStyles.text}>{log.message}</div>
                   </Card>
                 ))
               )}
             </div>
           </Card>
 
-          <div className={`mt-4 text-[11px] ${themeClasses.textMuted} leading-relaxed`}>
+          <div className="mt-4 text-[11px] leading-relaxed" style={tvStyles.textMuted}>
             המידע המוצג כאן נועד לבדוק שהחיבור ליומן Google ולבסיס הנתונים תקין. במצב
             קהל ניתן יהיה להסתיר פאנל זה.
           </div>
@@ -610,6 +636,47 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         }
         .animate-confetti {
           animation: confetti linear forwards;
+        }
+        
+        /* TV-specific overrides to ensure white text on dark background */
+        /* This overrides the global color: #000000 !important; rule */
+        .tv-view-container,
+        .tv-view-container * {
+          color: #ffffff !important;
+        }
+        
+        .tv-view-container .text-muted-tv {
+          color: #a3a3a3 !important;
+        }
+        
+        /* Ensure proper background colors for WebOS and other TV browsers */
+        .tv-view-container {
+          background-color: #1a2e16 !important;
+        }
+        
+        .tv-view-container .tv-card {
+          background-color: #24321c !important;
+          border: 1px solid rgba(74, 107, 42, 0.3) !important;
+        }
+        
+        .tv-view-container .tv-badge-primary {
+          background-color: #4a6b2a !important;
+          color: #ffffff !important;
+        }
+        
+        /* Fix for Smart TV browsers that don't support backdrop-filter */
+        @supports not (backdrop-filter: blur(10px)) {
+          .tv-view-container .backdrop-blur-xl,
+          .tv-view-container .backdrop-blur-lg,
+          .tv-view-container .backdrop-blur-md,
+          .tv-view-container .backdrop-blur {
+            background-color: rgba(36, 50, 28, 0.98) !important;
+          }
+        }
+        
+        /* Simplified gradients for TV compatibility */
+        .tv-view-container .bg-gradient-to-br {
+          background: #4a6b2a !important;
         }
       `}</style>
     </div>
