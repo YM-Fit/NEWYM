@@ -582,7 +582,7 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       .filter((item): item is NonNullable<typeof item> => item !== null);
 
     // Separate into today and tomorrow, and sort by time
-    const now = new Date();
+    // Use the 'now' variable that was already declared at the beginning of the function
     
     const todayWorkouts = allWorkouts
       .filter(item => {
