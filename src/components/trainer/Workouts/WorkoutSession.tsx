@@ -626,6 +626,48 @@ export default function WorkoutSession({
     if (!user) return;
 
     try {
+      // If previousWorkout prop is provided, use it directly
+      if (previousWorkout && previousWorkout.workout_exercises) {
+        const loadedExercises: WorkoutExercise[] = previousWorkout.workout_exercises
+          .sort((a: any, b: any) => a.order_index - b.order_index)
+          .map((we: any) => ({
+            tempId: Date.now().toString() + Math.random(),
+            exercise: {
+              id: we.exercises.id,
+              name: we.exercises.name,
+              muscle_group_id: we.exercises.muscle_group_id,
+            },
+            sets: we.exercise_sets
+              .sort((a: any, b: any) => a.set_number - b.set_number)
+              .map((set: any, index: number) => ({
+                id: `temp-${Date.now()}-${index}`,
+                set_number: set.set_number,
+                weight: set.weight,
+                reps: set.reps,
+                rpe: set.rpe,
+                set_type: set.set_type,
+                failure: set.failure || false,
+                superset_exercise_id: set.superset_exercise_id,
+                superset_weight: set.superset_weight,
+                superset_reps: set.superset_reps,
+                superset_rpe: set.superset_rpe,
+                superset_equipment_id: set.superset_equipment_id,
+                superset_dropset_weight: set.superset_dropset_weight,
+                superset_dropset_reps: set.superset_dropset_reps,
+                dropset_weight: set.dropset_weight,
+                dropset_reps: set.dropset_reps,
+                equipment_id: set.equipment_id,
+                equipment: null,
+                superset_equipment: null,
+              })),
+          }));
+
+        setExercises(loadedExercises);
+        toast.success('האימון נטען בהצלחה!');
+        return;
+      }
+
+      // Otherwise, load from database
       // First get all workouts for this trainer and trainee
       const { data: workouts, error: workoutsError } = await supabase
         .from('workouts')

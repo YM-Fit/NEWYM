@@ -79,6 +79,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const [activeView, setActiveView] = useState('dashboard');
   const [selectedTrainee, setSelectedTrainee] = useState<Trainee | null>(null);
   const [selectedWorkout, setSelectedWorkout] = useState<any | null>(null);
+  const [previousWorkoutForNew, setPreviousWorkoutForNew] = useState<any | null>(null);
   const [editingMeasurement, setEditingMeasurement] = useState<any | null>(null);
   const [selectedPairMember, setSelectedPairMember] = useState<'member_1' | 'member_2' | null>(null);
   const [trainees, setTrainees] = useState<Trainee[]>([]);
@@ -719,6 +720,59 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
     }
   };
 
+  const handleNewWorkoutFromExisting = async (workout: any) => {
+    if (!selectedTrainee) return;
+
+    const { data: workoutExercises } = await supabase
+      .from('workout_exercises')
+      .select(`
+        id,
+        exercise_id,
+        order_index,
+        exercises (
+          id,
+          name,
+          muscle_group_id
+        ),
+        exercise_sets (
+          id,
+          set_number,
+          weight,
+          reps,
+          rpe,
+          set_type,
+          superset_exercise_id,
+          superset_weight,
+          superset_reps,
+          dropset_weight,
+          dropset_reps
+        )
+      `)
+      .eq('workout_id', workout.id)
+      .order('order_index', { ascending: true });
+
+    if (workoutExercises) {
+      const formattedWorkout = {
+        id: workout.id,
+        date: workout.date,
+        workout_exercises: workoutExercises.map((we) => ({
+          id: we.id,
+          exercise_id: we.exercise_id,
+          order_index: we.order_index,
+          exercises: we.exercises,
+          exercise_sets: we.exercise_sets,
+        })),
+      };
+
+      setPreviousWorkoutForNew(formattedWorkout);
+      if (selectedTrainee.is_pair) {
+        setActiveView('workout-type-selection');
+      } else {
+        setActiveView('workout-session');
+      }
+    }
+  };
+
   const handleDuplicateWorkout = async (workout: any) => {
     if (!selectedTrainee || !user) return;
 
@@ -907,6 +961,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             onMarkSelfWeightsSeen={markSelfWeightsSeen}
             onViewMentalTools={() => setActiveView('mental-tools')}
             onViewCardio={() => setActiveView('cardio-manager')}
+            onDuplicateWorkout={handleNewWorkoutFromExisting}
           />
           </Suspense>
         ) : null;
@@ -988,6 +1043,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
               onSave={async (workout) => {
                 await loadWorkouts(selectedTrainee.id);
                 setSelectedWorkout(null);
+                setPreviousWorkoutForNew(null);
                 setSelectedPairMember(null);
                 if (selectedWorkout) {
                   setActiveView('workouts-list');
@@ -995,7 +1051,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
                   setActiveView('trainee-profile');
                 }
               }}
-              previousWorkout={undefined}
+              previousWorkout={previousWorkoutForNew || undefined}
               editingWorkout={
                 selectedWorkout
                   ? {

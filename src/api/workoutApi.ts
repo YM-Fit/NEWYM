@@ -368,6 +368,188 @@ export async function syncWorkoutToCalendar(
 }
 
 /**
+ * Get scheduled workouts for today and tomorrow
+ * Includes workouts from both local database and Google Calendar sync
+ */
+export async function getScheduledWorkoutsForTodayAndTomorrow(
+  trainerId: string,
+  traineeIds: string[]
+): Promise<ApiResponse<{
+  today: Array<{
+    trainee: any;
+    workout: any;
+    isFromGoogle?: boolean;
+  }>;
+  tomorrow: Array<{
+    trainee: any;
+    workout: any;
+    isFromGoogle?: boolean;
+  }>;
+}>> {
+  // Rate limiting: 30 requests per minute per trainer
+  const rateLimitKey = `getScheduledWorkoutsForTodayAndTomorrow:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 30, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
+  try {
+    if (!traineeIds || traineeIds.length === 0) {
+      return { data: { today: [], tomorrow: [] }, success: true };
+    }
+
+    // Calculate date ranges for today and tomorrow
+    const now = new Date();
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayAfterTomorrow = new Date(tomorrow);
+    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
+
+    const todayStr = today.toISOString();
+    const tomorrowStr = tomorrow.toISOString();
+    const dayAfterTomorrowStr = dayAfterTomorrow.toISOString();
+
+    // Get workouts from workouts table (includes both local and synced from Google)
+    // We need workouts that are either:
+    // 1. Not completed (scheduled) OR
+    // 2. Synced from Google Calendar (even if completed, they might be future events)
+    const { data: workoutsData, error: workoutsError } = await supabase
+      .from('workouts')
+      .select(`
+        id,
+        workout_date,
+        workout_type,
+        is_completed,
+        notes,
+        created_at,
+        trainer_id
+      `)
+      .eq('trainer_id', trainerId)
+      .gte('workout_date', todayStr)
+      .lt('workout_date', dayAfterTomorrowStr)
+      .order('workout_date', { ascending: true });
+
+    if (workoutsError) {
+      return { error: workoutsError.message };
+    }
+
+    if (!workoutsData || workoutsData.length === 0) {
+      return { data: { today: [], tomorrow: [] }, success: true };
+    }
+
+    const workoutIds = workoutsData.map(w => w.id);
+
+    // Get workout_trainees for these workouts, filtered by our trainee IDs
+    const { data: workoutTraineesData, error: wtError } = await supabase
+      .from('workout_trainees')
+      .select('trainee_id, workout_id')
+      .in('workout_id', workoutIds)
+      .in('trainee_id', traineeIds);
+
+    if (wtError) {
+      return { error: wtError.message };
+    }
+
+    if (!workoutTraineesData || workoutTraineesData.length === 0) {
+      return { data: { today: [], tomorrow: [] }, success: true };
+    }
+
+    // Get unique trainee IDs from the results
+    const traineeIdsInWorkouts = [...new Set(workoutTraineesData.map(wt => wt.trainee_id))];
+
+    // Fetch trainee details
+    const { data: traineesData, error: traineesError } = await supabase
+      .from('trainees')
+      .select('id, full_name, gender, phone, email, google_calendar_client_id, is_pair, pair_name_1, pair_name_2')
+      .in('id', traineeIdsInWorkouts);
+
+    if (traineesError) {
+      return { error: traineesError.message };
+    }
+
+    // Check which workouts are synced from Google Calendar
+    const { data: googleSyncData } = await supabase
+      .from('google_calendar_sync')
+      .select('workout_id, sync_direction')
+      .in('workout_id', workoutIds)
+      .eq('sync_status', 'synced');
+
+    const googleSyncedWorkoutIds = new Set(
+      (googleSyncData || [])
+        .filter(sync => sync.sync_direction === 'from_google' || sync.sync_direction === 'bidirectional')
+        .map(sync => sync.workout_id)
+    );
+
+    // Create maps for quick lookup
+    const traineesMap = new Map((traineesData || []).map(t => [t.id, t]));
+    const workoutsMap = new Map(workoutsData.map(w => [w.id, w]));
+
+    // Build the data structure - combine workout_trainees with workouts and trainees
+    const allWorkouts = workoutTraineesData
+      .map(wt => {
+        const workout = workoutsMap.get(wt.workout_id);
+        const trainee = traineesMap.get(wt.trainee_id);
+        
+        if (!workout || !trainee) return null;
+
+        const workoutDate = new Date(workout.workout_date);
+        const isFromGoogle = googleSyncedWorkoutIds.has(workout.id);
+
+        return {
+          trainee,
+          workout: {
+            id: workout.id,
+            workout_date: workout.workout_date,
+            workout_type: workout.workout_type,
+            is_completed: workout.is_completed,
+            notes: workout.notes,
+            isFromGoogle
+          },
+          workoutDate
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+
+    // Separate into today and tomorrow
+    const todayWorkouts = allWorkouts
+      .filter(item => {
+        const itemDate = new Date(item.workoutDate);
+        itemDate.setHours(0, 0, 0, 0);
+        return itemDate.getTime() === today.getTime();
+      })
+      .map(item => ({
+        trainee: item.trainee,
+        workout: item.workout,
+        isFromGoogle: item.workout.isFromGoogle
+      }));
+
+    const tomorrowWorkouts = allWorkouts
+      .filter(item => {
+        const itemDate = new Date(item.workoutDate);
+        itemDate.setHours(0, 0, 0, 0);
+        return itemDate.getTime() === tomorrow.getTime();
+      })
+      .map(item => ({
+        trainee: item.trainee,
+        workout: item.workout,
+        isFromGoogle: item.workout.isFromGoogle
+      }));
+
+    return {
+      data: {
+        today: todayWorkouts,
+        tomorrow: tomorrowWorkouts
+      },
+      success: true
+    };
+  } catch (err: any) {
+    return { error: err.message || 'שגיאה בטעינת אימונים מתוזמנים' };
+  }
+}
+
+/**
  * Get workouts from Google Calendar
  */
 export async function getWorkoutsFromCalendar(

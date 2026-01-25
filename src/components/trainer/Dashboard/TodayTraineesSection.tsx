@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Dumbbell, ClipboardList, UtensilsCrossed, Clock, Users, Calendar, AlertCircle, Scale } from 'lucide-react';
+import { Dumbbell, ClipboardList, UtensilsCrossed, Clock, Users, Calendar, AlertCircle, Scale, CalendarDays, CalendarCheck } from 'lucide-react';
 import { Trainee } from '../../../types';
 import { supabase } from '../../../lib/supabase';
 import { logger } from '../../../utils/logger';
 import { LoadingSpinner } from '../../ui/LoadingSpinner';
+import { getScheduledWorkoutsForTodayAndTomorrow } from '../../../api/workoutApi';
+import { useAuth } from '../../../contexts/AuthContext';
 
 export interface TodayTrainee {
   trainee: Trainee;
@@ -14,6 +16,7 @@ export interface TodayTrainee {
     is_completed: boolean;
     workout_time?: string;
     notes?: string;
+    isFromGoogle?: boolean;
   };
   daysSinceLastWorkout?: number | null;
   unseenWeightsCount?: number;
@@ -68,7 +71,9 @@ export default function TodayTraineesSection({
   onViewWorkoutPlan,
   onViewMealPlan
 }: TodayTraineesSectionProps) {
+  const { user } = useAuth();
   const [todayTrainees, setTodayTrainees] = useState<TodayTrainee[]>([]);
+  const [tomorrowTrainees, setTomorrowTrainees] = useState<TodayTrainee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isLoadingRef = useRef(false);
@@ -85,229 +90,192 @@ export default function TodayTraineesSection({
       return;
     }
 
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     isLoadingRef.current = true;
     setLoading(true);
     setError(null);
     
     try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      
-      // Use full ISO timestamp strings for timestamptz comparison
-      const todayStr = today.toISOString();
-      const tomorrowStr = tomorrow.toISOString();
-      
       const traineeIds = trainees.map(t => t.id);
       
       if (traineeIds.length === 0) {
         setTodayTrainees([]);
+        setTomorrowTrainees([]);
         setLoading(false);
         isLoadingRef.current = false;
         return;
       }
 
       // Get trainer_id from the first trainee (all trainees belong to the same trainer)
-      const trainerId = trainees[0]?.trainer_id;
+      const trainerId = trainees[0]?.trainer_id || user.id;
       if (!trainerId) {
         setTodayTrainees([]);
+        setTomorrowTrainees([]);
         setLoading(false);
         isLoadingRef.current = false;
         return;
       }
 
-      // First, get today's workouts for the trainer
-      let workoutsData, workoutsError;
-      try {
-        const result = await supabase
-          .from('workouts')
-          .select('id, workout_date, workout_type, is_completed, notes, created_at, trainer_id')
-          .eq('trainer_id', trainerId)
-          .gte('workout_date', todayStr)
-          .lt('workout_date', tomorrowStr)
-          .order('workout_date', { ascending: true });
-        workoutsData = result.data;
-        workoutsError = result.error;
-      } catch (networkErr) {
-        // Network error - likely WebContainer limitation, fail silently
+      // Use the new unified API function
+      const result = await getScheduledWorkoutsForTodayAndTomorrow(trainerId, traineeIds);
+      
+      if (result.error) {
+        logger.debug('Error loading scheduled workouts:', result.error, 'TodayTraineesSection');
         setTodayTrainees([]);
+        setTomorrowTrainees([]);
         setLoading(false);
         isLoadingRef.current = false;
         return;
       }
 
-      if (workoutsError) {
-        // Log but don't crash - show empty state
-        logger.debug('Workouts query returned error:', workoutsError, 'TodayTraineesSection');
+      if (!result.data) {
         setTodayTrainees([]);
+        setTomorrowTrainees([]);
         setLoading(false);
         isLoadingRef.current = false;
         return;
       }
 
-      if (!workoutsData || workoutsData.length === 0) {
-        setTodayTrainees([]);
-        setLoading(false);
-        isLoadingRef.current = false;
-        return;
-      }
-
-      const workoutIds = workoutsData.map((w: any) => w.id);
-
-      // Get workout_trainees for these workouts, filtered by our trainee IDs
-      let workoutTraineesData, wtError;
-      try {
-        const result = await supabase
-          .from('workout_trainees')
-          .select('trainee_id, workout_id')
-          .in('workout_id', workoutIds)
-          .in('trainee_id', traineeIds);
-        workoutTraineesData = result.data;
-        wtError = result.error;
-      } catch (networkErr) {
-        setTodayTrainees([]);
-        setLoading(false);
-        isLoadingRef.current = false;
-        return;
-      }
-
-      if (wtError) {
-        logger.debug('Workout_trainees query returned error:', wtError, 'TodayTraineesSection');
-        setTodayTrainees([]);
-        setLoading(false);
-        isLoadingRef.current = false;
-        return;
-      }
-
-      if (!workoutTraineesData || workoutTraineesData.length === 0) {
-        setTodayTrainees([]);
-        setLoading(false);
-        isLoadingRef.current = false;
-        return;
-      }
-
-      // Get unique trainee IDs from the results
-      const traineeIdsInWorkouts = [...new Set(workoutTraineesData.map((wt: any) => wt.trainee_id))];
-
-      // Fetch trainee details separately to avoid RLS issues with nested joins
-      let traineesData, traineesError;
-      try {
-        const result = await supabase
-          .from('trainees')
-          .select('id, full_name, gender, phone, email, google_calendar_client_id, is_pair, pair_name_1, pair_name_2')
-          .in('id', traineeIdsInWorkouts);
-        traineesData = result.data;
-        traineesError = result.error;
-      } catch (networkErr) {
-        setTodayTrainees([]);
-        setLoading(false);
-        isLoadingRef.current = false;
-        return;
-      }
-
-      if (traineesError) {
-        logger.debug('Trainees query returned error:', traineesError, 'TodayTraineesSection');
-        setTodayTrainees([]);
-        setLoading(false);
-        isLoadingRef.current = false;
-        return;
-      }
-
-      // Create maps for quick lookup
-      const traineesMap = new Map((traineesData || []).map((t: any) => [t.id, t]));
-      const workoutsMap = new Map(workoutsData.map((w: any) => [w.id, w]));
-
-      // Build the data structure - combine workout_trainees with workouts and trainees
-      const data = workoutTraineesData
-        .map((wt: any) => ({
-          trainee_id: wt.trainee_id,
-          workouts: workoutsMap.get(wt.workout_id),
-          trainees: traineesMap.get(wt.trainee_id)
-        }))
-        .filter((item: any) => item.trainees && item.workouts); // Filter out any missing data
-
-      // עיבוד הנתונים עם helper functions
-      const processedTrainees = await Promise.all(
-        (data || [])
-          .filter((item: any) => item.trainees && item.workouts) // Safety check
-          .map(async (item: any) => {
-            const trainee = item.trainees;
-            const workout = item.workouts;
-            
-            if (!trainee || !workout || !trainee.id || !workout.id) {
-              return null;
-            }
-            
-            // חישוב ימים מאז אימון אחרון
-            const lastWorkout = await getLastWorkoutDate(trainee.id);
-            const daysSinceLastWorkout = lastWorkout 
-              ? Math.floor((new Date().getTime() - new Date(lastWorkout).getTime()) / (1000 * 60 * 60 * 24))
-              : null;
-            
-            // חישוב מספר שקילות חדשות
-            const unseenWeightsCount = await getUnseenWeightsCount(trainee.id);
-            
-            // חילוץ זמן האימון (אם workout_date הוא timestamptz)
-            let workoutTime: string | undefined;
-            if (workout.workout_date && typeof workout.workout_date === 'string' && workout.workout_date.includes('T')) {
-              try {
-                const workoutDate = new Date(workout.workout_date);
-                if (!isNaN(workoutDate.getTime())) {
-                  workoutTime = workoutDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-                }
-              } catch (e) {
-                // Ignore date parsing errors
+      // Process today's workouts
+      const processedToday = await Promise.all(
+        result.data.today.map(async (item) => {
+          const trainee = item.trainee;
+          const workout = item.workout;
+          
+          if (!trainee || !workout) {
+            return null;
+          }
+          
+          // חישוב ימים מאז אימון אחרון
+          const lastWorkout = await getLastWorkoutDate(trainee.id);
+          const daysSinceLastWorkout = lastWorkout 
+            ? Math.floor((new Date().getTime() - new Date(lastWorkout).getTime()) / (1000 * 60 * 60 * 24))
+            : null;
+          
+          // חישוב מספר שקילות חדשות
+          const unseenWeightsCount = await getUnseenWeightsCount(trainee.id);
+          
+          // חילוץ זמן האימון
+          let workoutTime: string | undefined;
+          if (workout.workout_date && typeof workout.workout_date === 'string') {
+            try {
+              const workoutDate = new Date(workout.workout_date);
+              if (!isNaN(workoutDate.getTime())) {
+                workoutTime = workoutDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
               }
+            } catch (e) {
+              // Ignore date parsing errors
             }
-            
-            // קביעת סטטוס
-            let status: 'scheduled' | 'completed' | 'upcoming' = 'scheduled';
-            if (workout.is_completed) {
-              status = 'completed';
-            } else if (workout.workout_date) {
-              try {
-                const workoutDate = new Date(workout.workout_date);
-                const now = new Date();
-                if (!isNaN(workoutDate.getTime()) && workoutDate > now) {
-                  status = 'upcoming';
-                }
-              } catch (e) {
-                // Ignore date parsing errors, default to 'scheduled'
+          }
+          
+          // קביעת סטטוס
+          let status: 'scheduled' | 'completed' | 'upcoming' = 'scheduled';
+          if (workout.is_completed) {
+            status = 'completed';
+          } else if (workout.workout_date) {
+            try {
+              const workoutDate = new Date(workout.workout_date);
+              const now = new Date();
+              if (!isNaN(workoutDate.getTime()) && workoutDate > now) {
+                status = 'upcoming';
               }
+            } catch (e) {
+              // Ignore date parsing errors, default to 'scheduled'
             }
-            
-            return {
-              trainee: trainee as Trainee,
-              workout: {
-                id: workout.id,
-                workout_date: workout.workout_date,
-                workout_type: workout.workout_type,
-                is_completed: workout.is_completed,
-                workout_time: workoutTime,
-                notes: workout.notes
-              },
-              daysSinceLastWorkout,
-              unseenWeightsCount,
-              status
-            };
-          })
+          }
+          
+          return {
+            trainee: trainee as Trainee,
+            workout: {
+              id: workout.id,
+              workout_date: workout.workout_date,
+              workout_type: workout.workout_type,
+              is_completed: workout.is_completed,
+              workout_time: workoutTime,
+              notes: workout.notes,
+              isFromGoogle: workout.isFromGoogle || false
+            },
+            daysSinceLastWorkout,
+            unseenWeightsCount,
+            status
+          };
+        })
+      );
+
+      // Process tomorrow's workouts
+      const processedTomorrow = await Promise.all(
+        result.data.tomorrow.map(async (item) => {
+          const trainee = item.trainee;
+          const workout = item.workout;
+          
+          if (!trainee || !workout) {
+            return null;
+          }
+          
+          // חישוב ימים מאז אימון אחרון
+          const lastWorkout = await getLastWorkoutDate(trainee.id);
+          const daysSinceLastWorkout = lastWorkout 
+            ? Math.floor((new Date().getTime() - new Date(lastWorkout).getTime()) / (1000 * 60 * 60 * 24))
+            : null;
+          
+          // חישוב מספר שקילות חדשות
+          const unseenWeightsCount = await getUnseenWeightsCount(trainee.id);
+          
+          // חילוץ זמן האימון
+          let workoutTime: string | undefined;
+          if (workout.workout_date && typeof workout.workout_date === 'string') {
+            try {
+              const workoutDate = new Date(workout.workout_date);
+              if (!isNaN(workoutDate.getTime())) {
+                workoutTime = workoutDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+              }
+            } catch (e) {
+              // Ignore date parsing errors
+            }
+          }
+          
+          // קביעת סטטוס - מחר תמיד "upcoming"
+          const status: 'scheduled' | 'completed' | 'upcoming' = workout.is_completed ? 'completed' : 'upcoming';
+          
+          return {
+            trainee: trainee as Trainee,
+            workout: {
+              id: workout.id,
+              workout_date: workout.workout_date,
+              workout_type: workout.workout_type,
+              is_completed: workout.is_completed,
+              workout_time: workoutTime,
+              notes: workout.notes,
+              isFromGoogle: workout.isFromGoogle || false
+            },
+            daysSinceLastWorkout,
+            unseenWeightsCount,
+            status
+          };
+        })
       );
       
-      // Filter out any null values from processing
-      const validTrainees = processedTrainees.filter((t): t is TodayTrainee => t !== null);
+      // Filter out any null values
+      const validToday = processedToday.filter((t): t is TodayTrainee => t !== null);
+      const validTomorrow = processedTomorrow.filter((t): t is TodayTrainee => t !== null);
       
-      setTodayTrainees(validTrainees);
+      setTodayTrainees(validToday);
+      setTomorrowTrainees(validTomorrow);
     } catch (err: any) {
       // Only log as debug to avoid console spam - network errors are expected in some environments
-      logger.debug('Error loading today trainees:', err, 'TodayTraineesSection');
+      logger.debug('Error loading scheduled workouts:', err, 'TodayTraineesSection');
       // Don't show error message - just show empty state
       setTodayTrainees([]);
+      setTomorrowTrainees([]);
     } finally {
       setLoading(false);
       isLoadingRef.current = false;
     }
-  }, [trainees]);
+  }, [trainees, user]);
 
   useEffect(() => {
     // Skip if already loading or if trainee IDs haven't changed
@@ -345,97 +313,167 @@ export default function TodayTraineesSection({
     );
   }
 
-  if (todayTrainees.length === 0) {
+  const hasAnyWorkouts = todayTrainees.length > 0 || tomorrowTrainees.length > 0;
+
+  if (!hasAnyWorkouts && !loading) {
     return (
       <div className="premium-card-static p-8 md:p-10 text-center border border-primary/20">
         <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/20 to-primary-dark/10 flex items-center justify-center">
           <Calendar className="w-8 h-8 text-primary" />
         </div>
-        <h3 className="text-xl font-bold text-foreground mb-3">אין אימונים מתוזמנים להיום</h3>
+        <h3 className="text-xl font-bold text-foreground mb-3">אין אימונים מתוזמנים להיום ומחר</h3>
         <p className="text-secondary mb-6 max-w-md mx-auto">
-          אין מתאמנים עם אימון מתוזמן להיום. תוכל להוסיף אימון חדש מהרשימה הכללית.
+          אין מתאמנים עם אימון מתוזמן להיום או למחר. תוכל להוסיף אימון חדש מהרשימה הכללית.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="premium-card-static p-6 md:p-8 lg:p-10 relative overflow-hidden
-                    border-2 border-primary/10 hover:border-primary/20 transition-all duration-500">
-      {/* Enhanced Background gradient effects */}
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-primary/10 via-emerald-700/5 to-transparent 
-                      rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 animate-pulse" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-gradient-to-tl from-emerald-700/10 via-primary/5 to-transparent 
-                      rounded-full blur-3xl translate-x-1/2 translate-y-1/2 animate-pulse" 
-           style={{ animationDelay: '1s' }} />
-      
-      {/* Animated border glow */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 
-                      opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-      
-      <div className="relative z-10">
-        {/* Enhanced Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          <div className="flex-1">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="relative">
-                <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl animate-pulse" />
-                <div className="relative p-3 rounded-2xl bg-gradient-to-br from-primary/30 via-primary/20 to-emerald-700/20 
-                              border-2 border-primary/30 shadow-lg shadow-primary/20">
-                  <Calendar className="w-7 h-7 text-primary" />
+    <div className="space-y-6 md:space-y-8">
+      {/* Today's Trainees Section */}
+      <div className="premium-card-static p-6 md:p-8 lg:p-10 relative overflow-hidden
+                      border-2 border-primary/10 hover:border-primary/20 transition-all duration-500">
+        {/* Enhanced Background gradient effects */}
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-primary/10 via-emerald-700/5 to-transparent 
+                        rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-gradient-to-tl from-emerald-700/10 via-primary/5 to-transparent 
+                        rounded-full blur-3xl translate-x-1/2 translate-y-1/2 animate-pulse" 
+             style={{ animationDelay: '1s' }} />
+        
+        {/* Animated border glow */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 
+                        opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+        
+        <div className="relative z-10">
+          {/* Enhanced Header */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+            <div className="flex-1">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl animate-pulse" />
+                  <div className="relative p-3 rounded-2xl bg-gradient-to-br from-primary/30 via-primary/20 to-emerald-700/20 
+                                border-2 border-primary/30 shadow-lg shadow-primary/20">
+                    <Calendar className="w-7 h-7 text-primary" />
+                  </div>
+                </div>
+                <div>
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight mb-1
+                              bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+                    מתאמנים של היום
+                  </h2>
+                  <p className="text-sm md:text-base text-secondary/80 font-medium">
+                    כל המתאמנים עם אימון מתוזמן להיום • ניהול מהיר ונוח
+                  </p>
                 </div>
               </div>
-              <div>
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight mb-1
-                            bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
-                  מתאמנים של היום
-                </h2>
-                <p className="text-sm md:text-base text-secondary/80 font-medium">
-                  כל המתאמנים עם אימון מתוזמן להיום • ניהול מהיר ונוח
-                </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="px-5 py-3 rounded-2xl bg-gradient-to-r from-primary/25 via-emerald-700/20 to-primary/25 
+                            border-2 border-primary/30 shadow-lg shadow-primary/10
+                            hover:scale-105 transition-transform duration-300">
+                <span className="text-2xl md:text-3xl font-extrabold text-primary">{todayTrainees.length}</span>
+                <span className="text-sm md:text-base text-secondary/80 font-semibold mr-2">מתאמנים</span>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="px-5 py-3 rounded-2xl bg-gradient-to-r from-primary/25 via-emerald-700/20 to-primary/25 
-                          border-2 border-primary/30 shadow-lg shadow-primary/10
-                          hover:scale-105 transition-transform duration-300">
-              <span className="text-2xl md:text-3xl font-extrabold text-primary">{todayTrainees.length}</span>
-              <span className="text-sm md:text-base text-secondary/80 font-semibold mr-2">מתאמנים</span>
+
+          {/* Trainees Grid */}
+          {todayTrainees.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 lg:gap-8">
+              {todayTrainees.map((item, index) => (
+                <TraineeCardToday
+                  key={`${item.trainee.id}-${item.workout.id}`}
+                  todayTrainee={item}
+                  index={index}
+                  onNewWorkout={onNewWorkout}
+                  onViewWorkoutPlan={onViewWorkoutPlan}
+                  onViewMealPlan={onViewMealPlan}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="relative w-20 h-20 mx-auto mb-4">
+                <div className="absolute inset-0 bg-primary/20 rounded-3xl blur-2xl animate-pulse" />
+                <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/30 to-primary-dark/20 
+                              flex items-center justify-center border-2 border-primary/30 shadow-xl">
+                  <Calendar className="w-10 h-10 text-primary" />
+                </div>
+              </div>
+              <h3 className="text-lg md:text-xl font-bold text-foreground mb-2">אין אימונים מתוזמנים להיום</h3>
+              <p className="text-sm md:text-base text-secondary/80 max-w-md mx-auto">
+                תוכל להוסיף אימון חדש מהרשימה הכללית או לתזמן אימונים מראש
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Tomorrow's Trainees Section */}
+      {tomorrowTrainees.length > 0 && (
+        <div className="premium-card-static p-6 md:p-8 lg:p-10 relative overflow-hidden
+                        border-2 border-warning/10 hover:border-warning/20 transition-all duration-500">
+          {/* Enhanced Background gradient effects */}
+          <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-warning/10 via-amber-500/5 to-transparent 
+                          rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+          <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-gradient-to-tl from-amber-500/10 via-warning/5 to-transparent 
+                          rounded-full blur-3xl translate-x-1/2 translate-y-1/2 animate-pulse" 
+               style={{ animationDelay: '1.5s' }} />
+          
+          {/* Animated border glow */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-warning/0 via-warning/5 to-warning/0 
+                          opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+          
+          <div className="relative z-10">
+            {/* Enhanced Header */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+              <div className="flex-1">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-warning/20 rounded-2xl blur-xl animate-pulse" />
+                    <div className="relative p-3 rounded-2xl bg-gradient-to-br from-warning/30 via-warning/20 to-amber-500/20 
+                                  border-2 border-warning/30 shadow-lg shadow-warning/20">
+                      <CalendarDays className="w-7 h-7 text-warning" />
+                    </div>
+                  </div>
+                  <div>
+                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight mb-1
+                                bg-gradient-to-r from-foreground to-warning bg-clip-text text-transparent">
+                      מתאמנים של מחר
+                    </h2>
+                    <p className="text-sm md:text-base text-secondary/80 font-medium">
+                      כל המתאמנים עם אימון מתוזמן למחר • תכנון מראש
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="px-5 py-3 rounded-2xl bg-gradient-to-r from-warning/25 via-amber-500/20 to-warning/25 
+                              border-2 border-warning/30 shadow-lg shadow-warning/10
+                              hover:scale-105 transition-transform duration-300">
+                  <span className="text-2xl md:text-3xl font-extrabold text-warning">{tomorrowTrainees.length}</span>
+                  <span className="text-sm md:text-base text-secondary/80 font-semibold mr-2">מתאמנים</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Trainees Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 lg:gap-8">
+              {tomorrowTrainees.map((item, index) => (
+                <TraineeCardToday
+                  key={`${item.trainee.id}-${item.workout.id}-tomorrow`}
+                  todayTrainee={item}
+                  index={index}
+                  onNewWorkout={onNewWorkout}
+                  onViewWorkoutPlan={onViewWorkoutPlan}
+                  onViewMealPlan={onViewMealPlan}
+                />
+              ))}
             </div>
           </div>
         </div>
-
-        {/* Trainees Grid */}
-        {todayTrainees.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 lg:gap-8">
-            {todayTrainees.map((item, index) => (
-              <TraineeCardToday
-                key={`${item.trainee.id}-${item.workout.id}`}
-                todayTrainee={item}
-                index={index}
-                onNewWorkout={onNewWorkout}
-                onViewWorkoutPlan={onViewWorkoutPlan}
-                onViewMealPlan={onViewMealPlan}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16">
-            <div className="relative w-24 h-24 mx-auto mb-6">
-              <div className="absolute inset-0 bg-primary/20 rounded-3xl blur-2xl animate-pulse" />
-              <div className="relative w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/30 to-primary-dark/20 
-                            flex items-center justify-center border-2 border-primary/30 shadow-xl">
-                <Calendar className="w-12 h-12 text-primary" />
-              </div>
-            </div>
-            <h3 className="text-xl md:text-2xl font-bold text-foreground mb-3">אין אימונים מתוזמנים להיום</h3>
-            <p className="text-sm md:text-base text-secondary/80 max-w-md mx-auto">
-              תוכל להוסיף אימון חדש מהרשימה הכללית או לתזמן אימונים מראש
-            </p>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
@@ -558,6 +596,18 @@ function TraineeCardToday({
                    status === 'scheduled' ? '📅 מתוזמן' :
                    '⏰ מתקרב'}
                 </span>
+                {workout.isFromGoogle && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg 
+                                bg-info/15 border border-info/30
+                                group-hover:bg-info/20 group-hover:border-info/40
+                                transition-all duration-200"
+                       title="מסונכרן מיומן גוגל">
+                    <CalendarCheck className="w-3.5 h-3.5 text-info" />
+                    <span className="text-xs sm:text-sm font-semibold text-info">
+                      גוגל
+                    </span>
+                  </div>
+                )}
                 {workout.workout_time && (
                   <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg 
                                 bg-surface/60 border border-border/20

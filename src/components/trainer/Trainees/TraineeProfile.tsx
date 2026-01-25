@@ -1,4 +1,4 @@
-import { ArrowRight, CreditCard as Edit, Calendar, Scale, BarChart3, User, Phone, Mail, Trash2, TrendingUp, ClipboardList, UtensilsCrossed, Key, Home, CheckCircle, Brain, BookOpen, Calculator, Sparkles, Users, Activity, History, FileText, CalendarDays, Bell, TrendingDown } from 'lucide-react';
+import { ArrowRight, CreditCard as Edit, Calendar, Scale, BarChart3, User, Phone, Mail, Trash2, TrendingUp, ClipboardList, UtensilsCrossed, Key, Home, CheckCircle, Brain, BookOpen, Calculator, Sparkles, Users, Activity, History, FileText, CalendarDays, Bell, TrendingDown, Copy } from 'lucide-react';
 import { Trainee, BodyMeasurement, Workout } from '../../../types';
 import React, { useState } from 'react';
 import TDEECalculator from '../Tools/TDEECalculator';
@@ -38,6 +38,7 @@ interface TraineeProfileProps {
   onMarkSelfWeightsSeen?: () => void;
   onViewMentalTools?: () => void;
   onViewCardio?: () => void;
+  onDuplicateWorkout?: (workout: Workout) => void;
 }
 
 type TabType = 'overview' | 'workouts' | 'measurements' | 'plans' | 'tools';
@@ -61,7 +62,8 @@ export default function TraineeProfile({
   onViewTraineeAccess,
   onMarkSelfWeightsSeen,
   onViewMentalTools,
-  onViewCardio
+  onViewCardio,
+  onDuplicateWorkout
 }: TraineeProfileProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [showTDEE, setShowTDEE] = useState(false);
@@ -583,18 +585,33 @@ export default function TraineeProfile({
                         }`}
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <div>
-                          <p className="font-medium text-foreground flex items-center gap-2">
-                            {new Date(workout.date).toLocaleDateString('he-IL')}
-                            {workout.syncedFromGoogle && (
-                              <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">יומן</span>
-                            )}
-                          </p>
-                          <p className="text-sm text-muted">
-                            {workout.syncedFromGoogle && workout.exercises.length === 0 
-                              ? 'אימון מהיומן' 
-                              : `${workout.exercises.length} תרגילים`}
-                          </p>
+                        <div className="flex items-center gap-3 flex-1">
+                          {onDuplicateWorkout && workout.exercises.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDuplicateWorkout(workout);
+                              }}
+                              className="p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-all border border-emerald-500/20 hover:border-emerald-500/40"
+                              title="פתח אימון חדש על בסיס אימון זה"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </button>
+                          )}
+                          <div className="flex-1">
+                            <p className="font-medium text-foreground flex items-center gap-2">
+                              {new Date(workout.date).toLocaleDateString('he-IL')}
+                              {workout.syncedFromGoogle && (
+                                <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">יומן</span>
+                              )}
+                            </p>
+                            <p className="text-sm text-muted">
+                              {workout.syncedFromGoogle && workout.exercises.length === 0 
+                                ? 'אימון מהיומן' 
+                                : `${workout.exercises.length} תרגילים`}
+                            </p>
+                          </div>
                         </div>
                         <div className="text-left">
                           {workout.syncedFromGoogle && workout.totalVolume === 0 ? (
