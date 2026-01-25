@@ -171,7 +171,12 @@ function AppContent() {
     // Register Service Worker for caching
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch((error) => {
-        console.warn('[Service Worker] Failed to register:', error);
+        // Only log service worker errors in development, and only if not on StackBlitz
+        const isStackBlitz = error?.message?.includes('StackBlitz') || 
+                            window.location.hostname.includes('stackblitz');
+        if (isDev && !isStackBlitz) {
+          console.warn('[Service Worker] Failed to register:', error);
+        }
       });
     }
 

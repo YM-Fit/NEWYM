@@ -51,7 +51,10 @@ const errorLogCache = new Map<string, number>();
 const ERROR_CACHE_TIME = 5000; // Don't log same error within 5 seconds
 
 function getErrorCacheKey(error: PostgrestError, context: string): string {
-  return `${context}:${error.code || 'NO_CODE'}:${error.message.substring(0, 50)}`;
+  // Include error ID if present (Supabase sometimes includes error IDs in the format: project:session:timestamp:sequence)
+  const errorIdMatch = error.message?.match(/([a-f0-9]{32}:[a-zA-Z0-9]+:\d+:\d+)/);
+  const errorId = errorIdMatch ? errorIdMatch[1] : '';
+  return `${context}:${error.code || 'NO_CODE'}:${errorId || error.message?.substring(0, 50) || 'UNKNOWN'}`;
 }
 
 /**
@@ -113,12 +116,17 @@ export function logSupabaseError(
     return;
   }
   
+  // Extract error ID if present in the error message
+  const errorIdMatch = error.message?.match(/([a-f0-9]{32}:[a-zA-Z0-9]+:\d+:\d+)/);
+  const errorId = errorIdMatch ? errorIdMatch[1] : null;
+  
   logger.error(
     `❌ Supabase request failed: ${context}`,
     {
       table: tableName,
       errorCode: error.code,
       errorMessage: error.message,
+      errorId: errorId, // Include extracted error ID for tracking
       errorDetails: error.details,
       errorHint: error.hint,
       ...additionalInfo,
@@ -128,6 +136,7 @@ export function logSupabaseError(
         code: error.code,
         details: error.details,
         hint: error.hint,
+        errorId: errorId,
       },
     },
     'SupabaseClient'
@@ -143,10 +152,15 @@ export function logSupabaseError(
   if (import.meta.env.DEV && 
       !commonIgnoredErrors.includes(error.code || '') && 
       !isWebContainerError) {
+    // Extract error ID if present
+    const errorIdMatch = error.message?.match(/([a-f0-9]{32}:[a-zA-Z0-9]+:\d+:\d+)/);
+    const errorId = errorIdMatch ? errorIdMatch[1] : null;
+    
     // Use console.group only if it's a real error we care about
     console.group(`🔴 Supabase Error in: ${context}`);
     console.error('📊 Table:', tableName);
     console.error('🔢 Error Code:', error.code || 'N/A');
+    if (errorId) console.error('🆔 Error ID:', errorId);
     console.error('💬 Message:', error.message);
     if (error.details) console.error('📋 Details:', error.details);
     if (error.hint) console.error('💡 Hint:', error.hint);
@@ -155,6 +169,35 @@ export function logSupabaseError(
     }
     console.groupEnd();
   }
+}
+
+/**
+ * Helper function to extract error ID from error message
+ */
+export function extractErrorId(error: PostgrestError | Error | string | null | unknown): string | null {
+  if (!error) return null;
+  
+  let errorMessage = '';
+  if (typeof error === 'string') {
+    errorMessage = error;
+  } else if (error instanceof Error) {
+    errorMessage = error.message;
+  } else if (error && typeof error === 'object' && 'message' in error) {
+    errorMessage = String((error as { message: unknown }).message);
+  }
+  
+  if (!errorMessage) return null;
+  
+  const errorIdMatch = errorMessage.match(/([a-f0-9]{32}:[a-zA-Z0-9]+:\d+:\d+)/);
+  return errorIdMatch ? errorIdMatch[1] : null;
+}
+
+/**
+ * Helper function to check if an error matches a specific error ID
+ */
+export function isErrorId(error: PostgrestError | Error | string | null | unknown, errorId: string): boolean {
+  const extractedId = extractErrorId(error);
+  return extractedId === errorId;
 }
 
 /**
@@ -169,14 +212,30 @@ export async function handleSupabaseResponse<T>(
     const result = await promise;
     if (result.error) {
       logSupabaseError(result.error, context, additionalInfo);
+      
+      // Check for specific error ID and log it
+      const errorId = extractErrorId(result.error);
+      if (errorId) {
+        logger.warn(
+          `Supabase error with ID detected: ${errorId}`,
+          {
+            errorId,
+            context,
+            ...additionalInfo,
+          },
+          'SupabaseClient'
+        );
+      }
     }
     return result;
   } catch (error) {
+    const errorId = extractErrorId(error);
     logger.error(
       `Supabase request exception: ${context}`,
       {
         ...additionalInfo,
         error,
+        errorId,
       },
       'SupabaseClient'
     );

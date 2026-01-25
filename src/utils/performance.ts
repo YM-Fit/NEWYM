@@ -256,12 +256,14 @@ class PerformanceMonitor {
    */
   private getThreshold(metricName: string): number {
     const thresholds: Record<string, number> = {
-      LCP: 2500, // Good LCP is < 2.5s
+      LCP: 4000, // Poor LCP is > 4s (warn at 4s)
       FID: 100, // Good FID is < 100ms
       CLS: 0.1, // Good CLS is < 0.1
       FCP: 1800, // Good FCP is < 1.8s
-      TTFB: 800, // Good TTFB is < 800ms
+      TTFB: 1800, // Poor TTFB is > 1.8s (warn at 1.8s, not 800ms)
       'long-task': 50, // Long tasks should be < 50ms
+      'bundle-load-time': 5000, // Bundle load time threshold (5s)
+      'resource-load': 10000, // Resource load time threshold (10s) - actual time window, not sum
     };
 
     return thresholds[metricName] || 1000;
@@ -478,20 +480,32 @@ export function trackBundlePerformance(): void {
       // Track resource loading
       const resources = window.performance.getEntriesByType('resource') as PerformanceResourceTiming[];
       let totalResourceSize = 0;
-      let totalResourceTime = 0;
+      let earliestStart = Infinity;
+      let latestEnd = 0;
 
       resources.forEach((resource) => {
         if (resource.transferSize) {
           totalResourceSize += resource.transferSize;
         }
-        totalResourceTime += resource.duration;
+        // Track the actual time window for resource loading (not sum of durations)
+        if (resource.startTime < earliestStart) {
+          earliestStart = resource.startTime;
+        }
+        const resourceEnd = resource.startTime + resource.duration;
+        if (resourceEnd > latestEnd) {
+          latestEnd = resourceEnd;
+        }
       });
 
-      if (resources.length > 0) {
-        performanceMonitor.recordMetric('resource-load', totalResourceTime, 'ms', {
+      if (resources.length > 0 && earliestStart !== Infinity) {
+        // Calculate actual time window for resource loading
+        const resourceLoadWindow = latestEnd - earliestStart;
+        performanceMonitor.recordMetric('resource-load', resourceLoadWindow, 'ms', {
           count: resources.length,
           totalSize: totalResourceSize,
           averageSize: totalResourceSize / resources.length,
+          earliestStart,
+          latestEnd,
         });
 
         // Log large resources
