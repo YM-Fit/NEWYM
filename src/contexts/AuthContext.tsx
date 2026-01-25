@@ -96,14 +96,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   useEffect(() => {
+    console.log('[AuthContext] Starting session check...');
+    
     // Set a timeout to prevent infinite loading if Supabase connection fails
+    // Reduced to 5 seconds for faster response on TV
     const loadingTimeout = setTimeout(() => {
-      console.warn('[AuthContext] Session check timed out, showing login screen');
+      console.warn('[AuthContext] Session check timed out after 5 seconds, showing login screen');
       setLoading(false);
-    }, 10000); // 10 second timeout
+    }, 5000); // 5 second timeout for TV
 
     // Try to get session with error handling
-    supabase.auth.getSession()
+    const sessionPromise = supabase.auth.getSession()
       .then(({ data: { session }, error }) => {
         clearTimeout(loadingTimeout);
         
@@ -113,6 +116,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
+        console.log('[AuthContext] Session check completed, user:', session?.user?.email || 'none');
+        
         hydrateAuthFromSession(
           session,
           setUser,
@@ -139,6 +144,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('[AuthContext] Failed to get session:', error);
         setLoading(false);
       });
+    
+    // Also set a fallback timeout in case the promise never resolves
+    const fallbackTimeout = setTimeout(() => {
+      console.warn('[AuthContext] Fallback timeout - forcing loading to false');
+      setLoading(false);
+    }, 6000);
+    
+    return () => {
+      clearTimeout(loadingTimeout);
+      clearTimeout(fallbackTimeout);
+    };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       clearTimeout(loadingTimeout);

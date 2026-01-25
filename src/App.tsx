@@ -71,16 +71,80 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center">
-        <div className="text-center animate-fade-in max-w-md px-4">
-          <div className="relative inline-block">
-            <div className="absolute inset-0 bg-emerald-700/20 rounded-full blur-xl animate-pulse-soft" />
-            <div className="relative inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-700/30 border-t-emerald-600"></div>
+      <div 
+        className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center"
+        style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(to bottom right, #09090b, #18181b)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <div 
+          className="text-center animate-fade-in max-w-md px-4"
+          style={{
+            textAlign: 'center',
+            maxWidth: '28rem',
+            padding: '0 1rem',
+          }}
+        >
+          <div 
+            className="relative inline-block"
+            style={{ position: 'relative', display: 'inline-block' }}
+          >
+            <div 
+              className="absolute inset-0 bg-emerald-700/20 rounded-full blur-xl animate-pulse-soft"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                borderRadius: '50%',
+                filter: 'blur(20px)',
+              }}
+            />
+            <div 
+              className="relative inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-700/30 border-t-emerald-600"
+              style={{
+                position: 'relative',
+                display: 'inline-block',
+                width: '3rem',
+                height: '3rem',
+                border: '4px solid rgba(16, 185, 129, 0.3)',
+                borderTopColor: '#10b981',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+              }}
+            />
           </div>
-          <p className="mt-6 text-emerald-900 dark:text-muted font-medium animate-fade-in-up" style={{ animationDelay: '0.2s' }}>טוען...</p>
-          <p className="mt-4 text-sm text-emerald-800/70 dark:text-muted/70 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+          <p 
+            className="mt-6 text-emerald-900 dark:text-muted font-medium animate-fade-in-up" 
+            style={{ 
+              animationDelay: '0.2s',
+              marginTop: '1.5rem',
+              color: '#ffffff',
+              fontSize: '1.125rem',
+              fontWeight: 500,
+            }}
+          >
+            טוען...
+          </p>
+          <p 
+            className="mt-4 text-sm text-emerald-800/70 dark:text-muted/70 animate-fade-in-up" 
+            style={{ 
+              animationDelay: '0.4s',
+              marginTop: '1rem',
+              color: '#a1a1aa',
+              fontSize: '0.875rem',
+            }}
+          >
             אם המסך לא נטען תוך 10 שניות, יוצג מסך התחברות
           </p>
+          <style>{`
+            @keyframes spin {
+              to { transform: rotate(360deg); }
+            }
+          `}</style>
         </div>
       </div>
     );
