@@ -125,9 +125,10 @@ export default function TodayTraineesSection({
       }
 
       // First, get today's workouts for the trainer
-      // Query workouts where workout_date starts with today's date (works for both date and timestamp)
+      // Cast to date for comparison to handle both date and timestamp formats
       let workoutsData, workoutsError;
       try {
+        // Query with date cast using PostgreSQL syntax
         const result = await supabase
           .from('workouts')
           .select('id, workout_date, workout_type, is_completed, notes, created_at, trainer_id')
@@ -137,7 +138,12 @@ export default function TodayTraineesSection({
           .order('workout_date', { ascending: true });
         workoutsData = result.data;
         workoutsError = result.error;
-        console.log('[TodayTrainees] Workouts query result:', { data: workoutsData?.length, error: workoutsError });
+        console.log('[TodayTrainees] Workouts query result:', {
+          found: workoutsData?.length || 0,
+          error: workoutsError?.message,
+          searchDate: todayDateStr,
+          sample: workoutsData?.[0]?.workout_date
+        });
       } catch (networkErr) {
         console.log('[TodayTrainees] Network error:', networkErr);
         // Network error - likely WebContainer limitation, fail silently
