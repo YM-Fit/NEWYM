@@ -96,30 +96,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      hydrateAuthFromSession(
-        session,
-        setUser,
-        setSession,
-        setUserType,
-        setTraineeId,
-        setTraineeSession
-      );
-      
-      // Set Sentry user context
-      if (session?.user) {
-        setUserContext(session.user.id, session.user.email, {
-          userType: session.user.user_metadata?.is_trainee ? 'trainee' : 'trainer',
-        });
-        setTag('user_type', session.user.user_metadata?.is_trainee ? 'trainee' : 'trainer');
-      } else {
-        clearUserContext();
-      }
-      
+    // Set a timeout to prevent infinite loading if Supabase connection fails
+    const loadingTimeout = setTimeout(() => {
+      console.warn('[AuthContext] Session check timed out, showing login screen');
       setLoading(false);
-    });
+    }, 10000); // 10 second timeout
+
+    // Try to get session with error handling
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        clearTimeout(loadingTimeout);
+        
+        if (error) {
+          console.error('[AuthContext] Error getting session:', error);
+          setLoading(false);
+          return;
+        }
+
+        hydrateAuthFromSession(
+          session,
+          setUser,
+          setSession,
+          setUserType,
+          setTraineeId,
+          setTraineeSession
+        );
+        
+        // Set Sentry user context
+        if (session?.user) {
+          setUserContext(session.user.id, session.user.email, {
+            userType: session.user.user_metadata?.is_trainee ? 'trainee' : 'trainer',
+          });
+          setTag('user_type', session.user.user_metadata?.is_trainee ? 'trainee' : 'trainer');
+        } else {
+          clearUserContext();
+        }
+        
+        setLoading(false);
+      })
+      .catch((error) => {
+        clearTimeout(loadingTimeout);
+        console.error('[AuthContext] Failed to get session:', error);
+        setLoading(false);
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      clearTimeout(loadingTimeout);
+      
       hydrateAuthFromSession(
         session,
         setUser,
@@ -142,7 +165,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(loadingTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {

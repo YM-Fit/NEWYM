@@ -67,12 +67,15 @@ function AppContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center">
-        <div className="text-center animate-fade-in">
+        <div className="text-center animate-fade-in max-w-md px-4">
           <div className="relative inline-block">
             <div className="absolute inset-0 bg-emerald-700/20 rounded-full blur-xl animate-pulse-soft" />
             <div className="relative inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-700/30 border-t-emerald-600"></div>
           </div>
           <p className="mt-6 text-emerald-900 dark:text-muted font-medium animate-fade-in-up" style={{ animationDelay: '0.2s' }}>טוען...</p>
+          <p className="mt-4 text-sm text-emerald-800/70 dark:text-muted/70 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            אם המסך לא נטען תוך 10 שניות, יוצג מסך התחברות
+          </p>
         </div>
       </div>
     );
