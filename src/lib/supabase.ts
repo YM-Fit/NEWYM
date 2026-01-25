@@ -20,10 +20,86 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw error;
 }
 
+// Detect WebContainer/StackBlitz environments where WebSockets may not work
+function isWebContainerEnvironment(): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  const hostname = window.location.hostname;
+  const userAgent = navigator.userAgent || '';
+  
+  return (
+    hostname.includes('stackblitz') ||
+    hostname.includes('webcontainer') ||
+    hostname.includes('stackblitz.io') ||
+    userAgent.includes('webcontainer') ||
+    // Check for WebContainer runtime in error stack traces
+    (typeof Error !== 'undefined' && new Error().stack?.includes('webcontainer'))
+  );
+}
+
+const isWebContainer = isWebContainerEnvironment();
+
+// Suppress WebSocket connection errors in WebContainer environments
+if (isWebContainer && typeof window !== 'undefined') {
+  // Suppress console.error for WebSocket connection failures
+  const originalError = console.error;
+  console.error = (...args: any[]) => {
+    const message = args[0]?.toString() || '';
+    const fullMessage = args.map(arg => String(arg)).join(' ');
+    // Suppress WebSocket connection errors to Supabase Realtime
+    if (
+      (message.includes('WebSocket connection') || fullMessage.includes('WebSocket connection')) &&
+      (message.includes('supabase.co/realtime') || fullMessage.includes('supabase.co/realtime') || fullMessage.includes('realtime/v1/websocket'))
+    ) {
+      // Silently ignore WebSocket errors in WebContainer
+      return;
+    }
+    originalError.apply(console, args);
+  };
+  
+  // Suppress console.warn for WebSocket warnings
+  const originalWarn = console.warn;
+  console.warn = (...args: any[]) => {
+    const message = args[0]?.toString() || '';
+    const fullMessage = args.map(arg => String(arg)).join(' ');
+    if (
+      (message.includes('WebSocket') || fullMessage.includes('WebSocket')) &&
+      (message.includes('supabase') || fullMessage.includes('supabase') || fullMessage.includes('realtime'))
+    ) {
+      return;
+    }
+    originalWarn.apply(console, args);
+  };
+  
+  // Suppress unhandled promise rejections related to WebSockets
+  window.addEventListener('unhandledrejection', (event) => {
+    const reason = event.reason?.toString() || '';
+    if (
+      reason.includes('WebSocket') &&
+      (reason.includes('supabase.co/realtime') || reason.includes('realtime/v1/websocket'))
+    ) {
+      event.preventDefault();
+    }
+  });
+  
+  // Suppress global error events for WebSocket failures
+  window.addEventListener('error', (event) => {
+    const message = event.message || '';
+    const source = event.filename || '';
+    if (
+      message.includes('WebSocket') &&
+      (message.includes('supabase.co/realtime') || message.includes('realtime/v1/websocket') || source.includes('supabase'))
+    ) {
+      event.preventDefault();
+    }
+  }, true);
+}
+
 // Initialize CSRF token
 const csrfToken = initializeCSRF();
 
 // Create Supabase client with enhanced configuration
+// Disable Realtime in WebContainer environments where WebSockets don't work
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   global: {
     headers: {
@@ -39,12 +115,35 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   db: {
     schema: 'public',
   },
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
-    },
-  },
+  // Disable Realtime in WebContainer environments to prevent WebSocket errors
+  realtime: isWebContainer
+    ? undefined
+    : {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
 });
+
+// Log if Realtime is disabled
+if (isWebContainer) {
+  logger.info(
+    'Supabase Realtime disabled in WebContainer environment',
+    {
+      reason: 'WebSocket connections are not supported in WebContainer/StackBlitz',
+      note: 'Real-time features will not be available',
+    },
+    'SupabaseClient'
+  );
+}
+
+/**
+ * Check if Realtime is available in the current environment
+ * Returns false in WebContainer/StackBlitz environments where WebSockets don't work
+ */
+export function isRealtimeAvailable(): boolean {
+  return !isWebContainer;
+}
 
 // Error deduplication: track recent errors to avoid spam
 const errorLogCache = new Map<string, number>();

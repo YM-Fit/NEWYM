@@ -49,7 +49,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   // These override CSS that may not work correctly on TV browsers
   const tvStyles = {
     container: {
-      backgroundColor: '#1a2e16',
+      backgroundColor: '#1a1a2e', // Dark blue background (matches loading screen)
       color: '#ffffff',
     },
     text: {
@@ -59,12 +59,12 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       color: '#a3a3a3',
     },
     card: {
-      backgroundColor: '#24321c',
-      borderColor: 'rgba(74, 107, 42, 0.3)',
+      backgroundColor: '#2a2a3e', // Darker blue for cards
+      borderColor: 'rgba(255, 255, 255, 0.1)',
     },
     header: {
-      backgroundColor: '#24321c',
-      borderColor: 'rgba(74, 107, 42, 0.3)',
+      backgroundColor: '#2a2a3e', // Darker blue for header
+      borderColor: 'rgba(255, 255, 255, 0.1)',
     },
   };
 
@@ -204,7 +204,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         <div className="flex items-center gap-4 2xl:gap-6">
           <div 
             className="h-14 w-14 2xl:h-20 2xl:w-20 rounded-2xl 2xl:rounded-3xl flex items-center justify-center shadow-lg"
-            style={{ backgroundColor: '#4a6b2a' }}
+            style={{ backgroundColor: '#10b981' }}
           >
             <span className="text-2xl 2xl:text-4xl font-extrabold tracking-tight" style={{ color: '#ffffff' }}>N</span>
           </div>
@@ -250,7 +250,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
             </div>
           ) : loading && !session ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
-              <div className="h-20 w-20 border-4 rounded-full animate-spin" style={{ borderColor: 'rgba(74, 107, 42, 0.4)', borderTopColor: '#4a6b2a' }} />
+              <div className="h-20 w-20 border-4 rounded-full animate-spin" style={{ borderColor: 'rgba(16, 185, 129, 0.4)', borderTopColor: '#10b981' }} />
               <div className="text-2xl" style={tvStyles.text}>טוען את האימון הנוכחי מהיומן...</div>
             </div>
           ) : error && !session ? (
@@ -651,12 +651,12 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         
         /* Ensure proper background colors for WebOS and other TV browsers */
         .tv-view-container {
-          background-color: #1a2e16 !important;
+          background-color: #1a1a2e !important; /* Dark blue (matches loading screen) */
         }
         
         .tv-view-container .tv-card {
-          background-color: #24321c !important;
-          border: 1px solid rgba(74, 107, 42, 0.3) !important;
+          background-color: #2a2a3e !important; /* Darker blue for cards */
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
         }
         
         .tv-view-container .tv-badge-primary {
