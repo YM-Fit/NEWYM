@@ -1328,7 +1328,6 @@ export async function bulkUpdateCalendarEvents(
     }
     
     const accessToken = tokenResult.data;
-    const calendarId = credentials.default_calendar_id || 'primary';
 
     let updated = 0;
     let failed = 0;
@@ -1342,20 +1341,20 @@ export async function bulkUpdateCalendarEvents(
 
         const updateResult = await updateGoogleCalendarEvent(
           trainerId,
-          record.google_event_id,
+          (record as any).google_event_id,
           { summary: updates.summary },
           accessToken
         );
 
         if (updateResult.error) {
           failed++;
-          errors.push(`Event ${record.google_event_id}: ${updateResult.error}`);
+          errors.push(`Event ${(record as any).google_event_id}: ${updateResult.error}`);
           
           // Update sync status to failed
           await supabase
             .from('google_calendar_sync')
-            .update({ sync_status: 'failed' })
-            .eq('id', record.id);
+            .update({ sync_status: 'failed' } as any)
+            .eq('id', (record as any).id);
         } else {
           updated++;
           
@@ -1366,13 +1365,13 @@ export async function bulkUpdateCalendarEvents(
               event_summary: updates.summary,
               last_synced_at: new Date().toISOString(),
               sync_status: 'synced'
-            })
-            .eq('id', record.id);
+            } as any)
+            .eq('id', (record as any).id);
         }
       } catch (err: unknown) {
         failed++;
         const errorMsg = err instanceof Error ? err.message : 'Unknown error';
-        errors.push(`Event ${record.google_event_id}: ${errorMsg}`);
+        errors.push(`Event ${(record as any).google_event_id}: ${errorMsg}`);
         logger.error('Error updating calendar event in bulk', err, 'bulkUpdateCalendarEvents');
       }
     }

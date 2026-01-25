@@ -110,7 +110,7 @@ export const habitsApi = {
     try {
       const { data, error } = await supabase
         .from('trainee_habits')
-        .insert([input])
+        .insert([input] as any)
         .select()
         .single();
 
@@ -126,7 +126,7 @@ export const habitsApi = {
     try {
       const { data, error } = await supabase
         .from('trainee_habits')
-        .update(updates)
+        .update(updates as any)
         .eq('id', habitId)
         .select()
         .single();
@@ -143,7 +143,7 @@ export const habitsApi = {
     try {
       const { error } = await supabase
         .from('trainee_habits')
-        .update({ is_active: false })
+        .update({ is_active: false } as any)
         .eq('id', habitId);
 
       if (error) throw error;
@@ -182,7 +182,7 @@ export const habitsApi = {
     try {
       const { data, error } = await supabase
         .from('habit_logs')
-        .upsert([input], { onConflict: 'habit_id,log_date' })
+        .upsert([input] as any, { onConflict: 'habit_id,log_date' })
         .select()
         .single();
 

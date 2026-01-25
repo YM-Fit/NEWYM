@@ -94,40 +94,49 @@ export function extractApiErrorMessage(error: ApiError): string {
  */
 export function handleApiError(
   error: ApiError,
+  options: ApiErrorHandlerOptions
+): string;
+export function handleApiError(
+  error: ApiError,
+  defaultMessage: string,
+  context?: string
+): Error;
+export function handleApiError(
+  error: ApiError,
   optionsOrMessage: ApiErrorHandlerOptions | string,
   context?: string
 ): string | Error {
-  // Handle simple string usage (backward compatibility)
-  if (typeof optionsOrMessage === 'string') {
-    const defaultMessage = optionsOrMessage;
+  // Handle options object usage (returns string)
+  if (typeof optionsOrMessage === 'object') {
+    const { defaultMessage, context: ctx, additionalInfo, logSupabaseError: shouldLog = true } = optionsOrMessage;
+
+    // Log Supabase errors if needed
+    if (shouldLog && error && typeof error === 'object' && 'code' in error) {
+      logSupabaseError(error as PostgrestError, ctx, additionalInfo);
+    }
+
+    // Extract error message
     const errorMessage = extractApiErrorMessage(error);
     
-    // Log Supabase errors if needed
-    if (error && typeof error === 'object' && 'code' in error) {
-      logSupabaseError(error as PostgrestError, context || 'unknown', {});
-    }
-    
-    // Return Error object for backward compatibility
-    const apiError = new Error(errorMessage || defaultMessage);
-    if (error instanceof Error) {
-      apiError.cause = error;
-    }
-    return apiError;
+    // Return user-friendly message or default
+    return errorMessage || defaultMessage;
   }
 
-  // Handle options object usage
-  const { defaultMessage, context: ctx, additionalInfo, logSupabaseError: shouldLog = true } = optionsOrMessage;
-
-  // Log Supabase errors if needed
-  if (shouldLog && error && typeof error === 'object' && 'code' in error) {
-    logSupabaseError(error as PostgrestError, ctx, additionalInfo);
-  }
-
-  // Extract error message
+  // Handle simple string usage (backward compatibility - returns Error)
+  const defaultMessage = optionsOrMessage;
   const errorMessage = extractApiErrorMessage(error);
   
-  // Return user-friendly message or default
-  return errorMessage || defaultMessage;
+  // Log Supabase errors if needed
+  if (error && typeof error === 'object' && 'code' in error) {
+    logSupabaseError(error as PostgrestError, context || 'unknown', {});
+  }
+  
+  // Return Error object for backward compatibility
+  const apiError = new Error(errorMessage || defaultMessage);
+  if (error instanceof Error) {
+    apiError.cause = error;
+  }
+  return apiError;
 }
 
 /**

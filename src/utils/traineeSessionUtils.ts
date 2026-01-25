@@ -369,11 +369,11 @@ export async function calculateMonthlyPositionsFromDb(
       
       // Try partial match (event name is part of trainee name or vice versa)
       const partialMatch = trainees.find(t => 
-        t.full_name.toLowerCase().includes(eventName.toLowerCase()) ||
-        eventName.toLowerCase().includes(t.full_name.toLowerCase())
+        (t as any).full_name.toLowerCase().includes(eventName.toLowerCase()) ||
+        eventName.toLowerCase().includes((t as any).full_name.toLowerCase())
       );
       if (partialMatch) {
-        traineeNameToId.set(eventName, partialMatch.id);
+        traineeNameToId.set(eventName, (partialMatch as any).id);
       }
     });
     
@@ -397,7 +397,7 @@ export async function calculateMonthlyPositionsFromDb(
     }
     
     // Get workout-trainee links
-    const workoutIds = workouts.map(w => w.id);
+    const workoutIds = workouts.map(w => (w as any).id);
     const traineeIds = [...new Set(Array.from(traineeNameToId.values()))];
     
     const { data: links, error: linksError } = await supabase
@@ -413,13 +413,13 @@ export async function calculateMonthlyPositionsFromDb(
     const traineeWorkouts = new Map<string, Array<{ workoutId: string; date: Date; googleEventId: string | null }>>();
     
     workouts.forEach(workout => {
-      const traineeLink = (links || []).find(l => l.workout_id === workout.id);
+      const traineeLink = (links || []).find(l => l.workout_id === (workout as any).id);
       if (traineeLink) {
         const existing = traineeWorkouts.get(traineeLink.trainee_id) || [];
         existing.push({
-          workoutId: workout.id,
-          date: new Date(workout.workout_date),
-          googleEventId: workout.google_event_id,
+          workoutId: (workout as any).id,
+          date: new Date((workout as any).workout_date),
+          googleEventId: (workout as any).google_event_id,
         });
         traineeWorkouts.set(traineeLink.trainee_id, existing);
       }
@@ -438,8 +438,8 @@ export async function calculateMonthlyPositionsFromDb(
     
     // Also add from trainees data for complete mapping
     trainees.forEach(t => {
-      if (!traineeIdToName.has(t.id)) {
-        traineeIdToName.set(t.id, t.full_name);
+      if (!traineeIdToName.has((t as any).id)) {
+        traineeIdToName.set((t as any).id, (t as any).full_name);
       }
     });
     
@@ -606,7 +606,7 @@ export async function generateGoogleCalendarEventTitle(
 
     // If no session info, return just the name
     if (!sessionInfo) {
-      return `אימון - ${trainee.full_name}`;
+      return `אימון - ${(trainee as any).full_name}`;
     }
 
     // Determine the display format based on counting method
@@ -633,7 +633,7 @@ export async function generateGoogleCalendarEventTitle(
 
       if (!workoutsError && workouts && workouts.length > 0) {
         // Get workout links to find which workouts belong to this trainee
-        const workoutIds = workouts.map(w => w.id);
+        const workoutIds = workouts.map(w => (w as any).id);
         const { data: links } = await supabase
           .from('workout_trainees')
           .select('workout_id')
@@ -641,11 +641,11 @@ export async function generateGoogleCalendarEventTitle(
           .in('workout_id', workoutIds);
 
         const traineeWorkoutIds = new Set((links || []).map(l => l.workout_id));
-        const traineeWorkouts = workouts.filter(w => traineeWorkoutIds.has(w.id));
+        const traineeWorkouts = workouts.filter(w => traineeWorkoutIds.has((w as any).id));
 
         // Sort workouts by date to ensure correct order
         traineeWorkouts.sort((a, b) => 
-          new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime()
+          new Date((a as any).workout_date).getTime() - new Date((b as any).workout_date).getTime()
         );
 
         let position = 1;
@@ -653,7 +653,7 @@ export async function generateGoogleCalendarEventTitle(
 
         // If we have workoutId, find its exact position (existing workout)
         if (workoutId) {
-          const workoutIndex = traineeWorkouts.findIndex(w => w.id === workoutId);
+          const workoutIndex = traineeWorkouts.findIndex(w => (w as any).id === workoutId);
           if (workoutIndex >= 0) {
             position = workoutIndex + 1;
           }
@@ -664,7 +664,7 @@ export async function generateGoogleCalendarEventTitle(
           
           // Check if event matches any existing workout
           for (let i = 0; i < traineeWorkouts.length; i++) {
-            const workoutDateMs = new Date(traineeWorkouts[i].workout_date).getTime();
+            const workoutDateMs = new Date((traineeWorkouts[i] as any).workout_date).getTime();
             // If dates are within 1 hour of each other, consider it a match (existing workout)
             if (Math.abs(workoutDateMs - eventDateMs) < 3600000) {
               position = i + 1;
@@ -677,7 +677,7 @@ export async function generateGoogleCalendarEventTitle(
           if (!foundMatch) {
             // Count how many workouts are before this date
             const workoutsBefore = traineeWorkouts.filter(w => 
-              new Date(w.workout_date).getTime() < eventDateMs
+              new Date((w as any).workout_date).getTime() < eventDateMs
             ).length;
             
             position = workoutsBefore + 1;
@@ -696,9 +696,9 @@ export async function generateGoogleCalendarEventTitle(
 
     // Return formatted title
     if (sessionText) {
-      return `אימון - ${trainee.full_name} ${sessionText}`;
+      return `אימון - ${(trainee as any).full_name} ${sessionText}`;
     } else {
-      return `אימון - ${trainee.full_name}`;
+      return `אימון - ${(trainee as any).full_name}`;
     }
   } catch (err) {
     logger.error('Error generating calendar event title', err, 'generateGoogleCalendarEventTitle');

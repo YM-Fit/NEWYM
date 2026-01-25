@@ -18,7 +18,18 @@ export default defineConfig({
     // Use ES2015 for maximum TV browser compatibility (LG webOS, Samsung Tizen, etc.)
     // Older WebOS versions use Chrome 53-68 which don't support ES2020 features
     target: 'es2015',
-    minify: 'esbuild',
+    minify: 'esbuild', // Faster than terser
+    cssMinify: true,
+    chunkSizeWarningLimit: 300, // Stricter limit to ensure smaller bundles
+    sourcemap: false, // Disable sourcemaps in production for smaller bundle
+    // Report bundle sizes
+    reportCompressedSize: true,
+    // Enable tree shaking
+    treeshake: {
+      moduleSideEffects: false,
+      propertyReadSideEffects: false,
+      tryCatchDeoptimization: false,
+    },
     rollupOptions: {
       output: {
         manualChunks: (id) => {
@@ -54,47 +65,18 @@ export default defineConfig({
             if (id.includes('xlsx') || id.includes('papaparse')) {
               return 'export-vendor';
             }
-            // Zod validation
-            if (id.includes('zod')) {
-              return 'validation-vendor';
-            }
-            // Sentry (if used)
-            if (id.includes('@sentry')) {
-              return 'monitoring-vendor';
+            // DnD Kit libraries
+            if (id.includes('@dnd-kit')) {
+              return 'dnd-vendor';
             }
             // Other vendor libraries - split by size
             return 'vendor';
           }
-          // Split services by domain
-          if (id.includes('/services/')) {
-            if (id.includes('analytics')) {
-              return 'services-analytics';
-            }
-            return 'services-other';
-          }
-          // Split hooks
-          if (id.includes('/hooks/')) {
-            return 'hooks-other';
-          }
-          // Utils chunk
-          if (id.includes('/utils/')) {
-            return 'utils';
-          }
+          // Don't split source code into separate chunks to avoid circular dependencies
+          // Let Vite handle code splitting automatically for source files
+          return null;
         },
       },
-    },
-    chunkSizeWarningLimit: 300, // Stricter limit to ensure smaller bundles
-    sourcemap: false, // Disable sourcemaps in production for smaller bundle
-    // Compress output files
-    minify: 'esbuild', // Faster than terser
-    cssMinify: true,
-    // Report bundle sizes
-    reportCompressedSize: true,
-    // Enable tree shaking
-    treeshake: {
-      moduleSideEffects: false,
-      propertyReadSideEffects: false,
-      tryCatchDeoptimization: false,
     },
   },
   esbuild: {
