@@ -837,11 +837,21 @@ export default function WorkoutSession({
         
         logger.error('Save workout error:', errorDetails, 'WorkoutSession');
         
-        // Show user-friendly error message
-        const userMessage = typeof errorMessage === 'string' 
-          ? errorMessage 
-          : 'שגיאה בשמירת האימון. נסה שוב.';
-        toast.error(userMessage);
+        // Check if error is about existing workout - this should not happen anymore
+        // but if it does, provide helpful message
+        const errorStr = typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage);
+        if (errorStr.includes('כבר קיים') || errorStr.includes('already exists') || errorStr.includes('409')) {
+          // This shouldn't happen with the new logic, but if it does, allow user to continue
+          console.warn('Unexpected "workout exists" error - this should be allowed now. Error:', errorMessage);
+          // Don't show error - just log it and continue (or show a different message)
+          toast.error('שגיאה בשמירת האימון. אם יש אימון מתוזמן, תוכל ליצור אימון חדש. נסה שוב.');
+        } else {
+          // Show user-friendly error message for other errors
+          const userMessage = typeof errorMessage === 'string' 
+            ? errorMessage 
+            : 'שגיאה בשמירת האימון. נסה שוב.';
+          toast.error(userMessage);
+        }
         setSaving(false);
         return;
       }

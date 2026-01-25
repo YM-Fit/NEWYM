@@ -426,36 +426,15 @@ Deno.serve(async (req: Request) => {
 
       workout = updatedWorkout;
     } else {
-      // Check if a workout already exists for this trainee on the same date
-      const workoutDateOnly = finalWorkoutDate.split('T')[0];
-      const startOfDay = `${workoutDateOnly}T00:00:00.000Z`;
-      const endOfDay = `${workoutDateOnly}T23:59:59.999Z`;
+      // Create new workout - allow multiple workouts per day
+      // Users can create:
+      // 1. A completed workout even if there's a scheduled one (is_completed=false)
+      // 2. Multiple workouts per day (morning/evening)
+      // 3. Replace a scheduled workout with actual completed data
       
-      const { data: existingWorkouts } = await supabase
-        .from('workouts')
-        .select('id, workout_trainees!inner(trainee_id)')
-        .eq('trainer_id', trainer_id)
-        .eq('workout_trainees.trainee_id', trainee_id)
-        .gte('workout_date', startOfDay)
-        .lte('workout_date', endOfDay)
-        .limit(1);
-      
-      if (existingWorkouts && existingWorkouts.length > 0) {
-        // Return the existing workout instead of creating a duplicate
-        console.log('Workout already exists for this trainee on this date, returning existing workout');
-        return new Response(
-          JSON.stringify({ 
-            error: "אימון כבר קיים למתאמן זה בתאריך זה",
-            existing_workout_id: existingWorkouts[0].id
-          }),
-          {
-            status: 409, // Conflict
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-
       // When creating new workout, use the date from input but with current time
+      // New workouts are always created as completed (is_completed=true)
+      // This allows users to fill in a scheduled workout (is_completed=false) with actual completed data
       const { data: newWorkout, error: workoutError } = await supabase
         .from('workouts')
         .insert([
@@ -464,6 +443,7 @@ Deno.serve(async (req: Request) => {
             workout_type,
             notes,
             workout_date: finalWorkoutDate,
+            is_completed: true, // Explicitly set as completed - this is a workout that was actually performed
           },
         ])
         .select()
