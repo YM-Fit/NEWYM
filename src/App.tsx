@@ -22,6 +22,11 @@ const TraineeApp = lazy(() => import('./components/trainee/TraineeApp'));
 function AppContent() {
   const { user, loading, userType } = useAuth();
 
+  // Debug logging
+  useEffect(() => {
+    console.log('[AppContent] State:', { user: !!user, loading, userType });
+  }, [user, loading, userType]);
+
   // Track Web Vitals and performance metrics
   useEffect(() => {
     // Initialize IndexedDB for offline caching
@@ -82,6 +87,7 @@ function AppContent() {
   }
 
   if (!user) {
+    console.log('[AppContent] Rendering login form, authMode:', authMode);
     return authMode === 'login' ? (
       <LoginForm onToggleMode={() => setAuthMode('register')} />
     ) : (
