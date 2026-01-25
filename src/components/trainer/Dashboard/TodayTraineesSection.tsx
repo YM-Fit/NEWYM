@@ -293,7 +293,7 @@ export default function TodayTraineesSection({
             logger.debug('Error processing workout item:', err, 'TodayTraineesSection');
             return null;
           }
-        })
+        }
       );
 
       // Process tomorrow's workouts (using pre-loaded data)
