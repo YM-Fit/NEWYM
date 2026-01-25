@@ -417,10 +417,9 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     const tomorrowStr = tomorrow.toISOString();
     const dayAfterTomorrowStr = dayAfterTomorrow.toISOString();
 
-    // Get workouts from workouts table (includes both local and synced from Google)
-    // We need workouts that are either:
-    // 1. Not completed (scheduled) OR
-    // 2. Synced from Google Calendar (even if completed, they might be future events)
+    // Get workouts from workouts table - only SCHEDULED workouts (not completed)
+    // Scheduled workouts are those with is_completed=false (future/pending workouts)
+    // We don't show completed workouts here - they should be in workout history
     const { data: workoutsData, error: workoutsError } = await supabase
       .from('workouts')
       .select(`
@@ -433,6 +432,7 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         trainer_id
       `)
       .eq('trainer_id', trainerId)
+      .eq('is_completed', false) // Only scheduled workouts, not completed ones
       .gte('workout_date', todayStr)
       .lt('workout_date', dayAfterTomorrowStr)
       .order('workout_date', { ascending: true });

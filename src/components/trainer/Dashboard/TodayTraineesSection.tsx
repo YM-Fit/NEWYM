@@ -427,19 +427,31 @@ export default function TodayTraineesSection({
             </div>
           </div>
 
-          {/* Trainees Grid */}
+          {/* Trainees Table */}
           {todayTrainees.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 lg:gap-8">
-              {todayTrainees.map((item, index) => (
-                <TraineeCardToday
-                  key={`${item.trainee.id}-${item.workout.id}`}
-                  todayTrainee={item}
-                  index={index}
-                  onNewWorkout={onNewWorkout}
-                  onViewWorkoutPlan={onViewWorkoutPlan}
-                  onViewMealPlan={onViewMealPlan}
-                />
-              ))}
+            <div className="overflow-x-auto rounded-xl border border-border/20">
+              <table className="w-full">
+                <thead className="bg-surface/50">
+                  <tr className="border-b-2 border-primary/20">
+                    <th className="text-right py-4 px-4 font-bold text-foreground">מתאמן</th>
+                    <th className="text-right py-4 px-4 font-bold text-foreground">שעה</th>
+                    <th className="text-right py-4 px-4 font-bold text-foreground">סטטוס</th>
+                    <th className="text-right py-4 px-4 font-bold text-foreground">פעולות</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {todayTrainees.map((item, index) => (
+                    <TraineeTableRow
+                      key={`${item.trainee.id}-${item.workout.id}`}
+                      todayTrainee={item}
+                      index={index}
+                      onNewWorkout={onNewWorkout}
+                      onViewWorkoutPlan={onViewWorkoutPlan}
+                      onViewMealPlan={onViewMealPlan}
+                    />
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : (
             <div className="text-center py-12">
@@ -507,23 +519,176 @@ export default function TodayTraineesSection({
               </div>
             </div>
 
-            {/* Trainees Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 lg:gap-8">
-              {tomorrowTrainees.map((item, index) => (
-                <TraineeCardToday
-                  key={`${item.trainee.id}-${item.workout.id}-tomorrow`}
-                  todayTrainee={item}
-                  index={index}
-                  onNewWorkout={onNewWorkout}
-                  onViewWorkoutPlan={onViewWorkoutPlan}
-                  onViewMealPlan={onViewMealPlan}
-                />
-              ))}
+            {/* Trainees Table */}
+            <div className="overflow-x-auto rounded-xl border border-border/20">
+              <table className="w-full">
+                <thead className="bg-surface/50">
+                  <tr className="border-b-2 border-warning/20">
+                    <th className="text-right py-4 px-4 font-bold text-foreground">מתאמן</th>
+                    <th className="text-right py-4 px-4 font-bold text-foreground">שעה</th>
+                    <th className="text-right py-4 px-4 font-bold text-foreground">סטטוס</th>
+                    <th className="text-right py-4 px-4 font-bold text-foreground">פעולות</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tomorrowTrainees.map((item, index) => (
+                    <TraineeTableRow
+                      key={`${item.trainee.id}-${item.workout.id}-tomorrow`}
+                      todayTrainee={item}
+                      index={index}
+                      onNewWorkout={onNewWorkout}
+                      onViewWorkoutPlan={onViewWorkoutPlan}
+                      onViewMealPlan={onViewMealPlan}
+                    />
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+interface TraineeTableRowProps {
+  todayTrainee: TodayTrainee;
+  index: number;
+  onNewWorkout: (trainee: Trainee) => void;
+  onViewWorkoutPlan: (trainee: Trainee) => void;
+  onViewMealPlan: (trainee: Trainee) => void;
+}
+
+function TraineeTableRow({
+  todayTrainee,
+  index,
+  onNewWorkout,
+  onViewWorkoutPlan,
+  onViewMealPlan
+}: TraineeTableRowProps) {
+  const { trainee, workout, status, daysSinceLastWorkout, unseenWeightsCount } = todayTrainee;
+  const isActive = daysSinceLastWorkout !== null && daysSinceLastWorkout <= 7;
+
+  // Get status display
+  const statusDisplay = status === 'completed' ? '✓ הושלם' :
+                         status === 'scheduled' ? '📅 מתוזמן' :
+                         '⏰ מתקרב';
+
+  const statusColor = status === 'completed' ? 'text-success' :
+                      status === 'scheduled' ? 'text-primary' :
+                      'text-warning';
+
+  return (
+    <tr className="border-b border-border/20 hover:bg-surface/50 transition-colors duration-200 group">
+      {/* Trainee Name */}
+      <td className="py-4 px-4">
+        <div className="flex items-center gap-3">
+          <div className="relative flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/25 via-primary/15 to-primary-dark/10 
+                          flex items-center justify-center border-2 border-primary/20">
+              {trainee.is_pair ? (
+                <Users className="w-5 h-5 text-primary" />
+              ) : (
+                <span className="text-lg font-bold text-primary">
+                  {trainee.full_name.charAt(0)}
+                </span>
+              )}
+            </div>
+            {unseenWeightsCount && unseenWeightsCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5
+                             bg-gradient-to-br from-info to-cyan-500 rounded-full 
+                             flex items-center justify-center 
+                             text-xs font-bold text-inverse border-2 border-elevated 
+                             animate-pulse shadow-lg shadow-info/50">
+                {unseenWeightsCount}
+              </span>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-foreground truncate">{trainee.full_name}</div>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              {workout.isFromGoogle && (
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg 
+                              bg-info/15 border border-info/30">
+                  <Calendar className="w-3 h-3 text-info" />
+                  <span className="text-xs font-semibold text-info">גוגל</span>
+                </div>
+              )}
+              {daysSinceLastWorkout !== null && (
+                <div className={`px-2 py-0.5 rounded-lg text-xs font-semibold border ${
+                  isActive
+                    ? 'bg-success/15 text-success border-success/30'
+                    : 'bg-danger/15 text-danger border-danger/30'
+                }`}>
+                  {daysSinceLastWorkout} ימים
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </td>
+
+      {/* Time */}
+      <td className="py-4 px-4">
+        {workout.workout_time ? (
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-primary" />
+            <span className="font-semibold text-foreground">{workout.workout_time}</span>
+          </div>
+        ) : (
+          <span className="text-secondary text-sm">-</span>
+        )}
+      </td>
+
+      {/* Status */}
+      <td className="py-4 px-4">
+        <span className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wide border ${statusColor}`}>
+          {statusDisplay}
+        </span>
+      </td>
+
+      {/* Actions */}
+      <td className="py-4 px-4">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onNewWorkout(trainee)}
+            className="btn-primary p-2 rounded-lg flex items-center gap-1.5
+                       hover:scale-110 active:scale-95 transition-all duration-300
+                       shadow-lg shadow-emerald-700/50 hover:shadow-2xl hover:shadow-emerald-700/70
+                       focus:outline-none focus:ring-2 focus:ring-emerald-700/50 focus:ring-offset-2"
+            aria-label={`הוסף אימון חדש ל${trainee.full_name}`}
+            title="אימון חדש"
+          >
+            <Dumbbell className="w-4 h-4" />
+            <span className="text-xs font-bold">אימון</span>
+          </button>
+          <button
+            onClick={() => onViewWorkoutPlan(trainee)}
+            className="bg-surface/60 hover:bg-surface border-2 border-border/20 
+                       hover:border-primary/50 p-2 rounded-lg flex items-center gap-1.5
+                       transition-all duration-300 hover:scale-105 active:scale-95
+                       hover:shadow-lg hover:shadow-primary/20
+                       focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
+            aria-label={`צפה בתוכנית אימון של ${trainee.full_name}`}
+            title="תוכנית אימון"
+          >
+            <ClipboardList className="w-4 h-4 text-primary" />
+          </button>
+          <button
+            onClick={() => onViewMealPlan(trainee)}
+            className="bg-surface/60 hover:bg-surface border-2 border-border/20 
+                       hover:border-primary/50 p-2 rounded-lg flex items-center gap-1.5
+                       transition-all duration-300 hover:scale-105 active:scale-95
+                       hover:shadow-lg hover:shadow-primary/20
+                       focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
+            aria-label={`צפה בתפריט של ${trainee.full_name}`}
+            title="תפריט"
+          >
+            <UtensilsCrossed className="w-4 h-4 text-primary" />
+          </button>
+        </div>
+      </td>
+    </tr>
   );
 }
 
