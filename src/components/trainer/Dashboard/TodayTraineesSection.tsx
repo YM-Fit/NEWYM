@@ -288,13 +288,12 @@ export default function TodayTraineesSection({
             unseenWeightsCount,
             status
           };
-          } catch (err) {
-            // If processing a single item fails, return null and continue with others
-            logger.debug('Error processing workout item:', err, 'TodayTraineesSection');
-            return null;
-          }
+        } catch (err) {
+          // If processing a single item fails, return null and continue with others
+          logger.debug('Error processing workout item:', err, 'TodayTraineesSection');
+          return null;
         }
-      );
+      });
 
       // Process tomorrow's workouts (using pre-loaded data)
       const processedTomorrow = result.data.tomorrow.map((item) => {
@@ -355,13 +354,12 @@ export default function TodayTraineesSection({
             unseenWeightsCount,
             status
           };
-          } catch (err) {
-            // If processing a single item fails, return null and continue with others
-            logger.debug('Error processing workout item:', err, 'TodayTraineesSection');
-            return null;
-          }
-        })
-      );
+        } catch (err) {
+          // If processing a single item fails, return null and continue with others
+          logger.debug('Error processing workout item:', err, 'TodayTraineesSection');
+          return null;
+        }
+      });
       
       // Filter out any null values
       const validToday = processedToday.filter((t): t is TodayTrainee => t !== null);
