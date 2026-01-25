@@ -94,10 +94,12 @@ export function logSupabaseError(
   const commonIgnoredErrors = [
     'PGRST116', // Resource not found (404) - common when checking existence
     '23505', // Unique violation - might be expected in upserts
+    'PGRST301', // JWT expired - handled by auto refresh
+    'PGRST301', // JWT missing - handled by auth flow
   ];
   
   if (error.code && commonIgnoredErrors.includes(error.code)) {
-    // Still log but with lower priority
+    // Still log but with lower priority - don't spam console
     logger.debug(
       `⚠️ Supabase request warning: ${context}`,
       {
@@ -131,17 +133,28 @@ export function logSupabaseError(
     'SupabaseClient'
   );
   
-  // Also log a more readable version to console
-  console.group(`🔴 Supabase Error in: ${context}`);
-  console.error('📊 Table:', tableName);
-  console.error('🔢 Error Code:', error.code || 'N/A');
-  console.error('💬 Message:', error.message);
-  if (error.details) console.error('📋 Details:', error.details);
-  if (error.hint) console.error('💡 Hint:', error.hint);
-  if (additionalInfo && Object.keys(additionalInfo).length > 0) {
-    console.error('🔍 Additional Context:', additionalInfo);
+  // Only log to console in development, and only for non-ignored errors
+  // In production or for ignored errors, we rely on logger only
+  // Also suppress console errors from WebContainer/StackBlitz preview scripts
+  const isWebContainerError = error.message?.includes('webcontainer') || 
+                              error.message?.includes('preview-script') ||
+                              context.includes('webcontainer');
+  
+  if (import.meta.env.DEV && 
+      !commonIgnoredErrors.includes(error.code || '') && 
+      !isWebContainerError) {
+    // Use console.group only if it's a real error we care about
+    console.group(`🔴 Supabase Error in: ${context}`);
+    console.error('📊 Table:', tableName);
+    console.error('🔢 Error Code:', error.code || 'N/A');
+    console.error('💬 Message:', error.message);
+    if (error.details) console.error('📋 Details:', error.details);
+    if (error.hint) console.error('💡 Hint:', error.hint);
+    if (additionalInfo && Object.keys(additionalInfo).length > 0) {
+      console.error('🔍 Additional Context:', additionalInfo);
+    }
+    console.groupEnd();
   }
-  console.groupEnd();
 }
 
 /**

@@ -18,6 +18,7 @@ window.addEventListener('unhandledrejection', (event) => {
   // Filter out Chameleon (chmln) errors - they're from third-party tools and not our code
   const errorMessage = event.reason?.message || String(event.reason || '');
   const errorStack = event.reason?.stack || '';
+  const errorString = String(event.reason || '');
   
   if (
     errorMessage.includes('chmln') ||
@@ -27,6 +28,18 @@ window.addEventListener('unhandledrejection', (event) => {
     errorMessage.includes('Cannot read properties of undefined')
   ) {
     // Silently ignore Chameleon errors - they're not our problem
+    event.preventDefault();
+    return;
+  }
+  
+  // Filter out WebContainer/StackBlitz Supabase errors from preview scripts
+  if (
+    errorString.includes('Supabase request failed') ||
+    errorMessage.includes('Supabase request failed') ||
+    (errorStack && errorStack.includes('preview-script') && errorMessage.includes('Supabase'))
+  ) {
+    // These are from the development environment intercepting Supabase requests
+    // They're not real errors in our code
     event.preventDefault();
     return;
   }
@@ -53,6 +66,18 @@ window.addEventListener('error', (event) => {
     (errorMessage.includes('Cannot read properties of undefined') && errorStack.includes('chmln'))
   ) {
     // Silently ignore Chameleon errors - they're not our problem
+    event.preventDefault();
+    return;
+  }
+  
+  // Filter out WebContainer/StackBlitz preview script errors
+  if (
+    errorSource.includes('preview-script') ||
+    errorSource.includes('webcontainer') ||
+    (errorMessage.includes('Supabase request failed') && errorSource.includes('preview-script'))
+  ) {
+    // These are from the development environment intercepting Supabase requests
+    // They're not real errors in our code
     event.preventDefault();
     return;
   }
