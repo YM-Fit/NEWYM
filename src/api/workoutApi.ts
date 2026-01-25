@@ -480,7 +480,7 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
 
     const { data: traineesData, error: traineesError } = await supabase
       .from('trainees')
-      .select('id, full_name, gender, phone, email, google_calendar_client_id, is_pair, pair_name_1, pair_name_2')
+      .select('id, full_name, gender, phone, email, is_pair, pair_name_1, pair_name_2')
       .in('id', traineeIdsInWorkouts);
 
     if (traineesError) {

@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useCurrentTvSession } from '../../../hooks/useCurrentTvSession';
+import { Card } from '../../ui/Card';
+import { useThemeClasses } from '../../../contexts/ThemeContext';
 
 interface StudioTvViewProps {
   pollIntervalMs?: number;
@@ -26,6 +28,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   const { loading, error, session, logs, lastUpdated } = useCurrentTvSession({
     pollIntervalMs,
   });
+  const themeClasses = useThemeClasses();
 
   const now = useMemo(() => new Date(), []);
 
@@ -46,16 +49,16 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   const isUnauthorized = !user || userType !== 'trainer';
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white flex flex-col">
+    <div className={`h-screen w-screen overflow-hidden ${themeClasses.bgBase} ${themeClasses.textPrimary} flex flex-col`}>
       {/* Top bar */}
-      <header className="flex items-center justify-between px-12 py-6 bg-black/40 border-b border-white/10 backdrop-blur-xl">
+      <header className={`flex items-center justify-between px-12 py-6 ${themeClasses.bgElevated} ${themeClasses.border} border-b backdrop-blur-xl shadow-lg`}>
         <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-lime-400 to-emerald-500 flex items-center justify-center shadow-[0_0_35px_rgba(190,242,100,0.6)]">
-            <span className="text-2xl font-extrabold tracking-tight">N</span>
+          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+            <span className="text-2xl font-extrabold tracking-tight text-white">N</span>
           </div>
           <div>
-            <div className="text-sm text-zinc-400">מצב טלוויזיה · סטודיו</div>
-            <div className="text-xl font-semibold">
+            <div className={`text-sm ${themeClasses.textMuted}`}>מצב טלוויזיה · סטודיו</div>
+            <div className={`text-xl font-semibold ${themeClasses.textPrimary}`}>
               {user?.email ? `מאמן: ${user.email}` : 'מחכה לחיבור מאמן'}
             </div>
           </div>
@@ -63,13 +66,13 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
         <div className="flex items-end gap-8">
           <div className="text-right">
-            <div className="text-5xl font-bold tracking-tight leading-none">
+            <div className={`text-5xl font-bold tracking-tight leading-none ${themeClasses.textPrimary}`}>
               {formatClock(now)}
             </div>
-            <div className="text-lg text-zinc-400 mt-1">{formatDate(now)}</div>
+            <div className={`text-lg ${themeClasses.textMuted} mt-1`}>{formatDate(now)}</div>
           </div>
           {lastUpdated && (
-            <div className="text-sm text-zinc-500">
+            <div className={`text-sm ${themeClasses.textMuted}`}>
               עדכון אחרון:{' '}
               {new Date(lastUpdated).toLocaleTimeString('he-IL', {
                 hour: '2-digit',
@@ -84,29 +87,29 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       {/* Main layout */}
       <div className="flex flex-1 gap-6 px-12 py-6">
         {/* Main workout area */}
-        <section className="flex-1 rounded-3xl bg-gradient-to-br from-zinc-900/90 to-zinc-950/90 border border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.8)] p-8 flex flex-col">
+        <Card variant="premium" className="flex-1 p-8 flex flex-col" padding="none">
           {isUnauthorized ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
-              <div className="text-3xl font-semibold">התחברות נדרשת</div>
-              <p className="text-xl text-zinc-400 max-w-xl text-center">
+              <div className={`text-3xl font-semibold ${themeClasses.textPrimary}`}>התחברות נדרשת</div>
+              <p className={`text-xl ${themeClasses.textMuted} max-w-xl text-center`}>
                 כדי להשתמש במצב טלוויזיה, התחבר כמדריך מהמכשיר הזה.
                 לאחר ההתחברות, המסך יזהה אוטומטית את האימון הפעיל מהיומן.
               </p>
             </div>
           ) : loading && !session ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
-              <div className="h-20 w-20 border-4 border-lime-400/40 border-t-transparent rounded-full animate-spin" />
-              <div className="text-2xl text-zinc-300">טוען את האימון הנוכחי מהיומן...</div>
+              <div className="h-20 w-20 border-4 border-primary/40 border-t-primary rounded-full animate-spin" />
+              <div className={`text-2xl ${themeClasses.textPrimary}`}>טוען את האימון הנוכחי מהיומן...</div>
             </div>
           ) : error && !session ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-4">
-              <div className="text-3xl font-semibold text-red-400">שגיאה במצב טלוויזיה</div>
-              <p className="text-xl text-zinc-300">{error}</p>
+              <div className="text-3xl font-semibold text-danger">שגיאה במצב טלוויזיה</div>
+              <p className={`text-xl ${themeClasses.textPrimary}`}>{error}</p>
             </div>
           ) : !session ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
-              <div className="text-4xl font-semibold">אין אימון פעיל כרגע</div>
-              <p className="text-xl text-zinc-400 max-w-2xl text-center leading-relaxed">
+              <div className={`text-4xl font-semibold ${themeClasses.textPrimary}`}>אין אימון פעיל כרגע</div>
+              <p className={`text-xl ${themeClasses.textMuted} max-w-2xl text-center leading-relaxed`}>
                 לא נמצא אירוע יומן פעיל לסטודיו בזמן הנוכחי.
                 ודא שהאימונים שלך מסונכרנים ליומן Google וששעת האימון תואמת לשעה הנוכחית.
               </p>
@@ -115,20 +118,20 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
             <>
               {/* Trainee header */}
               <div className="flex items-center gap-8 mb-10">
-                <div className="h-32 w-32 rounded-3xl bg-gradient-to-br from-lime-400 to-emerald-500 flex items-center justify-center shadow-[0_0_50px_rgba(190,242,100,0.7)]">
-                  <span className="text-4xl font-extrabold tracking-tight">
+                <div className="h-32 w-32 rounded-3xl bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/40">
+                  <span className="text-4xl font-extrabold tracking-tight text-white">
                     {initials || '?'}
                   </span>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <div className="text-sm uppercase tracking-[0.25em] text-lime-300/80">
+                  <div className={`text-sm uppercase tracking-[0.25em] ${themeClasses.textMuted}`}>
                     מתאמן נוכחי
                   </div>
-                  <div className="text-4xl font-bold tracking-tight">
+                  <div className={`text-4xl font-bold tracking-tight ${themeClasses.textPrimary}`}>
                     {session.trainee?.full_name ?? 'לא זוהה מתאמן'}
                   </div>
                   {session.calendarEvent?.summary && (
-                    <div className="text-xl text-zinc-400">
+                    <div className={`text-xl ${themeClasses.textMuted}`}>
                       {session.calendarEvent.summary}
                     </div>
                   )}
@@ -138,8 +141,8 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
               {/* Exercises grid */}
               <div className="flex-1 flex flex-col gap-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-2xl font-semibold">אימון נוכחי</h2>
-                  <div className="text-sm text-zinc-400">
+                  <h2 className={`text-2xl font-semibold ${themeClasses.textPrimary}`}>אימון נוכחי</h2>
+                  <div className={`text-sm ${themeClasses.textMuted}`}>
                     {session.workout
                       ? new Date(session.workout.workout_date).toLocaleTimeString(
                           'he-IL',
@@ -154,7 +157,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
                 {firstExercises.length === 0 ? (
                   <div className="flex-1 flex items-center justify-center">
-                    <p className="text-xl text-zinc-400">
+                    <p className={`text-xl ${themeClasses.textMuted}`}>
                       האימון זוהה מהיומן, אבל טרם נוספו לו תרגילים במערכת.
                     </p>
                   </div>
@@ -169,31 +172,33 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                       const isFirst = index === 0;
 
                       return (
-                        <div
+                        <Card
                           key={exercise.id}
-                          className={`relative rounded-3xl border p-5 flex flex-col justify-between overflow-hidden ${
+                          variant={isFirst ? 'default' : 'glass'}
+                          className={`relative flex flex-col justify-between overflow-hidden ${
                             isFirst
-                              ? 'border-lime-400/80 bg-gradient-to-br from-lime-500/20 via-emerald-500/10 to-zinc-900/80 shadow-[0_0_60px_rgba(190,242,100,0.5)]'
-                              : 'border-white/10 bg-zinc-900/60'
+                              ? 'border-primary border-2 bg-primary/5 shadow-lg shadow-primary/20'
+                              : ''
                           }`}
+                          padding="md"
                         >
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-3">
                               <div
                                 className={`h-10 w-10 rounded-2xl flex items-center justify-center text-sm font-semibold ${
                                   isFirst
-                                    ? 'bg-lime-400 text-black'
-                                    : 'bg-zinc-800 text-zinc-200'
+                                    ? 'bg-primary text-white'
+                                    : `${themeClasses.bgSurface} ${themeClasses.textPrimary}`
                                 }`}
                               >
                                 {index + 1}
                               </div>
                               <div>
-                                <div className="text-lg font-semibold line-clamp-2">
+                                <div className={`text-lg font-semibold line-clamp-2 ${themeClasses.textPrimary}`}>
                                   {exercise.name}
                                 </div>
                                 {exercise.muscle_group_id && (
-                                  <div className="text-xs text-zinc-400 mt-0.5">
+                                  <div className={`text-xs ${themeClasses.textMuted} mt-0.5`}>
                                     {exercise.muscle_group_id}
                                   </div>
                                 )}
@@ -201,23 +206,23 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                             </div>
 
                             {isFirst && (
-                              <span className="px-3 py-1 rounded-full bg-lime-400/20 text-lime-300 text-xs font-semibold">
+                              <span className="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-semibold border border-primary/30">
                                 תרגיל נוכחי
                               </span>
                             )}
                           </div>
 
                           <div className="mt-2">
-                            <div className="flex items-center gap-4 text-sm text-zinc-300">
+                            <div className={`flex items-center gap-4 text-sm ${themeClasses.textPrimary}`}>
                               <div>
-                                <span className="text-zinc-400">סטים:</span>{' '}
-                                <span className="font-semibold text-white">
+                                <span className={themeClasses.textMuted}>סטים:</span>{' '}
+                                <span className={`font-semibold ${themeClasses.textPrimary}`}>
                                   {totalSets}
                                 </span>
                               </div>
                               <div>
-                                <span className="text-zinc-400">סה״כ חזרות:</span>{' '}
-                                <span className="font-semibold text-white">
+                                <span className={themeClasses.textMuted}>סה״כ חזרות:</span>{' '}
+                                <span className={`font-semibold ${themeClasses.textPrimary}`}>
                                   {totalReps}
                                 </span>
                               </div>
@@ -227,11 +232,11 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                               {exercise.sets.map(set => (
                                 <div
                                   key={set.id}
-                                  className="min-w-[90px] rounded-2xl bg-black/40 border border-white/10 px-3 py-2 text-xs flex flex-col gap-1"
+                                  className={`min-w-[90px] rounded-2xl ${themeClasses.bgSurface} ${themeClasses.border} border px-3 py-2 text-xs flex flex-col gap-1`}
                                 >
                                   <div className="flex items-center justify-between">
-                                    <span className="text-zinc-400">סט {set.set_number}</span>
-                                    <span className="text-[10px] uppercase text-zinc-500">
+                                    <span className={themeClasses.textMuted}>סט {set.set_number}</span>
+                                    <span className={`text-[10px] uppercase ${themeClasses.textMuted}`}>
                                       {set.set_type === 'dropset'
                                         ? 'דרופסט'
                                         : set.set_type === 'superset'
@@ -239,11 +244,11 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                         : 'רגיל'}
                                     </span>
                                   </div>
-                                  <div className="font-semibold">
+                                  <div className={`font-semibold ${themeClasses.textPrimary}`}>
                                     {set.weight ?? 0} ק״ג × {set.reps ?? 0}
                                   </div>
                                   {typeof set.rpe === 'number' && (
-                                    <div className="text-[11px] text-zinc-400">
+                                    <div className={`text-[11px] ${themeClasses.textMuted}`}>
                                       RPE {set.rpe}
                                     </div>
                                   )}
@@ -251,7 +256,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                               ))}
                             </div>
                           </div>
-                        </div>
+                        </Card>
                       );
                     })}
                   </div>
@@ -259,7 +264,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
               </div>
             </>
           )}
-        </section>
+        </Card>
 
         {/* Proof / diagnostics panel */}
         <aside className="w-[380px] rounded-3xl bg-black/70 border border-lime-400/40 shadow-[0_0_40px_rgba(190,242,100,0.4)] p-6 flex flex-col">
