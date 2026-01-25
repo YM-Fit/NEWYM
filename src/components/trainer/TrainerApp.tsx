@@ -13,9 +13,10 @@ import Sidebar from '../layout/Sidebar';
 import MobileSidebar from '../layout/MobileSidebar';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { ThemeShowcase } from '../ui/ThemeShowcase';
+import { lazyWithRetry } from '../../utils/lazyWithRetry';
 
 // Lazy load heavy components - including main views for better code splitting
-const Dashboard = lazy(() => import('./Dashboard/Dashboard'));
+const Dashboard = lazyWithRetry(() => import('./Dashboard/Dashboard'), 3);
 const TraineesList = lazy(() => import('./Trainees/TraineesList'));
 const TraineeProfile = lazy(() => import('./Trainees/TraineeProfile'));
 const AddTraineeForm = lazy(() => import('./Trainees/AddTraineeForm'));
