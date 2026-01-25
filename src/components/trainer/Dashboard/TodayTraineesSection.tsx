@@ -121,7 +121,18 @@ export default function TodayTraineesSection({
       }
 
       // Use the new unified API function
-      const result = await getScheduledWorkoutsForTodayAndTomorrow(trainerId, traineeIds);
+      let result;
+      try {
+        result = await getScheduledWorkoutsForTodayAndTomorrow(trainerId, traineeIds);
+      } catch (err) {
+        // Catch any unexpected errors and log them
+        logger.debug('Unexpected error loading scheduled workouts:', err, 'TodayTraineesSection');
+        setTodayTrainees([]);
+        setTomorrowTrainees([]);
+        setLoading(false);
+        isLoadingRef.current = false;
+        return;
+      }
       
       if (result.error) {
         logger.debug('Error loading scheduled workouts:', result.error, 'TodayTraineesSection');
@@ -143,21 +154,35 @@ export default function TodayTraineesSection({
       // Process today's workouts
       const processedToday = await Promise.all(
         result.data.today.map(async (item) => {
-          const trainee = item.trainee;
-          const workout = item.workout;
-          
-          if (!trainee || !workout) {
-            return null;
-          }
-          
-          // חישוב ימים מאז אימון אחרון
-          const lastWorkout = await getLastWorkoutDate(trainee.id);
-          const daysSinceLastWorkout = lastWorkout 
-            ? Math.floor((new Date().getTime() - new Date(lastWorkout).getTime()) / (1000 * 60 * 60 * 24))
-            : null;
-          
-          // חישוב מספר שקילות חדשות
-          const unseenWeightsCount = await getUnseenWeightsCount(trainee.id);
+          try {
+            const trainee = item.trainee;
+            const workout = item.workout;
+            
+            if (!trainee || !workout) {
+              return null;
+            }
+            
+            // חישוב ימים מאז אימון אחרון
+            let lastWorkout: string | null = null;
+            let daysSinceLastWorkout: number | null = null;
+            try {
+              lastWorkout = await getLastWorkoutDate(trainee.id);
+              daysSinceLastWorkout = lastWorkout 
+                ? Math.floor((new Date().getTime() - new Date(lastWorkout).getTime()) / (1000 * 60 * 60 * 24))
+                : null;
+            } catch (err) {
+              // If getting last workout fails, continue without it
+              logger.debug('Error getting last workout date:', err, 'TodayTraineesSection');
+            }
+            
+            // חישוב מספר שקילות חדשות
+            let unseenWeightsCount = 0;
+            try {
+              unseenWeightsCount = await getUnseenWeightsCount(trainee.id);
+            } catch (err) {
+              // If getting unseen weights fails, continue without it
+              logger.debug('Error getting unseen weights count:', err, 'TodayTraineesSection');
+            }
           
           // חילוץ זמן האימון
           let workoutTime: string | undefined;
@@ -203,27 +228,46 @@ export default function TodayTraineesSection({
             unseenWeightsCount,
             status
           };
+          } catch (err) {
+            // If processing a single item fails, return null and continue with others
+            logger.debug('Error processing workout item:', err, 'TodayTraineesSection');
+            return null;
+          }
         })
       );
 
       // Process tomorrow's workouts
       const processedTomorrow = await Promise.all(
         result.data.tomorrow.map(async (item) => {
-          const trainee = item.trainee;
-          const workout = item.workout;
-          
-          if (!trainee || !workout) {
-            return null;
-          }
-          
-          // חישוב ימים מאז אימון אחרון
-          const lastWorkout = await getLastWorkoutDate(trainee.id);
-          const daysSinceLastWorkout = lastWorkout 
-            ? Math.floor((new Date().getTime() - new Date(lastWorkout).getTime()) / (1000 * 60 * 60 * 24))
-            : null;
-          
-          // חישוב מספר שקילות חדשות
-          const unseenWeightsCount = await getUnseenWeightsCount(trainee.id);
+          try {
+            const trainee = item.trainee;
+            const workout = item.workout;
+            
+            if (!trainee || !workout) {
+              return null;
+            }
+            
+            // חישוב ימים מאז אימון אחרון
+            let lastWorkout: string | null = null;
+            let daysSinceLastWorkout: number | null = null;
+            try {
+              lastWorkout = await getLastWorkoutDate(trainee.id);
+              daysSinceLastWorkout = lastWorkout 
+                ? Math.floor((new Date().getTime() - new Date(lastWorkout).getTime()) / (1000 * 60 * 60 * 24))
+                : null;
+            } catch (err) {
+              // If getting last workout fails, continue without it
+              logger.debug('Error getting last workout date:', err, 'TodayTraineesSection');
+            }
+            
+            // חישוב מספר שקילות חדשות
+            let unseenWeightsCount = 0;
+            try {
+              unseenWeightsCount = await getUnseenWeightsCount(trainee.id);
+            } catch (err) {
+              // If getting unseen weights fails, continue without it
+              logger.debug('Error getting unseen weights count:', err, 'TodayTraineesSection');
+            }
           
           // חילוץ זמן האימון
           let workoutTime: string | undefined;
@@ -256,6 +300,11 @@ export default function TodayTraineesSection({
             unseenWeightsCount,
             status
           };
+          } catch (err) {
+            // If processing a single item fails, return null and continue with others
+            logger.debug('Error processing workout item:', err, 'TodayTraineesSection');
+            return null;
+          }
         })
       );
       

@@ -54,7 +54,15 @@ export default function Dashboard({
     if (!user) return;
     
     try {
-      const today = new Date().toISOString().split('T')[0];
+      // workout_date is TIMESTAMPTZ, so we need to use date range comparison
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const todayStr = today.toISOString();
+      const tomorrowStr = tomorrow.toISOString();
+      
       const traineeIds = trainees.map(t => t.id);
 
       if (traineeIds.length === 0) {
@@ -76,7 +84,8 @@ export default function Dashboard({
           .from('workouts')
           .select('*', { count: 'exact', head: true })
           .in('id', workoutIds)
-          .eq('workout_date', today);
+          .gte('workout_date', todayStr)
+          .lt('workout_date', tomorrowStr);
         
         setTodayWorkouts(workoutsCount || 0);
       } else {
