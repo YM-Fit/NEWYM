@@ -2810,3 +2810,228 @@ html body .tv-view-container .text-muted-tv,
 .tv-view-container .text-muted-tv {
   color: #a3a3a3 !important;
 }
+
+/* ============================================
+   TV View - Advanced Styling & Animations
+   ============================================ */
+
+/* TV Container & Layout */
+.tv-view-container {
+  background: linear-gradient(145deg, rgb(var(--color-bg-base)) 0%, rgb(var(--color-bg-elevated)) 50%, rgb(var(--color-bg-surface)) 100%) !important;
+  contain: layout style paint;
+}
+
+.tv-container {
+  display: grid;
+  grid-template-columns: 1fr minmax(400px, 25%);
+  gap: clamp(1.5rem, 3vw, 3rem);
+  padding: clamp(1.5rem, 3vw, 3rem);
+}
+
+@media (min-width: 1920px) {
+  .tv-container {
+    grid-template-columns: 1fr minmax(450px, 30%);
+    gap: 4rem;
+    padding: 4rem;
+  }
+}
+
+@media (min-width: 2560px) {
+  .tv-container {
+    grid-template-columns: 1fr minmax(500px, 35%);
+    gap: 5rem;
+    padding: 5rem;
+  }
+}
+
+/* TV Typography - Responsive with clamp() */
+.tv-heading-xl {
+  font-size: clamp(2rem, 4vw + 1rem, 6rem);
+  line-height: 1.1;
+  font-weight: 900;
+}
+
+.tv-text-lg {
+  font-size: clamp(1rem, 1.5vw + 0.5rem, 1.75rem);
+  line-height: 1.5;
+}
+
+.tv-text-primary {
+  color: #ffffff !important;
+}
+
+.tv-text-muted {
+  color: #a3a3a3 !important;
+}
+
+.tv-number-xl {
+  font-size: clamp(3rem, 6vw + 2rem, 12rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* TV Header */
+.tv-header {
+  background: linear-gradient(135deg, rgb(var(--color-bg-elevated)) 0%, rgb(var(--color-bg-surface)) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tv-logo {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+  will-change: box-shadow;
+}
+
+.tv-clock {
+  text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+  will-change: text-shadow;
+}
+
+/* TV Trainee Badge */
+.tv-trainee-badge {
+  background: linear-gradient(135deg, rgb(var(--color-primary)) 0%, rgb(var(--color-primary-dark)) 100%);
+  box-shadow: 0 20px 60px rgba(74, 107, 42, 0.4), 0 0 40px rgba(74, 107, 42, 0.2);
+  will-change: transform, box-shadow;
+}
+
+/* TV Cards */
+.tv-card {
+  background-color: rgba(36, 50, 28, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.tv-sidebar {
+  background-color: rgba(36, 50, 28, 0.9) !important;
+}
+
+/* TV Animations */
+@keyframes tv-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(74, 107, 42, 0.3), 0 0 60px rgba(74, 107, 42, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 60px rgba(74, 107, 42, 0.6), 0 0 100px rgba(74, 107, 42, 0.2);
+  }
+}
+
+.animate-tv-glow-pulse {
+  animation: tv-glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes tv-shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-tv-shimmer {
+  animation: tv-shimmer 2s infinite linear;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 1000px 100%;
+}
+
+@keyframes tv-number-pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-tv-number-pop {
+  animation: tv-number-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Enhanced Confetti Animation */
+@keyframes tv-confetti {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(50vh) rotate(360deg) scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.animate-confetti {
+  animation: tv-confetti linear forwards;
+}
+
+/* Fix for Smart TV browsers that don't support backdrop-filter */
+@supports not (backdrop-filter: blur(10px)) {
+  .tv-view-container .backdrop-blur-xl,
+  .tv-view-container .backdrop-blur-lg,
+  .tv-view-container .backdrop-blur-md,
+  .tv-view-container .backdrop-blur {
+    background-color: rgba(36, 50, 28, 0.98) !important;
+  }
+  
+  .tv-card {
+    background-color: rgba(36, 50, 28, 0.95) !important;
+  }
+  
+  .tv-header {
+    background-color: rgba(36, 50, 28, 0.95) !important;
+  }
+}
+
+/* Performance optimizations */
+.tv-view-container * {
+  will-change: auto;
+}
+
+.tv-trainee-badge,
+.tv-logo,
+.tv-clock {
+  will-change: transform, box-shadow;
+}
+
+/* Smooth scrolling for TV */
+.tv-view-container {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* TV Live Card Enhanced */
+.tv-live-card {
+  background: linear-gradient(135deg, rgba(36, 50, 28, 0.9) 0%, rgba(45, 58, 36, 0.9) 100%);
+  border: 4px solid rgb(var(--color-primary));
+  box-shadow: 0 0 40px rgba(74, 107, 42, 0.4), 0 0 80px rgba(74, 107, 42, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.tv-live-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
+  animation: tv-shimmer 3s infinite;
+  pointer-events: none;
+}
