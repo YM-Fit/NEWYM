@@ -28,8 +28,5 @@ export function getCorsHeaders(origin: string | null): Record<string, string> {
   };
 }
 
-/**
- * Re-export handleApiError from utils for backward compatibility
- * @deprecated Import directly from '../utils/apiErrorHandler' instead
- */
-export { handleApiError } from '../utils/apiErrorHandler';
+// Note: handleApiError has been moved to '../utils/apiErrorHandler'
+// All imports have been updated to use the direct import

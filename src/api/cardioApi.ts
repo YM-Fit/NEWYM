@@ -3,7 +3,7 @@
  */
 
 import { supabase } from '../lib/supabase';
-import { handleApiError } from './config';
+import { handleApiError } from '../utils/apiErrorHandler';
 import { rateLimiter } from '../utils/rateLimiter';
 
 export interface CardioType {

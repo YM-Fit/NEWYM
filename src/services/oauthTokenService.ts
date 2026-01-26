@@ -88,8 +88,7 @@ export class OAuthTokenService {
    * @returns Promise with new access token info
    */
   static async refreshAccessToken(
-    trainerId: string,
-    _refreshToken?: string // Not used - Edge Function gets it from DB
+    trainerId: string
   ): Promise<ApiResponse<TokenRefreshResult>> {
     try {
       // Always use Edge Function for token refresh (more secure - secrets stay on server)
@@ -176,7 +175,7 @@ export class OAuthTokenService {
       if (this.needsRefresh(token_expires_at)) {
         logger.info('Token needs refresh, refreshing...', { trainerId }, 'OAuthTokenService');
         
-        const refreshResult = await this.refreshAccessToken(trainerId, refresh_token);
+        const refreshResult = await this.refreshAccessToken(trainerId);
         
         if (refreshResult.success && refreshResult.data) {
           return { data: refreshResult.data.access_token, success: true };

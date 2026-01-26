@@ -277,7 +277,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
 
     const { data, error } = await supabase
       .from('trainees')
-      .select('*')
+      .select('id, full_name, phone, email, date_of_birth, height, gender, is_pair, status, created_at, last_known_weight, last_known_body_fat, trainer_id')
       .eq('trainer_id', user.id)
       .neq('status', 'deleted') // Filter out deleted trainees
       .order('created_at', { ascending: false });

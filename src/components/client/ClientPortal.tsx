@@ -73,7 +73,9 @@ export default function ClientPortal() {
     if (user) {
       loadData();
     }
-  }, [user, loadData]);
+    // loadData is stable (useCallback with user dependency), but we only want to run when user changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const handleDownloadInvoice = async (payment: any) => {
     try {

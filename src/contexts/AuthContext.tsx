@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, ReactNode, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { setSecureSession, getSecureSession, removeSecureSession } from '../utils/secureSession';
@@ -245,21 +245,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAuthenticated = user !== null || traineeSession !== null;
 
+  const contextValue = useMemo(() => ({
+    user: isAuthenticated ? (user || { id: traineeSession?.trainee_id } as User) : null,
+    session,
+    loading,
+    userType,
+    traineeId,
+    traineeSession,
+    signIn,
+    signInTrainee,
+    signUp,
+    signOut,
+  }), [user, session, loading, userType, traineeId, traineeSession, signIn, signInTrainee, signUp, signOut, isAuthenticated]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        user: isAuthenticated ? (user || { id: traineeSession?.trainee_id } as User) : null,
-        session,
-        loading,
-        userType,
-        traineeId,
-        traineeSession,
-        signIn,
-        signInTrainee,
-        signUp,
-        signOut,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

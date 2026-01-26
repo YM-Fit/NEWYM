@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { workoutFeedbackApi } from './workoutFeedbackApi';
 import { supabase } from '../lib/supabase';
-import { handleApiError } from './config';
+import { handleApiError } from '../utils/apiErrorHandler';
 
 vi.mock('../lib/supabase', () => ({
   supabase: {

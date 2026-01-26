@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, memo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Column<T> {
@@ -19,7 +19,7 @@ interface DataTableProps<T> {
   className?: string;
 }
 
-export function DataTable<T extends { id: string }>({
+export const DataTable = memo(<T extends { id: string }>({
   data,
   columns,
   loading = false,
@@ -27,7 +27,7 @@ export function DataTable<T extends { id: string }>({
   onRowClick,
   pageSize = 10,
   className = '',
-}: DataTableProps<T>) {
+}: DataTableProps<T>) => {
   if (loading) {
     return (
       <div className="premium-card-static p-6">
@@ -98,4 +98,4 @@ export function DataTable<T extends { id: string }>({
       </div>
     </div>
   );
-}
+}) as <T extends { id: string }>(props: DataTableProps<T>) => JSX.Element;

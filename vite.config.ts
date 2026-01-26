@@ -32,6 +32,10 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
+        // Generate manifest for preload hints
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
         manualChunks: (id) => {
           // Vendor chunks - split more aggressively
           if (id.includes('node_modules')) {

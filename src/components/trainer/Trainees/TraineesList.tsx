@@ -1,5 +1,5 @@
 import { Plus, Users, Search, Sparkles, Filter, Grid3x3, List, TrendingUp, Calendar, Scale, X, User } from 'lucide-react';
-import { useState, useMemo, memo } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import TraineeCard from './TraineeCard';
 import { usePagination } from '../../../hooks/usePagination';
 import { Pagination, SkeletonTraineeCard } from '../../ui';

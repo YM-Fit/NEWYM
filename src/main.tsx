@@ -4,7 +4,7 @@ import App from './App.tsx';
 import './index.css';
 import { initSentry, captureUnhandledRejection } from './utils/sentry';
 import { registerServiceWorker } from './utils/serviceWorker';
-import { measureWebVitals } from './utils/performanceMonitor';
+import { trackWebVitals } from './utils/performance';
 
 // Make React available globally for debugging
 if (typeof window !== 'undefined') {
@@ -147,12 +147,12 @@ if (import.meta.env.PROD) {
 }
 
 // Measure Web Vitals
-measureWebVitals((metric) => {
+trackWebVitals((metric) => {
   if (import.meta.env.DEV) {
     const value = typeof metric.value === 'number' && !isNaN(metric.value) 
       ? metric.value.toFixed(2) 
       : 'N/A';
-    console.log('[Performance]', metric.name, `${value}ms`, `(${metric.rating || 'N/A'})`);
+    console.log('[Performance]', metric.name, `${value}${metric.unit || 'ms'}`, `(${metric.rating || 'N/A'})`);
   }
   // In production, send to analytics
 });

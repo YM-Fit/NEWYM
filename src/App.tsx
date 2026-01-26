@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy, useEffect } from 'react';
+import { useState, Suspense, lazy, useEffect, useRef } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -141,9 +141,13 @@ function AppContent() {
   const { user, loading, userType } = useAuth();
   const [forceShowLogin, setForceShowLogin] = useState(false);
 
-  // Debug logging
+  // Debug logging - use ref to avoid unnecessary re-renders
+  const debugLogRef = useRef(false);
   useEffect(() => {
-    console.log('[AppContent] State:', { user: !!user, loading, userType, forceShowLogin });
+    if (import.meta.env.DEV && !debugLogRef.current) {
+      console.log('[AppContent] State:', { user: !!user, loading, userType, forceShowLogin });
+      debugLogRef.current = true;
+    }
   }, [user, loading, userType, forceShowLogin]);
 
   // Force show login after 3 seconds if still loading

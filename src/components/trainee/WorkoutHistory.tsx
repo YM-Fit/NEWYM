@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import {
@@ -84,7 +84,7 @@ interface MuscleGroup {
   name: string;
 }
 
-export default function WorkoutHistory({ traineeId, traineeName, trainerId }: WorkoutHistoryProps) {
+const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, trainerId }: WorkoutHistoryProps) {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [muscleGroups, setMuscleGroups] = useState<MuscleGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -212,16 +212,16 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
     setPreviousExerciseData(previousData);
   };
 
-  const getAvailableMonths = () => {
+  const getAvailableMonths = useMemo(() => {
     const months = new Set<string>();
     workouts.forEach((w) => {
       const date = new Date(w.workout_date);
       months.add(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
     });
     return Array.from(months).sort().reverse();
-  };
+  }, [workouts]);
 
-  const getFilteredWorkouts = () => {
+  const getFilteredWorkouts = useMemo(() => {
     const now = new Date();
     return workouts.filter((w) => {
       const date = new Date(w.workout_date);
@@ -245,9 +245,9 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
 
       return true;
     });
-  };
+  }, [workouts, selectedMonth, selectedMuscleGroup]);
 
-  const calculateWorkoutVolume = (workout: Workout) => {
+  const calculateWorkoutVolume = useCallback((workout: Workout) => {
     let totalVolume = 0;
     workout.workout_exercises?.forEach((we) => {
       we.exercise_sets?.forEach((set) => {
@@ -261,9 +261,9 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
       });
     });
     return totalVolume;
-  };
+  }, []);
 
-  const getMonthlyStats = () => {
+  const getMonthlyStats = useMemo(() => {
     const now = new Date();
     const thisMonth = workouts.filter((w) => {
       const date = new Date(w.workout_date);
@@ -279,7 +279,7 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
     const avgVolume = totalWorkouts > 0 ? Math.round(totalVolume / totalWorkouts) : 0;
 
     return { totalWorkouts, avgVolume };
-  };
+  }, [workouts, calculateWorkoutVolume]);
 
   const getLatestPR = () => {
     let latestPR: { exercise: string; weight: number; date: string } | null = null;
@@ -391,9 +391,9 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
       .sort((a, b) => new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime());
   };
 
-  const stats = useMemo(() => getMonthlyStats(), [workouts]);
+  const stats = getMonthlyStats;
   const latestPR = useMemo(() => getLatestPR(), [workouts, previousExerciseData]);
-  const filteredWorkoutsMemo = useMemo(() => getFilteredWorkouts(), [workouts, selectedMonth, selectedMuscleGroup]);
+  const filteredWorkoutsMemo = getFilteredWorkouts;
   const calendarData = useMemo(() => getMonthCalendarData(), [workouts, selectedMonth]);
   const plannedWorkouts = useMemo(() => getPlannedWorkouts(), [workouts]);
 
@@ -559,7 +559,7 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
                 className="glass-input w-full p-2"
               >
                 <option value="all">חודש נוכחי</option>
-                {getAvailableMonths().map((month) => (
+                {getAvailableMonths.map((month) => (
                   <option key={month} value={month}>
                     {formatMonthName(month)}
                   </option>

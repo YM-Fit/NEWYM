@@ -606,10 +606,7 @@ export async function getGoogleCalendarEvents(
       if (response.status === 401) {
         // Try to refresh token and retry once
         const { OAuthTokenService } = await import('../services/oauthTokenService');
-        const refreshResult = await OAuthTokenService.refreshAccessToken(
-          trainerId, 
-          credentials.refresh_token
-        );
+        const refreshResult = await OAuthTokenService.refreshAccessToken(trainerId);
         
         if (refreshResult.success && refreshResult.data?.access_token) {
           // Retry with new token
@@ -653,8 +650,7 @@ export async function getGoogleCalendarEvents(
  */
 export async function createGoogleCalendarEvent(
   trainerId: string,
-  eventData: CreateEventData,
-  _accessToken?: string // Not used - we always get fresh Google OAuth token from service
+  eventData: CreateEventData
 ): Promise<ApiResponse<string>> {
   // Rate limiting: 50 create requests per minute per trainer
   const rateLimitKey = `createGoogleCalendarEvent:${trainerId}`;
@@ -756,8 +752,7 @@ export async function createGoogleCalendarEvent(
 export async function updateGoogleCalendarEvent(
   trainerId: string,
   eventId: string,
-  updates: Partial<CreateEventData>,
-  _accessToken?: string // Not used - we always get fresh token from service
+  updates: Partial<CreateEventData>
 ): Promise<ApiResponse> {
   // Rate limiting: 50 update requests per minute per trainer
   const rateLimitKey = `updateGoogleCalendarEvent:${trainerId}`;
@@ -898,8 +893,7 @@ export async function updateGoogleCalendarEvent(
  */
 export async function deleteGoogleCalendarEvent(
   trainerId: string,
-  eventId: string,
-  _accessToken?: string // Not used - we always get fresh Google OAuth token from service
+  eventId: string
 ): Promise<ApiResponse> {
   // Rate limiting: 30 delete requests per minute per trainer
   const rateLimitKey = `deleteGoogleCalendarEvent:${trainerId}`;
@@ -954,10 +948,7 @@ export async function deleteGoogleCalendarEvent(
           .single() as { data: { refresh_token: string } | null; error: unknown };
         
         if (fullCreds?.refresh_token) {
-          const refreshResult = await OAuthTokenService.refreshAccessToken(
-            trainerId, 
-            fullCreds.refresh_token
-          );
+          const refreshResult = await OAuthTokenService.refreshAccessToken(trainerId);
           
           if (refreshResult.success && refreshResult.data?.access_token) {
             // Retry with new token
@@ -1195,7 +1186,7 @@ export async function deleteCalendarEventBidirectional(
       .maybeSingle() as { data: Pick<GoogleCalendarSyncRow, 'workout_id' | 'sync_direction'> | null; error: { message: string } | null };
 
     // Delete from Google Calendar
-    const deleteResult = await deleteGoogleCalendarEvent(trainerId, eventId, accessToken);
+    const deleteResult = await deleteGoogleCalendarEvent(trainerId, eventId);
     if (deleteResult.error) {
       return deleteResult;
     }
@@ -1342,8 +1333,7 @@ export async function bulkUpdateCalendarEvents(
         const updateResult = await updateGoogleCalendarEvent(
           trainerId,
           (record as any).google_event_id,
-          { summary: updates.summary },
-          accessToken
+          { summary: updates.summary }
         );
 
         if (updateResult.error) {
