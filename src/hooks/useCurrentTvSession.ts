@@ -445,9 +445,9 @@ export function useCurrentTvSession(
     // Initial fetch
     fetchCurrentSession();
 
-    // Polling interval - reduced frequency since we have realtime subscriptions
-    // Only poll every 30 seconds to catch any missed updates
-    intervalId = window.setInterval(fetchCurrentSession, Math.max(pollIntervalMs, 30000));
+    // Polling interval - more frequent polling for TV display to ensure real-time updates
+    // Poll every 5 seconds to ensure immediate updates even if realtime fails
+    intervalId = window.setInterval(fetchCurrentSession, Math.max(pollIntervalMs || 5000, 5000));
 
     return () => {
       isMounted = false;
@@ -541,7 +541,14 @@ export function useCurrentTvSession(
           table: 'exercise_sets',
           filter: `workout_exercise_id.in.(select id from workout_exercises where workout_id='${activeWorkoutId}')`,
         },
-        refreshWorkoutData
+        (payload) => {
+          pushLog({
+            level: 'info',
+            message: `עדכון סט: ${payload.eventType}`,
+            details: { set_id: payload.new?.id || payload.old?.id },
+          });
+          refreshWorkoutData();
+        }
       )
       .on(
         'postgres_changes',
@@ -551,7 +558,14 @@ export function useCurrentTvSession(
           table: 'workout_exercises',
           filter: `workout_id=eq.${activeWorkoutId}`,
         },
-        refreshWorkoutData
+        (payload) => {
+          pushLog({
+            level: 'info',
+            message: `עדכון תרגיל: ${payload.eventType}`,
+            details: { exercise_id: payload.new?.id || payload.old?.id },
+          });
+          refreshWorkoutData();
+        }
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
@@ -563,6 +577,11 @@ export function useCurrentTvSession(
           pushLog({
             level: 'error',
             message: 'שגיאה בחיבור לעדכונים בזמן אמת',
+          });
+        } else if (status === 'TIMED_OUT') {
+          pushLog({
+            level: 'warning',
+            message: 'חיבור לעדכונים בזמן אמת פג תוקף - מנסה להתחבר מחדש',
           });
         }
       });

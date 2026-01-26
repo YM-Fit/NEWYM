@@ -123,7 +123,14 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
     }
   }, [latestRecord]);
 
-  const now = useMemo(() => new Date(), []);
+  // Update clock every second for TV display
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const initials = useMemo(() => {
     if (!session?.trainee?.full_name) return '';
@@ -147,15 +154,20 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
     }, currentExercise.sets[0]);
   }, [currentExercise]);
 
-  // Calculate detailed stats for current exercise
+  // Calculate detailed stats for current exercise - updates in real-time
   const exerciseStats = useMemo(() => {
     if (!currentExercise || !currentExercise.sets || currentExercise.sets.length === 0) return null;
     
     const sets = currentExercise.sets;
-    const totalReps = sets.reduce((sum, set) => sum + (set.reps || 0), 0);
-    const maxWeight = Math.max(...sets.map(set => set.weight || 0), 0);
-    const totalVolume = sets.reduce((sum, set) => sum + ((set.weight || 0) * (set.reps || 0)), 0);
-    const completedSets = sets.filter(set => (set.weight || 0) > 0 && (set.reps || 0) > 0).length;
+    // Filter out completely empty sets for calculations
+    const validSets = sets.filter(set => (set.weight || 0) > 0 || (set.reps || 0) > 0);
+    
+    const totalReps = validSets.reduce((sum, set) => sum + (set.reps || 0), 0);
+    const maxWeight = validSets.length > 0 
+      ? Math.max(...validSets.map(set => set.weight || 0), 0)
+      : 0;
+    const totalVolume = validSets.reduce((sum, set) => sum + ((set.weight || 0) * (set.reps || 0)), 0);
+    const completedSets = validSets.length;
     const totalSets = sets.length;
     
     return {
@@ -200,25 +212,32 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
   // Calculate completed exercises with progress comparison
   const completedExercisesData = useMemo(() => {
-    if (!session?.workout?.exercises) return [];
+    if (!session?.workout?.exercises || session.workout.exercises.length === 0) return [];
     
     return session.workout.exercises.map((exercise) => {
       const sets = exercise.sets || [];
-      const totalReps = sets.reduce((sum, set) => sum + (set.reps || 0), 0);
-      const maxWeight = Math.max(...sets.map(set => set.weight || 0), 0);
-      const totalVolume = sets.reduce((sum, set) => sum + ((set.weight || 0) * (set.reps || 0)), 0);
-      const completedSets = sets.filter(set => (set.weight || 0) > 0 && (set.reps || 0) > 0).length;
+      
+      // Filter out empty sets (weight=0 and reps=0) for calculations
+      const validSets = sets.filter(set => (set.weight || 0) > 0 || (set.reps || 0) > 0);
+      
+      const totalReps = validSets.reduce((sum, set) => sum + (set.reps || 0), 0);
+      const maxWeight = validSets.length > 0 
+        ? Math.max(...validSets.map(set => set.weight || 0), 0)
+        : 0;
+      const totalVolume = validSets.reduce((sum, set) => sum + ((set.weight || 0) * (set.reps || 0)), 0);
+      const completedSets = validSets.length;
       const totalSets = sets.length;
       
-      // Check if exercise is completed (all sets have data)
-      const isCompleted = completedSets === totalSets && totalSets > 0;
+      // Check if exercise is completed (all sets have data with weight or reps > 0)
+      const isCompleted = completedSets === totalSets && totalSets > 0 && totalVolume > 0;
       
-      // Get previous workout data for comparison
+      // Get previous workout data for comparison - use best set from previous workout
       const previous = progressData.previousWorkoutData.get(exercise.id);
       let progressIndicator: 'up' | 'down' | 'same' | null = null;
       let progressPercent = 0;
       
       if (previous && totalVolume > 0) {
+        // Compare total volume of current exercise vs previous best set volume
         const previousVolume = previous.weight * previous.reps;
         if (previousVolume > 0) {
           progressPercent = ((totalVolume - previousVolume) / previousVolume) * 100;
@@ -499,7 +518,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                 </div>
               </div>
 
-              {/* LIVE Current Exercise Display */}
+              {/* LIVE Current Exercise Display - Updates in real-time */}
               {currentExercise && latestSet && exerciseStats && (
                 <Card variant="premium" className="tv-live-card mb-6 2xl:mb-8 p-6 md:p-8 2xl:p-12 border-primary border-4 2xl:border-[6px] shadow-glow-xl animate-tv-glow-pulse animate-tv-shimmer" padding="none">
                   <div className="flex items-center justify-between mb-4 2xl:mb-6">
@@ -511,12 +530,17 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                         מה עכשיו קורה
                       </div>
                     </div>
+                    {lastUpdated && (
+                      <div className={`text-xs 2xl:text-sm ${themeClasses.textMuted}`}>
+                        עודכן: {new Date(lastUpdated).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 2xl:gap-8 mb-6 2xl:mb-8">
                     <div>
-                      <div className="tv-text-muted tv-text-lg mb-2 2xl:mb-4">תרגיל נוכחי</div>
-                      <div className="tv-heading-xl tv-text-primary mb-4 2xl:mb-6">
+                      <div className="tv-text-muted tv-text-lg mb-2 2xl:mb-4 font-semibold">תרגיל נוכחי</div>
+                      <div className="tv-heading-xl tv-text-primary mb-4 2xl:mb-6 font-black">
                         {currentExercise.name}
                       </div>
                       <div className="tv-text-muted tv-text-lg">
@@ -525,42 +549,44 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                     </div>
                     
                     <div>
-                      <div className="tv-text-muted tv-text-lg mb-2 2xl:mb-4">ביצוע נוכחי</div>
-                      <div className="tv-number-xl tv-text-primary mb-2 2xl:mb-4 animate-tv-number-pop">
+                      <div className="tv-text-muted tv-text-lg mb-2 2xl:mb-4 font-semibold">ביצוע נוכחי</div>
+                      <div className="tv-number-xl tv-text-primary mb-2 2xl:mb-4 animate-tv-number-pop font-black">
                         {latestSet.weight ?? 0} <span className="tv-text-lg">ק״ג</span>
                       </div>
-                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop">
+                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop font-black">
                         × {latestSet.reps ?? 0} <span className="tv-text-lg">חזרות</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Detailed Indicators Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 2xl:gap-6 pt-6 2xl:pt-8 border-t border-primary/20">
-                    <div className="flex flex-col">
-                      <div className="tv-text-muted tv-text-lg mb-2">נפח סה״כ</div>
-                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop">
+                  {/* Detailed Indicators Grid - Updates in real-time */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 2xl:gap-6 pt-6 2xl:pt-8 border-t-2 border-primary/30">
+                    <Card variant="glass" className="p-4 2xl:p-6 flex flex-col items-center text-center" padding="none">
+                      <div className="tv-text-muted tv-text-lg mb-3 2xl:mb-4 font-semibold">נפח סה״כ</div>
+                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop font-black">
                         {Math.round(exerciseStats.totalVolume)} <span className="tv-text-lg">ק״ג</span>
                       </div>
-                    </div>
-                    <div className="flex flex-col">
-                      <div className="tv-text-muted tv-text-lg mb-2">משקל מקסימלי</div>
-                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop">
+                    </Card>
+                    <Card variant="glass" className="p-4 2xl:p-6 flex flex-col items-center text-center" padding="none">
+                      <div className="tv-text-muted tv-text-lg mb-3 2xl:mb-4 font-semibold">משקל מקסימלי</div>
+                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop font-black">
                         {exerciseStats.maxWeight} <span className="tv-text-lg">ק״ג</span>
                       </div>
-                    </div>
-                    <div className="flex flex-col">
-                      <div className="tv-text-muted tv-text-lg mb-2">חזרות סה״כ</div>
-                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop">
+                    </Card>
+                    <Card variant="glass" className="p-4 2xl:p-6 flex flex-col items-center text-center" padding="none">
+                      <div className="tv-text-muted tv-text-lg mb-3 2xl:mb-4 font-semibold">חזרות סה״כ</div>
+                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop font-black">
                         {exerciseStats.totalReps} <span className="tv-text-lg">חזרות</span>
                       </div>
-                    </div>
-                    <div className="flex flex-col">
-                      <div className="tv-text-muted tv-text-lg mb-2">סטים</div>
-                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop">
-                        {exerciseStats.completedSets}/{exerciseStats.totalSets}
+                    </Card>
+                    <Card variant="glass" className="p-4 2xl:p-6 flex flex-col items-center text-center" padding="none">
+                      <div className="tv-text-muted tv-text-lg mb-3 2xl:mb-4 font-semibold">סטים</div>
+                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop font-black">
+                        <span className={exerciseStats.completedSets === exerciseStats.totalSets ? 'text-emerald-500' : 'text-amber-500'}>
+                          {exerciseStats.completedSets}/{exerciseStats.totalSets}
+                        </span>
                       </div>
-                    </div>
+                    </Card>
                   </div>
 
                   {/* Progress Comparison */}
@@ -586,79 +612,97 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                 </Card>
               )}
 
-              {/* Completed Exercises Table */}
+              {/* Completed Exercises Table - Always visible, updates in real-time */}
               {completedExercisesData.length > 0 && (
-                <Card variant="premium" className="mb-6 2xl:mb-8 p-6 md:p-8 2xl:p-12" padding="none">
-                  <h2 className={`text-2xl md:text-3xl 2xl:text-4xl font-bold mb-6 2xl:mb-8 ${themeClasses.textPrimary}`}>
-                    תרגילים באימון
-                  </h2>
+                <Card variant="premium" className="mb-6 2xl:mb-8 p-6 md:p-8 2xl:p-12 border-primary/20 border-2 shadow-glow-lg" padding="none">
+                  <div className="flex items-center justify-between mb-6 2xl:mb-8">
+                    <h2 className={`text-2xl md:text-3xl 2xl:text-4xl font-bold ${themeClasses.textPrimary}`}>
+                      תרגילים באימון
+                    </h2>
+                    <div className={`text-sm 2xl:text-base ${themeClasses.textMuted}`}>
+                      {completedExercisesData.filter(e => e.isCompleted).length} / {completedExercisesData.length} הושלמו
+                    </div>
+                  </div>
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-primary/20">
-                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-semibold text-lg 2xl:text-xl`}>תרגיל</th>
-                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-semibold text-lg 2xl:text-xl`}>סטטוס</th>
-                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-semibold text-lg 2xl:text-xl`}>משקל מקס׳</th>
-                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-semibold text-lg 2xl:text-xl`}>חזרות</th>
-                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-semibold text-lg 2xl:text-xl`}>נפח</th>
-                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-semibold text-lg 2xl:text-xl`}>סטים</th>
-                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-semibold text-lg 2xl:text-xl`}>התקדמות</th>
+                        <tr className="border-b-2 border-primary/30">
+                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-bold text-lg 2xl:text-xl uppercase tracking-wider`}>תרגיל</th>
+                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-bold text-lg 2xl:text-xl uppercase tracking-wider`}>סטטוס</th>
+                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-bold text-lg 2xl:text-xl uppercase tracking-wider`}>משקל מקס׳</th>
+                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-bold text-lg 2xl:text-xl uppercase tracking-wider`}>חזרות</th>
+                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-bold text-lg 2xl:text-xl uppercase tracking-wider`}>נפח</th>
+                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-bold text-lg 2xl:text-xl uppercase tracking-wider`}>סטים</th>
+                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-bold text-lg 2xl:text-xl uppercase tracking-wider`}>התקדמות</th>
                         </tr>
                       </thead>
                       <tbody>
                         {completedExercisesData.map((exercise, index) => (
                           <tr 
                             key={exercise.id}
-                            className={`border-b border-primary/10 transition-colors ${
-                              exercise.isCompleted ? 'bg-emerald-500/5' : ''
+                            className={`border-b border-primary/10 transition-all duration-300 hover:bg-primary/5 ${
+                              exercise.isCompleted 
+                                ? 'bg-emerald-500/10 border-emerald-500/20' 
+                                : 'bg-amber-500/5 border-amber-500/10'
                             }`}
                           >
-                            <td className={`py-4 px-4 ${themeClasses.textPrimary} font-semibold text-lg 2xl:text-xl`}>
-                              {index + 1}. {exercise.name}
+                            <td className={`py-5 px-4 ${themeClasses.textPrimary} font-bold text-xl 2xl:text-2xl`}>
+                              <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 2xl:w-12 2xl:h-12 rounded-full flex items-center justify-center text-lg 2xl:text-xl font-bold ${
+                                  exercise.isCompleted 
+                                    ? 'bg-emerald-500 text-white' 
+                                    : 'bg-amber-500/20 text-amber-500'
+                                }`}>
+                                  {index + 1}
+                                </div>
+                                <span>{exercise.name}</span>
+                              </div>
                             </td>
-                            <td className="py-4 px-4">
+                            <td className="py-5 px-4">
                               {exercise.isCompleted ? (
-                                <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-500 text-sm 2xl:text-base font-semibold border border-emerald-500/30">
-                                  הושלם
+                                <span className="px-4 py-2 rounded-full bg-emerald-500/20 text-emerald-500 text-base 2xl:text-lg font-bold border-2 border-emerald-500/40 shadow-glow-sm animate-pulse-slow">
+                                  ✓ הושלם
                                 </span>
                               ) : (
-                                <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-500 text-sm 2xl:text-base font-semibold border border-amber-500/30">
+                                <span className="px-4 py-2 rounded-full bg-amber-500/20 text-amber-500 text-base 2xl:text-lg font-bold border-2 border-amber-500/40">
                                   בתהליך
                                 </span>
                               )}
                             </td>
-                            <td className={`py-4 px-4 ${themeClasses.textPrimary} text-lg 2xl:text-xl font-semibold`}>
-                              {exercise.maxWeight} ק״ג
+                            <td className={`py-5 px-4 ${themeClasses.textPrimary} text-xl 2xl:text-2xl font-bold`}>
+                              {exercise.maxWeight > 0 ? `${exercise.maxWeight} ק״ג` : '—'}
                             </td>
-                            <td className={`py-4 px-4 ${themeClasses.textPrimary} text-lg 2xl:text-xl font-semibold`}>
-                              {exercise.totalReps}
+                            <td className={`py-5 px-4 ${themeClasses.textPrimary} text-xl 2xl:text-2xl font-bold`}>
+                              {exercise.totalReps > 0 ? exercise.totalReps : '—'}
                             </td>
-                            <td className={`py-4 px-4 ${themeClasses.textPrimary} text-lg 2xl:text-xl font-semibold`}>
-                              {Math.round(exercise.totalVolume)} ק״ג
+                            <td className={`py-5 px-4 ${themeClasses.textPrimary} text-xl 2xl:text-2xl font-bold`}>
+                              {exercise.totalVolume > 0 ? `${Math.round(exercise.totalVolume)} ק״ג` : '—'}
                             </td>
-                            <td className={`py-4 px-4 ${themeClasses.textPrimary} text-lg 2xl:text-xl font-semibold`}>
-                              {exercise.completedSets}/{exercise.totalSets}
+                            <td className={`py-5 px-4 ${themeClasses.textPrimary} text-xl 2xl:text-2xl font-bold`}>
+                              <span className={exercise.completedSets === exercise.totalSets ? 'text-emerald-500' : 'text-amber-500'}>
+                                {exercise.completedSets}/{exercise.totalSets}
+                              </span>
                             </td>
-                            <td className="py-4 px-4">
+                            <td className="py-5 px-4">
                               {exercise.progressIndicator === 'up' && (
-                                <div className="flex items-center gap-2 text-emerald-500">
-                                  <TrendingUp className="w-5 h-5 2xl:w-6 2xl:h-6" />
-                                  <span className="text-lg 2xl:text-xl font-semibold">+{exercise.progressPercent}%</span>
+                                <div className="flex items-center gap-2 text-emerald-500 animate-pulse-slow">
+                                  <TrendingUp className="w-6 h-6 2xl:w-8 2xl:h-8" />
+                                  <span className="text-xl 2xl:text-2xl font-bold">+{Math.abs(exercise.progressPercent)}%</span>
                                 </div>
                               )}
                               {exercise.progressIndicator === 'down' && (
                                 <div className="flex items-center gap-2 text-red-500">
-                                  <TrendingUp className="w-5 h-5 2xl:w-6 2xl:h-6 rotate-180" />
-                                  <span className="text-lg 2xl:text-xl font-semibold">{exercise.progressPercent}%</span>
+                                  <TrendingUp className="w-6 h-6 2xl:w-8 2xl:h-8 rotate-180" />
+                                  <span className="text-xl 2xl:text-2xl font-bold">{exercise.progressPercent}%</span>
                                 </div>
                               )}
                               {exercise.progressIndicator === 'same' && (
                                 <div className="flex items-center gap-2 text-gray-400">
-                                  <span className="text-2xl 2xl:text-3xl">=</span>
+                                  <span className="text-3xl 2xl:text-4xl font-bold">=</span>
                                 </div>
                               )}
                               {!exercise.progressIndicator && (
-                                <span className={`${themeClasses.textMuted} text-sm 2xl:text-base`}>—</span>
+                                <span className={`${themeClasses.textMuted} text-base 2xl:text-lg`}>—</span>
                               )}
                             </td>
                           </tr>
