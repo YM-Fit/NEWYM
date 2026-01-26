@@ -78,41 +78,41 @@ export function usePersonalRecordDetection(
             r => r.exercise_id === exercise.id
           );
 
-          // Check max weight
+          // Check max weight - only show if there's a previous record to compare
           const weightRecord = exerciseRecords.find(r => r.record_type === 'max_weight');
-          if (!weightRecord || bestSet.weight > (weightRecord.weight || 0)) {
+          if (weightRecord && bestSet.weight > (weightRecord.weight || 0)) {
             newRecords.push({
               exerciseId: exercise.id,
               exerciseName: exercise.name,
               type: 'max_weight',
-              oldValue: weightRecord?.weight || 0,
+              oldValue: weightRecord.weight || 0,
               newValue: bestSet.weight,
               timestamp: new Date().toISOString(),
             });
           }
 
-          // Check max reps
+          // Check max reps - only show if there's a previous record to compare
           const repsRecord = exerciseRecords.find(r => r.record_type === 'max_reps');
-          if (!repsRecord || bestSet.reps > (repsRecord.reps || 0)) {
+          if (repsRecord && bestSet.reps > (repsRecord.reps || 0)) {
             newRecords.push({
               exerciseId: exercise.id,
               exerciseName: exercise.name,
               type: 'max_reps',
-              oldValue: repsRecord?.reps || 0,
+              oldValue: repsRecord.reps || 0,
               newValue: bestSet.reps,
               timestamp: new Date().toISOString(),
             });
           }
 
-          // Check max volume
+          // Check max volume - only show if there's a previous record to compare
           const volumeRecord = exerciseRecords.find(r => r.record_type === 'max_volume');
           const currentVolume = bestSet.weight * bestSet.reps;
-          if (!volumeRecord || currentVolume > (volumeRecord.volume || 0)) {
+          if (volumeRecord && currentVolume > (volumeRecord.volume || 0)) {
             newRecords.push({
               exerciseId: exercise.id,
               exerciseName: exercise.name,
               type: 'max_volume',
-              oldValue: volumeRecord?.volume || 0,
+              oldValue: volumeRecord.volume || 0,
               newValue: currentVolume,
               timestamp: new Date().toISOString(),
             });

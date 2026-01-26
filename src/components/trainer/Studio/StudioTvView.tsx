@@ -238,18 +238,44 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       const previous = progressData.previousWorkoutData.get(exercise.id);
       let progressIndicator: 'up' | 'down' | 'same' | null = null;
       let progressPercent = 0;
+      let progressType: 'volume' | 'weight' | 'reps' | null = null;
+      let progressDetails = '';
       
       if (previous && totalVolume > 0) {
         // Compare total volume of current exercise vs previous best set volume
         const previousVolume = previous.weight * previous.reps;
         if (previousVolume > 0) {
           progressPercent = ((totalVolume - previousVolume) / previousVolume) * 100;
+          progressType = 'volume';
           if (Math.abs(progressPercent) < 1) {
             progressIndicator = 'same';
+            progressDetails = `נפח זהה: ${Math.round(totalVolume)} ק״ג`;
           } else if (progressPercent > 0) {
             progressIndicator = 'up';
+            progressDetails = `נפח: ${Math.round(previousVolume)} → ${Math.round(totalVolume)} ק״ג`;
           } else {
             progressIndicator = 'down';
+            progressDetails = `נפח: ${Math.round(previousVolume)} → ${Math.round(totalVolume)} ק״ג`;
+          }
+        }
+        
+        // Also check weight and reps for more detailed comparison
+        if (previous.weight > 0 && maxWeight > previous.weight) {
+          const weightPercent = ((maxWeight - previous.weight) / previous.weight) * 100;
+          if (weightPercent > Math.abs(progressPercent)) {
+            progressType = 'weight';
+            progressPercent = weightPercent;
+            progressIndicator = 'up';
+            progressDetails = `משקל: ${previous.weight} → ${maxWeight} ק״ג`;
+          }
+        }
+        if (previous.reps > 0 && totalReps > previous.reps) {
+          const repsPercent = ((totalReps - previous.reps) / previous.reps) * 100;
+          if (repsPercent > Math.abs(progressPercent)) {
+            progressType = 'reps';
+            progressPercent = repsPercent;
+            progressIndicator = 'up';
+            progressDetails = `חזרות: ${previous.reps} → ${totalReps}`;
           }
         }
       }
@@ -265,6 +291,8 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         totalSets,
         progressIndicator,
         progressPercent: Math.round(progressPercent * 10) / 10,
+        progressType,
+        progressDetails,
         previousData: previous,
         sets: sortedSets, // Include sets for display
       };
@@ -459,7 +487,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
           ) : (
             <>
               {/* Full Screen Table for TV - Main Focus - Uses entire screen */}
-              {completedExercisesData.length > 0 ? (
+              {session?.workout?.exercises && session.workout.exercises.length > 0 ? (
                 <div className="h-full w-full flex flex-col bg-gradient-dark border-2 border-primary/30 shadow-glow-xl overflow-hidden">
                   {/* Compact Table Header */}
                   <div className="flex items-center justify-between px-6 2xl:px-8 py-4 2xl:py-5 border-b-4 border-primary/40 bg-primary/5 flex-shrink-0">
@@ -499,17 +527,17 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                   {/* Full Screen Table - Takes entire screen space */}
                   <div className="flex-1 overflow-auto">
                     <table className="w-full" style={{ fontSize: 'clamp(1.25rem, 3vw, 2.5rem)' }}>
-                      <thead className="sticky top-0 z-10 bg-gradient-dark border-b-4 border-primary/40">
+                      <thead className="sticky top-0 z-10 bg-gradient-dark dark:bg-gradient-dark border-b-4 border-primary/40 dark:border-primary/40">
                         <tr>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>#</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>תרגיל</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>סטטוס</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>משקל מקס׳</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>חזרות</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>נפח</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>סטים</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>פרטי סטים</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>התקדמות</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 dark:text-gray-300 text-gray-700 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10 dark:bg-primary/10`}>#</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 dark:text-gray-300 text-gray-700 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10 dark:bg-primary/10`}>תרגיל</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 dark:text-gray-300 text-gray-700 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10 dark:bg-primary/10`}>סטטוס</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 dark:text-gray-300 text-gray-700 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10 dark:bg-primary/10`}>משקל מקס׳</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 dark:text-gray-300 text-gray-700 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10 dark:bg-primary/10`}>חזרות</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 dark:text-gray-300 text-gray-700 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10 dark:bg-primary/10`}>נפח</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 dark:text-gray-300 text-gray-700 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10 dark:bg-primary/10`}>סטים</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 dark:text-gray-300 text-gray-700 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10 dark:bg-primary/10`}>פרטי סטים</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 dark:text-gray-300 text-gray-700 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10 dark:bg-primary/10`}>התקדמות</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -518,9 +546,9 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                             key={exercise.id}
                             className={`border-b-2 transition-all duration-300 ${
                               exercise.isCompleted 
-                                ? 'bg-emerald-500/15 border-emerald-500/30' 
-                                : 'bg-amber-500/10 border-amber-500/20'
-                            } ${index === 0 && currentExercise ? 'ring-4 ring-primary/50' : ''}`}
+                                ? 'bg-emerald-500/15 dark:bg-emerald-500/15 border-emerald-500/30 dark:border-emerald-500/30' 
+                                : 'bg-amber-500/10 dark:bg-amber-500/10 border-amber-500/20 dark:border-amber-500/20'
+                            } ${index === 0 && currentExercise ? 'ring-4 ring-primary/50 dark:ring-primary/50' : ''}`}
                           >
                             <td className={`py-6 2xl:py-8 px-4 2xl:px-6 text-center`}>
                               <div className={`w-14 h-14 2xl:w-18 2xl:h-18 rounded-full flex items-center justify-center text-xl 2xl:text-2xl font-black mx-auto ${
@@ -531,27 +559,27 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                 {index + 1}
                               </div>
                             </td>
-                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 ${themeClasses.textPrimary} font-black text-xl 2xl:text-2xl`}>
+                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 dark:text-white text-gray-900 font-black text-xl 2xl:text-2xl`}>
                               {exercise.name}
                             </td>
                             <td className="py-6 2xl:py-8 px-4 2xl:px-6">
                               {exercise.isCompleted ? (
-                                <span className="px-4 py-2 2xl:px-6 2xl:py-3 rounded-full bg-emerald-500/30 text-emerald-500 text-lg 2xl:text-xl font-black border-3 border-emerald-500/50 shadow-glow-lg animate-pulse-slow inline-block">
+                                <span className="px-4 py-2 2xl:px-6 2xl:py-3 rounded-full bg-emerald-500/30 dark:bg-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-lg 2xl:text-xl font-black border-3 border-emerald-500/50 dark:border-emerald-500/50 shadow-glow-lg animate-pulse-slow inline-block">
                                   ✓ הושלם
                                 </span>
                               ) : (
-                                <span className="px-4 py-2 2xl:px-6 2xl:py-3 rounded-full bg-amber-500/30 text-amber-500 text-lg 2xl:text-xl font-black border-3 border-amber-500/50 inline-block">
+                                <span className="px-4 py-2 2xl:px-6 2xl:py-3 rounded-full bg-amber-500/30 dark:bg-amber-500/30 text-amber-600 dark:text-amber-400 text-lg 2xl:text-xl font-black border-3 border-amber-500/50 dark:border-amber-500/50 inline-block">
                                   בתהליך
                                 </span>
                               )}
                             </td>
-                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 ${themeClasses.textPrimary} text-xl 2xl:text-2xl font-black text-center`}>
+                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 dark:text-white text-gray-900 text-xl 2xl:text-2xl font-black text-center`}>
                               {exercise.maxWeight > 0 ? `${exercise.maxWeight} ק״ג` : '—'}
                             </td>
-                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 ${themeClasses.textPrimary} text-xl 2xl:text-2xl font-black text-center`}>
+                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 dark:text-white text-gray-900 text-xl 2xl:text-2xl font-black text-center`}>
                               {exercise.totalReps > 0 ? exercise.totalReps : '—'}
                             </td>
-                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 ${themeClasses.textPrimary} text-xl 2xl:text-2xl font-black text-center`}>
+                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 dark:text-white text-gray-900 text-xl 2xl:text-2xl font-black text-center`}>
                               {exercise.totalVolume > 0 ? `${Math.round(exercise.totalVolume)} ק״ג` : '—'}
                             </td>
                             <td className={`py-6 2xl:py-8 px-4 2xl:px-6 text-xl 2xl:text-2xl font-black text-center`}>
@@ -582,24 +610,43 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                             </td>
                             <td className="py-6 2xl:py-8 px-4 2xl:px-6 text-center">
                               {exercise.progressIndicator === 'up' && (
-                                <div className="flex items-center justify-center gap-2 text-emerald-500 animate-pulse-slow">
-                                  <TrendingUp className="w-6 h-6 2xl:w-8 2xl:h-8" />
-                                  <span className="text-xl 2xl:text-2xl font-black">+{Math.abs(exercise.progressPercent)}%</span>
+                                <div className="flex flex-col items-center justify-center gap-1 text-emerald-500 dark:text-emerald-400 animate-pulse-slow">
+                                  <div className="flex items-center gap-2">
+                                    <TrendingUp className="w-6 h-6 2xl:w-8 2xl:h-8" />
+                                    <span className="text-xl 2xl:text-2xl font-black">+{Math.abs(exercise.progressPercent)}%</span>
+                                  </div>
+                                  {exercise.progressDetails && (
+                                    <span className="text-xs 2xl:text-sm font-semibold opacity-80 dark:text-emerald-300 text-emerald-700">
+                                      {exercise.progressDetails}
+                                    </span>
+                                  )}
                                 </div>
                               )}
                               {exercise.progressIndicator === 'down' && (
-                                <div className="flex items-center justify-center gap-2 text-red-500">
-                                  <TrendingUp className="w-6 h-6 2xl:w-8 2xl:h-8 rotate-180" />
-                                  <span className="text-xl 2xl:text-2xl font-black">{exercise.progressPercent}%</span>
+                                <div className="flex flex-col items-center justify-center gap-1 text-red-500 dark:text-red-400">
+                                  <div className="flex items-center gap-2">
+                                    <TrendingUp className="w-6 h-6 2xl:w-8 2xl:h-8 rotate-180" />
+                                    <span className="text-xl 2xl:text-2xl font-black">{exercise.progressPercent}%</span>
+                                  </div>
+                                  {exercise.progressDetails && (
+                                    <span className="text-xs 2xl:text-sm font-semibold opacity-80 dark:text-red-300 text-red-700">
+                                      {exercise.progressDetails}
+                                    </span>
+                                  )}
                                 </div>
                               )}
                               {exercise.progressIndicator === 'same' && (
-                                <div className="flex items-center justify-center">
-                                  <span className="text-3xl 2xl:text-4xl font-black text-gray-400">=</span>
+                                <div className="flex flex-col items-center justify-center gap-1">
+                                  <span className="text-3xl 2xl:text-4xl font-black dark:text-gray-400 text-gray-600">=</span>
+                                  {exercise.progressDetails && (
+                                    <span className="text-xs 2xl:text-sm font-semibold opacity-80 dark:text-gray-400 text-gray-600">
+                                      {exercise.progressDetails}
+                                    </span>
+                                  )}
                                 </div>
                               )}
                               {!exercise.progressIndicator && (
-                                <span className={`${themeClasses.textMuted} text-lg 2xl:text-xl`}>—</span>
+                                <span className="dark:text-gray-400 text-gray-600 text-lg 2xl:text-xl">—</span>
                               )}
                             </td>
                           </tr>
