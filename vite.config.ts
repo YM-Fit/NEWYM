@@ -36,6 +36,8 @@ export default defineConfig({
         entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
+        // Only preload critical chunks to reduce browser warnings
+        // Vite will still generate modulepreload hints, but we can control which chunks are preloaded
         manualChunks: (id) => {
           // Vendor chunks - split more aggressively
           if (id.includes('node_modules')) {

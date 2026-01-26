@@ -2793,8 +2793,8 @@
 }
 
 /* ============================================
-   TV View Override - Force white text for TV display
-   This overrides the global black text rule for the TV view
+   TV View Override - Force text color for TV display
+   Dark mode: white text, Light mode: black text
    MUST be outside @layer for proper cascade ordering
    ============================================ */
 html body .tv-view-container,
@@ -2806,9 +2806,21 @@ html body .tv-view-container *::after,
   color: #ffffff !important;
 }
 
+/* Light mode: black text on light background */
+.light .tv-view-container,
+.light .tv-view-container *,
+.light .tv-view-container *::before,
+.light .tv-view-container *::after {
+  color: #000000 !important;
+}
+
 html body .tv-view-container .text-muted-tv,
 .tv-view-container .text-muted-tv {
   color: #a3a3a3 !important;
+}
+
+.light .tv-view-container .text-muted-tv {
+  color: #000000 !important;
 }
 
 /* ============================================
@@ -2860,8 +2872,16 @@ html body .tv-view-container .text-muted-tv,
   color: #ffffff !important;
 }
 
+.light .tv-text-primary {
+  color: #000000 !important;
+}
+
 .tv-text-muted {
   color: #a3a3a3 !important;
+}
+
+.light .tv-text-muted {
+  color: #000000 !important;
 }
 
 .tv-number-xl {

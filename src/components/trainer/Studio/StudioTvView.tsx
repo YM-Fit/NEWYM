@@ -305,7 +305,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
   return (
     <div 
-      className="h-screen w-screen overflow-hidden flex flex-col relative tv-view-container bg-gradient-dark"
+      className="h-screen w-screen overflow-hidden flex flex-col relative tv-view-container bg-emerald-50 dark:bg-gradient-dark"
     >
       {/* Enhanced Confetti animation */}
       {showConfetti && (
@@ -422,11 +422,11 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
             <span className="text-3xl 2xl:text-4xl font-extrabold tracking-tight text-white">N</span>
           </div>
           <div>
-            <div className="tv-text-primary text-3xl 2xl:text-5xl font-black">
+            <div className="text-black dark:text-white text-3xl 2xl:text-5xl font-black">
               {session?.trainee?.full_name ?? 'מתאמן'}
             </div>
             {session?.calendarEvent?.summary && (
-              <div className="tv-text-muted text-lg 2xl:text-2xl mt-1">
+              <div className="text-black dark:text-gray-300 text-lg 2xl:text-2xl mt-1 font-semibold">
                 {session.calendarEvent.summary}
               </div>
             )}
@@ -435,13 +435,13 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
         <div className="flex items-center gap-8 2xl:gap-12">
           <div className="text-right">
-            <div className="tv-clock text-4xl 2xl:text-6xl font-black tracking-tight leading-none tv-text-primary">
+            <div className="tv-clock text-4xl 2xl:text-6xl font-black tracking-tight leading-none text-black dark:text-white">
               {formatClock(now)}
             </div>
-            <div className="tv-text-muted text-xl 2xl:text-2xl mt-1">{formatDate(now)}</div>
+            <div className="text-black dark:text-gray-300 text-xl 2xl:text-2xl mt-1 font-semibold">{formatDate(now)}</div>
           </div>
           {lastUpdated && (
-            <div className="tv-text-muted text-base 2xl:text-lg">
+            <div className="text-black dark:text-gray-300 text-base 2xl:text-lg font-semibold">
               עודכן: {new Date(lastUpdated).toLocaleTimeString('he-IL', {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -457,8 +457,8 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         <div className="h-full w-full p-4 2xl:p-6">
           {isUnauthorized ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
-              <div className="tv-text-primary text-3xl font-semibold">התחברות נדרשת</div>
-              <p className="tv-text-muted text-xl max-w-xl text-center">
+              <div className="text-black dark:text-white text-3xl font-semibold">התחברות נדרשת</div>
+              <p className="text-black dark:text-gray-300 text-xl max-w-xl text-center font-semibold">
                 כדי להשתמש במצב טלוויזיה, התחבר כמדריך מהמכשיר הזה.
                 לאחר ההתחברות, המסך יזהה אוטומטית את האימון הפעיל מהיומן.
               </p>
@@ -469,17 +469,17 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                 <div className="h-20 w-20 border-4 rounded-full animate-spin border-emerald-500/40 border-t-emerald-500" />
                 <div className="absolute inset-0 h-20 w-20 rounded-full animate-ping border-2 border-emerald-500/20" />
               </div>
-              <div className="tv-text-primary tv-text-lg animate-pulse">טוען את האימון הנוכחי מהיומן...</div>
+              <div className="text-black dark:text-white tv-text-lg animate-pulse font-semibold">טוען את האימון הנוכחי מהיומן...</div>
             </div>
           ) : error && !session ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 animate-fade-in">
-              <div className="text-3xl font-semibold text-red-500 mb-2">⚠️ שגיאה במצב טלוויזיה</div>
-              <p className="tv-text-primary tv-text-lg max-w-xl text-center">{error}</p>
+              <div className="text-3xl font-semibold text-red-600 dark:text-red-500 mb-2">⚠️ שגיאה במצב טלוויזיה</div>
+              <p className="text-black dark:text-white tv-text-lg max-w-xl text-center font-semibold">{error}</p>
             </div>
           ) : !session ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-6 animate-fade-in">
-              <div className="tv-text-primary tv-heading-xl font-semibold text-center">אין אימון פעיל כרגע</div>
-              <p className="tv-text-muted tv-text-lg max-w-2xl text-center leading-relaxed">
+              <div className="text-black dark:text-white tv-heading-xl font-semibold text-center">אין אימון פעיל כרגע</div>
+              <p className="text-black dark:text-gray-300 tv-text-lg max-w-2xl text-center leading-relaxed font-semibold">
                 לא נמצא אירוע יומן פעיל לסטודיו בזמן הנוכחי.
                 ודא שהאימונים שלך מסונכרנים ליומן Google וששעת האימון תואמת לשעה הנוכחית.
               </p>
@@ -656,12 +656,12 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                   </div>
                 </div>
               ) : (
-                <div className="h-full w-full flex items-center justify-center">
+                <div className="h-full w-full flex items-center justify-center bg-emerald-50 dark:bg-gradient-dark">
                   <div className="text-center">
-                    <div className="tv-text-primary text-4xl 2xl:text-6xl font-black mb-4">
+                    <div className="text-black dark:text-white text-4xl 2xl:text-6xl font-black mb-4">
                       אין תרגילים כרגע
                     </div>
-                    <p className="tv-text-muted text-2xl 2xl:text-3xl">
+                    <p className="text-black dark:text-gray-300 text-2xl 2xl:text-3xl font-semibold">
                       האימון זוהה מהיומן, אבל טרם נוספו לו תרגילים במערכת.
                     </p>
                   </div>

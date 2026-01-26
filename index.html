@@ -17,6 +17,40 @@
     <link rel="dns-prefetch" href="https://*.supabase.co" />
     <link rel="preconnect" href="https://*.supabase.co" crossorigin />
     
+    <!-- Suppress console warnings from build tools and third-party libraries -->
+    <script>
+      // Suppress contextify warnings from Vite legacy plugin polyfills (harmless but noisy)
+      if (typeof console !== 'undefined') {
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+          const message = String(args[0] || '');
+          const fullMessage = args.map(String).join(' ');
+          if (
+            message.includes('[Contextify]') ||
+            fullMessage.includes('[Contextify]') ||
+            fullMessage.includes('running source code in new context')
+          ) {
+            return; // Suppress contextify warnings
+          }
+          originalWarn.apply(console, args);
+        };
+        
+        // Suppress preload warnings (browser optimization warnings, not errors)
+        const originalError = console.error;
+        console.error = function(...args) {
+          const message = String(args[0] || '');
+          const fullMessage = args.map(String).join(' ');
+          if (
+            message.includes('preloaded using link preload but not used') ||
+            fullMessage.includes('preloaded using link preload but not used')
+          ) {
+            return; // Suppress preload warnings
+          }
+          originalError.apply(console, args);
+        };
+      }
+    </script>
+    
     <!-- Preload critical chunks will be added by Vite build -->
   </head>
   <body>

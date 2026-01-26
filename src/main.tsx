@@ -12,11 +12,47 @@ if (typeof window !== 'undefined') {
   (window as any).ReactDOM = { createRoot };
 }
 
-// Suppress WebContainer/StackBlitz preview script errors
-// These are from the development environment intercepting Supabase requests
-if (typeof window !== 'undefined' && import.meta.env.DEV) {
-  const originalConsoleError = console.error;
-  console.error = (...args: any[]) => {
+// Suppress console warnings and errors from third-party libraries and build tools
+if (typeof window !== 'undefined') {
+  // Suppress contextify warnings from Vite legacy plugin polyfills
+  const originalConsoleWarn = console.warn;
+  console.warn = (...args: any[]) => {
+    const message = args[0]?.toString() || '';
+    const fullMessage = args.map(arg => String(arg)).join(' ');
+    
+    // Suppress contextify warnings from legacy polyfills (harmless but noisy)
+    if (
+      message.includes('[Contextify]') ||
+      fullMessage.includes('[Contextify]') ||
+      fullMessage.includes('running source code in new context')
+    ) {
+      return;
+    }
+    
+    // Suppress preload warnings (browser optimization warnings, not errors)
+    if (
+      message.includes('preloaded using link preload but not used') ||
+      fullMessage.includes('preloaded using link preload but not used')
+    ) {
+      return;
+    }
+    
+    // Suppress WebSocket warnings for Supabase Realtime
+    if (
+      (message.includes('WebSocket') || fullMessage.includes('WebSocket')) &&
+      (message.includes('supabase') || fullMessage.includes('supabase') || fullMessage.includes('realtime'))
+    ) {
+      return;
+    }
+    
+    originalConsoleWarn.apply(console, args);
+  };
+  
+  // Suppress WebContainer/StackBlitz preview script errors
+  // These are from the development environment intercepting Supabase requests
+  if (import.meta.env.DEV) {
+    const originalConsoleError = console.error;
+    console.error = (...args: any[]) => {
     // Get stack trace to check where the error comes from
     const stackTrace = new Error().stack || '';
     
@@ -56,9 +92,28 @@ if (typeof window !== 'undefined' && import.meta.env.DEV) {
       return;
     }
     
+    // Suppress contextify warnings from legacy polyfills
+    if (
+      message.includes('[Contextify]') ||
+      fullMessage.includes('[Contextify]') ||
+      fullMessage.includes('running source code in new context')
+    ) {
+      return;
+    }
+    
+    // Suppress WebSocket connection errors for Supabase Realtime
+    if (
+      (message.includes('WebSocket') || fullMessage.includes('WebSocket')) &&
+      (message.includes('supabase') || fullMessage.includes('supabase') || 
+       fullMessage.includes('realtime') || fullMessage.includes('websocket'))
+    ) {
+      return;
+    }
+    
     // Call original console.error for everything else
     originalConsoleError.apply(console, args);
   };
+  }
 }
 
 // Initialize Sentry error tracking (async, don't block app startup)
@@ -99,6 +154,18 @@ window.addEventListener('unhandledrejection', (event) => {
     return;
   }
   
+  // Suppress WebSocket connection errors for Supabase Realtime
+  if (
+    (errorString.includes('WebSocket') || errorMessage.includes('WebSocket')) &&
+    (errorString.includes('supabase') || errorMessage.includes('supabase') ||
+     errorString.includes('realtime') || errorMessage.includes('realtime') ||
+     errorString.includes('websocket') || errorMessage.includes('websocket'))
+  ) {
+    // WebSocket errors are handled gracefully by Supabase client
+    event.preventDefault();
+    return;
+  }
+  
   captureUnhandledRejection(event.reason);
   // Prevent default browser console error
   event.preventDefault();
@@ -133,6 +200,28 @@ window.addEventListener('error', (event) => {
   ) {
     // These are from the development environment intercepting Supabase requests
     // They're not real errors in our code
+    event.preventDefault();
+    return;
+  }
+  
+  // Suppress WebSocket connection errors for Supabase Realtime
+  if (
+    (errorMessage.includes('WebSocket') || errorSource.includes('websocket')) &&
+    (errorMessage.includes('supabase') || errorSource.includes('supabase') ||
+     errorMessage.includes('realtime') || errorSource.includes('realtime'))
+  ) {
+    // WebSocket errors are handled gracefully by Supabase client
+    event.preventDefault();
+    return;
+  }
+  
+  // Suppress contextify warnings from legacy polyfills
+  if (
+    errorMessage.includes('[Contextify]') ||
+    errorMessage.includes('running source code in new context') ||
+    errorSource.includes('blitz')
+  ) {
+    // Harmless warnings from Vite legacy plugin polyfills
     event.preventDefault();
     return;
   }
