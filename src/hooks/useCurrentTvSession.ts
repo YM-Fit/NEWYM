@@ -503,17 +503,24 @@ export function useCurrentTvSession(
             })),
           }));
 
-          setSession(prev =>
-            prev && prev.workout && prev.workout.id === activeWorkoutId
-              ? {
-                  ...prev,
-                  workout: {
-                    ...prev.workout,
-                    exercises,
-                  },
-                }
-              : prev
-          );
+          setSession(prev => {
+            // Only update if we have a valid session and workout
+            if (!prev || !prev.workout || prev.workout.id !== activeWorkoutId) {
+              return prev;
+            }
+            // Only update if we have exercises or if exercises array is explicitly empty (to avoid flickering)
+            if (exercises.length === 0 && prev.workout.exercises && prev.workout.exercises.length > 0) {
+              // Don't clear exercises if we had them before - might be a temporary issue
+              return prev;
+            }
+            return {
+              ...prev,
+              workout: {
+                ...prev.workout,
+                exercises,
+              },
+            };
+          });
 
           pushLog({
             level: 'info',
