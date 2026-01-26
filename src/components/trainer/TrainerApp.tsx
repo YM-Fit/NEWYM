@@ -275,17 +275,59 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const loadTrainees = useCallback(async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('trainees')
-      .select('id, full_name, phone, email, date_of_birth, height, gender, is_pair, status, created_at, last_known_weight, last_known_body_fat, trainer_id')
-      .eq('trainer_id', user.id)
-      .neq('status', 'deleted') // Filter out deleted trainees
-      .order('created_at', { ascending: false });
+    try {
+      // First try with all fields - if some don't exist, we'll get a clear error
+      const { data, error } = await supabase
+        .from('trainees')
+        .select('*')
+        .eq('trainer_id', user.id)
+        .neq('status', 'deleted') // Filter out deleted trainees
+        .order('created_at', { ascending: false });
 
     if (!error && data) {
-      setTrainees(data);
+      // Get last workout dates for all trainees in one query (more efficient)
+      const traineeIds = data.map(t => t.id);
+      let lastWorkoutMap = new Map<string, string>();
+      
+      if (traineeIds.length > 0) {
+        const { data: lastWorkouts } = await supabase
+          .from('workout_trainees')
+          .select('trainee_id, workouts!inner(workout_date, is_completed)')
+          .in('trainee_id', traineeIds)
+          .eq('workouts.is_completed', true)
+          .order('workouts(workout_date)', { ascending: false });
+
+        // Create a map of trainee_id -> last workout date
+        if (lastWorkouts) {
+          lastWorkouts.forEach((wt: any) => {
+            const traineeId = wt.trainee_id;
+            const workoutDate = wt.workouts?.workout_date;
+            if (workoutDate && (!lastWorkoutMap.has(traineeId) || workoutDate > lastWorkoutMap.get(traineeId)!)) {
+              lastWorkoutMap.set(traineeId, workoutDate);
+            }
+          });
+        }
+      }
+
+      // Add lastWorkout to each trainee
+      const traineesWithLastWorkout = data.map(trainee => ({
+        ...trainee,
+        lastWorkout: lastWorkoutMap.get(trainee.id) || null,
+      }));
+
+      setTrainees(traineesWithLastWorkout);
     } else if (error) {
       logger.error('Error loading trainees:', error, 'TrainerApp');
+      console.error('Trainees query error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
+    }
+    } catch (err) {
+      logger.error('Unexpected error loading trainees:', err, 'TrainerApp');
+      console.error('Unexpected error:', err);
     }
   }, [user?.id]);
 
