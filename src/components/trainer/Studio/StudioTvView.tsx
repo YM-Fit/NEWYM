@@ -47,11 +47,11 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   const [showPRMessage, setShowPRMessage] = useState(false);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
   const [lastWorkout, setLastWorkout] = useState<any>(null);
-  const [welcomeScreenShown, setWelcomeScreenShown] = useState(false);
+  const [welcomeScreenShown, setWelcomeScreenShown] = useState<string | null>(null); // Store workout ID instead of boolean
 
   // Load last workout for welcome screen
   useEffect(() => {
-    if (!session?.trainee?.id || welcomeScreenShown) return;
+    if (!session?.trainee?.id || welcomeScreenShown === session?.workout?.id) return;
 
     const loadLastWorkout = async () => {
       try {
@@ -91,19 +91,51 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
     };
 
     loadLastWorkout();
-  }, [session?.trainee?.id, welcomeScreenShown]);
+  }, [session?.trainee?.id, session?.workout?.id, welcomeScreenShown]);
 
-  // Show welcome screen when first exercise appears
+  // Show welcome screen when first exercise appears, but hide it after first set is filled
+  // Only show once per workout (tracked by workout ID)
   useEffect(() => {
-    if (session?.workout?.exercises && session.workout.exercises.length > 0 && !welcomeScreenShown && session?.trainee) {
-      setShowWelcomeScreen(true);
-      setWelcomeScreenShown(true);
-      const timer = setTimeout(() => {
+    const currentWorkoutId = session?.workout?.id;
+    if (!currentWorkoutId || welcomeScreenShown === currentWorkoutId) return;
+    
+    if (session?.workout?.exercises && session.workout.exercises.length > 0 && session?.trainee) {
+      // Check if any exercise has at least one set with data (weight or reps > 0)
+      const hasFilledSet = session.workout.exercises.some(exercise => 
+        exercise.sets?.some(set => (set.weight || 0) > 0 || (set.reps || 0) > 0)
+      );
+      
+      if (!hasFilledSet) {
+        // Show welcome screen only if no sets are filled yet
+        setShowWelcomeScreen(true);
+        const timer = setTimeout(() => {
+          setShowWelcomeScreen(false);
+        }, 6000); // Show for 6 seconds
+        return () => clearTimeout(timer);
+      } else {
+        // If sets are already filled, mark as shown so it doesn't appear again
+        setWelcomeScreenShown(currentWorkoutId);
         setShowWelcomeScreen(false);
-      }, 6000); // Show for 6 seconds
-      return () => clearTimeout(timer);
+      }
     }
-  }, [session?.workout?.exercises, welcomeScreenShown, session?.trainee]);
+  }, [session?.workout?.exercises, session?.workout?.id, welcomeScreenShown, session?.trainee]);
+
+  // Hide welcome screen when first set is filled and mark workout as shown
+  useEffect(() => {
+    const currentWorkoutId = session?.workout?.id;
+    if (!currentWorkoutId || welcomeScreenShown === currentWorkoutId) return;
+    
+    if (showWelcomeScreen && session?.workout?.exercises) {
+      const hasFilledSet = session.workout.exercises.some(exercise => 
+        exercise.sets?.some(set => (set.weight || 0) > 0 || (set.reps || 0) > 0)
+      );
+      
+      if (hasFilledSet) {
+        setShowWelcomeScreen(false);
+        setWelcomeScreenShown(currentWorkoutId); // Mark this workout as shown
+      }
+    }
+  }, [showWelcomeScreen, session?.workout?.exercises, session?.workout?.id, welcomeScreenShown]);
 
   // Show confetti when a new PR is detected
   useEffect(() => {
@@ -234,6 +266,9 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       // Check if exercise is completed (all sets have data with weight or reps > 0)
       const isCompleted = completedSets === totalSets && totalSets > 0 && totalVolume > 0;
       
+      // Check if any set has failure
+      const hasFailure = validSets.some(set => set.failure === true);
+      
       // Get previous workout data for comparison - use best set from previous workout
       const previous = progressData.previousWorkoutData.get(exercise.id);
       let progressIndicator: 'up' | 'down' | 'same' | null = null;
@@ -289,6 +324,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         totalVolume,
         completedSets,
         totalSets,
+        hasFailure,
         progressIndicator,
         progressPercent: Math.round(progressPercent * 10) / 10,
         progressType,
@@ -560,7 +596,14 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                               </div>
                             </td>
                             <td className={`py-6 2xl:py-8 px-4 2xl:px-6 text-black dark:text-white font-black text-xl 2xl:text-2xl border-r-2 border-black dark:border-primary/20`}>
-                              {exercise.name}
+                              <div className="flex items-center gap-2">
+                                {exercise.name}
+                                {exercise.hasFailure && (
+                                  <span className="text-red-600 dark:text-red-400 text-2xl 2xl:text-3xl" title="היה כשל בסט כלשהו">
+                                    ⚠️
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td className="py-6 2xl:py-8 px-4 2xl:px-6 border-r-2 border-black dark:border-primary/20">
                               {exercise.isCompleted ? (
@@ -592,13 +635,20 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                 {exercise.sets.slice(0, 5).map((set) => (
                                   <div
                                     key={set.id}
-                                    className={`px-2 py-1 2xl:px-3 2xl:py-2 rounded-lg text-base 2xl:text-lg font-bold border border-black dark:border-primary/40 ${
+                                    className={`px-2 py-1 2xl:px-3 2xl:py-2 rounded-lg text-base 2xl:text-lg font-bold border border-black dark:border-primary/40 flex items-center gap-1 ${
                                       (set.weight || 0) > 0 || (set.reps || 0) > 0
-                                        ? 'bg-emerald-200 text-black dark:bg-primary/20 dark:text-primary'
+                                        ? set.failure
+                                          ? 'bg-red-200 text-black dark:bg-red-500/30 dark:text-red-300'
+                                          : 'bg-emerald-200 text-black dark:bg-primary/20 dark:text-primary'
                                         : 'bg-gray-200 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400'
                                     }`}
                                   >
                                     {set.set_number}: {set.weight ?? 0}×{set.reps ?? 0}
+                                    {set.failure && (
+                                      <span className="text-red-600 dark:text-red-400 text-sm 2xl:text-base" title="כשל">
+                                        ⚠️
+                                      </span>
+                                    )}
                                   </div>
                                 ))}
                                 {exercise.sets.length > 5 && (

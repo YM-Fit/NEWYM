@@ -134,6 +134,7 @@ export async function getWorkoutDetails(
           reps,
           rpe,
           set_type,
+          failure,
           superset_exercise_id,
           superset_weight,
           superset_reps,

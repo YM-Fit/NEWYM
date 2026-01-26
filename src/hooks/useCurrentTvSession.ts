@@ -17,6 +17,7 @@ interface TvWorkoutExerciseSet {
   reps: number | null;
   rpe: number | null;
   set_type: string | null;
+  failure: boolean | null;
 }
 
 interface TvWorkoutExercise {
@@ -201,6 +202,7 @@ export function useCurrentTvSession(
                     reps: set.reps,
                     rpe: set.rpe,
                     set_type: set.set_type,
+                    failure: set.failure || false,
                   })),
                 }));
 
@@ -366,6 +368,7 @@ export function useCurrentTvSession(
                     reps: set.reps,
                     rpe: set.rpe,
                     set_type: set.set_type,
+                    failure: set.failure || false,
                   })),
                 }));
 
