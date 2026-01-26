@@ -163,7 +163,73 @@ export function useCurrentTvSession(
           return;
         }
 
+        // If no calendar events, try to find active workout for any trainee of this trainer
         if (!syncRecords || syncRecords.length === 0) {
+          // Try to find the most recent active workout for any trainee
+          const { data: recentWorkouts, error: recentError } = await supabase
+            .from('workouts')
+            .select(`
+              id,
+              workout_date,
+              workout_trainees!inner(
+                trainee_id,
+                trainees!inner(id, full_name)
+              )
+            `)
+            .eq('trainer_id', user.id)
+            .eq('is_completed', false)
+            .order('workout_date', { ascending: false })
+            .limit(1);
+
+          if (!recentError && recentWorkouts && recentWorkouts.length > 0) {
+            const workout = recentWorkouts[0];
+            const traineeLink = (workout.workout_trainees as any[])[0];
+            const traineeData = traineeLink?.trainees;
+            
+            if (traineeData) {
+              const workoutDetails = await getWorkoutDetails(workout.id);
+              
+              if ('data' in workoutDetails && workoutDetails.data) {
+                const exercises: TvWorkoutExercise[] = (workoutDetails.data as any[]).map(ex => ({
+                  id: ex.id,
+                  name: ex.exercises?.name ?? 'תרגיל',
+                  muscle_group_id: ex.exercises?.muscle_group_id ?? null,
+                  sets: (ex.exercise_sets ?? []).map((set: any) => ({
+                    id: set.id,
+                    set_number: set.set_number,
+                    weight: set.weight,
+                    reps: set.reps,
+                    rpe: set.rpe,
+                    set_type: set.set_type,
+                  })),
+                }));
+
+                const nextSession: TvSessionState = {
+                  trainee: {
+                    id: traineeData.id,
+                    full_name: traineeData.full_name,
+                  },
+                  workout: {
+                    id: workout.id,
+                    workout_date: workout.workout_date,
+                    is_completed: false,
+                    exercises,
+                  },
+                  calendarEvent: null,
+                };
+
+                setSession(nextSession);
+                setLastUpdated(nowIso);
+                pushLog({
+                  level: 'info',
+                  message: `נמצא אימון פעיל עבור ${traineeData.full_name} (ללא אירוע יומן)`,
+                  details: { workoutId: workout.id },
+                });
+                return;
+              }
+            }
+          }
+          
           if (!session) {
             pushLog({
               level: 'info',
@@ -200,7 +266,13 @@ export function useCurrentTvSession(
         let workoutId: string | null = activeRecord.workout_id as string | null;
 
         // If no workout_id in calendar sync, try to find active workout for this trainee
+        // Also check for completed workouts from today (in case workout was just saved)
         if (!workoutId && trainee) {
+          const now = new Date();
+          const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+          const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
+          
+          // First try to find active (incomplete) workout
           const { data: activeWorkouts, error: workoutSearchError } = await supabase
             .from('workouts')
             .select(`
@@ -221,39 +293,103 @@ export function useCurrentTvSession(
               message: `נמצא אימון פעיל עבור ${trainee.full_name} (לא קשור ליומן)`,
               details: { workoutId },
             });
-          }
+            } else {
+              // If no active workout, try to find the most recent workout from today (even if completed)
+              // This handles the case where workout was just saved
+              const { data: todayWorkouts, error: todayError } = await supabase
+                .from('workouts')
+                .select(`
+                  id,
+                  workout_date,
+                  workout_trainees!inner(trainee_id)
+                `)
+                .eq('trainer_id', user.id)
+                .eq('workout_trainees.trainee_id', trainee.id)
+                .gte('workout_date', todayStart)
+                .lte('workout_date', todayEnd)
+                .order('workout_date', { ascending: false })
+                .limit(1);
+
+              if (!todayError && todayWorkouts && todayWorkouts.length > 0) {
+                workoutId = todayWorkouts[0].id;
+                pushLog({
+                  level: 'info',
+                  message: `נמצא אימון מהיום עבור ${trainee.full_name}`,
+                  details: { workoutId },
+                });
+              } else if (todayError) {
+                pushLog({
+                  level: 'warning',
+                  message: 'שגיאה בחיפוש אימונים מהיום',
+                  details: { error: todayError.message },
+                });
+              }
+            }
         }
 
         if (workoutId) {
-          const workoutDetails = await getWorkoutDetails(workoutId);
+          try {
+            const workoutDetails = await getWorkoutDetails(workoutId);
 
-          if ('error' in workoutDetails && workoutDetails.error) {
+            if ('error' in workoutDetails && workoutDetails.error) {
+              pushLog({
+                level: 'warning',
+                message: 'אירוע פעיל נמצא, אך לא ניתן לטעון את פרטי האימון',
+                details: { workoutId, error: workoutDetails.error },
+              });
+            } else if ('data' in workoutDetails && workoutDetails.data) {
+              const exercisesData = workoutDetails.data as any[];
+              
+              // Check if workout has any exercises
+              if (exercisesData.length === 0) {
+                pushLog({
+                  level: 'info',
+                  message: `אימון ${workoutId} נמצא אך עדיין אין בו תרגילים - ממתין לתרגילים`,
+                  details: { workoutId },
+                });
+                // Still create workout object even if empty - realtime will update it when exercises are added
+                workout = {
+                  id: workoutId,
+                  workout_date: activeRecord.event_start_time,
+                  is_completed: false,
+                  exercises: [],
+                };
+              } else {
+                const exercises: TvWorkoutExercise[] = exercisesData.map(ex => ({
+                  id: ex.id,
+                  name: ex.exercises?.name ?? 'תרגיל',
+                  muscle_group_id: ex.exercises?.muscle_group_id ?? null,
+                  sets: (ex.exercise_sets ?? []).map((set: any) => ({
+                    id: set.id,
+                    set_number: set.set_number,
+                    weight: set.weight,
+                    reps: set.reps,
+                    rpe: set.rpe,
+                    set_type: set.set_type,
+                  })),
+                }));
+
+                workout = {
+                  id: workoutId,
+                  workout_date: activeRecord.event_start_time,
+                  is_completed: false,
+                  exercises,
+                };
+                
+                pushLog({
+                  level: 'info',
+                  message: `נטענו ${exercises.length} תרגילים עבור אימון ${workoutId}`,
+                  details: { workoutId, exerciseCount: exercises.length },
+                });
+              }
+            }
+          } catch (err) {
+            logger.error('Error loading workout details in TV session', err, 'useCurrentTvSession');
             pushLog({
-              level: 'warning',
-              message: 'אירוע פעיל נמצא, אך לא ניתן לטעון את פרטי האימון',
-              details: { workoutId, error: workoutDetails.error },
+              level: 'error',
+              message: 'שגיאה בטעינת פרטי האימון',
+              details: { workoutId, error: err instanceof Error ? err.message : String(err) },
             });
-          } else if ('data' in workoutDetails && workoutDetails.data) {
-            const exercises: TvWorkoutExercise[] = (workoutDetails.data as any[]).map(ex => ({
-              id: ex.id,
-              name: ex.exercises?.name ?? 'תרגיל',
-              muscle_group_id: ex.exercises?.muscle_group_id ?? null,
-              sets: (ex.exercise_sets ?? []).map((set: any) => ({
-                id: set.id,
-                set_number: set.set_number,
-                weight: set.weight,
-                reps: set.reps,
-                rpe: set.rpe,
-                set_type: set.set_type,
-              })),
-            }));
-
-            workout = {
-              id: workoutId,
-              workout_date: activeRecord.event_start_time,
-              is_completed: false,
-              exercises,
-            };
           }
         }
 
@@ -340,33 +476,58 @@ export function useCurrentTvSession(
         message: 'התקבל עדכון אימון בזמן אמת – טוען מחדש את פרטי האימון',
       });
 
-      const details = await getWorkoutDetails(activeWorkoutId);
-      if ('data' in details && details.data) {
-        const exercises: TvWorkoutExercise[] = (details.data as any[]).map(ex => ({
-          id: ex.id,
-          name: ex.exercises?.name ?? 'תרגיל',
-          muscle_group_id: ex.exercises?.muscle_group_id ?? null,
-          sets: (ex.exercise_sets ?? []).map((set: any) => ({
-            id: set.id,
-            set_number: set.set_number,
-            weight: set.weight,
-            reps: set.reps,
-            rpe: set.rpe,
-            set_type: set.set_type,
-          })),
-        }));
+      try {
+        const details = await getWorkoutDetails(activeWorkoutId);
+        if ('error' in details && details.error) {
+          pushLog({
+            level: 'error',
+            message: 'שגיאה בטעינת פרטי האימון בעדכון בזמן אמת',
+            details: { workoutId: activeWorkoutId, error: details.error },
+          });
+          return;
+        }
 
-        setSession(prev =>
-          prev && prev.workout && prev.workout.id === activeWorkoutId
-            ? {
-                ...prev,
-                workout: {
-                  ...prev.workout,
-                  exercises,
-                },
-              }
-            : prev
-        );
+        if ('data' in details && details.data) {
+          const exercisesData = details.data as any[];
+          const exercises: TvWorkoutExercise[] = exercisesData.map(ex => ({
+            id: ex.id,
+            name: ex.exercises?.name ?? 'תרגיל',
+            muscle_group_id: ex.exercises?.muscle_group_id ?? null,
+            sets: (ex.exercise_sets ?? []).map((set: any) => ({
+              id: set.id,
+              set_number: set.set_number,
+              weight: set.weight,
+              reps: set.reps,
+              rpe: set.rpe,
+              set_type: set.set_type,
+            })),
+          }));
+
+          setSession(prev =>
+            prev && prev.workout && prev.workout.id === activeWorkoutId
+              ? {
+                  ...prev,
+                  workout: {
+                    ...prev.workout,
+                    exercises,
+                  },
+                }
+              : prev
+          );
+
+          pushLog({
+            level: 'info',
+            message: `עודכן אימון עם ${exercises.length} תרגילים`,
+            details: { workoutId: activeWorkoutId, exerciseCount: exercises.length },
+          });
+        }
+      } catch (err) {
+        logger.error('Error refreshing workout data in realtime', err, 'useCurrentTvSession');
+        pushLog({
+          level: 'error',
+          message: 'שגיאה בעדכון פרטי האימון בזמן אמת',
+          details: { workoutId: activeWorkoutId, error: err instanceof Error ? err.message : String(err) },
+        });
       }
     };
 
