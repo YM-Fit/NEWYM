@@ -349,12 +349,17 @@ export function useCurrentTvSession(
                   message: `אימון ${workoutId} נמצא אך עדיין אין בו תרגילים - ממתין לתרגילים`,
                   details: { workoutId },
                 });
-                // Still create workout object even if empty - realtime will update it when exercises are added
+                // If we have existing session with exercises for this workout, keep them
+                // Otherwise create empty array - realtime will update it when exercises are added
+                const existingExercises = session?.workout?.id === workoutId && session.workout.exercises?.length > 0
+                  ? session.workout.exercises
+                  : [];
+                
                 workout = {
                   id: workoutId,
                   workout_date: activeRecord.event_start_time,
                   is_completed: false,
-                  exercises: [],
+                  exercises: existingExercises, // Keep existing exercises if available
                 };
               } else {
                 const exercises: TvWorkoutExercise[] = exercisesData.map(ex => ({
@@ -503,6 +508,7 @@ export function useCurrentTvSession(
               reps: set.reps,
               rpe: set.rpe,
               set_type: set.set_type,
+              failure: set.failure || false,
             })),
           }));
 
@@ -511,16 +517,29 @@ export function useCurrentTvSession(
             if (!prev || !prev.workout || prev.workout.id !== activeWorkoutId) {
               return prev;
             }
-            // Only update if we have exercises or if exercises array is explicitly empty (to avoid flickering)
-            if (exercises.length === 0 && prev.workout.exercises && prev.workout.exercises.length > 0) {
-              // Don't clear exercises if we had them before - might be a temporary issue
+            // Never clear exercises if we had them before - always preserve existing exercises
+            // Only update if we have new exercises to add, or merge with existing
+            if (exercises.length === 0) {
+              // Don't update if we're getting empty exercises - keep existing ones
               return prev;
             }
+            
+            // Merge exercises: keep existing ones and update/add new ones
+            const existingExercises = prev.workout.exercises || [];
+            const exerciseMap = new Map(existingExercises.map(ex => [ex.id, ex]));
+            
+            // Update or add exercises from the new data
+            exercises.forEach(ex => {
+              exerciseMap.set(ex.id, ex);
+            });
+            
+            const mergedExercises = Array.from(exerciseMap.values());
+            
             return {
               ...prev,
               workout: {
                 ...prev.workout,
-                exercises,
+                exercises: mergedExercises,
               },
             };
           });

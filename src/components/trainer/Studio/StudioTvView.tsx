@@ -523,7 +523,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
           ) : (
             <>
               {/* Full Screen Table for TV - Main Focus - Uses entire screen */}
-              {(session?.workout?.exercises && session.workout.exercises.length > 0) || completedExercisesData.length > 0 ? (
+              {session?.workout && ((session.workout.exercises && session.workout.exercises.length > 0) || completedExercisesData.length > 0) ? (
                 <div className="h-full w-full flex flex-col bg-emerald-50 dark:bg-gradient-dark border-2 border-black dark:border-primary/30 shadow-glow-xl overflow-hidden">
                   {/* Compact Table Header */}
                   <div className="flex items-center justify-between px-6 2xl:px-8 py-4 2xl:py-5 border-b-4 border-black dark:border-primary/40 bg-emerald-100 dark:bg-primary/5 flex-shrink-0">
@@ -705,18 +705,22 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                     </table>
                   </div>
                 </div>
-              ) : (
+              ) : session?.workout ? (
                 <div className="h-full w-full flex items-center justify-center bg-emerald-50 dark:bg-gradient-dark">
                   <div className="text-center">
                     <div className="text-black dark:text-white text-4xl 2xl:text-6xl font-black mb-4">
-                      אין תרגילים כרגע
+                      ממתין לתרגילים
                     </div>
                     <p className="text-black dark:text-gray-300 text-2xl 2xl:text-3xl font-semibold">
                       האימון זוהה מהיומן, אבל טרם נוספו לו תרגילים במערכת.
+                      <br />
+                      <span className="text-xl 2xl:text-2xl mt-2 inline-block animate-pulse">
+                        התרגילים יופיעו כאן ברגע שיוספו לאימון...
+                      </span>
                     </p>
                   </div>
                 </div>
-              )}
+              ) : null}
             </>
           )}
         </div>
