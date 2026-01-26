@@ -195,10 +195,36 @@ export function useCurrentTvSession(
 
         const trainee = activeRecord.trainees as { id: string; full_name: string } | null;
 
-        // 3. Load workout details if we have a linked workout
+        // 3. Load workout details - try linked workout first, then find active workout for trainee
         let workout: TvWorkout | null = null;
-        if (activeRecord.workout_id) {
-          const workoutId = activeRecord.workout_id as string;
+        let workoutId: string | null = activeRecord.workout_id as string | null;
+
+        // If no workout_id in calendar sync, try to find active workout for this trainee
+        if (!workoutId && trainee) {
+          const { data: activeWorkouts, error: workoutSearchError } = await supabase
+            .from('workouts')
+            .select(`
+              id,
+              workout_date,
+              workout_trainees!inner(trainee_id)
+            `)
+            .eq('trainer_id', user.id)
+            .eq('workout_trainees.trainee_id', trainee.id)
+            .eq('is_completed', false)
+            .order('workout_date', { ascending: false })
+            .limit(1);
+
+          if (!workoutSearchError && activeWorkouts && activeWorkouts.length > 0) {
+            workoutId = activeWorkouts[0].id;
+            pushLog({
+              level: 'info',
+              message: `נמצא אימון פעיל עבור ${trainee.full_name} (לא קשור ליומן)`,
+              details: { workoutId },
+            });
+          }
+        }
+
+        if (workoutId) {
           const workoutDetails = await getWorkoutDetails(workoutId);
 
           if ('error' in workoutDetails && workoutDetails.error) {
@@ -283,8 +309,9 @@ export function useCurrentTvSession(
     // Initial fetch
     fetchCurrentSession();
 
-    // Polling interval
-    intervalId = window.setInterval(fetchCurrentSession, pollIntervalMs);
+    // Polling interval - reduced frequency since we have realtime subscriptions
+    // Only poll every 30 seconds to catch any missed updates
+    intervalId = window.setInterval(fetchCurrentSession, Math.max(pollIntervalMs, 30000));
 
     return () => {
       isMounted = false;
@@ -307,6 +334,42 @@ export function useCurrentTvSession(
       return;
     }
 
+    const refreshWorkoutData = async () => {
+      pushLog({
+        level: 'info',
+        message: 'התקבל עדכון אימון בזמן אמת – טוען מחדש את פרטי האימון',
+      });
+
+      const details = await getWorkoutDetails(activeWorkoutId);
+      if ('data' in details && details.data) {
+        const exercises: TvWorkoutExercise[] = (details.data as any[]).map(ex => ({
+          id: ex.id,
+          name: ex.exercises?.name ?? 'תרגיל',
+          muscle_group_id: ex.exercises?.muscle_group_id ?? null,
+          sets: (ex.exercise_sets ?? []).map((set: any) => ({
+            id: set.id,
+            set_number: set.set_number,
+            weight: set.weight,
+            reps: set.reps,
+            rpe: set.rpe,
+            set_type: set.set_type,
+          })),
+        }));
+
+        setSession(prev =>
+          prev && prev.workout && prev.workout.id === activeWorkoutId
+            ? {
+                ...prev,
+                workout: {
+                  ...prev.workout,
+                  exercises,
+                },
+              }
+            : prev
+        );
+      }
+    };
+
     const channel = supabase
       .channel(`studio-tv-workout-${activeWorkoutId}`)
       .on(
@@ -317,43 +380,31 @@ export function useCurrentTvSession(
           table: 'exercise_sets',
           filter: `workout_exercise_id.in.(select id from workout_exercises where workout_id='${activeWorkoutId}')`,
         },
-        async () => {
+        refreshWorkoutData
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'workout_exercises',
+          filter: `workout_id=eq.${activeWorkoutId}`,
+        },
+        refreshWorkoutData
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
           pushLog({
             level: 'info',
-            message: 'התקבל עדכון אימון בזמן אמת – טוען מחדש את פרטי האימון',
+            message: `מחובר לעדכונים בזמן אמת עבור אימון ${activeWorkoutId}`,
           });
-
-          const details = await getWorkoutDetails(activeWorkoutId);
-          if ('data' in details && details.data) {
-            const exercises: TvWorkoutExercise[] = (details.data as any[]).map(ex => ({
-              id: ex.id,
-              name: ex.exercises?.name ?? 'תרגיל',
-              muscle_group_id: ex.exercises?.muscle_group_id ?? null,
-              sets: (ex.exercise_sets ?? []).map((set: any) => ({
-                id: set.id,
-                set_number: set.set_number,
-                weight: set.weight,
-                reps: set.reps,
-                rpe: set.rpe,
-                set_type: set.set_type,
-              })),
-            }));
-
-            setSession(prev =>
-              prev && prev.workout && prev.workout.id === activeWorkoutId
-                ? {
-                    ...prev,
-                    workout: {
-                      ...prev.workout,
-                      exercises,
-                    },
-                  }
-                : prev
-            );
-          }
+        } else if (status === 'CHANNEL_ERROR') {
+          pushLog({
+            level: 'error',
+            message: 'שגיאה בחיבור לעדכונים בזמן אמת',
+          });
         }
-      )
-      .subscribe();
+      });
 
     workoutChannelRef.current = channel;
 
