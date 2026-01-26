@@ -6,6 +6,7 @@ import { usePersonalRecordDetection } from '../../../hooks/usePersonalRecordDete
 import { Card } from '../../ui/Card';
 import { useThemeClasses } from '../../../contexts/ThemeContext';
 import { Flame, TrendingUp, Trophy, Calendar, Target } from 'lucide-react';
+import { supabase } from '../../../lib/supabase';
 
 interface StudioTvViewProps {
   pollIntervalMs?: number;
@@ -44,6 +45,65 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
   const [showConfetti, setShowConfetti] = useState(false);
   const [showPRMessage, setShowPRMessage] = useState(false);
+  const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
+  const [lastWorkout, setLastWorkout] = useState<any>(null);
+  const [welcomeScreenShown, setWelcomeScreenShown] = useState(false);
+
+  // Load last workout for welcome screen
+  useEffect(() => {
+    if (!session?.trainee?.id || welcomeScreenShown) return;
+
+    const loadLastWorkout = async () => {
+      try {
+        const { data: workoutTrainees } = await supabase
+          .from('workout_trainees')
+          .select(`
+            workouts!inner (
+              id,
+              workout_date,
+              is_completed,
+              workout_exercises (
+                id,
+                order_index,
+                exercises (
+                  id,
+                  name
+                ),
+                exercise_sets (
+                  set_number,
+                  weight,
+                  reps
+                )
+              )
+            )
+          `)
+          .eq('trainee_id', session.trainee.id)
+          .eq('workouts.is_completed', true)
+          .order('workouts(workout_date)', { ascending: false })
+          .limit(1);
+
+        if (workoutTrainees && workoutTrainees.length > 0) {
+          setLastWorkout(workoutTrainees[0].workouts);
+        }
+      } catch (err) {
+        console.error('Error loading last workout:', err);
+      }
+    };
+
+    loadLastWorkout();
+  }, [session?.trainee?.id, welcomeScreenShown]);
+
+  // Show welcome screen when first exercise appears
+  useEffect(() => {
+    if (session?.workout?.exercises && session.workout.exercises.length > 0 && !welcomeScreenShown && session?.trainee) {
+      setShowWelcomeScreen(true);
+      setWelcomeScreenShown(true);
+      const timer = setTimeout(() => {
+        setShowWelcomeScreen(false);
+      }, 6000); // Show for 6 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [session?.workout?.exercises, welcomeScreenShown, session?.trainee]);
 
   // Show confetti when a new PR is detected
   useEffect(() => {
@@ -87,6 +147,26 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
     }, currentExercise.sets[0]);
   }, [currentExercise]);
 
+  // Calculate detailed stats for current exercise
+  const exerciseStats = useMemo(() => {
+    if (!currentExercise || !currentExercise.sets || currentExercise.sets.length === 0) return null;
+    
+    const sets = currentExercise.sets;
+    const totalReps = sets.reduce((sum, set) => sum + (set.reps || 0), 0);
+    const maxWeight = Math.max(...sets.map(set => set.weight || 0), 0);
+    const totalVolume = sets.reduce((sum, set) => sum + ((set.weight || 0) * (set.reps || 0)), 0);
+    const completedSets = sets.filter(set => (set.weight || 0) > 0 && (set.reps || 0) > 0).length;
+    const totalSets = sets.length;
+    
+    return {
+      totalReps,
+      maxWeight,
+      totalVolume,
+      completedSets,
+      totalSets,
+    };
+  }, [currentExercise]);
+
   // Get progress comparison for current exercise
   const progressComparison = useMemo(() => {
     if (!currentExercise || !latestSet || !progressData.previousWorkoutData) return null;
@@ -117,6 +197,56 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
     if (!session?.workout?.exercises) return [];
     return session.workout.exercises.slice(0, 6);
   }, [session?.workout?.exercises]);
+
+  // Calculate completed exercises with progress comparison
+  const completedExercisesData = useMemo(() => {
+    if (!session?.workout?.exercises) return [];
+    
+    return session.workout.exercises.map((exercise) => {
+      const sets = exercise.sets || [];
+      const totalReps = sets.reduce((sum, set) => sum + (set.reps || 0), 0);
+      const maxWeight = Math.max(...sets.map(set => set.weight || 0), 0);
+      const totalVolume = sets.reduce((sum, set) => sum + ((set.weight || 0) * (set.reps || 0)), 0);
+      const completedSets = sets.filter(set => (set.weight || 0) > 0 && (set.reps || 0) > 0).length;
+      const totalSets = sets.length;
+      
+      // Check if exercise is completed (all sets have data)
+      const isCompleted = completedSets === totalSets && totalSets > 0;
+      
+      // Get previous workout data for comparison
+      const previous = progressData.previousWorkoutData.get(exercise.id);
+      let progressIndicator: 'up' | 'down' | 'same' | null = null;
+      let progressPercent = 0;
+      
+      if (previous && totalVolume > 0) {
+        const previousVolume = previous.weight * previous.reps;
+        if (previousVolume > 0) {
+          progressPercent = ((totalVolume - previousVolume) / previousVolume) * 100;
+          if (Math.abs(progressPercent) < 1) {
+            progressIndicator = 'same';
+          } else if (progressPercent > 0) {
+            progressIndicator = 'up';
+          } else {
+            progressIndicator = 'down';
+          }
+        }
+      }
+      
+      return {
+        id: exercise.id,
+        name: exercise.name,
+        isCompleted,
+        maxWeight,
+        totalReps,
+        totalVolume,
+        completedSets,
+        totalSets,
+        progressIndicator,
+        progressPercent: Math.round(progressPercent * 10) / 10,
+        previousData: previous,
+      };
+    });
+  }, [session?.workout?.exercises, progressData.previousWorkoutData]);
 
   const latestLogs = logs.slice(0, 6);
 
@@ -150,6 +280,67 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
               />
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Welcome Screen */}
+      {showWelcomeScreen && session?.trainee && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/80 backdrop-blur-sm animate-fade-in"
+          onClick={() => setShowWelcomeScreen(false)}
+        >
+          <div className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white px-12 py-8 2xl:px-20 2xl:py-12 rounded-3xl 2xl:rounded-[2rem] shadow-glow-xl animate-scale-in border-4 2xl:border-[6px] border-white/30 backdrop-blur-sm max-w-4xl mx-4">
+            <div className="flex flex-col items-center gap-4 2xl:gap-6">
+              <div className="tv-heading-xl font-extrabold text-center animate-tv-number-pop">
+                ברוך הבא {session.trainee.full_name}!
+              </div>
+              {lastWorkout && (
+                <div className="w-full mt-4 2xl:mt-6">
+                  <div className="tv-text-lg font-semibold text-center mb-4 2xl:mb-6">
+                    האימון שבוצע בפעם האחרונה:
+                  </div>
+                  <div className="bg-white/10 rounded-2xl 2xl:rounded-3xl p-6 2xl:p-8 backdrop-blur-sm">
+                    <div className="tv-text-lg font-semibold mb-3 2xl:mb-4">
+                      {new Date(lastWorkout.workout_date).toLocaleDateString('he-IL', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </div>
+                    {lastWorkout.workout_exercises && lastWorkout.workout_exercises.length > 0 && (
+                      <div className="space-y-2 2xl:space-y-3">
+                        <div className="tv-text-lg font-semibold mb-2">תרגילים:</div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 2xl:gap-3">
+                          {lastWorkout.workout_exercises.slice(0, 6).map((we: any, idx: number) => {
+                            const totalSets = we.exercise_sets?.length || 0;
+                            const totalReps = we.exercise_sets?.reduce((sum: number, set: any) => sum + (set.reps || 0), 0) || 0;
+                            const maxWeight = Math.max(...(we.exercise_sets?.map((set: any) => set.weight || 0) || [0]), 0);
+                            return (
+                              <div key={we.id} className="bg-white/10 rounded-xl p-3 2xl:p-4">
+                                <div className="font-semibold text-lg 2xl:text-xl">{we.exercises?.name || 'תרגיל'}</div>
+                                <div className="text-sm 2xl:text-base opacity-90">
+                                  {maxWeight} ק״ג × {totalReps} חזרות ({totalSets} סטים)
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {lastWorkout.workout_exercises.length > 6 && (
+                          <div className="text-sm 2xl:text-base opacity-75 mt-2">
+                            +{lastWorkout.workout_exercises.length - 6} תרגילים נוספים
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              <div className="tv-text-lg mt-4 2xl:mt-6 opacity-90 animate-pulse">
+                לחץ כדי להמשיך...
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -209,8 +400,8 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
       {/* Main layout */}
       <div className="tv-container flex flex-1 gap-6 px-6 md:px-12 py-6 overflow-hidden">
-        {/* Main workout area */}
-        <Card variant="premium" className="flex-1 p-8 flex flex-col tv-card" padding="none">
+        {/* Main workout area - Full width after removing proof screen */}
+        <Card variant="premium" className="w-full p-8 flex flex-col tv-card" padding="none">
           {isUnauthorized ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
               <div className="tv-text-primary text-3xl font-semibold">התחברות נדרשת</div>
@@ -309,7 +500,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
               </div>
 
               {/* LIVE Current Exercise Display */}
-              {currentExercise && latestSet && (
+              {currentExercise && latestSet && exerciseStats && (
                 <Card variant="premium" className="tv-live-card mb-6 2xl:mb-8 p-6 md:p-8 2xl:p-12 border-primary border-4 2xl:border-[6px] shadow-glow-xl animate-tv-glow-pulse animate-tv-shimmer" padding="none">
                   <div className="flex items-center justify-between mb-4 2xl:mb-6">
                     <div className="flex items-center gap-3 2xl:gap-4">
@@ -322,7 +513,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 2xl:gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 2xl:gap-8 mb-6 2xl:mb-8">
                     <div>
                       <div className="tv-text-muted tv-text-lg mb-2 2xl:mb-4">תרגיל נוכחי</div>
                       <div className="tv-heading-xl tv-text-primary mb-4 2xl:mb-6">
@@ -340,6 +531,34 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                       </div>
                       <div className="tv-number-xl tv-text-primary animate-tv-number-pop">
                         × {latestSet.reps ?? 0} <span className="tv-text-lg">חזרות</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Detailed Indicators Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 2xl:gap-6 pt-6 2xl:pt-8 border-t border-primary/20">
+                    <div className="flex flex-col">
+                      <div className="tv-text-muted tv-text-lg mb-2">נפח סה״כ</div>
+                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop">
+                        {Math.round(exerciseStats.totalVolume)} <span className="tv-text-lg">ק״ג</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col">
+                      <div className="tv-text-muted tv-text-lg mb-2">משקל מקסימלי</div>
+                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop">
+                        {exerciseStats.maxWeight} <span className="tv-text-lg">ק״ג</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col">
+                      <div className="tv-text-muted tv-text-lg mb-2">חזרות סה״כ</div>
+                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop">
+                        {exerciseStats.totalReps} <span className="tv-text-lg">חזרות</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col">
+                      <div className="tv-text-muted tv-text-lg mb-2">סטים</div>
+                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop">
+                        {exerciseStats.completedSets}/{exerciseStats.totalSets}
                       </div>
                     </div>
                   </div>
@@ -364,6 +583,89 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                       </div>
                     </div>
                   )}
+                </Card>
+              )}
+
+              {/* Completed Exercises Table */}
+              {completedExercisesData.length > 0 && (
+                <Card variant="premium" className="mb-6 2xl:mb-8 p-6 md:p-8 2xl:p-12" padding="none">
+                  <h2 className={`text-2xl md:text-3xl 2xl:text-4xl font-bold mb-6 2xl:mb-8 ${themeClasses.textPrimary}`}>
+                    תרגילים באימון
+                  </h2>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-primary/20">
+                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-semibold text-lg 2xl:text-xl`}>תרגיל</th>
+                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-semibold text-lg 2xl:text-xl`}>סטטוס</th>
+                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-semibold text-lg 2xl:text-xl`}>משקל מקס׳</th>
+                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-semibold text-lg 2xl:text-xl`}>חזרות</th>
+                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-semibold text-lg 2xl:text-xl`}>נפח</th>
+                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-semibold text-lg 2xl:text-xl`}>סטים</th>
+                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-semibold text-lg 2xl:text-xl`}>התקדמות</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {completedExercisesData.map((exercise, index) => (
+                          <tr 
+                            key={exercise.id}
+                            className={`border-b border-primary/10 transition-colors ${
+                              exercise.isCompleted ? 'bg-emerald-500/5' : ''
+                            }`}
+                          >
+                            <td className={`py-4 px-4 ${themeClasses.textPrimary} font-semibold text-lg 2xl:text-xl`}>
+                              {index + 1}. {exercise.name}
+                            </td>
+                            <td className="py-4 px-4">
+                              {exercise.isCompleted ? (
+                                <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-500 text-sm 2xl:text-base font-semibold border border-emerald-500/30">
+                                  הושלם
+                                </span>
+                              ) : (
+                                <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-500 text-sm 2xl:text-base font-semibold border border-amber-500/30">
+                                  בתהליך
+                                </span>
+                              )}
+                            </td>
+                            <td className={`py-4 px-4 ${themeClasses.textPrimary} text-lg 2xl:text-xl font-semibold`}>
+                              {exercise.maxWeight} ק״ג
+                            </td>
+                            <td className={`py-4 px-4 ${themeClasses.textPrimary} text-lg 2xl:text-xl font-semibold`}>
+                              {exercise.totalReps}
+                            </td>
+                            <td className={`py-4 px-4 ${themeClasses.textPrimary} text-lg 2xl:text-xl font-semibold`}>
+                              {Math.round(exercise.totalVolume)} ק״ג
+                            </td>
+                            <td className={`py-4 px-4 ${themeClasses.textPrimary} text-lg 2xl:text-xl font-semibold`}>
+                              {exercise.completedSets}/{exercise.totalSets}
+                            </td>
+                            <td className="py-4 px-4">
+                              {exercise.progressIndicator === 'up' && (
+                                <div className="flex items-center gap-2 text-emerald-500">
+                                  <TrendingUp className="w-5 h-5 2xl:w-6 2xl:h-6" />
+                                  <span className="text-lg 2xl:text-xl font-semibold">+{exercise.progressPercent}%</span>
+                                </div>
+                              )}
+                              {exercise.progressIndicator === 'down' && (
+                                <div className="flex items-center gap-2 text-red-500">
+                                  <TrendingUp className="w-5 h-5 2xl:w-6 2xl:h-6 rotate-180" />
+                                  <span className="text-lg 2xl:text-xl font-semibold">{exercise.progressPercent}%</span>
+                                </div>
+                              )}
+                              {exercise.progressIndicator === 'same' && (
+                                <div className="flex items-center gap-2 text-gray-400">
+                                  <span className="text-2xl 2xl:text-3xl">=</span>
+                                </div>
+                              )}
+                              {!exercise.progressIndicator && (
+                                <span className={`${themeClasses.textMuted} text-sm 2xl:text-base`}>—</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </Card>
               )}
 
@@ -493,103 +795,6 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
               </div>
             </>
           )}
-        </Card>
-
-        {/* Proof / diagnostics panel */}
-        <Card variant="premium" className="w-full md:w-[380px] flex flex-col flex-shrink-0 tv-card tv-sidebar" padding="lg">
-          <h2 className="tv-text-primary text-xl font-semibold mb-4 flex items-center justify-between">
-            מסך הוכחה
-            <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30">
-              מצב בדיקה
-            </span>
-          </h2>
-
-          <div className="space-y-3 mb-5 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="tv-text-muted">סטטוס:</span>
-              <span className={`font-semibold ${
-                error ? 'text-red-500' : session ? 'text-emerald-500' : 'tv-text-primary'
-              }`}>
-                {error
-                  ? 'שגיאה'
-                  : session
-                  ? 'אימון פעיל זוהה'
-                  : 'מחכה לאימון מיומן Google'}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="tv-text-muted">אירוע יומן:</span>
-              <span className="tv-text-primary text-sm truncate max-w-[210px]">
-                {session?.calendarEvent?.summary ?? '—'}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="tv-text-muted">מתאמן:</span>
-              <span className="tv-text-primary text-sm">
-                {session?.trainee?.full_name ?? '—'}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="tv-text-muted">מזהה אימון:</span>
-              <span className="tv-text-muted text-xs">
-                {session?.workout?.id ?? '—'}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="tv-text-primary text-sm font-medium">יומן אירועים (TV)</h3>
-            <span className="tv-text-muted text-[11px]">
-              מציג {latestLogs.length} / {logs.length} אירועים
-            </span>
-          </div>
-
-          <Card variant="glass" className="flex-1 p-3 overflow-hidden tv-card" padding="none">
-            <div className="h-full overflow-y-auto space-y-2 pr-1">
-              {latestLogs.length === 0 ? (
-                <div className="tv-text-muted text-xs">
-                  טרם נרשמו אירועים. המסך יציג כאן את כל מה שקורה מאחורי הקלעים (זיהוי
-                  יומן, טעינת אימון, שגיאות ועוד).
-                </div>
-              ) : (
-                latestLogs.map(log => (
-                  <Card
-                    key={log.id}
-                    variant="glass"
-                    className="px-2.5 py-2 tv-card"
-                    padding="none"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className={`inline-flex items-center gap-1 text-[11px] ${
-                        log.level === 'error' ? 'text-red-500' : 
-                        log.level === 'warning' ? 'text-amber-500' : 
-                        'text-emerald-500'
-                      }`}>
-                        {log.level === 'error'
-                          ? 'שגיאה'
-                          : log.level === 'warning'
-                          ? 'אזהרה'
-                          : 'מידע'}
-                      </span>
-                      <span className="tv-text-muted text-[10px]">
-                        {new Date(log.timestamp).toLocaleTimeString('he-IL', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          second: '2-digit',
-                        })}
-                      </span>
-                    </div>
-                    <div className="tv-text-primary text-[11px]">{log.message}</div>
-                  </Card>
-                ))
-              )}
-            </div>
-          </Card>
-
-          <div className="tv-text-muted mt-4 text-[11px] leading-relaxed">
-            המידע המוצג כאן נועד לבדוק שהחיבור ליומן Google ולבסיס הנתונים תקין. במצב
-            קהל ניתן יהיה להסתיר פאנל זה.
-          </div>
         </Card>
       </div>
 

@@ -29,7 +29,7 @@ export interface TodayTrainee {
 
 interface TodayTraineesSectionProps {
   trainees: Trainee[];
-  onNewWorkout: (trainee: Trainee) => void;
+  onNewWorkout: (trainee: Trainee, scheduledWorkoutId?: string) => void;
   onViewWorkoutPlan: (trainee: Trainee) => void;
   onViewMealPlan: (trainee: Trainee) => void;
 }
@@ -672,7 +672,7 @@ export default function TodayTraineesSection({
 interface TraineeTableRowProps {
   todayTrainee: TodayTrainee;
   index: number;
-  onNewWorkout: (trainee: Trainee) => void;
+  onNewWorkout: (trainee: Trainee, scheduledWorkoutId?: string) => void;
   onViewWorkoutPlan: (trainee: Trainee) => void;
   onViewMealPlan: (trainee: Trainee) => void;
 }
@@ -786,7 +786,11 @@ function TraineeTableRow({
       <td className="py-3 px-3 md:py-4 md:px-4">
         <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
           <button
-            onClick={() => onNewWorkout(trainee)}
+            onClick={() => {
+              // If there's a scheduled workout (not completed), pass its ID
+              const scheduledWorkoutId = !workout.is_completed ? workout.id : undefined;
+              onNewWorkout(trainee, scheduledWorkoutId);
+            }}
             className="btn-primary p-1.5 md:p-2 rounded-lg flex items-center gap-1 md:gap-1.5
                        hover:scale-110 active:scale-95 transition-all duration-300
                        shadow-lg shadow-emerald-700/50 hover:shadow-2xl hover:shadow-emerald-700/70
@@ -830,7 +834,7 @@ function TraineeTableRow({
 interface TraineeCardTodayProps {
   todayTrainee: TodayTrainee;
   index: number;
-  onNewWorkout: (trainee: Trainee) => void;
+  onNewWorkout: (trainee: Trainee, scheduledWorkoutId?: string) => void;
   onViewWorkoutPlan: (trainee: Trainee) => void;
   onViewMealPlan: (trainee: Trainee) => void;
 }
@@ -988,11 +992,16 @@ function TraineeCardToday({
         <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
           {/* אימון חדש - Primary */}
           <button
-            onClick={() => onNewWorkout(trainee)}
+            onClick={() => {
+              // If there's a scheduled workout (not completed), pass its ID
+              const scheduledWorkoutId = !workout.is_completed ? workout.id : undefined;
+              onNewWorkout(trainee, scheduledWorkoutId);
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                onNewWorkout(trainee);
+                const scheduledWorkoutId = !workout.is_completed ? workout.id : undefined;
+                onNewWorkout(trainee, scheduledWorkoutId);
               }
             }}
             className="btn-primary p-4 sm:p-5 rounded-xl flex flex-col items-center gap-2

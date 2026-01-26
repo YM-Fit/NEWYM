@@ -235,7 +235,52 @@ export default function WorkoutSession({
         return null;
       }
 
-      // Create workout with is_completed=false
+      // First, check if there's an existing scheduled workout (is_completed=false) for this trainee and date
+      // This prevents creating duplicate workouts when opening a scheduled workout
+      const workoutDateStr = workoutDate.toISOString().split('T')[0]; // Get date part only
+      const workoutDateStart = new Date(workoutDateStr);
+      workoutDateStart.setHours(0, 0, 0, 0);
+      const workoutDateEnd = new Date(workoutDateStr);
+      workoutDateEnd.setHours(23, 59, 59, 999);
+
+      const { data: existingScheduledWorkouts } = await supabase
+        .from('workout_trainees')
+        .select(`
+          workout_id,
+          workouts!inner (
+            id,
+            workout_date,
+            is_completed,
+            trainer_id
+          )
+        `)
+        .eq('trainee_id', trainee.id)
+        .eq('workouts.is_completed', false)
+        .eq('workouts.trainer_id', user.id)
+        .gte('workouts.workout_date', workoutDateStart.toISOString())
+        .lte('workouts.workout_date', workoutDateEnd.toISOString())
+        .limit(1);
+
+      // If there's an existing scheduled workout, use it instead of creating a new one
+      if (existingScheduledWorkouts && existingScheduledWorkouts.length > 0) {
+        const workoutData = existingScheduledWorkouts[0];
+        // workouts can be an object or array depending on Supabase query structure
+        let workout;
+        if (Array.isArray(workoutData.workouts)) {
+          workout = workoutData.workouts[0];
+        } else {
+          workout = workoutData.workouts;
+        }
+        
+        if (workout && workout.id) {
+          setWorkoutId(workout.id);
+          logger.info('Using existing scheduled workout', { workoutId: workout.id }, 'WorkoutSession');
+          setCreatingWorkout(false);
+          return workout.id;
+        }
+      }
+
+      // No existing scheduled workout found, create a new one
       const { data: newWorkout, error: workoutError } = await supabase
         .from('workouts')
         .insert([

@@ -639,12 +639,103 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
     }
   };
 
-  const handleNewWorkout = (trainee: Trainee) => {
+  const handleNewWorkout = (trainee: Trainee, scheduledWorkoutId?: string) => {
     setSelectedTrainee(trainee);
-    if (trainee.is_pair) {
+    // If there's a scheduled workout ID, load it and pass as editingWorkout
+    if (scheduledWorkoutId) {
+      loadScheduledWorkoutForEditing(scheduledWorkoutId, trainee);
+    } else if (trainee.is_pair) {
       setActiveView('workout-type-selection');
     } else {
       setActiveView('workout-session');
+    }
+  };
+
+  const loadScheduledWorkoutForEditing = async (workoutId: string, trainee: Trainee) => {
+    try {
+      const { data: workoutExercises } = await supabase
+        .from('workout_exercises')
+        .select(`
+          id,
+          exercise_id,
+          order_index,
+          exercises (
+            id,
+            name,
+            muscle_group_id
+          ),
+          exercise_sets (
+            id,
+            set_number,
+            weight,
+            reps,
+            rpe,
+            set_type,
+            superset_exercise_id,
+            superset_weight,
+            superset_reps,
+            dropset_weight,
+            dropset_reps
+          )
+        `)
+        .eq('workout_id', workoutId)
+        .order('order_index', { ascending: true });
+
+      if (workoutExercises) {
+        const formattedExercises = workoutExercises.map((we) => ({
+          tempId: we.id,
+          exercise: {
+            id: we.exercises.id,
+            name: we.exercises.name,
+            muscle_group_id: we.exercises.muscle_group_id,
+          },
+          sets: (we.exercise_sets || [])
+            .sort((a, b) => a.set_number - b.set_number)
+            .map((set) => ({
+              id: set.id,
+              set_number: set.set_number,
+              weight: set.weight,
+              reps: set.reps,
+              rpe: set.rpe,
+              set_type: set.set_type as 'regular' | 'superset' | 'dropset',
+              superset_exercise_id: set.superset_exercise_id,
+              superset_weight: set.superset_weight,
+              superset_reps: set.superset_reps,
+              dropset_weight: set.dropset_weight,
+              dropset_reps: set.dropset_reps,
+            })),
+        }));
+
+        setSelectedWorkout({
+          id: workoutId,
+          exercises: formattedExercises,
+        });
+        if (trainee.is_pair) {
+          setActiveView('workout-type-selection');
+        } else {
+          setActiveView('workout-session');
+        }
+      } else {
+        // If no exercises found, just open the workout session with the workout ID
+        setSelectedWorkout({
+          id: workoutId,
+          exercises: [],
+        });
+        if (trainee.is_pair) {
+          setActiveView('workout-type-selection');
+        } else {
+          setActiveView('workout-session');
+        }
+      }
+    } catch (err) {
+      logger.error('Error loading scheduled workout for editing:', err, 'TrainerApp');
+      toast.error('שגיאה בטעינת האימון המתוזמן');
+      // Fallback to regular new workout
+      if (trainee.is_pair) {
+        setActiveView('workout-type-selection');
+      } else {
+        setActiveView('workout-session');
+      }
     }
   };
 

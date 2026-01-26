@@ -409,12 +409,14 @@ Deno.serve(async (req: Request) => {
       await supabase.from('workout_exercises').delete().eq('workout_id', workout_id);
 
       // When updating, preserve the date from input but use current time
+      // Also mark as completed since the user is saving the workout with exercises
       const { data: updatedWorkout, error: updateError } = await supabase
         .from('workouts')
         .update({
           notes: notes || null,
           updated_at: new Date().toISOString(),
           workout_date: finalWorkoutDate, // Preserve date, use current time
+          is_completed: true, // Mark as completed when saving with exercises
         })
         .eq('id', workout_id)
         .select()
