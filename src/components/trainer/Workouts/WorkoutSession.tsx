@@ -118,8 +118,9 @@ export default function WorkoutSession({
   );
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
-  const [workoutId] = useState(editingWorkout?.id || null);
+  const [workoutId, setWorkoutId] = useState<string | null>(editingWorkout?.id || null);
   const [workoutDate, setWorkoutDate] = useState(new Date());
+  const [creatingWorkout, setCreatingWorkout] = useState(false);
   const [numericPad, setNumericPad] = useState<{
     exerciseIndex: number;
     setIndex: number;
@@ -238,6 +239,17 @@ export default function WorkoutSession({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty, exercises.length, workoutId]);
 
+  // Auto-save workout in realtime when exercises change (with debounce)
+  useEffect(() => {
+    if (!workoutId || exercises.length === 0 || saving || creatingWorkout) return;
+
+    const timeoutId = setTimeout(() => {
+      autoSaveWorkout();
+    }, 2000); // Debounce: wait 2 seconds after last change
+
+    return () => clearTimeout(timeoutId);
+  }, [exercises, workoutId, saving, creatingWorkout, autoSaveWorkout]);
+
   // Enhanced keyboard shortcuts for better UX (especially on tablet with external keyboard)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -338,6 +350,11 @@ export default function WorkoutSession({
   }, []);
 
   const handleAddExerciseWithAutoFill = async (exercise: Exercise) => {
+    // Create workout if this is the first exercise
+    if (exercises.length === 0 && !workoutId && user) {
+      await createInitialWorkout();
+    }
+
     if (!user) {
       addExercise(exercise);
       return;
@@ -778,6 +795,116 @@ export default function WorkoutSession({
     }
   };
 
+  // Create initial workout when first exercise is added
+  const createInitialWorkout = useCallback(async (): Promise<string | null> => {
+    if (!user || workoutId || creatingWorkout) return null;
+
+    setCreatingWorkout(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        return null;
+      }
+
+      // Create workout with is_completed=false
+      const { data: newWorkout, error: workoutError } = await supabase
+        .from('workouts')
+        .insert([
+          {
+            trainer_id: user.id,
+            workout_type: workoutType,
+            notes: notes || null,
+            workout_date: workoutDate.toISOString(),
+            is_completed: false, // Mark as incomplete - will be completed when user saves
+          },
+        ])
+        .select()
+        .single();
+
+      if (workoutError || !newWorkout) {
+        logger.error('Error creating initial workout', workoutError, 'WorkoutSession');
+        return null;
+      }
+
+      // Link trainee to workout
+      const { error: traineeError } = await supabase
+        .from('workout_trainees')
+        .insert([
+          {
+            workout_id: newWorkout.id,
+            trainee_id: trainee.id,
+          },
+        ]);
+
+      if (traineeError) {
+        logger.error('Error linking trainee to workout', traineeError, 'WorkoutSession');
+        // Try to delete the workout we just created
+        await supabase.from('workouts').delete().eq('id', newWorkout.id);
+        return null;
+      }
+
+      setWorkoutId(newWorkout.id);
+      logger.info('Created initial workout', { workoutId: newWorkout.id }, 'WorkoutSession');
+      return newWorkout.id;
+    } catch (err) {
+      logger.error('Unexpected error creating initial workout', err, 'WorkoutSession');
+      return null;
+    } finally {
+      setCreatingWorkout(false);
+    }
+  }, [user, workoutId, creatingWorkout, workoutType, notes, workoutDate, trainee.id]);
+
+  // Auto-save workout in realtime when exercises change
+  const autoSaveWorkout = useCallback(async () => {
+    if (!user || !workoutId || exercises.length === 0 || saving || creatingWorkout) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const exercisesData = exercises.map((ex, index) => ({
+        exercise_id: ex.exercise.id,
+        order_index: index,
+        sets: ex.sets.map((set) => ({
+          set_number: set.set_number,
+          weight: set.weight,
+          reps: set.reps,
+          rpe: set.rpe,
+          set_type: set.set_type,
+          failure: set.failure || false,
+          superset_exercise_id: set.superset_exercise_id || null,
+          superset_weight: set.superset_weight || null,
+          superset_reps: set.superset_reps || null,
+          superset_rpe: set.superset_rpe || null,
+          superset_equipment_id: set.superset_equipment_id || null,
+          superset_dropset_weight: set.superset_dropset_weight || null,
+          superset_dropset_reps: set.superset_dropset_reps || null,
+          dropset_weight: set.dropset_weight || null,
+          dropset_reps: set.dropset_reps || null,
+          equipment_id: set.equipment_id || null,
+        })),
+      }));
+
+      const requestBody = {
+        trainee_id: trainee.id,
+        trainer_id: user.id,
+        workout_type: workoutType,
+        notes: notes || null,
+        workout_date: workoutDate.toISOString(),
+        exercises: exercisesData,
+        pair_member: trainee.is_pair ? selectedMember : null,
+        workout_id: workoutId,
+      };
+
+      const result = await saveWorkout(requestBody, session.access_token);
+      if (result.error) {
+        logger.error('Auto-save error', result.error, 'WorkoutSession');
+      }
+    } catch (err) {
+      logger.error('Unexpected error in auto-save', err, 'WorkoutSession');
+    }
+  }, [user, workoutId, exercises, workoutType, notes, workoutDate, trainee, selectedMember, saving, creatingWorkout]);
+
   const handleSave = async () => {
     if (!user || exercises.length === 0) return;
 
@@ -857,6 +984,14 @@ export default function WorkoutSession({
       }
 
       const workoutResult = result.data;
+
+      // Update workout to completed
+      if (workoutId && workoutResult.workout.id === workoutId) {
+        await supabase
+          .from('workouts')
+          .update({ is_completed: true })
+          .eq('id', workoutId);
+      }
 
       clearSaved();
 
