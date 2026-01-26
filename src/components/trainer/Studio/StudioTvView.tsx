@@ -105,19 +105,6 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
     return () => clearInterval(timer);
   }, []);
 
-  // Detect new set and trigger flash animation
-  useEffect(() => {
-    if (latestSet && latestSet.id !== previousSetId && previousSetId !== null) {
-      // New set detected! Show flash animation
-      setShowNewSetFlash(true);
-      const timer = setTimeout(() => setShowNewSetFlash(false), 1500);
-      return () => clearTimeout(timer);
-    }
-    if (latestSet) {
-      setPreviousSetId(latestSet.id);
-    }
-  }, [latestSet?.id, previousSetId]);
-
   const initials = useMemo(() => {
     if (!session?.trainee?.full_name) return '';
     const parts = session.trainee.full_name.trim().split(/\s+/);
@@ -172,6 +159,19 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       return (set.set_number || 0) > (latest.set_number || 0) ? set : latest;
     }, setsWithData[0]);
   }, [currentExercise]);
+
+  // Detect new set and trigger flash animation
+  useEffect(() => {
+    if (latestSet && latestSet.id !== previousSetId && previousSetId !== null) {
+      // New set detected! Show flash animation
+      setShowNewSetFlash(true);
+      const timer = setTimeout(() => setShowNewSetFlash(false), 1500);
+      return () => clearTimeout(timer);
+    }
+    if (latestSet) {
+      setPreviousSetId(latestSet.id);
+    }
+  }, [latestSet?.id, previousSetId]);
 
   // Get progress comparison for current exercise
   const progressComparison = useMemo(() => {
