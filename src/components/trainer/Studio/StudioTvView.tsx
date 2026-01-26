@@ -220,6 +220,9 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       // Filter out empty sets (weight=0 and reps=0) for calculations
       const validSets = sets.filter(set => (set.weight || 0) > 0 || (set.reps || 0) > 0);
       
+      // Sort sets by set_number for display
+      const sortedSets = [...sets].sort((a, b) => (a.set_number || 0) - (b.set_number || 0));
+      
       const totalReps = validSets.reduce((sum, set) => sum + (set.reps || 0), 0);
       const maxWeight = validSets.length > 0 
         ? Math.max(...validSets.map(set => set.weight || 0), 0)
@@ -263,6 +266,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         progressIndicator,
         progressPercent: Math.round(progressPercent * 10) / 10,
         previousData: previous,
+        sets: sortedSets, // Include sets for display
       };
     });
   }, [session?.workout?.exercises, progressData.previousWorkoutData]);
@@ -383,31 +387,34 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         </div>
       )}
 
-      {/* Top bar */}
-      <header className="tv-header flex items-center justify-between px-6 md:px-12 2xl:px-16 py-6 2xl:py-8 border-b border-border/20 shadow-lg">
-        <div className="flex items-center gap-4 2xl:gap-6">
-          <div className="tv-logo h-14 w-14 2xl:h-20 2xl:w-20 rounded-2xl 2xl:rounded-3xl flex items-center justify-center shadow-glow-lg bg-gradient-to-br from-emerald-500 to-emerald-600 animate-glow-slow">
-            <span className="text-2xl 2xl:text-4xl font-extrabold tracking-tight text-white">N</span>
+      {/* Compact Top bar for TV */}
+      <header className="tv-header flex items-center justify-between px-8 2xl:px-12 py-4 2xl:py-6 border-b-2 border-primary/30 shadow-lg bg-gradient-dark">
+        <div className="flex items-center gap-6 2xl:gap-8">
+          <div className="tv-logo h-16 w-16 2xl:h-20 2xl:w-20 rounded-2xl 2xl:rounded-3xl flex items-center justify-center shadow-glow-lg bg-gradient-to-br from-emerald-500 to-emerald-600 animate-glow-slow">
+            <span className="text-3xl 2xl:text-4xl font-extrabold tracking-tight text-white">N</span>
           </div>
           <div>
-            <div className="tv-text-muted text-sm 2xl:text-xl">מצב טלוויזיה · סטודיו</div>
-            <div className="tv-text-primary text-xl 2xl:text-3xl font-semibold">
-              {user?.email ? `מאמן: ${user.email}` : 'מחכה לחיבור מאמן'}
+            <div className="tv-text-primary text-3xl 2xl:text-5xl font-black">
+              {session?.trainee?.full_name ?? 'מתאמן'}
             </div>
+            {session?.calendarEvent?.summary && (
+              <div className="tv-text-muted text-lg 2xl:text-2xl mt-1">
+                {session.calendarEvent.summary}
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="flex items-end gap-8 2xl:gap-12">
+        <div className="flex items-center gap-8 2xl:gap-12">
           <div className="text-right">
-            <div className="tv-clock text-3xl md:text-5xl 2xl:text-7xl font-bold tracking-tight leading-none tv-text-primary">
+            <div className="tv-clock text-4xl 2xl:text-6xl font-black tracking-tight leading-none tv-text-primary">
               {formatClock(now)}
             </div>
-            <div className="tv-text-muted text-lg 2xl:text-2xl mt-1">{formatDate(now)}</div>
+            <div className="tv-text-muted text-xl 2xl:text-2xl mt-1">{formatDate(now)}</div>
           </div>
           {lastUpdated && (
-            <div className="tv-text-muted text-sm 2xl:text-lg">
-              עדכון אחרון:{' '}
-              {new Date(lastUpdated).toLocaleTimeString('he-IL', {
+            <div className="tv-text-muted text-base 2xl:text-lg">
+              עודכן: {new Date(lastUpdated).toLocaleTimeString('he-IL', {
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit',
@@ -417,10 +424,9 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         </div>
       </header>
 
-      {/* Main layout */}
-      <div className="tv-container flex flex-1 gap-6 px-6 md:px-12 py-6 overflow-hidden">
-        {/* Main workout area - Full width after removing proof screen */}
-        <Card variant="premium" className="w-full p-8 flex flex-col tv-card" padding="none">
+      {/* Full screen table layout for TV - Uses entire screen */}
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full w-full p-4 2xl:p-6">
           {isUnauthorized ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
               <div className="tv-text-primary text-3xl font-semibold">התחברות נדרשת</div>
@@ -452,257 +458,148 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
             </div>
           ) : (
             <>
-              {/* Enhanced Trainee "On Stage" Display */}
-              <div className="mb-8 md:mb-12 2xl:mb-16">
-                <div className="flex items-center gap-6 md:gap-12 2xl:gap-16 mb-6 2xl:mb-8">
-                  <div className="tv-trainee-badge h-32 w-32 md:h-40 md:w-40 2xl:h-56 2xl:w-56 rounded-3xl 2xl:rounded-[2rem] flex items-center justify-center shadow-glow-xl transition-transform hover:scale-105 animate-pulse-slow bg-gradient-primary">
-                    <span className="text-5xl md:text-6xl 2xl:text-8xl font-extrabold tracking-tight text-white">
-                      {initials || '?'}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-3 2xl:gap-4 flex-1">
-                    <div className="tv-text-muted text-sm md:text-base 2xl:text-xl uppercase tracking-[0.25em] mb-1">
-                      מתאמן נוכחי
-                    </div>
-                    <div className="tv-heading-xl text-4xl md:text-6xl lg:text-7xl 2xl:text-8xl 3xl:text-[10rem] font-extrabold tracking-tight leading-tight tv-text-primary">
-                      {session.trainee?.full_name ?? 'לא זוהה מתאמן'}
-                    </div>
-                    <div className="tv-text-muted text-xl md:text-2xl 2xl:text-4xl mt-2 animate-fade-in">
-                      הנה אני על המסך! 🎬
-                    </div>
-                    {session.calendarEvent?.summary && (
-                      <div className="tv-text-muted text-lg md:text-xl 2xl:text-3xl mt-1">
-                        {session.calendarEvent.summary}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Trainee Story - Streak, Monthly Workouts, Progress */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 2xl:gap-6 mb-6 2xl:mb-8">
-                  {progressData.streakDays > 0 && (
-                    <Card variant="glass" className="p-4 md:p-6 2xl:p-8" padding="none">
-                      <div className="flex items-center gap-3 2xl:gap-4">
-                        <Flame className="w-8 h-8 2xl:w-12 2xl:h-12 text-orange-500" />
-                        <div>
-                          <div className={`text-sm 2xl:text-xl ${themeClasses.textMuted}`}>רצף אימונים</div>
-                          <div className={`text-2xl md:text-3xl 2xl:text-5xl font-bold ${themeClasses.textPrimary}`}>
-                            🔥 {progressData.streakDays} ימים
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  )}
-                  <Card variant="glass" className="p-4 md:p-6 2xl:p-8" padding="none">
-                    <div className="flex items-center gap-3 2xl:gap-4">
-                      <Calendar className="w-8 h-8 2xl:w-12 2xl:h-12 text-emerald-500" />
-                      <div>
-                        <div className={`text-sm 2xl:text-xl ${themeClasses.textMuted}`}>אימונים החודש</div>
-                        <div className={`text-2xl md:text-3xl 2xl:text-5xl font-bold ${themeClasses.textPrimary}`}>
-                          {progressData.workoutsThisMonth}
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                  <Card variant="glass" className="p-4 md:p-6 2xl:p-8" padding="none">
-                    <div className="flex items-center gap-3 2xl:gap-4">
-                      <Target className="w-8 h-8 2xl:w-12 2xl:h-12 text-blue-500" />
-                      <div>
-                        <div className={`text-sm 2xl:text-xl ${themeClasses.textMuted}`}>סה״כ אימונים</div>
-                        <div className={`text-2xl md:text-3xl 2xl:text-5xl font-bold ${themeClasses.textPrimary}`}>
-                          {progressData.totalWorkouts}
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-              </div>
-
-              {/* LIVE Current Exercise Display - Updates in real-time */}
-              {currentExercise && latestSet && exerciseStats && (
-                <Card variant="premium" className="tv-live-card mb-6 2xl:mb-8 p-6 md:p-8 2xl:p-12 border-primary border-4 2xl:border-[6px] shadow-glow-xl animate-tv-glow-pulse animate-tv-shimmer" padding="none">
-                  <div className="flex items-center justify-between mb-4 2xl:mb-6">
-                    <div className="flex items-center gap-3 2xl:gap-4">
-                      <span className="px-4 py-2 2xl:px-6 2xl:py-3 rounded-full bg-red-500 text-white text-sm md:text-base 2xl:text-2xl font-bold animate-pulse shadow-glow">
-                        🔴 LIVE
-                      </span>
-                      <div className="tv-text-lg tv-text-primary font-semibold">
-                        מה עכשיו קורה
-                      </div>
-                    </div>
-                    {lastUpdated && (
-                      <div className={`text-xs 2xl:text-sm ${themeClasses.textMuted}`}>
-                        עודכן: {new Date(lastUpdated).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 2xl:gap-8 mb-6 2xl:mb-8">
-                    <div>
-                      <div className="tv-text-muted tv-text-lg mb-2 2xl:mb-4 font-semibold">תרגיל נוכחי</div>
-                      <div className="tv-heading-xl tv-text-primary mb-4 2xl:mb-6 font-black">
-                        {currentExercise.name}
-                      </div>
-                      <div className="tv-text-muted tv-text-lg">
-                        סט {latestSet.set_number} מתוך {currentExercise.sets.length}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <div className="tv-text-muted tv-text-lg mb-2 2xl:mb-4 font-semibold">ביצוע נוכחי</div>
-                      <div className="tv-number-xl tv-text-primary mb-2 2xl:mb-4 animate-tv-number-pop font-black">
-                        {latestSet.weight ?? 0} <span className="tv-text-lg">ק״ג</span>
-                      </div>
-                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop font-black">
-                        × {latestSet.reps ?? 0} <span className="tv-text-lg">חזרות</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Detailed Indicators Grid - Updates in real-time */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 2xl:gap-6 pt-6 2xl:pt-8 border-t-2 border-primary/30">
-                    <Card variant="glass" className="p-4 2xl:p-6 flex flex-col items-center text-center" padding="none">
-                      <div className="tv-text-muted tv-text-lg mb-3 2xl:mb-4 font-semibold">נפח סה״כ</div>
-                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop font-black">
-                        {Math.round(exerciseStats.totalVolume)} <span className="tv-text-lg">ק״ג</span>
-                      </div>
-                    </Card>
-                    <Card variant="glass" className="p-4 2xl:p-6 flex flex-col items-center text-center" padding="none">
-                      <div className="tv-text-muted tv-text-lg mb-3 2xl:mb-4 font-semibold">משקל מקסימלי</div>
-                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop font-black">
-                        {exerciseStats.maxWeight} <span className="tv-text-lg">ק״ג</span>
-                      </div>
-                    </Card>
-                    <Card variant="glass" className="p-4 2xl:p-6 flex flex-col items-center text-center" padding="none">
-                      <div className="tv-text-muted tv-text-lg mb-3 2xl:mb-4 font-semibold">חזרות סה״כ</div>
-                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop font-black">
-                        {exerciseStats.totalReps} <span className="tv-text-lg">חזרות</span>
-                      </div>
-                    </Card>
-                    <Card variant="glass" className="p-4 2xl:p-6 flex flex-col items-center text-center" padding="none">
-                      <div className="tv-text-muted tv-text-lg mb-3 2xl:mb-4 font-semibold">סטים</div>
-                      <div className="tv-number-xl tv-text-primary animate-tv-number-pop font-black">
-                        <span className={exerciseStats.completedSets === exerciseStats.totalSets ? 'text-emerald-500' : 'text-amber-500'}>
-                          {exerciseStats.completedSets}/{exerciseStats.totalSets}
+              {/* Full Screen Table for TV - Main Focus - Uses entire screen */}
+              {completedExercisesData.length > 0 ? (
+                <div className="h-full w-full flex flex-col bg-gradient-dark border-2 border-primary/30 shadow-glow-xl overflow-hidden">
+                  {/* Compact Table Header */}
+                  <div className="flex items-center justify-between px-6 2xl:px-8 py-4 2xl:py-5 border-b-4 border-primary/40 bg-primary/5 flex-shrink-0">
+                    <div className="flex items-center gap-4 2xl:gap-6">
+                      <div className="tv-trainee-badge h-16 w-16 2xl:h-20 2xl:w-20 rounded-2xl flex items-center justify-center shadow-glow-xl bg-gradient-primary">
+                        <span className="text-3xl 2xl:text-4xl font-extrabold text-white">
+                          {initials || '?'}
                         </span>
                       </div>
-                    </Card>
-                  </div>
-
-                  {/* Progress Comparison */}
-                  {progressComparison && progressComparison.isImprovement && (
-                    <div className="mt-6 2xl:mt-8 p-4 md:p-6 2xl:p-8 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl 2xl:rounded-3xl">
-                      <div className="flex items-center gap-3 2xl:gap-4 mb-2 2xl:mb-4">
-                        <TrendingUp className="w-6 h-6 2xl:w-10 2xl:h-10 text-emerald-500" />
-                        <div className={`text-lg md:text-xl 2xl:text-3xl font-semibold text-emerald-600`}>
-                          התקדמות!
+                      <div>
+                        <h1 className="tv-heading-xl text-3xl 2xl:text-5xl font-black tv-text-primary">
+                          תרגילים באימון
+                        </h1>
+                        <div className="tv-text-muted text-lg 2xl:text-xl mt-1">
+                          {completedExercisesData.filter(e => e.isCompleted).length} / {completedExercisesData.length} הושלמו
                         </div>
                       </div>
-                      <div className={`text-base md:text-lg 2xl:text-2xl ${themeClasses.textPrimary}`}>
-                        בפעם הקודמת: {progressComparison.previousWeight} ק״ג × {progressComparison.previousReps} חזרות
-                      </div>
-                      <div className={`text-base md:text-lg 2xl:text-2xl ${themeClasses.textPrimary} font-semibold`}>
-                        היום: {progressComparison.currentWeight} ק״ג × {progressComparison.currentReps} חזרות
-                      </div>
-                      <div className={`text-xl md:text-2xl 2xl:text-4xl font-bold text-emerald-600 mt-2 2xl:mt-4`}>
-                        שיפור של +{progressComparison.improvement}% 🎉
-                      </div>
                     </div>
-                  )}
-                </Card>
-              )}
-
-              {/* Completed Exercises Table - Always visible, updates in real-time */}
-              {completedExercisesData.length > 0 && (
-                <Card variant="premium" className="mb-6 2xl:mb-8 p-6 md:p-8 2xl:p-12 border-primary/20 border-2 shadow-glow-lg" padding="none">
-                  <div className="flex items-center justify-between mb-6 2xl:mb-8">
-                    <h2 className={`text-2xl md:text-3xl 2xl:text-4xl font-bold ${themeClasses.textPrimary}`}>
-                      תרגילים באימון
-                    </h2>
-                    <div className={`text-sm 2xl:text-base ${themeClasses.textMuted}`}>
-                      {completedExercisesData.filter(e => e.isCompleted).length} / {completedExercisesData.length} הושלמו
-                    </div>
+                    {currentExercise && latestSet && exerciseStats && (
+                      <div className="flex items-center gap-4 2xl:gap-6">
+                        <div className="text-right">
+                          <div className="tv-text-muted text-base 2xl:text-lg mb-1">תרגיל נוכחי</div>
+                          <div className="tv-text-primary text-xl 2xl:text-2xl font-black">
+                            {currentExercise.name}
+                          </div>
+                          <div className="tv-text-muted text-sm 2xl:text-base">
+                            סט {latestSet.set_number} | {latestSet.weight ?? 0} ק״ג × {latestSet.reps ?? 0} | נפח: {Math.round(exerciseStats.totalVolume)} ק״ג
+                          </div>
+                        </div>
+                        <div className="px-5 py-2 rounded-full bg-red-500 text-white text-lg 2xl:text-xl font-black animate-pulse shadow-glow">
+                          🔴 LIVE
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b-2 border-primary/30">
-                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-bold text-lg 2xl:text-xl uppercase tracking-wider`}>תרגיל</th>
-                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-bold text-lg 2xl:text-xl uppercase tracking-wider`}>סטטוס</th>
-                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-bold text-lg 2xl:text-xl uppercase tracking-wider`}>משקל מקס׳</th>
-                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-bold text-lg 2xl:text-xl uppercase tracking-wider`}>חזרות</th>
-                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-bold text-lg 2xl:text-xl uppercase tracking-wider`}>נפח</th>
-                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-bold text-lg 2xl:text-xl uppercase tracking-wider`}>סטים</th>
-                          <th className={`text-right py-4 px-4 ${themeClasses.textMuted} font-bold text-lg 2xl:text-xl uppercase tracking-wider`}>התקדמות</th>
+
+                  {/* Full Screen Table - Takes entire screen space */}
+                  <div className="flex-1 overflow-auto">
+                    <table className="w-full" style={{ fontSize: 'clamp(1.25rem, 3vw, 2.5rem)' }}>
+                      <thead className="sticky top-0 z-10 bg-gradient-dark border-b-4 border-primary/40">
+                        <tr>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>#</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>תרגיל</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>סטטוס</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>משקל מקס׳</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>חזרות</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>נפח</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>סטים</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>פרטי סטים</th>
+                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 ${themeClasses.textMuted} font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-primary/10`}>התקדמות</th>
                         </tr>
                       </thead>
                       <tbody>
                         {completedExercisesData.map((exercise, index) => (
                           <tr 
                             key={exercise.id}
-                            className={`border-b border-primary/10 transition-all duration-300 hover:bg-primary/5 ${
+                            className={`border-b-2 transition-all duration-300 ${
                               exercise.isCompleted 
-                                ? 'bg-emerald-500/10 border-emerald-500/20' 
-                                : 'bg-amber-500/5 border-amber-500/10'
-                            }`}
+                                ? 'bg-emerald-500/15 border-emerald-500/30' 
+                                : 'bg-amber-500/10 border-amber-500/20'
+                            } ${index === 0 && currentExercise ? 'ring-4 ring-primary/50' : ''}`}
                           >
-                            <td className={`py-5 px-4 ${themeClasses.textPrimary} font-bold text-xl 2xl:text-2xl`}>
-                              <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 2xl:w-12 2xl:h-12 rounded-full flex items-center justify-center text-lg 2xl:text-xl font-bold ${
-                                  exercise.isCompleted 
-                                    ? 'bg-emerald-500 text-white' 
-                                    : 'bg-amber-500/20 text-amber-500'
-                                }`}>
-                                  {index + 1}
-                                </div>
-                                <span>{exercise.name}</span>
+                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 text-center`}>
+                              <div className={`w-14 h-14 2xl:w-18 2xl:h-18 rounded-full flex items-center justify-center text-xl 2xl:text-2xl font-black mx-auto ${
+                                exercise.isCompleted 
+                                  ? 'bg-emerald-500 text-white shadow-glow-lg' 
+                                  : 'bg-amber-500/30 text-amber-500'
+                              }`}>
+                                {index + 1}
                               </div>
                             </td>
-                            <td className="py-5 px-4">
+                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 ${themeClasses.textPrimary} font-black text-xl 2xl:text-2xl`}>
+                              {exercise.name}
+                            </td>
+                            <td className="py-6 2xl:py-8 px-4 2xl:px-6">
                               {exercise.isCompleted ? (
-                                <span className="px-4 py-2 rounded-full bg-emerald-500/20 text-emerald-500 text-base 2xl:text-lg font-bold border-2 border-emerald-500/40 shadow-glow-sm animate-pulse-slow">
+                                <span className="px-4 py-2 2xl:px-6 2xl:py-3 rounded-full bg-emerald-500/30 text-emerald-500 text-lg 2xl:text-xl font-black border-3 border-emerald-500/50 shadow-glow-lg animate-pulse-slow inline-block">
                                   ✓ הושלם
                                 </span>
                               ) : (
-                                <span className="px-4 py-2 rounded-full bg-amber-500/20 text-amber-500 text-base 2xl:text-lg font-bold border-2 border-amber-500/40">
+                                <span className="px-4 py-2 2xl:px-6 2xl:py-3 rounded-full bg-amber-500/30 text-amber-500 text-lg 2xl:text-xl font-black border-3 border-amber-500/50 inline-block">
                                   בתהליך
                                 </span>
                               )}
                             </td>
-                            <td className={`py-5 px-4 ${themeClasses.textPrimary} text-xl 2xl:text-2xl font-bold`}>
+                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 ${themeClasses.textPrimary} text-xl 2xl:text-2xl font-black text-center`}>
                               {exercise.maxWeight > 0 ? `${exercise.maxWeight} ק״ג` : '—'}
                             </td>
-                            <td className={`py-5 px-4 ${themeClasses.textPrimary} text-xl 2xl:text-2xl font-bold`}>
+                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 ${themeClasses.textPrimary} text-xl 2xl:text-2xl font-black text-center`}>
                               {exercise.totalReps > 0 ? exercise.totalReps : '—'}
                             </td>
-                            <td className={`py-5 px-4 ${themeClasses.textPrimary} text-xl 2xl:text-2xl font-bold`}>
+                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 ${themeClasses.textPrimary} text-xl 2xl:text-2xl font-black text-center`}>
                               {exercise.totalVolume > 0 ? `${Math.round(exercise.totalVolume)} ק״ג` : '—'}
                             </td>
-                            <td className={`py-5 px-4 ${themeClasses.textPrimary} text-xl 2xl:text-2xl font-bold`}>
+                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 text-xl 2xl:text-2xl font-black text-center`}>
                               <span className={exercise.completedSets === exercise.totalSets ? 'text-emerald-500' : 'text-amber-500'}>
                                 {exercise.completedSets}/{exercise.totalSets}
                               </span>
                             </td>
-                            <td className="py-5 px-4">
+                            <td className="py-6 2xl:py-8 px-4 2xl:px-6">
+                              <div className="flex flex-wrap gap-2 2xl:gap-3 justify-end">
+                                {exercise.sets.slice(0, 5).map((set) => (
+                                  <div
+                                    key={set.id}
+                                    className={`px-2 py-1 2xl:px-3 2xl:py-2 rounded-lg text-base 2xl:text-lg font-bold ${
+                                      (set.weight || 0) > 0 || (set.reps || 0) > 0
+                                        ? 'bg-primary/20 text-primary border-2 border-primary/40'
+                                        : 'bg-gray-500/10 text-gray-400 border-2 border-gray-500/20'
+                                    }`}
+                                  >
+                                    {set.set_number}: {set.weight ?? 0}×{set.reps ?? 0}
+                                  </div>
+                                ))}
+                                {exercise.sets.length > 5 && (
+                                  <div className="px-2 py-1 2xl:px-3 2xl:py-2 rounded-lg text-base 2xl:text-lg font-bold bg-primary/10 text-primary border-2 border-primary/30">
+                                    +{exercise.sets.length - 5}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-6 2xl:py-8 px-4 2xl:px-6 text-center">
                               {exercise.progressIndicator === 'up' && (
-                                <div className="flex items-center gap-2 text-emerald-500 animate-pulse-slow">
+                                <div className="flex items-center justify-center gap-2 text-emerald-500 animate-pulse-slow">
                                   <TrendingUp className="w-6 h-6 2xl:w-8 2xl:h-8" />
-                                  <span className="text-xl 2xl:text-2xl font-bold">+{Math.abs(exercise.progressPercent)}%</span>
+                                  <span className="text-xl 2xl:text-2xl font-black">+{Math.abs(exercise.progressPercent)}%</span>
                                 </div>
                               )}
                               {exercise.progressIndicator === 'down' && (
-                                <div className="flex items-center gap-2 text-red-500">
+                                <div className="flex items-center justify-center gap-2 text-red-500">
                                   <TrendingUp className="w-6 h-6 2xl:w-8 2xl:h-8 rotate-180" />
-                                  <span className="text-xl 2xl:text-2xl font-bold">{exercise.progressPercent}%</span>
+                                  <span className="text-xl 2xl:text-2xl font-black">{exercise.progressPercent}%</span>
                                 </div>
                               )}
                               {exercise.progressIndicator === 'same' && (
-                                <div className="flex items-center gap-2 text-gray-400">
-                                  <span className="text-3xl 2xl:text-4xl font-bold">=</span>
+                                <div className="flex items-center justify-center">
+                                  <span className="text-3xl 2xl:text-4xl font-black text-gray-400">=</span>
                                 </div>
                               )}
                               {!exercise.progressIndicator && (
-                                <span className={`${themeClasses.textMuted} text-base 2xl:text-lg`}>—</span>
+                                <span className={`${themeClasses.textMuted} text-lg 2xl:text-xl`}>—</span>
                               )}
                             </td>
                           </tr>
@@ -710,136 +607,22 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                       </tbody>
                     </table>
                   </div>
-                </Card>
-              )}
-
-              {/* Exercises grid */}
-              <div className="flex-1 flex flex-col gap-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className={`text-2xl font-semibold ${themeClasses.textPrimary}`}>אימון נוכחי</h2>
-                  <div className={`text-sm ${themeClasses.textMuted}`}>
-                    {session.workout
-                      ? new Date(session.workout.workout_date).toLocaleTimeString(
-                          'he-IL',
-                          {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          }
-                        )
-                      : 'אין פרטי אימון זמינים מהמערכת'}
-                  </div>
                 </div>
-
-                {firstExercises.length === 0 ? (
-                  <div className="flex-1 flex items-center justify-center">
-                    <p className={`text-xl ${themeClasses.textMuted}`}>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="tv-text-primary text-4xl 2xl:text-6xl font-black mb-4">
+                      אין תרגילים כרגע
+                    </div>
+                    <p className="tv-text-muted text-2xl 2xl:text-3xl">
                       האימון זוהה מהיומן, אבל טרם נוספו לו תרגילים במערכת.
                     </p>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 flex-1 overflow-y-auto">
-                    {firstExercises.map((exercise, index) => {
-                      const totalSets = exercise.sets.length;
-                      const totalReps = exercise.sets.reduce(
-                        (sum, set) => sum + (set.reps || 0),
-                        0
-                      );
-                      const isFirst = index === 0;
-
-                      return (
-                        <Card
-                          key={exercise.id}
-                          variant={isFirst ? 'default' : 'glass'}
-                          className={`relative flex flex-col justify-between overflow-hidden ${
-                            isFirst
-                              ? 'border-primary border-2 bg-primary/5 shadow-lg shadow-primary/20'
-                              : ''
-                          }`}
-                          padding="md"
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={`h-10 w-10 rounded-2xl flex items-center justify-center text-sm font-semibold ${
-                                  isFirst
-                                    ? 'bg-primary text-white'
-                                    : `${themeClasses.bgSurface} ${themeClasses.textPrimary}`
-                                }`}
-                              >
-                                {index + 1}
-                              </div>
-                              <div>
-                                <div className={`text-lg font-semibold line-clamp-2 ${themeClasses.textPrimary}`}>
-                                  {exercise.name}
-                                </div>
-                                {exercise.muscle_group_id && (
-                                  <div className={`text-xs ${themeClasses.textMuted} mt-0.5`}>
-                                    {exercise.muscle_group_id}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {isFirst && (
-                              <span className="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-semibold border border-primary/30">
-                                תרגיל נוכחי
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="mt-2">
-                            <div className={`flex items-center gap-4 text-sm ${themeClasses.textPrimary}`}>
-                              <div>
-                                <span className={themeClasses.textMuted}>סטים:</span>{' '}
-                                <span className={`font-semibold ${themeClasses.textPrimary}`}>
-                                  {totalSets}
-                                </span>
-                              </div>
-                              <div>
-                                <span className={themeClasses.textMuted}>סה״כ חזרות:</span>{' '}
-                                <span className={`font-semibold ${themeClasses.textPrimary}`}>
-                                  {totalReps}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-                              {exercise.sets.map(set => (
-                                <div
-                                  key={set.id}
-                                  className={`min-w-[90px] rounded-2xl ${themeClasses.bgSurface} ${themeClasses.border} border px-3 py-2 text-xs flex flex-col gap-1`}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <span className={themeClasses.textMuted}>סט {set.set_number}</span>
-                                    <span className={`text-[10px] uppercase ${themeClasses.textMuted}`}>
-                                      {set.set_type === 'dropset'
-                                        ? 'דרופסט'
-                                        : set.set_type === 'superset'
-                                        ? 'סופרסט'
-                                        : 'רגיל'}
-                                    </span>
-                                  </div>
-                                  <div className={`font-semibold ${themeClasses.textPrimary}`}>
-                                    {set.weight ?? 0} ק״ג × {set.reps ?? 0}
-                                  </div>
-                                  {typeof set.rpe === 'number' && (
-                                    <div className={`text-[11px] ${themeClasses.textMuted}`}>
-                                      RPE {set.rpe}
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </>
           )}
-        </Card>
+        </div>
       </div>
 
     </div>
