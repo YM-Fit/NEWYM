@@ -47,24 +47,32 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   
   // TV-optimized inline styles to ensure compatibility with WebOS and other Smart TV browsers
   // These override CSS that may not work correctly on TV browsers
+  // Enhanced for 55" 4K displays with improved contrast (WCAG AA compliant)
   const tvStyles = {
     container: {
-      backgroundColor: '#1a1a2e', // Dark blue background (matches loading screen)
+      backgroundColor: '#0d0d1a', // Deeper dark blue for better contrast
       color: '#ffffff',
     },
     text: {
       color: '#ffffff',
     },
     textMuted: {
-      color: '#a3a3a3',
+      color: '#b8b8b8', // Lighter gray for better readability from distance
+    },
+    textHighlight: {
+      color: '#4ade80', // Bright green for important numbers
     },
     card: {
-      backgroundColor: '#2a2a3e', // Darker blue for cards
-      borderColor: 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: '#1a1a2e', // Slightly lighter for card contrast
+      borderColor: 'rgba(255, 255, 255, 0.15)',
     },
     header: {
-      backgroundColor: '#2a2a3e', // Darker blue for header
-      borderColor: 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: '#1a1a2e', // Match cards
+      borderColor: 'rgba(255, 255, 255, 0.15)',
+    },
+    // Safe area padding for TV overscan (3-5% of screen)
+    safeArea: {
+      padding: '2.5%',
     },
   };
 
@@ -86,7 +94,14 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
     }
   }, [latestRecord]);
 
-  const now = useMemo(() => new Date(), []);
+  // Live clock that updates every second
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const initials = useMemo(() => {
     if (!session?.trainee?.full_name) return '';
@@ -146,9 +161,9 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   const isUnauthorized = !user || userType !== 'trainer';
 
   return (
-    <div 
-      className={`h-screen w-screen overflow-hidden flex flex-col relative tv-view-container`}
-      style={tvStyles.container}
+    <div
+      className={`h-screen w-screen overflow-hidden flex flex-col relative tv-view-container tv-safe-area`}
+      style={{...tvStyles.container, ...tvStyles.safeArea}}
     >
       {/* Confetti animation */}
       {showConfetti && (
@@ -176,17 +191,17 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         </div>
       )}
 
-      {/* Personal Record Celebration Message */}
+      {/* Personal Record Celebration Message - Enhanced for 55" 4K TV */}
       {showPRMessage && latestRecord && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white px-12 py-8 2xl:px-20 2xl:py-12 rounded-3xl 2xl:rounded-[2rem] shadow-2xl animate-scale-in border-4 2xl:border-[6px] border-white/30">
-            <div className="flex flex-col items-center gap-4 2xl:gap-6">
-              <Trophy className="w-16 h-16 2xl:w-24 2xl:h-24 animate-bounce" />
-              <div className="text-5xl 2xl:text-7xl font-extrabold">שיא אישי חדש!</div>
-              <div className="text-2xl 2xl:text-4xl font-semibold text-center">
+          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white px-12 py-8 2xl:px-20 2xl:py-12 5xl:px-32 5xl:py-20 rounded-3xl 2xl:rounded-[2rem] 5xl:rounded-[3rem] shadow-2xl animate-scale-in border-4 2xl:border-[6px] 5xl:border-8 border-white/30 tv-pr-celebration">
+            <div className="flex flex-col items-center gap-4 2xl:gap-6 5xl:gap-10">
+              <Trophy className="w-16 h-16 2xl:w-24 2xl:h-24 5xl:w-40 5xl:h-40 animate-bounce" />
+              <div className="text-5xl 2xl:text-7xl 5xl:text-10xl font-extrabold">שיא אישי חדש!</div>
+              <div className="text-2xl 2xl:text-4xl 5xl:text-6xl font-semibold text-center">
                 {latestRecord.exerciseName}
               </div>
-              <div className="text-xl 2xl:text-3xl">
+              <div className="text-xl 2xl:text-3xl 5xl:text-5xl">
                 {latestRecord.type === 'max_weight' && `${latestRecord.newValue} ק״ג`}
                 {latestRecord.type === 'max_reps' && `${latestRecord.newValue} חזרות`}
                 {latestRecord.type === 'max_volume' && `${Math.round(latestRecord.newValue)} ק״ג`}
@@ -216,12 +231,12 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
           </div>
         </div>
 
-        <div className="flex items-end gap-8 2xl:gap-12">
+        <div className="flex items-end gap-8 2xl:gap-12 5xl:gap-16">
           <div className="text-right">
-            <div className="text-3xl md:text-5xl 2xl:text-7xl font-bold tracking-tight leading-none" style={tvStyles.text}>
+            <div className="text-3xl md:text-5xl 2xl:text-7xl 5xl:text-9xl font-bold tracking-tight leading-none tv-clock" style={tvStyles.text}>
               {formatClock(now)}
             </div>
-            <div className="text-lg 2xl:text-2xl mt-1" style={tvStyles.textMuted}>{formatDate(now)}</div>
+            <div className="text-lg 2xl:text-2xl 5xl:text-4xl mt-1 5xl:mt-3" style={tvStyles.textMuted}>{formatDate(now)}</div>
           </div>
           {lastUpdated && (
             <div className="text-sm 2xl:text-lg" style={tvStyles.textMuted}>
@@ -268,67 +283,67 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
             </div>
           ) : (
             <>
-              {/* Enhanced Trainee "On Stage" Display */}
-              <div className="mb-8 md:mb-12 2xl:mb-16">
-                <div className="flex items-center gap-6 md:gap-12 2xl:gap-16 mb-6 2xl:mb-8">
-                  <div 
-                    className="h-32 w-32 md:h-40 md:w-40 2xl:h-56 2xl:w-56 rounded-3xl 2xl:rounded-[2rem] flex items-center justify-center shadow-2xl transition-transform hover:scale-105 animate-pulse-slow tv-badge-primary"
+              {/* Enhanced Trainee "On Stage" Display - Optimized for 55" 4K TV */}
+              <div className="mb-8 md:mb-12 2xl:mb-16 5xl:mb-20">
+                <div className="flex items-center gap-6 md:gap-12 2xl:gap-16 5xl:gap-24 mb-6 2xl:mb-8 5xl:mb-12">
+                  <div
+                    className="h-32 w-32 md:h-40 md:w-40 2xl:h-56 2xl:w-56 5xl:h-80 5xl:w-80 rounded-3xl 2xl:rounded-[2rem] 5xl:rounded-[3rem] flex items-center justify-center shadow-2xl transition-transform hover:scale-105 tv-badge-primary tv-glow"
                     style={{ backgroundColor: '#4a6b2a' }}
                   >
-                    <span className="text-5xl md:text-6xl 2xl:text-8xl font-extrabold tracking-tight" style={{ color: '#ffffff' }}>
+                    <span className="text-5xl md:text-6xl 2xl:text-8xl 5xl:text-10xl font-extrabold tracking-tight" style={{ color: '#ffffff' }}>
                       {initials || '?'}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-3 2xl:gap-4 flex-1">
-                    <div className="text-sm md:text-base 2xl:text-xl uppercase tracking-[0.25em] mb-1 text-muted-tv" style={tvStyles.textMuted}>
+                  <div className="flex flex-col gap-3 2xl:gap-4 5xl:gap-6 flex-1">
+                    <div className="text-sm md:text-base 2xl:text-xl 5xl:text-3xl uppercase tracking-[0.25em] mb-1 text-muted-tv" style={tvStyles.textMuted}>
                       מתאמן נוכחי
                     </div>
-                    <div className="text-4xl md:text-6xl lg:text-7xl 2xl:text-8xl 3xl:text-[10rem] font-extrabold tracking-tight leading-tight" style={tvStyles.text}>
+                    <div className="text-4xl md:text-6xl lg:text-7xl 2xl:text-8xl 3xl:text-[10rem] 5xl:text-[14rem] font-extrabold tracking-tight leading-tight tv-trainee-name" style={tvStyles.text}>
                       {session.trainee?.full_name ?? 'לא זוהה מתאמן'}
                     </div>
-                    <div className="text-xl md:text-2xl 2xl:text-4xl mt-2 animate-fade-in text-muted-tv" style={tvStyles.textMuted}>
+                    <div className="text-xl md:text-2xl 2xl:text-4xl 5xl:text-5xl mt-2 animate-fade-in text-muted-tv" style={tvStyles.textMuted}>
                       הנה אני על המסך! 🎬
                     </div>
                     {session.calendarEvent?.summary && (
-                      <div className="text-lg md:text-xl 2xl:text-3xl mt-1 text-muted-tv" style={tvStyles.textMuted}>
+                      <div className="text-lg md:text-xl 2xl:text-3xl 5xl:text-4xl mt-1 text-muted-tv" style={tvStyles.textMuted}>
                         {session.calendarEvent.summary}
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Trainee Story - Streak, Monthly Workouts, Progress */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 2xl:gap-6 mb-6 2xl:mb-8">
+                {/* Trainee Story - Streak, Monthly Workouts, Progress - Enhanced for 4K */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 2xl:gap-6 5xl:gap-10 mb-6 2xl:mb-8 5xl:mb-12">
                   {progressData.streakDays > 0 && (
-                    <Card variant="glass" className="p-4 md:p-6 2xl:p-8" padding="none">
-                      <div className="flex items-center gap-3 2xl:gap-4">
-                        <Flame className="w-8 h-8 2xl:w-12 2xl:h-12 text-orange-500" />
+                    <Card variant="glass" className="p-4 md:p-6 2xl:p-8 5xl:p-12 tv-card" padding="none">
+                      <div className="flex items-center gap-3 2xl:gap-4 5xl:gap-8">
+                        <Flame className="w-8 h-8 2xl:w-12 2xl:h-12 5xl:w-20 5xl:h-20 text-orange-500" />
                         <div>
-                          <div className={`text-sm 2xl:text-xl ${themeClasses.textMuted}`}>רצף אימונים</div>
-                          <div className={`text-2xl md:text-3xl 2xl:text-5xl font-bold ${themeClasses.textPrimary}`}>
+                          <div className={`text-sm 2xl:text-xl 5xl:text-3xl ${themeClasses.textMuted}`}>רצף אימונים</div>
+                          <div className={`text-2xl md:text-3xl 2xl:text-5xl 5xl:text-7xl font-bold ${themeClasses.textPrimary}`}>
                             🔥 {progressData.streakDays} ימים
                           </div>
                         </div>
                       </div>
                     </Card>
                   )}
-                  <Card variant="glass" className="p-4 md:p-6 2xl:p-8" padding="none">
-                    <div className="flex items-center gap-3 2xl:gap-4">
-                      <Calendar className="w-8 h-8 2xl:w-12 2xl:h-12 text-emerald-500" />
+                  <Card variant="glass" className="p-4 md:p-6 2xl:p-8 5xl:p-12 tv-card" padding="none">
+                    <div className="flex items-center gap-3 2xl:gap-4 5xl:gap-8">
+                      <Calendar className="w-8 h-8 2xl:w-12 2xl:h-12 5xl:w-20 5xl:h-20 text-emerald-500" />
                       <div>
-                        <div className={`text-sm 2xl:text-xl ${themeClasses.textMuted}`}>אימונים החודש</div>
-                        <div className={`text-2xl md:text-3xl 2xl:text-5xl font-bold ${themeClasses.textPrimary}`}>
+                        <div className={`text-sm 2xl:text-xl 5xl:text-3xl ${themeClasses.textMuted}`}>אימונים החודש</div>
+                        <div className={`text-2xl md:text-3xl 2xl:text-5xl 5xl:text-7xl font-bold ${themeClasses.textPrimary}`}>
                           {progressData.workoutsThisMonth}
                         </div>
                       </div>
                     </div>
                   </Card>
-                  <Card variant="glass" className="p-4 md:p-6 2xl:p-8" padding="none">
-                    <div className="flex items-center gap-3 2xl:gap-4">
-                      <Target className="w-8 h-8 2xl:w-12 2xl:h-12 text-blue-500" />
+                  <Card variant="glass" className="p-4 md:p-6 2xl:p-8 5xl:p-12 tv-card" padding="none">
+                    <div className="flex items-center gap-3 2xl:gap-4 5xl:gap-8">
+                      <Target className="w-8 h-8 2xl:w-12 2xl:h-12 5xl:w-20 5xl:h-20 text-blue-500" />
                       <div>
-                        <div className={`text-sm 2xl:text-xl ${themeClasses.textMuted}`}>סה״כ אימונים</div>
-                        <div className={`text-2xl md:text-3xl 2xl:text-5xl font-bold ${themeClasses.textPrimary}`}>
+                        <div className={`text-sm 2xl:text-xl 5xl:text-3xl ${themeClasses.textMuted}`}>סה״כ אימונים</div>
+                        <div className={`text-2xl md:text-3xl 2xl:text-5xl 5xl:text-7xl font-bold ${themeClasses.textPrimary}`}>
                           {progressData.totalWorkouts}
                         </div>
                       </div>
@@ -337,58 +352,64 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                 </div>
               </div>
 
-              {/* LIVE Current Exercise Display */}
+              {/* LIVE Current Exercise Display - Hero section for 55" TV */}
               {currentExercise && latestSet && (
-                <Card variant="premium" className="mb-6 2xl:mb-8 p-6 md:p-8 2xl:p-12 border-primary border-4 2xl:border-[6px] shadow-2xl shadow-primary/30 animate-pulse-slow" padding="none">
-                  <div className="flex items-center justify-between mb-4 2xl:mb-6">
-                    <div className="flex items-center gap-3 2xl:gap-4">
-                      <span className="px-4 py-2 2xl:px-6 2xl:py-3 rounded-full bg-red-500 text-white text-sm md:text-base 2xl:text-2xl font-bold animate-pulse">
+                <Card variant="premium" className="mb-6 2xl:mb-8 5xl:mb-12 p-6 md:p-8 2xl:p-12 5xl:p-16 border-primary border-4 2xl:border-[6px] 5xl:border-8 shadow-2xl shadow-primary/30 tv-live-card" padding="none">
+                  <div className="flex items-center justify-between mb-4 2xl:mb-6 5xl:mb-10">
+                    <div className="flex items-center gap-3 2xl:gap-4 5xl:gap-6">
+                      <span className="px-4 py-2 2xl:px-6 2xl:py-3 5xl:px-10 5xl:py-5 rounded-full bg-red-500 text-white text-sm md:text-base 2xl:text-2xl 5xl:text-4xl font-bold tv-live-indicator">
                         🔴 LIVE
                       </span>
-                      <div className={`text-xl md:text-2xl 2xl:text-4xl font-semibold ${themeClasses.textPrimary}`}>
+                      <div className={`text-xl md:text-2xl 2xl:text-4xl 5xl:text-6xl font-semibold ${themeClasses.textPrimary}`}>
                         מה עכשיו קורה
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 2xl:gap-8">
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 2xl:gap-8 5xl:gap-16">
                     <div>
-                      <div className={`text-lg md:text-xl 2xl:text-3xl ${themeClasses.textMuted} mb-2 2xl:mb-4`}>תרגיל נוכחי</div>
-                      <div className={`text-3xl md:text-4xl 2xl:text-6xl font-bold ${themeClasses.textPrimary} mb-4 2xl:mb-6`}>
+                      <div className={`text-lg md:text-xl 2xl:text-3xl 5xl:text-5xl ${themeClasses.textMuted} mb-2 2xl:mb-4 5xl:mb-6`}>תרגיל נוכחי</div>
+                      <div className={`text-3xl md:text-4xl 2xl:text-6xl 5xl:text-8xl font-bold ${themeClasses.textPrimary} mb-4 2xl:mb-6 5xl:mb-10`}>
                         {currentExercise.name}
                       </div>
-                      <div className={`text-base md:text-lg 2xl:text-2xl ${themeClasses.textMuted}`}>
+                      <div className={`text-base md:text-lg 2xl:text-2xl 5xl:text-4xl ${themeClasses.textMuted}`}>
                         סט {latestSet.set_number} מתוך {currentExercise.sets.length}
                       </div>
                     </div>
-                    
+
                     <div>
-                      <div className={`text-lg md:text-xl 2xl:text-3xl ${themeClasses.textMuted} mb-2 2xl:mb-4`}>ביצוע נוכחי</div>
-                      <div className={`text-5xl md:text-7xl 2xl:text-9xl 3xl:text-[12rem] font-extrabold ${themeClasses.textPrimary} mb-2 2xl:mb-4`}>
-                        {latestSet.weight ?? 0} <span className="text-3xl md:text-5xl 2xl:text-7xl 3xl:text-9xl">ק״ג</span>
+                      <div className={`text-lg md:text-xl 2xl:text-3xl 5xl:text-5xl ${themeClasses.textMuted} mb-2 2xl:mb-4 5xl:mb-6`}>ביצוע נוכחי</div>
+                      <div className="tv-weight-display" style={tvStyles.textHighlight}>
+                        <span className={`text-5xl md:text-7xl 2xl:text-9xl 3xl:text-[12rem] 5xl:text-tv-giant font-extrabold`}>
+                          {latestSet.weight ?? 0}
+                        </span>
+                        <span className="text-3xl md:text-5xl 2xl:text-7xl 3xl:text-9xl 5xl:text-10xl"> ק״ג</span>
                       </div>
-                      <div className={`text-5xl md:text-7xl 2xl:text-9xl 3xl:text-[12rem] font-extrabold ${themeClasses.textPrimary}`}>
-                        × {latestSet.reps ?? 0} <span className="text-3xl md:text-5xl 2xl:text-7xl 3xl:text-9xl">חזרות</span>
+                      <div className="tv-reps-display mt-2 5xl:mt-6" style={tvStyles.textHighlight}>
+                        <span className={`text-5xl md:text-7xl 2xl:text-9xl 3xl:text-[12rem] 5xl:text-tv-giant font-extrabold`}>
+                          × {latestSet.reps ?? 0}
+                        </span>
+                        <span className="text-3xl md:text-5xl 2xl:text-7xl 3xl:text-9xl 5xl:text-10xl"> חזרות</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Progress Comparison */}
+                  {/* Progress Comparison - Enhanced for 4K */}
                   {progressComparison && progressComparison.isImprovement && (
-                    <div className="mt-6 2xl:mt-8 p-4 md:p-6 2xl:p-8 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl 2xl:rounded-3xl">
-                      <div className="flex items-center gap-3 2xl:gap-4 mb-2 2xl:mb-4">
-                        <TrendingUp className="w-6 h-6 2xl:w-10 2xl:h-10 text-emerald-500" />
-                        <div className={`text-lg md:text-xl 2xl:text-3xl font-semibold text-emerald-600`}>
+                    <div className="mt-6 2xl:mt-8 5xl:mt-12 p-4 md:p-6 2xl:p-8 5xl:p-12 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl 2xl:rounded-3xl 5xl:rounded-[2rem]">
+                      <div className="flex items-center gap-3 2xl:gap-4 5xl:gap-6 mb-2 2xl:mb-4 5xl:mb-6">
+                        <TrendingUp className="w-6 h-6 2xl:w-10 2xl:h-10 5xl:w-16 5xl:h-16 text-emerald-500" />
+                        <div className={`text-lg md:text-xl 2xl:text-3xl 5xl:text-5xl font-semibold text-emerald-600`}>
                           התקדמות!
                         </div>
                       </div>
-                      <div className={`text-base md:text-lg 2xl:text-2xl ${themeClasses.textPrimary}`}>
+                      <div className={`text-base md:text-lg 2xl:text-2xl 5xl:text-4xl ${themeClasses.textPrimary}`}>
                         בפעם הקודמת: {progressComparison.previousWeight} ק״ג × {progressComparison.previousReps} חזרות
                       </div>
-                      <div className={`text-base md:text-lg 2xl:text-2xl ${themeClasses.textPrimary} font-semibold`}>
+                      <div className={`text-base md:text-lg 2xl:text-2xl 5xl:text-4xl ${themeClasses.textPrimary} font-semibold`}>
                         היום: {progressComparison.currentWeight} ק״ג × {progressComparison.currentReps} חזרות
                       </div>
-                      <div className={`text-xl md:text-2xl 2xl:text-4xl font-bold text-emerald-600 mt-2 2xl:mt-4`}>
+                      <div className={`text-xl md:text-2xl 2xl:text-4xl 5xl:text-6xl font-bold text-emerald-600 mt-2 2xl:mt-4 5xl:mt-6`}>
                         שיפור של +{progressComparison.improvement}% 🎉
                       </div>
                     </div>
@@ -637,43 +658,91 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         .animate-confetti {
           animation: confetti linear forwards;
         }
-        
+
         /* TV-specific overrides to ensure white text on dark background */
         /* This overrides the global color: #000000 !important; rule */
         .tv-view-container,
         .tv-view-container * {
           color: #ffffff !important;
         }
-        
+
         .tv-view-container .text-muted-tv {
-          color: #a3a3a3 !important;
+          color: #b8b8b8 !important;
         }
-        
+
         /* Ensure proper background colors for WebOS and other TV browsers */
+        /* Enhanced for 55" 4K displays with deeper contrast */
         .tv-view-container {
-          background-color: #1a1a2e !important; /* Dark blue (matches loading screen) */
+          background-color: #0d0d1a !important;
         }
-        
+
         .tv-view-container .tv-card {
-          background-color: #2a2a3e !important; /* Darker blue for cards */
-          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          background-color: #1a1a2e !important;
+          border: 1px solid rgba(255, 255, 255, 0.15) !important;
         }
-        
+
         .tv-view-container .tv-badge-primary {
           background-color: #4a6b2a !important;
           color: #ffffff !important;
         }
-        
+
+        /* Glow effect for badges - TV-safe simple shadow */
+        .tv-view-container .tv-glow {
+          box-shadow: 0 0 60px rgba(74, 171, 42, 0.4);
+        }
+
+        /* Weight/Reps display with bright green for visibility */
+        .tv-view-container .tv-weight-display,
+        .tv-view-container .tv-reps-display {
+          color: #4ade80 !important;
+          text-shadow: 0 0 30px rgba(74, 222, 128, 0.3);
+        }
+
+        /* LIVE indicator pulsing animation */
+        @keyframes tv-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
+        }
+        .tv-view-container .tv-live-indicator {
+          animation: tv-pulse 1.5s ease-in-out infinite;
+        }
+
+        /* Live card subtle glow */
+        .tv-view-container .tv-live-card {
+          box-shadow: 0 0 40px rgba(74, 107, 42, 0.3), 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Clock display - slightly larger shadow for readability */
+        .tv-view-container .tv-clock {
+          text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Trainee name - ensure maximum readability */
+        .tv-view-container .tv-trainee-name {
+          text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* BURN-IN PREVENTION: Subtle position shift every 30 seconds */
+        @keyframes tv-anti-burn {
+          0%, 100% { transform: translate(0, 0); }
+          25% { transform: translate(2px, 1px); }
+          50% { transform: translate(-1px, 2px); }
+          75% { transform: translate(1px, -1px); }
+        }
+        .tv-view-container.tv-safe-area {
+          animation: tv-anti-burn 120s ease-in-out infinite;
+        }
+
         /* Fix for Smart TV browsers that don't support backdrop-filter */
         @supports not (backdrop-filter: blur(10px)) {
           .tv-view-container .backdrop-blur-xl,
           .tv-view-container .backdrop-blur-lg,
           .tv-view-container .backdrop-blur-md,
           .tv-view-container .backdrop-blur {
-            background-color: rgba(36, 50, 28, 0.98) !important;
+            background-color: rgba(26, 26, 46, 0.98) !important;
           }
         }
-        
+
         /* Simplified gradients for TV compatibility */
         .tv-view-container .bg-gradient-to-br {
           background: #4a6b2a !important;

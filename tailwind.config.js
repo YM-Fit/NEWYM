@@ -88,7 +88,9 @@ export default {
         'landscape': { 'raw': '(orientation: landscape)' },
         'portrait': { 'raw': '(orientation: portrait)' },
         'xs': '475px',
-        '3xl': '1920px',  // For large TV screens (55" and above)
+        '3xl': '1920px',  // For Full HD TV screens
+        '4xl': '2560px',  // For QHD displays
+        '5xl': '3840px',  // For 4K Ultra HD TV screens (55" and above)
       },
       backdropBlur: {
         xs: '2px',
@@ -131,6 +133,12 @@ export default {
         '7xl': ['4.5rem', { lineHeight: '1' }],
         '8xl': ['6rem', { lineHeight: '1' }],
         '9xl': ['8rem', { lineHeight: '1' }],
+        // TV-optimized sizes for 55"+ displays (viewing from 2-4 meters)
+        '10xl': ['10rem', { lineHeight: '1' }],    // 160px
+        '11xl': ['12rem', { lineHeight: '1' }],    // 192px
+        '12xl': ['14rem', { lineHeight: '1' }],    // 224px
+        'tv-hero': ['16rem', { lineHeight: '1' }], // 256px - for main numbers
+        'tv-giant': ['20rem', { lineHeight: '1' }], // 320px - for weight/reps
       },
       spacing: {
         '0.5': '0.125rem',   // 2px
