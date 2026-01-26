@@ -774,7 +774,9 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
       </div>
     </div>
   );
-}
+});
+
+export default WorkoutHistory;
 
 interface WorkoutDetailProps {
   workout: Workout;
