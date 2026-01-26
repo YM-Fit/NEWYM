@@ -44,6 +44,8 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
   const [showConfetti, setShowConfetti] = useState(false);
   const [showPRMessage, setShowPRMessage] = useState(false);
+  const [showNewSetFlash, setShowNewSetFlash] = useState(false);
+  const [previousSetId, setPreviousSetId] = useState<string | null>(null);
   
   // TV-optimized inline styles to ensure compatibility with WebOS and other Smart TV browsers
   // These override CSS that may not work correctly on TV browsers
@@ -103,6 +105,19 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
     return () => clearInterval(timer);
   }, []);
 
+  // Detect new set and trigger flash animation
+  useEffect(() => {
+    if (latestSet && latestSet.id !== previousSetId && previousSetId !== null) {
+      // New set detected! Show flash animation
+      setShowNewSetFlash(true);
+      const timer = setTimeout(() => setShowNewSetFlash(false), 1500);
+      return () => clearTimeout(timer);
+    }
+    if (latestSet) {
+      setPreviousSetId(latestSet.id);
+    }
+  }, [latestSet?.id, previousSetId]);
+
   const initials = useMemo(() => {
     if (!session?.trainee?.full_name) return '';
     const parts = session.trainee.full_name.trim().split(/\s+/);
@@ -110,19 +125,52 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
     return `${parts[0][0]}${parts[1][0]}`;
   }, [session?.trainee?.full_name]);
 
-  // Get current exercise (first one)
+  // Get current exercise - the one with the most recent set update
   const currentExercise = useMemo(() => {
     if (!session?.workout?.exercises || session.workout.exercises.length === 0) return null;
-    return session.workout.exercises[0];
+
+    // Find exercise with the most recently updated set (by set data, not just position)
+    let latestExercise = session.workout.exercises[0];
+    let latestSetData: { weight: number; reps: number; setNumber: number } | null = null;
+
+    for (const exercise of session.workout.exercises) {
+      if (exercise.sets && exercise.sets.length > 0) {
+        // Find the last set with actual data (weight or reps)
+        const setsWithData = exercise.sets.filter(s => s.weight !== null || s.reps !== null);
+        if (setsWithData.length > 0) {
+          const lastSet = setsWithData[setsWithData.length - 1];
+          // Use the exercise with the most recent set that has data
+          if (!latestSetData || (lastSet.updated_at && lastSet.updated_at > (latestExercise.sets[0]?.updated_at || ''))) {
+            latestExercise = exercise;
+            latestSetData = {
+              weight: lastSet.weight || 0,
+              reps: lastSet.reps || 0,
+              setNumber: lastSet.set_number || 1
+            };
+          }
+        }
+      }
+    }
+
+    return latestExercise;
   }, [session?.workout?.exercises]);
 
-  // Get latest set from current exercise
+  // Get latest set from current exercise - the most recent set with actual data
   const latestSet = useMemo(() => {
     if (!currentExercise || !currentExercise.sets || currentExercise.sets.length === 0) return null;
-    // Get the set with the highest set_number (most recent)
-    return currentExercise.sets.reduce((latest, set) => {
+
+    // Filter sets that have actual data (weight or reps)
+    const setsWithData = currentExercise.sets.filter(s => s.weight !== null || s.reps !== null);
+
+    if (setsWithData.length === 0) {
+      // No sets with data yet, return the first set
+      return currentExercise.sets[0];
+    }
+
+    // Return the set with the highest set_number that has data
+    return setsWithData.reduce((latest, set) => {
       return (set.set_number || 0) > (latest.set_number || 0) ? set : latest;
-    }, currentExercise.sets[0]);
+    }, setsWithData[0]);
   }, [currentExercise]);
 
   // Get progress comparison for current exercise
@@ -274,12 +322,30 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
               <p className="text-xl" style={tvStyles.text}>{error}</p>
             </div>
           ) : !session ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-6">
-              <div className="text-4xl font-semibold" style={tvStyles.text}>אין אימון פעיל כרגע</div>
-              <p className="text-xl max-w-2xl text-center leading-relaxed" style={tvStyles.textMuted}>
-                לא נמצא אירוע יומן פעיל לסטודיו בזמן הנוכחי.
-                ודא שהאימונים שלך מסונכרנים ליומן Google וששעת האימון תואמת לשעה הנוכחית.
+            <div className="flex-1 flex flex-col items-center justify-center gap-8 2xl:gap-12">
+              {/* Animated waiting indicator */}
+              <div className="relative">
+                <div className="h-32 w-32 2xl:h-48 2xl:w-48 5xl:h-64 5xl:w-64 rounded-full tv-waiting-pulse" style={{ background: 'rgba(74, 107, 42, 0.2)' }}>
+                  <div className="absolute inset-4 2xl:inset-6 5xl:inset-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(74, 107, 42, 0.4)' }}>
+                    <div className="text-5xl 2xl:text-7xl 5xl:text-9xl">⏳</div>
+                  </div>
+                </div>
+              </div>
+              <div className="text-4xl 2xl:text-6xl 5xl:text-8xl font-bold text-center" style={tvStyles.text}>
+                ממתין לאימון הבא...
+              </div>
+              <p className="text-xl 2xl:text-3xl 5xl:text-4xl max-w-3xl text-center leading-relaxed" style={tvStyles.textMuted}>
+                המסך יזהה אוטומטית כשיתחיל אימון מהיומן
               </p>
+              {/* Clock display while waiting */}
+              <div className="mt-8 2xl:mt-12">
+                <div className="text-6xl 2xl:text-8xl 5xl:text-10xl font-bold tv-clock" style={tvStyles.text}>
+                  {formatClock(now)}
+                </div>
+                <div className="text-2xl 2xl:text-4xl 5xl:text-5xl text-center mt-2" style={tvStyles.textMuted}>
+                  {formatDate(now)}
+                </div>
+              </div>
             </div>
           ) : (
             <>
@@ -377,9 +443,12 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                       </div>
                     </div>
 
-                    <div>
-                      <div className={`text-lg md:text-xl 2xl:text-3xl 5xl:text-5xl ${themeClasses.textMuted} mb-2 2xl:mb-4 5xl:mb-6`}>ביצוע נוכחי</div>
-                      <div className="tv-weight-display" style={tvStyles.textHighlight}>
+                    <div className={`rounded-2xl p-4 2xl:p-6 5xl:p-10 ${showNewSetFlash ? 'tv-new-set-flash' : ''}`}>
+                      <div className={`text-lg md:text-xl 2xl:text-3xl 5xl:text-5xl ${themeClasses.textMuted} mb-2 2xl:mb-4 5xl:mb-6 flex items-center gap-3`}>
+                        ביצוע נוכחי
+                        {showNewSetFlash && <span className="text-emerald-400 animate-pulse">✨ עודכן!</span>}
+                      </div>
+                      <div className={`tv-weight-display ${showNewSetFlash ? 'tv-update-ping' : ''}`} style={tvStyles.textHighlight}>
                         <span className={`text-5xl md:text-7xl 2xl:text-9xl 3xl:text-[12rem] 5xl:text-tv-giant font-extrabold`}>
                           {latestSet.weight ?? 0}
                         </span>
@@ -645,95 +714,251 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       </div>
 
       <style>{`
+        /* ========================================
+           TV MODE - ULTIMATE EXPERIENCE
+           Optimized for 55" 4K displays
+           ======================================== */
+
+        /* CONFETTI ANIMATION for Personal Records */
         @keyframes confetti {
-          0% {
-            transform: translateY(0) rotate(0deg);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(100vh) rotate(720deg);
-            opacity: 0;
-          }
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
         }
         .animate-confetti {
           animation: confetti linear forwards;
         }
 
-        /* TV-specific overrides to ensure white text on dark background */
-        /* This overrides the global color: #000000 !important; rule */
+        /* ===== FORCE DARK MODE FOR TV ===== */
+        /* TV displays are always in dark environment - force dark theme */
         .tv-view-container,
         .tv-view-container * {
           color: #ffffff !important;
         }
 
         .tv-view-container .text-muted-tv {
-          color: #b8b8b8 !important;
+          color: #9ca3af !important;
         }
 
-        /* Ensure proper background colors for WebOS and other TV browsers */
-        /* Enhanced for 55" 4K displays with deeper contrast */
         .tv-view-container {
-          background-color: #0d0d1a !important;
+          background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 50%, #0d1117 100%) !important;
         }
 
         .tv-view-container .tv-card {
-          background-color: #1a1a2e !important;
-          border: 1px solid rgba(255, 255, 255, 0.15) !important;
+          background: linear-gradient(145deg, #1e1e32 0%, #252540 100%) !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
         }
 
+        /* ===== WOW EFFECT: BADGE GLOW ===== */
         .tv-view-container .tv-badge-primary {
-          background-color: #4a6b2a !important;
+          background: linear-gradient(135deg, #4a6b2a 0%, #5d8a35 50%, #4a6b2a 100%) !important;
           color: #ffffff !important;
+          box-shadow:
+            0 0 60px rgba(74, 171, 42, 0.5),
+            0 0 100px rgba(74, 171, 42, 0.3),
+            inset 0 2px 0 rgba(255, 255, 255, 0.2) !important;
         }
 
-        /* Glow effect for badges - TV-safe simple shadow */
+        @keyframes badge-glow-pulse {
+          0%, 100% { box-shadow: 0 0 60px rgba(74, 171, 42, 0.5), 0 0 100px rgba(74, 171, 42, 0.3); }
+          50% { box-shadow: 0 0 80px rgba(74, 171, 42, 0.7), 0 0 140px rgba(74, 171, 42, 0.4); }
+        }
         .tv-view-container .tv-glow {
-          box-shadow: 0 0 60px rgba(74, 171, 42, 0.4);
+          animation: badge-glow-pulse 3s ease-in-out infinite;
         }
 
-        /* Weight/Reps display with bright green for visibility */
+        /* ===== WOW EFFECT: WEIGHT/REPS DISPLAY ===== */
         .tv-view-container .tv-weight-display,
         .tv-view-container .tv-reps-display {
           color: #4ade80 !important;
-          text-shadow: 0 0 30px rgba(74, 222, 128, 0.3);
+          text-shadow:
+            0 0 20px rgba(74, 222, 128, 0.8),
+            0 0 40px rgba(74, 222, 128, 0.4),
+            0 0 60px rgba(74, 222, 128, 0.2) !important;
         }
 
-        /* LIVE indicator pulsing animation */
-        @keyframes tv-pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.7; }
+        @keyframes number-glow {
+          0%, 100% {
+            text-shadow: 0 0 20px rgba(74, 222, 128, 0.8), 0 0 40px rgba(74, 222, 128, 0.4);
+            transform: scale(1);
+          }
+          50% {
+            text-shadow: 0 0 30px rgba(74, 222, 128, 1), 0 0 60px rgba(74, 222, 128, 0.6);
+            transform: scale(1.02);
+          }
+        }
+        .tv-view-container .tv-weight-display {
+          animation: number-glow 2s ease-in-out infinite;
+        }
+
+        /* ===== WOW EFFECT: LIVE INDICATOR ===== */
+        @keyframes live-pulse {
+          0%, 100% {
+            opacity: 1;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.8;
+            box-shadow: 0 0 40px rgba(239, 68, 68, 1);
+            transform: scale(1.05);
+          }
         }
         .tv-view-container .tv-live-indicator {
-          animation: tv-pulse 1.5s ease-in-out infinite;
+          animation: live-pulse 1s ease-in-out infinite;
+          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
         }
 
-        /* Live card subtle glow */
+        /* ===== WOW EFFECT: LIVE CARD ===== */
+        @keyframes card-breathe {
+          0%, 100% {
+            box-shadow: 0 0 40px rgba(74, 107, 42, 0.3), 0 8px 32px rgba(0, 0, 0, 0.4);
+            border-color: rgba(74, 107, 42, 0.5);
+          }
+          50% {
+            box-shadow: 0 0 60px rgba(74, 107, 42, 0.5), 0 12px 48px rgba(0, 0, 0, 0.5);
+            border-color: rgba(74, 107, 42, 0.8);
+          }
+        }
         .tv-view-container .tv-live-card {
-          box-shadow: 0 0 40px rgba(74, 107, 42, 0.3), 0 8px 32px rgba(0, 0, 0, 0.4);
+          animation: card-breathe 3s ease-in-out infinite;
+          border: 4px solid rgba(74, 107, 42, 0.5) !important;
+          background: linear-gradient(145deg, #1a2e16 0%, #1e3a1e 50%, #1a2e16 100%) !important;
         }
 
-        /* Clock display - slightly larger shadow for readability */
+        /* ===== CLOCK DISPLAY ===== */
         .tv-view-container .tv-clock {
-          text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+          text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+          letter-spacing: 0.05em;
         }
 
-        /* Trainee name - ensure maximum readability */
+        /* ===== TRAINEE NAME - HERO STYLE ===== */
+        @keyframes name-shine {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
         .tv-view-container .tv-trainee-name {
-          text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+          background: linear-gradient(
+            90deg,
+            #ffffff 0%,
+            #ffffff 40%,
+            #4ade80 50%,
+            #ffffff 60%,
+            #ffffff 100%
+          );
+          background-size: 200% auto;
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: name-shine 4s linear infinite;
+          text-shadow: none !important;
         }
 
-        /* BURN-IN PREVENTION: Subtle position shift every 30 seconds */
+        /* ===== BURN-IN PREVENTION ===== */
         @keyframes tv-anti-burn {
           0%, 100% { transform: translate(0, 0); }
-          25% { transform: translate(2px, 1px); }
-          50% { transform: translate(-1px, 2px); }
-          75% { transform: translate(1px, -1px); }
+          25% { transform: translate(3px, 2px); }
+          50% { transform: translate(-2px, 3px); }
+          75% { transform: translate(2px, -2px); }
         }
         .tv-view-container.tv-safe-area {
-          animation: tv-anti-burn 120s ease-in-out infinite;
+          animation: tv-anti-burn 180s ease-in-out infinite;
         }
 
-        /* Fix for Smart TV browsers that don't support backdrop-filter */
+        /* ===== WAITING STATE ANIMATION ===== */
+        @keyframes waiting-pulse {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 0.6;
+          }
+          50% {
+            transform: scale(1.1);
+            opacity: 1;
+          }
+        }
+        .tv-view-container .tv-waiting-pulse {
+          animation: waiting-pulse 3s ease-in-out infinite;
+        }
+
+        /* ===== PR CELEBRATION ===== */
+        @keyframes pr-celebration {
+          0% { transform: scale(0.5) rotate(-5deg); opacity: 0; }
+          50% { transform: scale(1.1) rotate(2deg); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        .tv-view-container .tv-pr-celebration {
+          animation: pr-celebration 0.5s ease-out;
+          box-shadow:
+            0 0 80px rgba(16, 185, 129, 0.6),
+            0 0 160px rgba(16, 185, 129, 0.3),
+            0 20px 60px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        /* ===== STATS CARDS HOVER EFFECT ===== */
+        .tv-view-container .tv-card {
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* ===== PROGRESS INDICATOR ===== */
+        @keyframes progress-shine {
+          0% { left: -100%; }
+          100% { left: 100%; }
+        }
+        .tv-view-container .tv-progress-bar::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+          animation: progress-shine 2s infinite;
+        }
+
+        /* ===== NEW SET FLASH ANIMATION ===== */
+        @keyframes new-set-flash {
+          0% {
+            background: rgba(74, 222, 128, 0.3);
+            transform: scale(1);
+          }
+          25% {
+            background: rgba(74, 222, 128, 0.6);
+            transform: scale(1.02);
+          }
+          50% {
+            background: rgba(74, 222, 128, 0.4);
+            transform: scale(1.01);
+          }
+          100% {
+            background: transparent;
+            transform: scale(1);
+          }
+        }
+        .tv-view-container .tv-new-set-flash {
+          animation: new-set-flash 1.5s ease-out;
+        }
+
+        /* ===== UPDATE INDICATOR ===== */
+        @keyframes update-ping {
+          0% { transform: scale(1); opacity: 1; }
+          75%, 100% { transform: scale(2); opacity: 0; }
+        }
+        .tv-view-container .tv-update-ping {
+          position: relative;
+        }
+        .tv-view-container .tv-update-ping::before {
+          content: '';
+          position: absolute;
+          top: -10px;
+          right: -10px;
+          width: 20px;
+          height: 20px;
+          background: #4ade80;
+          border-radius: 50%;
+          animation: update-ping 1s ease-out infinite;
+        }
+
+        /* ===== SMART TV FALLBACKS ===== */
         @supports not (backdrop-filter: blur(10px)) {
           .tv-view-container .backdrop-blur-xl,
           .tv-view-container .backdrop-blur-lg,
@@ -743,9 +968,24 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
           }
         }
 
-        /* Simplified gradients for TV compatibility */
-        .tv-view-container .bg-gradient-to-br {
-          background: #4a6b2a !important;
+        /* Fallback for browsers without gradient support */
+        @supports not (background: linear-gradient(135deg, #000, #fff)) {
+          .tv-view-container {
+            background-color: #0d0d1a !important;
+          }
+          .tv-view-container .tv-live-card {
+            background-color: #1a2e16 !important;
+          }
+        }
+
+        /* Fallback for browsers without animation support */
+        @supports not (animation: fade 1s) {
+          .tv-view-container .tv-glow,
+          .tv-view-container .tv-live-indicator,
+          .tv-view-container .tv-live-card,
+          .tv-view-container .tv-trainee-name {
+            animation: none !important;
+          }
         }
       `}</style>
     </div>

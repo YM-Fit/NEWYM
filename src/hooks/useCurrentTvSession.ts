@@ -17,6 +17,7 @@ interface TvWorkoutExerciseSet {
   reps: number | null;
   rpe: number | null;
   set_type: string | null;
+  updated_at?: string;
 }
 
 interface TvWorkoutExercise {
@@ -295,6 +296,7 @@ export function useCurrentTvSession(
   }, [user, userType, pollIntervalMs, session]);
 
   // Realtime subscription for workout changes of the active session
+  // Using multiple channels to capture all changes in real-time
   useEffect(() => {
     // Clean up any existing channel first
     if (workoutChannelRef.current) {
@@ -307,61 +309,80 @@ export function useCurrentTvSession(
       return;
     }
 
-    const channel = supabase
-      .channel(`studio-tv-workout-${activeWorkoutId}`)
+    const reloadWorkoutDetails = async () => {
+      pushLog({
+        level: 'info',
+        message: '🔄 התקבל עדכון בזמן אמת – טוען מחדש',
+      });
+
+      const details = await getWorkoutDetails(activeWorkoutId);
+      if ('data' in details && details.data) {
+        const exercises: TvWorkoutExercise[] = (details.data as any[]).map(ex => ({
+          id: ex.id,
+          name: ex.exercises?.name ?? 'תרגיל',
+          muscle_group_id: ex.exercises?.muscle_group_id ?? null,
+          sets: (ex.exercise_sets ?? []).map((set: any) => ({
+            id: set.id,
+            set_number: set.set_number,
+            weight: set.weight,
+            reps: set.reps,
+            rpe: set.rpe,
+            set_type: set.set_type,
+            updated_at: set.updated_at || set.created_at,
+          })),
+        }));
+
+        setSession(prev =>
+          prev && prev.workout && prev.workout.id === activeWorkoutId
+            ? {
+                ...prev,
+                workout: {
+                  ...prev.workout,
+                  exercises,
+                },
+              }
+            : prev
+        );
+
+        setLastUpdated(new Date().toISOString());
+      }
+    };
+
+    // Channel 1: Listen to exercise_sets table (all changes)
+    const setsChannel = supabase
+      .channel(`studio-tv-sets-${activeWorkoutId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'exercise_sets',
-          filter: `workout_exercise_id.in.(select id from workout_exercises where workout_id='${activeWorkoutId}')`,
         },
-        async () => {
-          pushLog({
-            level: 'info',
-            message: 'התקבל עדכון אימון בזמן אמת – טוען מחדש את פרטי האימון',
-          });
-
-          const details = await getWorkoutDetails(activeWorkoutId);
-          if ('data' in details && details.data) {
-            const exercises: TvWorkoutExercise[] = (details.data as any[]).map(ex => ({
-              id: ex.id,
-              name: ex.exercises?.name ?? 'תרגיל',
-              muscle_group_id: ex.exercises?.muscle_group_id ?? null,
-              sets: (ex.exercise_sets ?? []).map((set: any) => ({
-                id: set.id,
-                set_number: set.set_number,
-                weight: set.weight,
-                reps: set.reps,
-                rpe: set.rpe,
-                set_type: set.set_type,
-              })),
-            }));
-
-            setSession(prev =>
-              prev && prev.workout && prev.workout.id === activeWorkoutId
-                ? {
-                    ...prev,
-                    workout: {
-                      ...prev.workout,
-                      exercises,
-                    },
-                  }
-                : prev
-            );
-          }
-        }
+        reloadWorkoutDetails
       )
       .subscribe();
 
-    workoutChannelRef.current = channel;
+    // Channel 2: Listen to workout_exercises table
+    const exercisesChannel = supabase
+      .channel(`studio-tv-exercises-${activeWorkoutId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'workout_exercises',
+          filter: `workout_id=eq.${activeWorkoutId}`,
+        },
+        reloadWorkoutDetails
+      )
+      .subscribe();
+
+    workoutChannelRef.current = setsChannel;
 
     return () => {
-      if (workoutChannelRef.current) {
-        supabase.removeChannel(workoutChannelRef.current);
-        workoutChannelRef.current = null;
-      }
+      supabase.removeChannel(setsChannel);
+      supabase.removeChannel(exercisesChannel);
+      workoutChannelRef.current = null;
     };
   }, [user, session?.workout?.id]);
 
