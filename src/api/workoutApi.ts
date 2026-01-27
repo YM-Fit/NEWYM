@@ -424,8 +424,8 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     const tomorrowStr = tomorrow.toISOString();
     const dayAfterTomorrowStr = dayAfterTomorrow.toISOString();
 
-    // Get workouts from workouts table - only SCHEDULED workouts (not completed)
-    // Scheduled workouts are those with is_completed=false (future/pending workouts)
+    // Get workouts from workouts table - both SCHEDULED and COMPLETED workouts
+    // This ensures scheduled workouts remain visible even after they're completed
     const { data: workoutsData, error: workoutsError } = await supabase
       .from('workouts')
       .select(`
@@ -438,24 +438,10 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         trainer_id
       `)
       .eq('trainer_id', trainerId)
-      .eq('is_completed', false) // Only scheduled workouts, not completed ones
+      // Show both scheduled (is_completed=false) and completed (is_completed=true) workouts
       .gte('workout_date', todayStr)
       .lt('workout_date', dayAfterTomorrowStr)
       .order('workout_date', { ascending: true });
-
-    // Also get completed workouts for the same date range to check if there's a completed workout
-    // for the same trainee and date (to show "אימון חדש נוסף")
-    const { data: completedWorkoutsData } = await supabase
-      .from('workouts')
-      .select(`
-        id,
-        workout_date,
-        trainer_id
-      `)
-      .eq('trainer_id', trainerId)
-      .eq('is_completed', true) // Only completed workouts
-      .gte('workout_date', todayStr)
-      .lt('workout_date', dayAfterTomorrowStr);
 
     if (workoutsError) {
       // Log error but return empty result instead of failing completely

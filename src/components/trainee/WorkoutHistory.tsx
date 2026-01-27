@@ -147,6 +147,7 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
         )
       `)
       .eq('trainee_id', traineeId)
+      .eq('workouts.is_completed', true)
       .order('workouts(workout_date)', { ascending: false });
 
     if (data) {

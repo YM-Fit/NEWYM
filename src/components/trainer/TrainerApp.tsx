@@ -410,8 +410,8 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   }, []);
 
   const loadWorkouts = useCallback(async (traineeId: string) => {
-    // Fetch workouts that are either completed OR synced from Google Calendar
-    // This ensures synced calendar events (both past and future) appear in the trainee profile
+    // Fetch all workouts (both scheduled and completed) for the trainee
+    // This ensures scheduled workouts remain visible even after they're completed
     const { data: workoutTrainees, error } = await supabase
       .from('workout_trainees')
       .select(`
@@ -442,8 +442,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
           )
         )
       `)
-      .eq('trainee_id', traineeId)
-      .or('is_completed.eq.true,synced_from_google.eq.true', { referencedTable: 'workouts' });
+      .eq('trainee_id', traineeId);
 
     if (!error && workoutTrainees) {
       const formattedWorkouts = workoutTrainees

@@ -36,6 +36,7 @@ export default function ReportsView() {
       .from('workouts')
       .select('id, workout_date, workout_exercises(exercise_sets(weight, reps))')
       .eq('trainer_id', user.id)
+      .eq('is_completed', true)
       .gte('workout_date', startOfMonth.toISOString())
       .lte('workout_date', endOfMonth.toISOString());
 

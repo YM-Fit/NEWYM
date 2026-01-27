@@ -721,8 +721,12 @@ export function useCurrentTvSession(
               exerciseMap.set(ex.id, ex);
             });
             
-            // Convert map back to array - this ensures no duplicates
-            const mergedExercises = Array.from(exerciseMap.values());
+            // Remove exercises that are in existingExercises but not in the new data
+            // This handles deletions - if an exercise was deleted, it won't be in exercises array
+            const newExerciseIds = new Set(exercises.map(ex => ex.id));
+            const mergedExercises = Array.from(exerciseMap.values()).filter(ex => 
+              newExerciseIds.has(ex.id)
+            );
             
             // Always use merged exercises (which includes existing ones, no duplicates)
             return {

@@ -48,6 +48,7 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
         )
       `)
       .eq('trainee_id', traineeId)
+      .eq('workouts.is_completed', true)
       .order('workouts(workout_date)', { ascending: false })
       .limit(50);
 

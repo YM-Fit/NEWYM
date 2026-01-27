@@ -1087,12 +1087,23 @@ export default function WorkoutSession({
 
       const workoutResult = result.data;
 
-      // Update workout to completed
+      // Update workout to completed only if it wasn't already completed
+      // This preserves the is_completed status when editing a completed workout
       if (workoutId && workoutResult.workout.id === workoutId) {
-        await supabase
+        const { data: existingWorkout } = await supabase
           .from('workouts')
-          .update({ is_completed: true })
-          .eq('id', workoutId);
+          .select('is_completed')
+          .eq('id', workoutId)
+          .single();
+        
+        // Only update to completed if it wasn't already completed
+        // This allows editing completed workouts without changing their status
+        if (existingWorkout?.is_completed !== true) {
+          await supabase
+            .from('workouts')
+            .update({ is_completed: true })
+            .eq('id', workoutId);
+        }
       }
 
       clearSaved();
@@ -1353,7 +1364,37 @@ export default function WorkoutSession({
             collapsedSets={collapsedSets}
             summary={getExerciseSummary(workoutExercise)}
             totalVolume={calculateExerciseVolume(workoutExercise)}
-            onRemove={() => removeExercise(exerciseIndex)}
+            onRemove={async () => {
+              const exercise = exercises[exerciseIndex];
+              // If workoutId exists and tempId is a UUID (not a temp ID), delete from database
+              if (workoutId && exercise.tempId && !exercise.tempId.startsWith('temp-') && !exercise.tempId.match(/^\d+$/)) {
+                try {
+                  // Delete all sets for this workout_exercise
+                  const { data: sets } = await supabase
+                    .from('exercise_sets')
+                    .select('id')
+                    .eq('workout_exercise_id', exercise.tempId);
+                  
+                  if (sets && sets.length > 0) {
+                    await supabase
+                      .from('exercise_sets')
+                      .delete()
+                      .in('id', sets.map(s => s.id));
+                  }
+                  
+                  // Delete the workout_exercise
+                  await supabase
+                    .from('workout_exercises')
+                    .delete()
+                    .eq('id', exercise.tempId);
+                } catch (error) {
+                  logger.error('Error deleting exercise from database:', error, 'WorkoutSession');
+                  toast.error('שגיאה במחיקת התרגיל מהדאטאבייס');
+                }
+              }
+              // Remove from local state
+              removeExercise(exerciseIndex);
+            }}
             onToggleMinimize={() => toggleMinimizeExercise(workoutExercise.tempId)}
             onComplete={() => completeExercise(workoutExercise.tempId)}
             onAddSet={() => addSet(exerciseIndex)}

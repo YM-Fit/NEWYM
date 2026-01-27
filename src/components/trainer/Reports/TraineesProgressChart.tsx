@@ -114,6 +114,7 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
             )
           `)
           .eq('trainee_id', traineeId)
+          .eq('workouts.is_completed', true)
           .gte('workouts.workout_date', startDate.toISOString())
           .lte('workouts.workout_date', endDate.toISOString())
           .order('workouts(workout_date)', { ascending: true });

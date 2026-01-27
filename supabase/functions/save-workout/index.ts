@@ -411,17 +411,29 @@ Deno.serve(async (req: Request) => {
       await supabase.from('workout_exercises').delete().eq('workout_id', workout_id);
 
       // When updating, preserve the date from input but use current time
-      // Only mark as completed if this is NOT an auto-save (explicit save by user)
+      // Check if the workout was already completed - if so, preserve is_completed=true
+      const { data: existingWorkout } = await supabase
+        .from('workouts')
+        .select('is_completed')
+        .eq('id', workout_id)
+        .single();
+      
       const updateData: any = {
         notes: notes || null,
         updated_at: new Date().toISOString(),
         workout_date: finalWorkoutDate, // Preserve date, use current time
       };
       
-      // Only mark as completed if this is an explicit save (not auto-save)
-      if (!is_auto_save) {
+      // Preserve is_completed status if workout was already completed
+      // Only mark as completed if this is an explicit save (not auto-save) AND workout wasn't already completed
+      if (existingWorkout?.is_completed === true) {
+        // If workout was already completed, keep it as completed
+        updateData.is_completed = true;
+      } else if (!is_auto_save) {
+        // If workout wasn't completed and this is an explicit save, mark as completed
         updateData.is_completed = true;
       }
+      // If is_auto_save and workout wasn't completed, don't change is_completed
       
       const { data: updatedWorkout, error: updateError } = await supabase
         .from('workouts')

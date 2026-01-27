@@ -285,6 +285,7 @@ export function useWorkouts(traineeId: string | null, limit?: number) {
           )
         `)
         .eq('trainee_id', traineeId)
+        .eq('workouts.is_completed', true)
         .order('workout_id', { ascending: false });
 
       if (limit) {
