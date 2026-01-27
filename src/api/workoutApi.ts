@@ -744,6 +744,14 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         isFromGoogle: item.isFromGoogle
       }));
 
+    // Debug: Log final results
+    console.log('=== FINAL RESULTS DEBUG ===');
+    console.log('todayWorkouts count:', todayWorkouts.length);
+    console.log('tomorrowWorkouts count:', tomorrowWorkouts.length);
+    console.log('todayWorkouts scheduled:', todayWorkouts.filter(w => !w.workout.is_completed).length);
+    console.log('tomorrowWorkouts scheduled:', tomorrowWorkouts.filter(w => !w.workout.is_completed).length);
+    console.log('=== END FINAL RESULTS DEBUG ===');
+
     return {
       data: {
         today: todayWorkouts,

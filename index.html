@@ -32,6 +32,17 @@
           ) {
             return; // Suppress contextify warnings
           }
+          // Suppress performance warnings (expected in development environments)
+          if (
+            message.includes('Performance issue detected') ||
+            fullMessage.includes('Performance issue detected') ||
+            message.includes('FCP =') ||
+            message.includes('LCP =') ||
+            message.includes('CLS =') ||
+            message.includes('bundle-load-time =')
+          ) {
+            return; // Suppress performance warnings
+          }
           originalWarn.apply(console, args);
         };
         
@@ -45,6 +56,17 @@
             fullMessage.includes('preloaded using link preload but not used')
           ) {
             return; // Suppress preload warnings
+          }
+          // Suppress performance warnings (expected in development environments)
+          if (
+            message.includes('Performance issue detected') ||
+            fullMessage.includes('Performance issue detected') ||
+            message.includes('FCP =') ||
+            message.includes('LCP =') ||
+            message.includes('CLS =') ||
+            message.includes('bundle-load-time =')
+          ) {
+            return; // Suppress performance warnings
           }
           originalError.apply(console, args);
         };

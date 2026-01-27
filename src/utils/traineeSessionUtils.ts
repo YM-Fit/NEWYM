@@ -6,6 +6,52 @@
 import { supabase } from '../lib/supabase';
 import { logger } from './logger';
 
+/**
+ * Batch helper to split large arrays into chunks for Supabase queries
+ * Supabase has URL length limits, so we need to batch large ID arrays
+ */
+const BATCH_SIZE = 100; // Maximum IDs per query to avoid URL length limits
+
+async function batchQuery<T>(
+  queryFn: (ids: string[]) => Promise<{ data: T[] | null; error: any }>,
+  ids: string[]
+): Promise<{ data: T[]; error: any }> {
+  if (ids.length === 0) {
+    return { data: [], error: null };
+  }
+
+  // If the array is small enough, query directly
+  if (ids.length <= BATCH_SIZE) {
+    const result = await queryFn(ids);
+    return { data: result.data || [], error: result.error };
+  }
+
+  // Split into batches and query in parallel
+  const batches: string[][] = [];
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    batches.push(ids.slice(i, i + BATCH_SIZE));
+  }
+
+  const results = await Promise.all(
+    batches.map(batch => queryFn(batch))
+  );
+
+  // Combine results
+  const allData: T[] = [];
+  let error: any = null;
+
+  for (const result of results) {
+    if (result.error) {
+      error = result.error;
+      logger.error('Error in batch query', result.error, 'traineeSessionUtils');
+    } else if (result.data) {
+      allData.push(...result.data);
+    }
+  }
+
+  return { data: allData, error };
+}
+
 export interface TraineeSessionInfo {
   traineeId: string;
   traineeName: string;
@@ -80,11 +126,14 @@ export async function getTraineeSessionInfo(
     let workoutsThisMonth = 0;
     if (!workoutsError && workouts && workouts.length > 0) {
       const workoutIds = workouts.map(w => w.id);
-      const { data: links } = await supabase
-        .from('workout_trainees')
-        .select('workout_id')
-        .eq('trainee_id', traineeId)
-        .in('workout_id', workoutIds);
+      const { data: links } = await batchQuery(
+        async (ids) => supabase
+          .from('workout_trainees')
+          .select('workout_id')
+          .eq('trainee_id', traineeId)
+          .in('workout_id', ids),
+        workoutIds
+      );
       
       workoutsThisMonth = links?.length || 0;
     }
@@ -168,11 +217,16 @@ export async function getTraineesSessionInfo(
     const workoutCountMap = new Map<string, number>();
     if (workouts && workouts.length > 0) {
       const workoutIds = workouts.map(w => w.id);
-      const { data: links } = await supabase
-        .from('workout_trainees')
-        .select('trainee_id, workout_id')
-        .in('trainee_id', traineeIds)
-        .in('workout_id', workoutIds);
+      
+      // Batch query for workout links - split by workout IDs if too many
+      const { data: links } = await batchQuery(
+        async (ids) => supabase
+          .from('workout_trainees')
+          .select('trainee_id, workout_id')
+          .in('trainee_id', traineeIds)
+          .in('workout_id', ids),
+        workoutIds
+      );
 
       (links || []).forEach(link => {
         workoutCountMap.set(link.trainee_id, (workoutCountMap.get(link.trainee_id) || 0) + 1);
@@ -400,10 +454,13 @@ export async function calculateMonthlyPositionsFromDb(
     const workoutIds = workouts.map(w => (w as any).id);
     const traineeIds = [...new Set(Array.from(traineeNameToId.values()))];
     
-    const { data: links, error: linksError } = await supabase
-      .from('workout_trainees')
-      .select('workout_id, trainee_id')
-      .in('workout_id', workoutIds);
+    const { data: links, error: linksError } = await batchQuery(
+      async (ids) => supabase
+        .from('workout_trainees')
+        .select('workout_id, trainee_id')
+        .in('workout_id', ids),
+      workoutIds
+    );
     
     if (linksError) {
       logger.error('Error fetching workout links for monthly positions', linksError, 'traineeSessionUtils');
@@ -634,11 +691,14 @@ export async function generateGoogleCalendarEventTitle(
       if (!workoutsError && workouts && workouts.length > 0) {
         // Get workout links to find which workouts belong to this trainee
         const workoutIds = workouts.map(w => (w as any).id);
-        const { data: links } = await supabase
-          .from('workout_trainees')
-          .select('workout_id')
-          .eq('trainee_id', traineeId)
-          .in('workout_id', workoutIds);
+        const { data: links } = await batchQuery(
+          async (ids) => supabase
+            .from('workout_trainees')
+            .select('workout_id')
+            .eq('trainee_id', traineeId)
+            .in('workout_id', ids),
+          workoutIds
+        );
 
         const traineeWorkoutIds = new Set((links || []).map(l => l.workout_id));
         const traineeWorkouts = workouts.filter(w => traineeWorkoutIds.has((w as any).id));

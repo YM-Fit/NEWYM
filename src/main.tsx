@@ -37,6 +37,18 @@ if (typeof window !== 'undefined') {
       return;
     }
     
+    // Suppress performance warnings in development (they're expected in dev environments)
+    if (
+      message.includes('Performance issue detected') ||
+      fullMessage.includes('Performance issue detected') ||
+      message.includes('FCP =') ||
+      message.includes('LCP =') ||
+      message.includes('CLS =') ||
+      message.includes('bundle-load-time =')
+    ) {
+      return;
+    }
+    
     // Suppress WebSocket warnings for Supabase Realtime
     if (
       (message.includes('WebSocket') || fullMessage.includes('WebSocket')) &&
@@ -93,19 +105,34 @@ if (typeof window !== 'undefined') {
     }
     
     // Suppress contextify warnings from legacy polyfills
+    const errorMessage = args[0]?.toString() || '';
+    const errorFullMessage = args.map(arg => String(arg)).join(' ');
+    
     if (
-      message.includes('[Contextify]') ||
-      fullMessage.includes('[Contextify]') ||
-      fullMessage.includes('running source code in new context')
+      errorMessage.includes('[Contextify]') ||
+      errorFullMessage.includes('[Contextify]') ||
+      errorFullMessage.includes('running source code in new context')
+    ) {
+      return;
+    }
+    
+    // Suppress performance warnings in development
+    if (
+      errorMessage.includes('Performance issue detected') ||
+      errorFullMessage.includes('Performance issue detected') ||
+      errorMessage.includes('FCP =') ||
+      errorMessage.includes('LCP =') ||
+      errorMessage.includes('CLS =') ||
+      errorMessage.includes('bundle-load-time =')
     ) {
       return;
     }
     
     // Suppress WebSocket connection errors for Supabase Realtime
     if (
-      (message.includes('WebSocket') || fullMessage.includes('WebSocket')) &&
-      (message.includes('supabase') || fullMessage.includes('supabase') || 
-       fullMessage.includes('realtime') || fullMessage.includes('websocket'))
+      (errorMessage.includes('WebSocket') || errorFullMessage.includes('WebSocket')) &&
+      (errorMessage.includes('supabase') || errorFullMessage.includes('supabase') || 
+       errorFullMessage.includes('realtime') || errorFullMessage.includes('websocket'))
     ) {
       return;
     }

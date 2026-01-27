@@ -80,14 +80,23 @@ export default function Dashboard({
       const workoutIds = workoutTrainees?.map(wt => wt.workout_id) || [];
       
       if (workoutIds.length > 0) {
-        const { count: workoutsCount } = await supabase
-          .from('workouts')
-          .select('*', { count: 'exact', head: true })
-          .in('id', workoutIds)
-          .gte('workout_date', todayStr)
-          .lt('workout_date', tomorrowStr);
+        // Batch query to avoid URL length limits when there are many workout IDs
+        const BATCH_SIZE = 100;
+        let totalCount = 0;
         
-        setTodayWorkouts(workoutsCount || 0);
+        for (let i = 0; i < workoutIds.length; i += BATCH_SIZE) {
+          const batch = workoutIds.slice(i, i + BATCH_SIZE);
+          const { count } = await supabase
+            .from('workouts')
+            .select('*', { count: 'exact', head: true })
+            .in('id', batch)
+            .gte('workout_date', todayStr)
+            .lt('workout_date', tomorrowStr);
+          
+          totalCount += count || 0;
+        }
+        
+        setTodayWorkouts(totalCount);
       } else {
         setTodayWorkouts(0);
       }

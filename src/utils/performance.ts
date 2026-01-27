@@ -211,8 +211,18 @@ class PerformanceMonitor {
     }
 
     // Log significant performance issues
-    if (value > this.getThreshold(name)) {
-      logger.warn(`Performance issue detected: ${name} = ${value}${unit}`, metadata, 'Performance');
+    // In development, only log critical issues (2x threshold) to reduce noise
+    const threshold = this.getThreshold(name);
+    const isDev = import.meta.env.DEV;
+    const shouldLog = isDev ? value > threshold * 2 : value > threshold;
+    
+    if (shouldLog) {
+      // In development, use debug level instead of warn to reduce console noise
+      if (isDev) {
+        logger.debug(`Performance issue detected: ${name} = ${value}${unit}`, metadata, 'Performance');
+      } else {
+        logger.warn(`Performance issue detected: ${name} = ${value}${unit}`, metadata, 'Performance');
+      }
       
       // Add to Sentry breadcrumb
       addBreadcrumb(`Performance: ${name}`, 'performance', {
