@@ -453,6 +453,16 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       return { data: { today: [], tomorrow: [] }, success: true };
     }
 
+    // Debug: Log scheduled workouts
+    const scheduledWorkouts = workoutsData.filter(w => !w.is_completed);
+    if (scheduledWorkouts.length > 0) {
+      console.log('Found scheduled workouts:', scheduledWorkouts.map(w => ({
+        id: w.id,
+        workout_date: w.workout_date,
+        is_completed: w.is_completed
+      })));
+    }
+
     const workoutIds = workoutsData.map(w => w.id);
 
     if (workoutIds.length === 0) {
@@ -473,7 +483,21 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     }
 
     if (!workoutTraineesData || workoutTraineesData.length === 0) {
+      // Debug: Log if workouts exist but no workout_trainees
+      if (workoutIds.length > 0) {
+        console.warn('Workouts found but no workout_trainees links:', {
+          workoutIds: workoutIds.slice(0, 5), // Log first 5
+          totalWorkouts: workoutIds.length
+        });
+      }
       return { data: { today: [], tomorrow: [] }, success: true };
+    }
+
+    // Debug: Log workout_trainees for scheduled workouts
+    const scheduledWorkoutIds = workoutsData.filter(w => !w.is_completed).map(w => w.id);
+    const scheduledWorkoutTrainees = workoutTraineesData.filter(wt => scheduledWorkoutIds.includes(wt.workout_id));
+    if (scheduledWorkoutTrainees.length > 0) {
+      console.log('Found workout_trainees for scheduled workouts:', scheduledWorkoutTrainees.length);
     }
 
     // Get unique trainee IDs from the results
