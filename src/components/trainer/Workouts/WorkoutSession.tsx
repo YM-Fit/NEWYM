@@ -365,12 +365,30 @@ export default function WorkoutSession({
       // 1. Workout exists and is not completed
       // 2. Workout has exercises (meaning it was filled during this session, not a scheduled workout)
       // 3. Workout was created recently (within last hour) - this indicates it's a new workout, not a scheduled one
+      // 4. Workout date is today or in the past (not a future scheduled workout)
       // This prevents deleting scheduled workouts that don't have exercises yet
       const workoutCreatedAt = new Date(workout.created_at);
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
       const isRecentWorkout = workoutCreatedAt > oneHourAgo;
       
-      if (!workout.is_completed && workout.workout_exercises && workout.workout_exercises.length > 0 && isRecentWorkout) {
+      // Check if workout date is in the future (scheduled workout)
+      const { data: workoutDetails } = await supabase
+        .from('workouts')
+        .select('workout_date')
+        .eq('id', workoutId)
+        .single();
+      
+      const isFutureWorkout = workoutDetails?.workout_date 
+        ? new Date(workoutDetails.workout_date) > new Date()
+        : false;
+      
+      // Only delete if it's a recent workout with exercises that's not in the future
+      // This ensures scheduled workouts (future dates) are never deleted
+      if (!workout.is_completed && 
+          workout.workout_exercises && 
+          workout.workout_exercises.length > 0 && 
+          isRecentWorkout && 
+          !isFutureWorkout) {
         await supabase
           .from('workouts')
           .delete()
