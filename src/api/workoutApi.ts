@@ -631,13 +631,14 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         itemDate.setHours(0, 0, 0, 0);
         const isToday = itemDate.getTime() === today.getTime();
         // Debug: Log scheduled workouts that should appear today
-        if (!item.workout.is_completed && !isToday) {
-          console.log('Scheduled workout not matching today filter:', {
+        if (!item.workout.is_completed) {
+          console.log('Scheduled workout filter check:', {
             workoutId: item.workout.id,
             workoutDate: item.workout.workout_date,
             workoutDateParsed: itemDate.toISOString(),
             today: today.toISOString(),
-            isToday
+            isToday,
+            isCompleted: item.workout.is_completed
           });
         }
         return isToday;
