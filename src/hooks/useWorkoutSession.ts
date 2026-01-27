@@ -94,6 +94,16 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
   };
 
   const addExercise = (exercise: Exercise) => {
+    // CRITICAL FIX: Check if exercise already exists to prevent duplicates
+    const exerciseExists = exercises.some(ex => ex.exercise.id === exercise.id);
+    if (exerciseExists) {
+      console.warn('[useWorkoutSession] Exercise already exists, skipping addition', {
+        exerciseId: exercise.id,
+        exerciseName: exercise.name
+      });
+      return; // Don't add duplicate
+    }
+
     if (exercises.length > 0) {
       const lastExercise = exercises[exercises.length - 1];
       if (!minimizedExercises.includes(lastExercise.tempId)) {

@@ -421,6 +421,38 @@ export default function WorkoutSession({
   const autoSaveWorkout = useCallback(async () => {
     if (!user || !workoutId || exercises.length === 0 || saving || creatingWorkout) return;
 
+    // CRITICAL FIX: Check for duplicate exercises before saving
+    // This prevents the autosave from creating duplicate exercises in the database
+    const exerciseIds = exercises.map(ex => ex.exercise.id);
+    const uniqueExerciseIds = new Set(exerciseIds);
+
+    if (exerciseIds.length !== uniqueExerciseIds.size) {
+      logger.error('Duplicate exercises detected in state, skipping autosave to prevent DB corruption', {
+        totalExercises: exerciseIds.length,
+        uniqueExercises: uniqueExerciseIds.size,
+        exerciseIds
+      }, 'WorkoutSession');
+
+      // Remove duplicates from state
+      const seen = new Set<string>();
+      const uniqueExercises = exercises.filter(ex => {
+        if (seen.has(ex.exercise.id)) {
+          logger.debug('Removing duplicate exercise from state', {
+            exerciseId: ex.exercise.id,
+            exerciseName: ex.exercise.name,
+            tempId: ex.tempId
+          }, 'WorkoutSession');
+          return false;
+        }
+        seen.add(ex.exercise.id);
+        return true;
+      });
+
+      setExercises(uniqueExercises);
+      toast.error('זוהו תרגילים כפולים והוסרו. אנא בדוק את הרשימה.');
+      return;
+    }
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -460,14 +492,22 @@ export default function WorkoutSession({
         is_auto_save: true, // Mark as auto-save so workout won't be marked as completed
       };
 
+      logger.debug('Auto-saving workout', {
+        workoutId,
+        exercisesCount: exercisesData.length,
+        exerciseIds: exercisesData.map(e => e.exercise_id)
+      }, 'WorkoutSession');
+
       const result = await saveWorkout(requestBody, session.access_token);
       if (result.error) {
         logger.error('Auto-save error', result.error, 'WorkoutSession');
+      } else {
+        logger.debug('Auto-save successful', { workoutId }, 'WorkoutSession');
       }
     } catch (err) {
       logger.error('Unexpected error in auto-save', err, 'WorkoutSession');
     }
-  }, [user, workoutId, exercises, workoutType, notes, workoutDate, trainee, selectedMember, saving, creatingWorkout]);
+  }, [user, workoutId, exercises, workoutType, notes, workoutDate, trainee, selectedMember, saving, creatingWorkout, setExercises]);
 
   // Update ref when function changes
   useEffect(() => {
