@@ -629,7 +629,18 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       .filter(item => {
         const itemDate = new Date(item.workoutDate);
         itemDate.setHours(0, 0, 0, 0);
-        return itemDate.getTime() === today.getTime();
+        const isToday = itemDate.getTime() === today.getTime();
+        // Debug: Log scheduled workouts that should appear today
+        if (!item.workout.is_completed && !isToday) {
+          console.log('Scheduled workout not matching today filter:', {
+            workoutId: item.workout.id,
+            workoutDate: item.workout.workout_date,
+            workoutDateParsed: itemDate.toISOString(),
+            today: today.toISOString(),
+            isToday
+          });
+        }
+        return isToday;
       })
       .map(item => {
         // For Google Calendar workouts, use eventStartTime if available for accurate time comparison
