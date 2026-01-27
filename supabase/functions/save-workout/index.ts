@@ -393,22 +393,54 @@ Deno.serve(async (req: Request) => {
     }
 
     if (workout_id) {
-      const { data: existingSets } = await supabase
+      // Get the list of exercise_ids we're about to save
+      const incomingExerciseIds = exercises.map(e => e.exercise_id);
+      
+      // Find existing workout_exercises for this workout
+      const { data: existingWorkoutExercises } = await supabase
         .from('workout_exercises')
-        .select('id')
+        .select('id, exercise_id')
         .eq('workout_id', workout_id);
 
-      if (existingSets && existingSets.length > 0) {
+      // Separate exercises into: to delete, to update, and to create
+      const existingExerciseMap = new Map<string, string>();
+      const exercisesToDelete: string[] = [];
+      
+      if (existingWorkoutExercises) {
+        for (const we of existingWorkoutExercises) {
+          if (!incomingExerciseIds.includes(we.exercise_id)) {
+            // Exercise was removed - delete it
+            exercisesToDelete.push(we.id);
+          } else {
+            // Exercise exists and is in incoming data - will be updated
+            existingExerciseMap.set(we.exercise_id, we.id);
+          }
+        }
+      }
+
+      // Delete exercises that were removed (along with their sets)
+      if (exercisesToDelete.length > 0) {
         await supabase
           .from('exercise_sets')
           .delete()
-          .in(
-            'workout_exercise_id',
-            existingSets.map((we) => we.id)
-          );
+          .in('workout_exercise_id', exercisesToDelete);
+        
+        await supabase
+          .from('workout_exercises')
+          .delete()
+          .in('id', exercisesToDelete);
+          
+        console.log(`Deleted ${exercisesToDelete.length} removed exercises`);
       }
 
-      await supabase.from('workout_exercises').delete().eq('workout_id', workout_id);
+      // Delete sets for exercises that will be updated (we'll re-create them)
+      const exerciseIdsToUpdate = Array.from(existingExerciseMap.values());
+      if (exerciseIdsToUpdate.length > 0) {
+        await supabase
+          .from('exercise_sets')
+          .delete()
+          .in('workout_exercise_id', exerciseIdsToUpdate);
+      }
 
       // When updating, preserve the date from input but use current time
       // Check if the workout was already completed - if so, preserve is_completed=true
@@ -447,6 +479,96 @@ Deno.serve(async (req: Request) => {
       }
 
       workout = updatedWorkout;
+      
+      // Process exercises - update existing or create new
+      for (const exercise of exercises) {
+        let workoutExerciseId: string;
+        
+        if (existingExerciseMap.has(exercise.exercise_id)) {
+          // Exercise already exists - update it
+          workoutExerciseId = existingExerciseMap.get(exercise.exercise_id)!;
+          
+          await supabase
+            .from('workout_exercises')
+            .update({
+              order_index: exercise.order_index,
+              pair_member: pair_member || null,
+            })
+            .eq('id', workoutExerciseId);
+        } else {
+          // New exercise - create it
+          const { data: workoutExercise, error: exerciseError } = await supabase
+            .from('workout_exercises')
+            .insert([
+              {
+                workout_id: workout.id,
+                trainee_id,
+                exercise_id: exercise.exercise_id,
+                order_index: exercise.order_index,
+                pair_member: pair_member || null,
+              },
+            ])
+            .select()
+            .single();
+
+          if (exerciseError) {
+            // If it's a duplicate key error, try to get the existing record
+            if (exerciseError.code === '23505') {
+              console.log(`Duplicate exercise detected for exercise_id ${exercise.exercise_id}, fetching existing record`);
+              const { data: existingWe } = await supabase
+                .from('workout_exercises')
+                .select('id')
+                .eq('workout_id', workout.id)
+                .eq('exercise_id', exercise.exercise_id)
+                .single();
+              
+              if (existingWe) {
+                workoutExerciseId = existingWe.id;
+                // Delete existing sets for this exercise
+                await supabase
+                  .from('exercise_sets')
+                  .delete()
+                  .eq('workout_exercise_id', workoutExerciseId);
+              } else {
+                throw exerciseError;
+              }
+            } else {
+              throw exerciseError;
+            }
+          } else {
+            workoutExerciseId = workoutExercise!.id;
+          }
+        }
+
+        // Insert sets for this exercise
+        const setsToInsert = exercise.sets.map((set) => ({
+          workout_exercise_id: workoutExerciseId,
+          set_number: set.set_number,
+          weight: set.weight,
+          reps: set.reps,
+          rpe: set.rpe && set.rpe >= 1 && set.rpe <= 10 ? set.rpe : null,
+          set_type: set.set_type,
+          failure: set.failure || false,
+          superset_exercise_id: set.superset_exercise_id || null,
+          superset_weight: set.superset_weight || null,
+          superset_reps: set.superset_reps || null,
+          superset_rpe: set.superset_rpe && set.superset_rpe >= 1 && set.superset_rpe <= 10 ? set.superset_rpe : null,
+          superset_equipment_id: set.superset_equipment_id || null,
+          superset_dropset_weight: set.superset_dropset_weight || null,
+          superset_dropset_reps: set.superset_dropset_reps || null,
+          dropset_weight: set.dropset_weight || null,
+          dropset_reps: set.dropset_reps || null,
+          equipment_id: set.equipment_id || null,
+        }));
+
+        const { error: setsError } = await supabase
+          .from('exercise_sets')
+          .insert(setsToInsert);
+
+        if (setsError) {
+          throw setsError;
+        }
+      }
     } else {
       // Create new workout - allow multiple workouts per day
       // Users can create:
@@ -489,53 +611,54 @@ Deno.serve(async (req: Request) => {
       }
 
       workout = newWorkout;
-    }
+      
+      // Insert exercises for new workout
+      for (const exercise of exercises) {
+        const { data: workoutExercise, error: exerciseError } = await supabase
+          .from('workout_exercises')
+          .insert([
+            {
+              workout_id: workout.id,
+              trainee_id,
+              exercise_id: exercise.exercise_id,
+              order_index: exercise.order_index,
+              pair_member: pair_member || null,
+            },
+          ])
+          .select()
+          .single();
 
-    for (const exercise of exercises) {
-      const { data: workoutExercise, error: exerciseError } = await supabase
-        .from('workout_exercises')
-        .insert([
-          {
-            workout_id: workout.id,
-            trainee_id,
-            exercise_id: exercise.exercise_id,
-            order_index: exercise.order_index,
-            pair_member: pair_member || null,
-          },
-        ])
-        .select()
-        .single();
+        if (exerciseError) {
+          throw exerciseError;
+        }
 
-      if (exerciseError) {
-        throw exerciseError;
-      }
+        const setsToInsert = exercise.sets.map((set) => ({
+          workout_exercise_id: workoutExercise.id,
+          set_number: set.set_number,
+          weight: set.weight,
+          reps: set.reps,
+          rpe: set.rpe && set.rpe >= 1 && set.rpe <= 10 ? set.rpe : null,
+          set_type: set.set_type,
+          failure: set.failure || false,
+          superset_exercise_id: set.superset_exercise_id || null,
+          superset_weight: set.superset_weight || null,
+          superset_reps: set.superset_reps || null,
+          superset_rpe: set.superset_rpe && set.superset_rpe >= 1 && set.superset_rpe <= 10 ? set.superset_rpe : null,
+          superset_equipment_id: set.superset_equipment_id || null,
+          superset_dropset_weight: set.superset_dropset_weight || null,
+          superset_dropset_reps: set.superset_dropset_reps || null,
+          dropset_weight: set.dropset_weight || null,
+          dropset_reps: set.dropset_reps || null,
+          equipment_id: set.equipment_id || null,
+        }));
 
-      const setsToInsert = exercise.sets.map((set) => ({
-        workout_exercise_id: workoutExercise.id,
-        set_number: set.set_number,
-        weight: set.weight,
-        reps: set.reps,
-        rpe: set.rpe && set.rpe >= 1 && set.rpe <= 10 ? set.rpe : null,
-        set_type: set.set_type,
-        failure: set.failure || false,
-        superset_exercise_id: set.superset_exercise_id || null,
-        superset_weight: set.superset_weight || null,
-        superset_reps: set.superset_reps || null,
-        superset_rpe: set.superset_rpe && set.superset_rpe >= 1 && set.superset_rpe <= 10 ? set.superset_rpe : null,
-        superset_equipment_id: set.superset_equipment_id || null,
-        superset_dropset_weight: set.superset_dropset_weight || null,
-        superset_dropset_reps: set.superset_dropset_reps || null,
-        dropset_weight: set.dropset_weight || null,
-        dropset_reps: set.dropset_reps || null,
-        equipment_id: set.equipment_id || null,
-      }));
+        const { error: setsError } = await supabase
+          .from('exercise_sets')
+          .insert(setsToInsert);
 
-      const { error: setsError } = await supabase
-        .from('exercise_sets')
-        .insert(setsToInsert);
-
-      if (setsError) {
-        throw setsError;
+        if (setsError) {
+          throw setsError;
+        }
       }
     }
 
