@@ -343,7 +343,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (!trainee_id || !trainer_id || !workout_type || !exercises || exercises.length === 0) {
+    if (!trainee_id || !trainer_id || !workout_type || !exercises) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         {
@@ -352,6 +352,8 @@ Deno.serve(async (req: Request) => {
         }
       );
     }
+    
+    // Allow empty exercises array (for deleting all exercises from a workout)
 
     let workout;
 
@@ -406,14 +408,22 @@ Deno.serve(async (req: Request) => {
       const existingExerciseMap = new Map<string, string>();
       const exercisesToDelete: string[] = [];
       
-      if (existingWorkoutExercises) {
-        for (const we of existingWorkoutExercises) {
-          if (!incomingExerciseIds.includes(we.exercise_id)) {
-            // Exercise was removed - delete it
-            exercisesToDelete.push(we.id);
-          } else {
-            // Exercise exists and is in incoming data - will be updated
-            existingExerciseMap.set(we.exercise_id, we.id);
+      // If exercises array is empty, mark all existing exercises for deletion
+      if (exercises.length === 0) {
+        if (existingWorkoutExercises && existingWorkoutExercises.length > 0) {
+          exercisesToDelete.push(...existingWorkoutExercises.map(we => we.id));
+        }
+      } else {
+        // Normal flow: compare incoming exercises with existing ones
+        if (existingWorkoutExercises) {
+          for (const we of existingWorkoutExercises) {
+            if (!incomingExerciseIds.includes(we.exercise_id)) {
+              // Exercise was removed - delete it
+              exercisesToDelete.push(we.id);
+            } else {
+              // Exercise exists and is in incoming data - will be updated
+              existingExerciseMap.set(we.exercise_id, we.id);
+            }
           }
         }
       }
@@ -434,12 +444,15 @@ Deno.serve(async (req: Request) => {
       }
 
       // Delete sets for exercises that will be updated (we'll re-create them)
-      const exerciseIdsToUpdate = Array.from(existingExerciseMap.values());
-      if (exerciseIdsToUpdate.length > 0) {
-        await supabase
-          .from('exercise_sets')
-          .delete()
-          .in('workout_exercise_id', exerciseIdsToUpdate);
+      // Only do this if we have exercises to process
+      if (exercises.length > 0) {
+        const exerciseIdsToUpdate = Array.from(existingExerciseMap.values());
+        if (exerciseIdsToUpdate.length > 0) {
+          await supabase
+            .from('exercise_sets')
+            .delete()
+            .in('workout_exercise_id', exerciseIdsToUpdate);
+        }
       }
 
       // When updating, preserve the date from input but use current time
@@ -481,7 +494,9 @@ Deno.serve(async (req: Request) => {
       workout = updatedWorkout;
       
       // Process exercises - update existing or create new
-      for (const exercise of exercises) {
+      // Only process if we have exercises (skip if empty array)
+      if (exercises.length > 0) {
+        for (const exercise of exercises) {
         let workoutExerciseId: string;
         
         if (existingExerciseMap.has(exercise.exercise_id)) {

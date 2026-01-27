@@ -596,25 +596,28 @@ export default function WorkoutSession({
           toast.success('סט חדש נוסף', { duration: 1500, position: 'bottom-center' });
         }
       }
-      // W key to open weight pad for first set of first exercise
+      // W key to open weight pad for active exercise and set
       else if (e.key.toLowerCase() === 'w' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
         e.preventDefault();
-        if (exercises[0].sets.length > 0) {
-          openNumericPad(0, 0, 'weight', 'משקל (ק״ג)');
+        const active = findActiveExerciseAndSet();
+        if (active) {
+          openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
         }
       }
-      // R key to open reps pad for first set of first exercise
+      // R key to open reps pad for active exercise and set
       else if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
         e.preventDefault();
-        if (exercises[0].sets.length > 0) {
-          openNumericPad(0, 0, 'reps', 'חזרות');
+        const active = findActiveExerciseAndSet();
+        if (active) {
+          openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
         }
       }
-      // E key to open RPE pad for first set of first exercise
+      // E key to open RPE pad for active exercise and set
       else if (e.key.toLowerCase() === 'e' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
         e.preventDefault();
-        if (exercises[0].sets.length > 0) {
-          openNumericPad(0, 0, 'rpe', 'RPE (1-10)');
+        const active = findActiveExerciseAndSet();
+        if (active) {
+          openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
         }
       }
       // Escape to go back (with confirmation if dirty)
@@ -659,7 +662,7 @@ export default function WorkoutSession({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showExerciseSelector, numericPad, equipmentSelector, supersetSelector, 
       showDraftModal, showTemplateModal, showSaveTemplateModal, showSummary, 
-      exercises.length, saving, isDirty, collapsedSets, minimizedExercises]);
+      exercises.length, saving, isDirty, collapsedSets, minimizedExercises, findActiveExerciseAndSet]);
 
   useEffect(() => {
     const loadMuscleGroups = async () => {
@@ -687,7 +690,25 @@ export default function WorkoutSession({
     try {
       // Create workout if this is the first exercise
       if (exercises.length === 0 && !workoutId && user) {
-        await createInitialWorkout();
+        const newWorkoutId = await createInitialWorkout();
+        if (!newWorkoutId) {
+          logger.error('Failed to create workout, cannot add exercise', {}, 'WorkoutSession');
+          toast.error('שגיאה ביצירת אימון. נסה שוב.');
+          setLoadingExercise(null);
+          return;
+        }
+        // Set workoutId directly to ensure it's available for auto-save
+        setWorkoutId(newWorkoutId);
+        // Wait a bit for state to settle
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+      
+      // Double-check that workoutId exists before proceeding (in case state didn't update)
+      // Use a ref or direct check - if we just created it, use the returned value
+      if (!workoutId && user && exercises.length === 0) {
+        // We just created a workout but state might not have updated yet
+        // The workoutId should be set above, but if it's still null, we have a problem
+        logger.warn('WorkoutId still missing after creation attempt', {}, 'WorkoutSession');
       }
 
       if (!user) {
@@ -835,10 +856,54 @@ export default function WorkoutSession({
   };
 
 
+  // Find the active exercise (first non-minimized) and active set (first non-collapsed)
+  const findActiveExerciseAndSet = useCallback((): { exerciseIndex: number; setIndex: number } | null => {
+    for (let i = 0; i < exercises.length; i++) {
+      if (!minimizedExercises.includes(exercises[i].tempId)) {
+        const exercise = exercises[i];
+        for (let j = 0; j < exercise.sets.length; j++) {
+          if (!collapsedSets.includes(exercise.sets[j].id)) {
+            return { exerciseIndex: i, setIndex: j };
+          }
+        }
+        // If no non-collapsed set, return the first set
+        if (exercise.sets.length > 0) {
+          return { exerciseIndex: i, setIndex: 0 };
+        }
+      }
+    }
+    // Fallback to first exercise and first set
+    return exercises.length > 0 && exercises[0].sets.length > 0 
+      ? { exerciseIndex: 0, setIndex: 0 }
+      : null;
+  }, [exercises, minimizedExercises, collapsedSets]);
+
   const openNumericPad = (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe', label: string) => {
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     setNumericPad({ exerciseIndex, setIndex, field, value: currentValue as number, label });
   };
+
+  // Find the active exercise and set (first non-minimized exercise with first non-collapsed set)
+  const findActiveExerciseAndSet = useCallback(() => {
+    for (let i = 0; i < exercises.length; i++) {
+      if (!minimizedExercises.includes(exercises[i].tempId)) {
+        const exercise = exercises[i];
+        for (let j = 0; j < exercise.sets.length; j++) {
+          if (!collapsedSets.includes(exercise.sets[j].id)) {
+            return { exerciseIndex: i, setIndex: j };
+          }
+        }
+        // If no non-collapsed set, return the first set
+        if (exercise.sets.length > 0) {
+          return { exerciseIndex: i, setIndex: 0 };
+        }
+      }
+    }
+    // Fallback to first exercise
+    return exercises.length > 0 && exercises[0].sets.length > 0 
+      ? { exerciseIndex: 0, setIndex: 0 }
+      : null;
+  }, [exercises, minimizedExercises, collapsedSets]);
 
   const handleNumericPadConfirm = (value: number) => {
     if (numericPad) {
@@ -1975,13 +2040,14 @@ export default function WorkoutSession({
           {/* Right side - Quick shortcuts for weight, reps, RPE, sets */}
           {exercises.length > 0 && exercises[0].sets.length > 0 && (
             <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3 animate-fade-in">
-              {/* Quick Weight - Open weight pad for first set of first exercise */}
+              {/* Quick Weight - Open weight pad for active exercise and set */}
               <button
                 type="button"
                 onClick={() => {
-                  const firstExerciseIndex = 0;
-                  const firstSetIndex = 0;
-                  openNumericPad(firstExerciseIndex, firstSetIndex, 'weight', 'משקל (ק״ג)');
+                  const active = findActiveExerciseAndSet();
+                  if (active) {
+                    openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+                  }
                 }}
                 className="w-16 h-16 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
                 title="משקל"
@@ -1989,13 +2055,14 @@ export default function WorkoutSession({
                 <span className="text-xs font-bold leading-tight text-center">משקל</span>
               </button>
 
-              {/* Quick Reps - Open reps pad for first set of first exercise */}
+              {/* Quick Reps - Open reps pad for active exercise and set */}
               <button
                 type="button"
                 onClick={() => {
-                  const firstExerciseIndex = 0;
-                  const firstSetIndex = 0;
-                  openNumericPad(firstExerciseIndex, firstSetIndex, 'reps', 'חזרות');
+                  const active = findActiveExerciseAndSet();
+                  if (active) {
+                    openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+                  }
                 }}
                 className="w-16 h-16 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
                 title="חזרות"
@@ -2003,13 +2070,14 @@ export default function WorkoutSession({
                 <span className="text-xs font-bold leading-tight text-center">חזרות</span>
               </button>
 
-              {/* Quick RPE - Open RPE pad for first set of first exercise */}
+              {/* Quick RPE - Open RPE pad for active exercise and set */}
               <button
                 type="button"
                 onClick={() => {
-                  const firstExerciseIndex = 0;
-                  const firstSetIndex = 0;
-                  openNumericPad(firstExerciseIndex, firstSetIndex, 'rpe', 'RPE (1-10)');
+                  const active = findActiveExerciseAndSet();
+                  if (active) {
+                    openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
+                  }
                 }}
                 className="w-16 h-16 bg-purple-500 hover:bg-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
                 title="RPE"

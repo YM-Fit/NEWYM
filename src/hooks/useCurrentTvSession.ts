@@ -697,18 +697,22 @@ export function useCurrentTvSession(
               return prev;
             }
             
-            // Always preserve existing exercises - never clear them
-            const existingExercises = prev.workout.exercises || [];
-            
-            // If we're getting empty exercises, keep existing ones
+            // If we're getting empty exercises, it means all exercises were deleted
+            // Update the workout to have no exercises
             if (exercises.length === 0) {
-              // Don't update if we're getting empty exercises - keep existing ones
-              return prev;
+              return {
+                ...prev,
+                workout: {
+                  ...prev.workout,
+                  exercises: [], // Clear all exercises when empty array is received
+                },
+              };
             }
             
             // Merge exercises: keep existing ones and update/add new ones
             // Use a Map to ensure no duplicates by exercise ID
             const exerciseMap = new Map<string, TvWorkoutExercise>();
+            const existingExercises = prev.workout.exercises || [];
             
             // First, add all existing exercises to the map
             existingExercises.forEach(ex => {
