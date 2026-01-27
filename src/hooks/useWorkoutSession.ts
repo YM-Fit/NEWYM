@@ -53,7 +53,7 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
   const [collapsedSets, setCollapsedSets] = useState<string[]>([]);
 
   const createEmptySet = (setNumber: number): SetData => ({
-    id: `temp-${Date.now()}-${setNumber}`,
+    id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${setNumber}`,
     set_number: setNumber,
     weight: 0,
     reps: 0,
@@ -66,7 +66,7 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
 
   const createSetFromPrevious = (setNumber: number, previousSet: SetData): SetData => {
     return {
-      id: `temp-${Date.now()}-${setNumber}`,
+      id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${setNumber}`,
       set_number: setNumber,
       // Auto-fill from previous set
       weight: previousSet.weight,
@@ -101,8 +101,10 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
       }
     }
 
+    // Generate unique tempId with additional randomness to prevent duplicates
+    // This ensures uniqueness even if called in rapid succession
     const newExercise: WorkoutExercise = {
-      tempId: Date.now().toString(),
+      tempId: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       exercise,
       sets: [createEmptySet(1)],
     };
@@ -201,7 +203,7 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     const exercise = updatedExercises[exerciseIndex];
     const setToCopy = { ...exercise.sets[setIndex] };
     const newSetNumber = exercise.sets.length + 1;
-    setToCopy.id = `temp-${Date.now()}-${newSetNumber}`;
+    setToCopy.id = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${newSetNumber}`;
     setToCopy.set_number = newSetNumber;
     exercise.sets.push(setToCopy);
     setExercises(updatedExercises);

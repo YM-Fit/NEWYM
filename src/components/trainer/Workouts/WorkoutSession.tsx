@@ -602,6 +602,12 @@ export default function WorkoutSession({
   }, []);
 
   const handleAddExerciseWithAutoFill = async (exercise: Exercise) => {
+    // Prevent duplicate additions - check if exercise is already being loaded
+    if (loadingExercise === exercise.id) {
+      logger.debug('Exercise already being added, skipping duplicate request', { exerciseId: exercise.id }, 'WorkoutSession');
+      return;
+    }
+
     // Create workout if this is the first exercise
     if (exercises.length === 0 && !workoutId && user) {
       await createInitialWorkout();
@@ -1407,32 +1413,35 @@ export default function WorkoutSession({
             onRemove={async () => {
               const exercise = exercises[exerciseIndex];
               // If workoutId exists and tempId is a UUID (not a temp ID), delete from database
-              if (workoutId && exercise.tempId && !exercise.tempId.startsWith('temp-') && !exercise.tempId.match(/^\d+$/)) {
+              // tempId starting with 'temp-' indicates it's not saved to DB yet
+              if (workoutId && exercise.tempId && !exercise.tempId.startsWith('temp-')) {
                 try {
                   // Delete all sets for this workout_exercise
                   const { data: sets } = await supabase
                     .from('exercise_sets')
                     .select('id')
                     .eq('workout_exercise_id', exercise.tempId);
-                  
+
                   if (sets && sets.length > 0) {
                     await supabase
                       .from('exercise_sets')
                       .delete()
                       .in('id', sets.map(s => s.id));
                   }
-                  
+
                   // Delete the workout_exercise
                   await supabase
                     .from('workout_exercises')
                     .delete()
                     .eq('id', exercise.tempId);
+
+                  logger.debug('Deleted exercise from database', { tempId: exercise.tempId }, 'WorkoutSession');
                 } catch (error) {
                   logger.error('Error deleting exercise from database:', error, 'WorkoutSession');
                   toast.error('שגיאה במחיקת התרגיל מהדאטאבייס');
                 }
               }
-              // Remove from local state
+              // Always remove from local state
               removeExercise(exerciseIndex);
             }}
             onToggleMinimize={() => toggleMinimizeExercise(workoutExercise.tempId)}
