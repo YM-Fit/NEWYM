@@ -594,6 +594,18 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
           actualWorkoutDate = new Date(eventStartTime);
         }
 
+        // Debug: Log scheduled workouts in allWorkouts
+        if (!workout.is_completed) {
+          console.log('Scheduled workout in allWorkouts:', {
+            workoutId: workout.id,
+            workout_date: workout.workout_date,
+            actualWorkoutDate: actualWorkoutDate.toISOString(),
+            is_completed: workout.is_completed,
+            traineeId: trainee.id,
+            traineeName: trainee.full_name
+          });
+        }
+
         return {
           trainee,
           workout: {
@@ -613,6 +625,13 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
 
+    // Debug: Log allWorkouts count
+    console.log('allWorkouts count:', allWorkouts.length, 'scheduled:', allWorkouts.filter(w => !w.workout.is_completed).length);
+
+    // Debug: Log allWorkouts count and scheduled workouts
+    console.log('allWorkouts count:', allWorkouts.length, 'scheduled:', allWorkouts.filter(w => !w.workout.is_completed).length);
+    console.log('Today date:', today.toISOString(), 'Tomorrow date:', tomorrow.toISOString());
+    
     // Separate into today and tomorrow, and sort by time
     // Use the 'now' variable that was already declared at the beginning of the function
     // Group by trainee to handle multiple workouts per trainee per day
