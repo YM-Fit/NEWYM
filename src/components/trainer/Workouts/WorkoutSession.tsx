@@ -185,6 +185,8 @@ export default function WorkoutSession({
   const exerciseCacheRef = useRef<Map<string, { sets: SetData[]; timestamp: number }>>(new Map());
   const [loadingExercise, setLoadingExercise] = useState<string | null>(null);
   const [showWorkoutHistory, setShowWorkoutHistory] = useState(false);
+  // Track exercises that are being deleted to prevent auto-save from re-adding them
+  const deletedExerciseIdsRef = useRef<Set<string>>(new Set());
 
   const workoutData = {
     exercises,
@@ -421,9 +423,18 @@ export default function WorkoutSession({
   const autoSaveWorkout = useCallback(async () => {
     if (!user || !workoutId || exercises.length === 0 || saving || creatingWorkout) return;
 
+    // CRITICAL FIX: Filter out exercises that are being deleted
+    // This prevents auto-save from re-adding exercises that were just deleted
+    const exercisesToSave = exercises.filter(ex => !deletedExerciseIdsRef.current.has(ex.exercise.id));
+    
+    if (exercisesToSave.length === 0) {
+      logger.debug('No exercises to save (all are being deleted)', 'WorkoutSession');
+      return;
+    }
+
     // CRITICAL FIX: Check for duplicate exercises before saving
     // This prevents the autosave from creating duplicate exercises in the database
-    const exerciseIds = exercises.map(ex => ex.exercise.id);
+    const exerciseIds = exercisesToSave.map(ex => ex.exercise.id);
     const uniqueExerciseIds = new Set(exerciseIds);
 
     if (exerciseIds.length !== uniqueExerciseIds.size) {
@@ -435,7 +446,7 @@ export default function WorkoutSession({
 
       // Remove duplicates from state
       const seen = new Set<string>();
-      const uniqueExercises = exercises.filter(ex => {
+      const uniqueExercises = exercisesToSave.filter(ex => {
         if (seen.has(ex.exercise.id)) {
           logger.debug('Removing duplicate exercise from state', {
             exerciseId: ex.exercise.id,
@@ -457,7 +468,7 @@ export default function WorkoutSession({
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const exercisesData = exercises.map((ex, index) => ({
+      const exercisesData = exercisesToSave.map((ex, index) => ({
         exercise_id: ex.exercise.id,
         order_index: index,
         sets: ex.sets.map((set) => ({
@@ -583,6 +594,20 @@ export default function WorkoutSession({
           const lastExerciseIndex = exercises.length - 1;
           addSet(lastExerciseIndex);
           toast.success('סט חדש נוסף', { duration: 1500, position: 'bottom-center' });
+        }
+      }
+      // R key to open RPE pad for first set of first exercise
+      else if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
+        e.preventDefault();
+        if (exercises[0].sets.length > 0) {
+          openNumericPad(0, 0, 'rpe', 'RPE (1-10)');
+        }
+      }
+      // P key to open reps pad for first set of first exercise
+      else if (e.key.toLowerCase() === 'p' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
+        e.preventDefault();
+        if (exercises[0].sets.length > 0) {
+          openNumericPad(0, 0, 'reps', 'חזרות');
         }
       }
       // Escape to go back (with confirmation if dirty)
@@ -1469,6 +1494,9 @@ export default function WorkoutSession({
                 totalExercises: exercises.length
               }, 'WorkoutSession');
 
+              // Mark exercise as deleted to prevent auto-save from re-adding it
+              deletedExerciseIdsRef.current.add(exerciseId);
+
               // IMMEDIATELY remove from local state for responsive UI
               removeExercise(exerciseIndex);
               toast.success('התרגיל הוסר');
@@ -1496,6 +1524,8 @@ export default function WorkoutSession({
 
                     if (findError) {
                       logger.error('Error finding exercise in database:', findError, 'WorkoutSession');
+                      // Remove from deleted set if deletion failed
+                      deletedExerciseIdsRef.current.delete(exerciseId);
                       return;
                     }
                     
@@ -1520,14 +1550,28 @@ export default function WorkoutSession({
 
                       if (exerciseDeleteError) {
                         logger.error('Error deleting exercise from database:', exerciseDeleteError, 'WorkoutSession');
+                        // Remove from deleted set if deletion failed
+                        deletedExerciseIdsRef.current.delete(exerciseId);
                       } else {
                         logger.debug('Deleted exercise from database', { workoutExerciseIds }, 'WorkoutSession');
+                        // Keep in deleted set for a bit longer to ensure auto-save doesn't re-add it
+                        setTimeout(() => {
+                          deletedExerciseIdsRef.current.delete(exerciseId);
+                        }, 5000); // Remove from tracking after 5 seconds
                       }
+                    } else {
+                      // Exercise not in DB, remove from tracking immediately
+                      deletedExerciseIdsRef.current.delete(exerciseId);
                     }
                   } catch (error) {
                     logger.error('Error deleting exercise from database:', error, 'WorkoutSession');
+                    // Remove from deleted set if deletion failed
+                    deletedExerciseIdsRef.current.delete(exerciseId);
                   }
                 })();
+              } else {
+                // No workoutId, remove from tracking immediately
+                deletedExerciseIdsRef.current.delete(exerciseId);
               }
             }}
             onToggleMinimize={() => toggleMinimizeExercise(workoutExercise.tempId)}
@@ -1908,7 +1952,39 @@ export default function WorkoutSession({
             <History className="h-6 w-6" />
           </button>
 
-          {/* Add set to last exercise */}
+          {/* Quick RPE - Open RPE pad for first set of first exercise */}
+          {exercises.length > 0 && exercises[0].sets.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                const firstExerciseIndex = 0;
+                const firstSetIndex = 0;
+                openNumericPad(firstExerciseIndex, firstSetIndex, 'rpe', 'RPE (1-10)');
+              }}
+              className="w-14 h-14 bg-purple-500 hover:bg-purple-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+              title="RPE (קיצור: R)"
+            >
+              <span className="text-lg font-bold">R</span>
+            </button>
+          )}
+
+          {/* Quick Reps - Open reps pad for first set of first exercise */}
+          {exercises.length > 0 && exercises[0].sets.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                const firstExerciseIndex = 0;
+                const firstSetIndex = 0;
+                openNumericPad(firstExerciseIndex, firstSetIndex, 'reps', 'חזרות');
+              }}
+              className="w-14 h-14 bg-blue-500 hover:bg-blue-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+              title="חזרות (קיצור: P)"
+            >
+              <span className="text-lg font-bold">P</span>
+            </button>
+          )}
+
+          {/* Quick Sets - Add set to last exercise */}
           <button
             type="button"
             onClick={() => {
@@ -1926,7 +2002,7 @@ export default function WorkoutSession({
           <button
             type="button"
             onClick={() => setShowExerciseSelector(true)}
-            className="w-14 h-14 bg-emerלד-500 hover:bg-emerald-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
             title="הוסף תרגיל (קיצור: Ctrl+N)"
           >
             <BookMarked className="h-6 w-6" />
