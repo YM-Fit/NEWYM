@@ -883,28 +883,6 @@ export default function WorkoutSession({
     setNumericPad({ exerciseIndex, setIndex, field, value: currentValue as number, label });
   };
 
-  // Find the active exercise and set (first non-minimized exercise with first non-collapsed set)
-  const findActiveExerciseAndSet = useCallback(() => {
-    for (let i = 0; i < exercises.length; i++) {
-      if (!minimizedExercises.includes(exercises[i].tempId)) {
-        const exercise = exercises[i];
-        for (let j = 0; j < exercise.sets.length; j++) {
-          if (!collapsedSets.includes(exercise.sets[j].id)) {
-            return { exerciseIndex: i, setIndex: j };
-          }
-        }
-        // If no non-collapsed set, return the first set
-        if (exercise.sets.length > 0) {
-          return { exerciseIndex: i, setIndex: 0 };
-        }
-      }
-    }
-    // Fallback to first exercise
-    return exercises.length > 0 && exercises[0].sets.length > 0 
-      ? { exerciseIndex: 0, setIndex: 0 }
-      : null;
-  }, [exercises, minimizedExercises, collapsedSets]);
-
   const handleNumericPadConfirm = (value: number) => {
     if (numericPad) {
       updateSet(numericPad.exerciseIndex, numericPad.setIndex, numericPad.field, value);
