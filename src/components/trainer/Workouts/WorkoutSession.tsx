@@ -1455,89 +1455,80 @@ export default function WorkoutSession({
             collapsedSets={collapsedSets}
             summary={getExerciseSummary(workoutExercise)}
             totalVolume={calculateExerciseVolume(workoutExercise)}
-            onRemove={async () => {
+            onRemove={() => {
               const exercise = exercises[exerciseIndex];
+              const exerciseId = exercise.exercise.id;
+              const exerciseTempId = exercise.tempId;
+              
               logger.debug('Removing exercise', {
                 exerciseIndex,
                 exerciseName: exercise.exercise.name,
-                exerciseId: exercise.exercise.id,
-                tempId: exercise.tempId,
+                exerciseId,
+                tempId: exerciseTempId,
                 workoutId,
                 totalExercises: exercises.length
               }, 'WorkoutSession');
 
-              // If workoutId exists, we need to delete from database
-              // We search by workout_id + exercise_id since tempId is always temp-* format
-              if (workoutId) {
-                logger.debug('Workout has ID, attempting to delete from database', { 
-                  workoutId, 
-                  exerciseId: exercise.exercise.id 
-                }, 'WorkoutSession');
-                try {
-                  // Find the workout_exercise by workout_id and exercise_id
-                  const { data: workoutExercises, error: findError } = await supabase
-                    .from('workout_exercises')
-                    .select('id')
-                    .eq('workout_id', workoutId)
-                    .eq('exercise_id', exercise.exercise.id);
-
-                  if (findError) {
-                    logger.error('Error finding exercise in database:', findError, 'WorkoutSession');
-                    // Continue to remove from local state even if DB lookup fails
-                  } else if (workoutExercises && workoutExercises.length > 0) {
-                    // Delete all sets for these workout_exercises
-                    const workoutExerciseIds = workoutExercises.map(we => we.id);
-                    
-                    const { error: setsDeleteError } = await supabase
-                      .from('exercise_sets')
-                      .delete()
-                      .in('workout_exercise_id', workoutExerciseIds);
-
-                    if (setsDeleteError) {
-                      logger.error('Error deleting exercise sets from database:', setsDeleteError, 'WorkoutSession');
-                    } else {
-                      logger.debug('Deleted exercise sets from database', { count: workoutExerciseIds.length }, 'WorkoutSession');
-                    }
-
-                    // Delete the workout_exercises
-                    const { error: exerciseDeleteError } = await supabase
-                      .from('workout_exercises')
-                      .delete()
-                      .in('id', workoutExerciseIds);
-
-                    if (exerciseDeleteError) {
-                      logger.error('Error deleting exercise from database:', exerciseDeleteError, 'WorkoutSession');
-                      toast.error('שגיאה במחיקת התרגיל מהדאטאבייס');
-                      // Don't return - still remove from local state
-                    } else {
-                      logger.debug('Deleted exercise from database', { workoutExerciseIds }, 'WorkoutSession');
-                      toast.success('התרגיל נמחק');
-                    }
-                  } else {
-                    logger.debug('Exercise not found in database, removing from local state only', {
-                      workoutId,
-                      exerciseId: exercise.exercise.id
-                    }, 'WorkoutSession');
-                    toast.success('התרגיל הוסר');
-                  }
-                } catch (error) {
-                  logger.error('Error deleting exercise from database:', error, 'WorkoutSession');
-                  toast.error('שגיאה במחיקת התרגיל מהדאטאבייס');
-                  // Continue to remove from local state
-                }
-              } else {
-                logger.debug('No workoutId, removing from local state only', {
-                  tempId: exercise.tempId
-                }, 'WorkoutSession');
-                toast.success('התרגיל הוסר');
-              }
-
-              // Always remove from local state
+              // IMMEDIATELY remove from local state for responsive UI
               removeExercise(exerciseIndex);
+              toast.success('התרגיל הוסר');
               logger.debug('Exercise removed from local state', {
                 exerciseIndex,
                 remainingExercises: exercises.length - 1
               }, 'WorkoutSession');
+
+              // Then delete from database in the background (if workoutId exists)
+              if (workoutId) {
+                logger.debug('Deleting exercise from database in background', { 
+                  workoutId, 
+                  exerciseId 
+                }, 'WorkoutSession');
+                
+                // Run DB deletion asynchronously without blocking UI
+                (async () => {
+                  try {
+                    // Find the workout_exercise by workout_id and exercise_id
+                    const { data: workoutExercises, error: findError } = await supabase
+                      .from('workout_exercises')
+                      .select('id')
+                      .eq('workout_id', workoutId)
+                      .eq('exercise_id', exerciseId);
+
+                    if (findError) {
+                      logger.error('Error finding exercise in database:', findError, 'WorkoutSession');
+                      return;
+                    }
+                    
+                    if (workoutExercises && workoutExercises.length > 0) {
+                      // Delete all sets for these workout_exercises
+                      const workoutExerciseIds = workoutExercises.map(we => we.id);
+                      
+                      const { error: setsDeleteError } = await supabase
+                        .from('exercise_sets')
+                        .delete()
+                        .in('workout_exercise_id', workoutExerciseIds);
+
+                      if (setsDeleteError) {
+                        logger.error('Error deleting exercise sets from database:', setsDeleteError, 'WorkoutSession');
+                      }
+
+                      // Delete the workout_exercises
+                      const { error: exerciseDeleteError } = await supabase
+                        .from('workout_exercises')
+                        .delete()
+                        .in('id', workoutExerciseIds);
+
+                      if (exerciseDeleteError) {
+                        logger.error('Error deleting exercise from database:', exerciseDeleteError, 'WorkoutSession');
+                      } else {
+                        logger.debug('Deleted exercise from database', { workoutExerciseIds }, 'WorkoutSession');
+                      }
+                    }
+                  } catch (error) {
+                    logger.error('Error deleting exercise from database:', error, 'WorkoutSession');
+                  }
+                })();
+              }
             }}
             onToggleMinimize={() => toggleMinimizeExercise(workoutExercise.tempId)}
             onComplete={() => completeExercise(workoutExercise.tempId)}

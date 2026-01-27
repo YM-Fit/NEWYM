@@ -54,24 +54,40 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
   
   // Track if initialExercises have been loaded to prevent re-initialization
   const initializedRef = useRef(false);
+  // Store the workout ID to detect when we switch to a different workout
+  const previousWorkoutIdRef = useRef<string | undefined>(undefined);
   
-  // Update exercises when initialExercises change (e.g., when returning to an existing workout)
-  // This is important because useState only initializes once
+  // Update exercises ONLY on initial load or when switching to a completely different workout
+  // This prevents overwriting user's changes (like deleted exercises) during the same session
   useEffect(() => {
+    // Extract workout ID from first exercise's tempId (if it's a DB id, not temp-*)
+    const getWorkoutIndicator = (exercises: WorkoutExercise[] | undefined) => {
+      if (!exercises || exercises.length === 0) return undefined;
+      const firstTempId = exercises[0]?.tempId;
+      // If tempId doesn't start with 'temp-', it's a DB id (workout_exercise.id)
+      return firstTempId && !firstTempId.startsWith('temp-') ? firstTempId.substring(0, 8) : undefined;
+    };
+    
+    const currentWorkoutIndicator = getWorkoutIndicator(options.initialExercises);
+    
+    // Only initialize exercises if:
+    // 1. We haven't initialized yet, OR
+    // 2. We switched to a different workout (different workout indicator)
     if (options.initialExercises && options.initialExercises.length > 0) {
-      // Only update if the initial exercises are different from current
-      // Compare by checking if exercise IDs are different
-      const currentIds = exercises.map(e => e.exercise.id).sort().join(',');
-      const newIds = options.initialExercises.map(e => e.exercise.id).sort().join(',');
+      const shouldInitialize = !initializedRef.current || 
+        (currentWorkoutIndicator && previousWorkoutIdRef.current !== currentWorkoutIndicator);
       
-      if (currentIds !== newIds || !initializedRef.current) {
-        console.log('[useWorkoutSession] Updating exercises from initialExercises', {
+      if (shouldInitialize) {
+        console.log('[useWorkoutSession] Initializing exercises from initialExercises', {
           current: exercises.length,
           new: options.initialExercises.length,
-          initialized: initializedRef.current
+          initialized: initializedRef.current,
+          previousWorkoutId: previousWorkoutIdRef.current,
+          currentWorkoutId: currentWorkoutIndicator
         });
         setExercises(options.initialExercises);
         initializedRef.current = true;
+        previousWorkoutIdRef.current = currentWorkoutIndicator;
       }
     }
   }, [options.initialExercises]);
