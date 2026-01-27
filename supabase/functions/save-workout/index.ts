@@ -200,6 +200,7 @@ interface SaveWorkoutRequest {
   exercises: ExerciseData[];
   pair_member?: 'member_1' | 'member_2' | null;
   workout_id?: string;
+  is_auto_save?: boolean;
 }
 
 Deno.serve(async (req: Request) => {
@@ -301,6 +302,7 @@ Deno.serve(async (req: Request) => {
       exercises,
       pair_member,
       workout_id,
+      is_auto_save,
     }: SaveWorkoutRequest = await req.json();
 
     // Verify trainer_id matches authenticated user
@@ -409,15 +411,21 @@ Deno.serve(async (req: Request) => {
       await supabase.from('workout_exercises').delete().eq('workout_id', workout_id);
 
       // When updating, preserve the date from input but use current time
-      // Also mark as completed since the user is saving the workout with exercises
+      // Only mark as completed if this is NOT an auto-save (explicit save by user)
+      const updateData: any = {
+        notes: notes || null,
+        updated_at: new Date().toISOString(),
+        workout_date: finalWorkoutDate, // Preserve date, use current time
+      };
+      
+      // Only mark as completed if this is an explicit save (not auto-save)
+      if (!is_auto_save) {
+        updateData.is_completed = true;
+      }
+      
       const { data: updatedWorkout, error: updateError } = await supabase
         .from('workouts')
-        .update({
-          notes: notes || null,
-          updated_at: new Date().toISOString(),
-          workout_date: finalWorkoutDate, // Preserve date, use current time
-          is_completed: true, // Mark as completed when saving with exercises
-        })
+        .update(updateData)
         .eq('id', workout_id)
         .select()
         .single();
@@ -435,8 +443,8 @@ Deno.serve(async (req: Request) => {
       // 3. Replace a scheduled workout with actual completed data
       
       // When creating new workout, use the date from input but with current time
-      // New workouts are always created as completed (is_completed=true)
-      // This allows users to fill in a scheduled workout (is_completed=false) with actual completed data
+      // Only mark as completed if this is NOT an auto-save (explicit save by user)
+      // Auto-save should keep workouts as incomplete (is_completed=false) so they don't appear in history
       const { data: newWorkout, error: workoutError } = await supabase
         .from('workouts')
         .insert([
@@ -445,7 +453,7 @@ Deno.serve(async (req: Request) => {
             workout_type,
             notes,
             workout_date: finalWorkoutDate,
-            is_completed: true, // Explicitly set as completed - this is a workout that was actually performed
+            is_completed: !is_auto_save, // Only mark as completed if this is an explicit save (not auto-save)
           },
         ])
         .select()

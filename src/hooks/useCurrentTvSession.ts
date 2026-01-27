@@ -101,6 +101,12 @@ export function useCurrentTvSession(
   const pollIntervalMs = options.pollIntervalMs ?? 5000;
 
   const workoutChannelRef = useRef<RealtimeChannel | null>(null);
+  const sessionRef = useRef<TvSessionState | null>(null);
+
+  // Keep sessionRef in sync with session state
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
 
   const pushLog = (entry: Omit<TvStatusLog, 'id' | 'timestamp'>) => {
     const timestamp = new Date().toISOString();
@@ -138,8 +144,17 @@ export function useCurrentTvSession(
       const nowIso = now.toISOString();
 
       try {
-        setLoading(prev => (session ? prev : true));
-        setError(null);
+        // Use ref to get current session value without causing re-renders
+        const currentSession = sessionRef.current;
+        
+        // Don't set loading to true if we already have a session - prevents flickering
+        if (!currentSession) {
+          setLoading(true);
+        }
+        // Don't clear error if we have a session - keep existing state
+        if (!currentSession) {
+          setError(null);
+        }
 
         // 1. Find candidate calendar events for this trainer
         const { data: syncRecords, error: syncError } = await supabase
@@ -250,16 +265,18 @@ export function useCurrentTvSession(
             }
           }
           
-          // Only clear session if we don't have an active session already
+          // Never clear session if we have one - keep existing session
           // This prevents clearing the screen when polling finds no new calendar events
           // but there's already an active workout session
-          if (!session) {
+          const currentSession = sessionRef.current;
+          if (!currentSession) {
             pushLog({
               level: 'info',
               message: 'לא נמצאו אירועי יומן מסונכרנים פעילים כרגע',
             });
             setSession(null);
             setLastUpdated(nowIso);
+            setLoading(false);
           } else {
             // Keep existing session - don't clear it just because no calendar events found
             // The session might be from a direct workout lookup
@@ -267,6 +284,9 @@ export function useCurrentTvSession(
               level: 'info',
               message: 'לא נמצאו אירועי יומן חדשים, שומרים על האימון הפעיל',
             });
+            // Update lastUpdated but keep session
+            setLastUpdated(nowIso);
+            setLoading(false);
           }
           return;
         }
@@ -284,8 +304,20 @@ export function useCurrentTvSession(
           }) ?? syncRecords[0];
 
         if (!activeRecord) {
-          setSession(null);
-          setLastUpdated(nowIso);
+          // Only clear session if we don't have one - keep existing session
+          const currentSession = sessionRef.current;
+          if (!currentSession) {
+            setSession(null);
+            setLastUpdated(nowIso);
+            setLoading(false);
+          } else {
+            // Keep existing session - don't clear it
+            pushLog({
+              level: 'info',
+              message: 'לא נמצא אירוע פעיל חדש, שומרים על האימון הפעיל',
+            });
+            setLastUpdated(nowIso);
+          }
           return;
         }
 
@@ -379,8 +411,9 @@ export function useCurrentTvSession(
                 });
                 // If we have existing session with exercises for this workout, keep them
                 // Otherwise create empty array - realtime will update it when exercises are added
-                const existingExercises = session?.workout?.id === workoutId && session.workout.exercises?.length > 0
-                  ? session.workout.exercises
+                const currentSession = sessionRef.current;
+                const existingExercises = currentSession?.workout?.id === workoutId && currentSession.workout.exercises?.length > 0
+                  ? currentSession.workout.exercises
                   : [];
                 
                 workout = {
@@ -408,14 +441,31 @@ export function useCurrentTvSession(
                     dropset_weight: set.dropset_weight || null,
                     dropset_reps: set.dropset_reps || null,
                     equipment_id: set.equipment_id || null,
+                    equipment: set.equipment || null,
                   })),
                 }));
+
+                // If we have existing session with same workout, merge exercises
+                const currentSession = sessionRef.current;
+                const existingExercises = currentSession?.workout?.id === workoutId && currentSession.workout.exercises?.length > 0
+                  ? currentSession.workout.exercises
+                  : [];
+                
+                // Merge exercises if we have existing ones
+                let finalExercises = exercises;
+                if (existingExercises.length > 0) {
+                  const exerciseMap = new Map(existingExercises.map(ex => [ex.id, ex]));
+                  exercises.forEach(ex => {
+                    exerciseMap.set(ex.id, ex);
+                  });
+                  finalExercises = Array.from(exerciseMap.values());
+                }
 
                 workout = {
                   id: workoutId,
                   workout_date: activeRecord.event_start_time,
                   is_completed: false,
-                  exercises,
+                  exercises: finalExercises,
                 };
                 
                 pushLog({
@@ -432,6 +482,17 @@ export function useCurrentTvSession(
               message: 'שגיאה בטעינת פרטי האימון',
               details: { workoutId, error: err instanceof Error ? err.message : String(err) },
             });
+            // If we have existing session with this workout, keep it
+            const currentSession = sessionRef.current;
+            if (currentSession?.workout?.id === workoutId) {
+              pushLog({
+                level: 'info',
+                message: 'שומרים על האימון הקיים למרות השגיאה',
+              });
+              setLastUpdated(nowIso);
+              return;
+            }
+            // Otherwise, workout will be null and we'll handle it below
           }
         }
 
@@ -441,6 +502,25 @@ export function useCurrentTvSession(
           event_start_time: activeRecord.event_start_time,
           event_end_time: activeRecord.event_end_time,
         };
+
+        // If no workout found, keep existing session if we have one
+        if (!workout) {
+          const currentSession = sessionRef.current;
+          if (currentSession) {
+            // Keep existing session - don't clear it
+            pushLog({
+              level: 'info',
+              message: 'לא נמצא אימון, שומרים על האימון הפעיל הקיים',
+            });
+            setLastUpdated(nowIso);
+            return;
+          }
+          // No session and no workout - clear
+          setSession(null);
+          setLastUpdated(nowIso);
+          setLoading(false);
+          return;
+        }
 
         const nextSession: TvSessionState = {
           trainee: trainee
@@ -453,7 +533,56 @@ export function useCurrentTvSession(
           calendarEvent,
         };
 
-        setSession(nextSession);
+        // Only update session if it's different or if we don't have one
+        // This prevents unnecessary re-renders and flickering
+        setSession(prev => {
+          // If we have an existing session with the same workout ID, merge exercises
+          if (prev && prev.workout && nextSession.workout && prev.workout.id === nextSession.workout.id) {
+            // Merge exercises: keep existing ones and add/update new ones
+            const existingExercises = prev.workout.exercises || [];
+            const newExercises = nextSession.workout.exercises || [];
+            
+            // If we have existing exercises, always preserve them
+            if (existingExercises.length > 0) {
+              const exerciseMap = new Map(existingExercises.map(ex => [ex.id, ex]));
+              
+              // Update or add exercises from the new data (only if new data has exercises)
+              if (newExercises.length > 0) {
+                newExercises.forEach(ex => {
+                  exerciseMap.set(ex.id, ex);
+                });
+              }
+              
+              const mergedExercises = Array.from(exerciseMap.values());
+              
+              return {
+                ...nextSession,
+                workout: {
+                  ...nextSession.workout,
+                  exercises: mergedExercises, // Always use merged exercises if we had existing ones
+                },
+              };
+            }
+            
+            // No existing exercises - use new ones if available
+            if (newExercises.length > 0) {
+              return nextSession;
+            }
+            
+            // Both are empty - keep existing session structure but update other fields
+            return {
+              ...nextSession,
+              workout: {
+                ...prev.workout, // Keep existing workout structure
+                ...nextSession.workout, // Update other fields
+                exercises: existingExercises, // Keep empty array if that's what we had
+              },
+            };
+          }
+          
+          // New session or different workout - use as is
+          return nextSession;
+        });
         setLastUpdated(nowIso);
 
         pushLog({
@@ -474,12 +603,21 @@ export function useCurrentTvSession(
           level: 'error',
           message: 'שגיאה בלתי צפויה בטעינת מצב הטלוויזיה',
         });
-        if (!session) {
+        const currentSession = sessionRef.current;
+        if (!currentSession) {
           setError('שגיאה בלתי צפויה בטעינת מצב הטלוויזיה');
         }
       } finally {
         if (isMounted) {
-          setLoading(false);
+          // Only set loading to false if we don't have a session
+          // This prevents flickering when we have an active session
+          const currentSession = sessionRef.current;
+          if (!currentSession) {
+            setLoading(false);
+          } else {
+            // If we have a session, only set loading to false if it was true
+            setLoading(prev => prev ? false : prev);
+          }
         }
       }
     };
@@ -497,7 +635,7 @@ export function useCurrentTvSession(
         window.clearInterval(intervalId);
       }
     };
-  }, [user, userType, pollIntervalMs, session]);
+  }, [user, userType, pollIntervalMs]); // Removed session from dependencies to prevent re-runs
 
   // Realtime subscription for workout changes of the active session
   useEffect(() => {
@@ -543,6 +681,13 @@ export function useCurrentTvSession(
               rpe: set.rpe,
               set_type: set.set_type,
               failure: set.failure || false,
+              superset_exercise_id: set.superset_exercise_id || null,
+              superset_weight: set.superset_weight || null,
+              superset_reps: set.superset_reps || null,
+              dropset_weight: set.dropset_weight || null,
+              dropset_reps: set.dropset_reps || null,
+              equipment_id: set.equipment_id || null,
+              equipment: set.equipment || null,
             })),
           }));
 
@@ -551,15 +696,17 @@ export function useCurrentTvSession(
             if (!prev || !prev.workout || prev.workout.id !== activeWorkoutId) {
               return prev;
             }
-            // Never clear exercises if we had them before - always preserve existing exercises
-            // Only update if we have new exercises to add, or merge with existing
+            
+            // Always preserve existing exercises - never clear them
+            const existingExercises = prev.workout.exercises || [];
+            
+            // If we're getting empty exercises, keep existing ones
             if (exercises.length === 0) {
               // Don't update if we're getting empty exercises - keep existing ones
               return prev;
             }
             
             // Merge exercises: keep existing ones and update/add new ones
-            const existingExercises = prev.workout.exercises || [];
             const exerciseMap = new Map(existingExercises.map(ex => [ex.id, ex]));
             
             // Update or add exercises from the new data
@@ -569,11 +716,12 @@ export function useCurrentTvSession(
             
             const mergedExercises = Array.from(exerciseMap.values());
             
+            // Always use merged exercises (which includes existing ones)
             return {
               ...prev,
               workout: {
                 ...prev.workout,
-                exercises: mergedExercises,
+                exercises: mergedExercises.length > 0 ? mergedExercises : existingExercises,
               },
             };
           });

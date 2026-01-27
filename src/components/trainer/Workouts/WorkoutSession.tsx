@@ -328,6 +328,47 @@ export default function WorkoutSession({
     }
   }, [user, workoutId, creatingWorkout, workoutType, notes, workoutDate, trainee.id]);
 
+  // Delete incomplete workout if user cancels/leaves
+  const deleteIncompleteWorkout = useCallback(async () => {
+    if (!workoutId || !user) return;
+    
+    try {
+      // Check if workout exists and is not completed
+      const { data: workout } = await supabase
+        .from('workouts')
+        .select('id, is_completed')
+        .eq('id', workoutId)
+        .eq('trainer_id', user.id)
+        .single();
+
+      // Only delete if workout exists and is not completed
+      if (workout && !workout.is_completed) {
+        await supabase
+          .from('workouts')
+          .delete()
+          .eq('id', workoutId);
+        logger.info('Deleted incomplete workout on cancel', { workoutId }, 'WorkoutSession');
+      }
+    } catch (err) {
+      // Log error but don't block - user is leaving anyway
+      logger.error('Error deleting incomplete workout', err, 'WorkoutSession');
+    }
+  }, [workoutId, user]);
+
+  // Cleanup: delete incomplete workout when component unmounts or user navigates away
+  useEffect(() => {
+    return () => {
+      // Only delete if workout is not completed (auto-saved workouts)
+      deleteIncompleteWorkout();
+    };
+  }, [deleteIncompleteWorkout]);
+
+  // Handle back button - delete incomplete workout before leaving
+  const handleBackWithCleanup = useCallback(async () => {
+    await deleteIncompleteWorkout();
+    onBack();
+  }, [deleteIncompleteWorkout, onBack]);
+
   // Auto-save workout in realtime when exercises change
   const autoSaveWorkoutRef = useRef<(() => Promise<void>) | null>(null);
   
@@ -370,6 +411,7 @@ export default function WorkoutSession({
         exercises: exercisesData,
         pair_member: trainee.is_pair ? selectedMember : null,
         workout_id: workoutId,
+        is_auto_save: true, // Mark as auto-save so workout won't be marked as completed
       };
 
       const result = await saveWorkout(requestBody, session.access_token);
@@ -461,10 +503,10 @@ export default function WorkoutSession({
       else if (e.key === 'Escape') {
         if (exercises.length > 0 && isDirty) {
           if (confirm('יש שינויים שלא נשמרו. בטוח שברצונך לצאת?')) {
-            onBack();
+            handleBackWithCleanup();
           }
         } else if (exercises.length === 0) {
-          onBack();
+          handleBackWithCleanup();
         }
       }
       // Arrow down to expand next collapsed set
@@ -1231,7 +1273,7 @@ export default function WorkoutSession({
         exercisesCount={exercises.length}
         saving={saving}
         selectedMember={selectedMember}
-        onBack={onBack}
+        onBack={handleBackWithCleanup}
         onSave={handleSave}
         onSaveTemplate={() => setShowSaveTemplateModal(true)}
         onLoadPrevious={handleLoadPrevious}
