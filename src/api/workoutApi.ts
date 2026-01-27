@@ -625,12 +625,19 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
 
-    // Debug: Log allWorkouts count
-    console.log('allWorkouts count:', allWorkouts.length, 'scheduled:', allWorkouts.filter(w => !w.workout.is_completed).length);
-
     // Debug: Log allWorkouts count and scheduled workouts
-    console.log('allWorkouts count:', allWorkouts.length, 'scheduled:', allWorkouts.filter(w => !w.workout.is_completed).length);
-    console.log('Today date:', today.toISOString(), 'Tomorrow date:', tomorrow.toISOString());
+    console.log('=== allWorkouts DEBUG ===');
+    console.log('allWorkouts count:', allWorkouts.length);
+    console.log('scheduled count:', allWorkouts.filter(w => !w.workout.is_completed).length);
+    console.log('Today date:', today.toISOString());
+    console.log('Tomorrow date:', tomorrow.toISOString());
+    console.log('allWorkouts scheduled workouts:', allWorkouts.filter(w => !w.workout.is_completed).map(w => ({
+      id: w.workout.id,
+      date: w.workout.workout_date,
+      workoutDate: w.workoutDate.toISOString(),
+      trainee: w.trainee.full_name
+    })));
+    console.log('=== END allWorkouts DEBUG ===');
     
     // Separate into today and tomorrow, and sort by time
     // Use the 'now' variable that was already declared at the beginning of the function
@@ -649,15 +656,18 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         const itemDate = new Date(item.workoutDate);
         itemDate.setHours(0, 0, 0, 0);
         const isToday = itemDate.getTime() === today.getTime();
-        // Debug: Log scheduled workouts that should appear today
+        // Debug: Log ALL scheduled workouts to see what's happening
         if (!item.workout.is_completed) {
           console.log('Scheduled workout filter check:', {
             workoutId: item.workout.id,
             workoutDate: item.workout.workout_date,
             workoutDateParsed: itemDate.toISOString(),
             today: today.toISOString(),
+            todayTime: today.getTime(),
+            itemDateTime: itemDate.getTime(),
             isToday,
-            isCompleted: item.workout.is_completed
+            isCompleted: item.workout.is_completed,
+            traineeName: item.trainee.full_name
           });
         }
         return isToday;
