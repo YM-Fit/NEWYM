@@ -421,7 +421,9 @@ export default function WorkoutSession({
   const autoSaveWorkoutRef = useRef<(() => Promise<void>) | null>(null);
   
   const autoSaveWorkout = useCallback(async () => {
-    if (!user || !workoutId || exercises.length === 0 || saving || creatingWorkout) return;
+    // CRITICAL: Don't auto-save if we're still loading/adding an exercise
+    // This prevents race conditions where auto-save triggers before exercise is fully added
+    if (!user || !workoutId || exercises.length === 0 || saving || creatingWorkout || loadingExercise) return;
 
     // CRITICAL FIX: Filter out exercises that are being deleted
     // This prevents auto-save from re-adding exercises that were just deleted
@@ -518,7 +520,7 @@ export default function WorkoutSession({
     } catch (err) {
       logger.error('Unexpected error in auto-save', err, 'WorkoutSession');
     }
-  }, [user, workoutId, exercises, workoutType, notes, workoutDate, trainee, selectedMember, saving, creatingWorkout, setExercises]);
+  }, [user, workoutId, exercises, workoutType, notes, workoutDate, trainee, selectedMember, saving, creatingWorkout, loadingExercise, setExercises]);
 
   // Update ref when function changes
   useEffect(() => {
@@ -542,7 +544,8 @@ export default function WorkoutSession({
 
   // Auto-save workout in realtime when exercises change (with debounce)
   useEffect(() => {
-    if (!workoutId || exercises.length === 0 || saving || creatingWorkout) return;
+    // Don't trigger auto-save while loading/adding an exercise
+    if (!workoutId || exercises.length === 0 || saving || creatingWorkout || loadingExercise) return;
 
     const timeoutId = setTimeout(() => {
       if (autoSaveWorkoutRef.current) {
@@ -551,13 +554,35 @@ export default function WorkoutSession({
     }, 2000); // Debounce: wait 2 seconds after last change
 
     return () => clearTimeout(timeoutId);
-  }, [exercises, workoutId, saving, creatingWorkout]);
+  }, [exercises, workoutId, saving, creatingWorkout, loadingExercise]);
+
+  // Helper function to find the active exercise and set (first non-minimized exercise with first non-collapsed set)
+  const findActiveExerciseAndSet = useCallback((): { exerciseIndex: number; setIndex: number } | null => {
+    for (let i = 0; i < exercises.length; i++) {
+      if (!minimizedExercises.includes(exercises[i].tempId)) {
+        const exercise = exercises[i];
+        for (let j = 0; j < exercise.sets.length; j++) {
+          if (!collapsedSets.includes(exercise.sets[j].id)) {
+            return { exerciseIndex: i, setIndex: j };
+          }
+        }
+        // If no non-collapsed set found, return the first set
+        if (exercise.sets.length > 0) {
+          return { exerciseIndex: i, setIndex: 0 };
+        }
+      }
+    }
+    // Fallback to first exercise if available
+    return exercises.length > 0 && exercises[0].sets.length > 0
+      ? { exerciseIndex: 0, setIndex: 0 }
+      : null;
+  }, [exercises, minimizedExercises, collapsedSets]);
 
   // Enhanced keyboard shortcuts for better UX (especially on tablet with external keyboard)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle shortcuts when modals are open or input is focused
-      if (showExerciseSelector || numericPad || equipmentSelector || supersetSelector || 
+      if (showExerciseSelector || numericPad || equipmentSelector || supersetSelector ||
           showDraftModal || showTemplateModal || showSaveTemplateModal || showSummary ||
           document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
         return;
@@ -596,25 +621,28 @@ export default function WorkoutSession({
           toast.success('סט חדש נוסף', { duration: 1500, position: 'bottom-center' });
         }
       }
-      // W key to open weight pad for first set of first exercise
+      // W key to open weight pad for active exercise and set
       else if (e.key.toLowerCase() === 'w' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
         e.preventDefault();
-        if (exercises[0].sets.length > 0) {
-          openNumericPad(0, 0, 'weight', 'משקל (ק״ג)');
+        const active = findActiveExerciseAndSet();
+        if (active) {
+          openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
         }
       }
-      // R key to open reps pad for first set of first exercise
+      // R key to open reps pad for active exercise and set
       else if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
         e.preventDefault();
-        if (exercises[0].sets.length > 0) {
-          openNumericPad(0, 0, 'reps', 'חזרות');
+        const active = findActiveExerciseAndSet();
+        if (active) {
+          openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
         }
       }
-      // E key to open RPE pad for first set of first exercise
+      // E key to open RPE pad for active exercise and set
       else if (e.key.toLowerCase() === 'e' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
         e.preventDefault();
-        if (exercises[0].sets.length > 0) {
-          openNumericPad(0, 0, 'rpe', 'RPE (1-10)');
+        const active = findActiveExerciseAndSet();
+        if (active) {
+          openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
         }
       }
       // Escape to go back (with confirmation if dirty)
@@ -657,9 +685,9 @@ export default function WorkoutSession({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showExerciseSelector, numericPad, equipmentSelector, supersetSelector, 
-      showDraftModal, showTemplateModal, showSaveTemplateModal, showSummary, 
-      exercises.length, saving, isDirty, collapsedSets, minimizedExercises]);
+  }, [showExerciseSelector, numericPad, equipmentSelector, supersetSelector,
+      showDraftModal, showTemplateModal, showSaveTemplateModal, showSummary,
+      exercises.length, saving, isDirty, collapsedSets, minimizedExercises, findActiveExerciseAndSet]);
 
   useEffect(() => {
     const loadMuscleGroups = async () => {
@@ -1975,13 +2003,14 @@ export default function WorkoutSession({
           {/* Right side - Quick shortcuts for weight, reps, RPE, sets */}
           {exercises.length > 0 && exercises[0].sets.length > 0 && (
             <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3 animate-fade-in">
-              {/* Quick Weight - Open weight pad for first set of first exercise */}
+              {/* Quick Weight - Open weight pad for active exercise and set */}
               <button
                 type="button"
                 onClick={() => {
-                  const firstExerciseIndex = 0;
-                  const firstSetIndex = 0;
-                  openNumericPad(firstExerciseIndex, firstSetIndex, 'weight', 'משקל (ק״ג)');
+                  const active = findActiveExerciseAndSet();
+                  if (active) {
+                    openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+                  }
                 }}
                 className="w-16 h-16 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
                 title="משקל"
@@ -1989,13 +2018,14 @@ export default function WorkoutSession({
                 <span className="text-xs font-bold leading-tight text-center">משקל</span>
               </button>
 
-              {/* Quick Reps - Open reps pad for first set of first exercise */}
+              {/* Quick Reps - Open reps pad for active exercise and set */}
               <button
                 type="button"
                 onClick={() => {
-                  const firstExerciseIndex = 0;
-                  const firstSetIndex = 0;
-                  openNumericPad(firstExerciseIndex, firstSetIndex, 'reps', 'חזרות');
+                  const active = findActiveExerciseAndSet();
+                  if (active) {
+                    openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+                  }
                 }}
                 className="w-16 h-16 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
                 title="חזרות"
@@ -2003,13 +2033,14 @@ export default function WorkoutSession({
                 <span className="text-xs font-bold leading-tight text-center">חזרות</span>
               </button>
 
-              {/* Quick RPE - Open RPE pad for first set of first exercise */}
+              {/* Quick RPE - Open RPE pad for active exercise and set */}
               <button
                 type="button"
                 onClick={() => {
-                  const firstExerciseIndex = 0;
-                  const firstSetIndex = 0;
-                  openNumericPad(firstExerciseIndex, firstSetIndex, 'rpe', 'RPE (1-10)');
+                  const active = findActiveExerciseAndSet();
+                  if (active) {
+                    openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
+                  }
                 }}
                 className="w-16 h-16 bg-purple-500 hover:bg-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
                 title="RPE"
@@ -2017,13 +2048,15 @@ export default function WorkoutSession({
                 <span className="text-xs font-bold leading-tight text-center">RPE</span>
               </button>
 
-              {/* Quick Sets - Add set to last exercise */}
+              {/* Quick Sets - Add set to active exercise */}
               <button
                 type="button"
                 onClick={() => {
-                  const lastExerciseIndex = exercises.length - 1;
-                  addSet(lastExerciseIndex);
-                  toast.success('סט חדש נוסף', { duration: 1500, position: 'bottom-center' });
+                  const active = findActiveExerciseAndSet();
+                  if (active) {
+                    addSet(active.exerciseIndex);
+                    toast.success('סט חדש נוסף', { duration: 1500, position: 'bottom-center' });
+                  }
                 }}
                 className="w-16 h-16 bg-cyan-500 hover:bg-cyan-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
                 title="סט"
