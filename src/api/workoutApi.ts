@@ -139,7 +139,13 @@ export async function getWorkoutDetails(
           superset_weight,
           superset_reps,
           dropset_weight,
-          dropset_reps
+          dropset_reps,
+          equipment_id,
+          equipment:equipment_id (
+            id,
+            name,
+            emoji
+          )
         )
       `)
       .eq('workout_id', workoutId)

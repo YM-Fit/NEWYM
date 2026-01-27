@@ -18,6 +18,17 @@ interface TvWorkoutExerciseSet {
   rpe: number | null;
   set_type: string | null;
   failure: boolean | null;
+  superset_exercise_id?: string | null;
+  superset_weight?: number | null;
+  superset_reps?: number | null;
+  dropset_weight?: number | null;
+  dropset_reps?: number | null;
+  equipment_id?: string | null;
+  equipment?: {
+    id: string;
+    name: string;
+    emoji: string | null;
+  } | null;
 }
 
 interface TvWorkoutExercise {
@@ -203,6 +214,13 @@ export function useCurrentTvSession(
                     rpe: set.rpe,
                     set_type: set.set_type,
                     failure: set.failure || false,
+                    superset_exercise_id: set.superset_exercise_id || null,
+                    superset_weight: set.superset_weight || null,
+                    superset_reps: set.superset_reps || null,
+                    dropset_weight: set.dropset_weight || null,
+                    dropset_reps: set.dropset_reps || null,
+                    equipment_id: set.equipment_id || null,
+                    equipment: set.equipment || null,
                   })),
                 }));
 
@@ -232,14 +250,24 @@ export function useCurrentTvSession(
             }
           }
           
+          // Only clear session if we don't have an active session already
+          // This prevents clearing the screen when polling finds no new calendar events
+          // but there's already an active workout session
           if (!session) {
             pushLog({
               level: 'info',
               message: 'לא נמצאו אירועי יומן מסונכרנים פעילים כרגע',
             });
+            setSession(null);
+            setLastUpdated(nowIso);
+          } else {
+            // Keep existing session - don't clear it just because no calendar events found
+            // The session might be from a direct workout lookup
+            pushLog({
+              level: 'info',
+              message: 'לא נמצאו אירועי יומן חדשים, שומרים על האימון הפעיל',
+            });
           }
-          setSession(null);
-          setLastUpdated(nowIso);
           return;
         }
 
@@ -374,6 +402,12 @@ export function useCurrentTvSession(
                     rpe: set.rpe,
                     set_type: set.set_type,
                     failure: set.failure || false,
+                    superset_exercise_id: set.superset_exercise_id || null,
+                    superset_weight: set.superset_weight || null,
+                    superset_reps: set.superset_reps || null,
+                    dropset_weight: set.dropset_weight || null,
+                    dropset_reps: set.dropset_reps || null,
+                    equipment_id: set.equipment_id || null,
                   })),
                 }));
 

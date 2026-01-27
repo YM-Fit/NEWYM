@@ -263,8 +263,21 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       const completedSets = validSets.length;
       const totalSets = sets.length;
       
-      // Check if exercise is completed (all sets have data with weight or reps > 0)
-      const isCompleted = completedSets === totalSets && totalSets > 0 && totalVolume > 0;
+      // Check if exercise is completed:
+      // 1. All sets must exist (totalSets > 0)
+      // 2. All sets must have at least weight OR reps > 0 (completedSets === totalSets)
+      // 3. At least one set must have both weight AND reps > 0 (totalVolume > 0)
+      // This prevents marking as "completed" if all sets are empty (0x0)
+      const hasAnyData = totalSets > 0 && completedSets > 0;
+      const allSetsFilled = completedSets === totalSets && totalSets > 0;
+      const hasValidVolume = totalVolume > 0;
+      
+      // Exercise is completed only if all sets are filled AND there's actual volume
+      const isCompleted = allSetsFilled && hasValidVolume;
+      
+      // Exercise is "in progress" if it has some data but not all sets are filled
+      // OR if all sets exist but have no volume (all 0x0)
+      const isInProgress = hasAnyData && (!allSetsFilled || !hasValidVolume);
       
       // Check if any set has failure
       const hasFailure = validSets.some(set => set.failure === true);
@@ -632,25 +645,63 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                             </td>
                             <td className="py-6 2xl:py-8 px-4 2xl:px-6 border-r-2 border-black dark:border-primary/20">
                               <div className="flex flex-wrap gap-2 2xl:gap-3 justify-end">
-                                {exercise.sets.slice(0, 5).map((set) => (
-                                  <div
-                                    key={set.id}
-                                    className={`px-2 py-1 2xl:px-3 2xl:py-2 rounded-lg text-base 2xl:text-lg font-bold border border-black dark:border-primary/40 flex items-center gap-1 ${
-                                      (set.weight || 0) > 0 || (set.reps || 0) > 0
-                                        ? set.failure
-                                          ? 'bg-red-200 text-black dark:bg-red-500/30 dark:text-red-300'
-                                          : 'bg-emerald-200 text-black dark:bg-primary/20 dark:text-primary'
-                                        : 'bg-gray-200 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400'
-                                    }`}
-                                  >
-                                    {set.set_number}: {set.weight ?? 0}×{set.reps ?? 0}
-                                    {set.failure && (
-                                      <span className="text-red-600 dark:text-red-400 text-sm 2xl:text-base" title="כשל">
-                                        ⚠️
-                                      </span>
-                                    )}
-                                  </div>
-                                ))}
+                                {exercise.sets.slice(0, 5).map((set) => {
+                                  const hasSuperset = set.superset_exercise_id && ((set.superset_weight || 0) > 0 || (set.superset_reps || 0) > 0);
+                                  const hasDropset = (set.dropset_weight || 0) > 0 || (set.dropset_reps || 0) > 0;
+                                  const setType = set.set_type;
+                                  const isSuperset = setType === 'superset';
+                                  const isDropset = setType === 'dropset';
+                                  const hasEquipment = set.equipment && set.equipment.name;
+                                  
+                                  return (
+                                    <div
+                                      key={set.id}
+                                      className={`px-2 py-1 2xl:px-3 2xl:py-2 rounded-lg text-base 2xl:text-lg font-bold border border-black dark:border-primary/40 flex flex-col gap-1 ${
+                                        (set.weight || 0) > 0 || (set.reps || 0) > 0
+                                          ? set.failure
+                                            ? 'bg-red-200 text-black dark:bg-red-500/30 dark:text-red-300'
+                                            : 'bg-emerald-200 text-black dark:bg-primary/20 dark:text-primary'
+                                          : 'bg-gray-200 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-1">
+                                        <span className={isSuperset ? 'text-purple-600 dark:text-purple-400' : isDropset ? 'text-orange-600 dark:text-orange-400' : ''}>
+                                          {set.set_number}: {set.weight ?? 0}×{set.reps ?? 0}
+                                        </span>
+                                        {set.failure && (
+                                          <span className="text-red-600 dark:text-red-400 text-sm 2xl:text-base" title="כשל">
+                                            ⚠️
+                                          </span>
+                                        )}
+                                        {isSuperset && (
+                                          <span className="text-purple-600 dark:text-purple-400 text-xs font-bold" title="סופר-סט">
+                                            SS
+                                          </span>
+                                        )}
+                                        {isDropset && (
+                                          <span className="text-orange-600 dark:text-orange-400 text-xs font-bold" title="דרופ-סט">
+                                            DS
+                                          </span>
+                                        )}
+                                        {hasEquipment && (
+                                          <span className="text-blue-600 dark:text-blue-400 text-xs" title={set.equipment.name}>
+                                            {set.equipment.emoji || '🎒'}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {hasSuperset && (
+                                        <div className="text-xs 2xl:text-sm text-purple-700 dark:text-purple-300 font-semibold">
+                                          +{set.superset_weight ?? 0}×{set.superset_reps ?? 0}
+                                        </div>
+                                      )}
+                                      {hasDropset && (
+                                        <div className="text-xs 2xl:text-sm text-orange-700 dark:text-orange-300 font-semibold">
+                                          ↓{set.dropset_weight ?? 0}×{set.dropset_reps ?? 0}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
                                 {exercise.sets.length > 5 && (
                                   <div className="px-2 py-1 2xl:px-3 2xl:py-2 rounded-lg text-base 2xl:text-lg font-bold bg-emerald-200 text-black dark:bg-primary/10 dark:text-primary border border-black dark:border-primary/30">
                                     +{exercise.sets.length - 5}
