@@ -707,21 +707,29 @@ export function useCurrentTvSession(
             }
             
             // Merge exercises: keep existing ones and update/add new ones
-            const exerciseMap = new Map(existingExercises.map(ex => [ex.id, ex]));
+            // Use a Map to ensure no duplicates by exercise ID
+            const exerciseMap = new Map<string, TvWorkoutExercise>();
             
-            // Update or add exercises from the new data
+            // First, add all existing exercises to the map
+            existingExercises.forEach(ex => {
+              exerciseMap.set(ex.id, ex);
+            });
+            
+            // Then, update or add exercises from the new data
+            // This ensures that if an exercise already exists, it gets updated, not duplicated
             exercises.forEach(ex => {
               exerciseMap.set(ex.id, ex);
             });
             
+            // Convert map back to array - this ensures no duplicates
             const mergedExercises = Array.from(exerciseMap.values());
             
-            // Always use merged exercises (which includes existing ones)
+            // Always use merged exercises (which includes existing ones, no duplicates)
             return {
               ...prev,
               workout: {
                 ...prev.workout,
-                exercises: mergedExercises.length > 0 ? mergedExercises : existingExercises,
+                exercises: mergedExercises, // No need to check length - map ensures no duplicates
               },
             };
           });
@@ -775,6 +783,29 @@ export function useCurrentTvSession(
             message: `עדכון תרגיל: ${payload.eventType}`,
             details: { exercise_id: payload.new?.id || payload.old?.id },
           });
+          
+          // If exercise was deleted, remove it from session immediately
+          if (payload.eventType === 'DELETE' && payload.old?.id) {
+            setSession(prev => {
+              if (!prev || !prev.workout || prev.workout.id !== activeWorkoutId) {
+                return prev;
+              }
+              
+              const updatedExercises = (prev.workout.exercises || []).filter(
+                ex => ex.id !== payload.old.id
+              );
+              
+              return {
+                ...prev,
+                workout: {
+                  ...prev.workout,
+                  exercises: updatedExercises,
+                },
+              };
+            });
+          }
+          
+          // Refresh workout data for all other events (INSERT, UPDATE)
           refreshWorkoutData();
         }
       )

@@ -1,8 +1,9 @@
 import { memo } from 'react';
-import { Calendar, Phone, TrendingDown, TrendingUp, User, Users, Scale, ChevronLeft, Mail, Clock, AlertCircle, Link2 } from 'lucide-react';
+import { Calendar, Phone, TrendingDown, TrendingUp, User, Users, Scale, ChevronLeft, Mail, Clock, AlertCircle, Link2, Edit2 } from 'lucide-react';
 
 interface TraineeCardProps {
   trainee: {
+    id?: string;
     full_name: string;
     is_pair?: boolean;
     gender?: string;
@@ -16,11 +17,12 @@ interface TraineeCardProps {
     google_calendar_client_id?: string;
   };
   onClick: () => void;
+  onQuickEdit?: (traineeId: string) => void;
   unseenWeightsCount?: number;
   viewMode?: 'grid' | 'list';
 }
 
-function TraineeCard({ trainee, onClick, unseenWeightsCount = 0, viewMode = 'grid' }: TraineeCardProps) {
+function TraineeCard({ trainee, onClick, onQuickEdit, unseenWeightsCount = 0, viewMode = 'grid' }: TraineeCardProps) {
   const daysSinceLastWorkout = trainee.lastWorkout
     ? Math.floor((new Date().getTime() - new Date(trainee.lastWorkout).getTime()) / (1000 * 60 * 60 * 24))
     : null;
@@ -93,6 +95,18 @@ function TraineeCard({ trainee, onClick, unseenWeightsCount = 0, viewMode = 'gri
                     <span className="text-sm text-secondary">
                       {new Date(trainee.lastWorkout).toLocaleDateString('he-IL')}
                     </span>
+                    {onQuickEdit && trainee.id && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onQuickEdit(trainee.id!);
+                        }}
+                        className="p-1 text-primary hover:bg-primary/15 rounded transition-all"
+                        title="ערוך אימון אחרון"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
                   {daysSinceLastWorkout !== null && (
                     <div className={`flex items-center justify-end text-xs px-2 py-1 rounded-lg ${
@@ -213,20 +227,34 @@ function TraineeCard({ trainee, onClick, unseenWeightsCount = 0, viewMode = 'gri
                 <Calendar className="h-4 w-4 text-muted" />
                 <span>אימון אחרון</span>
               </div>
-              {daysSinceLastWorkout !== null && (
-                <div className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-medium ${
-                  isActive
-                    ? 'bg-success/20 text-success border border-success/30'
-                    : 'bg-danger/20 text-danger border border-danger/30'
-                }`}>
-                  {isActive ? (
-                    <TrendingUp className="h-3 w-3" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3" />
-                  )}
-                  {daysSinceLastWorkout} ימים
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                {daysSinceLastWorkout !== null && (
+                  <div className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-medium ${
+                    isActive
+                      ? 'bg-success/20 text-success border border-success/30'
+                      : 'bg-danger/20 text-danger border border-danger/30'
+                  }`}>
+                    {isActive ? (
+                      <TrendingUp className="h-3 w-3" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3" />
+                    )}
+                    {daysSinceLastWorkout} ימים
+                  </div>
+                )}
+                {onQuickEdit && trainee.id && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onQuickEdit(trainee.id!);
+                    }}
+                    className="p-1.5 text-primary hover:bg-primary/15 rounded-lg transition-all"
+                    title="ערוך אימון אחרון"
+                  >
+                    <Edit2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
             <p className="text-sm font-medium text-foreground">
               {new Date(trainee.lastWorkout).toLocaleDateString('he-IL', {

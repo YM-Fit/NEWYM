@@ -11,13 +11,14 @@ interface TraineesListProps {
   trainees: Trainee[];
   onTraineeClick: (trainee: Trainee) => void;
   onAddTrainee: () => void;
+  onQuickEdit?: (traineeId: string) => void;
   unseenWeightsCounts?: Map<string, number>;
 }
 
 type SortOption = 'name' | 'lastWorkout' | 'recent';
 type FilterOption = 'all' | 'male' | 'female' | 'pair' | 'active' | 'inactive';
 
-function TraineesList({ trainees, onTraineeClick, onAddTrainee, unseenWeightsCounts }: TraineesListProps) {
+function TraineesList({ trainees, onTraineeClick, onAddTrainee, onQuickEdit, unseenWeightsCounts }: TraineesListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('name');
   const [filterBy, setFilterBy] = useState<FilterOption>('all');
@@ -293,6 +294,7 @@ function TraineesList({ trainees, onTraineeClick, onAddTrainee, unseenWeightsCou
                 <TraineeCard
                   trainee={trainee}
                   onClick={() => onTraineeClick(trainee)}
+                  onQuickEdit={onQuickEdit}
                   unseenWeightsCount={unseenWeightsCounts?.get(trainee.id) || 0}
                   viewMode={viewMode}
                 />

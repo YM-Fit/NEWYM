@@ -797,6 +797,47 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
     setActiveView('workout-details');
   };
 
+  const handleQuickEditLastWorkout = async (traineeId: string) => {
+    if (!user) return;
+    
+    try {
+      // Get the last completed workout for this trainee
+      const { data: lastWorkout, error } = await supabase
+        .from('workout_trainees')
+        .select(`
+          workout_id,
+          workouts!inner (
+            id,
+            workout_date,
+            is_completed,
+            trainer_id
+          )
+        `)
+        .eq('trainee_id', traineeId)
+        .eq('workouts.is_completed', true)
+        .eq('workouts.trainer_id', user.id)
+        .order('workouts.workout_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error || !lastWorkout) {
+        toast.error('לא נמצא אימון אחרון לעריכה');
+        return;
+      }
+
+      const workout = Array.isArray(lastWorkout.workouts) 
+        ? lastWorkout.workouts[0] 
+        : lastWorkout.workouts;
+
+      if (workout && workout.id) {
+        await handleEditWorkout({ id: workout.id });
+      }
+    } catch (err) {
+      logger.error('Error loading last workout for quick edit:', err, 'TrainerApp');
+      toast.error('שגיאה בטעינת האימון האחרון');
+    }
+  };
+
   const handleEditWorkout = async (workout: any) => {
     const { data: workoutExercises } = await supabase
       .from('workout_exercises')
@@ -1070,6 +1111,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
               trainees={trainees}
               onTraineeClick={handleTraineeClick}
               onAddTrainee={handleAddTrainee}
+              onQuickEdit={handleQuickEditLastWorkout}
               unseenWeightsCounts={unseenWeightsCounts}
             />
           </Suspense>

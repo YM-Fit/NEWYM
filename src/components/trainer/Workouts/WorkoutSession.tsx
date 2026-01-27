@@ -226,6 +226,12 @@ export default function WorkoutSession({
 
   // Create initial workout when first exercise is added
   const createInitialWorkout = useCallback(async (): Promise<string | null> => {
+    // If we already have a workout ID (from editingWorkout), use it
+    if (editingWorkout?.id) {
+      setWorkoutId(editingWorkout.id);
+      return editingWorkout.id;
+    }
+    
     if (!user || workoutId || creatingWorkout) return null;
 
     setCreatingWorkout(true);
