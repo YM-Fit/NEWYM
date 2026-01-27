@@ -335,20 +335,29 @@ export default function WorkoutSession({
   }, [user, workoutId, creatingWorkout, workoutType, notes, workoutDate, trainee.id]);
 
   // Delete incomplete workout if user cancels/leaves
+  // Only delete workouts that were created during this session (new workouts, not scheduled ones)
   const deleteIncompleteWorkout = useCallback(async () => {
     if (!workoutId || !user) return;
     
     try {
-      // Check if workout exists and is not completed
+      // Check if workout exists, is not completed, and has exercises
+      // Scheduled workouts typically don't have exercises yet, so we only delete workouts with exercises
       const { data: workout } = await supabase
         .from('workouts')
-        .select('id, is_completed')
+        .select(`
+          id, 
+          is_completed,
+          workout_exercises (id)
+        `)
         .eq('id', workoutId)
         .eq('trainer_id', user.id)
         .single();
 
-      // Only delete if workout exists and is not completed
-      if (workout && !workout.is_completed) {
+      // Only delete if:
+      // 1. Workout exists and is not completed
+      // 2. Workout has exercises (meaning it was filled during this session, not a scheduled workout)
+      // This prevents deleting scheduled workouts that don't have exercises yet
+      if (workout && !workout.is_completed && workout.workout_exercises && workout.workout_exercises.length > 0) {
         await supabase
           .from('workouts')
           .delete()
