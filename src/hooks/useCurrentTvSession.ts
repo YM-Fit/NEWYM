@@ -696,38 +696,43 @@ export function useCurrentTvSession(
             if (!prev || !prev.workout || prev.workout.id !== activeWorkoutId) {
               return prev;
             }
-            
+
+            // If exercises array is empty, all exercises were deleted - clear the list
+            if (exercises.length === 0) {
+              return {
+                ...prev,
+                workout: {
+                  ...prev.workout,
+                  exercises: [], // Clear all exercises
+                },
+              };
+            }
+
             // Always preserve existing exercises - never clear them
             const existingExercises = prev.workout.exercises || [];
-            
-            // If we're getting empty exercises, keep existing ones
-            if (exercises.length === 0) {
-              // Don't update if we're getting empty exercises - keep existing ones
-              return prev;
-            }
-            
+
             // Merge exercises: keep existing ones and update/add new ones
             // Use a Map to ensure no duplicates by exercise ID
             const exerciseMap = new Map<string, TvWorkoutExercise>();
-            
+
             // First, add all existing exercises to the map
             existingExercises.forEach(ex => {
               exerciseMap.set(ex.id, ex);
             });
-            
+
             // Then, update or add exercises from the new data
             // This ensures that if an exercise already exists, it gets updated, not duplicated
             exercises.forEach(ex => {
               exerciseMap.set(ex.id, ex);
             });
-            
+
             // Remove exercises that are in existingExercises but not in the new data
             // This handles deletions - if an exercise was deleted, it won't be in exercises array
             const newExerciseIds = new Set(exercises.map(ex => ex.id));
-            const mergedExercises = Array.from(exerciseMap.values()).filter(ex => 
+            const mergedExercises = Array.from(exerciseMap.values()).filter(ex =>
               newExerciseIds.has(ex.id)
             );
-            
+
             // Always use merged exercises (which includes existing ones, no duplicates)
             return {
               ...prev,
