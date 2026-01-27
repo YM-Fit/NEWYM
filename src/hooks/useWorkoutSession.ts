@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 
 interface Exercise {
   id: string;
@@ -51,6 +51,30 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
   const [exercises, setExercises] = useState<WorkoutExercise[]>(options.initialExercises || []);
   const [minimizedExercises, setMinimizedExercises] = useState<string[]>([]);
   const [collapsedSets, setCollapsedSets] = useState<string[]>([]);
+  
+  // Track if initialExercises have been loaded to prevent re-initialization
+  const initializedRef = useRef(false);
+  
+  // Update exercises when initialExercises change (e.g., when returning to an existing workout)
+  // This is important because useState only initializes once
+  useEffect(() => {
+    if (options.initialExercises && options.initialExercises.length > 0) {
+      // Only update if the initial exercises are different from current
+      // Compare by checking if exercise IDs are different
+      const currentIds = exercises.map(e => e.exercise.id).sort().join(',');
+      const newIds = options.initialExercises.map(e => e.exercise.id).sort().join(',');
+      
+      if (currentIds !== newIds || !initializedRef.current) {
+        console.log('[useWorkoutSession] Updating exercises from initialExercises', {
+          current: exercises.length,
+          new: options.initialExercises.length,
+          initialized: initializedRef.current
+        });
+        setExercises(options.initialExercises);
+        initializedRef.current = true;
+      }
+    }
+  }, [options.initialExercises]);
 
   const createEmptySet = (setNumber: number): SetData => ({
     id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${setNumber}`,

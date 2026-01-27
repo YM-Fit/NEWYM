@@ -98,7 +98,7 @@ export function useCurrentTvSession(
   const [logs, setLogs] = useState<TvStatusLog[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
-  const pollIntervalMs = options.pollIntervalMs ?? 5000;
+  const pollIntervalMs = options.pollIntervalMs ?? 1500; // 1.5 seconds for faster TV updates
 
   const workoutChannelRef = useRef<RealtimeChannel | null>(null);
   const sessionRef = useRef<TvSessionState | null>(null);
@@ -626,8 +626,8 @@ export function useCurrentTvSession(
     fetchCurrentSession();
 
     // Polling interval - more frequent polling for TV display to ensure real-time updates
-    // Poll every 5 seconds to ensure immediate updates even if realtime fails
-    intervalId = window.setInterval(fetchCurrentSession, Math.max(pollIntervalMs || 5000, 5000));
+    // Poll every 1.5 seconds for faster updates
+    intervalId = window.setInterval(fetchCurrentSession, pollIntervalMs || 1500);
 
     return () => {
       isMounted = false;
