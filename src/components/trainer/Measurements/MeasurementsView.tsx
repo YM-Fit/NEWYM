@@ -148,7 +148,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
             {onBack && (
               <button
                 onClick={onBack}
-                className="p-3 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
+                className="p-3 rounded-xl bg-surface text-muted hover:text-foreground hover:bg-elevated/50 transition-all"
               >
                 <ArrowRight className="h-5 w-5" />
               </button>
@@ -158,8 +158,8 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                 <Sparkles className="w-4 h-4 text-emerald-400" />
                 <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">מדידות</span>
               </div>
-              <h1 className="text-2xl font-bold text-white">{trainee.name}</h1>
-              <p className="text-zinc-500">מעקב אחר התקדמות ושינויים בהרכב הגוף</p>
+              <h1 className="text-2xl font-bold text-foreground">{trainee.name}</h1>
+              <p className="text-muted">מעקב אחר התקדמות ושינויים בהרכב הגוף</p>
             </div>
           </div>
 
@@ -180,92 +180,92 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
         <div className="premium-card-static p-6">
           <div className="flex items-center gap-2 mb-4">
             <Calculator className="h-5 w-5 text-cyan-400" />
-            <h3 className="text-lg font-semibold text-white">סטטיסטיקות</h3>
+            <h3 className="text-lg font-semibold text-foreground">סטטיסטיקות</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {statistics.weight && (
-              <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700/50">
-                <p className="text-sm text-gray-400 mb-3">משקל</p>
+              <div className="p-4 rounded-xl bg-surface800/50 border border-border700/50">
+                <p className="text-sm text-muted400 mb-3">משקל</p>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">ממוצע:</span>
-                    <span className="font-semibold text-white">{statistics.weight.avg.toFixed(1)} ק״ג</span>
+                    <span className="text-muted500">ממוצע:</span>
+                    <span className="font-semibold text-foreground">{statistics.weight.avg.toFixed(1)} ק״ג</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">מינימום:</span>
-                    <span className="font-semibold text-white">{statistics.weight.min.toFixed(1)} ק״ג</span>
+                    <span className="text-muted500">מינימום:</span>
+                    <span className="font-semibold text-foreground">{statistics.weight.min.toFixed(1)} ק״ג</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">מקסימום:</span>
-                    <span className="font-semibold text-white">{statistics.weight.max.toFixed(1)} ק״ג</span>
+                    <span className="text-muted500">מקסימום:</span>
+                    <span className="font-semibold text-foreground">{statistics.weight.max.toFixed(1)} ק״ג</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">סטיית תקן:</span>
-                    <span className="font-semibold text-white">{statistics.weight.stdDev.toFixed(2)} ק״ג</span>
+                    <span className="text-muted500">סטיית תקן:</span>
+                    <span className="font-semibold text-foreground">{statistics.weight.stdDev.toFixed(2)} ק״ג</span>
                   </div>
                 </div>
               </div>
             )}
             {statistics.bodyFat && (
-              <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700/50">
-                <p className="text-sm text-gray-400 mb-3">אחוז שומן</p>
+              <div className="p-4 rounded-xl bg-surface800/50 border border-border700/50">
+                <p className="text-sm text-muted400 mb-3">אחוז שומן</p>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">ממוצע:</span>
-                    <span className="font-semibold text-white">{statistics.bodyFat.avg.toFixed(1)}%</span>
+                    <span className="text-muted500">ממוצע:</span>
+                    <span className="font-semibold text-foreground">{statistics.bodyFat.avg.toFixed(1)}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">מינימום:</span>
-                    <span className="font-semibold text-white">{statistics.bodyFat.min.toFixed(1)}%</span>
+                    <span className="text-muted500">מינימום:</span>
+                    <span className="font-semibold text-foreground">{statistics.bodyFat.min.toFixed(1)}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">מקסימום:</span>
-                    <span className="font-semibold text-white">{statistics.bodyFat.max.toFixed(1)}%</span>
+                    <span className="text-muted500">מקסימום:</span>
+                    <span className="font-semibold text-foreground">{statistics.bodyFat.max.toFixed(1)}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">סטיית תקן:</span>
-                    <span className="font-semibold text-white">{statistics.bodyFat.stdDev.toFixed(2)}%</span>
+                    <span className="text-muted500">סטיית תקן:</span>
+                    <span className="font-semibold text-foreground">{statistics.bodyFat.stdDev.toFixed(2)}%</span>
                   </div>
                 </div>
               </div>
             )}
             {statistics.muscleMass && (
-              <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700/50">
-                <p className="text-sm text-gray-400 mb-3">מסת שריר</p>
+              <div className="p-4 rounded-xl bg-surface800/50 border border-border700/50">
+                <p className="text-sm text-muted400 mb-3">מסת שריר</p>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">ממוצע:</span>
-                    <span className="font-semibold text-white">{statistics.muscleMass.avg.toFixed(1)} ק״ג</span>
+                    <span className="text-muted500">ממוצע:</span>
+                    <span className="font-semibold text-foreground">{statistics.muscleMass.avg.toFixed(1)} ק״ג</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">מינימום:</span>
-                    <span className="font-semibold text-white">{statistics.muscleMass.min.toFixed(1)} ק״ג</span>
+                    <span className="text-muted500">מינימום:</span>
+                    <span className="font-semibold text-foreground">{statistics.muscleMass.min.toFixed(1)} ק״ג</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">מקסימום:</span>
-                    <span className="font-semibold text-white">{statistics.muscleMass.max.toFixed(1)} ק״ג</span>
+                    <span className="text-muted500">מקסימום:</span>
+                    <span className="font-semibold text-foreground">{statistics.muscleMass.max.toFixed(1)} ק״ג</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">סטיית תקן:</span>
-                    <span className="font-semibold text-white">{statistics.muscleMass.stdDev.toFixed(2)} ק״ג</span>
+                    <span className="text-muted500">סטיית תקן:</span>
+                    <span className="font-semibold text-foreground">{statistics.muscleMass.stdDev.toFixed(2)} ק״ג</span>
                   </div>
                 </div>
               </div>
             )}
           </div>
           {trend && (
-            <div className="mt-4 pt-4 border-t border-gray-700/50">
+            <div className="mt-4 pt-4 border-t border-border700/50">
               <div className="flex items-center gap-3">
                 {trend.type === 'up' ? (
                   <TrendingUp className="h-5 w-5 text-red-400" />
                 ) : trend.type === 'down' ? (
                   <TrendingDown className="h-5 w-5 text-emerald-400" />
                 ) : (
-                  <Minus className="h-5 w-5 text-gray-400" />
+                  <Minus className="h-5 w-5 text-muted400" />
                 )}
                 <div>
-                  <p className="text-sm text-gray-400">מגמה כוללת</p>
-                  <p className="font-semibold text-white">
+                  <p className="text-sm text-muted400">מגמה כוללת</p>
+                  <p className="font-semibold text-foreground">
                     {trend.type === 'up' ? 'עלייה' : trend.type === 'down' ? 'ירידה' : 'יציב'} -{' '}
                     {trend.totalChange > 0 ? '+' : ''}{trend.totalChange.toFixed(1)} ק״ג
                     {' '}({trend.changePerWeek > 0 ? '+' : ''}{trend.changePerWeek.toFixed(2)} ק״ג לשבוע)
@@ -279,21 +279,21 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
 
       {trainee.isPair && (
         <div className="premium-card-static p-5">
-          <h3 className="text-sm font-medium text-zinc-400 mb-4">הצג מדידות עבור:</h3>
+          <h3 className="text-sm font-medium text-muted mb-4">הצג מדידות עבור:</h3>
           <div className="grid grid-cols-3 gap-3">
             <button
               onClick={() => setSelectedMember('all')}
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'all'
                   ? 'border-emerald-500/50 bg-emerald-500/10'
-                  : 'border-zinc-700/50 bg-zinc-800/30 hover:border-zinc-600/50'
+                  : 'border-border bg-surface/30 hover:border-border-hover'
               }`}
             >
               <User className={`h-6 w-6 mx-auto mb-2 ${
-                selectedMember === 'all' ? 'text-emerald-400' : 'text-zinc-500'
+                selectedMember === 'all' ? 'text-emerald-400' : 'text-muted'
               }`} />
               <p className={`text-sm font-semibold text-center ${
-                selectedMember === 'all' ? 'text-emerald-400' : 'text-zinc-400'
+                selectedMember === 'all' ? 'text-emerald-400' : 'text-muted'
               }`}>{trainee.pairName1} + {trainee.pairName2}</p>
             </button>
             <button
@@ -301,14 +301,14 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'member_1'
                   ? 'border-cyan-500/50 bg-cyan-500/10'
-                  : 'border-zinc-700/50 bg-zinc-800/30 hover:border-zinc-600/50'
+                  : 'border-border bg-surface/30 hover:border-border-hover'
               }`}
             >
               <User className={`h-6 w-6 mx-auto mb-2 ${
-                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-zinc-500'
+                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-muted'
               }`} />
               <p className={`text-sm font-semibold text-center ${
-                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-zinc-400'
+                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-muted'
               }`}>{trainee.pairName1}</p>
             </button>
             <button
@@ -316,14 +316,14 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'member_2'
                   ? 'border-amber-500/50 bg-amber-500/10'
-                  : 'border-zinc-700/50 bg-zinc-800/30 hover:border-zinc-600/50'
+                  : 'border-border bg-surface/30 hover:border-border-hover'
               }`}
             >
               <User className={`h-6 w-6 mx-auto mb-2 ${
-                selectedMember === 'member_2' ? 'text-amber-400' : 'text-zinc-500'
+                selectedMember === 'member_2' ? 'text-amber-400' : 'text-muted'
               }`} />
               <p className={`text-sm font-semibold text-center ${
-                selectedMember === 'member_2' ? 'text-amber-400' : 'text-zinc-400'
+                selectedMember === 'member_2' ? 'text-amber-400' : 'text-muted'
               }`}>{trainee.pairName2}</p>
             </button>
           </div>
@@ -340,16 +340,16 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
             const colors = colorConfig[color];
 
             return (
-              <div key={key} className="premium-card-static p-5 group hover:border-zinc-600/50 transition-all">
+              <div key={key} className="premium-card-static p-5 group hover:border-border-hover transition-all">
                 <div className="flex items-start justify-between mb-3">
                   <div className={`p-2.5 rounded-xl ${colors.bg} ${colors.border} border`}>
                     <Icon className={`h-5 w-5 ${colors.text}`} />
                   </div>
                 </div>
-                <p className="text-sm text-zinc-500 mb-1">{label}</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-sm text-muted mb-1">{label}</p>
+                <p className="text-2xl font-bold text-foreground">
                   {current ? `${current.toFixed(1)}` : '-'}
-                  <span className="text-sm font-normal text-zinc-500 mr-1">{current ? unit : ''}</span>
+                  <span className="text-sm font-normal text-muted mr-1">{current ? unit : ''}</span>
                 </p>
                 {change && (
                   <div className={`flex items-center mt-2 text-xs ${
@@ -362,7 +362,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                     )}
                     {change > 0 ? '+' : ''}{change.toFixed(1)} {unit}
                     {changePercentage && key !== 'metabolicAge' && (
-                      <span className="mr-1 text-zinc-500">
+                      <span className="mr-1 text-muted">
                         ({changePercentage > 0 ? '+' : ''}{changePercentage.toFixed(1)}%)
                       </span>
                     )}
@@ -375,9 +375,9 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
       )}
 
       <div className="premium-card-static overflow-hidden">
-        <div className="p-5 border-b border-zinc-800/50">
+        <div className="p-5 border-b border-border/50">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h3 className="text-lg font-semibold text-white">גרף התקדמות</h3>
+            <h3 className="text-lg font-semibold text-foreground">גרף התקדמות</h3>
             <div className="flex flex-wrap gap-2">
               {metrics.map(({ key, label }) => (
                 <button
@@ -386,7 +386,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                     selectedMetric === key
                       ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                      : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:text-white hover:border-zinc-600/50'
+                      : 'bg-surface text-muted border border-border hover:text-foreground hover:border-border-hover'
                   }`}
                 >
                   {label}
@@ -405,14 +405,14 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
       </div>
 
       <div className="premium-card-static overflow-hidden">
-        <div className="p-5 border-b border-zinc-800/50">
+        <div className="p-5 border-b border-border/50">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">היסטוריית מדידות</h3>
-            <div className="flex gap-1 bg-zinc-800/50 p-1 rounded-xl border border-zinc-700/50">
+            <h3 className="text-lg font-semibold text-foreground">היסטוריית מדידות</h3>
+            <div className="flex gap-1 bg-surface p-1 rounded-xl border border-border">
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded-lg transition-all ${
-                  viewMode === 'list' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+                  viewMode === 'list' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
                 }`}
                 title="תצוגת רשימה"
               >
@@ -421,7 +421,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
               <button
                 onClick={() => setViewMode('table')}
                 className={`p-2 rounded-lg transition-all ${
-                  viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+                  viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
                 }`}
                 title="תצוגת טבלה"
               >
@@ -435,14 +435,14 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
             viewMode === 'list' ? (
               <div className="space-y-3">
                 {filteredMeasurements.map((measurement) => (
-                  <div key={measurement.id} className="bg-zinc-800/30 border border-zinc-700/50 rounded-xl p-4 hover:border-zinc-600/50 transition-all">
+                  <div key={measurement.id} className="bg-surface/30 border border-border rounded-xl p-4 hover:border-border-hover transition-all">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
                           <Scale className="h-5 w-5 text-emerald-400" />
                         </div>
                         <div>
-                          <p className="font-medium text-white flex items-center gap-2">
+                          <p className="font-medium text-foreground flex items-center gap-2">
                             {new Date(measurement.date).toLocaleDateString('he-IL')}
                             {trainee.isPair && measurement.pairMember && (
                               <span className={`text-xs px-2 py-0.5 rounded-full ${
@@ -454,7 +454,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                               </span>
                             )}
                           </p>
-                          <p className="text-sm text-zinc-500">
+                          <p className="text-sm text-muted">
                             {measurement.source === 'tanita' ? 'Tanita' : 'מדידה ידנית'}
                           </p>
                         </div>
@@ -481,31 +481,31 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
-                        <span className="text-zinc-500">משקל:</span>
-                        <span className="font-medium text-white mr-2">{measurement.weight} ק״ג</span>
+                        <span className="text-muted">משקל:</span>
+                        <span className="font-medium text-foreground mr-2">{measurement.weight} ק״ג</span>
                       </div>
                       {measurement.bodyFat && (
                         <div>
-                          <span className="text-zinc-500">אחוז שומן:</span>
-                          <span className="font-medium text-white mr-2">{measurement.bodyFat.toFixed(1)}%</span>
+                          <span className="text-muted">אחוז שומן:</span>
+                          <span className="font-medium text-foreground mr-2">{measurement.bodyFat.toFixed(1)}%</span>
                         </div>
                       )}
                       {measurement.muscleMass && (
                         <div>
-                          <span className="text-zinc-500">מסת שריר:</span>
-                          <span className="font-medium text-white mr-2">{measurement.muscleMass.toFixed(1)} ק״ג</span>
+                          <span className="text-muted">מסת שריר:</span>
+                          <span className="font-medium text-foreground mr-2">{measurement.muscleMass.toFixed(1)} ק״ג</span>
                         </div>
                       )}
                       <div>
-                        <span className="text-zinc-500">BMI:</span>
-                        <span className="font-medium text-white mr-2">{measurement.bmi}</span>
+                        <span className="text-muted">BMI:</span>
+                        <span className="font-medium text-foreground mr-2">{measurement.bmi}</span>
                       </div>
                     </div>
 
                     {measurement.measurements && (measurement.measurements.chestBack || measurement.measurements.belly || measurement.measurements.glutes || measurement.measurements.thigh || measurement.measurements.rightArm || measurement.measurements.leftArm) && (
-                      <div className="mt-3 pt-3 border-t border-zinc-700/50">
-                        <p className="text-sm text-zinc-500 mb-2">היקפים (ס״מ):</p>
-                        <div className="grid grid-cols-2 md:grid-cols-6 gap-2 text-sm text-zinc-300">
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <p className="text-sm text-muted mb-2">היקפים (ס״מ):</p>
+                        <div className="grid grid-cols-2 md:grid-cols-6 gap-2 text-sm text-foreground">
                           {measurement.measurements.chestBack > 0 && (
                             <span>חזה/גב: {measurement.measurements.chestBack}</span>
                           )}
@@ -529,9 +529,9 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                     )}
 
                     {measurement.notes && (
-                      <div className="mt-3 pt-3 border-t border-zinc-700/50">
-                        <p className="text-sm text-zinc-500 mb-1">הערות:</p>
-                        <p className="text-sm text-zinc-300">{measurement.notes}</p>
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <p className="text-sm text-muted mb-1">הערות:</p>
+                        <p className="text-sm text-foreground">{measurement.notes}</p>
                       </div>
                     )}
                   </div>
@@ -541,25 +541,25 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[800px]">
                   <thead>
-                    <tr className="border-b border-zinc-700/50">
-                      <th className="text-right py-3 px-3 text-sm font-semibold text-zinc-400">תאריך</th>
-                      <th className="text-center py-3 px-3 text-sm font-semibold text-zinc-400">משקל</th>
-                      <th className="text-center py-3 px-3 text-sm font-semibold text-zinc-400">% שומן</th>
-                      <th className="text-center py-3 px-3 text-sm font-semibold text-zinc-400">מסת שריר</th>
-                      <th className="text-center py-3 px-3 text-sm font-semibold text-zinc-400">% מים</th>
-                      <th className="text-center py-3 px-3 text-sm font-semibold text-zinc-400">BMI</th>
-                      <th className="text-center py-3 px-3 text-sm font-semibold text-zinc-400">גיל מטבולי</th>
-                      <th className="text-center py-3 px-3 text-sm font-semibold text-zinc-400">פעולות</th>
+                    <tr className="border-b border-border">
+                      <th className="text-right py-3 px-3 text-sm font-semibold text-muted">תאריך</th>
+                      <th className="text-center py-3 px-3 text-sm font-semibold text-muted">משקל</th>
+                      <th className="text-center py-3 px-3 text-sm font-semibold text-muted">% שומן</th>
+                      <th className="text-center py-3 px-3 text-sm font-semibold text-muted">מסת שריר</th>
+                      <th className="text-center py-3 px-3 text-sm font-semibold text-muted">% מים</th>
+                      <th className="text-center py-3 px-3 text-sm font-semibold text-muted">BMI</th>
+                      <th className="text-center py-3 px-3 text-sm font-semibold text-muted">גיל מטבולי</th>
+                      <th className="text-center py-3 px-3 text-sm font-semibold text-muted">פעולות</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredMeasurements.map((measurement, index) => {
                       const prevMeasurement = filteredMeasurements[index + 1];
                       return (
-                        <tr key={measurement.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-all">
+                        <tr key={measurement.id} className="border-b border-border/50 hover:bg-surface/30 transition-all">
                           <td className="py-3 px-3">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-white">
+                              <span className="font-medium text-foreground">
                                 {new Date(measurement.date).toLocaleDateString('he-IL')}
                               </span>
                               {trainee.isPair && measurement.pairMember && (
@@ -575,33 +575,33 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                           </td>
                           <td className="py-3 px-3 text-center">
                             <div className="flex flex-col items-center">
-                              <span className="font-semibold text-white">{measurement.weight}</span>
+                              <span className="font-semibold text-foreground">{measurement.weight}</span>
                               {prevMeasurement && getChangeIndicator(measurement.weight, prevMeasurement.weight, false)}
                             </div>
                           </td>
                           <td className="py-3 px-3 text-center">
                             <div className="flex flex-col items-center">
-                              <span className="font-semibold text-white">{measurement.bodyFat?.toFixed(1) || '-'}</span>
+                              <span className="font-semibold text-foreground">{measurement.bodyFat?.toFixed(1) || '-'}</span>
                               {measurement.bodyFat && prevMeasurement?.bodyFat && getChangeIndicator(measurement.bodyFat, prevMeasurement.bodyFat, true)}
                             </div>
                           </td>
                           <td className="py-3 px-3 text-center">
                             <div className="flex flex-col items-center">
-                              <span className="font-semibold text-white">{measurement.muscleMass?.toFixed(1) || '-'}</span>
+                              <span className="font-semibold text-foreground">{measurement.muscleMass?.toFixed(1) || '-'}</span>
                               {measurement.muscleMass && prevMeasurement?.muscleMass && getChangeIndicator(measurement.muscleMass, prevMeasurement.muscleMass, false)}
                             </div>
                           </td>
                           <td className="py-3 px-3 text-center">
                             <div className="flex flex-col items-center">
-                              <span className="font-semibold text-white">{measurement.waterPercentage?.toFixed(1) || '-'}</span>
+                              <span className="font-semibold text-foreground">{measurement.waterPercentage?.toFixed(1) || '-'}</span>
                             </div>
                           </td>
                           <td className="py-3 px-3 text-center">
-                            <span className="font-semibold text-white">{measurement.bmi || '-'}</span>
+                            <span className="font-semibold text-foreground">{measurement.bmi || '-'}</span>
                           </td>
                           <td className="py-3 px-3 text-center">
                             <div className="flex flex-col items-center">
-                              <span className="font-semibold text-white">{measurement.metabolicAge || '-'}</span>
+                              <span className="font-semibold text-foreground">{measurement.metabolicAge || '-'}</span>
                               {measurement.metabolicAge && prevMeasurement?.metabolicAge && getChangeIndicator(measurement.metabolicAge, prevMeasurement.metabolicAge, true)}
                             </div>
                           </td>
@@ -632,11 +632,11 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
             )
           ) : (
             <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-zinc-800/50 flex items-center justify-center">
-                <Scale className="h-8 w-8 text-zinc-500" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-surface flex items-center justify-center">
+                <Scale className="h-8 w-8 text-muted" />
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">אין מדידות עדיין</h3>
-              <p className="text-zinc-500 mb-6">התחל במדידה הראשונה כדי לעקוב אחר ההתקדמות</p>
+              <h3 className="text-lg font-medium text-foreground mb-2">אין מדידות עדיין</h3>
+              <p className="text-muted mb-6">התחל במדידה הראשונה כדי לעקוב אחר ההתקדמות</p>
               <button
                 onClick={onNewMeasurement}
                 className="btn-primary px-6 py-3 rounded-xl font-medium"

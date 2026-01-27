@@ -225,13 +225,13 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
             <FileText className="h-6 w-6 text-blue-400" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">דוחות משקל</h3>
-            <p className="text-sm text-gray-400">סיכום תקופתי</p>
+            <h3 className="text-lg font-bold text-foreground">דוחות משקל</h3>
+            <p className="text-sm text-muted400">סיכום תקופתי</p>
           </div>
         </div>
         <button
           onClick={exportToCSV}
-          className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold flex items-center gap-2 transition-all hover:scale-105"
+          className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-foreground font-semibold flex items-center gap-2 transition-all hover:scale-105"
         >
           <Download className="h-4 w-4" />
           ייצא ל-CSV
@@ -243,7 +243,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
         <select
           value={selectedPeriod}
           onChange={(e) => setSelectedPeriod(e.target.value as any)}
-          className="px-4 py-2 rounded-xl bg-gray-800/50 border border-gray-700/50 text-white text-sm focus:ring-2 focus:ring-teal-500/50"
+          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-foreground text-sm focus:ring-2 focus:ring-teal-500/50"
         >
           <option value="week">שבוע</option>
           <option value="month">חודש</option>
@@ -254,14 +254,14 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
           type="date"
           value={selectedDate.toISOString().split('T')[0]}
           onChange={(e) => setSelectedDate(new Date(e.target.value))}
-          className="px-4 py-2 rounded-xl bg-gray-800/50 border border-gray-700/50 text-white text-sm focus:ring-2 focus:ring-teal-500/50"
+          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-foreground text-sm focus:ring-2 focus:ring-teal-500/50"
         />
       </div>
 
       {reports.length === 0 ? (
         <div className="text-center py-12">
-          <FileText className="h-16 w-16 mx-auto text-gray-600 mb-4" />
-          <p className="text-gray-400 font-medium">אין נתונים לתקופה זו</p>
+          <FileText className="h-16 w-16 mx-auto text-muted600 mb-4" />
+          <p className="text-muted400 font-medium">אין נתונים לתקופה זו</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -273,21 +273,21 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
                   ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-teal-500/5'
                   : report.trend === 'up'
                   ? 'border-red-500/30 bg-gradient-to-br from-red-500/5 to-orange-500/5'
-                  : 'border-gray-500/30 bg-gray-800/30'
+                  : 'border-border500/30 bg-surface800/30'
               }`}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <Users className="h-5 w-5 text-gray-400" />
-                    <h4 className="font-bold text-white text-lg">{report.trainee_name}</h4>
+                    <Users className="h-5 w-5 text-muted400" />
+                    <h4 className="font-bold text-foreground text-lg">{report.trainee_name}</h4>
                     {report.trend === 'down' ? (
                       <TrendingDown className="h-5 w-5 text-emerald-400" />
                     ) : report.trend === 'up' ? (
                       <TrendingUp className="h-5 w-5 text-red-400" />
                     ) : null}
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-gray-400">
+                  <div className="flex items-center gap-4 text-sm text-muted400">
                     <span>
                       {new Date(report.period_start).toLocaleDateString('he-IL')} -{' '}
                       {new Date(report.period_end).toLocaleDateString('he-IL')}
@@ -296,11 +296,11 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
                 </div>
                 <div className="text-left">
                   <p className={`text-2xl font-bold ${
-                    report.change < 0 ? 'text-emerald-400' : report.change > 0 ? 'text-red-400' : 'text-gray-400'
+                    report.change < 0 ? 'text-emerald-400' : report.change > 0 ? 'text-red-400' : 'text-muted400'
                   }`}>
                     {report.change > 0 ? '+' : ''}{report.change.toFixed(1)} ק״ג
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted500">
                     {report.change_percentage > 0 ? '+' : ''}{report.change_percentage.toFixed(2)}%
                   </p>
                 </div>
@@ -308,26 +308,26 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
-                  <p className="text-gray-500 mb-1">התחלה</p>
-                  <p className="font-semibold text-white">{report.start_weight.toFixed(1)} ק״ג</p>
+                  <p className="text-muted500 mb-1">התחלה</p>
+                  <p className="font-semibold text-foreground">{report.start_weight.toFixed(1)} ק״ג</p>
                 </div>
                 <div>
-                  <p className="text-gray-500 mb-1">סיום</p>
-                  <p className="font-semibold text-white">{report.end_weight.toFixed(1)} ק״ג</p>
+                  <p className="text-muted500 mb-1">סיום</p>
+                  <p className="font-semibold text-foreground">{report.end_weight.toFixed(1)} ק״ג</p>
                 </div>
                 <div>
-                  <p className="text-gray-500 mb-1">ממוצע</p>
-                  <p className="font-semibold text-white">{report.average_weight.toFixed(1)} ק״ג</p>
+                  <p className="text-muted500 mb-1">ממוצע</p>
+                  <p className="font-semibold text-foreground">{report.average_weight.toFixed(1)} ק״ג</p>
                 </div>
                 <div>
-                  <p className="text-gray-500 mb-1">טווח</p>
-                  <p className="font-semibold text-white">
+                  <p className="text-muted500 mb-1">טווח</p>
+                  <p className="font-semibold text-foreground">
                     {report.min_weight.toFixed(1)} - {report.max_weight.toFixed(1)} ק״ג
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-gray-700/50 flex items-center justify-between text-xs text-gray-500">
+              <div className="mt-4 pt-4 border-t border-border700/50 flex items-center justify-between text-xs text-muted500">
                 <span>{report.measurements_count} מדידות</span>
                 <span>{report.self_weights_count} שקילות מהבית</span>
               </div>

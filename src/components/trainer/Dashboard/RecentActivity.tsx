@@ -157,32 +157,32 @@ export default function RecentActivity() {
         };
       case 'measurement':
         return {
-          bg: 'bg-emerald-500/15',
-          text: 'text-emerald-400',
-          border: 'border-emerald-500/20',
+          bg: 'bg-emerald-700/15',
+          text: 'text-emerald-600',
+          border: 'border-emerald-700/20',
         };
       default:
         return {
-          bg: 'bg-zinc-500/15',
-          text: 'text-zinc-400',
-          border: 'border-zinc-500/20',
+          bg: 'bg-muted/15',
+          text: 'text-muted',
+          border: 'border-border/20',
         };
     }
   };
 
   return (
     <div className="premium-card-static h-full">
-      <div className="p-5 border-b border-zinc-800/50">
+      <div className="p-5 border-b border-border/10">
         <div className="flex items-center gap-2">
-          <Activity className="h-4 w-4 text-emerald-400" />
-          <h3 className="text-base font-semibold text-white">פעילות אחרונה</h3>
+          <Activity className="h-4 w-4 text-primary" />
+          <h3 className="text-base font-semibold text-foreground">פעילות אחרונה</h3>
         </div>
       </div>
       <div className="p-5">
         {loading ? (
           <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-zinc-800/30">
+              <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-surface/50">
                 <Skeleton variant="rounded" width={40} height={40} />
                 <div className="flex-1 space-y-2">
                   <Skeleton variant="text" height={16} width="60%" />
@@ -205,17 +205,17 @@ export default function RecentActivity() {
               return (
                 <div
                   key={activity.id}
-                  className="flex items-start gap-3 p-3 rounded-xl bg-zinc-800/30 border border-zinc-800/50 hover:border-zinc-700/50 transition-all animate-fade-in"
+                  className="flex items-start gap-3 p-3 rounded-xl bg-surface/50 border border-border/10 hover:border-border-hover/30 transition-all duration-250 animate-fade-in"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className={`p-2.5 rounded-xl ${config.bg} ${config.text}`}>
                     {getIcon(activity.type)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white">{activity.trainee}</p>
-                    <p className="text-sm text-zinc-400 mt-0.5">{activity.description}</p>
+                    <p className="text-sm font-medium text-foreground">{activity.trainee}</p>
+                    <p className="text-sm text-secondary mt-0.5">{activity.description}</p>
                   </div>
-                  <span className="text-xs text-zinc-600 whitespace-nowrap">{activity.time}</span>
+                  <span className="text-xs text-muted whitespace-nowrap">{activity.time}</span>
                 </div>
               );
             })}

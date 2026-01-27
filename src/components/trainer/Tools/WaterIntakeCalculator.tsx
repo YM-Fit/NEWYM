@@ -45,14 +45,14 @@ export default function WaterIntakeCalculator({
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-cyan-500 p-6 rounded-t-2xl flex items-center justify-between">
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
             <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <Droplets className="h-7 w-7 text-white" />
+              <Droplets className="h-7 w-7 text-foreground" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">מחשבון צריכת מים</h2>
+              <h2 className="text-2xl font-bold text-foreground">מחשבון צריכת מים</h2>
               <p className="text-sm text-cyan-100">כמה מים לשתות ביום?</p>
             </div>
           </div>
@@ -60,27 +60,27 @@ export default function WaterIntakeCalculator({
             onClick={onClose}
             className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all"
           >
-            <X className="h-6 w-6 text-white" />
+            <X className="h-6 w-6 text-foreground" />
           </button>
         </div>
 
         <div className="p-6 space-y-6">
-          <div className="bg-zinc-800/50 rounded-2xl p-6 border border-zinc-700/50">
+          <div className="bg-surface rounded-2xl p-6 border border-border">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 bg-cyan-500 rounded-xl flex items-center justify-center">
-                <Activity className="w-5 h-5 text-white" />
+                <Activity className="w-5 h-5 text-foreground" />
               </div>
-              <h3 className="text-lg font-bold text-white">הפרטים שלך</h3>
+              <h3 className="text-lg font-bold text-foreground">הפרטים שלך</h3>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-zinc-300 mb-2">משקל (ק"ג)</label>
+                <label className="block text-sm font-semibold text-foreground mb-2">משקל (ק"ג)</label>
                 <input
                   type="number"
                   value={weight}
                   onChange={(e) => setWeight(Number(e.target.value))}
-                  className="w-full px-4 py-3 text-lg font-bold text-center border border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all bg-zinc-800/50 text-white"
+                  className="w-full px-4 py-3 text-lg font-bold text-center border border-border rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all bg-surface text-foreground"
                   min="30"
                   max="200"
                   step="0.5"
@@ -88,11 +88,11 @@ export default function WaterIntakeCalculator({
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-zinc-300 mb-2">רמת פעילות</label>
+                <label className="block text-sm font-semibold text-foreground mb-2">רמת פעילות</label>
                 <select
                   value={activityLevel}
                   onChange={(e) => setActivityLevel(e.target.value as any)}
-                  className="w-full px-4 py-3 text-lg font-bold border border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all bg-zinc-800/50 text-white"
+                  className="w-full px-4 py-3 text-lg font-bold border border-border rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all bg-surface text-foreground"
                 >
                   {Object.entries(activityMultipliers).map(([key, { label, description }]) => (
                     <option key={key} value={key}>
@@ -103,7 +103,7 @@ export default function WaterIntakeCalculator({
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-zinc-300 mb-2">אקלים</label>
+                <label className="block text-sm font-semibold text-foreground mb-2">אקלים</label>
                 <div className="flex gap-3">
                   {Object.entries(climateMultipliers).map(([key, { label, icon }]) => (
                     <button
@@ -111,8 +111,8 @@ export default function WaterIntakeCalculator({
                       onClick={() => setClimate(key as any)}
                       className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
                         climate === key
-                          ? 'bg-cyan-500 text-white'
-                          : 'bg-zinc-800 border border-zinc-700/50 text-zinc-300 hover:bg-zinc-700'
+                          ? 'bg-cyan-500 text-foreground'
+                          : 'bg-surface border border-border text-foreground hover:bg-elevated'
                       }`}
                     >
                       <span className="text-xl">{icon}</span>
@@ -128,42 +128,42 @@ export default function WaterIntakeCalculator({
             <div className="bg-cyan-500 rounded-2xl p-6 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Droplets className="w-4 h-4 text-white" />
+                  <Droplets className="w-4 h-4 text-foreground" />
                 </div>
-                <p className="text-sm font-bold text-white/90">ליטרים ליום</p>
+                <p className="text-sm font-bold text-foreground/90">ליטרים ליום</p>
               </div>
-              <p className="text-5xl font-bold text-white">{totalWater.toFixed(1)}</p>
-              <p className="text-lg text-white/80 mt-2 font-medium">ליטר</p>
+              <p className="text-5xl font-bold text-foreground">{totalWater.toFixed(1)}</p>
+              <p className="text-lg text-foreground/80 mt-2 font-medium">ליטר</p>
             </div>
 
             <div className="bg-emerald-500 rounded-2xl p-6 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Sun className="w-4 h-4 text-white" />
+                  <Sun className="w-4 h-4 text-foreground" />
                 </div>
-                <p className="text-sm font-bold text-white/90">כוסות ליום</p>
+                <p className="text-sm font-bold text-foreground/90">כוסות ליום</p>
               </div>
-              <p className="text-5xl font-bold text-white">{glasses}</p>
-              <p className="text-lg text-white/80 mt-2 font-medium">כוסות (250 מ"ל)</p>
+              <p className="text-5xl font-bold text-foreground">{glasses}</p>
+              <p className="text-lg text-foreground/80 mt-2 font-medium">כוסות (250 מ"ל)</p>
             </div>
           </div>
 
           <div>
-            <h3 className="text-lg font-bold text-white mb-4">לוח זמנים מומלץ</h3>
-            <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl overflow-hidden">
+            <h3 className="text-lg font-bold text-foreground mb-4">לוח זמנים מומלץ</h3>
+            <div className="bg-surface border border-border rounded-2xl overflow-hidden">
               <table className="w-full">
-                <thead className="bg-zinc-800">
+                <thead className="bg-surface">
                   <tr>
-                    <th className="px-5 py-4 text-right text-sm font-bold text-zinc-300">זמן</th>
-                    <th className="px-5 py-4 text-center text-sm font-bold text-zinc-300">כמות</th>
-                    <th className="px-5 py-4 text-left text-sm font-bold text-zinc-300">הערה</th>
+                    <th className="px-5 py-4 text-right text-sm font-bold text-foreground">זמן</th>
+                    <th className="px-5 py-4 text-center text-sm font-bold text-foreground">כמות</th>
+                    <th className="px-5 py-4 text-left text-sm font-bold text-foreground">הערה</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-700/50">
                   {schedule.map((item, index) => (
                     <tr key={index} className="hover:bg-cyan-500/5 transition-all">
                       <td className="px-5 py-3">
-                        <span className="font-semibold text-white">{item.time}</span>
+                        <span className="font-semibold text-foreground">{item.time}</span>
                       </td>
                       <td className="px-5 py-3 text-center">
                         <span className="font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-lg">
@@ -171,7 +171,7 @@ export default function WaterIntakeCalculator({
                         </span>
                       </td>
                       <td className="px-5 py-3 text-left">
-                        <span className="text-zinc-400 text-sm">{item.note}</span>
+                        <span className="text-muted text-sm">{item.note}</span>
                       </td>
                     </tr>
                   ))}
@@ -183,11 +183,11 @@ export default function WaterIntakeCalculator({
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Info className="w-5 h-5 text-white" />
+                <Info className="w-5 h-5 text-foreground" />
               </div>
               <div>
                 <p className="font-bold text-amber-400 mb-1">טיפים</p>
-                <ul className="text-sm text-zinc-400 leading-relaxed space-y-1">
+                <ul className="text-sm text-muted leading-relaxed space-y-1">
                   <li>התחל את היום עם כוס מים</li>
                   <li>שתה לפני שאתה צמא - צמא מסמן התייבשות קלה</li>
                   <li>הוסף 500 מ"ל לכל שעת אימון</li>
@@ -198,10 +198,10 @@ export default function WaterIntakeCalculator({
           </div>
         </div>
 
-        <div className="sticky bottom-0 bg-zinc-900 border-t border-zinc-800 p-6 rounded-b-2xl">
+        <div className="sticky bottom-0 bg-card border-t border-border p-6 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all"
+            className="w-full bg-cyan-500 hover:bg-cyan-600 text-foreground px-6 py-4 rounded-xl font-bold text-lg transition-all"
           >
             סגור
           </button>

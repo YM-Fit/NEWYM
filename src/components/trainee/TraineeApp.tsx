@@ -84,7 +84,7 @@ export default function TraineeApp() {
         <div className="mx-auto max-w-5xl flex justify-between items-center gap-3">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-400 to-teal-500 flex items-center justify-center shadow-glow animate-scale-bounce">
-              <span className="text-white font-bold text-lg md:text-xl">
+              <span className="text-foreground font-bold text-lg md:text-xl">
                 {trainee?.full_name?.charAt(0) || 'U'}
               </span>
             </div>
@@ -193,7 +193,7 @@ export default function TraineeApp() {
                   aria-label="התחל אימון חדש"
                   title="אימון חדש"
                 >
-                  <Plus className="w-7 h-7 text-white" aria-hidden="true" />
+                  <Plus className="w-7 h-7 text-foreground" aria-hidden="true" />
                 </button>
               </div>
 

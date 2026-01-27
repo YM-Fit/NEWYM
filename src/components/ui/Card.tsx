@@ -7,28 +7,30 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const variantStyles = {
-  default: 'bg-zinc-900 border border-zinc-800',
+  default: 'bg-card border border-border/10',
   glass: 'glass-card',
-  bordered: 'bg-transparent border-2 border-zinc-700',
+  bordered: 'bg-transparent border-2 border-border/20',
   premium: 'premium-card',
 };
 
 const paddingStyles = {
   none: '',
-  sm: 'p-3',
-  md: 'p-5',
-  lg: 'p-8',
+  sm: 'p-4',      // 16px - standardized
+  md: 'p-5',      // 20px - standardized
+  lg: 'p-6',      // 24px - standardized
 };
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ variant = 'default', padding = 'md', hover = false, className = '', children, ...props }, ref) => {
-    const hoverClass = hover && variant !== 'premium' ? 'transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:border-zinc-700' : '';
+    const hoverClass = hover && variant !== 'premium'
+      ? 'transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:border-border-hover/40'
+      : '';
     
     return (
       <div
         ref={ref}
         className={`
-          rounded-2xl shadow-xl
+          rounded-2xl shadow-lg
           ${variantStyles[variant]}
           ${paddingStyles[padding]}
           ${hoverClass}

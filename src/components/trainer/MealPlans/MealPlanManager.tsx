@@ -142,7 +142,7 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
           <div className="flex items-center gap-4">
             <button
               onClick={onBack}
-              className="p-3 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
+              className="p-3 rounded-xl bg-surface text-muted hover:text-foreground hover:bg-elevated/50 transition-all"
             >
               <ArrowRight className="h-5 w-5" />
             </button>
@@ -151,8 +151,8 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
                 <Sparkles className="w-4 h-4 text-amber-400" />
                 <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">תפריטים</span>
               </div>
-              <h1 className="text-2xl font-bold text-white">{traineeName}</h1>
-              <p className="text-zinc-500">ניהול תפריטי תזונה</p>
+              <h1 className="text-2xl font-bold text-foreground">{traineeName}</h1>
+              <p className="text-muted">ניהול תפריטי תזונה</p>
             </div>
           </div>
 
@@ -174,27 +174,27 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
                 <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30">
                   <UtensilsCrossed className="h-5 w-5 text-amber-400" />
                 </div>
-                <h2 className="text-xl font-bold text-white">תפריט חדש</h2>
+                <h2 className="text-xl font-bold text-foreground">תפריט חדש</h2>
               </div>
               <button
                 onClick={() => {
                   setShowCreateForm(false);
                   setNewPlanName('');
                 }}
-                className="p-2 hover:bg-zinc-800/50 rounded-lg transition-colors"
+                className="p-2 hover:bg-surface rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-zinc-400" />
+                <X className="w-5 h-5 text-muted" />
               </button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">שם התפריט</label>
+                <label className="block text-sm font-medium text-muted mb-2">שם התפריט</label>
                 <input
                   type="text"
                   value={newPlanName}
                   onChange={(e) => setNewPlanName(e.target.value)}
-                  className="w-full p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                  className="w-full p-4 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all"
                   placeholder="לדוגמה: תפריט שבועי - שלב הורדה"
                   autoFocus
                 />
@@ -214,7 +214,7 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
                     setNewPlanName('');
                   }}
                   disabled={saving}
-                  className="flex-1 py-3 rounded-xl border border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all disabled:opacity-50"
+                  className="flex-1 py-3 rounded-xl border border-border text-muted hover:text-foreground hover:bg-surface transition-all disabled:opacity-50"
                 >
                   ביטול
                 </button>
@@ -227,11 +227,11 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
       <div className="space-y-3">
         {plans.length === 0 ? (
           <div className="text-center py-12 premium-card-static">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-zinc-800/50 flex items-center justify-center">
-              <UtensilsCrossed className="h-8 w-8 text-zinc-500" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-surface flex items-center justify-center">
+              <UtensilsCrossed className="h-8 w-8 text-muted" />
             </div>
-            <h3 className="text-lg font-medium text-white mb-2">אין תפריטים עדיין</h3>
-            <p className="text-zinc-500 mb-6">לחץ על "תפריט חדש" כדי ליצור תפריט ראשון</p>
+            <h3 className="text-lg font-medium text-foreground mb-2">אין תפריטים עדיין</h3>
+            <p className="text-muted mb-6">לחץ על "תפריט חדש" כדי ליצור תפריט ראשון</p>
             <button
               onClick={() => setShowCreateForm(true)}
               className="btn-primary px-6 py-3 rounded-xl font-medium"
@@ -243,7 +243,7 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
           plans.map((plan) => (
             <div
               key={plan.id}
-              className={`premium-card-static p-5 hover:border-zinc-600/50 transition-all ${
+              className={`premium-card-static p-5 hover:border-border-hover transition-all ${
                 !plan.is_active ? 'opacity-60' : ''
               }`}
             >
@@ -255,18 +255,18 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-white">{plan.name || 'תפריט ללא שם'}</h3>
+                        <h3 className="font-semibold text-foreground">{plan.name || 'תפריט ללא שם'}</h3>
                         {plan.is_active ? (
                           <span className="bg-emerald-500/15 text-emerald-400 text-xs px-2 py-0.5 rounded-full border border-emerald-500/30">
                             פעיל
                           </span>
                         ) : (
-                          <span className="bg-zinc-800/50 text-zinc-500 text-xs px-2 py-0.5 rounded-full border border-zinc-700/50">
+                          <span className="bg-surface text-muted text-xs px-2 py-0.5 rounded-full border border-border">
                             לא פעיל
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-zinc-500 mt-1">
+                      <p className="text-sm text-muted mt-1">
                         נוצר: {new Date(plan.created_at).toLocaleDateString('he-IL')}
                       </p>
                     </div>

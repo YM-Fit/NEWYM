@@ -126,10 +126,10 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
   };
 
   const getWeightChangeIcon = (change: number | null) => {
-    if (change === null) return <Minus className="w-4 h-4 text-zinc-500" />;
+    if (change === null) return <Minus className="w-4 h-4 text-muted" />;
     if (change < 0) return <TrendingDown className="w-4 h-4 text-emerald-400" />;
     if (change > 0) return <TrendingUp className="w-4 h-4 text-red-400" />;
-    return <Minus className="w-4 h-4 text-zinc-500" />;
+    return <Minus className="w-4 h-4 text-muted" />;
   };
 
   if (loading) {
@@ -145,9 +145,12 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3 shadow-xl">
-          <p className="text-white font-semibold">{label}</p>
-          <p className="text-emerald-400">{payload[0].value} אימונים</p>
+        <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl p-4 shadow-2xl">
+          <p className="text-muted text-xs mb-2 font-medium">{label}</p>
+          <div className="flex items-baseline gap-2">
+            <p className="text-emerald-400 font-bold text-2xl">{payload[0].value}</p>
+            <p className="text-muted text-sm font-medium">אימונים</p>
+          </div>
         </div>
       );
     }
@@ -157,30 +160,54 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
   return (
     <div className="space-y-6">
       <div className="premium-card-static overflow-hidden">
-        <div className="p-5 border-b border-zinc-800/50">
+        <div className="p-5 border-b border-border/50">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
               <FileText className="w-5 h-5 text-emerald-400" />
             </div>
-            <h2 className="text-xl font-bold text-white">אימונים לפי שבוע</h2>
+            <h2 className="text-xl font-bold text-foreground">אימונים לפי שבוע</h2>
           </div>
         </div>
 
         <div className="p-5">
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                <XAxis dataKey="week" tick={{ fontSize: 12, fill: '#a1a1aa' }} axisLine={{ stroke: '#3f3f46' }} />
-                <YAxis tick={{ fontSize: 12, fill: '#a1a1aa' }} axisLine={{ stroke: '#3f3f46' }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="workouts" fill="url(#barGradient)" radius={[8, 8, 0, 0]} />
+              <BarChart data={weeklyData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" />
-                    <stop offset="100%" stopColor="#059669" />
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#059669" stopOpacity={0.9} />
                   </linearGradient>
                 </defs>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="#3f3f46" 
+                  strokeOpacity={0.3}
+                  vertical={false}
+                />
+                <XAxis 
+                  dataKey="week" 
+                  tick={{ fontSize: 12, fill: '#a1a1aa' }} 
+                  axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
+                  tickLine={false}
+                />
+                <YAxis 
+                  tick={{ fontSize: 12, fill: '#a1a1aa' }} 
+                  axisLine={false}
+                  tickLine={false}
+                  width={35}
+                />
+                <Tooltip 
+                  content={<CustomTooltip />}
+                  cursor={{ fill: 'rgba(16, 185, 129, 0.1)' }}
+                />
+                <Bar 
+                  dataKey="workouts" 
+                  fill="url(#barGradient)" 
+                  radius={[8, 8, 0, 0]}
+                  animationDuration={1000}
+                  animationEasing="ease-in-out"
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -188,50 +215,50 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
       </div>
 
       <div className="premium-card-static overflow-hidden">
-        <div className="p-5 border-b border-zinc-800/50">
+        <div className="p-5 border-b border-border/50">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30">
               <Users className="w-5 h-5 text-cyan-400" />
             </div>
-            <h2 className="text-xl font-bold text-white">מתאמנים מובילים החודש</h2>
+            <h2 className="text-xl font-bold text-foreground">מתאמנים מובילים החודש</h2>
           </div>
         </div>
 
         <div className="p-5">
           {topTrainees.length === 0 ? (
             <div className="text-center py-8">
-              <div className="w-14 h-14 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
-                <Users className="w-7 h-7 text-zinc-600" />
+              <div className="w-14 h-14 rounded-xl bg-surface flex items-center justify-center mx-auto mb-4">
+                <Users className="w-7 h-7 text-muted" />
               </div>
-              <p className="text-zinc-500">אין נתונים להצגה</p>
+              <p className="text-muted">אין נתונים להצגה</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-zinc-700/50">
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-zinc-400">#</th>
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-zinc-400">מתאמן</th>
-                    <th className="text-center py-3 px-4 text-sm font-semibold text-zinc-400">אימונים</th>
-                    <th className="text-center py-3 px-4 text-sm font-semibold text-zinc-400">שינוי משקל</th>
-                    <th className="text-center py-3 px-4 text-sm font-semibold text-zinc-400">שיאים</th>
+                  <tr className="border-b border-border">
+                    <th className="text-right py-3 px-4 text-sm font-semibold text-muted">#</th>
+                    <th className="text-right py-3 px-4 text-sm font-semibold text-muted">מתאמן</th>
+                    <th className="text-center py-3 px-4 text-sm font-semibold text-muted">אימונים</th>
+                    <th className="text-center py-3 px-4 text-sm font-semibold text-muted">שינוי משקל</th>
+                    <th className="text-center py-3 px-4 text-sm font-semibold text-muted">שיאים</th>
                   </tr>
                 </thead>
                 <tbody>
                   {topTrainees.map((trainee, index) => (
-                    <tr key={trainee.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-all">
+                    <tr key={trainee.id} className="border-b border-border/50 hover:bg-surface/30 transition-all">
                       <td className="py-4 px-4">
                         <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                           index === 0 ? 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/30' :
-                          index === 1 ? 'bg-zinc-500/15 text-zinc-300 border border-zinc-500/30' :
+                          index === 1 ? 'bg-surface/15 text-foreground border border-border' :
                           index === 2 ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' :
-                          'bg-zinc-800/50 text-zinc-500'
+                          'bg-surface text-muted'
                         }`}>
                           {index + 1}
                         </span>
                       </td>
                       <td className="py-4 px-4">
-                        <span className="font-semibold text-white">{trainee.name}</span>
+                        <span className="font-semibold text-foreground">{trainee.name}</span>
                       </td>
                       <td className="py-4 px-4 text-center">
                         <span className="font-bold text-emerald-400 bg-emerald-500/15 px-3 py-1 rounded-lg border border-emerald-500/30">
@@ -242,10 +269,10 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
                         <div className="flex items-center justify-center gap-1">
                           {getWeightChangeIcon(trainee.weightChange)}
                           <span className={`font-semibold ${
-                            trainee.weightChange === null ? 'text-zinc-500' :
+                            trainee.weightChange === null ? 'text-muted' :
                             trainee.weightChange < 0 ? 'text-emerald-400' :
                             trainee.weightChange > 0 ? 'text-red-400' :
-                            'text-zinc-400'
+                            'text-muted'
                           }`}>
                             {trainee.weightChange !== null ? `${trainee.weightChange > 0 ? '+' : ''}${trainee.weightChange.toFixed(1)} ק"ג` : '-'}
                           </span>
@@ -258,7 +285,7 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
                             {trainee.prCount}
                           </span>
                         ) : (
-                          <span className="text-zinc-600">-</span>
+                          <span className="text-muted">-</span>
                         )}
                       </td>
                     </tr>

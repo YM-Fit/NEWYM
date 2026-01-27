@@ -23,9 +23,9 @@ export function EmptyState({
   if (variant === 'minimal') {
     return (
       <div className={`text-center py-8 ${className}`}>
-        <Icon className="w-12 h-12 mx-auto mb-4 text-zinc-500" />
-        <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-        <p className="text-zinc-400 text-sm">{description}</p>
+        <Icon className="w-12 h-12 mx-auto mb-4 text-muted" />
+        <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
+        <p className="text-muted text-sm">{description}</p>
         {action && (
           <button
             onClick={action.onClick}
@@ -40,14 +40,14 @@ export function EmptyState({
 
   return (
     <div className={`premium-card-static p-12 text-center animate-fade-in ${className}`}>
-      <div className="relative w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 flex items-center justify-center group">
-        <div className="absolute inset-0 bg-emerald-500/10 rounded-2xl blur-xl group-hover:bg-emerald-500/20 transition-all duration-300" />
-        <Icon className="w-10 h-10 text-emerald-400 relative z-10 transition-transform group-hover:scale-110 group-hover:rotate-6" />
+      <div className="relative w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center group">
+        <div className="absolute inset-0 bg-primary/10 rounded-2xl blur-xl group-hover:bg-primary/20 transition-all duration-300" />
+        <Icon className="w-10 h-10 text-primary relative z-10 transition-transform group-hover:scale-110 group-hover:rotate-6" />
       </div>
-      <h3 className="text-xl md:text-2xl font-bold text-white mb-3 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+      <h3 className="text-xl md:text-2xl font-bold text-foreground mb-3 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
         {title}
       </h3>
-      <p className="text-zinc-400 mb-8 max-w-md mx-auto text-sm md:text-base leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+      <p className="text-muted mb-8 max-w-md mx-auto text-sm md:text-base leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
         {description}
       </p>
       {action && (

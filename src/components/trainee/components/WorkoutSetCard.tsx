@@ -176,7 +176,7 @@ export default function WorkoutSetCard({
           type="button"
           onClick={() => onUpdateSet('set_type', 'regular')}
           className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all ${
-            set.set_type === 'regular' ? 'bg-emerald-500 text-white' : 'bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)]'
+            set.set_type === 'regular' ? 'bg-emerald-500 text-foreground' : 'bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)]'
           }`}
         >
           רגיל
@@ -189,7 +189,7 @@ export default function WorkoutSetCard({
             }
           }}
           className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all ${
-            set.set_type === 'superset' ? 'bg-cyan-500 text-white' : 'bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)]'
+            set.set_type === 'superset' ? 'bg-cyan-500 text-foreground' : 'bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)]'
           }`}
         >
           סופר-סט
@@ -198,7 +198,7 @@ export default function WorkoutSetCard({
           type="button"
           onClick={() => onUpdateSet('set_type', 'dropset')}
           className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all ${
-            set.set_type === 'dropset' ? 'bg-amber-500 text-white' : 'bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)]'
+            set.set_type === 'dropset' ? 'bg-amber-500 text-foreground' : 'bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)]'
           }`}
         >
           דרופ-סט
@@ -334,7 +334,7 @@ export default function WorkoutSetCard({
       <button
         type="button"
         onClick={onCompleteSet}
-        className="w-full mt-3 py-2.5 md:py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold md:font-bold text-sm md:text-base rounded-lg md:rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg"
+        className="w-full mt-3 py-2.5 md:py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground font-semibold md:font-bold text-sm md:text-base rounded-lg md:rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg"
       >
         <CheckCircle className="h-4 w-4 md:h-5 md:w-5" />
         <span>סיים סט</span>

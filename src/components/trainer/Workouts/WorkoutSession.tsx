@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, BookMarked } from 'lucide-react';
+import { Plus, BookMarked, Timer, Target, TrendingUp, Zap, Pencil, CheckCircle2, History } from 'lucide-react';
 import { supabase, logSupabaseError } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useAutoSave } from '../../../hooks/useAutoSave';
 import { useWorkoutSession } from '../../../hooks/useWorkoutSession';
 import { useErrorHandler } from '../../../hooks/useErrorHandler';
+import { useIsTouchDevice } from '../../../hooks/useIsTouchDevice';
 import { saveWorkout } from '../../../api/workoutApi';
 import { logger } from '../../../utils/logger';
 import ExerciseSelector from './ExerciseSelector';
@@ -16,6 +17,7 @@ import DraftModal from '../../common/DraftModal';
 import WorkoutTemplates from './WorkoutTemplates';
 import { WorkoutHeader } from './WorkoutHeader';
 import { WorkoutExerciseCard } from './WorkoutExerciseCard';
+import WorkoutHistoryModal from './WorkoutHistoryModal';
 import { WorkoutTemplate, WorkoutTemplateExercise, Trainee, Workout } from '../../../types';
 
 interface Exercise {
@@ -84,6 +86,11 @@ export default function WorkoutSession({
 }: WorkoutSessionProps) {
   const { user } = useAuth();
   const { handleError } = useErrorHandler();
+
+  // Use touch device detection - prevents keyboard on all touch devices (phones & tablets)
+  const isTouchDevice = useIsTouchDevice();
+  const preventKeyboard = isTablet || isTouchDevice;
+
   const {
     exercises,
     setExercises,
@@ -111,8 +118,11 @@ export default function WorkoutSession({
   );
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
-  const [workoutId] = useState(editingWorkout?.id || null);
+  const [workoutId, setWorkoutId] = useState<string | null>(editingWorkout?.id || null);
+  // Track if this is an editing workout to prevent deletion
+  const isEditingWorkout = useRef<boolean>(!!editingWorkout?.id);
   const [workoutDate, setWorkoutDate] = useState(new Date());
+  const [creatingWorkout, setCreatingWorkout] = useState(false);
   const [numericPad, setNumericPad] = useState<{
     exerciseIndex: number;
     setIndex: number;
@@ -165,6 +175,8 @@ export default function WorkoutSession({
   const [templateName, setTemplateName] = useState('');
   const [templateDescription, setTemplateDescription] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateNameKeyboardEnabled, setTemplateNameKeyboardEnabled] = useState(false);
+  const [templateDescriptionKeyboardEnabled, setTemplateDescriptionKeyboardEnabled] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [savedWorkout, setSavedWorkout] = useState<Workout | null>(null);
   const [muscleGroups, setMuscleGroups] = useState<{ id: string; name: string }[]>([]);
@@ -172,6 +184,7 @@ export default function WorkoutSession({
   const workoutStartTime = useRef(Date.now());
   const exerciseCacheRef = useRef<Map<string, { sets: SetData[]; timestamp: number }>>(new Map());
   const [loadingExercise, setLoadingExercise] = useState<string | null>(null);
+  const [showWorkoutHistory, setShowWorkoutHistory] = useState(false);
 
   const workoutData = {
     exercises,
@@ -213,6 +226,254 @@ export default function WorkoutSession({
     setDraftData(null);
   };
 
+  // Create initial workout when first exercise is added
+  const createInitialWorkout = useCallback(async (): Promise<string | null> => {
+    // If we already have a workout ID (from editingWorkout), use it
+    if (editingWorkout?.id) {
+      setWorkoutId(editingWorkout.id);
+      isEditingWorkout.current = true; // Mark as editing workout to prevent deletion
+      return editingWorkout.id;
+    }
+    
+    if (!user || workoutId || creatingWorkout) return null;
+
+    setCreatingWorkout(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        return null;
+      }
+
+      // First, check if there's an existing scheduled workout (is_completed=false) for this trainee and date
+      // This prevents creating duplicate workouts when opening a scheduled workout
+      const workoutDateStr = workoutDate.toISOString().split('T')[0]; // Get date part only
+      const workoutDateStart = new Date(workoutDateStr);
+      workoutDateStart.setHours(0, 0, 0, 0);
+      const workoutDateEnd = new Date(workoutDateStr);
+      workoutDateEnd.setHours(23, 59, 59, 999);
+
+      const { data: existingScheduledWorkouts } = await supabase
+        .from('workout_trainees')
+        .select(`
+          workout_id,
+          workouts!inner (
+            id,
+            workout_date,
+            is_completed,
+            trainer_id
+          )
+        `)
+        .eq('trainee_id', trainee.id)
+        .eq('workouts.is_completed', false)
+        .eq('workouts.trainer_id', user.id)
+        .gte('workouts.workout_date', workoutDateStart.toISOString())
+        .lte('workouts.workout_date', workoutDateEnd.toISOString())
+        .limit(1);
+
+      // If there's an existing scheduled workout, use it instead of creating a new one
+      if (existingScheduledWorkouts && existingScheduledWorkouts.length > 0) {
+        const workoutData = existingScheduledWorkouts[0];
+        // workouts can be an object or array depending on Supabase query structure
+        let workout;
+        if (Array.isArray(workoutData.workouts)) {
+          workout = workoutData.workouts[0];
+        } else {
+          workout = workoutData.workouts;
+        }
+        
+        if (workout && workout.id) {
+          setWorkoutId(workout.id);
+          logger.info('Using existing scheduled workout', { workoutId: workout.id }, 'WorkoutSession');
+          setCreatingWorkout(false);
+          return workout.id;
+        }
+      }
+
+      // No existing scheduled workout found, create a new one
+      const { data: newWorkout, error: workoutError } = await supabase
+        .from('workouts')
+        .insert([
+          {
+            trainer_id: user.id,
+            workout_type: workoutType,
+            notes: notes || null,
+            workout_date: workoutDate.toISOString(),
+            is_completed: false, // Mark as incomplete - will be completed when user saves
+          },
+        ])
+        .select()
+        .single();
+
+      if (workoutError || !newWorkout) {
+        logger.error('Error creating initial workout', workoutError, 'WorkoutSession');
+        return null;
+      }
+
+      // Link trainee to workout
+      const { error: traineeError } = await supabase
+        .from('workout_trainees')
+        .insert([
+          {
+            workout_id: newWorkout.id,
+            trainee_id: trainee.id,
+          },
+        ]);
+
+      if (traineeError) {
+        logger.error('Error linking trainee to workout', traineeError, 'WorkoutSession');
+        // Try to delete the workout we just created
+        await supabase.from('workouts').delete().eq('id', newWorkout.id);
+        return null;
+      }
+
+      setWorkoutId(newWorkout.id);
+      logger.info('Created initial workout', { workoutId: newWorkout.id }, 'WorkoutSession');
+      return newWorkout.id;
+    } catch (err) {
+      logger.error('Unexpected error creating initial workout', err, 'WorkoutSession');
+      return null;
+    } finally {
+      setCreatingWorkout(false);
+    }
+  }, [user, workoutId, creatingWorkout, workoutType, notes, workoutDate, trainee.id]);
+
+  // Delete incomplete workout if user cancels/leaves
+  // Only delete workouts that were created during this session (new workouts, not scheduled ones)
+  const deleteIncompleteWorkout = useCallback(async () => {
+    // Don't delete if this is an editing workout (scheduled workout being edited)
+    // Only delete workouts that were created during this session
+    if (!workoutId || !user || isEditingWorkout.current) return;
+    
+    try {
+      // Check if workout exists, is not completed, and has exercises
+      // Scheduled workouts typically don't have exercises yet, so we only delete workouts with exercises
+      const { data: workout } = await supabase
+        .from('workouts')
+        .select(`
+          id, 
+          is_completed,
+          created_at,
+          workout_exercises (id)
+        `)
+        .eq('id', workoutId)
+        .eq('trainer_id', user.id)
+        .single();
+
+      if (!workout) return;
+
+      // Only delete if:
+      // 1. Workout exists and is not completed
+      // 2. Workout has exercises (meaning it was filled during this session, not a scheduled workout)
+      // 3. Workout was created recently (within last hour) - this indicates it's a new workout, not a scheduled one
+      // 4. Workout date is today or in the past (not a future scheduled workout)
+      // This prevents deleting scheduled workouts that don't have exercises yet
+      const workoutCreatedAt = new Date(workout.created_at);
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const isRecentWorkout = workoutCreatedAt > oneHourAgo;
+      
+      // Check if workout date is in the future (scheduled workout)
+      const { data: workoutDetails } = await supabase
+        .from('workouts')
+        .select('workout_date')
+        .eq('id', workoutId)
+        .single();
+      
+      const isFutureWorkout = workoutDetails?.workout_date 
+        ? new Date(workoutDetails.workout_date) > new Date()
+        : false;
+      
+      // Only delete if it's a recent workout with exercises that's not in the future
+      // This ensures scheduled workouts (future dates) are never deleted
+      if (!workout.is_completed && 
+          workout.workout_exercises && 
+          workout.workout_exercises.length > 0 && 
+          isRecentWorkout && 
+          !isFutureWorkout) {
+        await supabase
+          .from('workouts')
+          .delete()
+          .eq('id', workoutId);
+        logger.info('Deleted incomplete workout on cancel', { workoutId }, 'WorkoutSession');
+      }
+    } catch (err) {
+      // Log error but don't block - user is leaving anyway
+      logger.error('Error deleting incomplete workout', err, 'WorkoutSession');
+    }
+  }, [workoutId, user, editingWorkout]);
+
+  // Cleanup: delete incomplete workout when component unmounts or user navigates away
+  useEffect(() => {
+    return () => {
+      // Only delete if workout is not completed (auto-saved workouts)
+      deleteIncompleteWorkout();
+    };
+  }, [deleteIncompleteWorkout]);
+
+  // Handle back button - delete incomplete workout before leaving
+  const handleBackWithCleanup = useCallback(async () => {
+    await deleteIncompleteWorkout();
+    onBack();
+  }, [deleteIncompleteWorkout, onBack]);
+
+  // Auto-save workout in realtime when exercises change
+  const autoSaveWorkoutRef = useRef<(() => Promise<void>) | null>(null);
+  
+  const autoSaveWorkout = useCallback(async () => {
+    if (!user || !workoutId || exercises.length === 0 || saving || creatingWorkout) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const exercisesData = exercises.map((ex, index) => ({
+        exercise_id: ex.exercise.id,
+        order_index: index,
+        sets: ex.sets.map((set) => ({
+          set_number: set.set_number,
+          weight: set.weight,
+          reps: set.reps,
+          rpe: set.rpe,
+          set_type: set.set_type,
+          failure: set.failure || false,
+          superset_exercise_id: set.superset_exercise_id || null,
+          superset_weight: set.superset_weight || null,
+          superset_reps: set.superset_reps || null,
+          superset_rpe: set.superset_rpe || null,
+          superset_equipment_id: set.superset_equipment_id || null,
+          superset_dropset_weight: set.superset_dropset_weight || null,
+          superset_dropset_reps: set.superset_dropset_reps || null,
+          dropset_weight: set.dropset_weight || null,
+          dropset_reps: set.dropset_reps || null,
+          equipment_id: set.equipment_id || null,
+        })),
+      }));
+
+      const requestBody = {
+        trainee_id: trainee.id,
+        trainer_id: user.id,
+        workout_type: workoutType,
+        notes: notes || null,
+        workout_date: workoutDate.toISOString(),
+        exercises: exercisesData,
+        pair_member: trainee.is_pair ? selectedMember : null,
+        workout_id: workoutId,
+        is_auto_save: true, // Mark as auto-save so workout won't be marked as completed
+      };
+
+      const result = await saveWorkout(requestBody, session.access_token);
+      if (result.error) {
+        logger.error('Auto-save error', result.error, 'WorkoutSession');
+      }
+    } catch (err) {
+      logger.error('Unexpected error in auto-save', err, 'WorkoutSession');
+    }
+  }, [user, workoutId, exercises, workoutType, notes, workoutDate, trainee, selectedMember, saving, creatingWorkout]);
+
+  // Update ref when function changes
+  useEffect(() => {
+    autoSaveWorkoutRef.current = autoSaveWorkout;
+  }, [autoSaveWorkout]);
+
   useEffect(() => {
     if (workoutId) return;
 
@@ -228,7 +489,20 @@ export default function WorkoutSession({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty, exercises.length, workoutId]);
 
-  // Keyboard shortcuts for better UX
+  // Auto-save workout in realtime when exercises change (with debounce)
+  useEffect(() => {
+    if (!workoutId || exercises.length === 0 || saving || creatingWorkout) return;
+
+    const timeoutId = setTimeout(() => {
+      if (autoSaveWorkoutRef.current) {
+        autoSaveWorkoutRef.current();
+      }
+    }, 2000); // Debounce: wait 2 seconds after last change
+
+    return () => clearTimeout(timeoutId);
+  }, [exercises, workoutId, saving, creatingWorkout]);
+
+  // Enhanced keyboard shortcuts for better UX (especially on tablet with external keyboard)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle shortcuts when modals are open or input is focused
@@ -242,12 +516,16 @@ export default function WorkoutSession({
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         if (exercises.length > 0 && !saving && user) {
-          // Call handleSave directly - it's defined in the component scope
           handleSave();
         }
       }
-      // Ctrl/Cmd + N to add exercise
+      // Ctrl/Cmd + N or just N to add exercise
       else if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        setShowExerciseSelector(true);
+      }
+      // Just N (without modifier) to add exercise when no exercises
+      else if (e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.metaKey && exercises.length === 0) {
         e.preventDefault();
         setShowExerciseSelector(true);
       }
@@ -258,6 +536,50 @@ export default function WorkoutSession({
           setShowTemplateModal(true);
         }
       }
+      // Plus key to add set to last exercise
+      else if (e.key === '+' || e.key === '=') {
+        e.preventDefault();
+        if (exercises.length > 0) {
+          const lastExerciseIndex = exercises.length - 1;
+          addSet(lastExerciseIndex);
+          toast.success('סט חדש נוסף', { duration: 1500, position: 'bottom-center' });
+        }
+      }
+      // Escape to go back (with confirmation if dirty)
+      else if (e.key === 'Escape') {
+        if (exercises.length > 0 && isDirty) {
+          if (confirm('יש שינויים שלא נשמרו. בטוח שברצונך לצאת?')) {
+            handleBackWithCleanup();
+          }
+        } else if (exercises.length === 0) {
+          handleBackWithCleanup();
+        }
+      }
+      // Arrow down to expand next collapsed set
+      else if (e.key === 'ArrowDown' && !e.ctrlKey && !e.metaKey) {
+        const firstCollapsedSet = collapsedSets[0];
+        if (firstCollapsedSet) {
+          toggleCollapseSet(firstCollapsedSet);
+        }
+      }
+      // Enter to complete current set (first non-collapsed exercise, first non-collapsed set)
+      else if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
+        // Find the first non-minimized exercise with a non-collapsed set
+        for (let i = 0; i < exercises.length; i++) {
+          if (!minimizedExercises.includes(exercises[i].tempId)) {
+            const exercise = exercises[i];
+            for (let j = 0; j < exercise.sets.length; j++) {
+              if (!collapsedSets.includes(exercise.sets[j].id)) {
+                // This is the active set - complete it
+                completeSetAndMoveNext(i, j);
+                toast.success('סט הושלם', { duration: 1500, position: 'bottom-center' });
+                break;
+              }
+            }
+            break;
+          }
+        }
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -265,7 +587,7 @@ export default function WorkoutSession({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showExerciseSelector, numericPad, equipmentSelector, supersetSelector, 
       showDraftModal, showTemplateModal, showSaveTemplateModal, showSummary, 
-      exercises.length, saving]);
+      exercises.length, saving, isDirty, collapsedSets, minimizedExercises]);
 
   useEffect(() => {
     const loadMuscleGroups = async () => {
@@ -280,6 +602,11 @@ export default function WorkoutSession({
   }, []);
 
   const handleAddExerciseWithAutoFill = async (exercise: Exercise) => {
+    // Create workout if this is the first exercise
+    if (exercises.length === 0 && !workoutId && user) {
+      await createInitialWorkout();
+    }
+
     if (!user) {
       addExercise(exercise);
       return;
@@ -568,6 +895,48 @@ export default function WorkoutSession({
     if (!user) return;
 
     try {
+      // If previousWorkout prop is provided, use it directly
+      if (previousWorkout && previousWorkout.workout_exercises) {
+        const loadedExercises: WorkoutExercise[] = previousWorkout.workout_exercises
+          .sort((a: any, b: any) => a.order_index - b.order_index)
+          .map((we: any) => ({
+            tempId: Date.now().toString() + Math.random(),
+            exercise: {
+              id: we.exercises.id,
+              name: we.exercises.name,
+              muscle_group_id: we.exercises.muscle_group_id,
+            },
+            sets: we.exercise_sets
+              .sort((a: any, b: any) => a.set_number - b.set_number)
+              .map((set: any, index: number) => ({
+                id: `temp-${Date.now()}-${index}`,
+                set_number: set.set_number,
+                weight: set.weight,
+                reps: set.reps,
+                rpe: set.rpe,
+                set_type: set.set_type,
+                failure: set.failure || false,
+                superset_exercise_id: set.superset_exercise_id,
+                superset_weight: set.superset_weight,
+                superset_reps: set.superset_reps,
+                superset_rpe: set.superset_rpe,
+                superset_equipment_id: set.superset_equipment_id,
+                superset_dropset_weight: set.superset_dropset_weight,
+                superset_dropset_reps: set.superset_dropset_reps,
+                dropset_weight: set.dropset_weight,
+                dropset_reps: set.dropset_reps,
+                equipment_id: set.equipment_id,
+                equipment: null,
+                superset_equipment: null,
+              })),
+          }));
+
+        setExercises(loadedExercises);
+        toast.success('האימון נטען בהצלחה!');
+        return;
+      }
+
+      // Otherwise, load from database
       // First get all workouts for this trainer and trainee
       const { data: workouts, error: workoutsError } = await supabase
         .from('workouts')
@@ -729,13 +1098,53 @@ export default function WorkoutSession({
       const result = await saveWorkout(requestBody, session.access_token);
 
       if (result.error || !result.data) {
-        logger.error('Save workout error:', result, 'WorkoutSession');
-        toast.error(result.error || 'שגיאה בשמירת האימון');
+        // Extract error message for better logging
+        const errorMessage = result.error || 'Unknown error saving workout';
+        const errorDetails = result.error 
+          ? { error: result.error, fullResult: result }
+          : { message: 'No error message provided', fullResult: result };
+        
+        logger.error('Save workout error:', errorDetails, 'WorkoutSession');
+        
+        // Check if error is about existing workout - this should not happen anymore
+        // but if it does, provide helpful message
+        const errorStr = typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage);
+        if (errorStr.includes('כבר קיים') || errorStr.includes('already exists') || errorStr.includes('409')) {
+          // This shouldn't happen with the new logic, but if it does, allow user to continue
+          console.warn('Unexpected "workout exists" error - this should be allowed now. Error:', errorMessage);
+          // Don't show error - just log it and continue (or show a different message)
+          toast.error('שגיאה בשמירת האימון. אם יש אימון מתוזמן, תוכל ליצור אימון חדש. נסה שוב.');
+        } else {
+          // Show user-friendly error message for other errors
+          const userMessage = typeof errorMessage === 'string' 
+            ? errorMessage 
+            : 'שגיאה בשמירת האימון. נסה שוב.';
+          toast.error(userMessage);
+        }
         setSaving(false);
         return;
       }
 
       const workoutResult = result.data;
+
+      // Update workout to completed only if it wasn't already completed
+      // This preserves the is_completed status when editing a completed workout
+      if (workoutId && workoutResult.workout.id === workoutId) {
+        const { data: existingWorkout } = await supabase
+          .from('workouts')
+          .select('is_completed')
+          .eq('id', workoutId)
+          .single();
+        
+        // Only update to completed if it wasn't already completed
+        // This allows editing completed workouts without changing their status
+        if (existingWorkout?.is_completed !== true) {
+          await supabase
+            .from('workouts')
+            .update({ is_completed: true })
+            .eq('id', workoutId);
+        }
+      }
 
       clearSaved();
 
@@ -862,6 +1271,48 @@ export default function WorkoutSession({
 
   const totalVolume = useMemo(() => calculateTotalVolume(), [exercises]);
 
+  // Calculate workout progress stats
+  const workoutProgress = useMemo(() => {
+    let totalSets = 0;
+    let completedSets = 0;
+    
+    exercises.forEach(ex => {
+      totalSets += ex.sets.length;
+      ex.sets.forEach(set => {
+        if (set.weight > 0 && set.reps > 0) {
+          completedSets++;
+        }
+      });
+    });
+    
+    const progressPercent = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
+    
+    return {
+      totalSets,
+      completedSets,
+      progressPercent,
+      totalExercises: exercises.length,
+      completedExercises: minimizedExercises.length,
+    };
+  }, [exercises, minimizedExercises]);
+
+  // Workout timer display
+  const [elapsedTime, setElapsedTime] = useState(0);
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - workoutStartTime.current) / 1000));
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
+  
+  const formatTime = useCallback((seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }, []);
+
   return (
     <div
       className={`trainer-workout-session min-h-screen bg-[var(--color-bg-base)] p-4 lg:p-6 transition-colors duration-300 ${
@@ -879,13 +1330,69 @@ export default function WorkoutSession({
         exercisesCount={exercises.length}
         saving={saving}
         selectedMember={selectedMember}
-        onBack={onBack}
+        onBack={handleBackWithCleanup}
         onSave={handleSave}
         onSaveTemplate={() => setShowSaveTemplateModal(true)}
         onLoadPrevious={handleLoadPrevious}
         onDateChange={setWorkoutDate}
         onWorkoutTypeChange={setWorkoutType}
+        isTablet={isTablet}
       />
+
+      {/* Workout Progress Bar - Only show when workout has exercises */}
+      {exercises.length > 0 && (
+        <div className="premium-card-static p-3 lg:p-4 mb-4 animate-fade-in">
+          {/* Progress bar */}
+          <div className="relative h-2 bg-surface rounded-full overflow-hidden mb-3">
+            <div 
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+              style={{ width: `${workoutProgress.progressPercent}%` }}
+            />
+          </div>
+          
+          {/* Stats row */}
+          <div className="flex items-center justify-between flex-wrap gap-2 lg:gap-4">
+            {/* Timer */}
+            <div className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-lg">
+              <Timer className="h-4 w-4 text-amber-400" />
+              <span className="font-mono font-semibold text-foreground text-sm lg:text-base">{formatTime(elapsedTime)}</span>
+            </div>
+            
+            {/* Sets progress */}
+            <div className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-lg">
+              <Target className="h-4 w-4 text-cyan-400" />
+              <span className="text-sm lg:text-base">
+                <span className="font-semibold text-cyan-400">{workoutProgress.completedSets}</span>
+                <span className="text-muted">/{workoutProgress.totalSets}</span>
+                <span className="text-muted mr-1">סטים</span>
+              </span>
+            </div>
+            
+            {/* Volume */}
+            <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/30">
+              <TrendingUp className="h-4 w-4 text-emerald-400" />
+              <span className="font-semibold text-emerald-400 text-sm lg:text-base">{totalVolume.toLocaleString()}</span>
+              <span className="text-emerald-400/70 text-xs">ק״ג</span>
+            </div>
+            
+            {/* Exercises progress */}
+            <div className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-lg">
+              <Zap className="h-4 w-4 text-purple-400" />
+              <span className="text-sm lg:text-base">
+                <span className="font-semibold text-purple-400">{workoutProgress.completedExercises}</span>
+                <span className="text-muted">/{workoutProgress.totalExercises}</span>
+                <span className="text-muted mr-1">תרגילים</span>
+              </span>
+            </div>
+            
+            {/* Progress percentage */}
+            <div className="flex items-center gap-1">
+              <span className="text-lg lg:text-xl font-bold text-foreground">{workoutProgress.progressPercent}%</span>
+              <span className="text-xs text-muted">הושלמו</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={isTablet ? 'trainer-workout-layout grid gap-4' : 'space-y-4'}>
         {exercises.map((workoutExercise, exerciseIndex) => (
@@ -897,7 +1404,37 @@ export default function WorkoutSession({
             collapsedSets={collapsedSets}
             summary={getExerciseSummary(workoutExercise)}
             totalVolume={calculateExerciseVolume(workoutExercise)}
-            onRemove={() => removeExercise(exerciseIndex)}
+            onRemove={async () => {
+              const exercise = exercises[exerciseIndex];
+              // If workoutId exists and tempId is a UUID (not a temp ID), delete from database
+              if (workoutId && exercise.tempId && !exercise.tempId.startsWith('temp-') && !exercise.tempId.match(/^\d+$/)) {
+                try {
+                  // Delete all sets for this workout_exercise
+                  const { data: sets } = await supabase
+                    .from('exercise_sets')
+                    .select('id')
+                    .eq('workout_exercise_id', exercise.tempId);
+                  
+                  if (sets && sets.length > 0) {
+                    await supabase
+                      .from('exercise_sets')
+                      .delete()
+                      .in('id', sets.map(s => s.id));
+                  }
+                  
+                  // Delete the workout_exercise
+                  await supabase
+                    .from('workout_exercises')
+                    .delete()
+                    .eq('id', exercise.tempId);
+                } catch (error) {
+                  logger.error('Error deleting exercise from database:', error, 'WorkoutSession');
+                  toast.error('שגיאה במחיקת התרגיל מהדאטאבייס');
+                }
+              }
+              // Remove from local state
+              removeExercise(exerciseIndex);
+            }}
             onToggleMinimize={() => toggleMinimizeExercise(workoutExercise.tempId)}
             onComplete={() => completeExercise(workoutExercise.tempId)}
             onAddSet={() => addSet(exerciseIndex)}
@@ -959,8 +1496,8 @@ export default function WorkoutSession({
 
       {exercises.length === 0 && !workoutId && (
         <div className="premium-card-static p-6 mb-4">
-          <h3 className="text-lg font-bold text-white mb-2">התחל אימון חדש</h3>
-          <p className="text-zinc-400 mb-4">בחר תבנית קיימת או התחל אימון ריק</p>
+          <h3 className="text-lg font-bold text-foreground mb-2">התחל אימון חדש</h3>
+          <p className="text-muted mb-4">בחר תבנית קיימת או התחל אימון ריק</p>
           <button
             type="button"
             onClick={(e) => {
@@ -968,12 +1505,12 @@ export default function WorkoutSession({
               e.stopPropagation();
               setShowTemplateModal(true);
             }}
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold mb-3 cursor-pointer"
+            className="w-full bg-cyan-500 hover:bg-cyan-600 text-foreground py-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold mb-3 cursor-pointer"
           >
             <BookMarked className="h-5 w-5" />
             <span>טען תבנית קיימת</span>
           </button>
-          <p className="text-center text-sm text-zinc-500">או</p>
+          <p className="text-center text-sm text-muted">או</p>
         </div>
       )}
 
@@ -984,7 +1521,7 @@ export default function WorkoutSession({
           e.stopPropagation();
           setShowExerciseSelector(true);
         }}
-        className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all touch-manipulation font-bold cursor-pointer"
+        className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-foreground py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all touch-manipulation font-bold cursor-pointer"
       >
         <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
         <span className="text-lg lg:text-xl">{exercises.length === 0 ? 'התחל אימון ריק' : 'הוסף תרגיל'}</span>
@@ -997,6 +1534,7 @@ export default function WorkoutSession({
           onSelect={handleAddExerciseWithAutoFill}
           onClose={() => setShowExerciseSelector(false)}
           loadingExerciseId={loadingExercise}
+          isTablet={isTablet}
         />
       )}
 
@@ -1009,6 +1547,7 @@ export default function WorkoutSession({
           allowDecimal={numericPad.field === 'weight'}
           minValue={numericPad.field === 'rpe' ? 1 : undefined}
           maxValue={numericPad.field === 'rpe' ? 10 : undefined}
+          isTablet={isTablet}
         />
       )}
 
@@ -1026,6 +1565,7 @@ export default function WorkoutSession({
         <ExerciseSelector
           onSelect={handleSupersetExerciseSelect}
           onClose={() => setSupersetSelector(null)}
+          isTablet={isTablet}
         />
       )}
 
@@ -1038,6 +1578,7 @@ export default function WorkoutSession({
           allowDecimal={supersetNumericPad.field === 'superset_weight'}
           minValue={supersetNumericPad.field === 'superset_rpe' ? 1 : undefined}
           maxValue={supersetNumericPad.field === 'superset_rpe' ? 10 : undefined}
+          isTablet={isTablet}
         />
       )}
 
@@ -1058,6 +1599,7 @@ export default function WorkoutSession({
           onConfirm={handleDropsetNumericPadConfirm}
           onClose={() => setDropsetNumericPad(null)}
           allowDecimal={dropsetNumericPad.field === 'dropset_weight'}
+          isTablet={isTablet}
         />
       )}
 
@@ -1068,6 +1610,7 @@ export default function WorkoutSession({
           onConfirm={handleSupersetDropsetNumericPadConfirm}
           onClose={() => setSupersetDropsetNumericPad(null)}
           allowDecimal={supersetDropsetNumericPad.field === 'superset_dropset_weight'}
+          isTablet={isTablet}
         />
       )}
 
@@ -1089,42 +1632,88 @@ export default function WorkoutSession({
 
       {showSaveTemplateModal && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 rounded-xl bg-amber-500/15">
                 <BookMarked className="h-6 w-6 text-amber-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">שמור כתבנית</h3>
-                <p className="text-zinc-500 text-sm">שמור את האימון הזה כתבנית לשימוש עתידי מהיר</p>
+                <h3 className="text-xl font-bold text-foreground">שמור כתבנית</h3>
+                <p className="text-muted text-sm">שמור את האימון הזה כתבנית לשימוש עתידי מהיר</p>
               </div>
             </div>
 
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
-                  שם התבנית *
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-muted">
+                    שם התבנית *
+                  </label>
+                  {preventKeyboard && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setTemplateNameKeyboardEnabled(true);
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-medium"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      <span>אפשר כתיבה</span>
+                    </button>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-surface/50 border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="למשל: אימון רגליים מלא"
-                  autoFocus={!isTablet}
+                  autoFocus={!preventKeyboard}
+                  readOnly={preventKeyboard && !templateNameKeyboardEnabled}
+                  inputMode={preventKeyboard && !templateNameKeyboardEnabled ? 'none' : 'text'}
+                  onFocus={(e) => {
+                    if (preventKeyboard && !templateNameKeyboardEnabled) {
+                      e.target.blur();
+                    }
+                  }}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
-                  תיאור (אופציונלי)
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-muted">
+                    תיאור (אופציונלי)
+                  </label>
+                  {preventKeyboard && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setTemplateDescriptionKeyboardEnabled(true);
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-medium"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      <span>אפשר כתיבה</span>
+                    </button>
+                  )}
+                </div>
                 <textarea
                   value={templateDescription}
                   onChange={(e) => setTemplateDescription(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-surface/50 border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="הוסף תיאור לתבנית..."
                   rows={3}
+                  readOnly={preventKeyboard && !templateDescriptionKeyboardEnabled}
+                  inputMode={preventKeyboard && !templateDescriptionKeyboardEnabled ? 'none' : 'text'}
+                  onFocus={(e) => {
+                    if (preventKeyboard && !templateDescriptionKeyboardEnabled) {
+                      e.target.blur();
+                    }
+                  }}
                 />
               </div>
 
@@ -1144,7 +1733,7 @@ export default function WorkoutSession({
                   handleSaveAsTemplate();
                 }}
                 disabled={savingTemplate || !templateName.trim()}
-                className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
+                className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:bg-elevated disabled:text-muted disabled:cursor-not-allowed text-foreground px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
               >
                 {savingTemplate ? 'שומר...' : 'שמור תבנית'}
               </button>
@@ -1157,7 +1746,7 @@ export default function WorkoutSession({
                   setTemplateName('');
                   setTemplateDescription('');
                 }}
-                className="flex-1 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 text-zinc-300 px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
+                className="flex-1 bg-surface/50 hover:bg-surface border border-border text-foreground px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
               >
                 ביטול
               </button>
@@ -1186,6 +1775,68 @@ export default function WorkoutSession({
           } : null}
           personalRecords={personalRecords}
         />
+      )}
+
+      {showWorkoutHistory && (
+        <WorkoutHistoryModal
+          traineeId={trainee.id}
+          exercises={exercises}
+          onClose={() => setShowWorkoutHistory(false)}
+        />
+      )}
+
+      {/* Floating Action Buttons for tablet - Quick actions + finish + history */}
+      {isTablet && exercises.length > 0 && !showExerciseSelector && !numericPad && !showSummary && (
+        <div className="fixed bottom-6 left-6 z-40 flex flex-col gap-3 animate-fade-in">
+          {/* Finish workout */}
+          <button
+            type="button"
+            onClick={() => {
+              if (!saving) {
+                handleSave();
+              }
+            }}
+            className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback disabled:opacity-60"
+            title="סיים אימון"
+            disabled={saving || exercises.length === 0}
+          >
+            <CheckCircle2 className="h-6 w-6" />
+          </button>
+
+          {/* Workout history */}
+          <button
+            type="button"
+            onClick={() => setShowWorkoutHistory(true)}
+            className="w-14 h-14 bg-cyan-500 hover:bg-cyan-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            title="היסטוריית אימונים לתרגילים"
+          >
+            <History className="h-6 w-6" />
+          </button>
+
+          {/* Add set to last exercise */}
+          <button
+            type="button"
+            onClick={() => {
+              const lastExerciseIndex = exercises.length - 1;
+              addSet(lastExerciseIndex);
+              toast.success('סט חדש נוסף', { duration: 1500, position: 'bottom-center' });
+            }}
+            className="w-14 h-14 bg-cyan-500 hover:bg-cyan-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            title="הוסף סט (קיצור: +)"
+          >
+            <Plus className="h-6 w-6" />
+          </button>
+          
+          {/* Add exercise */}
+          <button
+            type="button"
+            onClick={() => setShowExerciseSelector(true)}
+            className="w-14 h-14 bg-emerלד-500 hover:bg-emerald-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            title="הוסף תרגיל (קיצור: Ctrl+N)"
+          >
+            <BookMarked className="h-6 w-6" />
+          </button>
+        </div>
       )}
     </div>
   );

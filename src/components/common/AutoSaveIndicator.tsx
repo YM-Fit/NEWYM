@@ -18,18 +18,18 @@ export default function AutoSaveIndicator({ lastSaved, isDirty }: AutoSaveIndica
   return (
     <div className="flex items-center space-x-3 rtl:space-x-reverse text-sm transition-all duration-300">
       {isDirty ? (
-        <div className="flex items-center space-x-2 rtl:space-x-reverse bg-gradient-to-br from-amber-50 to-orange-50 px-4 py-2 rounded-xl border border-amber-200 shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="bg-gradient-to-br from-amber-400 to-orange-500 p-1.5 rounded-lg shadow-md">
-            <Clock className="h-4 w-4 text-white animate-pulse" />
+        <div className="flex items-center space-x-2 rtl:space-x-reverse bg-warning/10 px-4 py-2 rounded-xl border border-warning/20 shadow-md hover:shadow-lg transition-all duration-300">
+          <div className="bg-warning p-1.5 rounded-lg shadow-md">
+            <Clock className="h-4 w-4 text-inverse animate-pulse" />
           </div>
-          <span className="text-amber-700 font-semibold">טרם נשמר...</span>
+          <span className="text-warning font-semibold">טרם נשמר...</span>
         </div>
       ) : (
-        <div className="flex items-center space-x-2 rtl:space-x-reverse bg-gradient-to-br from-emerald-50 to-teal-50 px-4 py-2 rounded-xl border border-emerald-200 shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="bg-gradient-to-br from-emerald-400 to-teal-500 p-1.5 rounded-lg shadow-md">
-            <CheckCircle className="h-4 w-4 text-white" />
+        <div className="flex items-center space-x-2 rtl:space-x-reverse bg-success/10 px-4 py-2 rounded-xl border border-success/20 shadow-md hover:shadow-lg transition-all duration-300">
+          <div className="bg-success p-1.5 rounded-lg shadow-md">
+            <CheckCircle className="h-4 w-4 text-inverse" />
           </div>
-          <span className="text-emerald-700 font-semibold">
+          <span className="text-success font-semibold">
             נשמר אוטומטית בשעה {formatTime(lastSaved)}
           </span>
         </div>

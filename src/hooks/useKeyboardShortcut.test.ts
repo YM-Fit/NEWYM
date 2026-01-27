@@ -160,4 +160,97 @@ describe('useKeyboardShortcut', () => {
 
     expect(callback2).toHaveBeenCalledTimes(1);
   });
+
+  it('should not trigger when typing in input field', () => {
+    renderHook(() => useKeyboardShortcut('a', callback));
+
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    
+    const event = new KeyboardEvent('keydown', {
+      key: 'a',
+      bubbles: true,
+    });
+    
+    Object.defineProperty(event, 'target', {
+      value: input,
+      enumerable: true,
+    });
+    
+    window.dispatchEvent(event);
+
+    expect(callback).not.toHaveBeenCalled();
+    
+    document.body.removeChild(input);
+  });
+
+  it('should not trigger when typing in textarea field', () => {
+    renderHook(() => useKeyboardShortcut('a', callback));
+
+    const textarea = document.createElement('textarea');
+    document.body.appendChild(textarea);
+    
+    const event = new KeyboardEvent('keydown', {
+      key: 'a',
+      bubbles: true,
+    });
+    
+    Object.defineProperty(event, 'target', {
+      value: textarea,
+      enumerable: true,
+    });
+    
+    window.dispatchEvent(event);
+
+    expect(callback).not.toHaveBeenCalled();
+    
+    document.body.removeChild(textarea);
+  });
+
+  it('should not trigger when typing in contenteditable element', () => {
+    renderHook(() => useKeyboardShortcut('a', callback));
+
+    const div = document.createElement('div');
+    div.contentEditable = 'true';
+    document.body.appendChild(div);
+    
+    const event = new KeyboardEvent('keydown', {
+      key: 'a',
+      bubbles: true,
+    });
+    
+    Object.defineProperty(event, 'target', {
+      value: div,
+      enumerable: true,
+    });
+    
+    window.dispatchEvent(event);
+
+    expect(callback).not.toHaveBeenCalled();
+    
+    document.body.removeChild(div);
+  });
+
+  it('should trigger normally when not in input field', () => {
+    renderHook(() => useKeyboardShortcut('a', callback));
+
+    const div = document.createElement('div');
+    document.body.appendChild(div);
+    
+    const event = new KeyboardEvent('keydown', {
+      key: 'a',
+      bubbles: true,
+    });
+    
+    Object.defineProperty(event, 'target', {
+      value: div,
+      enumerable: true,
+    });
+    
+    window.dispatchEvent(event);
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    
+    document.body.removeChild(div);
+  });
 });

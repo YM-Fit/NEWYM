@@ -343,7 +343,7 @@ export default function MyHabits({ traineeId }: MyHabitsProps) {
                   </div>
                   <button
                     onClick={() => handleDeleteHabit(habit.id)}
-                    className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+                    className="p-2 text-muted400 hover:text-red-400 transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>

@@ -427,7 +427,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 lg:p-6 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">טוען תוכנית...</p>
+          <p className="text-muted600">טוען תוכנית...</p>
         </div>
       </div>
     );
@@ -494,17 +494,17 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
             <button
               onClick={onBack}
-              className="p-3 lg:p-4 hover:bg-gray-100 rounded-xl transition-all duration-300"
+              className="p-3 lg:p-4 hover:bg-surface100 rounded-xl transition-all duration-300"
             >
-              <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7 text-gray-600" />
+              <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7 text-muted600" />
             </button>
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105">
-                <Dumbbell className="w-7 h-7 lg:w-8 lg:h-8 text-white" />
+                <Dumbbell className="w-7 h-7 lg:w-8 lg:h-8 text-foreground" />
               </div>
               <div>
-                <h1 className="text-xl lg:text-3xl font-bold text-gray-900">{activePlanId ? 'ערוך תוכנית אימון' : 'תוכנית אימון חדשה'}</h1>
-                <p className="text-base lg:text-lg text-gray-600">{traineeName}</p>
+                <h1 className="text-xl lg:text-3xl font-bold text-muted900">{activePlanId ? 'ערוך תוכנית אימון' : 'תוכנית אימון חדשה'}</h1>
+                <p className="text-base lg:text-lg text-muted600">{traineeName}</p>
               </div>
             </div>
           </div>
@@ -512,7 +512,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           <button
             onClick={handleSave}
             disabled={saving || days.length === 0 || !planName.trim()}
-            className="bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl hover:scale-105"
+            className="bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl hover:scale-105"
           >
             <Save className="h-5 w-5 lg:h-6 lg:w-6" />
             <span className="font-bold text-base lg:text-lg">{saving ? 'שומר...' : 'שמור תוכנית'}</span>
@@ -521,33 +521,33 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">שם התוכנית</label>
+            <label className="block text-sm font-semibold text-muted700 mb-2">שם התוכנית</label>
             <input
               type="text"
               value={planName}
               onChange={(e) => setPlanName(e.target.value)}
-              className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
               placeholder="לדוגמה: תוכנית כוח - שלב 1"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">תיאור</label>
+            <label className="block text-sm font-semibold text-muted700 mb-2">תיאור</label>
             <textarea
               value={planDescription}
               onChange={(e) => setPlanDescription(e.target.value)}
-              className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
               rows={2}
               placeholder="מטרות, הערות כלליות..."
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">ימי אימון בשבוע</label>
+            <label className="block text-sm font-semibold text-muted700 mb-2">ימי אימון בשבוע</label>
             <select
               value={daysPerWeek}
               onChange={(e) => setDaysPerWeek(parseInt(e.target.value))}
-              className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
             >
               {[1, 2, 3, 4, 5, 6, 7].map(n => (
                 <option key={n} value={n}>{n} ימים</option>
@@ -628,7 +628,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
       <button
         onClick={addDay}
-        className="w-full mt-4 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]"
+        className="w-full mt-4 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]"
       >
         <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
         <span className="font-bold text-lg lg:text-xl">{days.length === 0 ? 'הוסף יום אימון ראשון' : 'הוסף יום אימון נוסף'}</span>

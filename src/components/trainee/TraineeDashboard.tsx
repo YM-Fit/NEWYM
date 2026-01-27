@@ -327,7 +327,7 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
     return (
       <div className="flex justify-center items-center py-12">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
-          <Dumbbell className="w-8 h-8 text-white" />
+          <Dumbbell className="w-8 h-8 text-foreground" />
         </div>
       </div>
     );

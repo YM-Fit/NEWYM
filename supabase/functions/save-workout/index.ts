@@ -42,6 +42,130 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
   };
 }
 
+/**
+ * Generate Google Calendar event title with session info
+ */
+async function generateEventTitle(
+  supabase: any,
+  traineeId: string,
+  trainerId: string,
+  traineeName: string,
+  eventDate: Date,
+  workoutId?: string
+): Promise<string> {
+  try {
+    // Get trainee counting method and card info
+    const { data: trainee } = await supabase
+      .from('trainees')
+      .select('counting_method, card_sessions_total, card_sessions_used')
+      .eq('id', traineeId)
+      .single();
+
+    if (!trainee) {
+      return `אימון - ${traineeName}`;
+    }
+
+    // Check for active card
+    const { data: activeCard } = await supabase
+      .from('trainee_cards')
+      .select('sessions_purchased, sessions_used')
+      .eq('trainee_id', traineeId)
+      .eq('trainer_id', trainerId)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    let sessionText = '';
+
+    // Use card format if available
+    if (trainee.counting_method === 'card_ticket' && activeCard) {
+      const remaining = (activeCard.sessions_purchased || 0) - (activeCard.sessions_used || 0);
+      sessionText = `${remaining}/${activeCard.sessions_purchased}`;
+    } else {
+      // Calculate monthly position
+      const eventMonth = new Date(eventDate.getFullYear(), eventDate.getMonth(), 1);
+      const startOfMonth = new Date(eventMonth.getFullYear(), eventMonth.getMonth(), 1);
+      const endOfMonth = new Date(eventMonth.getFullYear(), eventMonth.getMonth() + 1, 0, 23, 59, 59);
+
+      const { data: workouts } = await supabase
+        .from('workouts')
+        .select('id, workout_date')
+        .eq('trainer_id', trainerId)
+        .gte('workout_date', startOfMonth.toISOString())
+        .lte('workout_date', endOfMonth.toISOString())
+        .order('workout_date', { ascending: true });
+
+      if (workouts && workouts.length > 0) {
+        const workoutIds = workouts.map((w: any) => w.id);
+        const { data: links } = await supabase
+          .from('workout_trainees')
+          .select('workout_id')
+          .eq('trainee_id', traineeId)
+          .in('workout_id', workoutIds);
+
+        const traineeWorkoutIds = new Set((links || []).map((l: any) => l.workout_id));
+        const traineeWorkouts = workouts.filter((w: any) => traineeWorkoutIds.has(w.id));
+
+        if (traineeWorkouts.length > 0) {
+          // Sort workouts by date to ensure correct order
+          traineeWorkouts.sort((a: any, b: any) => 
+            new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime()
+          );
+
+          let position = 1;
+          const totalInMonth = traineeWorkouts.length;
+
+          // If we have workoutId, find its exact position
+          if (workoutId) {
+            const workoutIndex = traineeWorkouts.findIndex((w: any) => w.id === workoutId);
+            if (workoutIndex >= 0) {
+              position = workoutIndex + 1;
+            } else {
+              // New workout, add to count
+              position = totalInMonth + 1;
+            }
+          } else {
+            // Fallback: find position by date
+            const eventDateMs = eventDate.getTime();
+            for (let i = 0; i < traineeWorkouts.length; i++) {
+              const workoutDateMs = new Date(traineeWorkouts[i].workout_date).getTime();
+              // If dates are within 1 hour of each other, consider it a match
+              if (Math.abs(workoutDateMs - eventDateMs) < 3600000) {
+                position = i + 1;
+                break;
+              }
+              if (workoutDateMs < eventDateMs) {
+                position = i + 2;
+              }
+            }
+            // Make sure position doesn't exceed total
+            if (position > totalInMonth) {
+              position = totalInMonth;
+            }
+          }
+
+          // For new workouts (workoutId not found in list), we might need to add 1 to total
+          const displayTotal = workoutId && !traineeWorkouts.find((w: any) => w.id === workoutId) 
+            ? totalInMonth + 1 
+            : totalInMonth;
+          
+          sessionText = displayTotal > 1 ? `${position}/${displayTotal}` : `${position}`;
+        } else {
+          // First workout for this trainee this month
+          sessionText = '1';
+        }
+      } else {
+        // First workout this month
+        sessionText = '1';
+      }
+    }
+
+    return sessionText ? `אימון - ${traineeName} ${sessionText}` : `אימון - ${traineeName}`;
+  } catch (err) {
+    console.error('Error generating event title:', err);
+    return `אימון - ${traineeName}`;
+  }
+}
+
 interface SetData {
   set_number: number;
   weight: number;
@@ -76,6 +200,7 @@ interface SaveWorkoutRequest {
   exercises: ExerciseData[];
   pair_member?: 'member_1' | 'member_2' | null;
   workout_id?: string;
+  is_auto_save?: boolean;
 }
 
 Deno.serve(async (req: Request) => {
@@ -177,6 +302,7 @@ Deno.serve(async (req: Request) => {
       exercises,
       pair_member,
       workout_id,
+      is_auto_save,
     }: SaveWorkoutRequest = await req.json();
 
     // Verify trainer_id matches authenticated user
@@ -285,13 +411,33 @@ Deno.serve(async (req: Request) => {
       await supabase.from('workout_exercises').delete().eq('workout_id', workout_id);
 
       // When updating, preserve the date from input but use current time
+      // Check if the workout was already completed - if so, preserve is_completed=true
+      const { data: existingWorkout } = await supabase
+        .from('workouts')
+        .select('is_completed')
+        .eq('id', workout_id)
+        .single();
+      
+      const updateData: any = {
+        notes: notes || null,
+        updated_at: new Date().toISOString(),
+        workout_date: finalWorkoutDate, // Preserve date, use current time
+      };
+      
+      // Preserve is_completed status if workout was already completed
+      // Only mark as completed if this is an explicit save (not auto-save) AND workout wasn't already completed
+      if (existingWorkout?.is_completed === true) {
+        // If workout was already completed, keep it as completed
+        updateData.is_completed = true;
+      } else if (!is_auto_save) {
+        // If workout wasn't completed and this is an explicit save, mark as completed
+        updateData.is_completed = true;
+      }
+      // If is_auto_save and workout wasn't completed, don't change is_completed
+      
       const { data: updatedWorkout, error: updateError } = await supabase
         .from('workouts')
-        .update({
-          notes: notes || null,
-          updated_at: new Date().toISOString(),
-          workout_date: finalWorkoutDate, // Preserve date, use current time
-        })
+        .update(updateData)
         .eq('id', workout_id)
         .select()
         .single();
@@ -302,7 +448,15 @@ Deno.serve(async (req: Request) => {
 
       workout = updatedWorkout;
     } else {
+      // Create new workout - allow multiple workouts per day
+      // Users can create:
+      // 1. A completed workout even if there's a scheduled one (is_completed=false)
+      // 2. Multiple workouts per day (morning/evening)
+      // 3. Replace a scheduled workout with actual completed data
+      
       // When creating new workout, use the date from input but with current time
+      // Only mark as completed if this is NOT an auto-save (explicit save by user)
+      // Auto-save should keep workouts as incomplete (is_completed=false) so they don't appear in history
       const { data: newWorkout, error: workoutError } = await supabase
         .from('workouts')
         .insert([
@@ -311,6 +465,7 @@ Deno.serve(async (req: Request) => {
             workout_type,
             notes,
             workout_date: finalWorkoutDate,
+            is_completed: !is_auto_save, // Only mark as completed if this is an explicit save (not auto-save)
           },
         ])
         .select()
@@ -447,10 +602,19 @@ Deno.serve(async (req: Request) => {
               }
             }
 
-            // Create calendar event
+            // Create calendar event with session info
             const calendarId = credentials.default_calendar_id || 'primary';
+            const eventSummary = await generateEventTitle(
+              supabase,
+              traineeData.trainee_id,
+              trainer_id,
+              trainee.full_name,
+              workoutDate,
+              workout.id
+            );
+            
             const eventPayload: any = {
-              summary: `אימון - ${trainee.full_name}`,
+              summary: eventSummary,
               start: {
                 dateTime: workoutDate.toISOString(),
                 timeZone: 'Asia/Jerusalem',

@@ -134,11 +134,18 @@ export async function getWorkoutDetails(
           reps,
           rpe,
           set_type,
+          failure,
           superset_exercise_id,
           superset_weight,
           superset_reps,
           dropset_weight,
-          dropset_reps
+          dropset_reps,
+          equipment_id,
+          equipment:equipment_id (
+            id,
+            name,
+            emoji
+          )
         )
       `)
       .eq('workout_id', workoutId)
@@ -168,6 +175,43 @@ export async function deleteWorkout(
   }
 
   try {
+    // First, get workout info before deleting (for calendar sync)
+    const { data: workoutInfo } = await supabase
+      .from('workouts')
+      .select('trainer_id, workout_trainees(trainee_id)')
+      .eq('id', workoutId)
+      .single();
+
+    const trainerId = workoutInfo?.trainer_id;
+    const traineeId = workoutInfo?.workout_trainees?.[0]?.trainee_id;
+
+    // Check if there's a Google Calendar sync record
+    const { data: syncRecord } = await supabase
+      .from('google_calendar_sync')
+      .select('google_event_id')
+      .eq('workout_id', workoutId)
+      .maybeSingle();
+
+    // Delete the Google Calendar event if it exists
+    if (syncRecord?.google_event_id && trainerId) {
+      try {
+        const { deleteGoogleCalendarEvent } = await import('./googleCalendarApi');
+        await deleteGoogleCalendarEvent(trainerId, syncRecord.google_event_id);
+      } catch (calendarErr) {
+        console.error('Error deleting Google Calendar event:', calendarErr);
+        // Continue with workout deletion even if calendar delete fails
+      }
+    }
+
+    // Delete sync record
+    if (syncRecord) {
+      await supabase
+        .from('google_calendar_sync')
+        .delete()
+        .eq('workout_id', workoutId);
+    }
+
+    // Delete the workout
     const { error } = await supabase
       .from('workouts')
       .delete()
@@ -175,6 +219,20 @@ export async function deleteWorkout(
 
     if (error) {
       return { error: error.message };
+    }
+
+    // After deleting, sync remaining events for this trainee to update numbering
+    if (traineeId && trainerId) {
+      // Do this in the background (non-blocking)
+      import('../services/traineeCalendarSyncService').then(({ syncTraineeEventsToCalendar }) => {
+        syncTraineeEventsToCalendar(traineeId, trainerId, 'current_month')
+          .then(result => {
+            if (result.data && result.data.updated > 0) {
+              console.log(`Calendar sync after delete: updated ${result.data.updated} events`);
+            }
+          })
+          .catch(err => console.error('Calendar sync after delete failed:', err));
+      }).catch(err => console.error('Failed to load calendar sync service:', err));
     }
 
     return { success: true };
@@ -237,10 +295,24 @@ export async function syncWorkoutToCalendar(
     const endDate = new Date(workoutDate);
     endDate.setHours(workoutDate.getHours() + 1); // Default 1 hour workout
 
+    // Generate event title with session info
+    let eventSummary = `אימון - ${trainee?.full_name || 'מתאמן'}`;
+    try {
+      const { generateGoogleCalendarEventTitle } = await import('../utils/traineeSessionUtils');
+      eventSummary = await generateGoogleCalendarEventTitle(
+        workout.workout_trainees[0].trainee_id,
+        trainerId,
+        workoutDate
+      );
+    } catch (titleErr) {
+      // Fallback to simple title if generation fails
+      console.warn('Could not generate event title with session info:', titleErr);
+    }
+
     const eventResult = await createGoogleCalendarEvent(
       trainerId,
       {
-        summary: `אימון - ${trainee?.full_name || 'מתאמן'}`,
+        summary: eventSummary,
         description: workout.notes || undefined,
         startTime: workoutDate,
         endTime: endDate,
@@ -268,7 +340,7 @@ export async function syncWorkoutToCalendar(
         sync_direction: 'to_google',
         event_start_time: workoutDate.toISOString(),
         event_end_time: endDate.toISOString(),
-        event_summary: `אימון - ${trainee?.full_name || 'מתאמן'}`,
+        event_summary: eventSummary,
         event_description: workout.notes || null,
         last_synced_at: new Date().toISOString(),
       });
@@ -277,9 +349,418 @@ export async function syncWorkoutToCalendar(
       return { error: syncError.message };
     }
 
+    // After successfully syncing this workout, update all other events for this trainee
+    // to ensure session numbers are current
+    try {
+      const { syncTraineeEventsToCalendar } = await import('../services/traineeCalendarSyncService');
+      
+      // Sync current month events to update session numbers
+      // Fire and forget - don't block the response
+      syncTraineeEventsToCalendar(
+        workout.workout_trainees[0].trainee_id,
+        trainerId,
+        'current_month'
+      ).catch(err => {
+        console.error('Error syncing trainee events after workout save:', err);
+      });
+    } catch (importErr) {
+      // If service not available, continue without syncing
+      console.warn('Could not import trainee calendar sync service:', importErr);
+    }
+
     return { data: googleEventId, success: true };
   } catch (err: any) {
     return { error: err.message || 'שגיאה בסנכרון ל-Google Calendar' };
+  }
+}
+
+/**
+ * Get scheduled workouts for today and tomorrow
+ * Includes workouts from both local database and Google Calendar sync
+ */
+export async function getScheduledWorkoutsForTodayAndTomorrow(
+  trainerId: string,
+  traineeIds: string[]
+): Promise<ApiResponse<{
+  today: Array<{
+    trainee: any;
+    workout: any;
+    isFromGoogle?: boolean;
+  }>;
+  tomorrow: Array<{
+    trainee: any;
+    workout: any;
+    isFromGoogle?: boolean;
+  }>;
+}>> {
+  // Rate limiting: 30 requests per minute per trainer
+  const rateLimitKey = `getScheduledWorkoutsForTodayAndTomorrow:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 30, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
+  try {
+    if (!traineeIds || traineeIds.length === 0) {
+      return { data: { today: [], tomorrow: [] }, success: true };
+    }
+
+    if (!trainerId) {
+      return { error: 'מזהה מאמן לא תקין' };
+    }
+
+    // Calculate date ranges for today and tomorrow
+    // workout_date is a TIMESTAMPTZ field, so we need to use ISO timestamps
+    const now = new Date();
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayAfterTomorrow = new Date(tomorrow);
+    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
+
+    // Use ISO timestamps for TIMESTAMPTZ field comparison
+    const todayStr = today.toISOString();
+    const tomorrowStr = tomorrow.toISOString();
+    const dayAfterTomorrowStr = dayAfterTomorrow.toISOString();
+
+    // Get workouts from workouts table - both SCHEDULED and COMPLETED workouts
+    // This ensures scheduled workouts remain visible even after they're completed
+    const { data: workoutsData, error: workoutsError } = await supabase
+      .from('workouts')
+      .select(`
+        id,
+        workout_date,
+        workout_type,
+        is_completed,
+        notes,
+        created_at,
+        trainer_id
+      `)
+      .eq('trainer_id', trainerId)
+      // Show both scheduled (is_completed=false) and completed (is_completed=true) workouts
+      .gte('workout_date', todayStr)
+      .lt('workout_date', dayAfterTomorrowStr)
+      .order('workout_date', { ascending: true });
+
+    if (workoutsError) {
+      // Log error but return empty result instead of failing completely
+      console.warn('Error loading workouts for scheduled view:', workoutsError);
+      return { data: { today: [], tomorrow: [] }, success: true };
+    }
+
+    if (!workoutsData || workoutsData.length === 0) {
+      return { data: { today: [], tomorrow: [] }, success: true };
+    }
+
+    // Debug: Log scheduled workouts
+    const scheduledWorkouts = workoutsData.filter(w => !w.is_completed);
+    if (scheduledWorkouts.length > 0) {
+      console.log('Found scheduled workouts:', scheduledWorkouts.map(w => ({
+        id: w.id,
+        workout_date: w.workout_date,
+        is_completed: w.is_completed
+      })));
+    }
+
+    const workoutIds = workoutsData.map(w => w.id);
+
+    if (workoutIds.length === 0) {
+      return { data: { today: [], tomorrow: [] }, success: true };
+    }
+
+    // Get workout_trainees for these workouts, filtered by our trainee IDs
+    const { data: workoutTraineesData, error: wtError } = await supabase
+      .from('workout_trainees')
+      .select('trainee_id, workout_id')
+      .in('workout_id', workoutIds)
+      .in('trainee_id', traineeIds);
+
+    if (wtError) {
+      // Log error but return empty result instead of failing completely
+      console.warn('Error loading workout_trainees for scheduled view:', wtError);
+      return { data: { today: [], tomorrow: [] }, success: true };
+    }
+
+    if (!workoutTraineesData || workoutTraineesData.length === 0) {
+      // Debug: Log if workouts exist but no workout_trainees
+      if (workoutIds.length > 0) {
+        console.warn('Workouts found but no workout_trainees links:', {
+          workoutIds: workoutIds.slice(0, 5), // Log first 5
+          totalWorkouts: workoutIds.length
+        });
+      }
+      return { data: { today: [], tomorrow: [] }, success: true };
+    }
+
+    // Debug: Log workout_trainees for scheduled workouts
+    const scheduledWorkoutIds = workoutsData.filter(w => !w.is_completed).map(w => w.id);
+    const scheduledWorkoutTrainees = workoutTraineesData.filter(wt => scheduledWorkoutIds.includes(wt.workout_id));
+    if (scheduledWorkoutTrainees.length > 0) {
+      console.log('Found workout_trainees for scheduled workouts:', scheduledWorkoutTrainees.length);
+    }
+
+    // Get unique trainee IDs from the results
+    const traineeIdsInWorkouts = [...new Set(workoutTraineesData.map(wt => wt.trainee_id))];
+
+    // Fetch trainee details
+    if (traineeIdsInWorkouts.length === 0) {
+      return { data: { today: [], tomorrow: [] }, success: true };
+    }
+
+    const { data: traineesData, error: traineesError } = await supabase
+      .from('trainees')
+      .select('id, full_name, gender, phone, email, is_pair, pair_name_1, pair_name_2')
+      .in('id', traineeIdsInWorkouts);
+
+    if (traineesError) {
+      // Log error but return empty result instead of failing completely
+      console.warn('Error loading trainees for scheduled view:', traineesError);
+      return { data: { today: [], tomorrow: [] }, success: true };
+    }
+
+    // Check which workouts are synced from Google Calendar and get their event_start_time
+    // Only query if we have workout IDs
+    let googleSyncedWorkoutIds = new Set<string>();
+    const googleSyncEventTimes = new Map<string, string>(); // Map workout_id -> event_start_time
+    if (workoutIds.length > 0) {
+      const { data: googleSyncData, error: googleSyncError } = await supabase
+        .from('google_calendar_sync')
+        .select('workout_id, sync_direction, event_start_time')
+        .in('workout_id', workoutIds)
+        .eq('sync_status', 'synced');
+
+      // If there's an error (e.g., RLS policy issue), just continue without Google sync info
+      // This is not critical - the workouts will still show, just without the Google indicator
+      if (!googleSyncError && googleSyncData) {
+        googleSyncData
+          .filter(sync => sync.workout_id && (sync.sync_direction === 'from_google' || sync.sync_direction === 'bidirectional'))
+          .forEach(sync => {
+            googleSyncedWorkoutIds.add(sync.workout_id!);
+            // Store event_start_time for accurate time display
+            if (sync.event_start_time) {
+              googleSyncEventTimes.set(sync.workout_id!, sync.event_start_time);
+            }
+          });
+      }
+    }
+
+    // Create maps for quick lookup
+    const traineesMap = new Map((traineesData || []).map(t => [t.id, t]));
+    const workoutsMap = new Map(workoutsData.map(w => [w.id, w]));
+
+    // Create a map of completed workouts by trainee and date (YYYY-MM-DD)
+    // Format: "traineeId:YYYY-MM-DD" -> true
+    const completedWorkoutsByTraineeAndDate = new Map<string, boolean>();
+    if (completedWorkoutsData && completedWorkoutsData.length > 0) {
+      const completedWorkoutIds = completedWorkoutsData.map(w => w.id);
+      const { data: completedWorkoutTrainees } = await supabase
+        .from('workout_trainees')
+        .select('trainee_id, workout_id')
+        .in('workout_id', completedWorkoutIds)
+        .in('trainee_id', traineeIds);
+
+      if (completedWorkoutTrainees) {
+        completedWorkoutTrainees.forEach(wt => {
+          const workout = completedWorkoutsData.find(w => w.id === wt.workout_id);
+          if (workout) {
+            const workoutDate = new Date(workout.workout_date);
+            const dateKey = `${workoutDate.getFullYear()}-${String(workoutDate.getMonth() + 1).padStart(2, '0')}-${String(workoutDate.getDate()).padStart(2, '0')}`;
+            completedWorkoutsByTraineeAndDate.set(`${wt.trainee_id}:${dateKey}`, true);
+          }
+        });
+      }
+    }
+
+    // Build the data structure - combine workout_trainees with workouts and trainees
+    const allWorkouts = workoutTraineesData
+      .map(wt => {
+        const workout = workoutsMap.get(wt.workout_id);
+        const trainee = traineesMap.get(wt.trainee_id);
+        
+        if (!workout || !trainee) return null;
+
+        const workoutDate = new Date(workout.workout_date);
+        const isFromGoogle = googleSyncedWorkoutIds.has(workout.id);
+        
+        // Check if there's a completed workout for this trainee on the same date
+        const dateKey = `${workoutDate.getFullYear()}-${String(workoutDate.getMonth() + 1).padStart(2, '0')}-${String(workoutDate.getDate()).padStart(2, '0')}`;
+        const hasCompletedWorkout = completedWorkoutsByTraineeAndDate.get(`${trainee.id}:${dateKey}`) || false;
+
+        // For Google Calendar workouts, use event_start_time if available for accurate time
+        let actualWorkoutDate = workoutDate;
+        if (isFromGoogle && googleSyncEventTimes.has(workout.id)) {
+          const eventStartTime = googleSyncEventTimes.get(workout.id)!;
+          actualWorkoutDate = new Date(eventStartTime);
+        }
+
+        // Debug: Log scheduled workouts in allWorkouts
+        if (!workout.is_completed) {
+          console.log('Scheduled workout in allWorkouts:', {
+            workoutId: workout.id,
+            workout_date: workout.workout_date,
+            actualWorkoutDate: actualWorkoutDate.toISOString(),
+            is_completed: workout.is_completed,
+            traineeId: trainee.id,
+            traineeName: trainee.full_name
+          });
+        }
+
+        return {
+          trainee,
+          workout: {
+            id: workout.id,
+            workout_date: workout.workout_date,
+            workout_type: workout.workout_type,
+            is_completed: workout.is_completed,
+            notes: workout.notes,
+            isFromGoogle,
+            hasCompletedWorkout, // Flag to indicate if there's a completed workout for this date
+            eventStartTime: isFromGoogle && googleSyncEventTimes.has(workout.id) 
+              ? googleSyncEventTimes.get(workout.id)! 
+              : undefined // Store event_start_time for accurate time display
+          },
+          workoutDate: actualWorkoutDate // Use actual date/time for sorting and display
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+
+    // Debug: Log allWorkouts count and scheduled workouts
+    console.log('=== allWorkouts DEBUG ===');
+    console.log('allWorkouts count:', allWorkouts.length);
+    console.log('scheduled count:', allWorkouts.filter(w => !w.workout.is_completed).length);
+    console.log('Today date:', today.toISOString());
+    console.log('Tomorrow date:', tomorrow.toISOString());
+    console.log('allWorkouts scheduled workouts:', allWorkouts.filter(w => !w.workout.is_completed).map(w => ({
+      id: w.workout.id,
+      date: w.workout.workout_date,
+      workoutDate: w.workoutDate.toISOString(),
+      trainee: w.trainee.full_name
+    })));
+    console.log('=== END allWorkouts DEBUG ===');
+    
+    // Separate into today and tomorrow, and sort by time
+    // Use the 'now' variable that was already declared at the beginning of the function
+    // Group by trainee to handle multiple workouts per trainee per day
+    const workoutsByTrainee = new Map<string, typeof allWorkouts>();
+    allWorkouts.forEach(item => {
+      const key = item.trainee.id;
+      if (!workoutsByTrainee.has(key)) {
+        workoutsByTrainee.set(key, []);
+      }
+      workoutsByTrainee.get(key)!.push(item);
+    });
+    
+    const todayWorkouts = allWorkouts
+      .filter(item => {
+        const itemDate = new Date(item.workoutDate);
+        itemDate.setHours(0, 0, 0, 0);
+        const isToday = itemDate.getTime() === today.getTime();
+        // Debug: Log ALL scheduled workouts to see what's happening
+        if (!item.workout.is_completed) {
+          console.log('Scheduled workout filter check:', {
+            workoutId: item.workout.id,
+            workoutDate: item.workout.workout_date,
+            workoutDateParsed: itemDate.toISOString(),
+            today: today.toISOString(),
+            todayTime: today.getTime(),
+            itemDateTime: itemDate.getTime(),
+            isToday,
+            isCompleted: item.workout.is_completed,
+            traineeName: item.trainee.full_name
+          });
+        }
+        return isToday;
+      })
+      .map(item => {
+        // For Google Calendar workouts, use eventStartTime if available for accurate time comparison
+        const timeSource = item.workout.eventStartTime || item.workout.workout_date;
+        const workoutDate = new Date(timeSource);
+        const isTimePassed = workoutDate < now; // Check if the scheduled time has passed
+        
+        return {
+          trainee: item.trainee,
+          workout: {
+            ...item.workout,
+            isTimePassed // Flag to indicate if the scheduled time has passed
+          },
+          isFromGoogle: item.workout.isFromGoogle,
+          workoutDate: item.workoutDate // Keep for sorting
+        };
+      })
+      .sort((a, b) => {
+        // Sort by workout time (ascending)
+        return a.workoutDate.getTime() - b.workoutDate.getTime();
+      })
+      // If there are multiple workouts for the same trainee on the same day,
+      // prefer the scheduled one (is_completed=false) over completed ones
+      .filter((item, index, arr) => {
+        // Check if there are multiple workouts for this trainee
+        const sameTraineeWorkouts = arr.filter(w => w.trainee.id === item.trainee.id);
+        if (sameTraineeWorkouts.length > 1) {
+          // If this is a completed workout and there's a scheduled one, filter it out
+          if (item.workout.is_completed) {
+            const hasScheduled = sameTraineeWorkouts.some(w => !w.workout.is_completed);
+            return !hasScheduled; // Keep only if there's no scheduled workout
+          }
+        }
+        return true; // Keep all other workouts
+      })
+      .map(item => ({
+        trainee: item.trainee,
+        workout: item.workout,
+        isFromGoogle: item.isFromGoogle
+      }));
+
+    const tomorrowWorkouts = allWorkouts
+      .filter(item => {
+        const itemDate = new Date(item.workoutDate);
+        itemDate.setHours(0, 0, 0, 0);
+        return itemDate.getTime() === tomorrow.getTime();
+      })
+      .map(item => {
+        // For Google Calendar workouts, use eventStartTime if available for accurate time comparison
+        const timeSource = item.workout.eventStartTime || item.workout.workout_date;
+        const workoutDate = new Date(timeSource);
+        const isTimePassed = workoutDate < now; // Check if the scheduled time has passed
+        
+        return {
+          trainee: item.trainee,
+          workout: {
+            ...item.workout,
+            isTimePassed // Flag to indicate if the scheduled time has passed
+          },
+          isFromGoogle: item.workout.isFromGoogle,
+          workoutDate: item.workoutDate // Keep for sorting
+        };
+      })
+      .sort((a, b) => {
+        // Sort by workout time (ascending)
+        return a.workoutDate.getTime() - b.workoutDate.getTime();
+      })
+      .map(item => ({
+        trainee: item.trainee,
+        workout: item.workout,
+        isFromGoogle: item.isFromGoogle
+      }));
+
+    // Debug: Log final results
+    console.log('=== FINAL RESULTS DEBUG ===');
+    console.log('todayWorkouts count:', todayWorkouts.length);
+    console.log('tomorrowWorkouts count:', tomorrowWorkouts.length);
+    console.log('todayWorkouts scheduled:', todayWorkouts.filter(w => !w.workout.is_completed).length);
+    console.log('tomorrowWorkouts scheduled:', tomorrowWorkouts.filter(w => !w.workout.is_completed).length);
+    console.log('=== END FINAL RESULTS DEBUG ===');
+
+    return {
+      data: {
+        today: todayWorkouts,
+        tomorrow: tomorrowWorkouts
+      },
+      success: true
+    };
+  } catch (err: any) {
+    return { error: err.message || 'שגיאה בטעינת אימונים מתוזמנים' };
   }
 }
 

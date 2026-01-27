@@ -73,7 +73,7 @@ export default function WorkoutTemplateModal({
           type="button"
           onClick={onSave}
           disabled={savingTemplate || !templateName.trim() || exercisesCount === 0}
-          className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:bg-[var(--color-bg-surface)] disabled:text-[var(--color-text-muted)] text-white font-semibold transition-all"
+          className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:bg-[var(--color-bg-surface)] disabled:text-[var(--color-text-muted)] text-foreground font-semibold transition-all"
         >
           {savingTemplate ? 'שומר...' : 'שמור כתבנית'}
         </button>

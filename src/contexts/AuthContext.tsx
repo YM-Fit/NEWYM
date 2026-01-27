@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, ReactNode, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { setSecureSession, getSecureSession, removeSecureSession } from '../utils/secureSession';
@@ -96,30 +96,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      hydrateAuthFromSession(
-        session,
-        setUser,
-        setSession,
-        setUserType,
-        setTraineeId,
-        setTraineeSession
-      );
-      
-      // Set Sentry user context
-      if (session?.user) {
-        setUserContext(session.user.id, session.user.email, {
-          userType: session.user.user_metadata?.is_trainee ? 'trainee' : 'trainer',
-        });
-        setTag('user_type', session.user.user_metadata?.is_trainee ? 'trainee' : 'trainer');
-      } else {
-        clearUserContext();
-      }
-      
+    console.log('[AuthContext] Starting session check...');
+    
+    // Set a timeout to prevent infinite loading if Supabase connection fails
+    // Reduced to 5 seconds for faster response on TV
+    const loadingTimeout = setTimeout(() => {
+      console.warn('[AuthContext] Session check timed out after 5 seconds, showing login screen');
       setLoading(false);
-    });
+    }, 5000); // 5 second timeout for TV
 
+    // Try to get session with error handling
+    const sessionPromise = supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        clearTimeout(loadingTimeout);
+        
+        if (error) {
+          console.error('[AuthContext] Error getting session:', error);
+          setLoading(false);
+          return;
+        }
+
+        console.log('[AuthContext] Session check completed, user:', session?.user?.email || 'none');
+        
+        hydrateAuthFromSession(
+          session,
+          setUser,
+          setSession,
+          setUserType,
+          setTraineeId,
+          setTraineeSession
+        );
+        
+        // Set Sentry user context
+        if (session?.user) {
+          setUserContext(session.user.id, session.user.email, {
+            userType: session.user.user_metadata?.is_trainee ? 'trainee' : 'trainer',
+          });
+          setTag('user_type', session.user.user_metadata?.is_trainee ? 'trainee' : 'trainer');
+        } else {
+          clearUserContext();
+        }
+        
+        setLoading(false);
+      })
+      .catch((error) => {
+        clearTimeout(loadingTimeout);
+        console.error('[AuthContext] Failed to get session:', error);
+        setLoading(false);
+      });
+    
+    // Also set a fallback timeout in case the promise never resolves
+    const fallbackTimeout = setTimeout(() => {
+      console.warn('[AuthContext] Fallback timeout - forcing loading to false');
+      setLoading(false);
+    }, 6000);
+    
+    // Set up auth state change listener - MUST be before return statement!
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      clearTimeout(loadingTimeout);
+      clearTimeout(fallbackTimeout);
+      
       hydrateAuthFromSession(
         session,
         setUser,
@@ -142,7 +178,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Cleanup function - must unsubscribe and clear all timeouts
+    return () => {
+      clearTimeout(loadingTimeout);
+      clearTimeout(fallbackTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
@@ -204,21 +245,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAuthenticated = user !== null || traineeSession !== null;
 
+  const contextValue = useMemo(() => ({
+    user: isAuthenticated ? (user || { id: traineeSession?.trainee_id } as User) : null,
+    session,
+    loading,
+    userType,
+    traineeId,
+    traineeSession,
+    signIn,
+    signInTrainee,
+    signUp,
+    signOut,
+  }), [user, session, loading, userType, traineeId, traineeSession, signIn, signInTrainee, signUp, signOut, isAuthenticated]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        user: isAuthenticated ? (user || { id: traineeSession?.trainee_id } as User) : null,
-        session,
-        loading,
-        userType,
-        traineeId,
-        traineeSession,
-        signIn,
-        signInTrainee,
-        signUp,
-        signOut,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

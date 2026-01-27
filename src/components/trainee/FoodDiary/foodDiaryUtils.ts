@@ -24,11 +24,17 @@ export function getHebrewDayName(date: Date): string {
 }
 
 /**
- * Format date as DD/MM
+ * Format date as DD/MM (short format)
  */
-export function formatDate(date: Date): string {
+export function formatDateShort(date: Date): string {
   return `${date.getDate()}/${date.getMonth() + 1}`;
 }
+
+/**
+ * @deprecated Use formatDateShort instead
+ * Kept for backward compatibility
+ */
+export const formatDate = formatDateShort;
 
 /**
  * Check if date is today

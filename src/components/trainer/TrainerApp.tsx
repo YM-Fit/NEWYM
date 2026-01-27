@@ -12,9 +12,11 @@ import Header from '../layout/Header';
 import Sidebar from '../layout/Sidebar';
 import MobileSidebar from '../layout/MobileSidebar';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { ThemeShowcase } from '../ui/ThemeShowcase';
+import { lazyWithRetry } from '../../utils/lazyWithRetry';
 
 // Lazy load heavy components - including main views for better code splitting
-const Dashboard = lazy(() => import('./Dashboard/Dashboard'));
+const Dashboard = lazyWithRetry(() => import('./Dashboard/Dashboard'), 3);
 const TraineesList = lazy(() => import('./Trainees/TraineesList'));
 const TraineeProfile = lazy(() => import('./Trainees/TraineeProfile'));
 const AddTraineeForm = lazy(() => import('./Trainees/AddTraineeForm'));
@@ -36,9 +38,11 @@ const ToolsView = lazy(() => import('./Tools/ToolsView'));
 const TraineeFoodDiaryView = lazy(() => import('./Trainees/TraineeFoodDiaryView'));
 const CardioManager = lazy(() => import('./Cardio/CardioManager'));
 const ReportsView = lazy(() => import('./Reports/ReportsView'));
+const SmartReportView = lazy(() => import('./Reports/SmartReportView'));
 // Settings & Management Components
 const HealthCheckView = lazy(() => import('../settings/HealthCheckView'));
 const ErrorReportingSettings = lazy(() => import('../settings/ErrorReportingSettings'));
+const StudioTvView = lazy(() => import('./Studio/StudioTvView'));
 
 interface Trainee {
   id: string;
@@ -73,9 +77,15 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const { signOut, user } = useAuth();
   const { handleError } = useErrorHandler();
   const { loadTraineeData } = useTraineeData();
-  const [activeView, setActiveView] = useState('dashboard');
+  
+  // Check if we're on the /tv route and set initial view accordingly
+  const initialView = typeof window !== 'undefined' && window.location.pathname === '/tv' 
+    ? 'studio-tv' 
+    : 'dashboard';
+  const [activeView, setActiveView] = useState(initialView);
   const [selectedTrainee, setSelectedTrainee] = useState<Trainee | null>(null);
   const [selectedWorkout, setSelectedWorkout] = useState<any | null>(null);
+  const [previousWorkoutForNew, setPreviousWorkoutForNew] = useState<any | null>(null);
   const [editingMeasurement, setEditingMeasurement] = useState<any | null>(null);
   const [selectedPairMember, setSelectedPairMember] = useState<'member_1' | 'member_2' | null>(null);
   const [trainees, setTrainees] = useState<Trainee[]>([]);
@@ -113,10 +123,10 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
                   </div>
                 </div>
                 <div className="mr-3 flex-1">
-                  <p className="text-sm font-medium text-white">
+                  <p className="text-sm font-medium text-foreground">
                     שקילה חדשה - {reading.bestMatch!.traineeName}
                   </p>
-                  <p className="mt-1 text-sm text-gray-400">
+                  <p className="mt-1 text-sm text-muted">
                     {weight} ק"ג
                     {bodyFat && ` | ${bodyFat}% שומן`}
                   </p>
@@ -161,10 +171,10 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
                   </div>
                 </div>
                 <div className="mr-3 flex-1">
-                  <p className="text-sm font-medium text-white">
+                  <p className="text-sm font-medium text-foreground">
                     שקילה חדשה - לא זוהה
                   </p>
-                  <p className="mt-1 text-sm text-gray-400">
+                  <p className="mt-1 text-sm text-muted">
                     {weight} ק"ג
                     {bodyFat && ` | ${bodyFat}% שומן`}
                   </p>
@@ -177,7 +187,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             <div className="flex border-r border-white/10">
               <button
                 onClick={() => toast.dismiss(t.id)}
-                className="w-full border border-transparent rounded-none rounded-l-2xl p-4 flex items-center justify-center text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 focus:outline-none transition-colors"
+                className="w-full border border-transparent rounded-none rounded-l-2xl p-4 flex items-center justify-center text-sm font-medium text-muted hover:text-foreground hover:bg-white/5 focus:outline-none transition-colors"
               >
                 סגור
               </button>
@@ -265,16 +275,59 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const loadTrainees = useCallback(async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('trainees')
-      .select('*')
-      .eq('trainer_id', user.id)
-      .order('created_at', { ascending: false });
+    try {
+      // First try with all fields - if some don't exist, we'll get a clear error
+      const { data, error } = await supabase
+        .from('trainees')
+        .select('*')
+        .eq('trainer_id', user.id)
+        .neq('status', 'deleted') // Filter out deleted trainees
+        .order('created_at', { ascending: false });
 
     if (!error && data) {
-      setTrainees(data);
+      // Get last workout dates for all trainees in one query (more efficient)
+      const traineeIds = data.map(t => t.id);
+      let lastWorkoutMap = new Map<string, string>();
+      
+      if (traineeIds.length > 0) {
+        const { data: lastWorkouts } = await supabase
+          .from('workout_trainees')
+          .select('trainee_id, workouts!inner(workout_date, is_completed)')
+          .in('trainee_id', traineeIds)
+          .eq('workouts.is_completed', true)
+          .order('workouts(workout_date)', { ascending: false });
+
+        // Create a map of trainee_id -> last workout date
+        if (lastWorkouts) {
+          lastWorkouts.forEach((wt: any) => {
+            const traineeId = wt.trainee_id;
+            const workoutDate = wt.workouts?.workout_date;
+            if (workoutDate && (!lastWorkoutMap.has(traineeId) || workoutDate > lastWorkoutMap.get(traineeId)!)) {
+              lastWorkoutMap.set(traineeId, workoutDate);
+            }
+          });
+        }
+      }
+
+      // Add lastWorkout to each trainee
+      const traineesWithLastWorkout = data.map(trainee => ({
+        ...trainee,
+        lastWorkout: lastWorkoutMap.get(trainee.id) || null,
+      }));
+
+      setTrainees(traineesWithLastWorkout);
     } else if (error) {
       logger.error('Error loading trainees:', error, 'TrainerApp');
+      console.error('Trainees query error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
+    }
+    } catch (err) {
+      logger.error('Unexpected error loading trainees:', err, 'TrainerApp');
+      console.error('Unexpected error:', err);
     }
   }, [user?.id]);
 
@@ -357,6 +410,8 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   }, []);
 
   const loadWorkouts = useCallback(async (traineeId: string) => {
+    // Fetch all workouts (both scheduled and completed) for the trainee
+    // This ensures scheduled workouts remain visible even after they're completed
     const { data: workoutTrainees, error } = await supabase
       .from('workout_trainees')
       .select(`
@@ -365,6 +420,8 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
           workout_date,
           is_completed,
           is_self_recorded,
+          synced_from_google,
+          google_event_summary,
           created_at,
           workout_exercises (
             id,
@@ -385,8 +442,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
           )
         )
       `)
-      .eq('trainee_id', traineeId)
-      .eq('workouts.is_completed', true);
+      .eq('trainee_id', traineeId);
 
     if (!error && workoutTrainees) {
       const formattedWorkouts = workoutTrainees
@@ -427,7 +483,9 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             })),
             totalVolume,
             duration: 0,
-            isSelfRecorded: w.is_self_recorded || false
+            isSelfRecorded: w.is_self_recorded || false,
+            syncedFromGoogle: w.synced_from_google || false,
+            googleEventSummary: w.google_event_summary || null
           };
         })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -559,9 +617,11 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
     }
 
     try {
+      // Use soft delete by setting status to 'deleted' instead of hard delete
+      // This preserves historical data and avoids foreign key constraint issues
       const { error } = await supabase
         .from('trainees')
-        .delete()
+        .update({ status: 'deleted' })
         .eq('id', traineeId);
 
       if (!error) {
@@ -578,13 +638,114 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
     }
   };
 
-  const handleNewWorkout = (trainee: Trainee) => {
+  const handleNewWorkout = (trainee: Trainee, scheduledWorkoutId?: string) => {
     setSelectedTrainee(trainee);
-    if (trainee.is_pair) {
+    // If there's a scheduled workout ID, load it and pass as editingWorkout
+    if (scheduledWorkoutId) {
+      loadScheduledWorkoutForEditing(scheduledWorkoutId, trainee);
+    } else if (trainee.is_pair) {
       setActiveView('workout-type-selection');
     } else {
       setActiveView('workout-session');
     }
+  };
+
+  const loadScheduledWorkoutForEditing = async (workoutId: string, trainee: Trainee) => {
+    try {
+      const { data: workoutExercises } = await supabase
+        .from('workout_exercises')
+        .select(`
+          id,
+          exercise_id,
+          order_index,
+          exercises (
+            id,
+            name,
+            muscle_group_id
+          ),
+          exercise_sets (
+            id,
+            set_number,
+            weight,
+            reps,
+            rpe,
+            set_type,
+            superset_exercise_id,
+            superset_weight,
+            superset_reps,
+            dropset_weight,
+            dropset_reps
+          )
+        `)
+        .eq('workout_id', workoutId)
+        .order('order_index', { ascending: true });
+
+      if (workoutExercises) {
+        const formattedExercises = workoutExercises.map((we) => ({
+          tempId: we.id,
+          exercise: {
+            id: we.exercises.id,
+            name: we.exercises.name,
+            muscle_group_id: we.exercises.muscle_group_id,
+          },
+          sets: (we.exercise_sets || [])
+            .sort((a, b) => a.set_number - b.set_number)
+            .map((set) => ({
+              id: set.id,
+              set_number: set.set_number,
+              weight: set.weight,
+              reps: set.reps,
+              rpe: set.rpe,
+              set_type: set.set_type as 'regular' | 'superset' | 'dropset',
+              superset_exercise_id: set.superset_exercise_id,
+              superset_weight: set.superset_weight,
+              superset_reps: set.superset_reps,
+              dropset_weight: set.dropset_weight,
+              dropset_reps: set.dropset_reps,
+            })),
+        }));
+
+        setSelectedWorkout({
+          id: workoutId,
+          exercises: formattedExercises,
+        });
+        if (trainee.is_pair) {
+          setActiveView('workout-type-selection');
+        } else {
+          setActiveView('workout-session');
+        }
+      } else {
+        // If no exercises found, just open the workout session with the workout ID
+        setSelectedWorkout({
+          id: workoutId,
+          exercises: [],
+        });
+        if (trainee.is_pair) {
+          setActiveView('workout-type-selection');
+        } else {
+          setActiveView('workout-session');
+        }
+      }
+    } catch (err) {
+      logger.error('Error loading scheduled workout for editing:', err, 'TrainerApp');
+      toast.error('שגיאה בטעינת האימון המתוזמן');
+      // Fallback to regular new workout
+      if (trainee.is_pair) {
+        setActiveView('workout-type-selection');
+      } else {
+        setActiveView('workout-session');
+      }
+    }
+  };
+
+  const handleViewWorkoutPlan = (trainee: Trainee) => {
+    setSelectedTrainee(trainee);
+    setActiveView('workout-plans');
+  };
+
+  const handleViewMealPlan = (trainee: Trainee) => {
+    setSelectedTrainee(trainee);
+    setActiveView('meal-plans');
   };
 
   const handleSelectPersonalWorkout = (memberIndex: 1 | 2) => {
@@ -633,6 +794,47 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const handleViewWorkout = (workout: any) => {
     setSelectedWorkout(workout);
     setActiveView('workout-details');
+  };
+
+  const handleQuickEditLastWorkout = async (traineeId: string) => {
+    if (!user) return;
+    
+    try {
+      // Get the last completed workout for this trainee
+      const { data: lastWorkout, error } = await supabase
+        .from('workout_trainees')
+        .select(`
+          workout_id,
+          workouts!inner (
+            id,
+            workout_date,
+            is_completed,
+            trainer_id
+          )
+        `)
+        .eq('trainee_id', traineeId)
+        .eq('workouts.is_completed', true)
+        .eq('workouts.trainer_id', user.id)
+        .order('workouts.workout_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error || !lastWorkout) {
+        toast.error('לא נמצא אימון אחרון לעריכה');
+        return;
+      }
+
+      const workout = Array.isArray(lastWorkout.workouts) 
+        ? lastWorkout.workouts[0] 
+        : lastWorkout.workouts;
+
+      if (workout && workout.id) {
+        await handleEditWorkout({ id: workout.id });
+      }
+    } catch (err) {
+      logger.error('Error loading last workout for quick edit:', err, 'TrainerApp');
+      toast.error('שגיאה בטעינת האימון האחרון');
+    }
   };
 
   const handleEditWorkout = async (workout: any) => {
@@ -694,6 +896,59 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
         exercises: formattedExercises,
       });
       setActiveView('workout-session');
+    }
+  };
+
+  const handleNewWorkoutFromExisting = async (workout: any) => {
+    if (!selectedTrainee) return;
+
+    const { data: workoutExercises } = await supabase
+      .from('workout_exercises')
+      .select(`
+        id,
+        exercise_id,
+        order_index,
+        exercises (
+          id,
+          name,
+          muscle_group_id
+        ),
+        exercise_sets (
+          id,
+          set_number,
+          weight,
+          reps,
+          rpe,
+          set_type,
+          superset_exercise_id,
+          superset_weight,
+          superset_reps,
+          dropset_weight,
+          dropset_reps
+        )
+      `)
+      .eq('workout_id', workout.id)
+      .order('order_index', { ascending: true });
+
+    if (workoutExercises) {
+      const formattedWorkout = {
+        id: workout.id,
+        date: workout.date,
+        workout_exercises: workoutExercises.map((we) => ({
+          id: we.id,
+          exercise_id: we.exercise_id,
+          order_index: we.order_index,
+          exercises: we.exercises,
+          exercise_sets: we.exercise_sets,
+        })),
+      };
+
+      setPreviousWorkoutForNew(formattedWorkout);
+      if (selectedTrainee.is_pair) {
+        setActiveView('workout-type-selection');
+      } else {
+        setActiveView('workout-session');
+      }
     }
   };
 
@@ -816,7 +1071,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center shadow-glow animate-pulse">
               <Users className="w-7 h-7 text-dark-500" />
             </div>
-            <p className="mt-4 text-gray-400">טוען נתונים...</p>
+            <p className="mt-4 text-theme-muted">טוען נתונים...</p>
           </div>
         </div>
       );
@@ -841,6 +1096,9 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
               }
             }}
             onSaveMeasurement={handleSaveScaleMeasurement}
+            onNewWorkout={handleNewWorkout}
+            onViewWorkoutPlan={handleViewWorkoutPlan}
+            onViewMealPlan={handleViewMealPlan}
           />
           </Suspense>
         );
@@ -852,6 +1110,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
               trainees={trainees}
               onTraineeClick={handleTraineeClick}
               onAddTrainee={handleAddTrainee}
+              onQuickEdit={handleQuickEditLastWorkout}
               unseenWeightsCounts={unseenWeightsCounts}
             />
           </Suspense>
@@ -882,6 +1141,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             onMarkSelfWeightsSeen={markSelfWeightsSeen}
             onViewMentalTools={() => setActiveView('mental-tools')}
             onViewCardio={() => setActiveView('cardio-manager')}
+            onDuplicateWorkout={handleNewWorkoutFromExisting}
           />
           </Suspense>
         ) : null;
@@ -940,6 +1200,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
                 await loadWorkouts(selectedTrainee.id);
                 setActiveView('trainee-profile');
               }}
+              isTablet={isTablet}
             />
           </Suspense>
         ) : null;
@@ -962,6 +1223,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
               onSave={async (workout) => {
                 await loadWorkouts(selectedTrainee.id);
                 setSelectedWorkout(null);
+                setPreviousWorkoutForNew(null);
                 setSelectedPairMember(null);
                 if (selectedWorkout) {
                   setActiveView('workouts-list');
@@ -969,7 +1231,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
                   setActiveView('trainee-profile');
                 }
               }}
-              previousWorkout={undefined}
+              previousWorkout={previousWorkoutForNew || undefined}
               editingWorkout={
                 selectedWorkout
                   ? {
@@ -1140,6 +1402,36 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
                 setActiveView('add-trainee');
                 toast(`יוצר כרטיס מתאמן חדש: ${name}`, { icon: '👤' });
               }}
+              onQuickCreateTrainee={async (name) => {
+                if (!user) return null;
+                try {
+                  const { data, error } = await supabase
+                    .from('trainees')
+                    .insert([{
+                      trainer_id: user.id,
+                      full_name: name.trim(),
+                      status: 'active',
+                    }])
+                    .select()
+                    .single();
+                  
+                  if (error) {
+                    logger.error('Error quick creating trainee', error, 'TrainerApp');
+                    toast.error('שגיאה ביצירת מתאמן');
+                    return null;
+                  }
+                  
+                  // Add to local state
+                  if (data) {
+                    setTrainees(prev => [data, ...prev]);
+                  }
+                  
+                  return data?.id || null;
+                } catch (err) {
+                  logger.error('Error in quick create trainee', err, 'TrainerApp');
+                  return null;
+                }
+              }}
             />
           </Suspense>
         );
@@ -1155,6 +1447,13 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
         return (
           <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
             <ReportsView />
+          </Suspense>
+        );
+
+      case 'smart-report':
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <SmartReportView />
           </Suspense>
         );
 
@@ -1177,8 +1476,8 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
         return (
           <div className="flex items-center justify-center h-64">
             <div className="text-center glass-card p-8 rounded-2xl">
-              <h3 className="text-lg font-medium text-white mb-2">בפיתוח</h3>
-              <p className="text-gray-400">תכונה זו תהיה זמינה בקרוב</p>
+              <h3 className="text-lg font-medium text-theme-primary mb-2">בפיתוח</h3>
+              <p className="text-theme-muted">תכונה זו תהיה זמינה בקרוב</p>
             </div>
           </div>
         );
@@ -1187,6 +1486,29 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
 
   const isWorkoutSession = activeView === 'workout-session' || activeView === 'pair-workout-session';
   const showCollapseControls = isWorkoutSession;
+  const isThemeShowcase =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('theme') === 'showcase';
+
+  if (isThemeShowcase) {
+    return <ThemeShowcase />;
+  }
+
+  // Full-screen Studio TV mode – no sidebars/header, only the TV view
+  if (activeView === 'studio-tv') {
+    return (
+      <Suspense
+        fallback={
+          <div className="min-h-screen bg-gradient-to-br from-zinc-950 to-black flex items-center justify-center">
+            <LoadingSpinner size="lg" text="טוען מצב טלוויזיה..." />
+          </div>
+        }
+      >
+        <StudioTvView />
+      </Suspense>
+    );
+  }
 
   return (
       <div
@@ -1199,6 +1521,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             activeView={activeView}
             onViewChange={handleViewChange}
             collapsed={sidebarCollapsed}
+            isTablet={isTablet}
           />
         )}
 
@@ -1267,7 +1590,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
                   className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
                     activeView === 'dashboard'
                       ? 'text-lime-500'
-                      : 'text-gray-500 hover:text-gray-300'
+                      : 'text-muted hover:text-foreground'
                   }`}
                 >
                   <Home className={`h-6 w-6 mb-1 ${activeView === 'dashboard' ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} aria-hidden="true" />
@@ -1280,7 +1603,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
                   className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
                     activeView.includes('trainee')
                       ? 'text-lime-500'
-                      : 'text-gray-500 hover:text-gray-300'
+                      : 'text-muted hover:text-foreground'
                   }`}
                 >
                   <Users className={`h-6 w-6 mb-1 ${activeView.includes('trainee') ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} aria-hidden="true" />

@@ -76,7 +76,7 @@ export async function signUpTrainer(
           email: data.user.email!,
           full_name: fullName,
         },
-      ]);
+      ] as any);
 
     if (profileError) {
       logger.error('Error creating trainer profile:', profileError, 'authApi');

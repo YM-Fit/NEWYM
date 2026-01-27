@@ -57,6 +57,6 @@ describe('Input', () => {
   it('should show success state', () => {
     render(<Input label="Test" success />);
     const label = screen.getByText(/test/i);
-    expect(label).toHaveClass('text-emerald-400');
+    expect(label).toHaveClass('text-success');
   });
 });

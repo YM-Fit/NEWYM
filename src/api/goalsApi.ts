@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { handleApiError } from './config';
+import { handleApiError } from '../utils/apiErrorHandler';
 import { rateLimiter } from '../utils/rateLimiter';
 
 export interface TraineeGoal {
@@ -62,7 +62,7 @@ export const goalsApi = {
     try {
       const { data, error } = await supabase
         .from('trainee_goals')
-        .insert([input])
+        .insert([input] as any)
         .select()
         .single();
 
@@ -78,7 +78,7 @@ export const goalsApi = {
     try {
       const { data, error } = await supabase
         .from('trainee_goals')
-        .update(updates)
+        .update(updates as any)
         .eq('id', goalId)
         .select()
         .single();
@@ -109,7 +109,7 @@ export const goalsApi = {
     try {
       const { data, error } = await supabase
         .from('trainee_goals')
-        .update({ current_value: currentValue })
+        .update({ current_value: currentValue } as any)
         .eq('id', goalId)
         .select()
         .single();
