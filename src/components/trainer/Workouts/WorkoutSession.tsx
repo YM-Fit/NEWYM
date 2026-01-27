@@ -119,6 +119,8 @@ export default function WorkoutSession({
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [workoutId, setWorkoutId] = useState<string | null>(editingWorkout?.id || null);
+  // Track if this is an editing workout to prevent deletion
+  const isEditingWorkout = useRef<boolean>(!!editingWorkout?.id);
   const [workoutDate, setWorkoutDate] = useState(new Date());
   const [creatingWorkout, setCreatingWorkout] = useState(false);
   const [numericPad, setNumericPad] = useState<{
@@ -229,6 +231,7 @@ export default function WorkoutSession({
     // If we already have a workout ID (from editingWorkout), use it
     if (editingWorkout?.id) {
       setWorkoutId(editingWorkout.id);
+      isEditingWorkout.current = true; // Mark as editing workout to prevent deletion
       return editingWorkout.id;
     }
     
@@ -337,7 +340,9 @@ export default function WorkoutSession({
   // Delete incomplete workout if user cancels/leaves
   // Only delete workouts that were created during this session (new workouts, not scheduled ones)
   const deleteIncompleteWorkout = useCallback(async () => {
-    if (!workoutId || !user) return;
+    // Don't delete if this is an editing workout (scheduled workout being edited)
+    // Only delete workouts that were created during this session
+    if (!workoutId || !user || isEditingWorkout.current) return;
     
     try {
       // Check if workout exists, is not completed, and has exercises
@@ -347,17 +352,25 @@ export default function WorkoutSession({
         .select(`
           id, 
           is_completed,
+          created_at,
           workout_exercises (id)
         `)
         .eq('id', workoutId)
         .eq('trainer_id', user.id)
         .single();
 
+      if (!workout) return;
+
       // Only delete if:
       // 1. Workout exists and is not completed
       // 2. Workout has exercises (meaning it was filled during this session, not a scheduled workout)
+      // 3. Workout was created recently (within last hour) - this indicates it's a new workout, not a scheduled one
       // This prevents deleting scheduled workouts that don't have exercises yet
-      if (workout && !workout.is_completed && workout.workout_exercises && workout.workout_exercises.length > 0) {
+      const workoutCreatedAt = new Date(workout.created_at);
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const isRecentWorkout = workoutCreatedAt > oneHourAgo;
+      
+      if (!workout.is_completed && workout.workout_exercises && workout.workout_exercises.length > 0 && isRecentWorkout) {
         await supabase
           .from('workouts')
           .delete()
@@ -368,7 +381,7 @@ export default function WorkoutSession({
       // Log error but don't block - user is leaving anyway
       logger.error('Error deleting incomplete workout', err, 'WorkoutSession');
     }
-  }, [workoutId, user]);
+  }, [workoutId, user, editingWorkout]);
 
   // Cleanup: delete incomplete workout when component unmounts or user navigates away
   useEffect(() => {
