@@ -453,16 +453,6 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       return { data: { today: [], tomorrow: [] }, success: true };
     }
 
-    // Debug: Log scheduled workouts
-    const scheduledWorkouts = workoutsData.filter(w => !w.is_completed);
-    if (scheduledWorkouts.length > 0) {
-      console.log('Found scheduled workouts:', scheduledWorkouts.map(w => ({
-        id: w.id,
-        workout_date: w.workout_date,
-        is_completed: w.is_completed
-      })));
-    }
-
     const workoutIds = workoutsData.map(w => w.id);
 
     if (workoutIds.length === 0) {
@@ -483,21 +473,7 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     }
 
     if (!workoutTraineesData || workoutTraineesData.length === 0) {
-      // Debug: Log if workouts exist but no workout_trainees
-      if (workoutIds.length > 0) {
-        console.warn('Workouts found but no workout_trainees links:', {
-          workoutIds: workoutIds.slice(0, 5), // Log first 5
-          totalWorkouts: workoutIds.length
-        });
-      }
       return { data: { today: [], tomorrow: [] }, success: true };
-    }
-
-    // Debug: Log workout_trainees for scheduled workouts
-    const scheduledWorkoutIds = workoutsData.filter(w => !w.is_completed).map(w => w.id);
-    const scheduledWorkoutTrainees = workoutTraineesData.filter(wt => scheduledWorkoutIds.includes(wt.workout_id));
-    if (scheduledWorkoutTrainees.length > 0) {
-      console.log('Found workout_trainees for scheduled workouts:', scheduledWorkoutTrainees.length);
     }
 
     // Get unique trainee IDs from the results
@@ -552,6 +528,8 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     // Create a map of completed workouts by trainee and date (YYYY-MM-DD)
     // Format: "traineeId:YYYY-MM-DD" -> true
     const completedWorkoutsByTraineeAndDate = new Map<string, boolean>();
+    // Filter workoutsData to get only completed workouts
+    const completedWorkoutsData = workoutsData.filter(w => w.is_completed);
     if (completedWorkoutsData && completedWorkoutsData.length > 0) {
       const completedWorkoutIds = completedWorkoutsData.map(w => w.id);
       const { data: completedWorkoutTrainees } = await supabase
@@ -594,18 +572,6 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
           actualWorkoutDate = new Date(eventStartTime);
         }
 
-        // Debug: Log scheduled workouts in allWorkouts
-        if (!workout.is_completed) {
-          console.log('Scheduled workout in allWorkouts:', {
-            workoutId: workout.id,
-            workout_date: workout.workout_date,
-            actualWorkoutDate: actualWorkoutDate.toISOString(),
-            is_completed: workout.is_completed,
-            traineeId: trainee.id,
-            traineeName: trainee.full_name
-          });
-        }
-
         return {
           trainee,
           workout: {
@@ -625,20 +591,6 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
 
-    // Debug: Log allWorkouts count and scheduled workouts
-    console.log('=== allWorkouts DEBUG ===');
-    console.log('allWorkouts count:', allWorkouts.length);
-    console.log('scheduled count:', allWorkouts.filter(w => !w.workout.is_completed).length);
-    console.log('Today date:', today.toISOString());
-    console.log('Tomorrow date:', tomorrow.toISOString());
-    console.log('allWorkouts scheduled workouts:', allWorkouts.filter(w => !w.workout.is_completed).map(w => ({
-      id: w.workout.id,
-      date: w.workout.workout_date,
-      workoutDate: w.workoutDate.toISOString(),
-      trainee: w.trainee.full_name
-    })));
-    console.log('=== END allWorkouts DEBUG ===');
-    
     // Separate into today and tomorrow, and sort by time
     // Use the 'now' variable that was already declared at the beginning of the function
     // Group by trainee to handle multiple workouts per trainee per day
@@ -656,20 +608,6 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         const itemDate = new Date(item.workoutDate);
         itemDate.setHours(0, 0, 0, 0);
         const isToday = itemDate.getTime() === today.getTime();
-        // Debug: Log ALL scheduled workouts to see what's happening
-        if (!item.workout.is_completed) {
-          console.log('Scheduled workout filter check:', {
-            workoutId: item.workout.id,
-            workoutDate: item.workout.workout_date,
-            workoutDateParsed: itemDate.toISOString(),
-            today: today.toISOString(),
-            todayTime: today.getTime(),
-            itemDateTime: itemDate.getTime(),
-            isToday,
-            isCompleted: item.workout.is_completed,
-            traineeName: item.trainee.full_name
-          });
-        }
         return isToday;
       })
       .map(item => {
@@ -743,14 +681,6 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         workout: item.workout,
         isFromGoogle: item.isFromGoogle
       }));
-
-    // Debug: Log final results
-    console.log('=== FINAL RESULTS DEBUG ===');
-    console.log('todayWorkouts count:', todayWorkouts.length);
-    console.log('tomorrowWorkouts count:', tomorrowWorkouts.length);
-    console.log('todayWorkouts scheduled:', todayWorkouts.filter(w => !w.workout.is_completed).length);
-    console.log('tomorrowWorkouts scheduled:', tomorrowWorkouts.filter(w => !w.workout.is_completed).length);
-    console.log('=== END FINAL RESULTS DEBUG ===');
 
     return {
       data: {
