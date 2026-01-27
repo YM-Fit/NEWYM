@@ -608,39 +608,44 @@ export default function WorkoutSession({
       return;
     }
 
-    // Create workout if this is the first exercise
-    if (exercises.length === 0 && !workoutId && user) {
-      await createInitialWorkout();
-    }
-
-    if (!user) {
-      addExercise(exercise);
-      return;
-    }
-
-    // Check cache first (cache valid for 5 minutes)
-    const cacheKey = `${trainee.id}-${exercise.id}`;
-    const cached = exerciseCacheRef.current.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
-      addExercise(exercise);
-      setExercises((prev) => {
-        if (!prev.length) return prev;
-        const updated = [...prev];
-        const lastIndex = updated.length - 1;
-        updated[lastIndex] = {
-          ...updated[lastIndex],
-          sets: cached.sets.map((set, index) => ({
-            ...set,
-            id: `temp-${Date.now()}-${index}`,
-          })),
-        };
-        return updated;
-      });
-      return;
-    }
-
+    // Set loading state IMMEDIATELY to prevent rapid clicks from adding duplicates
     setLoadingExercise(exercise.id);
+    logger.debug('Adding exercise:', { exerciseId: exercise.id, exerciseName: exercise.name }, 'WorkoutSession');
+
     try {
+      // Create workout if this is the first exercise
+      if (exercises.length === 0 && !workoutId && user) {
+        await createInitialWorkout();
+      }
+
+      if (!user) {
+        addExercise(exercise);
+        setLoadingExercise(null);
+        return;
+      }
+
+      // Check cache first (cache valid for 5 minutes)
+      const cacheKey = `${trainee.id}-${exercise.id}`;
+      const cached = exerciseCacheRef.current.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+        addExercise(exercise);
+        setExercises((prev) => {
+          if (!prev.length) return prev;
+          const updated = [...prev];
+          const lastIndex = updated.length - 1;
+          updated[lastIndex] = {
+            ...updated[lastIndex],
+            sets: cached.sets.map((set, index) => ({
+              ...set,
+              id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${index}`,
+            })),
+          };
+          return updated;
+        });
+        setLoadingExercise(null);
+        return;
+      }
+
       const { data: workouts, error } = await supabase
         .from('workouts')
         .select(`
@@ -705,7 +710,7 @@ export default function WorkoutSession({
       const mappedSets: SetData[] = previousSets
         .sort((a: any, b: any) => (a.set_number || 0) - (b.set_number || 0))
         .map((set: any, index: number) => ({
-          id: `temp-${Date.now()}-${index}`,
+          id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${index}`,
           set_number: set.set_number || index + 1,
           weight: set.weight || 0,
           reps: set.reps || 0,
@@ -1412,9 +1417,18 @@ export default function WorkoutSession({
             totalVolume={calculateExerciseVolume(workoutExercise)}
             onRemove={async () => {
               const exercise = exercises[exerciseIndex];
+              logger.debug('Removing exercise', {
+                exerciseIndex,
+                exerciseName: exercise.exercise.name,
+                tempId: exercise.tempId,
+                workoutId,
+                totalExercises: exercises.length
+              }, 'WorkoutSession');
+
               // If workoutId exists and tempId is a UUID (not a temp ID), delete from database
               // tempId starting with 'temp-' indicates it's not saved to DB yet
               if (workoutId && exercise.tempId && !exercise.tempId.startsWith('temp-')) {
+                logger.debug('Exercise is saved in DB, deleting from database', { tempId: exercise.tempId }, 'WorkoutSession');
                 try {
                   // Delete all sets for this workout_exercise
                   const { data: sets } = await supabase
@@ -1427,6 +1441,7 @@ export default function WorkoutSession({
                       .from('exercise_sets')
                       .delete()
                       .in('id', sets.map(s => s.id));
+                    logger.debug('Deleted exercise sets from database', { count: sets.length }, 'WorkoutSession');
                   }
 
                   // Delete the workout_exercise
@@ -1436,13 +1451,26 @@ export default function WorkoutSession({
                     .eq('id', exercise.tempId);
 
                   logger.debug('Deleted exercise from database', { tempId: exercise.tempId }, 'WorkoutSession');
+                  toast.success('התרגיל נמחק');
                 } catch (error) {
                   logger.error('Error deleting exercise from database:', error, 'WorkoutSession');
                   toast.error('שגיאה במחיקת התרגיל מהדאטאבייס');
+                  return; // Don't remove from local state if DB deletion failed
                 }
+              } else {
+                logger.debug('Exercise is not saved in DB, only removing from local state', {
+                  tempId: exercise.tempId,
+                  startsWith: exercise.tempId?.startsWith('temp-')
+                }, 'WorkoutSession');
+                toast.success('התרגיל הוסר');
               }
-              // Always remove from local state
+
+              // Always remove from local state (unless DB deletion failed)
               removeExercise(exerciseIndex);
+              logger.debug('Exercise removed from local state', {
+                exerciseIndex,
+                remainingExercises: exercises.length - 1
+              }, 'WorkoutSession');
             }}
             onToggleMinimize={() => toggleMinimizeExercise(workoutExercise.tempId)}
             onComplete={() => completeExercise(workoutExercise.tempId)}
