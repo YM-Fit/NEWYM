@@ -540,6 +540,28 @@ export default function WorkoutSession({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty, exercises.length, workoutId]);
 
+  // Find the active exercise (first non-minimized) and active set (first non-collapsed)
+  const findActiveExerciseAndSet = useCallback((): { exerciseIndex: number; setIndex: number } | null => {
+    for (let i = 0; i < exercises.length; i++) {
+      if (!minimizedExercises.includes(exercises[i].tempId)) {
+        const exercise = exercises[i];
+        for (let j = 0; j < exercise.sets.length; j++) {
+          if (!collapsedSets.includes(exercise.sets[j].id)) {
+            return { exerciseIndex: i, setIndex: j };
+          }
+        }
+        // If no non-collapsed set, return the first set
+        if (exercise.sets.length > 0) {
+          return { exerciseIndex: i, setIndex: 0 };
+        }
+      }
+    }
+    // Fallback to first exercise and first set
+    return exercises.length > 0 && exercises[0].sets.length > 0 
+      ? { exerciseIndex: 0, setIndex: 0 }
+      : null;
+  }, [exercises, minimizedExercises, collapsedSets]);
+
   // Auto-save workout in realtime when exercises change (with debounce)
   useEffect(() => {
     if (!workoutId || exercises.length === 0 || saving || creatingWorkout) return;
@@ -854,29 +876,6 @@ export default function WorkoutSession({
       setLoadingExercise(null);
     }
   };
-
-
-  // Find the active exercise (first non-minimized) and active set (first non-collapsed)
-  const findActiveExerciseAndSet = useCallback((): { exerciseIndex: number; setIndex: number } | null => {
-    for (let i = 0; i < exercises.length; i++) {
-      if (!minimizedExercises.includes(exercises[i].tempId)) {
-        const exercise = exercises[i];
-        for (let j = 0; j < exercise.sets.length; j++) {
-          if (!collapsedSets.includes(exercise.sets[j].id)) {
-            return { exerciseIndex: i, setIndex: j };
-          }
-        }
-        // If no non-collapsed set, return the first set
-        if (exercise.sets.length > 0) {
-          return { exerciseIndex: i, setIndex: 0 };
-        }
-      }
-    }
-    // Fallback to first exercise and first set
-    return exercises.length > 0 && exercises[0].sets.length > 0 
-      ? { exerciseIndex: 0, setIndex: 0 }
-      : null;
-  }, [exercises, minimizedExercises, collapsedSets]);
 
   const openNumericPad = (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe', label: string) => {
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
