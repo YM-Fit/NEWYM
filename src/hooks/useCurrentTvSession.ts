@@ -453,24 +453,18 @@ export function useCurrentTvSession(
                   ? currentSession.workout.exercises
                   : [];
 
-                // Get IDs of exercises from DB (these are the current valid exercises)
-                const dbExerciseIds = new Set(exercises.map(ex => ex.id));
-
                 // Merge exercises: use DB data as source of truth, but preserve any local state (like UI state)
+                // Only keep exercises that exist in the DB
                 let finalExercises = exercises;
                 if (existingExercises.length > 0) {
-                  // Create map from DB exercises
-                  const exerciseMap = new Map(exercises.map(ex => [ex.id, ex]));
-
-                  // Only merge existing exercises that still exist in DB
-                  existingExercises.forEach(ex => {
-                    if (dbExerciseIds.has(ex.id) && !exerciseMap.has(ex.id)) {
-                      exerciseMap.set(ex.id, ex);
-                    }
+                  // Merge: use DB data as base, but preserve any local state from existing exercises
+                  finalExercises = exercises.map(dbEx => {
+                    // Find matching existing exercise to preserve local state
+                    const existingEx = existingExercises.find(ex => ex.id === dbEx.id);
+                    // If found, merge them (DB data takes precedence, but preserve local state like UI state)
+                    return existingEx ? { ...existingEx, ...dbEx } : dbEx;
                   });
-
-                  // Final result: only exercises that exist in DB
-                  finalExercises = exercises.map(ex => exerciseMap.get(ex.id) || ex);
+                  // Note: exercises not in DB are automatically excluded since we only iterate over DB exercises
                 }
 
                 console.log('[TV-POLLING] Exercises from DB', {
@@ -557,36 +551,44 @@ export function useCurrentTvSession(
         setSession(prev => {
           // If we have an existing session with the same workout ID, merge exercises
           if (prev && prev.workout && nextSession.workout && prev.workout.id === nextSession.workout.id) {
-            // Merge exercises: keep existing ones and add/update new ones
+            // Merge exercises: use DB data as source of truth, but preserve local state (like UI state)
             const existingExercises = prev.workout.exercises || [];
             const newExercises = nextSession.workout.exercises || [];
             
-            // If we have existing exercises, always preserve them
-            if (existingExercises.length > 0) {
-              const exerciseMap = new Map(existingExercises.map(ex => [ex.id, ex]));
-              
-              // Update or add exercises from the new data (only if new data has exercises)
-              if (newExercises.length > 0) {
-                newExercises.forEach(ex => {
-                  exerciseMap.set(ex.id, ex);
-                });
-              }
-              
-              const mergedExercises = Array.from(exerciseMap.values());
+            // Use new exercises (from DB) as the source of truth
+            // Only keep existing exercises that still exist in the DB
+            if (newExercises.length > 0) {
+              // Merge: use DB data as base, but preserve any local state from existing exercises
+              const mergedExercises = newExercises.map(newEx => {
+                // Find matching existing exercise to preserve local state
+                const existingEx = existingExercises.find(ex => ex.id === newEx.id);
+                // If found, merge them (DB data takes precedence, but preserve local state like UI state)
+                return existingEx ? { ...existingEx, ...newEx } : newEx;
+              });
               
               return {
                 ...nextSession,
                 workout: {
                   ...nextSession.workout,
-                  exercises: mergedExercises, // Always use merged exercises if we had existing ones
+                  exercises: mergedExercises, // Only exercises that exist in DB
                 },
               };
             }
             
-            // No existing exercises - use new ones if available
-            if (newExercises.length > 0) {
-              return nextSession;
+            // No new exercises from DB - clear exercises if DB says there are none
+            // (This handles the case where all exercises were deleted)
+            if (existingExercises.length > 0) {
+              return {
+                ...nextSession,
+                workout: {
+                  ...nextSession.workout,
+                  exercises: [], // DB has no exercises, so clear them
+                },
+              };
             }
+            
+            // Both are empty - use new session
+            return nextSession;
             
             // Both are empty - keep existing session structure but update other fields
             return {
