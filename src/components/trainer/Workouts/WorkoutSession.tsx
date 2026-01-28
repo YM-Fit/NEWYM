@@ -187,6 +187,8 @@ export default function WorkoutSession({
   const [showWorkoutHistory, setShowWorkoutHistory] = useState(false);
   // Track exercises that are being deleted to prevent auto-save from re-adding them
   const deletedExerciseIdsRef = useRef<Set<string>>(new Set());
+  // NEW: Track exercises currently being deleted (async operation in progress)
+  const deletingExerciseIdsRef = useRef<Set<string>>(new Set());
 
   const workoutData = {
     exercises,
@@ -423,9 +425,12 @@ export default function WorkoutSession({
   const autoSaveWorkout = useCallback(async () => {
     if (!user || !workoutId || exercises.length === 0 || saving || creatingWorkout) return;
 
-    // CRITICAL FIX: Filter out exercises that are being deleted
+    // CRITICAL FIX: Filter out exercises that are being deleted OR were deleted
     // This prevents auto-save from re-adding exercises that were just deleted
-    const exercisesToSave = exercises.filter(ex => !deletedExerciseIdsRef.current.has(ex.exercise.id));
+    const exercisesToSave = exercises.filter(ex => 
+      !deletedExerciseIdsRef.current.has(ex.exercise.id) &&
+      !deletingExerciseIdsRef.current.has(ex.exercise.id)
+    );
     
     if (exercisesToSave.length === 0) {
       logger.debug('No exercises to save (all are being deleted)', 'WorkoutSession');
@@ -1543,7 +1548,9 @@ export default function WorkoutSession({
                 totalExercises: exercises.length
               }, 'WorkoutSession');
 
-              // Mark exercise as deleted to prevent auto-save from re-adding it
+              // Mark as "deleting" (operation in progress)
+              deletingExerciseIdsRef.current.add(exerciseId);
+              // Also mark as "deleted" to prevent auto-save
               deletedExerciseIdsRef.current.add(exerciseId);
 
               // IMMEDIATELY remove from local state for responsive UI
@@ -1573,7 +1580,8 @@ export default function WorkoutSession({
 
                     if (findError) {
                       logger.error('Error finding exercise in database:', findError, 'WorkoutSession');
-                      // Remove from deleted set if deletion failed
+                      // FAILURE: Remove from both sets (allow retry)
+                      deletingExerciseIdsRef.current.delete(exerciseId);
                       deletedExerciseIdsRef.current.delete(exerciseId);
                       return;
                     }
@@ -1589,6 +1597,10 @@ export default function WorkoutSession({
 
                       if (setsDeleteError) {
                         logger.error('Error deleting exercise sets from database:', setsDeleteError, 'WorkoutSession');
+                        // FAILURE: Remove from both sets (allow retry)
+                        deletingExerciseIdsRef.current.delete(exerciseId);
+                        deletedExerciseIdsRef.current.delete(exerciseId);
+                        return;
                       }
 
                       // Delete the workout_exercises
@@ -1599,27 +1611,33 @@ export default function WorkoutSession({
 
                       if (exerciseDeleteError) {
                         logger.error('Error deleting exercise from database:', exerciseDeleteError, 'WorkoutSession');
-                        // Remove from deleted set if deletion failed
+                        // FAILURE: Remove from both sets (allow retry)
+                        deletingExerciseIdsRef.current.delete(exerciseId);
                         deletedExerciseIdsRef.current.delete(exerciseId);
                       } else {
                         logger.debug('Deleted exercise from database', { workoutExerciseIds }, 'WorkoutSession');
-                        // Keep in deleted set for a bit longer to ensure auto-save doesn't re-add it
+                        // SUCCESS: Remove from "deleting", keep in "deleted" for longer
+                        deletingExerciseIdsRef.current.delete(exerciseId);
+                        // Keep in deletedExerciseIdsRef for 60 seconds (not 5!) to prevent auto-save from re-adding
                         setTimeout(() => {
                           deletedExerciseIdsRef.current.delete(exerciseId);
-                        }, 5000); // Remove from tracking after 5 seconds
+                        }, 60000); // Remove from tracking after 60 seconds
                       }
                     } else {
                       // Exercise not in DB, remove from tracking immediately
+                      deletingExerciseIdsRef.current.delete(exerciseId);
                       deletedExerciseIdsRef.current.delete(exerciseId);
                     }
                   } catch (error) {
                     logger.error('Error deleting exercise from database:', error, 'WorkoutSession');
-                    // Remove from deleted set if deletion failed
+                    // FAILURE: Remove from both sets (allow retry)
+                    deletingExerciseIdsRef.current.delete(exerciseId);
                     deletedExerciseIdsRef.current.delete(exerciseId);
                   }
                 })();
               } else {
                 // No workoutId, remove from tracking immediately
+                deletingExerciseIdsRef.current.delete(exerciseId);
                 deletedExerciseIdsRef.current.delete(exerciseId);
               }
             }}
