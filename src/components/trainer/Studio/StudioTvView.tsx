@@ -572,17 +572,25 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                       </div>
                     </div>
                     {currentExercise && latestSet && exerciseStats && (
-                      <div className="flex items-center gap-4 2xl:gap-6">
-                        <div className="text-right">
-                          <div className="text-black dark:text-gray-300 text-base 2xl:text-lg mb-1 font-semibold">תרגיל נוכחי</div>
-                          <div className="text-black dark:text-white text-xl 2xl:text-2xl font-black">
+                      <div className="flex items-center gap-6 2xl:gap-8 bg-gradient-to-r from-emerald-200/80 to-emerald-100/80 dark:from-emerald-500/30 dark:to-emerald-500/20 px-6 py-4 2xl:px-8 2xl:py-5 rounded-2xl 2xl:rounded-3xl border-3 border-emerald-400 dark:border-emerald-500/50 shadow-xl">
+                        <div className="text-right flex-1">
+                          <div className="text-black dark:text-white text-lg 2xl:text-xl mb-2 font-bold uppercase tracking-wide">תרגיל נוכחי</div>
+                          <div className="text-black dark:text-white text-2xl 2xl:text-4xl font-black mb-2 tv-active-exercise-name">
                             {currentExercise.name}
                           </div>
-                          <div className="text-black dark:text-gray-300 text-sm 2xl:text-base font-semibold">
-                            סט {latestSet.set_number} | {latestSet.weight ?? 0} ק״ג × {latestSet.reps ?? 0} | נפח: {Math.round(exerciseStats.totalVolume)} ק״ג
+                          <div className="flex items-center gap-4 2xl:gap-6 text-black dark:text-white">
+                            <div className="text-base 2xl:text-lg font-bold">
+                              <span className="text-emerald-700 dark:text-emerald-300">סט {latestSet.set_number}:</span> {latestSet.weight ?? 0} ק״ג × {latestSet.reps ?? 0}
+                            </div>
+                            <div className="text-base 2xl:text-lg font-bold">
+                              <span className="text-emerald-700 dark:text-emerald-300">נפח:</span> {Math.round(exerciseStats.totalVolume)} ק״ג
+                            </div>
+                            <div className="text-base 2xl:text-lg font-bold">
+                              <span className="text-emerald-700 dark:text-emerald-300">סטים:</span> {exerciseStats.completedSets}/{exerciseStats.totalSets}
+                            </div>
                           </div>
                         </div>
-                        <div className="px-5 py-2 rounded-full bg-red-500 text-white text-lg 2xl:text-xl font-black animate-pulse shadow-glow">
+                        <div className="px-6 py-3 2xl:px-8 2xl:py-4 rounded-full bg-gradient-to-r from-red-500 to-red-600 text-white text-xl 2xl:text-2xl font-black animate-pulse shadow-glow-xl border-3 border-red-700 dark:border-red-400">
                           🔴 LIVE
                         </div>
                       </div>
@@ -592,17 +600,17 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                   {/* Full Screen Table - Takes entire screen space */}
                   <div className="flex-1 overflow-auto">
                     <table className="w-full" style={{ fontSize: 'clamp(1.25rem, 3vw, 2.5rem)' }}>
-                      <thead className="sticky top-0 z-10 bg-emerald-100 dark:bg-gradient-dark border-b-4 border-black dark:border-primary/40">
+                      <thead className="sticky top-0 z-10 bg-gradient-to-r from-emerald-200 to-emerald-300 dark:from-emerald-600/40 dark:to-emerald-500/40 border-b-4 border-black dark:border-primary/50 shadow-lg">
                         <tr>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 text-black dark:text-gray-300 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-emerald-200 dark:bg-primary/10 border-r-2 border-black dark:border-primary/20`}>#</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 text-black dark:text-gray-300 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-emerald-200 dark:bg-primary/10 border-r-2 border-black dark:border-primary/20`}>תרגיל</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 text-black dark:text-gray-300 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-emerald-200 dark:bg-primary/10 border-r-2 border-black dark:border-primary/20`}>סטטוס</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 text-black dark:text-gray-300 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-emerald-200 dark:bg-primary/10 border-r-2 border-black dark:border-primary/20`}>משקל מקס׳</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 text-black dark:text-gray-300 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-emerald-200 dark:bg-primary/10 border-r-2 border-black dark:border-primary/20`}>חזרות</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 text-black dark:text-gray-300 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-emerald-200 dark:bg-primary/10 border-r-2 border-black dark:border-primary/20`}>נפח</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 text-black dark:text-gray-300 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-emerald-200 dark:bg-primary/10 border-r-2 border-black dark:border-primary/20`}>סטים</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 text-black dark:text-gray-300 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-emerald-200 dark:bg-primary/10 border-r-2 border-black dark:border-primary/20`}>פרטי סטים</th>
-                          <th className={`text-right py-4 2xl:py-6 px-4 2xl:px-6 text-black dark:text-gray-300 font-black text-xl 2xl:text-2xl uppercase tracking-wider bg-emerald-200 dark:bg-primary/10`}>התקדמות</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>#</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>תרגיל</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>סטטוס</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>משקל מקס׳</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>חזרות</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>נפח</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>סטים</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>פרטי סטים</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20`}>התקדמות</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -611,15 +619,24 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                           return (
                           <tr 
                             key={exercise.id}
-                            className={`border-b-2 border-black dark:border-primary/20 transition-all duration-300 ${
+                            className={`border-b-4 border-black dark:border-primary/30 transition-all duration-500 ${
                               exercise.isCompleted 
                                 ? 'bg-emerald-100 dark:bg-emerald-500/15' 
                                 : 'bg-emerald-50 dark:bg-amber-500/10'
-                            } ${isActiveExercise ? 'ring-4 ring-black dark:ring-primary/50 scale-105 transform' : ''}`}
-                            style={isActiveExercise ? { transform: 'scale(1.05)' } : {}}
+                            } ${isActiveExercise 
+                              ? 'tv-active-exercise-row ring-6 ring-emerald-500 dark:ring-emerald-400 ring-offset-4 ring-offset-emerald-50 dark:ring-offset-emerald-900/50 bg-gradient-to-r from-emerald-200 via-emerald-100 to-emerald-200 dark:from-emerald-500/30 dark:via-emerald-500/20 dark:to-emerald-500/30 shadow-2xl shadow-emerald-500/50 dark:shadow-emerald-400/30' 
+                              : 'hover:bg-emerald-100/50 dark:hover:bg-emerald-500/10'
+                            }`}
                           >
-                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 text-center border-r-2 border-black dark:border-primary/20`}>
-                              {!isActiveExercise && (
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 text-center border-r-3 border-black dark:border-primary/30`}>
+                              {isActiveExercise ? (
+                                <div className="w-20 h-20 2xl:w-24 2xl:h-24 rounded-full flex items-center justify-center text-3xl 2xl:text-4xl font-black mx-auto border-4 border-emerald-600 dark:border-emerald-400 bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-400 dark:to-emerald-500 text-white shadow-glow-xl animate-tv-active-badge-pulse">
+                                  <span className="relative">
+                                    {index + 1}
+                                    <span className="absolute -top-1 -right-1 w-4 h-4 2xl:w-5 2xl:h-5 bg-red-500 rounded-full border-2 border-white animate-ping"></span>
+                                  </span>
+                                </div>
+                              ) : (
                                 <div className={`w-14 h-14 2xl:w-18 2xl:h-18 rounded-full flex items-center justify-center text-xl 2xl:text-2xl font-black mx-auto border-2 border-black dark:border-transparent ${
                                   exercise.isCompleted 
                                     ? 'bg-emerald-500 text-white shadow-glow-lg dark:bg-emerald-500' 
@@ -629,10 +646,17 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                 </div>
                               )}
                             </td>
-                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 text-black dark:text-white font-black ${isActiveExercise ? 'text-2xl 2xl:text-4xl' : 'text-xl 2xl:text-2xl'} border-r-2 border-black dark:border-primary/20`}>
-                              <div className="flex flex-col gap-1">
-                                <div className="flex items-center gap-2">
-                                  {exercise.name}
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 text-black dark:text-white font-black ${isActiveExercise ? 'text-3xl 2xl:text-5xl' : 'text-xl 2xl:text-2xl'} border-r-3 border-black dark:border-primary/30`}>
+                              <div className="flex flex-col gap-2">
+                                <div className="flex items-center gap-3">
+                                  <span className={isActiveExercise ? 'tv-active-exercise-name' : ''}>
+                                    {exercise.name}
+                                  </span>
+                                  {isActiveExercise && (
+                                    <span className="px-3 py-1 2xl:px-4 2xl:py-2 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white text-sm 2xl:text-base font-black border-2 border-emerald-700 dark:border-emerald-400 shadow-lg animate-pulse-slow">
+                                      נוכחי
+                                    </span>
+                                  )}
                                   {exercise.hasFailure && (
                                     <span className="text-red-600 dark:text-red-400 text-2xl 2xl:text-3xl" title="היה כשל בסט כלשהו">
                                       ⚠️
@@ -657,32 +681,32 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                 )}
                               </div>
                             </td>
-                            <td className="py-6 2xl:py-8 px-4 2xl:px-6 border-r-2 border-black dark:border-primary/20">
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 border-r-3 border-black dark:border-primary/30`}>
                               {exercise.isCompleted ? (
-                                <span className="px-4 py-2 2xl:px-6 2xl:py-3 rounded-full bg-emerald-500 text-white dark:bg-emerald-500/30 dark:text-emerald-400 text-lg 2xl:text-xl font-black border-2 border-black dark:border-emerald-500/50 shadow-glow-lg animate-pulse-slow inline-block">
+                                <span className={`px-4 py-2 2xl:px-6 2xl:py-3 rounded-full bg-emerald-500 text-white dark:bg-emerald-500/30 dark:text-emerald-400 ${isActiveExercise ? 'text-xl 2xl:text-2xl' : 'text-lg 2xl:text-xl'} font-black border-3 border-black dark:border-emerald-500/50 shadow-glow-lg animate-pulse-slow inline-block`}>
                                   ✓ הושלם
                                 </span>
                               ) : (
-                                <span className="px-4 py-2 2xl:px-6 2xl:py-3 rounded-full bg-amber-500 text-white dark:bg-amber-500/30 dark:text-amber-400 text-lg 2xl:text-xl font-black border-2 border-black dark:border-amber-500/50 inline-block">
+                                <span className={`px-4 py-2 2xl:px-6 2xl:py-3 rounded-full bg-amber-500 text-white dark:bg-amber-500/30 dark:text-amber-400 ${isActiveExercise ? 'text-xl 2xl:text-2xl' : 'text-lg 2xl:text-xl'} font-black border-3 border-black dark:border-amber-500/50 inline-block`}>
                                   בתהליך
                                 </span>
                               )}
                             </td>
-                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 text-black dark:text-white text-xl 2xl:text-2xl font-black text-center border-r-2 border-black dark:border-primary/20`}>
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 text-black dark:text-white ${isActiveExercise ? 'text-2xl 2xl:text-4xl' : 'text-xl 2xl:text-2xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
                               {exercise.maxWeight > 0 ? `${exercise.maxWeight} ק״ג` : '—'}
                             </td>
-                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 text-black dark:text-white text-xl 2xl:text-2xl font-black text-center border-r-2 border-black dark:border-primary/20`}>
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 text-black dark:text-white ${isActiveExercise ? 'text-2xl 2xl:text-4xl' : 'text-xl 2xl:text-2xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
                               {exercise.totalReps > 0 ? exercise.totalReps : '—'}
                             </td>
-                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 text-black dark:text-white text-xl 2xl:text-2xl font-black text-center border-r-2 border-black dark:border-primary/20`}>
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 text-black dark:text-white ${isActiveExercise ? 'text-2xl 2xl:text-4xl' : 'text-xl 2xl:text-2xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
                               {exercise.totalVolume > 0 ? `${Math.round(exercise.totalVolume)} ק״ג` : '—'}
                             </td>
-                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 text-xl 2xl:text-2xl font-black text-center border-r-2 border-black dark:border-primary/20`}>
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 ${isActiveExercise ? 'text-2xl 2xl:text-4xl' : 'text-xl 2xl:text-2xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
                               <span className={exercise.completedSets === exercise.totalSets ? 'text-emerald-600 dark:text-emerald-500' : 'text-amber-600 dark:text-amber-500'}>
                                 {exercise.completedSets}/{exercise.totalSets}
                               </span>
                             </td>
-                            <td className="py-6 2xl:py-8 px-4 2xl:px-6 border-r-2 border-black dark:border-primary/20">
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 border-r-3 border-black dark:border-primary/30`}>
                               <div className="flex flex-wrap gap-2 2xl:gap-3 justify-end">
                                 {exercise.sets.slice(0, 5).map((set) => {
                                   const hasSuperset = set.superset_exercise_id && ((set.superset_weight || 0) > 0 || (set.superset_reps || 0) > 0);
@@ -748,7 +772,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                 )}
                               </div>
                             </td>
-                            <td className="py-6 2xl:py-8 px-4 2xl:px-6 text-center">
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 text-center`}>
                               {exercise.progressIndicator === 'up' && (
                                 <div className="flex flex-col items-center justify-center gap-1 text-emerald-600 dark:text-emerald-400 animate-pulse-slow">
                                   <div className="flex items-center gap-2">

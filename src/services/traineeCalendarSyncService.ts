@@ -138,8 +138,36 @@ export async function syncTraineeEventsToCalendar(
           );
 
           if (updateResult.error) {
-            failed++;
-            errors.push(`Event ${event.google_event_id}: ${updateResult.error}`);
+            // Check if event was deleted (404/410) - if so, delete sync record
+            if (updateResult.error.includes('לא נמצא') || updateResult.error.includes('נמחק')) {
+              // Get sync record info before deleting (to check sync_direction)
+              const { data: syncRecord } = await supabase
+                .from('google_calendar_sync')
+                .select('sync_direction')
+                .eq('id', event.id)
+                .maybeSingle();
+              
+              // Delete workout if exists and sync direction allows it
+              if (event.workout_id && syncRecord && syncRecord.sync_direction !== 'to_google') {
+                await supabase
+                  .from('workouts')
+                  .delete()
+                  .eq('id', event.workout_id)
+                  .eq('trainer_id', trainerId);
+              }
+              
+              // Delete sync record
+              await supabase
+                .from('google_calendar_sync')
+                .delete()
+                .eq('id', event.id);
+              
+              logger.info('Deleted sync record for event that no longer exists in Google Calendar', 
+                { eventId: event.google_event_id }, 'syncTraineeEventsToCalendar');
+            } else {
+              failed++;
+              errors.push(`Event ${event.google_event_id}: ${updateResult.error}`);
+            }
           } else {
             updated++;
             

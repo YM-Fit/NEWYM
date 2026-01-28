@@ -801,7 +801,9 @@ export async function updateGoogleCalendarEvent(
           return { success: false, needsRetry: true };
         }
         if (getResponse.status === 404 || getResponse.status === 410) {
-          return { success: false, error: 'האירוע לא נמצא ב-Google Calendar' };
+          // Event was deleted from Google Calendar
+          // Return special error code to indicate deletion
+          return { success: false, error: 'האירוע לא נמצא ב-Google Calendar (נמחק)', eventDeleted: true };
         }
         return { success: false, error: 'שגיאה בטעינת אירוע מ-Google Calendar' };
       }
@@ -1337,14 +1339,42 @@ export async function bulkUpdateCalendarEvents(
         );
 
         if (updateResult.error) {
-          failed++;
-          errors.push(`Event ${(record as any).google_event_id}: ${updateResult.error}`);
-          
-          // Update sync status to failed
-          await supabase
-            .from('google_calendar_sync')
-            .update({ sync_status: 'failed' } as any)
-            .eq('id', (record as any).id);
+          // Check if event was deleted (404/410) - if so, delete sync record
+          if (updateResult.error.includes('לא נמצא') || updateResult.error.includes('נמחק')) {
+            // Get sync record info before deleting (to check sync_direction)
+            const { data: syncRecord } = await supabase
+              .from('google_calendar_sync')
+              .select('workout_id, sync_direction')
+              .eq('id', (record as any).id)
+              .maybeSingle();
+            
+            // Delete workout if exists and sync direction allows it
+            if (syncRecord?.workout_id && syncRecord.sync_direction !== 'to_google') {
+              await supabase
+                .from('workouts')
+                .delete()
+                .eq('id', syncRecord.workout_id)
+                .eq('trainer_id', trainerId);
+            }
+            
+            // Delete sync record
+            await supabase
+              .from('google_calendar_sync')
+              .delete()
+              .eq('id', (record as any).id);
+            
+            logger.info('Deleted sync record for event that no longer exists in Google Calendar', 
+              { eventId: (record as any).google_event_id }, 'bulkUpdateCalendarEvents');
+          } else {
+            failed++;
+            errors.push(`Event ${(record as any).google_event_id}: ${updateResult.error}`);
+            
+            // Update sync status to failed
+            await supabase
+              .from('google_calendar_sync')
+              .update({ sync_status: 'failed' } as any)
+              .eq('id', (record as any).id);
+          }
         } else {
           updated++;
           

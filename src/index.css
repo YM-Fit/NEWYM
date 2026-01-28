@@ -3055,3 +3055,161 @@ html body .tv-view-container .text-muted-tv,
   animation: tv-shimmer 3s infinite;
   pointer-events: none;
 }
+
+/* ============================================
+   TV Active Exercise - Enhanced Styling
+   ============================================ */
+
+/* Active Exercise Row - Main container */
+.tv-active-exercise-row {
+  position: relative;
+  z-index: 1;
+  animation: tv-active-exercise-pulse 3s ease-in-out infinite;
+}
+
+/* Pulse animation for active exercise */
+@keyframes tv-active-exercise-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3), 0 0 40px rgba(16, 185, 129, 0.2), 0 0 60px rgba(16, 185, 129, 0.1);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.5), 0 0 80px rgba(16, 185, 129, 0.3), 0 0 120px rgba(16, 185, 129, 0.2);
+    transform: scale(1.02);
+  }
+}
+
+/* Glow effect for active exercise */
+.tv-active-exercise-row::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3));
+  border-radius: inherit;
+  z-index: -1;
+  animation: tv-active-exercise-glow 2s ease-in-out infinite;
+  filter: blur(8px);
+}
+
+@keyframes tv-active-exercise-glow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* Shimmer effect for active exercise */
+.tv-active-exercise-row::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: tv-active-exercise-shimmer 3s infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes tv-active-exercise-shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Active exercise name styling */
+.tv-active-exercise-name {
+  background: linear-gradient(135deg, #000000 0%, #1a2e22 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+  position: relative;
+}
+
+.light .tv-active-exercise-name {
+  background: linear-gradient(135deg, #000000 0%, #1a2e22 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark .tv-active-exercise-name {
+  background: linear-gradient(135deg, #ffffff 0%, #d1fae5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Active exercise badge pulse */
+@keyframes tv-active-badge-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(16, 185, 129, 0.2);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.6), 0 0 60px rgba(16, 185, 129, 0.3);
+  }
+}
+
+.animate-tv-active-badge-pulse {
+  animation: tv-active-badge-pulse 2s ease-in-out infinite;
+}
+
+/* Row hover effect */
+.tv-view-container tbody tr {
+  transition: all 0.3s ease;
+}
+
+.tv-view-container tbody tr:hover:not(.tv-active-exercise-row) {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  transform: translateX(-4px);
+}
+
+.dark .tv-view-container tbody tr:hover:not(.tv-active-exercise-row) {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Enhanced borders for TV mode */
+.border-r-3 {
+  border-right-width: 3px;
+}
+
+.border-3 {
+  border-width: 3px;
+}
+
+/* Improved text contrast for TV */
+.tv-view-container th,
+.tv-view-container td {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.dark .tv-view-container th,
+.dark .tv-view-container td {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced shadow for active exercise */
+.tv-active-exercise-row {
+  box-shadow: 
+    0 10px 40px rgba(16, 185, 129, 0.3),
+    0 0 60px rgba(16, 185, 129, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.dark .tv-active-exercise-row {
+  box-shadow: 
+    0 10px 40px rgba(16, 185, 129, 0.4),
+    0 0 80px rgba(16, 185, 129, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}

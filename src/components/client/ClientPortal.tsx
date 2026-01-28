@@ -14,15 +14,12 @@ import {
   Download
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { PaymentService } from '../../services/paymentService';
-import { DocumentService } from '../../services/documentService';
-import { CommunicationService } from '../../services/communicationService';
-import { getTrainees } from '../../api/traineeApi';
+import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../utils/logger';
 
 export default function ClientPortal() {
-  const { user } = useAuth();
+  const { traineeId } = useAuth();
   const [trainee, setTrainee] = useState<any>(null);
   const [payments, setPayments] = useState<any[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
@@ -31,34 +28,57 @@ export default function ClientPortal() {
   const [activeTab, setActiveTab] = useState<'overview' | 'payments' | 'documents' | 'messages'>('overview');
 
   const loadData = useCallback(async () => {
-    if (!user) return;
+    if (!traineeId) return;
 
     try {
       setLoading(true);
       
       // Get trainee data
-      const traineesResult = await getTrainees(user.id);
-      if (traineesResult.success && traineesResult.data && traineesResult.data.length > 0) {
-        const traineeData = traineesResult.data[0];
+      const { data: traineeData, error: traineeError } = await supabase
+        .from('trainees')
+        .select('*')
+        .eq('id', traineeId)
+        .maybeSingle();
+
+      if (traineeError) {
+        logger.error('Error loading trainee data', traineeError, 'ClientPortal');
+        toast.error('שגיאה בטעינת נתוני המתאמן');
+        return;
+      }
+
+      if (traineeData) {
         setTrainee(traineeData);
 
-        // Load related data
-        const [paymentsResult, documentsResult, messagesResult] = await Promise.all([
-          PaymentService.getPayments(user.id, { traineeId: traineeData.id }),
-          DocumentService.getDocuments(traineeData.id),
-          CommunicationService.getCommunicationHistory(traineeData.id),
+        // Load related data - using direct Supabase queries
+        // Note: These tables may not exist yet, so we'll handle errors gracefully
+        const [paymentsResult, documentsResult, messagesResult] = await Promise.allSettled([
+          supabase
+            .from('payments')
+            .select('*')
+            .eq('trainee_id', traineeId)
+            .order('due_date', { ascending: false }),
+          supabase
+            .from('documents')
+            .select('*')
+            .eq('trainee_id', traineeId)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('messages')
+            .select('*')
+            .eq('trainee_id', traineeId)
+            .order('sent_at', { ascending: false }),
         ]);
 
-        if (paymentsResult.success && paymentsResult.data) {
-          setPayments(paymentsResult.data);
+        if (paymentsResult.status === 'fulfilled' && paymentsResult.value.data) {
+          setPayments(paymentsResult.value.data);
         }
 
-        if (documentsResult.success && documentsResult.data) {
-          setDocuments(documentsResult.data);
+        if (documentsResult.status === 'fulfilled' && documentsResult.value.data) {
+          setDocuments(documentsResult.value.data);
         }
 
-        if (messagesResult.success && messagesResult.data) {
-          setMessages(messagesResult.data);
+        if (messagesResult.status === 'fulfilled' && messagesResult.value.data) {
+          setMessages(messagesResult.value.data);
         }
       }
     } catch (error) {
@@ -67,38 +87,22 @@ export default function ClientPortal() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [traineeId]);
 
   useEffect(() => {
-    if (user) {
+    if (traineeId) {
       loadData();
     }
-    // loadData is stable (useCallback with user dependency), but we only want to run when user changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [traineeId, loadData]);
 
   const handleDownloadInvoice = async (payment: any) => {
     try {
-      const result = await PaymentService.generateInvoicePDF(payment);
-      if (result.success && result.data) {
-        const url = URL.createObjectURL(result.data);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `invoice-${payment.invoice_number || payment.id}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        // Safely remove the element if it's still in the DOM
-        setTimeout(() => {
-          try {
-            if (a.parentNode) {
-              a.parentNode.removeChild(a);
-            }
-          } catch (e) {
-            // Element may have already been removed, ignore
-          }
-        }, 0);
-        URL.revokeObjectURL(url);
-        toast.success('חשבונית הורדה');
+      // Check if payment has a file_url or document_url
+      if (payment.file_url || payment.document_url) {
+        window.open(payment.file_url || payment.document_url, '_blank');
+        toast.success('חשבונית נפתחה');
+      } else {
+        toast.error('קישור לחשבונית לא זמין');
       }
     } catch (error) {
       logger.error('Error downloading invoice', error, 'ClientPortal');
@@ -108,9 +112,12 @@ export default function ClientPortal() {
 
   const handleDownloadDocument = async (document: any) => {
     try {
-      const result = await DocumentService.getDocumentUrl(document.id);
-      if (result.success && result.data) {
-        window.open(result.data, '_blank');
+      // Check if document has a file_url or url
+      if (document.file_url || document.url) {
+        window.open(document.file_url || document.url, '_blank');
+        toast.success('מסמך נפתח');
+      } else {
+        toast.error('קישור למסמך לא זמין');
       }
     } catch (error) {
       logger.error('Error downloading document', error, 'ClientPortal');

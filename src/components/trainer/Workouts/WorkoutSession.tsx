@@ -310,6 +310,7 @@ export default function WorkoutSession({
 
       if (workoutError || !newWorkout) {
         logger.error('Error creating initial workout', workoutError, 'WorkoutSession');
+        toast.error('שגיאה ביצירת אימון. נסה שוב.');
         return null;
       }
 
@@ -325,8 +326,13 @@ export default function WorkoutSession({
 
       if (traineeError) {
         logger.error('Error linking trainee to workout', traineeError, 'WorkoutSession');
-        // Try to delete the workout we just created
-        await supabase.from('workouts').delete().eq('id', newWorkout.id);
+        // Try to delete the workout we just created to prevent orphaned records
+        try {
+          await supabase.from('workouts').delete().eq('id', newWorkout.id);
+        } catch (deleteError) {
+          logger.error('Error deleting orphaned workout', deleteError, 'WorkoutSession');
+        }
+        toast.error('שגיאה בקישור המתאמן לאימון. נסה שוב.');
         return null;
       }
 
@@ -498,20 +504,23 @@ export default function WorkoutSession({
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
+      // Validate and fix set numbers before saving
       const exercisesData = exercisesToSave.map((ex, index) => ({
         exercise_id: ex.exercise.id,
         order_index: index,
-        sets: ex.sets.map((set) => ({
-          set_number: set.set_number,
-          weight: set.weight,
-          reps: set.reps,
-          rpe: set.rpe,
-          set_type: set.set_type,
+        sets: ex.sets.map((set, setIndex) => ({
+          // Ensure set numbers are sequential (1, 2, 3...) - use setIndex instead of set.set_number
+          // This prevents issues with duplicate or invalid set numbers
+          set_number: setIndex + 1,
+          weight: set.weight || 0,
+          reps: set.reps || 0,
+          rpe: set.rpe && set.rpe >= 1 && set.rpe <= 10 ? set.rpe : null,
+          set_type: set.set_type || 'regular',
           failure: set.failure || false,
           superset_exercise_id: set.superset_exercise_id || null,
           superset_weight: set.superset_weight || null,
           superset_reps: set.superset_reps || null,
-          superset_rpe: set.superset_rpe || null,
+          superset_rpe: set.superset_rpe && set.superset_rpe >= 1 && set.superset_rpe <= 10 ? set.superset_rpe : null,
           superset_equipment_id: set.superset_equipment_id || null,
           superset_dropset_weight: set.superset_dropset_weight || null,
           superset_dropset_reps: set.superset_dropset_reps || null,
@@ -761,16 +770,26 @@ export default function WorkoutSession({
         }
         // Set workoutId directly to ensure it's available for auto-save
         setWorkoutId(newWorkoutId);
-        // Wait a bit for state to settle
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
-      
-      // Double-check that workoutId exists before proceeding (in case state didn't update)
-      // Use a ref or direct check - if we just created it, use the returned value
-      if (!workoutId && user && exercises.length === 0) {
-        // We just created a workout but state might not have updated yet
-        // The workoutId should be set above, but if it's still null, we have a problem
-        logger.warn('WorkoutId still missing after creation attempt', {}, 'WorkoutSession');
+        // Use the returned value directly instead of waiting for state update
+        // This prevents race conditions with auto-save
+        const currentWorkoutId = newWorkoutId;
+        
+        // Proceed with the workoutId we just created
+        if (!currentWorkoutId) {
+          logger.error('Failed to create workout, cannot add exercise', {}, 'WorkoutSession');
+          toast.error('שגיאה ביצירת אימון. נסה שוב.');
+          setLoadingExercise(null);
+          return;
+        }
+        
+        // Continue with the workoutId we have
+        // Note: We use currentWorkoutId instead of workoutId state to avoid race conditions
+      } else if (!workoutId) {
+        // No workout ID and we didn't just create one - this shouldn't happen
+        logger.error('Cannot add exercise: no workout ID', {}, 'WorkoutSession');
+        toast.error('שגיאה: אין מזהה אימון. נסה שוב.');
+        setLoadingExercise(null);
+        return;
       }
 
       if (!user) {
@@ -1213,7 +1232,39 @@ export default function WorkoutSession({
   };
 
   const handleSave = async () => {
-    if (!user || exercises.length === 0) return;
+    if (!user) {
+      toast.error('נדרשת התחברות');
+      return;
+    }
+
+    // For new workouts, require at least one exercise
+    // For existing workouts, allow empty exercises (to delete all exercises)
+    if (!workoutId && exercises.length === 0) {
+      toast.error('יש להוסיף לפחות תרגיל אחד לפני שמירה');
+      return;
+    }
+
+    // Validate that all exercises have valid sets with set numbers
+    const hasInvalidSets = exercises.some(ex => {
+      return ex.sets.some((set, index) => {
+        // Set numbers should be sequential starting from 1
+        const expectedSetNumber = index + 1;
+        return set.set_number !== expectedSetNumber;
+      });
+    });
+
+    if (hasInvalidSets) {
+      // Fix set numbers before saving
+      const fixedExercises = exercises.map(ex => ({
+        ...ex,
+        sets: ex.sets.map((set, index) => ({
+          ...set,
+          set_number: index + 1
+        }))
+      }));
+      setExercises(fixedExercises);
+      logger.warn('Fixed invalid set numbers before saving', {}, 'WorkoutSession');
+    }
 
     setSaving(true);
 
@@ -1229,17 +1280,18 @@ export default function WorkoutSession({
       const exercisesData = exercises.map((ex, index) => ({
         exercise_id: ex.exercise.id,
         order_index: index,
-        sets: ex.sets.map((set) => ({
-          set_number: set.set_number,
-          weight: set.weight,
-          reps: set.reps,
-          rpe: set.rpe,
-          set_type: set.set_type,
+        sets: ex.sets.map((set, setIndex) => ({
+          // Ensure set numbers are sequential (1, 2, 3...)
+          set_number: setIndex + 1,
+          weight: set.weight || 0,
+          reps: set.reps || 0,
+          rpe: set.rpe && set.rpe >= 1 && set.rpe <= 10 ? set.rpe : null,
+          set_type: set.set_type || 'regular',
           failure: set.failure || false,
           superset_exercise_id: set.superset_exercise_id || null,
           superset_weight: set.superset_weight || null,
           superset_reps: set.superset_reps || null,
-          superset_rpe: set.superset_rpe || null,
+          superset_rpe: set.superset_rpe && set.superset_rpe >= 1 && set.superset_rpe <= 10 ? set.superset_rpe : null,
           superset_equipment_id: set.superset_equipment_id || null,
           superset_dropset_weight: set.superset_dropset_weight || null,
           superset_dropset_reps: set.superset_dropset_reps || null,
@@ -1271,21 +1323,27 @@ export default function WorkoutSession({
         
         logger.error('Save workout error:', errorDetails, 'WorkoutSession');
         
-        // Check if error is about existing workout - this should not happen anymore
-        // but if it does, provide helpful message
+        // Provide user-friendly error messages based on error type
         const errorStr = typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage);
+        
+        let userMessage = 'שגיאה בשמירת האימון. נסה שוב.';
+        
         if (errorStr.includes('כבר קיים') || errorStr.includes('already exists') || errorStr.includes('409')) {
-          // This shouldn't happen with the new logic, but if it does, allow user to continue
-          console.warn('Unexpected "workout exists" error - this should be allowed now. Error:', errorMessage);
-          // Don't show error - just log it and continue (or show a different message)
-          toast.error('שגיאה בשמירת האימון. אם יש אימון מתוזמן, תוכל ליצור אימון חדש. נסה שוב.');
-        } else {
-          // Show user-friendly error message for other errors
-          const userMessage = typeof errorMessage === 'string' 
-            ? errorMessage 
-            : 'שגיאה בשמירת האימון. נסה שוב.';
-          toast.error(userMessage);
+          userMessage = 'שגיאה: אימון כבר קיים. אם יש אימון מתוזמן, תוכל ליצור אימון חדש.';
+        } else if (errorStr.includes('Unauthorized') || errorStr.includes('401')) {
+          userMessage = 'נדרשת התחברות מחדש. אנא התחבר שוב.';
+        } else if (errorStr.includes('Forbidden') || errorStr.includes('403')) {
+          userMessage = 'אין הרשאה לשמור אימון זה. אנא בדוק את ההרשאות.';
+        } else if (errorStr.includes('Not Found') || errorStr.includes('404')) {
+          userMessage = 'המתאמן לא נמצא. אנא בדוק את הפרטים.';
+        } else if (errorStr.includes('Missing required fields') || errorStr.includes('400')) {
+          userMessage = 'חסרים שדות נדרשים. אנא בדוק שכל השדות מולאו.';
+        } else if (typeof errorMessage === 'string' && errorMessage.length > 0) {
+          // Use the error message if it's a meaningful string
+          userMessage = errorMessage;
         }
+        
+        toast.error(userMessage);
         setSaving(false);
         return;
       }

@@ -222,11 +222,54 @@ async function processCalendarEvents(
   supabase: any,
   syncDirection: 'to_google' | 'from_google' | 'bidirectional' = 'bidirectional'
 ) {
+  // Track which event IDs exist in Google Calendar (for cleanup)
+  const existingEventIds = new Set<string>();
+  const calendarId = events.length > 0 ? (events[0].organizer?.email || "primary") : "primary";
+  
+  // Calculate time window for cleanup
+  const timeMin = new Date();
+  timeMin.setDate(timeMin.getDate() - 7);
+  const timeMax = new Date();
+  timeMax.setDate(timeMax.getDate() + 7);
+  
   for (const event of events) {
+    // Handle cancelled events - delete their sync records
+    if (event.status === "cancelled") {
+      const { data: cancelledSync } = await supabase
+        .from("google_calendar_sync")
+        .select("id, workout_id, sync_direction")
+        .eq("google_event_id", event.id)
+        .eq("google_calendar_id", event.organizer?.email || "primary")
+        .maybeSingle();
+      
+      if (cancelledSync) {
+        // Delete workout if exists and sync direction allows it
+        if (cancelledSync.workout_id && cancelledSync.sync_direction !== 'to_google') {
+          await supabase
+            .from("workouts")
+            .delete()
+            .eq("id", cancelledSync.workout_id)
+            .eq("trainer_id", trainerId);
+        }
+        
+        // Delete sync record
+        await supabase
+          .from("google_calendar_sync")
+          .delete()
+          .eq("id", cancelledSync.id);
+        
+        console.log(`Deleted sync record for cancelled event: ${event.id}`);
+      }
+      continue;
+    }
+    
+    // Track this event as existing
+    existingEventIds.add(event.id);
+    
     // Check if event is already synced
     const { data: existingSync } = await supabase
       .from("google_calendar_sync")
-      .select("workout_id, trainee_id")
+      .select("id, workout_id, trainee_id")
       .eq("google_event_id", event.id)
       .eq("google_calendar_id", event.organizer?.email || "primary")
       .maybeSingle();
@@ -314,7 +357,7 @@ async function processCalendarEvents(
             sync_status: "synced",
             last_synced_at: new Date().toISOString(),
           })
-          .eq("id", existingSync.workout_id);
+          .eq("id", existingSync.id);
       }
     } else if (!event.status || event.status !== "cancelled") {
       // Create new workout
@@ -364,6 +407,40 @@ async function processCalendarEvents(
           // Update or create calendar client
           await updateCalendarClient(trainerId, traineeId, event, supabase);
         }
+      }
+    }
+  }
+  
+  // Cleanup: Delete sync records for events that no longer exist in Google Calendar
+  // (within the time window we're syncing)
+  const { data: allSyncRecords } = await supabase
+    .from("google_calendar_sync")
+    .select("id, google_event_id, workout_id, sync_direction")
+    .eq("trainer_id", trainerId)
+    .eq("google_calendar_id", calendarId)
+    .gte("event_start_time", timeMin.toISOString())
+    .lte("event_start_time", timeMax.toISOString());
+
+  if (allSyncRecords) {
+    for (const syncRecord of allSyncRecords) {
+      // If this sync record's event doesn't exist in Google Calendar, delete it
+      if (!existingEventIds.has(syncRecord.google_event_id)) {
+        console.log(`Deleting sync record for event that no longer exists: ${syncRecord.google_event_id}`);
+        
+        // Delete workout if exists and sync direction allows it
+        if (syncRecord.workout_id && syncRecord.sync_direction !== 'to_google') {
+          await supabase
+            .from("workouts")
+            .delete()
+            .eq("id", syncRecord.workout_id)
+            .eq("trainer_id", trainerId);
+        }
+        
+        // Delete sync record
+        await supabase
+          .from("google_calendar_sync")
+          .delete()
+          .eq("id", syncRecord.id);
       }
     }
   }

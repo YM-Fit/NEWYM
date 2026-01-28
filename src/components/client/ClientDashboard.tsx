@@ -10,7 +10,7 @@ import { supabase } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
 
 export default function ClientDashboard() {
-  const { user } = useAuth();
+  const { traineeId } = useAuth();
   const [stats, setStats] = useState({
     totalWorkouts: 0,
     workoutsThisMonth: 0,
@@ -20,50 +20,66 @@ export default function ClientDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    if (traineeId) {
       loadStats();
     }
-  }, [user]);
+  }, [traineeId]);
 
   const loadStats = async () => {
-    if (!user) return;
+    if (!traineeId) return;
 
     try {
       setLoading(true);
-      
-      // Get trainee ID from user
-      const { data: trainees } = await supabase
-        .from('trainees')
-        .select('id')
-        .eq('trainer_id', user.id)
-        .limit(1);
-
-      if (!trainees || trainees.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      const traineeId = trainees[0].id;
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfMonthStr = startOfMonth.toISOString().split('T')[0];
 
-      // Get workout stats
+      // Get workout stats - query through workout_trainees
       const { count: totalWorkouts } = await supabase
         .from('workout_trainees')
         .select('*', { count: 'exact', head: true })
         .eq('trainee_id', traineeId);
 
-      const { count: workoutsThisMonth } = await supabase
+      // Get workouts this month - need to join with workouts table
+      const { data: workoutsThisMonthData } = await supabase
         .from('workout_trainees')
+        .select('workout_id, workouts!inner(workout_date)')
+        .eq('trainee_id', traineeId);
+
+      const workoutsThisMonth = workoutsThisMonthData?.filter((wt: any) => {
+        const workoutDate = wt.workouts?.workout_date;
+        return workoutDate && workoutDate >= startOfMonthStr;
+      }).length || 0;
+
+      // Calculate weight loss from measurements (first vs last)
+      const { data: measurements } = await supabase
+        .from('measurements')
+        .select('weight, measurement_date')
+        .eq('trainee_id', traineeId)
+        .not('weight', 'is', null)
+        .order('measurement_date', { ascending: true });
+
+      let weightLoss = 0;
+      if (measurements && measurements.length >= 2) {
+        const firstWeight = measurements[0].weight;
+        const lastWeight = measurements[measurements.length - 1].weight;
+        if (firstWeight && lastWeight) {
+          weightLoss = Number((firstWeight - lastWeight).toFixed(1));
+        }
+      }
+
+      // Count achieved goals
+      const { count: goalsAchieved } = await supabase
+        .from('trainee_goals')
         .select('*', { count: 'exact', head: true })
         .eq('trainee_id', traineeId)
-        .gte('created_at', startOfMonth.toISOString());
+        .eq('status', 'achieved');
 
       setStats({
         totalWorkouts: totalWorkouts || 0,
-        workoutsThisMonth: workoutsThisMonth || 0,
-        weightLoss: 0, // Would calculate from measurements
-        goalsAchieved: 0, // Would calculate from goals
+        workoutsThisMonth: workoutsThisMonth,
+        weightLoss: weightLoss,
+        goalsAchieved: goalsAchieved || 0,
       });
     } catch (error) {
       logger.error('Error loading client dashboard stats', error, 'ClientDashboard');

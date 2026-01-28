@@ -212,6 +212,10 @@ async function updateGoogleCalendarEvent(
     );
 
     if (!getResponse.ok) {
+      // If event was deleted (404/410), return special indicator
+      if (getResponse.status === 404 || getResponse.status === 410) {
+        return false; // Will be handled as deleted event
+      }
       console.error(`Failed to get event ${eventId}:`, getResponse.status);
       return false;
     }
@@ -361,6 +365,56 @@ Deno.serve(async (req: Request) => {
       try {
         const eventDate = new Date(record.event_start_time);
         const newTitle = await generateEventTitle(supabase, trainee_id, trainer_id, eventDate, record.workout_id);
+
+        // Try to get event first to check if it exists
+        const getResponse = await fetch(
+          `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${record.google_event_id}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        // If event was deleted (404/410), delete sync record
+        if (getResponse.status === 404 || getResponse.status === 410) {
+          console.log(`Event ${record.google_event_id} was deleted, removing sync record`);
+          
+          // Delete workout if exists and sync direction allows it
+          if (record.workout_id) {
+            const { data: syncRecord } = await supabase
+              .from('google_calendar_sync')
+              .select('sync_direction')
+              .eq('id', record.id)
+              .maybeSingle();
+            
+            if (syncRecord && syncRecord.sync_direction !== 'to_google') {
+              await supabase
+                .from('workouts')
+                .delete()
+                .eq('id', record.workout_id)
+                .eq('trainer_id', trainer_id);
+            }
+          }
+          
+          // Delete sync record
+          await supabase
+            .from('google_calendar_sync')
+            .delete()
+            .eq('id', record.id);
+          
+          failed++; // Count as failed for reporting, but it's actually cleaned up
+          continue;
+        }
+
+        if (!getResponse.ok) {
+          failed++;
+          await supabase
+            .from('google_calendar_sync')
+            .update({ sync_status: 'failed' })
+            .eq('id', record.id);
+          continue;
+        }
 
         const success = await updateGoogleCalendarEvent(
           accessToken,
