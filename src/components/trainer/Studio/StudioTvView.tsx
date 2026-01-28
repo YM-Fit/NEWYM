@@ -246,7 +246,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   const completedExercisesData = useMemo(() => {
     if (!session?.workout?.exercises || session.workout.exercises.length === 0) return [];
     
-    return session.workout.exercises.map((exercise) => {
+    const exercisesData = session.workout.exercises.map((exercise) => {
       const sets = exercise.sets || [];
       
       // Filter out empty sets (weight=0 and reps=0) for calculations
@@ -266,18 +266,21 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       // Check if exercise is completed:
       // 1. All sets must exist (totalSets > 0)
       // 2. All sets must have at least weight OR reps > 0 (completedSets === totalSets)
-      // 3. At least one set must have both weight AND reps > 0 (totalVolume > 0)
-      // This prevents marking as "completed" if all sets are empty (0x0)
+      // 3. For exercises with weight: need volume > 0
+      // 4. For exercises without weight (bodyweight): all sets filled with reps is enough
       const hasAnyData = totalSets > 0 && completedSets > 0;
       const allSetsFilled = completedSets === totalSets && totalSets > 0;
       const hasValidVolume = totalVolume > 0;
+      const hasReps = validSets.some(set => (set.reps || 0) > 0);
+      const hasWeight = validSets.some(set => (set.weight || 0) > 0);
       
-      // Exercise is completed only if all sets are filled AND there's actual volume
-      const isCompleted = allSetsFilled && hasValidVolume;
+      // Exercise is completed if:
+      // - All sets are filled AND
+      // - (Has weight AND volume > 0) OR (No weight but has reps)
+      const isCompleted = allSetsFilled && (hasValidVolume || (!hasWeight && hasReps));
       
       // Exercise is "in progress" if it has some data but not all sets are filled
-      // OR if all sets exist but have no volume (all 0x0)
-      const isInProgress = hasAnyData && (!allSetsFilled || !hasValidVolume);
+      const isInProgress = hasAnyData && !allSetsFilled;
       
       // Check if any set has failure
       const hasFailure = validSets.some(set => set.failure === true);
@@ -346,7 +349,20 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         sets: sortedSets, // Include sets for display
       };
     });
-  }, [session?.workout?.exercises, progressData.previousWorkoutData]);
+    
+    // Sort exercises: active exercise (first non-completed) first, then completed, then in progress
+    const activeExerciseId = currentExercise?.id;
+    return exercisesData.sort((a, b) => {
+      // Active exercise always first
+      if (a.id === activeExerciseId) return -1;
+      if (b.id === activeExerciseId) return 1;
+      // Then by completion status
+      if (a.isCompleted && !b.isCompleted) return 1;
+      if (!a.isCompleted && b.isCompleted) return -1;
+      // Then by original order (keep original index)
+      return 0;
+    });
+  }, [session?.workout?.exercises, progressData.previousWorkoutData, currentExercise]);
 
   const latestLogs = logs.slice(0, 6);
 
@@ -590,31 +606,54 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                         </tr>
                       </thead>
                       <tbody>
-                        {completedExercisesData.map((exercise, index) => (
+                        {completedExercisesData.map((exercise, index) => {
+                          const isActiveExercise = exercise.id === currentExercise?.id;
+                          return (
                           <tr 
                             key={exercise.id}
                             className={`border-b-2 border-black dark:border-primary/20 transition-all duration-300 ${
                               exercise.isCompleted 
                                 ? 'bg-emerald-100 dark:bg-emerald-500/15' 
                                 : 'bg-emerald-50 dark:bg-amber-500/10'
-                            } ${index === 0 && currentExercise ? 'ring-4 ring-black dark:ring-primary/50' : ''}`}
+                            } ${isActiveExercise ? 'ring-4 ring-black dark:ring-primary/50 scale-105 transform' : ''}`}
+                            style={isActiveExercise ? { transform: 'scale(1.05)' } : {}}
                           >
                             <td className={`py-6 2xl:py-8 px-4 2xl:px-6 text-center border-r-2 border-black dark:border-primary/20`}>
-                              <div className={`w-14 h-14 2xl:w-18 2xl:h-18 rounded-full flex items-center justify-center text-xl 2xl:text-2xl font-black mx-auto border-2 border-black dark:border-transparent ${
-                                exercise.isCompleted 
-                                  ? 'bg-emerald-500 text-white shadow-glow-lg dark:bg-emerald-500' 
-                                  : 'bg-amber-500 text-white dark:bg-amber-500/30 dark:text-amber-500'
-                              }`}>
-                                {index + 1}
-                              </div>
+                              {!isActiveExercise && (
+                                <div className={`w-14 h-14 2xl:w-18 2xl:h-18 rounded-full flex items-center justify-center text-xl 2xl:text-2xl font-black mx-auto border-2 border-black dark:border-transparent ${
+                                  exercise.isCompleted 
+                                    ? 'bg-emerald-500 text-white shadow-glow-lg dark:bg-emerald-500' 
+                                    : 'bg-amber-500 text-white dark:bg-amber-500/30 dark:text-amber-500'
+                                }`}>
+                                  {index + 1}
+                                </div>
+                              )}
                             </td>
-                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 text-black dark:text-white font-black text-xl 2xl:text-2xl border-r-2 border-black dark:border-primary/20`}>
-                              <div className="flex items-center gap-2">
-                                {exercise.name}
-                                {exercise.hasFailure && (
-                                  <span className="text-red-600 dark:text-red-400 text-2xl 2xl:text-3xl" title="היה כשל בסט כלשהו">
-                                    ⚠️
-                                  </span>
+                            <td className={`py-6 2xl:py-8 px-4 2xl:px-6 text-black dark:text-white font-black ${isActiveExercise ? 'text-2xl 2xl:text-4xl' : 'text-xl 2xl:text-2xl'} border-r-2 border-black dark:border-primary/20`}>
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2">
+                                  {exercise.name}
+                                  {exercise.hasFailure && (
+                                    <span className="text-red-600 dark:text-red-400 text-2xl 2xl:text-3xl" title="היה כשל בסט כלשהו">
+                                      ⚠️
+                                    </span>
+                                  )}
+                                </div>
+                                {/* Show superset exercises below main exercise */}
+                                {isActiveExercise && exercise.sets.some(set => set.superset_exercise_id) && (
+                                  <div className="text-sm 2xl:text-base text-purple-600 dark:text-purple-400 font-semibold mt-1">
+                                    {exercise.sets
+                                      .filter(set => set.superset_exercise_id)
+                                      .map((set, setIdx) => {
+                                        const supersetExercise = session?.workout?.exercises?.find(ex => ex.id === set.superset_exercise_id);
+                                        return supersetExercise ? (
+                                          <span key={setIdx} className="mr-2">
+                                            + {supersetExercise.name} ({set.superset_weight ?? 0}×{set.superset_reps ?? 0})
+                                          </span>
+                                        ) : null;
+                                      })
+                                      .filter(Boolean)}
+                                  </div>
                                 )}
                               </div>
                             </td>
@@ -751,7 +790,8 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                               )}
                             </td>
                           </tr>
-                        ))}
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

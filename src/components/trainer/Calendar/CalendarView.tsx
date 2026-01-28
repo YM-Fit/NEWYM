@@ -109,8 +109,8 @@ interface DraggableWeekEventItemProps {
   onTraineeNameClick?: (traineeName: string, traineeId: string | null) => void;
 }
 
-// Optimized refresh interval - longer to reduce API calls
-const REFRESH_INTERVAL_MS = 120000; // 2 minutes instead of 30 seconds
+// Real-time refresh interval - shorter for better sync with Google Calendar
+const REFRESH_INTERVAL_MS = 10000; // 10 seconds for real-time updates
 const CACHE_DURATION_MS = 60000; // Cache events for 1 minute
 
 // Calendar view modes
