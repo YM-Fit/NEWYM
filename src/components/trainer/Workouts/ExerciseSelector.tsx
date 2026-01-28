@@ -167,7 +167,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
 
     const { data: exercises, error: exercisesError } = await supabase
       .from('exercises')
-      .select('*')
+      .select('id, name, muscle_group_id, instructions, created_at, updated_at')
       .order('name');
 
     if (exercisesError || !exercises) {
@@ -222,6 +222,18 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
         .single();
 
       if (error) {
+        // Log full error details to console for debugging
+        console.error('[ExerciseSelector] Full error details:', {
+          error,
+          errorCode: error.code,
+          errorMessage: error.message,
+          errorDetails: error.details,
+          errorHint: error.hint,
+          muscleGroupId: selectedGroup,
+          exerciseName: newExerciseName.trim(),
+          errorStringified: JSON.stringify(error, null, 2),
+        });
+        
         toast.error(`שגיאה בהוספת התרגיל: ${error.message || 'שגיאה לא ידועה'}`);
         logger.error('Error adding exercise:', {
           error,
