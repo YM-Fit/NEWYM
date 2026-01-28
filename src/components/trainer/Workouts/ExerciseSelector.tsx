@@ -191,6 +191,26 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
 
     setSavingExercise(true);
     try {
+      // First, verify the muscle group exists and is accessible
+      const { data: muscleGroup, error: groupError } = await supabase
+        .from('muscle_groups')
+        .select('id, name, trainer_id')
+        .eq('id', selectedGroup)
+        .single();
+
+      if (groupError || !muscleGroup) {
+        toast.error('שגיאה: קבוצת השריר לא נמצאה');
+        logger.error('Error fetching muscle group:', groupError, 'ExerciseSelector');
+        setSavingExercise(false);
+        return;
+      }
+
+      logger.debug('Adding exercise to muscle group:', { 
+        muscleGroupId: selectedGroup, 
+        muscleGroupName: muscleGroup.name,
+        trainerId: muscleGroup.trainer_id 
+      }, 'ExerciseSelector');
+
       const { data, error } = await supabase
         .from('exercises')
         .insert({
@@ -202,8 +222,16 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
         .single();
 
       if (error) {
-        toast.error('שגיאה בהוספת התרגיל');
-        logger.error('Error adding exercise:', error, 'ExerciseSelector');
+        toast.error(`שגיאה בהוספת התרגיל: ${error.message || 'שגיאה לא ידועה'}`);
+        logger.error('Error adding exercise:', {
+          error,
+          errorCode: error.code,
+          errorMessage: error.message,
+          errorDetails: error.details,
+          errorHint: error.hint,
+          muscleGroupId: selectedGroup,
+          exerciseName: newExerciseName.trim(),
+        }, 'ExerciseSelector');
       } else if (data) {
         toast.success('התרגיל נוסף בהצלחה');
         setMuscleGroups(prev => prev.map(group => {
