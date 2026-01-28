@@ -423,7 +423,20 @@ export default function WorkoutSession({
   const autoSaveWorkoutRef = useRef<(() => Promise<void>) | null>(null);
   
   const autoSaveWorkout = useCallback(async () => {
-    if (!user || !workoutId || saving || creatingWorkout) return;
+    console.log('[AUTO-SAVE] Starting auto-save check', {
+      user: !!user,
+      workoutId,
+      saving,
+      creatingWorkout,
+      exercisesCount: exercises.length,
+      deletedIds: Array.from(deletedExerciseIdsRef.current),
+      deletingIds: Array.from(deletingExerciseIdsRef.current)
+    });
+
+    if (!user || !workoutId || saving || creatingWorkout) {
+      console.log('[AUTO-SAVE] Skipping - conditions not met');
+      return;
+    }
 
     // CRITICAL FIX: Filter out exercises that are being deleted OR currently in deletion process
     // This prevents auto-save from re-adding exercises that were just deleted
@@ -432,10 +445,19 @@ export default function WorkoutSession({
       !deletingExerciseIdsRef.current.has(ex.exercise.id)
     );
 
+    console.log('[AUTO-SAVE] Filtered exercises', {
+      originalCount: exercises.length,
+      filteredCount: exercisesToSave.length,
+      filteredOutIds: exercises
+        .filter(ex => deletedExerciseIdsRef.current.has(ex.exercise.id) || deletingExerciseIdsRef.current.has(ex.exercise.id))
+        .map(ex => ex.exercise.id)
+    });
+
     // IMPORTANT: Even if exercisesToSave is empty, we MUST call the edge function
     // to delete all exercises from the database. Only skip if there's nothing to do.
     if (exercisesToSave.length === 0 && exercises.length === 0 &&
         deletedExerciseIdsRef.current.size === 0 && deletingExerciseIdsRef.current.size === 0) {
+      console.log('[AUTO-SAVE] Skipping - no exercises and nothing being deleted');
       logger.debug('No exercises and nothing being deleted, skipping auto-save', 'WorkoutSession');
       return;
     }
@@ -511,6 +533,13 @@ export default function WorkoutSession({
         is_auto_save: true, // Mark as auto-save so workout won't be marked as completed
       };
 
+      console.log('[AUTO-SAVE] Sending to edge function', {
+        workoutId,
+        exercisesCount: exercisesData.length,
+        exerciseIds: exercisesData.map(e => e.exercise_id),
+        is_auto_save: true
+      });
+
       logger.debug('Auto-saving workout', {
         workoutId,
         exercisesCount: exercisesData.length,
@@ -519,8 +548,10 @@ export default function WorkoutSession({
 
       const result = await saveWorkout(requestBody, session.access_token);
       if (result.error) {
+        console.error('[AUTO-SAVE] Error from edge function', result.error);
         logger.error('Auto-save error', result.error, 'WorkoutSession');
       } else {
+        console.log('[AUTO-SAVE] Success!', { workoutId, exercisesCount: exercisesData.length });
         logger.debug('Auto-save successful', { workoutId }, 'WorkoutSession');
       }
     } catch (err) {
@@ -1543,6 +1574,17 @@ export default function WorkoutSession({
               const exerciseId = exercise.exercise.id;
               const exerciseTempId = exercise.tempId;
 
+              console.log('[DELETE] Starting exercise deletion', {
+                exerciseIndex,
+                exerciseName: exercise.exercise.name,
+                exerciseId,
+                tempId: exerciseTempId,
+                workoutId,
+                totalExercises: exercises.length,
+                currentDeletedIds: Array.from(deletedExerciseIdsRef.current),
+                currentDeletingIds: Array.from(deletingExerciseIdsRef.current)
+              });
+
               logger.debug('Removing exercise', {
                 exerciseIndex,
                 exerciseName: exercise.exercise.name,
@@ -1556,6 +1598,11 @@ export default function WorkoutSession({
               deletingExerciseIdsRef.current.add(exerciseId);
               // Also mark as "deleted" to prevent auto-save from re-adding it
               deletedExerciseIdsRef.current.add(exerciseId);
+
+              console.log('[DELETE] Added to tracking refs', {
+                deletedIds: Array.from(deletedExerciseIdsRef.current),
+                deletingIds: Array.from(deletingExerciseIdsRef.current)
+              });
 
               // IMMEDIATELY remove from local state for responsive UI
               removeExercise(exerciseIndex);
