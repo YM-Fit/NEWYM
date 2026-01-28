@@ -703,10 +703,20 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     return { start, end };
   }, [currentDate, viewMode]);
 
-  // Generate cache key for current month
+  // Generate cache key that includes view mode to prevent cache conflicts
   const cacheKey = useMemo(() => {
-    return `${currentDate.getFullYear()}-${currentDate.getMonth()}`;
-  }, [currentDate]);
+    if (viewMode === 'month') {
+      return `${viewMode}-${currentDate.getFullYear()}-${currentDate.getMonth()}`;
+    } else if (viewMode === 'week') {
+      const startOfWeek = new Date(currentDate);
+      const dayOfWeek = startOfWeek.getDay();
+      startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
+      return `${viewMode}-${startOfWeek.getFullYear()}-${startOfWeek.getMonth()}-${startOfWeek.getDate()}`;
+    } else {
+      // day view
+      return `${viewMode}-${currentDate.getFullYear()}-${currentDate.getMonth()}-${currentDate.getDate()}`;
+    }
+  }, [currentDate, viewMode]);
 
   const loadEvents = useCallback(async (silent: boolean = false, forceRefresh: boolean = false) => {
     if (!user || !connected) {
@@ -873,12 +883,12 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     }
   }, [user, checkConnection]);
 
-  // Load events when connection is established or date changes
+  // Load events when connection is established, date changes, or view mode changes
   useEffect(() => {
     if (user && connected) {
       loadEvents();
     }
-  }, [user, connected, currentDate, loadEvents]);
+  }, [user, connected, currentDate, viewMode, loadEvents]);
 
   // Load session info when events change
   useEffect(() => {
