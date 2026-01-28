@@ -430,17 +430,31 @@ Deno.serve(async (req: Request) => {
 
       // Delete exercises that were removed (along with their sets)
       if (exercisesToDelete.length > 0) {
-        await supabase
+        console.log(`Deleting ${exercisesToDelete.length} removed exercises:`, exercisesToDelete);
+
+        // Delete sets first
+        const { error: setsDeleteError } = await supabase
           .from('exercise_sets')
           .delete()
           .in('workout_exercise_id', exercisesToDelete);
-        
-        await supabase
+
+        if (setsDeleteError) {
+          console.error('Error deleting exercise sets:', setsDeleteError);
+          throw new Error(`Failed to delete exercise sets: ${setsDeleteError.message}`);
+        }
+
+        // Delete workout_exercises
+        const { error: exerciseDeleteError } = await supabase
           .from('workout_exercises')
           .delete()
           .in('id', exercisesToDelete);
-          
-        console.log(`Deleted ${exercisesToDelete.length} removed exercises`);
+
+        if (exerciseDeleteError) {
+          console.error('Error deleting exercises:', exerciseDeleteError);
+          throw new Error(`Failed to delete exercises: ${exerciseDeleteError.message}`);
+        }
+
+        console.log(`Successfully deleted ${exercisesToDelete.length} removed exercises`);
       }
 
       // Delete sets for exercises that will be updated (we'll re-create them)

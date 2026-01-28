@@ -187,6 +187,8 @@ export default function WorkoutSession({
   const [showWorkoutHistory, setShowWorkoutHistory] = useState(false);
   // Track exercises that are being deleted to prevent auto-save from re-adding them
   const deletedExerciseIdsRef = useRef<Set<string>>(new Set());
+  // Track exercises currently being deleted (async operation in progress)
+  const deletingExerciseIdsRef = useRef<Set<string>>(new Set());
 
   const workoutData = {
     exercises,
@@ -421,14 +423,20 @@ export default function WorkoutSession({
   const autoSaveWorkoutRef = useRef<(() => Promise<void>) | null>(null);
   
   const autoSaveWorkout = useCallback(async () => {
-    if (!user || !workoutId || exercises.length === 0 || saving || creatingWorkout) return;
+    if (!user || !workoutId || saving || creatingWorkout) return;
 
-    // CRITICAL FIX: Filter out exercises that are being deleted
+    // CRITICAL FIX: Filter out exercises that are being deleted OR currently in deletion process
     // This prevents auto-save from re-adding exercises that were just deleted
-    const exercisesToSave = exercises.filter(ex => !deletedExerciseIdsRef.current.has(ex.exercise.id));
-    
-    if (exercisesToSave.length === 0) {
-      logger.debug('No exercises to save (all are being deleted)', 'WorkoutSession');
+    const exercisesToSave = exercises.filter(ex =>
+      !deletedExerciseIdsRef.current.has(ex.exercise.id) &&
+      !deletingExerciseIdsRef.current.has(ex.exercise.id)
+    );
+
+    // IMPORTANT: Even if exercisesToSave is empty, we MUST call the edge function
+    // to delete all exercises from the database. Only skip if there's nothing to do.
+    if (exercisesToSave.length === 0 && exercises.length === 0 &&
+        deletedExerciseIdsRef.current.size === 0 && deletingExerciseIdsRef.current.size === 0) {
+      logger.debug('No exercises and nothing being deleted, skipping auto-save', 'WorkoutSession');
       return;
     }
 
@@ -563,8 +571,9 @@ export default function WorkoutSession({
   }, [exercises, minimizedExercises, collapsedSets]);
 
   // Auto-save workout in realtime when exercises change (with debounce)
+  // IMPORTANT: Don't skip on empty exercises - we need to save deletions too!
   useEffect(() => {
-    if (!workoutId || exercises.length === 0 || saving || creatingWorkout) return;
+    if (!workoutId || saving || creatingWorkout) return;
 
     const timeoutId = setTimeout(() => {
       if (autoSaveWorkoutRef.current) {
@@ -1533,7 +1542,7 @@ export default function WorkoutSession({
               const exercise = exercises[exerciseIndex];
               const exerciseId = exercise.exercise.id;
               const exerciseTempId = exercise.tempId;
-              
+
               logger.debug('Removing exercise', {
                 exerciseIndex,
                 exerciseName: exercise.exercise.name,
@@ -1543,7 +1552,9 @@ export default function WorkoutSession({
                 totalExercises: exercises.length
               }, 'WorkoutSession');
 
-              // Mark exercise as deleted to prevent auto-save from re-adding it
+              // Mark exercise as "deleting" (async operation in progress)
+              deletingExerciseIdsRef.current.add(exerciseId);
+              // Also mark as "deleted" to prevent auto-save from re-adding it
               deletedExerciseIdsRef.current.add(exerciseId);
 
               // IMMEDIATELY remove from local state for responsive UI
@@ -1556,11 +1567,11 @@ export default function WorkoutSession({
 
               // Then delete from database in the background (if workoutId exists)
               if (workoutId) {
-                logger.debug('Deleting exercise from database in background', { 
-                  workoutId, 
-                  exerciseId 
+                logger.debug('Deleting exercise from database in background', {
+                  workoutId,
+                  exerciseId
                 }, 'WorkoutSession');
-                
+
                 // Run DB deletion asynchronously without blocking UI
                 (async () => {
                   try {
@@ -1573,15 +1584,15 @@ export default function WorkoutSession({
 
                     if (findError) {
                       logger.error('Error finding exercise in database:', findError, 'WorkoutSession');
-                      // Remove from deleted set if deletion failed
-                      deletedExerciseIdsRef.current.delete(exerciseId);
+                      // Remove from "deleting" but keep in "deleted" to be safe
+                      deletingExerciseIdsRef.current.delete(exerciseId);
                       return;
                     }
-                    
+
                     if (workoutExercises && workoutExercises.length > 0) {
                       // Delete all sets for these workout_exercises
                       const workoutExerciseIds = workoutExercises.map(we => we.id);
-                      
+
                       const { error: setsDeleteError } = await supabase
                         .from('exercise_sets')
                         .delete()
@@ -1599,28 +1610,39 @@ export default function WorkoutSession({
 
                       if (exerciseDeleteError) {
                         logger.error('Error deleting exercise from database:', exerciseDeleteError, 'WorkoutSession');
-                        // Remove from deleted set if deletion failed
-                        deletedExerciseIdsRef.current.delete(exerciseId);
+                        // Remove from "deleting" but keep in "deleted" to be safe
+                        deletingExerciseIdsRef.current.delete(exerciseId);
                       } else {
-                        logger.debug('Deleted exercise from database', { workoutExerciseIds }, 'WorkoutSession');
-                        // Keep in deleted set for a bit longer to ensure auto-save doesn't re-add it
+                        logger.debug('Deleted exercise from database successfully', { workoutExerciseIds }, 'WorkoutSession');
+                        // Remove from "deleting" - DB deletion completed
+                        deletingExerciseIdsRef.current.delete(exerciseId);
+                        // Keep in "deleted" set for much longer to ensure auto-save doesn't re-add it
                         setTimeout(() => {
                           deletedExerciseIdsRef.current.delete(exerciseId);
-                        }, 5000); // Remove from tracking after 5 seconds
+                          logger.debug('Removed exercise from deleted tracking', { exerciseId }, 'WorkoutSession');
+                        }, 60000); // 60 seconds - much safer than 5 seconds
                       }
                     } else {
-                      // Exercise not in DB, remove from tracking immediately
-                      deletedExerciseIdsRef.current.delete(exerciseId);
+                      // Exercise not in DB, remove from tracking
+                      deletingExerciseIdsRef.current.delete(exerciseId);
+                      // Keep in "deleted" for safety
+                      setTimeout(() => {
+                        deletedExerciseIdsRef.current.delete(exerciseId);
+                      }, 60000);
                     }
                   } catch (error) {
                     logger.error('Error deleting exercise from database:', error, 'WorkoutSession');
-                    // Remove from deleted set if deletion failed
-                    deletedExerciseIdsRef.current.delete(exerciseId);
+                    // Remove from "deleting" but keep in "deleted" to be safe
+                    deletingExerciseIdsRef.current.delete(exerciseId);
                   }
                 })();
               } else {
-                // No workoutId, remove from tracking immediately
-                deletedExerciseIdsRef.current.delete(exerciseId);
+                // No workoutId - new workout, just remove from tracking
+                deletingExerciseIdsRef.current.delete(exerciseId);
+                // Keep in "deleted" briefly in case workout gets created
+                setTimeout(() => {
+                  deletedExerciseIdsRef.current.delete(exerciseId);
+                }, 10000);
               }
             }}
             onToggleMinimize={() => toggleMinimizeExercise(workoutExercise.tempId)}
