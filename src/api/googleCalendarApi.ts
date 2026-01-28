@@ -515,31 +515,282 @@ export async function getGoogleCalendarEvents(
           });
 
           if (filteredEvents.length > 0) {
-            // Convert cached events to GoogleCalendarEvent format
-            const events: GoogleCalendarEvent[] = filteredEvents.map((cached) => {
-              const trainee = Array.isArray(cached.trainees) ? cached.trainees[0] : cached.trainees;
-              const startTime = new Date(cached.event_start_time);
-              const endTime = cached.event_end_time ? new Date(cached.event_end_time) : new Date(startTime.getTime() + 60 * 60 * 1000); // Default 1 hour if no end time
-              
-              return {
-                id: cached.google_event_id,
-                summary: cached.event_summary || `אימון${trainee ? ` - ${trainee.full_name}` : ''}`,
-                description: cached.event_description || undefined,
-                start: {
-                  dateTime: startTime.toISOString(),
-                  timeZone: 'Asia/Jerusalem',
-                },
-                end: {
-                  dateTime: endTime.toISOString(),
-                  timeZone: 'Asia/Jerusalem',
-                },
-                attendees: trainee?.email ? [{
-                  email: trainee.email,
-                  displayName: trainee.full_name || undefined,
-                }] : undefined,
-              };
+            // Validate events exist in Google Calendar and filter out deleted ones
+            // We check a sample and if we find deleted events, we fetch from Google to get accurate list
+            const validateAndFilterEvents = async (): Promise<GoogleCalendarEvent[]> => {
+              try {
+                const { OAuthTokenService } = await import('../services/oauthTokenService');
+                const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
+                
+                if (!tokenResult.success || !tokenResult.data) {
+                  // Can't validate without token - return cached events
+                  return filteredEvents.map((cached) => {
+                    const trainee = Array.isArray(cached.trainees) ? cached.trainees[0] : cached.trainees;
+                    const startTime = new Date(cached.event_start_time);
+                    const endTime = cached.event_end_time ? new Date(cached.event_end_time) : new Date(startTime.getTime() + 60 * 60 * 1000);
+                    
+                    return {
+                      id: cached.google_event_id,
+                      summary: cached.event_summary || `אימון${trainee ? ` - ${trainee.full_name}` : ''}`,
+                      description: cached.event_description || undefined,
+                      start: {
+                        dateTime: startTime.toISOString(),
+                        timeZone: 'Asia/Jerusalem',
+                      },
+                      end: {
+                        dateTime: endTime.toISOString(),
+                        timeZone: 'Asia/Jerusalem',
+                      },
+                      attendees: trainee?.email ? [{
+                        email: trainee.email,
+                        displayName: trainee.full_name || undefined,
+                      }] : undefined,
+                    };
+                  });
+                }
+                
+                const { data: credentials } = await supabase
+                  .from('trainer_google_credentials')
+                  .select('default_calendar_id')
+                  .eq('trainer_id', trainerId)
+                  .maybeSingle() as { data: Pick<GoogleCredentialsRow, 'default_calendar_id'> | null; error: unknown };
+                
+                if (!credentials) {
+                  // No credentials - return cached events
+                  return filteredEvents.map((cached) => {
+                    const trainee = Array.isArray(cached.trainees) ? cached.trainees[0] : cached.trainees;
+                    const startTime = new Date(cached.event_start_time);
+                    const endTime = cached.event_end_time ? new Date(cached.event_end_time) : new Date(startTime.getTime() + 60 * 60 * 1000);
+                    
+                    return {
+                      id: cached.google_event_id,
+                      summary: cached.event_summary || `אימון${trainee ? ` - ${trainee.full_name}` : ''}`,
+                      description: cached.event_description || undefined,
+                      start: {
+                        dateTime: startTime.toISOString(),
+                        timeZone: 'Asia/Jerusalem',
+                      },
+                      end: {
+                        dateTime: endTime.toISOString(),
+                        timeZone: 'Asia/Jerusalem',
+                      },
+                      attendees: trainee?.email ? [{
+                        email: trainee.email,
+                        displayName: trainee.full_name || undefined,
+                      }] : undefined,
+                    };
+                  });
+                }
+                
+                const calendarId = credentials.default_calendar_id || 'primary';
+                const accessToken = tokenResult.data;
+                
+                // Check a sample of events (first 10) to see if they exist
+                // If we find deleted ones, we'll clean up all of them
+                const sampleSize = Math.min(10, filteredEvents.length);
+                const eventsToCheck = filteredEvents.slice(0, sampleSize);
+                
+                const deletedEventIds = new Set<string>();
+                
+                for (const cached of eventsToCheck) {
+                  try {
+                    const checkResponse = await fetch(
+                      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${cached.google_event_id}`,
+                      {
+                        headers: {
+                          'Authorization': `Bearer ${accessToken}`,
+                        },
+                      }
+                    );
+                    
+                    if (checkResponse.status === 404 || checkResponse.status === 410) {
+                      deletedEventIds.add(cached.google_event_id);
+                    }
+                  } catch (err) {
+                    // Skip validation errors - don't block
+                  }
+                }
+                
+                // If we found deleted events in the sample, fetch from Google Calendar
+                // to get accurate list and clean up sync records
+                if (deletedEventIds.size > 0) {
+                  const { logger } = await import('../utils/logger');
+                  logger.info('Found deleted events in cache, fetching from Google Calendar', 
+                    { deletedCount: deletedEventIds.size }, 'getGoogleCalendarEvents');
+                  
+                  // Fetch actual events from Google Calendar
+                  const googleEventsResponse = await fetch(
+                    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?` +
+                    `timeMin=${dateRange.start.toISOString()}&` +
+                    `timeMax=${dateRange.end.toISOString()}&` +
+                    `singleEvents=true&` +
+                    `orderBy=startTime&` +
+                    `maxResults=2500`,
+                    {
+                      headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                      },
+                    }
+                  );
+                  
+                  if (googleEventsResponse.ok) {
+                    const googleData = await googleEventsResponse.json();
+                    const googleEvents = googleData.items || [];
+                    const existingEventIds = new Set(googleEvents.map((e: any) => e.id));
+                    
+                    // Clean up sync records for events that don't exist in Google Calendar
+                    const { data: allSyncRecords } = await supabase
+                      .from('google_calendar_sync')
+                      .select('id, google_event_id, workout_id, sync_direction')
+                      .eq('trainer_id', trainerId)
+                      .eq('sync_status', 'synced')
+                      .gte('event_start_time', dateRange.start.toISOString())
+                      .lte('event_start_time', dateRange.end.toISOString());
+                    
+                    if (allSyncRecords) {
+                      for (const syncRecord of allSyncRecords) {
+                        if (!existingEventIds.has(syncRecord.google_event_id)) {
+                          // Delete workout if exists and sync direction allows it
+                          if (syncRecord.workout_id && syncRecord.sync_direction !== 'to_google') {
+                            await supabase
+                              .from('workouts')
+                              .delete()
+                              .eq('id', syncRecord.workout_id)
+                              .eq('trainer_id', trainerId);
+                          }
+                          
+                          // Delete sync record
+                          await supabase
+                            .from('google_calendar_sync')
+                            .delete()
+                            .eq('id', syncRecord.id);
+                        }
+                      }
+                    }
+                    
+                    // Return Google Calendar events instead of cached ones
+                    // Convert to our format
+                    const validEvents: GoogleCalendarEvent[] = googleEvents
+                      .filter((e: any) => e.status !== 'cancelled')
+                      .map((e: any) => {
+                        const startTime = e.start.dateTime || e.start.date;
+                        const endTime = e.end.dateTime || e.end.date;
+                        
+                        return {
+                          id: e.id,
+                          summary: e.summary || '',
+                          description: e.description,
+                          start: {
+                            dateTime: e.start.dateTime,
+                            date: e.start.date,
+                            timeZone: e.start.timeZone,
+                          },
+                          end: {
+                            dateTime: e.end.dateTime,
+                            date: e.end.date,
+                            timeZone: e.end.timeZone,
+                          },
+                          attendees: e.attendees?.map((a: any) => ({
+                            email: a.email,
+                            displayName: a.displayName,
+                          })),
+                          location: e.location,
+                        };
+                      });
+                    
+                    return validEvents;
+                  }
+                }
+                
+                // No deleted events found, return cached events
+                return filteredEvents.map((cached) => {
+                  const trainee = Array.isArray(cached.trainees) ? cached.trainees[0] : cached.trainees;
+                  const startTime = new Date(cached.event_start_time);
+                  const endTime = cached.event_end_time ? new Date(cached.event_end_time) : new Date(startTime.getTime() + 60 * 60 * 1000);
+                  
+                  return {
+                    id: cached.google_event_id,
+                    summary: cached.event_summary || `אימון${trainee ? ` - ${trainee.full_name}` : ''}`,
+                    description: cached.event_description || undefined,
+                    start: {
+                      dateTime: startTime.toISOString(),
+                      timeZone: 'Asia/Jerusalem',
+                    },
+                    end: {
+                      dateTime: endTime.toISOString(),
+                      timeZone: 'Asia/Jerusalem',
+                    },
+                    attendees: trainee?.email ? [{
+                      email: trainee.email,
+                      displayName: trainee.full_name || undefined,
+                    }] : undefined,
+                  };
+                });
+              } catch (err) {
+                // On error, return cached events (fallback)
+                const { logger } = await import('../utils/logger');
+                logger.debug('Error validating cached events', err, 'getGoogleCalendarEvents');
+                
+                return filteredEvents.map((cached) => {
+                  const trainee = Array.isArray(cached.trainees) ? cached.trainees[0] : cached.trainees;
+                  const startTime = new Date(cached.event_start_time);
+                  const endTime = cached.event_end_time ? new Date(cached.event_end_time) : new Date(startTime.getTime() + 60 * 60 * 1000);
+                  
+                  return {
+                    id: cached.google_event_id,
+                    summary: cached.event_summary || `אימון${trainee ? ` - ${trainee.full_name}` : ''}`,
+                    description: cached.event_description || undefined,
+                    start: {
+                      dateTime: startTime.toISOString(),
+                      timeZone: 'Asia/Jerusalem',
+                    },
+                    end: {
+                      dateTime: endTime.toISOString(),
+                      timeZone: 'Asia/Jerusalem',
+                    },
+                    attendees: trainee?.email ? [{
+                      email: trainee.email,
+                      displayName: trainee.full_name || undefined,
+                    }] : undefined,
+                  };
+                });
+              }
+            };
+            
+            // Try to validate and get accurate events (with timeout)
+            // If validation takes too long, fall back to cached events
+            const validationPromise = validateAndFilterEvents();
+            const timeoutPromise = new Promise<GoogleCalendarEvent[]>((resolve) => {
+              setTimeout(() => {
+                // Timeout - return cached events
+                resolve(filteredEvents.map((cached) => {
+                  const trainee = Array.isArray(cached.trainees) ? cached.trainees[0] : cached.trainees;
+                  const startTime = new Date(cached.event_start_time);
+                  const endTime = cached.event_end_time ? new Date(cached.event_end_time) : new Date(startTime.getTime() + 60 * 60 * 1000);
+                  
+                  return {
+                    id: cached.google_event_id,
+                    summary: cached.event_summary || `אימון${trainee ? ` - ${trainee.full_name}` : ''}`,
+                    description: cached.event_description || undefined,
+                    start: {
+                      dateTime: startTime.toISOString(),
+                      timeZone: 'Asia/Jerusalem',
+                    },
+                    end: {
+                      dateTime: endTime.toISOString(),
+                      timeZone: 'Asia/Jerusalem',
+                    },
+                    attendees: trainee?.email ? [{
+                      email: trainee.email,
+                      displayName: trainee.full_name || undefined,
+                    }] : undefined,
+                  };
+                }));
+              }, 2000); // 2 second timeout
             });
-
+            
+            const events = await Promise.race([validationPromise, timeoutPromise]);
+            
             return { data: events, success: true };
           }
         }
