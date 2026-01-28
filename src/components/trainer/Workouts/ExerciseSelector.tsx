@@ -149,38 +149,65 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
       .select('*')
       .order('name');
 
-    if (groupsError || !groups) {
+    if (groupsError) {
+      console.error('[ExerciseSelector] Error loading muscle groups:', groupsError);
+      logger.error('Error loading muscle groups:', groupsError, 'ExerciseSelector');
       setLoading(false);
       return;
     }
 
-    if (isCacheValid && cachedExercises) {
-      const groupsWithExercises = groups.map((group) => ({
-        ...group,
-        exercises: cachedExercises.filter((ex) => ex.muscle_group_id === group.id),
-      }));
-
-      setMuscleGroups(groupsWithExercises);
+    if (!groups) {
+      console.warn('[ExerciseSelector] No muscle groups returned from database');
       setLoading(false);
       return;
+    }
+
+    console.log('[ExerciseSelector] Loaded muscle groups:', groups.length);
+
+    // Always reload exercises from DB to ensure we have the latest data
+    // Cache might be stale or incomplete
+    if (isCacheValid && cachedExercises) {
+      console.log('[ExerciseSelector] Cache found, but reloading from DB to ensure freshness');
+      console.log('[ExerciseSelector] Cached exercises count:', cachedExercises.length);
     }
 
     const { data: exercises, error: exercisesError } = await supabase
       .from('exercises')
-      .select('id, name, muscle_group_id, instructions, created_at, updated_at')
+      .select('id, name, muscle_group_id, created_at')
       .order('name');
 
-    if (exercisesError || !exercises) {
+    if (exercisesError) {
+      console.error('[ExerciseSelector] Error loading exercises:', exercisesError);
+      logger.error('Error loading exercises:', exercisesError, 'ExerciseSelector');
       setLoading(false);
       return;
     }
 
+    if (!exercises) {
+      console.warn('[ExerciseSelector] No exercises returned from database');
+      setLoading(false);
+      return;
+    }
+
+    console.log('[ExerciseSelector] Loaded exercises:', exercises.length);
+    console.log('[ExerciseSelector] Exercises sample:', exercises.slice(0, 3));
+
+    // Save to cache
     saveToCache(exercises);
 
-    const groupsWithExercises = groups.map((group) => ({
-      ...group,
-      exercises: exercises.filter((ex) => ex.muscle_group_id === group.id),
-    }));
+    // Map exercises to groups
+    const groupsWithExercises = groups.map((group) => {
+      const groupExercises = exercises.filter((ex) => ex.muscle_group_id === group.id);
+      console.log(`[ExerciseSelector] Group "${group.name}" has ${groupExercises.length} exercises`);
+      return {
+        ...group,
+        exercises: groupExercises,
+      };
+    });
+
+    const totalExercisesInGroups = groupsWithExercises.reduce((sum, group) => sum + group.exercises.length, 0);
+    console.log('[ExerciseSelector] Total exercises in groups:', totalExercisesInGroups);
+    console.log('[ExerciseSelector] Groups with exercises:', groupsWithExercises.length);
 
     setMuscleGroups(groupsWithExercises);
     setLoading(false);
@@ -216,9 +243,8 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
         .insert({
           name: newExerciseName.trim(),
           muscle_group_id: selectedGroup,
-          instructions: newExerciseInstructions.trim() || null,
         })
-        .select()
+        .select('id, name, muscle_group_id, created_at')
         .single();
 
       if (error) {
@@ -246,23 +272,10 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
         }, 'ExerciseSelector');
       } else if (data) {
         toast.success('התרגיל נוסף בהצלחה');
-        setMuscleGroups(prev => prev.map(group => {
-          if (group.id === selectedGroup) {
-            return {
-              ...group,
-              exercises: [...group.exercises, data].sort((a, b) => a.name.localeCompare(b.name)),
-            };
-          }
-          return group;
-        }));
-        // עדכון cache
-        if (cachedExercises) {
-          const updatedExercises = [...cachedExercises, data].sort((a, b) => a.name.localeCompare(b.name));
-          saveToCache(updatedExercises);
-        } else {
-          // אם אין cache, נטען מחדש
-          loadMuscleGroupsAndExercises();
-        }
+        // Reload all exercises from DB to ensure we have the latest data
+        // This ensures cache is updated and UI shows the new exercise
+        console.log('[ExerciseSelector] Exercise added successfully, reloading from DB');
+        await loadMuscleGroupsAndExercises();
         setNewExerciseName('');
         setNewExerciseInstructions('');
         setShowAddForm(false);
