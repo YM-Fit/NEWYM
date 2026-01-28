@@ -786,23 +786,38 @@ export function useCurrentTvSession(
           filter: `workout_id=eq.${activeWorkoutId}`,
         },
         (payload) => {
+          console.log('[TV-REALTIME] Received workout_exercises event', {
+            eventType: payload.eventType,
+            old: payload.old,
+            new: payload.new,
+          });
+
           pushLog({
             level: 'info',
             message: `עדכון תרגיל: ${payload.eventType}`,
             details: { exercise_id: payload.new?.id || payload.old?.id },
           });
-          
+
           // If exercise was deleted, remove it from session immediately
           if (payload.eventType === 'DELETE' && payload.old?.id) {
+            console.log('[TV-REALTIME] Exercise deleted, removing from state', {
+              deletedExerciseId: payload.old.id,
+            });
+
             setSession(prev => {
               if (!prev || !prev.workout || prev.workout.id !== activeWorkoutId) {
                 return prev;
               }
-              
+
               const updatedExercises = (prev.workout.exercises || []).filter(
                 ex => ex.id !== payload.old.id
               );
-              
+
+              console.log('[TV-REALTIME] Updated exercises after deletion', {
+                beforeCount: prev.workout.exercises?.length || 0,
+                afterCount: updatedExercises.length,
+              });
+
               return {
                 ...prev,
                 workout: {
@@ -812,23 +827,31 @@ export function useCurrentTvSession(
               };
             });
           }
-          
+
           // Refresh workout data for all other events (INSERT, UPDATE)
           refreshWorkoutData();
         }
       )
       .subscribe((status) => {
+        console.log('[TV-REALTIME] Subscription status changed', {
+          status,
+          workoutId: activeWorkoutId,
+        });
+
         if (status === 'SUBSCRIBED') {
+          console.log('[TV-REALTIME] Successfully subscribed to realtime updates!');
           pushLog({
             level: 'info',
             message: `מחובר לעדכונים בזמן אמת עבור אימון ${activeWorkoutId}`,
           });
         } else if (status === 'CHANNEL_ERROR') {
+          console.error('[TV-REALTIME] Channel error - realtime not working!');
           pushLog({
             level: 'error',
             message: 'שגיאה בחיבור לעדכונים בזמן אמת',
           });
         } else if (status === 'TIMED_OUT') {
+          console.warn('[TV-REALTIME] Connection timed out');
           pushLog({
             level: 'warning',
             message: 'חיבור לעדכונים בזמן אמת פג תוקף - מנסה להתחבר מחדש',
