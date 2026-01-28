@@ -446,20 +446,39 @@ export function useCurrentTvSession(
                 }));
 
                 // If we have existing session with same workout, merge exercises
+                // IMPORTANT: Only keep exercises that exist in the DB response
+                // This ensures deleted exercises are removed
                 const currentSession = sessionRef.current;
                 const existingExercises = currentSession?.workout?.id === workoutId && currentSession.workout.exercises?.length > 0
                   ? currentSession.workout.exercises
                   : [];
-                
-                // Merge exercises if we have existing ones
+
+                // Get IDs of exercises from DB (these are the current valid exercises)
+                const dbExerciseIds = new Set(exercises.map(ex => ex.id));
+
+                // Merge exercises: use DB data as source of truth, but preserve any local state (like UI state)
                 let finalExercises = exercises;
                 if (existingExercises.length > 0) {
-                  const exerciseMap = new Map(existingExercises.map(ex => [ex.id, ex]));
-                  exercises.forEach(ex => {
-                    exerciseMap.set(ex.id, ex);
+                  // Create map from DB exercises
+                  const exerciseMap = new Map(exercises.map(ex => [ex.id, ex]));
+
+                  // Only merge existing exercises that still exist in DB
+                  existingExercises.forEach(ex => {
+                    if (dbExerciseIds.has(ex.id) && !exerciseMap.has(ex.id)) {
+                      exerciseMap.set(ex.id, ex);
+                    }
                   });
-                  finalExercises = Array.from(exerciseMap.values());
+
+                  // Final result: only exercises that exist in DB
+                  finalExercises = exercises.map(ex => exerciseMap.get(ex.id) || ex);
                 }
+
+                console.log('[TV-POLLING] Exercises from DB', {
+                  dbCount: exercises.length,
+                  existingCount: existingExercises.length,
+                  finalCount: finalExercises.length,
+                  deletedCount: existingExercises.length - finalExercises.length,
+                });
 
                 workout = {
                   id: workoutId,
