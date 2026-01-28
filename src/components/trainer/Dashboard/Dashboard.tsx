@@ -261,6 +261,9 @@ export default function Dashboard({
           onNewWorkout={onNewWorkout}
           onViewWorkoutPlan={onViewWorkoutPlan}
           onViewMealPlan={onViewMealPlan}
+          onTraineeClick={onTraineeClick ? (trainee: Trainee) => {
+            onTraineeClick(trainee.id);
+          } : undefined}
         />
       ) : (
         <div className="premium-card-static p-8 md:p-10 text-center border border-primary/20">

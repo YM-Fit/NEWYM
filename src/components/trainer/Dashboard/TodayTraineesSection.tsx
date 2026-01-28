@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Dumbbell, ClipboardList, UtensilsCrossed, Clock, Users, Calendar, AlertCircle, Scale, CalendarDays, CalendarCheck } from 'lucide-react';
+import { Dumbbell, ClipboardList, UtensilsCrossed, Clock, Users, Calendar, AlertCircle, Scale, CalendarDays, CalendarCheck, User } from 'lucide-react';
 import { Trainee } from '../../../types';
 import { supabase } from '../../../lib/supabase';
 import { logger } from '../../../utils/logger';
@@ -32,6 +32,7 @@ interface TodayTraineesSectionProps {
   onNewWorkout: (trainee: Trainee, scheduledWorkoutId?: string) => void;
   onViewWorkoutPlan: (trainee: Trainee) => void;
   onViewMealPlan: (trainee: Trainee) => void;
+  onTraineeClick?: (trainee: Trainee) => void;
 }
 
 // Helper function to get last workout date
@@ -73,7 +74,8 @@ export default function TodayTraineesSection({
   trainees,
   onNewWorkout,
   onViewWorkoutPlan,
-  onViewMealPlan
+  onViewMealPlan,
+  onTraineeClick
 }: TodayTraineesSectionProps) {
   const { user } = useAuth();
   const [todayTrainees, setTodayTrainees] = useState<TodayTrainee[]>([]);
@@ -563,6 +565,7 @@ export default function TodayTraineesSection({
                         onNewWorkout={onNewWorkout}
                         onViewWorkoutPlan={onViewWorkoutPlan}
                         onViewMealPlan={onViewMealPlan}
+                        onTraineeClick={onTraineeClick}
                       />
                     ))}
                   </tbody>
@@ -656,6 +659,7 @@ export default function TodayTraineesSection({
                         onNewWorkout={onNewWorkout}
                         onViewWorkoutPlan={onViewWorkoutPlan}
                         onViewMealPlan={onViewMealPlan}
+                        onTraineeClick={onTraineeClick}
                       />
                     ))}
                   </tbody>
@@ -675,6 +679,7 @@ interface TraineeTableRowProps {
   onNewWorkout: (trainee: Trainee, scheduledWorkoutId?: string) => void;
   onViewWorkoutPlan: (trainee: Trainee) => void;
   onViewMealPlan: (trainee: Trainee) => void;
+  onTraineeClick?: (trainee: Trainee) => void;
 }
 
 function TraineeTableRow({
@@ -682,7 +687,8 @@ function TraineeTableRow({
   index,
   onNewWorkout,
   onViewWorkoutPlan,
-  onViewMealPlan
+  onViewMealPlan,
+  onTraineeClick
 }: TraineeTableRowProps) {
   const { trainee, workout, status, daysSinceLastWorkout, unseenWeightsCount } = todayTrainee;
   const isActive = daysSinceLastWorkout !== null && daysSinceLastWorkout <= 7;
@@ -732,7 +738,21 @@ function TraineeTableRow({
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-sm md:text-base text-foreground truncate">{trainee.full_name}</div>
+            <div 
+              className={`font-bold text-sm md:text-base text-foreground truncate ${onTraineeClick ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+              onClick={onTraineeClick ? () => onTraineeClick(trainee) : undefined}
+              onKeyDown={onTraineeClick ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onTraineeClick(trainee);
+                }
+              } : undefined}
+              role={onTraineeClick ? 'button' : undefined}
+              tabIndex={onTraineeClick ? 0 : undefined}
+              aria-label={onTraineeClick ? `פתח כרטיס לקוח של ${trainee.full_name}` : undefined}
+            >
+              {trainee.full_name}
+            </div>
             <div className="flex items-center gap-1.5 md:gap-2 mt-1 flex-wrap">
               {workout.isFromGoogle && (
                 <div className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 rounded-lg 
@@ -825,6 +845,20 @@ function TraineeTableRow({
           >
             <UtensilsCrossed className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
           </button>
+          {onTraineeClick && (
+            <button
+              onClick={() => onTraineeClick(trainee)}
+              className="bg-surface/60 hover:bg-surface border-2 border-border/20 
+                         hover:border-primary/50 p-1.5 md:p-2 rounded-lg flex items-center gap-1 md:gap-1.5
+                         transition-all duration-300 hover:scale-105 active:scale-95
+                         hover:shadow-lg hover:shadow-primary/20
+                         focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
+              aria-label={`פתח כרטיס לקוח של ${trainee.full_name}`}
+              title="כרטיס לקוח"
+            >
+              <User className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
+            </button>
+          )}
         </div>
       </td>
     </tr>
@@ -837,6 +871,7 @@ interface TraineeCardTodayProps {
   onNewWorkout: (trainee: Trainee, scheduledWorkoutId?: string) => void;
   onViewWorkoutPlan: (trainee: Trainee) => void;
   onViewMealPlan: (trainee: Trainee) => void;
+  onTraineeClick?: (trainee: Trainee) => void;
 }
 
 function TraineeCardToday({
@@ -844,7 +879,8 @@ function TraineeCardToday({
   index,
   onNewWorkout,
   onViewWorkoutPlan,
-  onViewMealPlan
+  onViewMealPlan,
+  onTraineeClick
 }: TraineeCardTodayProps) {
   const { trainee, workout, status, daysSinceLastWorkout, unseenWeightsCount } = todayTrainee;
   const isActive = daysSinceLastWorkout !== null && daysSinceLastWorkout <= 7;
@@ -989,7 +1025,7 @@ function TraineeCardToday({
         </div>
 
         {/* Enhanced Action Buttons */}
-        <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+        <div className={`grid ${onTraineeClick ? 'grid-cols-4' : 'grid-cols-3'} gap-2.5 sm:gap-3`}>
           {/* אימון חדש - Primary */}
           <button
             onClick={() => {
@@ -1065,6 +1101,32 @@ function TraineeCardToday({
             <UtensilsCrossed className="w-5 h-5 sm:w-6 sm:h-6 text-primary relative z-10" aria-hidden="true" />
             <span className="text-xs sm:text-sm font-bold text-foreground relative z-10">תפריט</span>
           </button>
+
+          {/* כרטיס לקוח */}
+          {onTraineeClick && (
+            <button
+              onClick={() => onTraineeClick(trainee)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onTraineeClick(trainee);
+                }
+              }}
+              className="bg-surface/60 hover:bg-surface border-2 border-border/20 
+                         hover:border-primary/50 p-4 sm:p-5 rounded-xl flex flex-col items-center gap-2
+                         transition-all duration-300 hover:scale-105 active:scale-95
+                         hover:shadow-lg hover:shadow-primary/20
+                         focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
+                         group/btn relative overflow-hidden"
+              aria-label={`פתח כרטיס לקוח של ${trainee.full_name}`}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent 
+                            translate-x-[-100%] group-hover/btn:translate-x-[100%] 
+                            transition-transform duration-700" />
+              <User className="w-5 h-5 sm:w-6 sm:h-6 text-primary relative z-10" aria-hidden="true" />
+              <span className="text-xs sm:text-sm font-bold text-foreground relative z-10">כרטיס</span>
+            </button>
+          )}
         </div>
       </div>
     </div>
