@@ -455,6 +455,9 @@ export function useCurrentTvSession(
 
                 // Merge exercises: use DB data as source of truth, but preserve any local state (like UI state)
                 // Only keep exercises that exist in the DB
+                // CRITICAL: Always use DB exercises as the definitive list - never keep exercises that aren't in DB
+                const dbExerciseIds = new Set(exercises.map(ex => ex.id));
+                
                 let finalExercises = exercises;
                 if (existingExercises.length > 0) {
                   // Merge: use DB data as base, but preserve any local state from existing exercises
@@ -465,6 +468,21 @@ export function useCurrentTvSession(
                     return existingEx ? { ...existingEx, ...dbEx } : dbEx;
                   });
                   // Note: exercises not in DB are automatically excluded since we only iterate over DB exercises
+                  
+                  // Defensive check: ensure we only have exercises that exist in DB
+                  finalExercises = finalExercises.filter(ex => dbExerciseIds.has(ex.id));
+                }
+
+                // Ensure count always matches DB count (safety check)
+                if (finalExercises.length !== exercises.length) {
+                  console.warn('[TV-POLLING] Exercise count mismatch, using DB data directly', {
+                    dbCount: exercises.length,
+                    finalCount: finalExercises.length,
+                    dbIds: Array.from(dbExerciseIds),
+                    finalIds: finalExercises.map(ex => ex.id),
+                  });
+                  // If counts don't match, use DB data directly (safest option)
+                  finalExercises = exercises;
                 }
 
                 console.log('[TV-POLLING] Exercises from DB', {
@@ -556,7 +574,10 @@ export function useCurrentTvSession(
             const newExercises = nextSession.workout.exercises || [];
             
             // Use new exercises (from DB) as the source of truth
-            // Only keep existing exercises that still exist in the DB
+            // Only keep exercises that still exist in the DB
+            // CRITICAL: Always use DB exercises as the definitive list - never keep exercises that aren't in DB
+            const dbExerciseIds = new Set(newExercises.map(ex => ex.id));
+            
             if (newExercises.length > 0) {
               // Merge: use DB data as base, but preserve any local state from existing exercises
               const mergedExercises = newExercises.map(newEx => {
@@ -566,37 +587,44 @@ export function useCurrentTvSession(
                 return existingEx ? { ...existingEx, ...newEx } : newEx;
               });
               
+              // Defensive check: ensure we only have exercises that exist in DB
+              // This prevents any edge cases where an exercise might slip through
+              const finalExercises = mergedExercises.filter(ex => dbExerciseIds.has(ex.id));
+              
+              // Ensure count matches DB count (this is a safety check)
+              if (finalExercises.length !== newExercises.length) {
+                console.warn('[TV-MERGE] Exercise count mismatch, using DB data directly', {
+                  dbCount: newExercises.length,
+                  mergedCount: finalExercises.length,
+                  dbIds: Array.from(dbExerciseIds),
+                  mergedIds: finalExercises.map(ex => ex.id),
+                });
+                // If counts don't match, use DB data directly (safest option)
+                return {
+                  ...nextSession,
+                  workout: {
+                    ...nextSession.workout,
+                    exercises: newExercises, // Use DB data directly if there's a mismatch
+                  },
+                };
+              }
+              
               return {
                 ...nextSession,
                 workout: {
                   ...nextSession.workout,
-                  exercises: mergedExercises, // Only exercises that exist in DB
+                  exercises: finalExercises, // Only exercises that exist in DB
                 },
               };
             }
             
             // No new exercises from DB - clear exercises if DB says there are none
             // (This handles the case where all exercises were deleted)
-            if (existingExercises.length > 0) {
-              return {
-                ...nextSession,
-                workout: {
-                  ...nextSession.workout,
-                  exercises: [], // DB has no exercises, so clear them
-                },
-              };
-            }
-            
-            // Both are empty - use new session
-            return nextSession;
-            
-            // Both are empty - keep existing session structure but update other fields
             return {
               ...nextSession,
               workout: {
-                ...prev.workout, // Keep existing workout structure
-                ...nextSession.workout, // Update other fields
-                exercises: existingExercises, // Keep empty array if that's what we had
+                ...nextSession.workout,
+                exercises: [], // DB has no exercises, so clear them
               },
             };
           }
@@ -730,35 +758,41 @@ export function useCurrentTvSession(
               };
             }
             
-            // Merge exercises: keep existing ones and update/add new ones
-            // Use a Map to ensure no duplicates by exercise ID
-            const exerciseMap = new Map<string, TvWorkoutExercise>();
+            // Merge exercises: use DB data as source of truth, but preserve local state (like UI state)
+            // Only keep exercises that exist in the DB
+            // CRITICAL: Always use DB exercises as the definitive list - never keep exercises that aren't in DB
             const existingExercises = prev.workout.exercises || [];
+            const dbExerciseIds = new Set(exercises.map(ex => ex.id));
             
-            // First, add all existing exercises to the map
-            existingExercises.forEach(ex => {
-              exerciseMap.set(ex.id, ex);
+            // Use DB exercises as base, but preserve any local state from existing exercises
+            let mergedExercises = exercises.map(dbEx => {
+              // Find matching existing exercise to preserve local state
+              const existingEx = existingExercises.find(ex => ex.id === dbEx.id);
+              // If found, merge them (DB data takes precedence, but preserve local state like UI state)
+              return existingEx ? { ...existingEx, ...dbEx } : dbEx;
             });
+            // Note: exercises not in DB are automatically excluded since we only iterate over DB exercises
             
-            // Then, update or add exercises from the new data
-            // This ensures that if an exercise already exists, it gets updated, not duplicated
-            exercises.forEach(ex => {
-              exerciseMap.set(ex.id, ex);
-            });
+            // Defensive check: ensure we only have exercises that exist in DB
+            mergedExercises = mergedExercises.filter(ex => dbExerciseIds.has(ex.id));
             
-            // Remove exercises that are in existingExercises but not in the new data
-            // This handles deletions - if an exercise was deleted, it won't be in exercises array
-            const newExerciseIds = new Set(exercises.map(ex => ex.id));
-            const mergedExercises = Array.from(exerciseMap.values()).filter(ex => 
-              newExerciseIds.has(ex.id)
-            );
+            // Ensure count always matches DB count (safety check)
+            if (mergedExercises.length !== exercises.length) {
+              console.warn('[TV-REALTIME] Exercise count mismatch, using DB data directly', {
+                dbCount: exercises.length,
+                mergedCount: mergedExercises.length,
+                dbIds: Array.from(dbExerciseIds),
+                mergedIds: mergedExercises.map(ex => ex.id),
+              });
+              // If counts don't match, use DB data directly (safest option)
+              mergedExercises = exercises;
+            }
             
-            // Always use merged exercises (which includes existing ones, no duplicates)
             return {
               ...prev,
               workout: {
                 ...prev.workout,
-                exercises: mergedExercises, // No need to check length - map ensures no duplicates
+                exercises: mergedExercises, // Only exercises that exist in DB
               },
             };
           });
