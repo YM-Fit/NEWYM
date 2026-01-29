@@ -250,11 +250,17 @@ export default function TraineeWorkoutHistoryModal({
 
     setActionLoading(workout.id);
     try {
-      // Delete from Google Calendar if exists
+      // Delete from Google Calendar if exists - wait for completion
+      // This must happen BEFORE deleting from DB to ensure sync consistency
       if (workout.googleEventId) {
         const deleteResult = await deleteGoogleCalendarEvent(user.id, workout.googleEventId);
         if (deleteResult.error) {
-          logger.warn('Error deleting from Google Calendar', { error: deleteResult.error }, 'TraineeWorkoutHistoryModal');
+          logger.warn('Error deleting from Google Calendar', { error: deleteResult.error, eventId: workout.googleEventId }, 'TraineeWorkoutHistoryModal');
+          // Still continue with DB deletion even if Google Calendar delete fails
+        } else {
+          // Small delay to ensure Google Calendar API has processed the deletion
+          // This helps prevent race conditions where the event might still appear in API responses
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
 

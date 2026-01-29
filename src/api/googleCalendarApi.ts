@@ -886,7 +886,9 @@ export async function getGoogleCalendarEvents(
     }
 
     const data = await response.json();
-    return { data: data.items || [], success: true };
+    // Filter out cancelled events to ensure deleted events don't appear
+    const validEvents = (data.items || []).filter((e: any) => e.status !== 'cancelled');
+    return { data: validEvents, success: true };
   } catch (err: unknown) {
     const errorMessage = handleApiError(err, {
       defaultMessage: 'שגיאה בטעינת אירועים מ-Google Calendar',

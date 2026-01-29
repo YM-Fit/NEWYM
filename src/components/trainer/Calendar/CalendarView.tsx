@@ -2031,11 +2031,13 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
           traineeName={selectedTraineeForHistory.name}
           traineeId={selectedTraineeForHistory.id}
           currentDate={currentDate}
-          onWorkoutUpdated={() => {
+          onWorkoutUpdated={async () => {
             // Clear cache to ensure fresh data after workout update
             eventsCacheRef.current = null;
-            // Refresh events after workout update
-            loadEvents(false, true);
+            // Small delay to ensure Google Calendar has processed the deletion
+            await new Promise(resolve => setTimeout(resolve, 500));
+            // Refresh events after workout update with force refresh
+            await loadEvents(false, true);
           }}
         />
       )}
