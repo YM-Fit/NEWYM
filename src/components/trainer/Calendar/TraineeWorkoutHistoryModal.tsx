@@ -299,6 +299,20 @@ export default function TraineeWorkoutHistoryModal({
       }
 
       toast.success('האימון נמחק בהצלחה');
+      
+      // Sync remaining events for this trainee to update numbering
+      // This ensures that when an workout is deleted, all remaining workouts get renumbered correctly
+      if (resolvedTraineeId && user.id) {
+        // Do this in the background (non-blocking)
+        syncTraineeEventsToCalendar(resolvedTraineeId, user.id, 'current_month_and_future')
+          .then(result => {
+            if (result.data && result.data.updated > 0) {
+              logger.info(`Calendar sync after delete: updated ${result.data.updated} events`, {}, 'TraineeWorkoutHistoryModal');
+            }
+          })
+          .catch(err => logger.error('Calendar sync after delete failed', err, 'TraineeWorkoutHistoryModal'));
+      }
+      
       loadWorkouts();
       // Call onWorkoutUpdated after all deletions are complete to ensure cache refresh
       onWorkoutUpdated?.();

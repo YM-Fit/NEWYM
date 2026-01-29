@@ -1436,10 +1436,10 @@ export async function deleteCalendarEventBidirectional(
     // Find sync record to check if we need to delete workout
     const { data: syncRecord } = await supabase
       .from('google_calendar_sync')
-      .select('workout_id, sync_direction')
+      .select('workout_id, sync_direction, trainee_id')
       .eq('trainer_id', trainerId)
       .eq('google_event_id', eventId)
-      .maybeSingle() as { data: Pick<GoogleCalendarSyncRow, 'workout_id' | 'sync_direction'> | null; error: { message: string } | null };
+      .maybeSingle() as { data: Pick<GoogleCalendarSyncRow, 'workout_id' | 'sync_direction' | 'trainee_id'> | null; error: { message: string } | null };
 
     // Delete from Google Calendar
     const deleteResult = await deleteGoogleCalendarEvent(trainerId, eventId);
@@ -1462,12 +1462,37 @@ export async function deleteCalendarEventBidirectional(
       }
     }
 
+    // Get trainee_id before deleting sync record (for numbering update)
+    const traineeId = syncRecord?.trainee_id || null;
+    
     // Delete sync record
     await supabase
       .from('google_calendar_sync')
       .delete()
       .eq('trainer_id', trainerId)
       .eq('google_event_id', eventId);
+
+    // Sync remaining events for this trainee to update numbering
+    // This ensures that when an workout is deleted, all remaining workouts get renumbered correctly
+    if (traineeId && trainerId) {
+      // Do this in the background (non-blocking)
+      import('../services/traineeCalendarSyncService').then(({ syncTraineeEventsToCalendar }) => {
+        return import('../utils/logger').then(({ logger }) => {
+          return syncTraineeEventsToCalendar(traineeId, trainerId, 'current_month_and_future')
+            .then(result => {
+              if (result.data && result.data.updated > 0) {
+                logger.info(`Calendar sync after delete: updated ${result.data.updated} events`, {}, 'deleteCalendarEventBidirectional');
+              }
+            })
+            .catch(err => {
+              logger.error('Calendar sync after delete failed', err, 'deleteCalendarEventBidirectional');
+            });
+        });
+      }).catch(err => {
+        // Log error if import fails
+        console.error('Failed to load calendar sync service', err);
+      });
+    }
 
     return { success: true };
   } catch (err: unknown) {

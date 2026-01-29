@@ -442,6 +442,22 @@ export default function TodayTraineesSection({
       }
 
       toast.success('האימון נמחק בהצלחה');
+      
+      // Sync remaining events for this trainee to update numbering
+      // This ensures that when an workout is deleted, all remaining workouts get renumbered correctly
+      if (traineeId && user.id) {
+        // Do this in the background (non-blocking)
+        import('../../../services/traineeCalendarSyncService').then(({ syncTraineeEventsToCalendar }) => {
+          syncTraineeEventsToCalendar(traineeId, user.id, 'current_month_and_future')
+            .then(result => {
+              if (result.data && result.data.updated > 0) {
+                logger.info(`Calendar sync after delete: updated ${result.data.updated} events`, {}, 'TodayTraineesSection');
+              }
+            })
+            .catch(err => logger.error('Calendar sync after delete failed', err, 'TodayTraineesSection'));
+        }).catch(err => logger.error('Failed to load calendar sync service', err, 'TodayTraineesSection'));
+      }
+      
       // Refresh scheduled workouts
       loadTodayTrainees(true);
       // Dispatch custom event to notify other components
