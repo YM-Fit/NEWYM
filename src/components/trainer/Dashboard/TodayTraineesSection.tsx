@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Dumbbell, ClipboardList, UtensilsCrossed, Clock, Users, Calendar, AlertCircle, Scale, CalendarDays, CalendarCheck, User } from 'lucide-react';
+import { Dumbbell, ClipboardList, UtensilsCrossed, Clock, Users, Calendar, AlertCircle, Scale, CalendarDays, CalendarCheck, User, Trash2 } from 'lucide-react';
 import { Trainee } from '../../../types';
 import { supabase } from '../../../lib/supabase';
 import { logger } from '../../../utils/logger';
@@ -7,6 +7,8 @@ import { LoadingSpinner } from '../../ui/LoadingSpinner';
 import { Skeleton } from '../../ui/Skeleton';
 import { getScheduledWorkoutsForTodayAndTomorrow } from '../../../api/workoutApi';
 import { useAuth } from '../../../contexts/AuthContext';
+import { deleteGoogleCalendarEvent } from '../../../api/googleCalendarApi';
+import toast from 'react-hot-toast';
 
 export interface TodayTrainee {
   trainee: Trainee;
@@ -21,6 +23,7 @@ export interface TodayTrainee {
     isTimePassed?: boolean; // Whether the scheduled time has passed
     hasCompletedWorkout?: boolean; // Whether there's a completed workout for this date
     eventStartTime?: string; // For Google Calendar workouts, the actual event start time
+    googleEventId?: string; // Google Calendar event ID for deletion
   };
   daysSinceLastWorkout?: number | null;
   unseenWeightsCount?: number;
@@ -78,6 +81,71 @@ export default function TodayTraineesSection({
   onTraineeClick
 }: TodayTraineesSectionProps) {
   const { user } = useAuth();
+  
+  // Handle delete workout
+  const handleDeleteWorkout = useCallback(async (workoutId: string, traineeId: string, googleEventId?: string) => {
+    if (!user) return;
+    
+    if (!confirm('האם אתה בטוח שברצונך למחוק את האימון המתוזמן?')) {
+      return;
+    }
+
+    try {
+      // Delete from Google Calendar if exists
+      if (googleEventId) {
+        const deleteResult = await deleteGoogleCalendarEvent(user.id, googleEventId);
+        if (deleteResult.error) {
+          logger.warn('Error deleting from Google Calendar', { error: deleteResult.error, eventId: googleEventId }, 'TodayTraineesSection');
+          // Still continue with DB deletion even if Google Calendar delete fails
+        } else {
+          // Small delay to ensure Google Calendar API has processed the deletion
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      // Delete workout-trainee link
+      const { error: linkError } = await supabase
+        .from('workout_trainees')
+        .delete()
+        .eq('workout_id', workoutId)
+        .eq('trainee_id', traineeId);
+
+      if (linkError) {
+        throw new Error('שגיאה במחיקת קישור אימון');
+      }
+
+      // Delete sync record
+      if (googleEventId) {
+        const { error: syncError } = await supabase
+          .from('google_calendar_sync')
+          .delete()
+          .eq('google_event_id', googleEventId);
+        
+        if (syncError) {
+          logger.warn('Error deleting sync record', { error: syncError }, 'TodayTraineesSection');
+        }
+      }
+
+      // Delete workout
+      const { error: workoutError } = await supabase
+        .from('workouts')
+        .delete()
+        .eq('id', workoutId);
+
+      if (workoutError) {
+        throw new Error('שגיאה במחיקת אימון');
+      }
+
+      toast.success('האימון נמחק בהצלחה');
+      // Refresh scheduled workouts
+      loadTodayTrainees(true);
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('workout-deleted', { detail: { workoutId } }));
+    } catch (err) {
+      logger.error('Error deleting workout', err, 'TodayTraineesSection');
+      toast.error(err instanceof Error ? err.message : 'שגיאה במחיקת אימון');
+    }
+  }, [user, loadTodayTrainees]);
   const [todayTrainees, setTodayTrainees] = useState<TodayTrainee[]>([]);
   const [tomorrowTrainees, setTomorrowTrainees] = useState<TodayTrainee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -612,6 +680,7 @@ export default function TodayTraineesSection({
                         onViewWorkoutPlan={onViewWorkoutPlan}
                         onViewMealPlan={onViewMealPlan}
                         onTraineeClick={onTraineeClick}
+                        onDeleteWorkout={handleDeleteWorkout}
                       />
                     ))}
                   </tbody>
@@ -706,6 +775,7 @@ export default function TodayTraineesSection({
                         onViewWorkoutPlan={onViewWorkoutPlan}
                         onViewMealPlan={onViewMealPlan}
                         onTraineeClick={onTraineeClick}
+                        onDeleteWorkout={handleDeleteWorkout}
                       />
                     ))}
                   </tbody>
@@ -726,6 +796,7 @@ interface TraineeTableRowProps {
   onViewWorkoutPlan: (trainee: Trainee) => void;
   onViewMealPlan: (trainee: Trainee) => void;
   onTraineeClick?: (trainee: Trainee) => void;
+  onDeleteWorkout?: (workoutId: string, traineeId: string, googleEventId?: string) => void;
 }
 
 function TraineeTableRow({
@@ -734,7 +805,8 @@ function TraineeTableRow({
   onNewWorkout,
   onViewWorkoutPlan,
   onViewMealPlan,
-  onTraineeClick
+  onTraineeClick,
+  onDeleteWorkout
 }: TraineeTableRowProps) {
   const { trainee, workout, status, daysSinceLastWorkout, unseenWeightsCount } = todayTrainee;
   const isActive = daysSinceLastWorkout !== null && daysSinceLastWorkout <= 7;
@@ -867,6 +939,22 @@ function TraineeTableRow({
             <Dumbbell className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span className="text-[10px] md:text-xs font-bold hidden sm:inline">אימון</span>
           </button>
+          {/* Delete button - only show for scheduled workouts (not completed) */}
+          {!workout.is_completed && onDeleteWorkout && (
+            <button
+              onClick={() => onDeleteWorkout(workout.id, trainee.id, workout.googleEventId)}
+              className="bg-danger/20 hover:bg-danger/30 border-2 border-danger/30 
+                         hover:border-danger/50 p-1.5 md:p-2 rounded-lg flex items-center gap-1 md:gap-1.5
+                         transition-all duration-300 hover:scale-105 active:scale-95
+                         hover:shadow-lg hover:shadow-danger/20 text-danger
+                         focus:outline-none focus:ring-2 focus:ring-danger/50 focus:ring-offset-2"
+              aria-label={`מחק אימון מתוזמן של ${trainee.full_name}`}
+              title="מחק אימון"
+            >
+              <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <span className="text-[10px] md:text-xs font-bold hidden sm:inline">מחק</span>
+            </button>
+          )}
           <button
             onClick={() => onViewWorkoutPlan(trainee)}
             className="bg-surface/60 hover:bg-surface border-2 border-border/20 
@@ -918,6 +1006,7 @@ interface TraineeCardTodayProps {
   onViewWorkoutPlan: (trainee: Trainee) => void;
   onViewMealPlan: (trainee: Trainee) => void;
   onTraineeClick?: (trainee: Trainee) => void;
+  onDeleteWorkout?: (workoutId: string, traineeId: string, googleEventId?: string) => void;
 }
 
 function TraineeCardToday({
@@ -926,7 +1015,8 @@ function TraineeCardToday({
   onNewWorkout,
   onViewWorkoutPlan,
   onViewMealPlan,
-  onTraineeClick
+  onTraineeClick,
+  onDeleteWorkout
 }: TraineeCardTodayProps) {
   const { trainee, workout, status, daysSinceLastWorkout, unseenWeightsCount } = todayTrainee;
   const isActive = daysSinceLastWorkout !== null && daysSinceLastWorkout <= 7;
@@ -1071,7 +1161,7 @@ function TraineeCardToday({
         </div>
 
         {/* Enhanced Action Buttons */}
-        <div className={`grid ${onTraineeClick ? 'grid-cols-4' : 'grid-cols-3'} gap-2.5 sm:gap-3`}>
+        <div className={`grid ${onTraineeClick ? (onDeleteWorkout && !workout.is_completed ? 'grid-cols-5' : 'grid-cols-4') : (onDeleteWorkout && !workout.is_completed ? 'grid-cols-4' : 'grid-cols-3')} gap-2.5 sm:gap-3`}>
           {/* אימון חדש - Primary */}
           <button
             onClick={() => {
@@ -1099,6 +1189,32 @@ function TraineeCardToday({
             <Dumbbell className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" aria-hidden="true" />
             <span className="text-xs sm:text-sm font-bold relative z-10">אימון חדש</span>
           </button>
+
+          {/* מחק אימון - only for scheduled workouts */}
+          {!workout.is_completed && onDeleteWorkout && (
+            <button
+              onClick={() => onDeleteWorkout(workout.id, trainee.id, workout.googleEventId)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onDeleteWorkout(workout.id, trainee.id, workout.googleEventId);
+                }
+              }}
+              className="bg-danger/20 hover:bg-danger/30 border-2 border-danger/30 
+                         hover:border-danger/50 p-4 sm:p-5 rounded-xl flex flex-col items-center gap-2
+                         transition-all duration-300 hover:scale-110 active:scale-95
+                         shadow-lg shadow-danger/30 hover:shadow-2xl hover:shadow-danger/50
+                         focus:outline-none focus:ring-2 focus:ring-danger/50 focus:ring-offset-2
+                         group/btn relative overflow-hidden text-danger"
+              aria-label={`מחק אימון מתוזמן של ${trainee.full_name}`}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
+                            translate-x-[-100%] group-hover/btn:translate-x-[100%] 
+                            transition-transform duration-700" />
+              <Trash2 className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" aria-hidden="true" />
+              <span className="text-xs sm:text-sm font-bold relative z-10">מחק</span>
+            </button>
+          )}
 
           {/* תוכנית אימון */}
           <button

@@ -499,10 +499,11 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     // Only query if we have workout IDs
     let googleSyncedWorkoutIds = new Set<string>();
     const googleSyncEventTimes = new Map<string, string>(); // Map workout_id -> event_start_time
+    const googleEventIds = new Map<string, string>(); // Map workout_id -> google_event_id
     if (workoutIds.length > 0) {
       const { data: googleSyncData, error: googleSyncError } = await supabase
         .from('google_calendar_sync')
-        .select('workout_id, sync_direction, event_start_time')
+        .select('workout_id, sync_direction, event_start_time, google_event_id')
         .in('workout_id', workoutIds)
         .eq('sync_status', 'synced');
 
@@ -516,6 +517,10 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
             // Store event_start_time for accurate time display
             if (sync.event_start_time) {
               googleSyncEventTimes.set(sync.workout_id!, sync.event_start_time);
+            }
+            // Store google_event_id for deletion
+            if (sync.google_event_id) {
+              googleEventIds.set(sync.workout_id!, sync.google_event_id);
             }
           });
       }
@@ -584,7 +589,10 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
             hasCompletedWorkout, // Flag to indicate if there's a completed workout for this date
             eventStartTime: isFromGoogle && googleSyncEventTimes.has(workout.id) 
               ? googleSyncEventTimes.get(workout.id)! 
-              : undefined // Store event_start_time for accurate time display
+              : undefined, // Store event_start_time for accurate time display
+            googleEventId: isFromGoogle && googleEventIds.has(workout.id)
+              ? googleEventIds.get(workout.id)!
+              : undefined // Store google_event_id for deletion
           },
           workoutDate: actualWorkoutDate // Use actual date/time for sorting and display
         };
