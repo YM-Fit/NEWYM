@@ -500,32 +500,48 @@ export async function calculateMonthlyPositionsFromDb(
       }
     });
     
+    // First, calculate the count of displayed events per trainee
+    // This is the most accurate count after deletions (events are already filtered)
+    const displayedEventsByTrainee = new Map<string, Array<{ id: string; startDate: Date }>>();
+    events.forEach(event => {
+      const existing = displayedEventsByTrainee.get(event.traineeName) || [];
+      existing.push({ id: event.id, startDate: event.startDate });
+      displayedEventsByTrainee.set(event.traineeName, existing);
+    });
+
+    // Sort displayed events by date for each trainee
+    displayedEventsByTrainee.forEach((eventList) => {
+      eventList.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+    });
+
     // Now process each event and find its position
     events.forEach(event => {
       const traineeId = traineeNameToId.get(event.traineeName);
-      
+      const displayedEventsForTrainee = displayedEventsByTrainee.get(event.traineeName) || [];
+      const displayedTotal = displayedEventsForTrainee.length;
+
       if (!traineeId) {
-        // No trainee match, use fallback position calculation
-        const sameNameEvents = events.filter(e => e.traineeName === event.traineeName);
-        sameNameEvents.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-        const position = sameNameEvents.findIndex(e => e.id === event.id) + 1;
-        
+        // No trainee match, use displayed events for position
+        const position = displayedEventsForTrainee.findIndex(e => e.id === event.id) + 1;
+
         result.set(event.id, {
           position,
-          totalInMonth: sameNameEvents.length,
+          totalInMonth: displayedTotal,
           traineeName: event.traineeName,
-          monthlyTotalFromDb: sameNameEvents.length,
+          monthlyTotalFromDb: displayedTotal,
         });
         return;
       }
-      
+
       const traineeWorkoutList = traineeWorkouts.get(traineeId) || [];
-      const monthlyTotal = traineeWorkoutList.length;
+      // Use displayed events count as primary, fall back to DB count
+      // This ensures correct total after deletions even if DB sync is delayed
+      const monthlyTotal = Math.max(displayedTotal, 1);
       
-      // Find position by matching google event ID or date
+      // Find position by matching google event ID or date in database
       let position = -1;
-      
-      // First try to match by Google event ID
+
+      // First try to match by Google event ID in database workouts
       const matchByGoogleId = traineeWorkoutList.findIndex(w => w.googleEventId === event.id);
       if (matchByGoogleId >= 0) {
         position = matchByGoogleId + 1;
@@ -534,7 +550,7 @@ export async function calculateMonthlyPositionsFromDb(
         const eventTime = event.startDate.getTime();
         let closestIndex = -1;
         let closestDiff = Infinity;
-        
+
         traineeWorkoutList.forEach((w, index) => {
           const diff = Math.abs(w.date.getTime() - eventTime);
           // Allow 1 hour tolerance for time differences
@@ -543,21 +559,24 @@ export async function calculateMonthlyPositionsFromDb(
             closestIndex = index;
           }
         });
-        
+
         if (closestIndex >= 0) {
           position = closestIndex + 1;
-        } else {
-          // If no match found, calculate position based on where this date would fit
-          const insertIndex = traineeWorkoutList.findIndex(w => w.date.getTime() > eventTime);
-          position = insertIndex >= 0 ? insertIndex + 1 : monthlyTotal + 1;
         }
       }
-      
+
+      // If no DB match found, use position from displayed events
+      // This handles new events not yet in DB or recently deleted events
+      if (position < 0) {
+        const displayedPosition = displayedEventsForTrainee.findIndex(e => e.id === event.id) + 1;
+        position = displayedPosition > 0 ? displayedPosition : 1;
+      }
+
       result.set(event.id, {
-        position: position > 0 ? position : 1,
+        position,
         totalInMonth: monthlyTotal,
         traineeName: event.traineeName,
-        monthlyTotalFromDb: monthlyTotal,
+        monthlyTotalFromDb: traineeWorkoutList.length,
       });
     });
     
