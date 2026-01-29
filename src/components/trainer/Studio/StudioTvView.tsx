@@ -536,30 +536,30 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       <div className="flex-1 overflow-hidden">
         <div className="h-full w-full p-4 2xl:p-6">
           {isUnauthorized ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-6">
-              <div className="text-black dark:text-white text-3xl font-semibold">התחברות נדרשת</div>
-              <p className="text-black dark:text-gray-300 text-xl max-w-xl text-center font-semibold">
+            <div className="flex-1 flex flex-col items-center justify-center gap-10">
+              <div className="text-black dark:text-white text-5xl 2xl:text-8xl font-black">התחברות נדרשת</div>
+              <p className="text-black dark:text-gray-300 text-3xl 2xl:text-5xl max-w-4xl text-center font-semibold leading-relaxed">
                 כדי להשתמש במצב טלוויזיה, התחבר כמדריך מהמכשיר הזה.
                 לאחר ההתחברות, המסך יזהה אוטומטית את האימון הפעיל מהיומן.
               </p>
             </div>
           ) : loading && !session ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-6 animate-fade-in">
+            <div className="flex-1 flex flex-col items-center justify-center gap-10 animate-fade-in">
               <div className="relative">
-                <div className="h-20 w-20 border-4 rounded-full animate-spin border-emerald-500/40 border-t-emerald-500" />
-                <div className="absolute inset-0 h-20 w-20 rounded-full animate-ping border-2 border-emerald-500/20" />
+                <div className="h-32 w-32 2xl:h-48 2xl:w-48 border-8 rounded-full animate-spin border-emerald-500/40 border-t-emerald-500" />
+                <div className="absolute inset-0 h-32 w-32 2xl:h-48 2xl:w-48 rounded-full animate-ping border-4 border-emerald-500/20" />
               </div>
-              <div className="text-black dark:text-white tv-text-lg animate-pulse font-semibold">טוען את האימון הנוכחי מהיומן...</div>
+              <div className="text-black dark:text-white text-4xl 2xl:text-6xl animate-pulse font-black">טוען את האימון הנוכחי מהיומן...</div>
             </div>
           ) : error && !session ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4 animate-fade-in">
-              <div className="text-3xl font-semibold text-red-600 dark:text-red-500 mb-2">⚠️ שגיאה במצב טלוויזיה</div>
-              <p className="text-black dark:text-white tv-text-lg max-w-xl text-center font-semibold">{error}</p>
+            <div className="flex-1 flex flex-col items-center justify-center gap-8 animate-fade-in">
+              <div className="text-5xl 2xl:text-7xl font-black text-red-600 dark:text-red-500 mb-4">⚠️ שגיאה במצב טלוויזיה</div>
+              <p className="text-black dark:text-white text-3xl 2xl:text-5xl max-w-4xl text-center font-semibold">{error}</p>
             </div>
           ) : !session ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-6 animate-fade-in">
-              <div className="text-black dark:text-white tv-heading-xl font-semibold text-center">אין אימון פעיל כרגע</div>
-              <p className="text-black dark:text-gray-300 tv-text-lg max-w-2xl text-center leading-relaxed font-semibold">
+            <div className="flex-1 flex flex-col items-center justify-center gap-10 animate-fade-in">
+              <div className="text-black dark:text-white text-5xl 2xl:text-8xl font-black text-center">אין אימון פעיל כרגע</div>
+              <p className="text-black dark:text-gray-300 text-3xl 2xl:text-5xl max-w-4xl text-center leading-relaxed font-semibold">
                 לא נמצא אירוע יומן פעיל לסטודיו בזמן הנוכחי.
                 ודא שהאימונים שלך מסונכרנים ליומן Google וששעת האימון תואמת לשעה הנוכחית.
               </p>
@@ -614,18 +614,18 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
                   {/* Full Screen Table - Takes entire screen space */}
                   <div className="flex-1 overflow-auto">
-                    <table className="w-full" style={{ fontSize: 'clamp(1.25rem, 3vw, 2.5rem)' }}>
+                    <table className="w-full" style={{ fontSize: 'clamp(1.75rem, 4vw, 3.5rem)' }}>
                       <thead className="sticky top-0 z-10 bg-gradient-to-r from-emerald-200 to-emerald-300 dark:from-emerald-600/40 dark:to-emerald-500/40 border-b-4 border-black dark:border-primary/50 shadow-lg">
                         <tr>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>#</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>תרגיל</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>סטטוס</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>משקל מקס׳</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>חזרות</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>נפח</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>סטים</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>פרטי סטים</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-2xl 2xl:text-3xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20`}>התקדמות</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>#</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>תרגיל</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>סטטוס</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>משקל מקס׳</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>חזרות</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>נפח</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>סטים</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>פרטי סטים</th>
+                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20`}>התקדמות</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -645,23 +645,23 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                           >
                             <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 text-center border-r-3 border-black dark:border-primary/30`}>
                               {isActiveExercise ? (
-                                <div className="w-20 h-20 2xl:w-24 2xl:h-24 rounded-full flex items-center justify-center text-3xl 2xl:text-4xl font-black mx-auto border-4 border-emerald-600 dark:border-emerald-400 bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-400 dark:to-emerald-500 text-white shadow-glow-xl animate-tv-active-badge-pulse">
+                                <div className="w-24 h-24 2xl:w-32 2xl:h-32 rounded-full flex items-center justify-center text-4xl 2xl:text-5xl font-black mx-auto border-4 border-emerald-600 dark:border-emerald-400 bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-400 dark:to-emerald-500 text-white shadow-glow-xl animate-tv-active-badge-pulse">
                                   <span className="relative">
                                     {index + 1}
                                     <span className="absolute -top-1 -right-1 w-4 h-4 2xl:w-5 2xl:h-5 bg-red-500 rounded-full border-2 border-white animate-ping"></span>
                                   </span>
                                 </div>
                               ) : (
-                                <div className={`w-14 h-14 2xl:w-18 2xl:h-18 rounded-full flex items-center justify-center text-xl 2xl:text-2xl font-black mx-auto border-2 border-black dark:border-transparent ${
-                                  exercise.isCompleted 
-                                    ? 'bg-emerald-500 text-white shadow-glow-lg dark:bg-emerald-500' 
+                                <div className={`w-18 h-18 2xl:w-24 2xl:h-24 rounded-full flex items-center justify-center text-2xl 2xl:text-4xl font-black mx-auto border-3 border-black dark:border-transparent ${
+                                  exercise.isCompleted
+                                    ? 'bg-emerald-500 text-white shadow-glow-lg dark:bg-emerald-500'
                                     : 'bg-amber-500 text-white dark:bg-amber-500/30 dark:text-amber-500'
                                 }`}>
                                   {index + 1}
                                 </div>
                               )}
                             </td>
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 text-black dark:text-white font-black ${isActiveExercise ? 'text-3xl 2xl:text-5xl' : 'text-xl 2xl:text-2xl'} border-r-3 border-black dark:border-primary/30`}>
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 text-black dark:text-white font-black ${isActiveExercise ? 'text-4xl 2xl:text-6xl' : 'text-2xl 2xl:text-4xl'} border-r-3 border-black dark:border-primary/30`}>
                               <div className="flex flex-col gap-2">
                                 <div className="flex items-center gap-3">
                                   <span className={isActiveExercise ? 'tv-active-exercise-name' : ''}>
@@ -698,31 +698,31 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                             </td>
                             <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 border-r-3 border-black dark:border-primary/30`}>
                               {exercise.isCompleted ? (
-                                <span className={`px-4 py-2 2xl:px-6 2xl:py-3 rounded-full bg-emerald-500 text-white dark:bg-emerald-500/30 dark:text-emerald-400 ${isActiveExercise ? 'text-xl 2xl:text-2xl' : 'text-lg 2xl:text-xl'} font-black border-3 border-black dark:border-emerald-500/50 shadow-glow-lg animate-pulse-slow inline-block`}>
+                                <span className={`px-5 py-3 2xl:px-8 2xl:py-4 rounded-full bg-emerald-500 text-white dark:bg-emerald-500/30 dark:text-emerald-400 ${isActiveExercise ? 'text-2xl 2xl:text-3xl' : 'text-xl 2xl:text-2xl'} font-black border-3 border-black dark:border-emerald-500/50 shadow-glow-lg animate-pulse-slow inline-block`}>
                                   ✓ הושלם
                                 </span>
                               ) : (
-                                <span className={`px-4 py-2 2xl:px-6 2xl:py-3 rounded-full bg-amber-500 text-white dark:bg-amber-500/30 dark:text-amber-400 ${isActiveExercise ? 'text-xl 2xl:text-2xl' : 'text-lg 2xl:text-xl'} font-black border-3 border-black dark:border-amber-500/50 inline-block`}>
+                                <span className={`px-5 py-3 2xl:px-8 2xl:py-4 rounded-full bg-amber-500 text-white dark:bg-amber-500/30 dark:text-amber-400 ${isActiveExercise ? 'text-2xl 2xl:text-3xl' : 'text-xl 2xl:text-2xl'} font-black border-3 border-black dark:border-amber-500/50 inline-block`}>
                                   בתהליך
                                 </span>
                               )}
                             </td>
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 text-black dark:text-white ${isActiveExercise ? 'text-2xl 2xl:text-4xl' : 'text-xl 2xl:text-2xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-5 2xl:px-8 text-black dark:text-white ${isActiveExercise ? 'text-3xl 2xl:text-5xl' : 'text-2xl 2xl:text-4xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
                               {exercise.maxWeight > 0 ? `${exercise.maxWeight} ק״ג` : '—'}
                             </td>
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 text-black dark:text-white ${isActiveExercise ? 'text-2xl 2xl:text-4xl' : 'text-xl 2xl:text-2xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-5 2xl:px-8 text-black dark:text-white ${isActiveExercise ? 'text-3xl 2xl:text-5xl' : 'text-2xl 2xl:text-4xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
                               {exercise.totalReps > 0 ? exercise.totalReps : '—'}
                             </td>
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 text-black dark:text-white ${isActiveExercise ? 'text-2xl 2xl:text-4xl' : 'text-xl 2xl:text-2xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-5 2xl:px-8 text-black dark:text-white ${isActiveExercise ? 'text-3xl 2xl:text-5xl' : 'text-2xl 2xl:text-4xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
                               {exercise.totalVolume > 0 ? `${Math.round(exercise.totalVolume)} ק״ג` : '—'}
                             </td>
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 ${isActiveExercise ? 'text-2xl 2xl:text-4xl' : 'text-xl 2xl:text-2xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-5 2xl:px-8 ${isActiveExercise ? 'text-3xl 2xl:text-5xl' : 'text-2xl 2xl:text-4xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
                               <span className={exercise.completedSets === exercise.totalSets ? 'text-emerald-600 dark:text-emerald-500' : 'text-amber-600 dark:text-amber-500'}>
                                 {exercise.completedSets}/{exercise.totalSets}
                               </span>
                             </td>
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 border-r-3 border-black dark:border-primary/30`}>
-                              <div className="flex flex-wrap gap-2 2xl:gap-3 justify-end">
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-5 2xl:px-8 border-r-3 border-black dark:border-primary/30`}>
+                              <div className="flex flex-wrap gap-3 2xl:gap-4 justify-end">
                                 {exercise.sets.slice(0, 5).map((set) => {
                                   const hasSuperset = set.superset_exercise_id && ((set.superset_weight || 0) > 0 || (set.superset_reps || 0) > 0);
                                   const hasDropset = (set.dropset_weight || 0) > 0 || (set.dropset_reps || 0) > 0;
@@ -730,11 +730,11 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                   const isSuperset = setType === 'superset';
                                   const isDropset = setType === 'dropset';
                                   const hasEquipment = set.equipment && set.equipment.name;
-                                  
+
                                   return (
                                     <div
                                       key={set.id}
-                                      className={`px-2 py-1 2xl:px-3 2xl:py-2 rounded-lg text-base 2xl:text-lg font-bold border border-black dark:border-primary/40 flex flex-col gap-1 ${
+                                      className={`px-3 py-2 2xl:px-5 2xl:py-3 rounded-lg text-lg 2xl:text-2xl font-bold border-2 border-black dark:border-primary/40 flex flex-col gap-1 ${
                                         (set.weight || 0) > 0 || (set.reps || 0) > 0
                                           ? set.failure
                                             ? 'bg-red-200 text-black dark:bg-red-500/30 dark:text-red-300'
@@ -742,38 +742,38 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                           : 'bg-gray-200 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400'
                                       }`}
                                     >
-                                      <div className="flex items-center gap-1">
+                                      <div className="flex items-center gap-2">
                                         <span className={isSuperset ? 'text-purple-600 dark:text-purple-400' : isDropset ? 'text-orange-600 dark:text-orange-400' : ''}>
                                           {set.set_number}: {set.weight ?? 0}×{set.reps ?? 0}
                                         </span>
                                         {set.failure && (
-                                          <span className="text-red-600 dark:text-red-400 text-sm 2xl:text-base" title="כשל">
+                                          <span className="text-red-600 dark:text-red-400 text-base 2xl:text-xl" title="כשל">
                                             ⚠️
                                           </span>
                                         )}
                                         {isSuperset && (
-                                          <span className="text-purple-600 dark:text-purple-400 text-xs font-bold" title="סופר-סט">
+                                          <span className="text-purple-600 dark:text-purple-400 text-sm 2xl:text-lg font-bold" title="סופר-סט">
                                             SS
                                           </span>
                                         )}
                                         {isDropset && (
-                                          <span className="text-orange-600 dark:text-orange-400 text-xs font-bold" title="דרופ-סט">
+                                          <span className="text-orange-600 dark:text-orange-400 text-sm 2xl:text-lg font-bold" title="דרופ-סט">
                                             DS
                                           </span>
                                         )}
                                         {hasEquipment && (
-                                          <span className="text-blue-600 dark:text-blue-400 text-xs" title={set.equipment.name}>
+                                          <span className="text-blue-600 dark:text-blue-400 text-sm 2xl:text-lg" title={set.equipment.name}>
                                             {set.equipment.emoji || '🎒'}
                                           </span>
                                         )}
                                       </div>
                                       {hasSuperset && (
-                                        <div className="text-xs 2xl:text-sm text-purple-700 dark:text-purple-300 font-semibold">
+                                        <div className="text-sm 2xl:text-lg text-purple-700 dark:text-purple-300 font-semibold">
                                           +{set.superset_weight ?? 0}×{set.superset_reps ?? 0}
                                         </div>
                                       )}
                                       {hasDropset && (
-                                        <div className="text-xs 2xl:text-sm text-orange-700 dark:text-orange-300 font-semibold">
+                                        <div className="text-sm 2xl:text-lg text-orange-700 dark:text-orange-300 font-semibold">
                                           ↓{set.dropset_weight ?? 0}×{set.dropset_reps ?? 0}
                                         </div>
                                       )}
@@ -781,51 +781,51 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                   );
                                 })}
                                 {exercise.sets.length > 5 && (
-                                  <div className="px-2 py-1 2xl:px-3 2xl:py-2 rounded-lg text-base 2xl:text-lg font-bold bg-emerald-200 text-black dark:bg-primary/10 dark:text-primary border border-black dark:border-primary/30">
+                                  <div className="px-3 py-2 2xl:px-5 2xl:py-3 rounded-lg text-lg 2xl:text-2xl font-bold bg-emerald-200 text-black dark:bg-primary/10 dark:text-primary border-2 border-black dark:border-primary/30">
                                     +{exercise.sets.length - 5}
                                   </div>
                                 )}
                               </div>
                             </td>
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 text-center`}>
+                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-5 2xl:px-8 text-center`}>
                               {exercise.progressIndicator === 'up' && (
-                                <div className="flex flex-col items-center justify-center gap-1 text-emerald-600 dark:text-emerald-400 animate-pulse-slow">
-                                  <div className="flex items-center gap-2">
-                                    <TrendingUp className="w-6 h-6 2xl:w-8 2xl:h-8" />
-                                    <span className="text-xl 2xl:text-2xl font-black">+{Math.abs(exercise.progressPercent)}%</span>
+                                <div className="flex flex-col items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 animate-pulse-slow">
+                                  <div className="flex items-center gap-3">
+                                    <TrendingUp className="w-8 h-8 2xl:w-12 2xl:h-12" />
+                                    <span className="text-2xl 2xl:text-4xl font-black">+{Math.abs(exercise.progressPercent)}%</span>
                                   </div>
                                   {exercise.progressDetails && (
-                                    <span className="text-xs 2xl:text-sm font-semibold opacity-80 dark:text-emerald-300 text-emerald-800">
+                                    <span className="text-sm 2xl:text-lg font-semibold opacity-80 dark:text-emerald-300 text-emerald-800">
                                       {exercise.progressDetails}
                                     </span>
                                   )}
                                 </div>
                               )}
                               {exercise.progressIndicator === 'down' && (
-                                <div className="flex flex-col items-center justify-center gap-1 text-red-600 dark:text-red-400">
-                                  <div className="flex items-center gap-2">
-                                    <TrendingUp className="w-6 h-6 2xl:w-8 2xl:h-8 rotate-180" />
-                                    <span className="text-xl 2xl:text-2xl font-black">{exercise.progressPercent}%</span>
+                                <div className="flex flex-col items-center justify-center gap-2 text-red-600 dark:text-red-400">
+                                  <div className="flex items-center gap-3">
+                                    <TrendingUp className="w-8 h-8 2xl:w-12 2xl:h-12 rotate-180" />
+                                    <span className="text-2xl 2xl:text-4xl font-black">{exercise.progressPercent}%</span>
                                   </div>
                                   {exercise.progressDetails && (
-                                    <span className="text-xs 2xl:text-sm font-semibold opacity-80 dark:text-red-300 text-red-800">
+                                    <span className="text-sm 2xl:text-lg font-semibold opacity-80 dark:text-red-300 text-red-800">
                                       {exercise.progressDetails}
                                     </span>
                                   )}
                                 </div>
                               )}
                               {exercise.progressIndicator === 'same' && (
-                                <div className="flex flex-col items-center justify-center gap-1">
-                                  <span className="text-3xl 2xl:text-4xl font-black dark:text-gray-400 text-gray-800">=</span>
+                                <div className="flex flex-col items-center justify-center gap-2">
+                                  <span className="text-4xl 2xl:text-6xl font-black dark:text-gray-400 text-gray-800">=</span>
                                   {exercise.progressDetails && (
-                                    <span className="text-xs 2xl:text-sm font-semibold opacity-80 dark:text-gray-400 text-gray-800">
+                                    <span className="text-sm 2xl:text-lg font-semibold opacity-80 dark:text-gray-400 text-gray-800">
                                       {exercise.progressDetails}
                                     </span>
                                   )}
                                 </div>
                               )}
                               {!exercise.progressIndicator && (
-                                <span className="dark:text-gray-400 text-black text-lg 2xl:text-xl">—</span>
+                                <span className="dark:text-gray-400 text-black text-xl 2xl:text-3xl">—</span>
                               )}
                             </td>
                           </tr>
@@ -838,13 +838,13 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
               ) : session?.workout ? (
                 <div className="h-full w-full flex items-center justify-center bg-emerald-50 dark:bg-gradient-dark">
                   <div className="text-center">
-                    <div className="text-black dark:text-white text-4xl 2xl:text-6xl font-black mb-4">
+                    <div className="text-black dark:text-white text-5xl 2xl:text-8xl font-black mb-6">
                       ממתין לתרגילים
                     </div>
-                    <p className="text-black dark:text-gray-300 text-2xl 2xl:text-3xl font-semibold">
+                    <p className="text-black dark:text-gray-300 text-3xl 2xl:text-5xl font-semibold">
                       האימון זוהה מהיומן, אבל טרם נוספו לו תרגילים במערכת.
                       <br />
-                      <span className="text-xl 2xl:text-2xl mt-2 inline-block animate-pulse">
+                      <span className="text-2xl 2xl:text-4xl mt-4 inline-block animate-pulse">
                         התרגילים יופיעו כאן ברגע שיוספו לאימון...
                       </span>
                     </p>
