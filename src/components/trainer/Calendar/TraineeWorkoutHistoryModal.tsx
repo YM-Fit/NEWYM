@@ -302,6 +302,8 @@ export default function TraineeWorkoutHistoryModal({
       loadWorkouts();
       // Call onWorkoutUpdated after all deletions are complete to ensure cache refresh
       onWorkoutUpdated?.();
+      // Dispatch custom event to notify dashboard and other components
+      window.dispatchEvent(new CustomEvent('workout-deleted', { detail: { workoutId: workout.id } }));
     } catch (err) {
       logger.error('Error deleting workout', err, 'TraineeWorkoutHistoryModal');
       toast.error(err instanceof Error ? err.message : 'שגיאה במחיקת אימון');

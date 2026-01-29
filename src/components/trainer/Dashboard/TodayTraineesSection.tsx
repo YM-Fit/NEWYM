@@ -399,6 +399,25 @@ export default function TodayTraineesSection({
     }
   }, [traineeIdsString, trainees.length, loadTodayTrainees]);
 
+  // Listen for workout deletion/update events to refresh immediately
+  useEffect(() => {
+    const handleWorkoutUpdate = () => {
+      // Refresh scheduled workouts when a workout is deleted or updated
+      if (!isLoadingRef.current) {
+        loadTodayTrainees(true); // Silent refresh
+      }
+    };
+
+    // Listen for custom event when workout is deleted/updated
+    window.addEventListener('workout-deleted', handleWorkoutUpdate);
+    window.addEventListener('workout-updated', handleWorkoutUpdate);
+
+    return () => {
+      window.removeEventListener('workout-deleted', handleWorkoutUpdate);
+      window.removeEventListener('workout-updated', handleWorkoutUpdate);
+    };
+  }, [loadTodayTrainees]);
+
   // Set up periodic refresh to sync with calendar changes
   useEffect(() => {
     if (user && trainees.length > 0) {

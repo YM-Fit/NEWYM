@@ -1173,6 +1173,8 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
       eventsCacheRef.current = null;
       // Refresh events
       await loadEvents(false, true);
+      // Dispatch custom event to notify dashboard and other components
+      window.dispatchEvent(new CustomEvent('workout-deleted', { detail: { eventId } }));
     } catch (error) {
       logger.error('Error deleting event', error, 'CalendarView');
       toast.error('שגיאה במחיקת אירוע');
