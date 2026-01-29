@@ -467,6 +467,7 @@ export async function getGoogleCalendarEvents(
     const forceRefresh = options?.forceRefresh === true;
 
     // First, try to get events from cached sync table (much faster)
+    // Skip cache entirely if forceRefresh is true to ensure fresh data
     if (useCache && !forceRefresh) {
       try {
         // Query for events that might overlap with the date range

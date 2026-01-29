@@ -1169,6 +1169,8 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
 
       toast.success('אירוע נמחק בהצלחה');
       
+      // Clear cache to ensure fresh data after deletion
+      eventsCacheRef.current = null;
       // Refresh events
       await loadEvents(false, true);
     } catch (error) {
@@ -2030,6 +2032,8 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
           traineeId={selectedTraineeForHistory.id}
           currentDate={currentDate}
           onWorkoutUpdated={() => {
+            // Clear cache to ensure fresh data after workout update
+            eventsCacheRef.current = null;
             // Refresh events after workout update
             loadEvents(false, true);
           }}

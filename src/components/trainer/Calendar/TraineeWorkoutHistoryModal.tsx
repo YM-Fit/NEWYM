@@ -269,12 +269,17 @@ export default function TraineeWorkoutHistoryModal({
         throw new Error('שגיאה במחיקת קישור אימון');
       }
 
-      // Delete sync record
+      // Delete sync record - wait for completion to ensure it's deleted before refresh
       if (workout.googleEventId) {
-        await supabase
+        const { error: syncError } = await supabase
           .from('google_calendar_sync')
           .delete()
           .eq('google_event_id', workout.googleEventId);
+        
+        if (syncError) {
+          logger.warn('Error deleting sync record', { error: syncError }, 'TraineeWorkoutHistoryModal');
+          // Continue even if sync record deletion fails
+        }
       }
 
       // Delete workout
@@ -289,6 +294,7 @@ export default function TraineeWorkoutHistoryModal({
 
       toast.success('האימון נמחק בהצלחה');
       loadWorkouts();
+      // Call onWorkoutUpdated after all deletions are complete to ensure cache refresh
       onWorkoutUpdated?.();
     } catch (err) {
       logger.error('Error deleting workout', err, 'TraineeWorkoutHistoryModal');
