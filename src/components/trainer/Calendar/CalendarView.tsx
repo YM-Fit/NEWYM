@@ -111,7 +111,7 @@ interface DraggableWeekEventItemProps {
 
 // Real-time refresh interval - shorter for better sync with Google Calendar
 const REFRESH_INTERVAL_MS = 10000; // 10 seconds for real-time updates
-const CACHE_DURATION_MS = 60000; // Cache events for 1 minute
+const CACHE_DURATION_MS = 20000; // Cache events for 20 seconds (reduced for better responsiveness)
 
 // Calendar view modes
 type ViewMode = 'month' | 'week' | 'day';
@@ -727,11 +727,12 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
       return;
     }
 
-    // Check cache first (unless forcing refresh)
-    if (!forceRefresh && eventsCacheRef.current) {
+    // Check cache first for non-silent requests (unless forcing refresh)
+    // Silent refreshes should ALWAYS fetch fresh data to detect changes
+    if (!forceRefresh && !silent && eventsCacheRef.current) {
       const { events: cachedEvents, timestamp, dateKey } = eventsCacheRef.current;
       const cacheAge = Date.now() - timestamp;
-      
+
       if (dateKey === cacheKey && cacheAge < CACHE_DURATION_MS) {
         setEvents(cachedEvents);
         setLoading(false);
@@ -748,10 +749,11 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
       }
 
       // Use cached data from sync table first, only fallback to Google API if needed
+      // For silent refreshes, we want fresh data to detect changes
       const result = await getGoogleCalendarEvents(
-        user.id, 
+        user.id,
         dateRange,
-        { useCache: true, forceRefresh }
+        { useCache: !silent, forceRefresh: forceRefresh || silent }
       );
       
       if (result.success && result.data) {

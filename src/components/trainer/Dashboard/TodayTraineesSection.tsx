@@ -84,13 +84,14 @@ export default function TodayTraineesSection({
   const [error, setError] = useState<string | null>(null);
   const isLoadingRef = useRef(false);
   const lastTraineeIdsRef = useRef<string>('');
+  const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Create a stable dependency based on trainee IDs
   const traineeIdsString = useMemo(() => {
     return trainees.map(t => t.id).sort().join(',');
   }, [trainees]);
 
-  const loadTodayTrainees = useCallback(async () => {
+  const loadTodayTrainees = useCallback(async (silent: boolean = false) => {
     // Prevent multiple simultaneous requests
     if (isLoadingRef.current) {
       return;
@@ -102,7 +103,9 @@ export default function TodayTraineesSection({
     }
 
     isLoadingRef.current = true;
-    setLoading(true);
+    if (!silent) {
+      setLoading(true);
+    }
     setError(null);
     
     try {
@@ -395,6 +398,30 @@ export default function TodayTraineesSection({
       setTodayTrainees([]);
     }
   }, [traineeIdsString, trainees.length, loadTodayTrainees]);
+
+  // Set up periodic refresh to sync with calendar changes
+  useEffect(() => {
+    if (user && trainees.length > 0) {
+      // Clear any existing interval
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+      }
+
+      // Set up 30-second polling to keep in sync with calendar
+      refreshIntervalRef.current = setInterval(() => {
+        if (!isLoadingRef.current) {
+          loadTodayTrainees(true); // Silent refresh
+        }
+      }, 30000); // 30 seconds
+
+      return () => {
+        if (refreshIntervalRef.current) {
+          clearInterval(refreshIntervalRef.current);
+          refreshIntervalRef.current = null;
+        }
+      };
+    }
+  }, [user, trainees.length, loadTodayTrainees]);
 
   // Skeleton loader component to prevent layout shift
   const TableSkeleton = () => (
