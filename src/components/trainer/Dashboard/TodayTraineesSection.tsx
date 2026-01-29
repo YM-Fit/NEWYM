@@ -81,71 +81,6 @@ export default function TodayTraineesSection({
   onTraineeClick
 }: TodayTraineesSectionProps) {
   const { user } = useAuth();
-  
-  // Handle delete workout
-  const handleDeleteWorkout = useCallback(async (workoutId: string, traineeId: string, googleEventId?: string) => {
-    if (!user) return;
-    
-    if (!confirm('האם אתה בטוח שברצונך למחוק את האימון המתוזמן?')) {
-      return;
-    }
-
-    try {
-      // Delete from Google Calendar if exists
-      if (googleEventId) {
-        const deleteResult = await deleteGoogleCalendarEvent(user.id, googleEventId);
-        if (deleteResult.error) {
-          logger.warn('Error deleting from Google Calendar', { error: deleteResult.error, eventId: googleEventId }, 'TodayTraineesSection');
-          // Still continue with DB deletion even if Google Calendar delete fails
-        } else {
-          // Small delay to ensure Google Calendar API has processed the deletion
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-      }
-
-      // Delete workout-trainee link
-      const { error: linkError } = await supabase
-        .from('workout_trainees')
-        .delete()
-        .eq('workout_id', workoutId)
-        .eq('trainee_id', traineeId);
-
-      if (linkError) {
-        throw new Error('שגיאה במחיקת קישור אימון');
-      }
-
-      // Delete sync record
-      if (googleEventId) {
-        const { error: syncError } = await supabase
-          .from('google_calendar_sync')
-          .delete()
-          .eq('google_event_id', googleEventId);
-        
-        if (syncError) {
-          logger.warn('Error deleting sync record', { error: syncError }, 'TodayTraineesSection');
-        }
-      }
-
-      // Delete workout
-      const { error: workoutError } = await supabase
-        .from('workouts')
-        .delete()
-        .eq('id', workoutId);
-
-      if (workoutError) {
-        throw new Error('שגיאה במחיקת אימון');
-      }
-
-      toast.success('האימון נמחק בהצלחה');
-      // Refresh scheduled workouts
-      loadTodayTrainees(true);
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('workout-deleted', { detail: { workoutId } }));
-    } catch (err) {
-      logger.error('Error deleting workout', err, 'TodayTraineesSection');
-      toast.error(err instanceof Error ? err.message : 'שגיאה במחיקת אימון');
-    }
-  }, [user, loadTodayTrainees]);
   const [todayTrainees, setTodayTrainees] = useState<TodayTrainee[]>([]);
   const [tomorrowTrainees, setTomorrowTrainees] = useState<TodayTrainee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -451,6 +386,71 @@ export default function TodayTraineesSection({
       isLoadingRef.current = false;
     }
   }, [trainees, user]);
+
+  // Handle delete workout - must be defined after loadTodayTrainees
+  const handleDeleteWorkout = useCallback(async (workoutId: string, traineeId: string, googleEventId?: string) => {
+    if (!user) return;
+    
+    if (!confirm('האם אתה בטוח שברצונך למחוק את האימון המתוזמן?')) {
+      return;
+    }
+
+    try {
+      // Delete from Google Calendar if exists
+      if (googleEventId) {
+        const deleteResult = await deleteGoogleCalendarEvent(user.id, googleEventId);
+        if (deleteResult.error) {
+          logger.warn('Error deleting from Google Calendar', { error: deleteResult.error, eventId: googleEventId }, 'TodayTraineesSection');
+          // Still continue with DB deletion even if Google Calendar delete fails
+        } else {
+          // Small delay to ensure Google Calendar API has processed the deletion
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      // Delete workout-trainee link
+      const { error: linkError } = await supabase
+        .from('workout_trainees')
+        .delete()
+        .eq('workout_id', workoutId)
+        .eq('trainee_id', traineeId);
+
+      if (linkError) {
+        throw new Error('שגיאה במחיקת קישור אימון');
+      }
+
+      // Delete sync record
+      if (googleEventId) {
+        const { error: syncError } = await supabase
+          .from('google_calendar_sync')
+          .delete()
+          .eq('google_event_id', googleEventId);
+        
+        if (syncError) {
+          logger.warn('Error deleting sync record', { error: syncError }, 'TodayTraineesSection');
+        }
+      }
+
+      // Delete workout
+      const { error: workoutError } = await supabase
+        .from('workouts')
+        .delete()
+        .eq('id', workoutId);
+
+      if (workoutError) {
+        throw new Error('שגיאה במחיקת אימון');
+      }
+
+      toast.success('האימון נמחק בהצלחה');
+      // Refresh scheduled workouts
+      loadTodayTrainees(true);
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('workout-deleted', { detail: { workoutId } }));
+    } catch (err) {
+      logger.error('Error deleting workout', err, 'TodayTraineesSection');
+      toast.error(err instanceof Error ? err.message : 'שגיאה במחיקת אימון');
+    }
+  }, [user, loadTodayTrainees]);
 
   useEffect(() => {
     // Skip if already loading or if trainee IDs haven't changed
