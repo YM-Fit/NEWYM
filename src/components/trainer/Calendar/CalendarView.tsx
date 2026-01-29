@@ -648,6 +648,9 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
   // Event position info - maps eventId to position in month (1, 2, 3...)
   const [eventPositionMap, setEventPositionMap] = useState<Map<string, EventPositionInfo>>(new Map());
   
+  // Unsynced workouts state - workouts without Google Calendar events
+  const [unsyncedWorkouts, setUnsyncedWorkouts] = useState<Array<{ id: string; workout_date: string; trainee_id: string; trainee_name: string }>>([]);
+  
   // Trainee history modal state
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedTraineeForHistory, setSelectedTraineeForHistory] = useState<{ name: string; id: string | null } | null>(null);
@@ -870,6 +873,80 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     }
   }, [user, events, currentDate]);
 
+  // Check for unsynced workouts (workouts without Google Calendar events)
+  const checkUnsyncedWorkouts = useCallback(async () => {
+    if (!user || !connected) {
+      setUnsyncedWorkouts([]);
+      return;
+    }
+
+    try {
+      // Get all workouts in the date range
+      const { data: workouts, error: workoutsError } = await supabase
+        .from('workouts')
+        .select(`
+          id,
+          workout_date,
+          workout_trainees!inner(
+            trainee_id,
+            trainees!inner(id, full_name)
+          )
+        `)
+        .eq('trainer_id', user.id)
+        .gte('workout_date', dateRange.start.toISOString())
+        .lte('workout_date', dateRange.end.toISOString());
+
+      if (workoutsError) {
+        logger.error('Error loading workouts for sync check', workoutsError, 'CalendarView');
+        return;
+      }
+
+      if (!workouts || workouts.length === 0) {
+        setUnsyncedWorkouts([]);
+        return;
+      }
+
+      // Get all synced workout IDs from google_calendar_sync
+      const workoutIds = workouts.map(w => w.id);
+      const { data: syncedWorkouts, error: syncError } = await supabase
+        .from('google_calendar_sync')
+        .select('workout_id')
+        .eq('trainer_id', user.id)
+        .in('workout_id', workoutIds)
+        .not('workout_id', 'is', null);
+
+      if (syncError) {
+        logger.error('Error loading synced workouts', syncError, 'CalendarView');
+        return;
+      }
+
+      const syncedWorkoutIds = new Set((syncedWorkouts || []).map(s => s.workout_id));
+
+      // Find workouts without sync records
+      const unsynced = workouts
+        .filter(w => !syncedWorkoutIds.has(w.id))
+        .map(w => {
+          const traineeLink = (w.workout_trainees as any[])?.[0];
+          const trainee = traineeLink?.trainees;
+          return {
+            id: w.id,
+            workout_date: w.workout_date,
+            trainee_id: trainee?.id || '',
+            trainee_name: trainee?.full_name || 'לא ידוע',
+          };
+        })
+        .filter(w => w.trainee_id); // Only include workouts with trainee
+
+      setUnsyncedWorkouts(unsynced);
+      
+      if (unsynced.length > 0 && !isRefreshing) {
+        logger.info(`Found ${unsynced.length} unsynced workouts`, { count: unsynced.length }, 'CalendarView');
+      }
+    } catch (err) {
+      logger.error('Error checking unsynced workouts', err, 'CalendarView');
+    }
+  }, [user, connected, dateRange, isRefreshing]);
+
   // Handle trainee name click - open history modal
   const handleTraineeNameClick = useCallback((traineeName: string, traineeId: string | null) => {
     setSelectedTraineeForHistory({ name: traineeName, id: traineeId });
@@ -896,6 +973,13 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
       loadSessionInfo();
     }
   }, [events, loadSessionInfo]);
+
+  // Check for unsynced workouts when date range or connection changes
+  useEffect(() => {
+    if (connected && user) {
+      checkUnsyncedWorkouts();
+    }
+  }, [connected, user, dateRange, checkUnsyncedWorkouts]);
 
   // Set up automatic refresh interval
   useEffect(() => {

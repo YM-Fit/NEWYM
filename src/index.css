@@ -2840,23 +2840,85 @@ html body .tv-view-container .text-muted-tv,
   padding: clamp(1.5rem, 3vw, 3rem);
 }
 
+/* 55-inch TV optimizations - Full HD (1920x1080) */
 @media (min-width: 1920px) {
   .tv-container {
-    grid-template-columns: 1fr minmax(450px, 30%);
-    gap: 4rem;
-    padding: 4rem;
+    grid-template-columns: 1fr minmax(500px, 30%);
+    gap: clamp(3rem, 5vw, 6rem);
+    padding: clamp(3rem, 5vw, 6rem);
+  }
+  
+  .tv-view-container {
+    padding: clamp(2rem, 4vw, 5rem);
+  }
+  
+  .tv-header {
+    padding: clamp(2rem, 3vw, 4rem) clamp(3rem, 5vw, 6rem);
+  }
+  
+  .tv-heading-xl {
+    font-size: clamp(3rem, 5vw + 2rem, 7rem);
+  }
+  
+  .tv-text-lg {
+    font-size: clamp(1.5rem, 2vw + 1rem, 2.5rem);
+  }
+  
+  .tv-number-xl {
+    font-size: clamp(4rem, 8vw + 3rem, 14rem);
+  }
+  
+  /* Table optimizations for TV */
+  .tv-view-container table {
+    font-size: clamp(1.5rem, 3vw, 3rem) !important;
+  }
+  
+  .tv-view-container th,
+  .tv-view-container td {
+    padding: clamp(1.5rem, 2.5vw, 3rem) clamp(1.5rem, 2.5vw, 3rem) !important;
   }
 }
 
-@media (min-width: 2560px) {
+/* 55-inch TV optimizations - 4K (3840x2160) */
+@media (min-width: 3840px) {
   .tv-container {
-    grid-template-columns: 1fr minmax(500px, 35%);
-    gap: 5rem;
-    padding: 5rem;
+    grid-template-columns: 1fr minmax(600px, 35%);
+    gap: clamp(4rem, 6vw, 8rem);
+    padding: clamp(4rem, 6vw, 8rem);
+  }
+  
+  .tv-view-container {
+    padding: clamp(3rem, 5vw, 7rem);
+  }
+  
+  .tv-header {
+    padding: clamp(3rem, 4vw, 5rem) clamp(4rem, 6vw, 8rem);
+  }
+  
+  .tv-heading-xl {
+    font-size: clamp(4rem, 6vw + 3rem, 10rem);
+  }
+  
+  .tv-text-lg {
+    font-size: clamp(2rem, 3vw + 1.5rem, 4rem);
+  }
+  
+  .tv-number-xl {
+    font-size: clamp(6rem, 10vw + 4rem, 20rem);
+  }
+  
+  /* Table optimizations for 4K TV */
+  .tv-view-container table {
+    font-size: clamp(2rem, 4vw, 4.5rem) !important;
+  }
+  
+  .tv-view-container th,
+  .tv-view-container td {
+    padding: clamp(2rem, 3vw, 4rem) clamp(2rem, 3vw, 4rem) !important;
   }
 }
 
-/* TV Typography - Responsive with clamp() */
+/* TV Typography - Responsive with clamp() - Base sizes for smaller screens */
 .tv-heading-xl {
   font-size: clamp(2rem, 4vw + 1rem, 6rem);
   line-height: 1.1;
@@ -2940,6 +3002,72 @@ html body .tv-view-container .text-muted-tv,
 
 .animate-tv-glow-pulse {
   animation: tv-glow-pulse 3s ease-in-out infinite;
+}
+
+/* Enhanced active exercise pulse animation */
+@keyframes tv-active-badge-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.6), 0 0 40px rgba(16, 185, 129, 0.4), 0 0 60px rgba(16, 185, 129, 0.2);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.9), 0 0 80px rgba(16, 185, 129, 0.6), 0 0 120px rgba(16, 185, 129, 0.3);
+  }
+}
+
+.animate-tv-active-badge-pulse {
+  animation: tv-active-badge-pulse 2s ease-in-out infinite;
+}
+
+/* Enhanced active exercise row glow */
+.tv-active-exercise-row {
+  position: relative;
+}
+
+.tv-active-exercise-row::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3));
+  filter: blur(8px);
+  z-index: -1;
+  animation: tv-active-row-glow 2s ease-in-out infinite;
+}
+
+@keyframes tv-active-row-glow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+/* Enhanced active exercise name styling */
+.tv-active-exercise-name {
+  font-weight: 900;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.5), 0 0 20px rgba(16, 185, 129, 0.3);
+  position: relative;
+}
+
+/* Improved status indicators */
+.tv-status-completed {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4) !important;
+}
+
+.tv-status-in-progress {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4) !important;
+}
+
+.tv-status-failure {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4) !important;
 }
 
 @keyframes tv-shimmer {

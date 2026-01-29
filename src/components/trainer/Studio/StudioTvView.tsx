@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, memo, useCallback } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useCurrentTvSession } from '../../../hooks/useCurrentTvSession';
 import { useTraineeProgressData } from '../../../hooks/useTraineeProgressData';
@@ -27,7 +27,7 @@ function formatDate(date: Date) {
   });
 }
 
-export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
+function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   const { user, userType } = useAuth();
   const { loading, error, session, logs, lastUpdated } = useCurrentTvSession({
     pollIntervalMs,
@@ -171,78 +171,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
     return `${parts[0][0]}${parts[1][0]}`;
   }, [session?.trainee?.full_name]);
 
-  // Get current exercise (first one)
-  const currentExercise = useMemo(() => {
-    if (!session?.workout?.exercises || session.workout.exercises.length === 0) return null;
-    return session.workout.exercises[0];
-  }, [session?.workout?.exercises]);
-
-  // Get latest set from current exercise
-  const latestSet = useMemo(() => {
-    if (!currentExercise || !currentExercise.sets || currentExercise.sets.length === 0) return null;
-    // Get the set with the highest set_number (most recent)
-    return currentExercise.sets.reduce((latest, set) => {
-      return (set.set_number || 0) > (latest.set_number || 0) ? set : latest;
-    }, currentExercise.sets[0]);
-  }, [currentExercise]);
-
-  // Calculate detailed stats for current exercise - updates in real-time
-  const exerciseStats = useMemo(() => {
-    if (!currentExercise || !currentExercise.sets || currentExercise.sets.length === 0) return null;
-    
-    const sets = currentExercise.sets;
-    // Filter out completely empty sets for calculations
-    const validSets = sets.filter(set => (set.weight || 0) > 0 || (set.reps || 0) > 0);
-    
-    const totalReps = validSets.reduce((sum, set) => sum + (set.reps || 0), 0);
-    const maxWeight = validSets.length > 0 
-      ? Math.max(...validSets.map(set => set.weight || 0), 0)
-      : 0;
-    const totalVolume = validSets.reduce((sum, set) => sum + ((set.weight || 0) * (set.reps || 0)), 0);
-    const completedSets = validSets.length;
-    const totalSets = sets.length;
-    
-    return {
-      totalReps,
-      maxWeight,
-      totalVolume,
-      completedSets,
-      totalSets,
-    };
-  }, [currentExercise]);
-
-  // Get progress comparison for current exercise
-  const progressComparison = useMemo(() => {
-    if (!currentExercise || !latestSet || !progressData.previousWorkoutData) return null;
-    
-    const previous = progressData.previousWorkoutData.get(currentExercise.id);
-    if (!previous) return null;
-
-    const currentWeight = latestSet.weight || 0;
-    const currentReps = latestSet.reps || 0;
-    const currentVolume = currentWeight * currentReps;
-    const previousVolume = previous.weight * previous.reps;
-
-    if (currentVolume === 0 || previousVolume === 0) return null;
-
-    const improvement = ((currentVolume - previousVolume) / previousVolume) * 100;
-
-    return {
-      previousWeight: previous.weight,
-      previousReps: previous.reps,
-      currentWeight,
-      currentReps,
-      improvement: Math.round(improvement * 10) / 10,
-      isImprovement: improvement > 0,
-    };
-  }, [currentExercise, latestSet, progressData.previousWorkoutData]);
-
-  const firstExercises = useMemo(() => {
-    if (!session?.workout?.exercises) return [];
-    return session.workout.exercises.slice(0, 6);
-  }, [session?.workout?.exercises]);
-
-  // Calculate completed exercises with progress comparison
+  // Calculate completed exercises with progress comparison (moved before currentExercise to avoid circular dependency)
   const completedExercisesData = useMemo(() => {
     if (!session?.workout?.exercises || session.workout.exercises.length === 0) return [];
     
@@ -347,12 +276,98 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         progressDetails,
         previousData: previous,
         sets: sortedSets, // Include sets for display
+        exercise: exercise, // Keep reference to original exercise
       };
     });
     
-    // Sort exercises: active exercise (first non-completed) first, then completed, then in progress
+    return exercisesData;
+  }, [session?.workout?.exercises, progressData.previousWorkoutData]);
+
+  // Get current exercise (first non-completed, or last completed if all are completed)
+  const currentExercise = useMemo(() => {
+    if (!session?.workout?.exercises || session.workout.exercises.length === 0) return null;
+    if (completedExercisesData.length === 0) return null;
+    
+    // Find first non-completed exercise
+    const firstNonCompleted = completedExercisesData.find(ex => !ex.isCompleted);
+    if (firstNonCompleted) {
+      return firstNonCompleted.exercise;
+    }
+    
+    // If all exercises are completed, return the last one
+    const lastCompleted = completedExercisesData[completedExercisesData.length - 1];
+    return lastCompleted?.exercise || null;
+  }, [session?.workout?.exercises, completedExercisesData]);
+
+  // Get latest set from current exercise
+  const latestSet = useMemo(() => {
+    if (!currentExercise || !currentExercise.sets || currentExercise.sets.length === 0) return null;
+    // Get the set with the highest set_number (most recent)
+    return currentExercise.sets.reduce((latest, set) => {
+      return (set.set_number || 0) > (latest.set_number || 0) ? set : latest;
+    }, currentExercise.sets[0]);
+  }, [currentExercise]);
+
+  // Calculate detailed stats for current exercise - updates in real-time
+  const exerciseStats = useMemo(() => {
+    if (!currentExercise || !currentExercise.sets || currentExercise.sets.length === 0) return null;
+    
+    const sets = currentExercise.sets;
+    // Filter out completely empty sets for calculations
+    const validSets = sets.filter(set => (set.weight || 0) > 0 || (set.reps || 0) > 0);
+    
+    const totalReps = validSets.reduce((sum, set) => sum + (set.reps || 0), 0);
+    const maxWeight = validSets.length > 0 
+      ? Math.max(...validSets.map(set => set.weight || 0), 0)
+      : 0;
+    const totalVolume = validSets.reduce((sum, set) => sum + ((set.weight || 0) * (set.reps || 0)), 0);
+    const completedSets = validSets.length;
+    const totalSets = sets.length;
+    
+    return {
+      totalReps,
+      maxWeight,
+      totalVolume,
+      completedSets,
+      totalSets,
+    };
+  }, [currentExercise]);
+
+  // Get progress comparison for current exercise
+  const progressComparison = useMemo(() => {
+    if (!currentExercise || !latestSet || !progressData.previousWorkoutData) return null;
+    
+    const previous = progressData.previousWorkoutData.get(currentExercise.id);
+    if (!previous) return null;
+
+    const currentWeight = latestSet.weight || 0;
+    const currentReps = latestSet.reps || 0;
+    const currentVolume = currentWeight * currentReps;
+    const previousVolume = previous.weight * previous.reps;
+
+    if (currentVolume === 0 || previousVolume === 0) return null;
+
+    const improvement = ((currentVolume - previousVolume) / previousVolume) * 100;
+
+    return {
+      previousWeight: previous.weight,
+      previousReps: previous.reps,
+      currentWeight,
+      currentReps,
+      improvement: Math.round(improvement * 10) / 10,
+      isImprovement: improvement > 0,
+    };
+  }, [currentExercise, latestSet, progressData.previousWorkoutData]);
+
+  const firstExercises = useMemo(() => {
+    if (!session?.workout?.exercises) return [];
+    return session.workout.exercises.slice(0, 6);
+  }, [session?.workout?.exercises]);
+
+  // Sort completedExercisesData for display: active exercise first, then by completion status
+  const sortedCompletedExercisesData = useMemo(() => {
     const activeExerciseId = currentExercise?.id;
-    return exercisesData.sort((a, b) => {
+    return [...completedExercisesData].sort((a, b) => {
       // Active exercise always first
       if (a.id === activeExerciseId) return -1;
       if (b.id === activeExerciseId) return 1;
@@ -362,7 +377,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       // Then by original order (keep original index)
       return 0;
     });
-  }, [session?.workout?.exercises, progressData.previousWorkoutData, currentExercise]);
+  }, [completedExercisesData, currentExercise]);
 
   const latestLogs = logs.slice(0, 6);
 
@@ -614,7 +629,7 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                         </tr>
                       </thead>
                       <tbody>
-                        {completedExercisesData.map((exercise, index) => {
+                        {sortedCompletedExercisesData.map((exercise, index) => {
                           const isActiveExercise = exercise.id === currentExercise?.id;
                           return (
                           <tr 
@@ -845,3 +860,5 @@ export default function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   );
 }
 
+// Memoize component for better performance
+export default memo(StudioTvView);
