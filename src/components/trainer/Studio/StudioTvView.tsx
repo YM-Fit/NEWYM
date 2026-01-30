@@ -495,26 +495,9 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         </div>
       )}
 
-      {/* Minimal Top Bar - Only Logo */}
-      <header className="flex items-center justify-between px-6 py-3 bg-gray-900 border-b border-gray-800">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-600">
-            <span className="text-xl font-black text-white">N</span>
-          </div>
-          <span className="text-lg font-bold text-white">NEWYM</span>
-        </div>
-        <div className="flex items-center gap-4 text-gray-400 text-sm">
-          {lastUpdated && (
-            <span>
-              עודכן {new Date(lastUpdated).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          )}
-        </div>
-      </header>
-
-      {/* Full screen table layout for TV - Uses entire screen */}
+      {/* Full screen layout for TV - No top bar, maximizes screen usage */}
       <div className="flex-1 overflow-hidden">
-        <div className="h-full w-full p-4 2xl:p-6">
+        <div className="h-full w-full p-6">
           {isUnauthorized ? (
             <div className="flex-1 flex flex-col items-center justify-center">
               <div className="text-center max-w-md">
@@ -561,127 +544,187 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
               {/* Full Screen Layout - Clean and Professional */}
               {session?.workout && ((session.workout.exercises && session.workout.exercises.length > 0) || completedExercisesData.length > 0) ? (
                 <div className="h-full w-full flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl">
-                  {/* Clean Header */}
-                  <div className="flex items-center justify-between px-6 py-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+                  {/* Header - Larger for TV */}
+                  <div className="flex items-center justify-between px-8 py-5 bg-white dark:bg-gray-900 border-b-2 border-gray-100 dark:border-gray-800 flex-shrink-0">
                     {/* Left: Trainee Info */}
-                    <div className="flex items-center gap-4">
-                      <div className="h-14 w-14 rounded-full flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg">
-                        <span className="text-2xl font-black text-white">
+                    <div className="flex items-center gap-6">
+                      <div className="h-20 w-20 rounded-2xl flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-xl">
+                        <span className="text-4xl font-black text-white">
                           {initials || '?'}
                         </span>
                       </div>
                       <div>
-                        <div className="text-xl font-black text-gray-900 dark:text-white">
+                        <div className="text-3xl font-black text-gray-900 dark:text-white">
                           {session?.trainee?.full_name || 'מתאמן'}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {completedExercisesData.filter(e => e.isCompleted).length} מתוך {completedExercisesData.length} תרגילים הושלמו
+                        <div className="text-lg text-gray-500 dark:text-gray-400 mt-1">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                            {completedExercisesData.filter(e => e.isCompleted).length}
+                          </span>
+                          {' '}מתוך{' '}
+                          <span className="font-bold">{completedExercisesData.length}</span>
+                          {' '}תרגילים הושלמו
                         </div>
                       </div>
                     </div>
 
-                    {/* Center: Current Exercise Summary */}
-                    {currentExercise && latestSet && exerciseStats && (
-                      <div className="flex items-center gap-6 bg-emerald-50 dark:bg-emerald-900/30 px-6 py-3 rounded-xl border border-emerald-200 dark:border-emerald-700">
-                        <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-                          <span className="text-lg font-bold text-gray-900 dark:text-white">
-                            {currentExercise.name}
-                          </span>
-                        </div>
-                        <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
-                        <div className="flex items-center gap-4 text-sm">
-                          <span className="text-gray-600 dark:text-gray-300">
-                            <span className="font-medium">סט:</span> {latestSet.set_number}
-                          </span>
-                          <span className="text-gray-600 dark:text-gray-300">
-                            <span className="font-medium">משקל:</span> {latestSet.weight ?? 0}ק״ג
-                          </span>
-                          <span className="text-gray-600 dark:text-gray-300">
-                            <span className="font-medium">חזרות:</span> {latestSet.reps ?? 0}
-                          </span>
+                    {/* Center: Total Workout Stats */}
+                    <div className="flex items-center gap-12 bg-gray-50 dark:bg-gray-800 px-10 py-4 rounded-2xl">
+                      <div className="text-center">
+                        <div className="text-base text-gray-400 mb-1">נפח כולל</div>
+                        <div className="text-3xl font-black text-gray-900 dark:text-white">
+                          {Math.round(completedExercisesData.reduce((sum, e) => sum + (e.totalVolume || 0), 0))}
+                          <span className="text-lg mr-1">ק״ג</span>
                         </div>
                       </div>
-                    )}
+                      <div className="h-12 w-px bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="text-center">
+                        <div className="text-base text-gray-400 mb-1">סה״כ סטים</div>
+                        <div className="text-3xl font-black text-gray-900 dark:text-white">
+                          {completedExercisesData.reduce((sum, e) => sum + (e.completedSets || 0), 0)}
+                          <span className="text-lg mr-1 text-gray-400">/{completedExercisesData.reduce((sum, e) => sum + (e.totalSets || 0), 0)}</span>
+                        </div>
+                      </div>
+                      <div className="h-12 w-px bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="text-center">
+                        <div className="text-base text-gray-400 mb-1">סה״כ חזרות</div>
+                        <div className="text-3xl font-black text-gray-900 dark:text-white">
+                          {completedExercisesData.reduce((sum, e) => sum + (e.totalReps || 0), 0)}
+                        </div>
+                      </div>
+                    </div>
 
                     {/* Right: Time */}
                     <div className="text-left">
-                      <div className="text-3xl font-black text-gray-900 dark:text-white tabular-nums">
+                      <div className="text-5xl font-black text-gray-900 dark:text-white tabular-nums">
                         {formatClock(now)}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <div className="text-lg text-gray-500 dark:text-gray-400 mt-1">
                         {formatDate(now)}
                       </div>
                     </div>
                   </div>
 
-                  {/* Clean TV Table - Optimized for 55" viewing */}
-                  <div className="flex-1 overflow-auto p-4">
-                    <div className="grid gap-3">
+                  {/* TV Exercise Cards - Optimized for 55" viewing */}
+                  <div className="flex-1 overflow-auto p-6">
+                    <div className="grid gap-4">
                       {sortedCompletedExercisesData.map((exercise, index) => {
                         const isActiveExercise = exercise.id === currentExercise?.id;
+                        const setsProgress = exercise.totalSets > 0 ? (exercise.completedSets / exercise.totalSets) * 100 : 0;
+
+                        // Check for superset/dropset in sets
+                        const hasSupersets = exercise.sets.some(set => set.superset_exercise_id || set.set_type === 'superset');
+                        const hasDropsets = exercise.sets.some(set => (set.dropset_weight || 0) > 0 || set.set_type === 'dropset');
+
+                        // Get unique equipment from sets
+                        const equipmentList = exercise.sets
+                          .filter(set => set.equipment?.name)
+                          .map(set => ({ emoji: set.equipment?.emoji || '🏋️', name: set.equipment?.name }))
+                          .filter((eq, idx, arr) => arr.findIndex(e => e.name === eq.name) === idx);
+
                         return (
                           <div
                             key={exercise.id}
-                            className={`rounded-2xl p-5 transition-all duration-300 ${
+                            className={`rounded-3xl p-6 transition-all duration-300 ${
                               isActiveExercise
-                                ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 dark:from-emerald-500 dark:to-emerald-600 text-white shadow-2xl scale-[1.02] ring-4 ring-white/50'
+                                ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-2xl scale-[1.01] ring-4 ring-emerald-300/50'
                                 : exercise.isCompleted
-                                ? 'bg-emerald-100 dark:bg-emerald-900/40 border-2 border-emerald-300 dark:border-emerald-700'
-                                : 'bg-white dark:bg-gray-800/60 border-2 border-gray-200 dark:border-gray-700'
+                                ? 'bg-emerald-50 dark:bg-emerald-900/30 border-2 border-emerald-200 dark:border-emerald-800'
+                                : 'bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700'
                             }`}
                           >
-                            <div className="flex items-center gap-6">
-                              {/* Number Badge */}
-                              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black flex-shrink-0 ${
+                            {/* Main Row */}
+                            <div className="flex items-center gap-8">
+                              {/* Number Badge - Larger */}
+                              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-black flex-shrink-0 shadow-lg ${
                                 isActiveExercise
                                   ? 'bg-white text-emerald-600'
                                   : exercise.isCompleted
                                   ? 'bg-emerald-500 text-white'
-                                  : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                                  : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300'
                               }`}>
                                 {exercise.isCompleted && !isActiveExercise ? '✓' : index + 1}
                               </div>
 
-                              {/* Exercise Name */}
+                              {/* Exercise Info */}
                               <div className="flex-1 min-w-0">
-                                <div className={`text-2xl font-black truncate ${
-                                  isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'
-                                }`}>
-                                  {exercise.name}
+                                <div className="flex items-center gap-4 mb-1">
+                                  <span className={`text-3xl font-black ${
+                                    isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'
+                                  }`}>
+                                    {exercise.name}
+                                  </span>
                                   {isActiveExercise && (
-                                    <span className="mr-3 px-3 py-1 text-sm bg-red-500 text-white rounded-full animate-pulse">
-                                      פעיל
+                                    <span className="px-4 py-1.5 text-base bg-red-500 text-white rounded-full animate-pulse font-bold">
+                                      🔴 עכשיו
                                     </span>
                                   )}
+                                  {exercise.hasFailure && (
+                                    <span className="text-2xl" title="כשל">⚠️</span>
+                                  )}
+                                </div>
+
+                                {/* Superset / Dropset / Equipment - Below exercise name */}
+                                <div className="flex items-center gap-4 flex-wrap">
+                                  {hasSupersets && (
+                                    <span className={`text-base font-semibold px-3 py-1 rounded-lg ${
+                                      isActiveExercise
+                                        ? 'bg-purple-400/30 text-purple-100'
+                                        : 'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400'
+                                    }`}>
+                                      🔗 סופר-סט
+                                    </span>
+                                  )}
+                                  {hasDropsets && (
+                                    <span className={`text-base font-semibold px-3 py-1 rounded-lg ${
+                                      isActiveExercise
+                                        ? 'bg-orange-400/30 text-orange-100'
+                                        : 'bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400'
+                                    }`}>
+                                      ⬇️ דרופ-סט
+                                    </span>
+                                  )}
+                                  {equipmentList.map((eq, eqIdx) => (
+                                    <span
+                                      key={eqIdx}
+                                      className={`text-base font-semibold px-3 py-1 rounded-lg ${
+                                        isActiveExercise
+                                          ? 'bg-blue-400/30 text-blue-100'
+                                          : 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
+                                      }`}
+                                    >
+                                      {eq.emoji} {eq.name}
+                                    </span>
+                                  ))}
                                 </div>
                               </div>
 
-                              {/* Stats Grid - Clear Labels */}
-                              <div className="flex items-center gap-8 flex-shrink-0">
+                              {/* Stats - Larger and Clearer */}
+                              <div className="flex items-center gap-10 flex-shrink-0">
                                 {/* Weight */}
-                                <div className="text-center min-w-[100px]">
-                                  <div className={`text-sm font-medium mb-1 ${
-                                    isActiveExercise ? 'text-emerald-100' : 'text-gray-500 dark:text-gray-400'
+                                <div className="text-center">
+                                  <div className={`text-lg font-semibold mb-1 ${
+                                    isActiveExercise ? 'text-emerald-100' : 'text-gray-400'
                                   }`}>
-                                    משקל
+                                    משקל מקס׳
                                   </div>
-                                  <div className={`text-3xl font-black ${
+                                  <div className={`text-4xl font-black ${
                                     isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'
                                   }`}>
-                                    {exercise.maxWeight > 0 ? exercise.maxWeight : '—'}
-                                    {exercise.maxWeight > 0 && <span className="text-lg mr-1">ק״ג</span>}
+                                    {exercise.maxWeight > 0 ? (
+                                      <>{exercise.maxWeight}<span className="text-xl mr-1">ק״ג</span></>
+                                    ) : '—'}
                                   </div>
                                 </div>
 
                                 {/* Reps */}
-                                <div className="text-center min-w-[80px]">
-                                  <div className={`text-sm font-medium mb-1 ${
-                                    isActiveExercise ? 'text-emerald-100' : 'text-gray-500 dark:text-gray-400'
+                                <div className="text-center">
+                                  <div className={`text-lg font-semibold mb-1 ${
+                                    isActiveExercise ? 'text-emerald-100' : 'text-gray-400'
                                   }`}>
-                                    חזרות
+                                    סה״כ חזרות
                                   </div>
-                                  <div className={`text-3xl font-black ${
+                                  <div className={`text-4xl font-black ${
                                     isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'
                                   }`}>
                                     {exercise.totalReps > 0 ? exercise.totalReps : '—'}
@@ -689,81 +732,136 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                 </div>
 
                                 {/* Volume */}
-                                <div className="text-center min-w-[120px]">
-                                  <div className={`text-sm font-medium mb-1 ${
-                                    isActiveExercise ? 'text-emerald-100' : 'text-gray-500 dark:text-gray-400'
+                                <div className="text-center">
+                                  <div className={`text-lg font-semibold mb-1 ${
+                                    isActiveExercise ? 'text-emerald-100' : 'text-gray-400'
                                   }`}>
                                     נפח כולל
                                   </div>
-                                  <div className={`text-3xl font-black ${
+                                  <div className={`text-4xl font-black ${
                                     isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'
                                   }`}>
-                                    {exercise.totalVolume > 0 ? Math.round(exercise.totalVolume) : '—'}
-                                    {exercise.totalVolume > 0 && <span className="text-lg mr-1">ק״ג</span>}
+                                    {exercise.totalVolume > 0 ? (
+                                      <>{Math.round(exercise.totalVolume)}<span className="text-xl mr-1">ק״ג</span></>
+                                    ) : '—'}
                                   </div>
                                 </div>
 
-                                {/* Sets Progress */}
-                                <div className="text-center min-w-[100px]">
-                                  <div className={`text-sm font-medium mb-1 ${
-                                    isActiveExercise ? 'text-emerald-100' : 'text-gray-500 dark:text-gray-400'
+                                {/* Sets Progress - Visual */}
+                                <div className="text-center min-w-[140px]">
+                                  <div className={`text-lg font-semibold mb-2 ${
+                                    isActiveExercise ? 'text-emerald-100' : 'text-gray-400'
                                   }`}>
                                     סטים
                                   </div>
-                                  <div className={`text-3xl font-black ${
+                                  <div className={`text-4xl font-black mb-2 ${
                                     isActiveExercise
                                       ? 'text-white'
                                       : exercise.completedSets === exercise.totalSets
                                       ? 'text-emerald-600 dark:text-emerald-400'
-                                      : 'text-amber-600 dark:text-amber-400'
+                                      : 'text-amber-500'
                                   }`}>
                                     {exercise.completedSets}/{exercise.totalSets}
                                   </div>
+                                  {/* Progress Bar */}
+                                  <div className={`h-2 rounded-full overflow-hidden ${
+                                    isActiveExercise ? 'bg-white/30' : 'bg-gray-200 dark:bg-gray-700'
+                                  }`}>
+                                    <div
+                                      className={`h-full rounded-full transition-all duration-500 ${
+                                        isActiveExercise
+                                          ? 'bg-white'
+                                          : exercise.completedSets === exercise.totalSets
+                                          ? 'bg-emerald-500'
+                                          : 'bg-amber-500'
+                                      }`}
+                                      style={{ width: `${setsProgress}%` }}
+                                    />
+                                  </div>
                                 </div>
 
-                                {/* Progress Indicator */}
-                                {exercise.progressIndicator && (
-                                  <div className={`w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                    exercise.progressIndicator === 'up'
-                                      ? 'bg-emerald-100 dark:bg-emerald-900/50'
-                                      : exercise.progressIndicator === 'down'
-                                      ? 'bg-red-100 dark:bg-red-900/50'
-                                      : 'bg-gray-100 dark:bg-gray-800'
-                                  }`}>
-                                    {exercise.progressIndicator === 'up' && (
-                                      <TrendingUp className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
-                                    )}
-                                    {exercise.progressIndicator === 'down' && (
-                                      <TrendingUp className="w-8 h-8 text-red-600 dark:text-red-400 rotate-180" />
-                                    )}
-                                    {exercise.progressIndicator === 'same' && (
-                                      <span className="text-2xl font-black text-gray-500">=</span>
-                                    )}
-                                  </div>
-                                )}
+                                {/* Progress Indicator - Always show */}
+                                <div className={`w-24 h-20 rounded-2xl flex flex-col items-center justify-center flex-shrink-0 ${
+                                  isActiveExercise
+                                    ? 'bg-white/20'
+                                    : exercise.progressIndicator === 'up'
+                                    ? 'bg-emerald-100 dark:bg-emerald-900/50'
+                                    : exercise.progressIndicator === 'down'
+                                    ? 'bg-red-100 dark:bg-red-900/50'
+                                    : 'bg-gray-100 dark:bg-gray-800'
+                                }`}>
+                                  {exercise.progressIndicator === 'up' ? (
+                                    <>
+                                      <TrendingUp className={`w-8 h-8 ${isActiveExercise ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
+                                      <span className={`text-sm font-black mt-1 ${isActiveExercise ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                        +{Math.abs(exercise.progressPercent || 0)}%
+                                      </span>
+                                    </>
+                                  ) : exercise.progressIndicator === 'down' ? (
+                                    <>
+                                      <TrendingUp className={`w-8 h-8 rotate-180 ${isActiveExercise ? 'text-white' : 'text-red-600 dark:text-red-400'}`} />
+                                      <span className={`text-sm font-black mt-1 ${isActiveExercise ? 'text-white' : 'text-red-600 dark:text-red-400'}`}>
+                                        {exercise.progressPercent || 0}%
+                                      </span>
+                                    </>
+                                  ) : exercise.progressIndicator === 'same' ? (
+                                    <>
+                                      <span className={`text-2xl font-black ${isActiveExercise ? 'text-white' : 'text-gray-500'}`}>=</span>
+                                      <span className={`text-sm font-bold ${isActiveExercise ? 'text-white/70' : 'text-gray-400'}`}>ללא שינוי</span>
+                                    </>
+                                  ) : (
+                                    <span className={`text-sm font-medium ${isActiveExercise ? 'text-white/50' : 'text-gray-400'}`}>—</span>
+                                  )}
+                                </div>
                               </div>
                             </div>
 
                             {/* Sets Detail Row - Only for active exercise */}
                             {isActiveExercise && exercise.sets.length > 0 && (
-                              <div className="mt-4 pt-4 border-t border-white/20">
-                                <div className="flex items-center gap-3 flex-wrap">
-                                  {exercise.sets.map((set) => (
-                                    <div
-                                      key={set.id}
-                                      className={`px-4 py-2 rounded-xl text-lg font-bold ${
-                                        (set.weight || 0) > 0 || (set.reps || 0) > 0
-                                          ? set.failure
-                                            ? 'bg-red-500/30 text-red-100 border border-red-400'
-                                            : 'bg-white/20 text-white border border-white/30'
-                                          : 'bg-white/10 text-white/50 border border-white/10'
-                                      }`}
-                                    >
-                                      <span className="text-emerald-200 mr-1">סט {set.set_number}:</span>
-                                      {set.weight ?? 0}ק״ג × {set.reps ?? 0}
-                                      {set.failure && <span className="mr-2">⚠️</span>}
-                                    </div>
-                                  ))}
+                              <div className="mt-5 pt-5 border-t border-white/20">
+                                <div className="flex items-center gap-4 flex-wrap">
+                                  {exercise.sets.map((set) => {
+                                    const isFilled = (set.weight || 0) > 0 || (set.reps || 0) > 0;
+                                    const hasSuperset = set.superset_exercise_id && ((set.superset_weight || 0) > 0 || (set.superset_reps || 0) > 0);
+                                    const hasDropset = (set.dropset_weight || 0) > 0 || (set.dropset_reps || 0) > 0;
+
+                                    return (
+                                      <div
+                                        key={set.id}
+                                        className={`px-5 py-3 rounded-2xl text-xl font-bold transition-all ${
+                                          isFilled
+                                            ? set.failure
+                                              ? 'bg-red-500/40 text-white border-2 border-red-300'
+                                              : 'bg-white/25 text-white border-2 border-white/40'
+                                            : 'bg-white/10 text-white/40 border-2 border-white/10'
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-emerald-200 font-black">סט {set.set_number}</span>
+                                          <span className="text-white/50">|</span>
+                                          <span>{set.weight ?? 0}ק״ג</span>
+                                          <span className="text-white/50">×</span>
+                                          <span>{set.reps ?? 0}</span>
+                                          {set.failure && <span className="mr-1">⚠️</span>}
+                                          {set.equipment?.emoji && (
+                                            <span className="mr-1" title={set.equipment.name}>{set.equipment.emoji}</span>
+                                          )}
+                                        </div>
+                                        {/* Superset detail */}
+                                        {hasSuperset && (
+                                          <div className="text-base text-purple-200 mt-1">
+                                            🔗 +{set.superset_weight ?? 0}ק״ג × {set.superset_reps ?? 0}
+                                          </div>
+                                        )}
+                                        {/* Dropset detail */}
+                                        {hasDropset && (
+                                          <div className="text-base text-orange-200 mt-1">
+                                            ⬇️ {set.dropset_weight ?? 0}ק״ג × {set.dropset_reps ?? 0}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             )}
