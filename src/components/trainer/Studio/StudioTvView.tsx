@@ -5,7 +5,7 @@ import { useTraineeProgressData } from '../../../hooks/useTraineeProgressData';
 import { usePersonalRecordDetection } from '../../../hooks/usePersonalRecordDetection';
 import { Card } from '../../ui/Card';
 import { useThemeClasses } from '../../../contexts/ThemeContext';
-import { Flame, TrendingUp, Trophy, Calendar, Target } from 'lucide-react';
+import { Flame, TrendingUp, Trophy, Calendar, Target, AlertCircle } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 
 interface StudioTvViewProps {
@@ -495,39 +495,19 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         </div>
       )}
 
-      {/* Compact Top bar for TV */}
-      <header className="tv-header flex items-center justify-between px-8 2xl:px-12 py-4 2xl:py-6 border-b-2 border-primary/30 shadow-lg bg-gradient-dark">
-        <div className="flex items-center gap-6 2xl:gap-8">
-          <div className="tv-logo h-16 w-16 2xl:h-20 2xl:w-20 rounded-2xl 2xl:rounded-3xl flex items-center justify-center shadow-glow-lg bg-gradient-to-br from-emerald-500 to-emerald-600 animate-glow-slow">
-            <span className="text-3xl 2xl:text-4xl font-extrabold tracking-tight text-white">N</span>
+      {/* Minimal Top Bar - Only Logo */}
+      <header className="flex items-center justify-between px-6 py-3 bg-gray-900 border-b border-gray-800">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-600">
+            <span className="text-xl font-black text-white">N</span>
           </div>
-          <div>
-            <div className="text-black dark:text-white text-3xl 2xl:text-5xl font-black">
-              {session?.trainee?.full_name ?? 'מתאמן'}
-            </div>
-            {session?.calendarEvent?.summary && (
-              <div className="text-black dark:text-gray-300 text-lg 2xl:text-2xl mt-1 font-semibold">
-                {session.calendarEvent.summary}
-              </div>
-            )}
-          </div>
+          <span className="text-lg font-bold text-white">NEWYM</span>
         </div>
-
-        <div className="flex items-center gap-8 2xl:gap-12">
-          <div className="text-right">
-            <div className="tv-clock text-4xl 2xl:text-6xl font-black tracking-tight leading-none text-black dark:text-white">
-              {formatClock(now)}
-            </div>
-            <div className="text-black dark:text-gray-300 text-xl 2xl:text-2xl mt-1 font-semibold">{formatDate(now)}</div>
-          </div>
+        <div className="flex items-center gap-4 text-gray-400 text-sm">
           {lastUpdated && (
-            <div className="text-black dark:text-gray-300 text-base 2xl:text-lg font-semibold">
-              עודכן: {new Date(lastUpdated).toLocaleTimeString('he-IL', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-              })}
-            </div>
+            <span>
+              עודכן {new Date(lastUpdated).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+            </span>
           )}
         </div>
       </header>
@@ -536,318 +516,282 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       <div className="flex-1 overflow-hidden">
         <div className="h-full w-full p-4 2xl:p-6">
           {isUnauthorized ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-10">
-              <div className="text-black dark:text-white text-5xl 2xl:text-8xl font-black">התחברות נדרשת</div>
-              <p className="text-black dark:text-gray-300 text-3xl 2xl:text-5xl max-w-4xl text-center font-semibold leading-relaxed">
-                כדי להשתמש במצב טלוויזיה, התחבר כמדריך מהמכשיר הזה.
-                לאחר ההתחברות, המסך יזהה אוטומטית את האימון הפעיל מהיומן.
-              </p>
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="text-center max-w-md">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+                  <AlertCircle className="w-10 h-10 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="text-gray-900 dark:text-white text-2xl font-black mb-3">התחברות נדרשת</div>
+                <p className="text-gray-500 dark:text-gray-400 text-base">
+                  כדי להשתמש במצב טלוויזיה, התחבר כמדריך מהמכשיר הזה.
+                </p>
+              </div>
             </div>
           ) : loading && !session ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-10 animate-fade-in">
-              <div className="relative">
-                <div className="h-32 w-32 2xl:h-48 2xl:w-48 border-8 rounded-full animate-spin border-emerald-500/40 border-t-emerald-500" />
-                <div className="absolute inset-0 h-32 w-32 2xl:h-48 2xl:w-48 rounded-full animate-ping border-4 border-emerald-500/20" />
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-6 border-4 border-emerald-200 dark:border-emerald-800 border-t-emerald-500 rounded-full animate-spin"></div>
+                <div className="text-gray-900 dark:text-white text-xl font-semibold">טוען אימון...</div>
               </div>
-              <div className="text-black dark:text-white text-4xl 2xl:text-6xl animate-pulse font-black">טוען את האימון הנוכחי מהיומן...</div>
             </div>
           ) : error && !session ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-8 animate-fade-in">
-              <div className="text-5xl 2xl:text-7xl font-black text-red-600 dark:text-red-500 mb-4">⚠️ שגיאה במצב טלוויזיה</div>
-              <p className="text-black dark:text-white text-3xl 2xl:text-5xl max-w-4xl text-center font-semibold">{error}</p>
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="text-center max-w-md">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                  <AlertCircle className="w-10 h-10 text-red-600 dark:text-red-400" />
+                </div>
+                <div className="text-gray-900 dark:text-white text-2xl font-black mb-3">שגיאה</div>
+                <p className="text-gray-500 dark:text-gray-400 text-base">{error}</p>
+              </div>
             </div>
           ) : !session ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-10 animate-fade-in">
-              <div className="text-black dark:text-white text-5xl 2xl:text-8xl font-black text-center">אין אימון פעיל כרגע</div>
-              <p className="text-black dark:text-gray-300 text-3xl 2xl:text-5xl max-w-4xl text-center leading-relaxed font-semibold">
-                לא נמצא אירוע יומן פעיל לסטודיו בזמן הנוכחי.
-                ודא שהאימונים שלך מסונכרנים ליומן Google וששעת האימון תואמת לשעה הנוכחית.
-              </p>
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="text-center max-w-md">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <Calendar className="w-10 h-10 text-gray-400" />
+                </div>
+                <div className="text-gray-900 dark:text-white text-2xl font-black mb-3">אין אימון פעיל</div>
+                <p className="text-gray-500 dark:text-gray-400 text-base">
+                  לא נמצא אירוע יומן פעיל כרגע. ודא שהאימונים מסונכרנים ליומן Google.
+                </p>
+              </div>
             </div>
           ) : (
             <>
-              {/* Full Screen Table for TV - Main Focus - Uses entire screen */}
+              {/* Full Screen Layout - Clean and Professional */}
               {session?.workout && ((session.workout.exercises && session.workout.exercises.length > 0) || completedExercisesData.length > 0) ? (
-                <div className="h-full w-full flex flex-col bg-emerald-50 dark:bg-gradient-dark border-2 border-black dark:border-primary/30 shadow-glow-xl overflow-hidden">
-                  {/* Compact Table Header */}
-                  <div className="flex items-center justify-between px-6 2xl:px-8 py-4 2xl:py-5 border-b-4 border-black dark:border-primary/40 bg-emerald-100 dark:bg-primary/5 flex-shrink-0">
-                    <div className="flex items-center gap-4 2xl:gap-6">
-                      <div className="tv-trainee-badge h-16 w-16 2xl:h-20 2xl:w-20 rounded-2xl flex items-center justify-center shadow-glow-xl bg-gradient-primary">
-                        <span className="text-3xl 2xl:text-4xl font-extrabold text-white">
+                <div className="h-full w-full flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl">
+                  {/* Clean Header */}
+                  <div className="flex items-center justify-between px-6 py-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+                    {/* Left: Trainee Info */}
+                    <div className="flex items-center gap-4">
+                      <div className="h-14 w-14 rounded-full flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg">
+                        <span className="text-2xl font-black text-white">
                           {initials || '?'}
                         </span>
                       </div>
                       <div>
-                        <h1 className="tv-heading-xl text-3xl 2xl:text-5xl font-black text-black dark:text-white">
-                          תרגילים באימון
-                        </h1>
-                        <div className="text-black dark:text-gray-300 text-lg 2xl:text-xl mt-1 font-semibold">
-                          {completedExercisesData.filter(e => e.isCompleted).length} / {completedExercisesData.length} הושלמו
+                        <div className="text-xl font-black text-gray-900 dark:text-white">
+                          {session?.trainee?.full_name || 'מתאמן'}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {completedExercisesData.filter(e => e.isCompleted).length} מתוך {completedExercisesData.length} תרגילים הושלמו
                         </div>
                       </div>
                     </div>
+
+                    {/* Center: Current Exercise Summary */}
                     {currentExercise && latestSet && exerciseStats && (
-                      <div className="flex items-center gap-6 2xl:gap-8 bg-gradient-to-r from-emerald-200/80 to-emerald-100/80 dark:from-emerald-500/30 dark:to-emerald-500/20 px-6 py-4 2xl:px-8 2xl:py-5 rounded-2xl 2xl:rounded-3xl border-3 border-emerald-400 dark:border-emerald-500/50 shadow-xl">
-                        <div className="text-right flex-1">
-                          <div className="text-black dark:text-white text-lg 2xl:text-xl mb-2 font-bold uppercase tracking-wide">תרגיל נוכחי</div>
-                          <div className="text-black dark:text-white text-2xl 2xl:text-4xl font-black mb-2 tv-active-exercise-name">
+                      <div className="flex items-center gap-6 bg-emerald-50 dark:bg-emerald-900/30 px-6 py-3 rounded-xl border border-emerald-200 dark:border-emerald-700">
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+                          <span className="text-lg font-bold text-gray-900 dark:text-white">
                             {currentExercise.name}
-                          </div>
-                          <div className="flex items-center gap-4 2xl:gap-6 text-black dark:text-white">
-                            <div className="text-base 2xl:text-lg font-bold">
-                              <span className="text-emerald-700 dark:text-emerald-300">סט {latestSet.set_number}:</span> {latestSet.weight ?? 0} ק״ג × {latestSet.reps ?? 0}
-                            </div>
-                            <div className="text-base 2xl:text-lg font-bold">
-                              <span className="text-emerald-700 dark:text-emerald-300">נפח:</span> {Math.round(exerciseStats.totalVolume)} ק״ג
-                            </div>
-                            <div className="text-base 2xl:text-lg font-bold">
-                              <span className="text-emerald-700 dark:text-emerald-300">סטים:</span> {exerciseStats.completedSets}/{exerciseStats.totalSets}
-                            </div>
-                          </div>
+                          </span>
                         </div>
-                        <div className="px-6 py-3 2xl:px-8 2xl:py-4 rounded-full bg-gradient-to-r from-red-500 to-red-600 text-white text-xl 2xl:text-2xl font-black animate-pulse shadow-glow-xl border-3 border-red-700 dark:border-red-400">
-                          🔴 LIVE
+                        <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="text-gray-600 dark:text-gray-300">
+                            <span className="font-medium">סט:</span> {latestSet.set_number}
+                          </span>
+                          <span className="text-gray-600 dark:text-gray-300">
+                            <span className="font-medium">משקל:</span> {latestSet.weight ?? 0}ק״ג
+                          </span>
+                          <span className="text-gray-600 dark:text-gray-300">
+                            <span className="font-medium">חזרות:</span> {latestSet.reps ?? 0}
+                          </span>
                         </div>
                       </div>
                     )}
+
+                    {/* Right: Time */}
+                    <div className="text-left">
+                      <div className="text-3xl font-black text-gray-900 dark:text-white tabular-nums">
+                        {formatClock(now)}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {formatDate(now)}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Full Screen Table - Takes entire screen space */}
-                  <div className="flex-1 overflow-auto">
-                    <table className="w-full" style={{ fontSize: 'clamp(1.75rem, 4vw, 3.5rem)' }}>
-                      <thead className="sticky top-0 z-10 bg-gradient-to-r from-emerald-200 to-emerald-300 dark:from-emerald-600/40 dark:to-emerald-500/40 border-b-4 border-black dark:border-primary/50 shadow-lg">
-                        <tr>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>#</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>תרגיל</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>סטטוס</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>משקל מקס׳</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>חזרות</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>נפח</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>סטים</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20 border-r-3 border-black dark:border-primary/30`}>פרטי סטים</th>
-                          <th className={`text-right py-5 2xl:py-7 px-5 2xl:px-7 text-black dark:text-white font-black text-3xl 2xl:text-4xl uppercase tracking-wider bg-emerald-300 dark:bg-primary/20`}>התקדמות</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sortedCompletedExercisesData.map((exercise, index) => {
-                          const isActiveExercise = exercise.id === currentExercise?.id;
-                          return (
-                          <tr 
+                  {/* Clean TV Table - Optimized for 55" viewing */}
+                  <div className="flex-1 overflow-auto p-4">
+                    <div className="grid gap-3">
+                      {sortedCompletedExercisesData.map((exercise, index) => {
+                        const isActiveExercise = exercise.id === currentExercise?.id;
+                        return (
+                          <div
                             key={exercise.id}
-                            className={`border-b-4 border-black dark:border-primary/30 transition-all duration-500 ${
-                              exercise.isCompleted 
-                                ? 'bg-emerald-100 dark:bg-emerald-500/15' 
-                                : 'bg-emerald-50 dark:bg-amber-500/10'
-                            } ${isActiveExercise 
-                              ? 'tv-active-exercise-row ring-6 ring-emerald-500 dark:ring-emerald-400 ring-offset-4 ring-offset-emerald-50 dark:ring-offset-emerald-900/50 bg-gradient-to-r from-emerald-200 via-emerald-100 to-emerald-200 dark:from-emerald-500/30 dark:via-emerald-500/20 dark:to-emerald-500/30 shadow-2xl shadow-emerald-500/50 dark:shadow-emerald-400/30' 
-                              : 'hover:bg-emerald-100/50 dark:hover:bg-emerald-500/10'
+                            className={`rounded-2xl p-5 transition-all duration-300 ${
+                              isActiveExercise
+                                ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 dark:from-emerald-500 dark:to-emerald-600 text-white shadow-2xl scale-[1.02] ring-4 ring-white/50'
+                                : exercise.isCompleted
+                                ? 'bg-emerald-100 dark:bg-emerald-900/40 border-2 border-emerald-300 dark:border-emerald-700'
+                                : 'bg-white dark:bg-gray-800/60 border-2 border-gray-200 dark:border-gray-700'
                             }`}
                           >
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 text-center border-r-3 border-black dark:border-primary/30`}>
-                              {isActiveExercise ? (
-                                <div className="w-24 h-24 2xl:w-32 2xl:h-32 rounded-full flex items-center justify-center text-4xl 2xl:text-5xl font-black mx-auto border-4 border-emerald-600 dark:border-emerald-400 bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-400 dark:to-emerald-500 text-white shadow-glow-xl animate-tv-active-badge-pulse">
-                                  <span className="relative">
-                                    {index + 1}
-                                    <span className="absolute -top-1 -right-1 w-4 h-4 2xl:w-5 2xl:h-5 bg-red-500 rounded-full border-2 border-white animate-ping"></span>
-                                  </span>
-                                </div>
-                              ) : (
-                                <div className={`w-18 h-18 2xl:w-24 2xl:h-24 rounded-full flex items-center justify-center text-2xl 2xl:text-4xl font-black mx-auto border-3 border-black dark:border-transparent ${
-                                  exercise.isCompleted
-                                    ? 'bg-emerald-500 text-white shadow-glow-lg dark:bg-emerald-500'
-                                    : 'bg-amber-500 text-white dark:bg-amber-500/30 dark:text-amber-500'
+                            <div className="flex items-center gap-6">
+                              {/* Number Badge */}
+                              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black flex-shrink-0 ${
+                                isActiveExercise
+                                  ? 'bg-white text-emerald-600'
+                                  : exercise.isCompleted
+                                  ? 'bg-emerald-500 text-white'
+                                  : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                              }`}>
+                                {exercise.isCompleted && !isActiveExercise ? '✓' : index + 1}
+                              </div>
+
+                              {/* Exercise Name */}
+                              <div className="flex-1 min-w-0">
+                                <div className={`text-2xl font-black truncate ${
+                                  isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'
                                 }`}>
-                                  {index + 1}
-                                </div>
-                              )}
-                            </td>
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 text-black dark:text-white font-black ${isActiveExercise ? 'text-4xl 2xl:text-6xl' : 'text-2xl 2xl:text-4xl'} border-r-3 border-black dark:border-primary/30`}>
-                              <div className="flex flex-col gap-2">
-                                <div className="flex items-center gap-3">
-                                  <span className={isActiveExercise ? 'tv-active-exercise-name' : ''}>
-                                    {exercise.name}
-                                  </span>
+                                  {exercise.name}
                                   {isActiveExercise && (
-                                    <span className="px-3 py-1 2xl:px-4 2xl:py-2 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white text-sm 2xl:text-base font-black border-2 border-emerald-700 dark:border-emerald-400 shadow-lg animate-pulse-slow">
-                                      נוכחי
-                                    </span>
-                                  )}
-                                  {exercise.hasFailure && (
-                                    <span className="text-red-600 dark:text-red-400 text-2xl 2xl:text-3xl" title="היה כשל בסט כלשהו">
-                                      ⚠️
+                                    <span className="mr-3 px-3 py-1 text-sm bg-red-500 text-white rounded-full animate-pulse">
+                                      פעיל
                                     </span>
                                   )}
                                 </div>
-                                {/* Show superset exercises below main exercise */}
-                                {isActiveExercise && exercise.sets.some(set => set.superset_exercise_id) && (
-                                  <div className="text-sm 2xl:text-base text-purple-600 dark:text-purple-400 font-semibold mt-1">
-                                    {exercise.sets
-                                      .filter(set => set.superset_exercise_id)
-                                      .map((set, setIdx) => {
-                                        const supersetExercise = session?.workout?.exercises?.find(ex => ex.id === set.superset_exercise_id);
-                                        return supersetExercise ? (
-                                          <span key={setIdx} className="mr-2">
-                                            + {supersetExercise.name} ({set.superset_weight ?? 0}×{set.superset_reps ?? 0})
-                                          </span>
-                                        ) : null;
-                                      })
-                                      .filter(Boolean)}
+                              </div>
+
+                              {/* Stats Grid - Clear Labels */}
+                              <div className="flex items-center gap-8 flex-shrink-0">
+                                {/* Weight */}
+                                <div className="text-center min-w-[100px]">
+                                  <div className={`text-sm font-medium mb-1 ${
+                                    isActiveExercise ? 'text-emerald-100' : 'text-gray-500 dark:text-gray-400'
+                                  }`}>
+                                    משקל
+                                  </div>
+                                  <div className={`text-3xl font-black ${
+                                    isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'
+                                  }`}>
+                                    {exercise.maxWeight > 0 ? exercise.maxWeight : '—'}
+                                    {exercise.maxWeight > 0 && <span className="text-lg mr-1">ק״ג</span>}
+                                  </div>
+                                </div>
+
+                                {/* Reps */}
+                                <div className="text-center min-w-[80px]">
+                                  <div className={`text-sm font-medium mb-1 ${
+                                    isActiveExercise ? 'text-emerald-100' : 'text-gray-500 dark:text-gray-400'
+                                  }`}>
+                                    חזרות
+                                  </div>
+                                  <div className={`text-3xl font-black ${
+                                    isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'
+                                  }`}>
+                                    {exercise.totalReps > 0 ? exercise.totalReps : '—'}
+                                  </div>
+                                </div>
+
+                                {/* Volume */}
+                                <div className="text-center min-w-[120px]">
+                                  <div className={`text-sm font-medium mb-1 ${
+                                    isActiveExercise ? 'text-emerald-100' : 'text-gray-500 dark:text-gray-400'
+                                  }`}>
+                                    נפח כולל
+                                  </div>
+                                  <div className={`text-3xl font-black ${
+                                    isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'
+                                  }`}>
+                                    {exercise.totalVolume > 0 ? Math.round(exercise.totalVolume) : '—'}
+                                    {exercise.totalVolume > 0 && <span className="text-lg mr-1">ק״ג</span>}
+                                  </div>
+                                </div>
+
+                                {/* Sets Progress */}
+                                <div className="text-center min-w-[100px]">
+                                  <div className={`text-sm font-medium mb-1 ${
+                                    isActiveExercise ? 'text-emerald-100' : 'text-gray-500 dark:text-gray-400'
+                                  }`}>
+                                    סטים
+                                  </div>
+                                  <div className={`text-3xl font-black ${
+                                    isActiveExercise
+                                      ? 'text-white'
+                                      : exercise.completedSets === exercise.totalSets
+                                      ? 'text-emerald-600 dark:text-emerald-400'
+                                      : 'text-amber-600 dark:text-amber-400'
+                                  }`}>
+                                    {exercise.completedSets}/{exercise.totalSets}
+                                  </div>
+                                </div>
+
+                                {/* Progress Indicator */}
+                                {exercise.progressIndicator && (
+                                  <div className={`w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                    exercise.progressIndicator === 'up'
+                                      ? 'bg-emerald-100 dark:bg-emerald-900/50'
+                                      : exercise.progressIndicator === 'down'
+                                      ? 'bg-red-100 dark:bg-red-900/50'
+                                      : 'bg-gray-100 dark:bg-gray-800'
+                                  }`}>
+                                    {exercise.progressIndicator === 'up' && (
+                                      <TrendingUp className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+                                    )}
+                                    {exercise.progressIndicator === 'down' && (
+                                      <TrendingUp className="w-8 h-8 text-red-600 dark:text-red-400 rotate-180" />
+                                    )}
+                                    {exercise.progressIndicator === 'same' && (
+                                      <span className="text-2xl font-black text-gray-500">=</span>
+                                    )}
                                   </div>
                                 )}
                               </div>
-                            </td>
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-4 2xl:px-6 border-r-3 border-black dark:border-primary/30`}>
-                              {exercise.isCompleted ? (
-                                <span className={`px-5 py-3 2xl:px-8 2xl:py-4 rounded-full bg-emerald-500 text-white dark:bg-emerald-500/30 dark:text-emerald-400 ${isActiveExercise ? 'text-2xl 2xl:text-3xl' : 'text-xl 2xl:text-2xl'} font-black border-3 border-black dark:border-emerald-500/50 shadow-glow-lg animate-pulse-slow inline-block`}>
-                                  ✓ הושלם
-                                </span>
-                              ) : (
-                                <span className={`px-5 py-3 2xl:px-8 2xl:py-4 rounded-full bg-amber-500 text-white dark:bg-amber-500/30 dark:text-amber-400 ${isActiveExercise ? 'text-2xl 2xl:text-3xl' : 'text-xl 2xl:text-2xl'} font-black border-3 border-black dark:border-amber-500/50 inline-block`}>
-                                  בתהליך
-                                </span>
-                              )}
-                            </td>
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-5 2xl:px-8 text-black dark:text-white ${isActiveExercise ? 'text-3xl 2xl:text-5xl' : 'text-2xl 2xl:text-4xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
-                              {exercise.maxWeight > 0 ? `${exercise.maxWeight} ק״ג` : '—'}
-                            </td>
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-5 2xl:px-8 text-black dark:text-white ${isActiveExercise ? 'text-3xl 2xl:text-5xl' : 'text-2xl 2xl:text-4xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
-                              {exercise.totalReps > 0 ? exercise.totalReps : '—'}
-                            </td>
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-5 2xl:px-8 text-black dark:text-white ${isActiveExercise ? 'text-3xl 2xl:text-5xl' : 'text-2xl 2xl:text-4xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
-                              {exercise.totalVolume > 0 ? `${Math.round(exercise.totalVolume)} ק״ג` : '—'}
-                            </td>
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-5 2xl:px-8 ${isActiveExercise ? 'text-3xl 2xl:text-5xl' : 'text-2xl 2xl:text-4xl'} font-black text-center border-r-3 border-black dark:border-primary/30`}>
-                              <span className={exercise.completedSets === exercise.totalSets ? 'text-emerald-600 dark:text-emerald-500' : 'text-amber-600 dark:text-amber-500'}>
-                                {exercise.completedSets}/{exercise.totalSets}
-                              </span>
-                            </td>
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-5 2xl:px-8 border-r-3 border-black dark:border-primary/30`}>
-                              <div className="flex flex-wrap gap-3 2xl:gap-4 justify-end">
-                                {exercise.sets.slice(0, 5).map((set) => {
-                                  const hasSuperset = set.superset_exercise_id && ((set.superset_weight || 0) > 0 || (set.superset_reps || 0) > 0);
-                                  const hasDropset = (set.dropset_weight || 0) > 0 || (set.dropset_reps || 0) > 0;
-                                  const setType = set.set_type;
-                                  const isSuperset = setType === 'superset';
-                                  const isDropset = setType === 'dropset';
-                                  const hasEquipment = set.equipment && set.equipment.name;
+                            </div>
 
-                                  return (
+                            {/* Sets Detail Row - Only for active exercise */}
+                            {isActiveExercise && exercise.sets.length > 0 && (
+                              <div className="mt-4 pt-4 border-t border-white/20">
+                                <div className="flex items-center gap-3 flex-wrap">
+                                  {exercise.sets.map((set) => (
                                     <div
                                       key={set.id}
-                                      className={`px-3 py-2 2xl:px-5 2xl:py-3 rounded-lg text-lg 2xl:text-2xl font-bold border-2 border-black dark:border-primary/40 flex flex-col gap-1 ${
+                                      className={`px-4 py-2 rounded-xl text-lg font-bold ${
                                         (set.weight || 0) > 0 || (set.reps || 0) > 0
                                           ? set.failure
-                                            ? 'bg-red-200 text-black dark:bg-red-500/30 dark:text-red-300'
-                                            : 'bg-emerald-200 text-black dark:bg-primary/20 dark:text-primary'
-                                          : 'bg-gray-200 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400'
+                                            ? 'bg-red-500/30 text-red-100 border border-red-400'
+                                            : 'bg-white/20 text-white border border-white/30'
+                                          : 'bg-white/10 text-white/50 border border-white/10'
                                       }`}
                                     >
-                                      <div className="flex items-center gap-2">
-                                        <span className={isSuperset ? 'text-purple-600 dark:text-purple-400' : isDropset ? 'text-orange-600 dark:text-orange-400' : ''}>
-                                          {set.set_number}: {set.weight ?? 0}×{set.reps ?? 0}
-                                        </span>
-                                        {set.failure && (
-                                          <span className="text-red-600 dark:text-red-400 text-base 2xl:text-xl" title="כשל">
-                                            ⚠️
-                                          </span>
-                                        )}
-                                        {isSuperset && (
-                                          <span className="text-purple-600 dark:text-purple-400 text-sm 2xl:text-lg font-bold" title="סופר-סט">
-                                            SS
-                                          </span>
-                                        )}
-                                        {isDropset && (
-                                          <span className="text-orange-600 dark:text-orange-400 text-sm 2xl:text-lg font-bold" title="דרופ-סט">
-                                            DS
-                                          </span>
-                                        )}
-                                        {hasEquipment && (
-                                          <span className="text-blue-600 dark:text-blue-400 text-sm 2xl:text-lg" title={set.equipment.name}>
-                                            {set.equipment.emoji || '🎒'}
-                                          </span>
-                                        )}
-                                      </div>
-                                      {hasSuperset && (
-                                        <div className="text-sm 2xl:text-lg text-purple-700 dark:text-purple-300 font-semibold">
-                                          +{set.superset_weight ?? 0}×{set.superset_reps ?? 0}
-                                        </div>
-                                      )}
-                                      {hasDropset && (
-                                        <div className="text-sm 2xl:text-lg text-orange-700 dark:text-orange-300 font-semibold">
-                                          ↓{set.dropset_weight ?? 0}×{set.dropset_reps ?? 0}
-                                        </div>
-                                      )}
+                                      <span className="text-emerald-200 mr-1">סט {set.set_number}:</span>
+                                      {set.weight ?? 0}ק״ג × {set.reps ?? 0}
+                                      {set.failure && <span className="mr-2">⚠️</span>}
                                     </div>
-                                  );
-                                })}
-                                {exercise.sets.length > 5 && (
-                                  <div className="px-3 py-2 2xl:px-5 2xl:py-3 rounded-lg text-lg 2xl:text-2xl font-bold bg-emerald-200 text-black dark:bg-primary/10 dark:text-primary border-2 border-black dark:border-primary/30">
-                                    +{exercise.sets.length - 5}
-                                  </div>
-                                )}
+                                  ))}
+                                </div>
                               </div>
-                            </td>
-                            <td className={`${isActiveExercise ? 'py-8 2xl:py-12' : 'py-6 2xl:py-8'} px-5 2xl:px-8 text-center`}>
-                              {exercise.progressIndicator === 'up' && (
-                                <div className="flex flex-col items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 animate-pulse-slow">
-                                  <div className="flex items-center gap-3">
-                                    <TrendingUp className="w-8 h-8 2xl:w-12 2xl:h-12" />
-                                    <span className="text-2xl 2xl:text-4xl font-black">+{Math.abs(exercise.progressPercent)}%</span>
-                                  </div>
-                                  {exercise.progressDetails && (
-                                    <span className="text-sm 2xl:text-lg font-semibold opacity-80 dark:text-emerald-300 text-emerald-800">
-                                      {exercise.progressDetails}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                              {exercise.progressIndicator === 'down' && (
-                                <div className="flex flex-col items-center justify-center gap-2 text-red-600 dark:text-red-400">
-                                  <div className="flex items-center gap-3">
-                                    <TrendingUp className="w-8 h-8 2xl:w-12 2xl:h-12 rotate-180" />
-                                    <span className="text-2xl 2xl:text-4xl font-black">{exercise.progressPercent}%</span>
-                                  </div>
-                                  {exercise.progressDetails && (
-                                    <span className="text-sm 2xl:text-lg font-semibold opacity-80 dark:text-red-300 text-red-800">
-                                      {exercise.progressDetails}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                              {exercise.progressIndicator === 'same' && (
-                                <div className="flex flex-col items-center justify-center gap-2">
-                                  <span className="text-4xl 2xl:text-6xl font-black dark:text-gray-400 text-gray-800">=</span>
-                                  {exercise.progressDetails && (
-                                    <span className="text-sm 2xl:text-lg font-semibold opacity-80 dark:text-gray-400 text-gray-800">
-                                      {exercise.progressDetails}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                              {!exercise.progressIndicator && (
-                                <span className="dark:text-gray-400 text-black text-xl 2xl:text-3xl">—</span>
-                              )}
-                            </td>
-                          </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               ) : session?.workout ? (
-                <div className="h-full w-full flex items-center justify-center bg-emerald-50 dark:bg-gradient-dark">
-                  <div className="text-center">
-                    <div className="text-black dark:text-white text-5xl 2xl:text-8xl font-black mb-6">
+                <div className="h-full w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 rounded-xl">
+                  <div className="text-center max-w-lg">
+                    <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                      <Target className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div className="text-gray-900 dark:text-white text-3xl font-black mb-3">
                       ממתין לתרגילים
                     </div>
-                    <p className="text-black dark:text-gray-300 text-3xl 2xl:text-5xl font-semibold">
-                      האימון זוהה מהיומן, אבל טרם נוספו לו תרגילים במערכת.
-                      <br />
-                      <span className="text-2xl 2xl:text-4xl mt-4 inline-block animate-pulse">
-                        התרגילים יופיעו כאן ברגע שיוספו לאימון...
-                      </span>
+                    <p className="text-gray-500 dark:text-gray-400 text-lg">
+                      האימון זוהה מהיומן. התרגילים יופיעו כאן ברגע שיוספו.
                     </p>
+                    <div className="mt-6 flex justify-center">
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : null}
