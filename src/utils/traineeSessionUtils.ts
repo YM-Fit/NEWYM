@@ -669,16 +669,12 @@ export async function generateGoogleCalendarEventTitle(
       return 'אימון';
     }
 
-    // Try to get cached session info first
-    let sessionInfo = sessionInfoCache.get(traineeId);
+    // Invalidate cache before calculating to ensure fresh data
+    // This is important when workouts are deleted to get accurate numbering
+    sessionInfoCache.invalidate(traineeId);
     
-    // If not cached, fetch it
-    if (!sessionInfo) {
-      sessionInfo = await getTraineeSessionInfo(traineeId, trainerId);
-      if (sessionInfo) {
-        sessionInfoCache.set(traineeId, sessionInfo);
-      }
-    }
+    // Get fresh session info (don't use cache to ensure accuracy)
+    const sessionInfo = await getTraineeSessionInfo(traineeId, trainerId);
 
     // If no session info, return just the name
     if (!sessionInfo) {
@@ -699,6 +695,7 @@ export async function generateGoogleCalendarEventTitle(
       const endOfMonth = new Date(eventMonth.getFullYear(), eventMonth.getMonth() + 1, 0, 23, 59, 59);
 
       // Get all workouts for this trainer in this month
+      // Include both completed and scheduled workouts for accurate numbering
       const { data: workouts, error: workoutsError } = await supabase
         .from('workouts')
         .select('id, workout_date')
@@ -706,6 +703,9 @@ export async function generateGoogleCalendarEventTitle(
         .gte('workout_date', startOfMonth.toISOString())
         .lte('workout_date', endOfMonth.toISOString())
         .order('workout_date', { ascending: true });
+      
+      // Clear any stale cache to ensure fresh data
+      sessionInfoCache.invalidate(traineeId);
 
       if (!workoutsError && workouts && workouts.length > 0) {
         // Get workout links to find which workouts belong to this trainee
@@ -735,6 +735,15 @@ export async function generateGoogleCalendarEventTitle(
           const workoutIndex = traineeWorkouts.findIndex(w => (w as any).id === workoutId);
           if (workoutIndex >= 0) {
             position = workoutIndex + 1;
+          } else {
+            // Workout not found in list - might have been deleted or not yet synced
+            // Calculate position based on date
+            const eventDateMs = eventDate.getTime();
+            const workoutsBefore = traineeWorkouts.filter(w => 
+              new Date((w as any).workout_date).getTime() < eventDateMs
+            ).length;
+            position = workoutsBefore + 1;
+            totalInMonth = traineeWorkouts.length; // Don't add to total if workout doesn't exist
           }
         } else {
           // No workoutId means this is a NEW workout being created

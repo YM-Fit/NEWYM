@@ -116,13 +116,34 @@ export async function syncTraineeEventsToCalendar(
     }
 
     // Update events month by month
-    for (const [monthKey, monthEvents] of eventsByMonth) {
-      for (const event of monthEvents) {
+    // IMPORTANT: Process events in chronological order to ensure correct numbering
+    // Sort events by date before processing
+    const sortedEventsByMonth = new Map(
+      Array.from(eventsByMonth.entries()).sort((a, b) => {
+        const dateA = new Date(a[1][0]?.event_start_time || 0);
+        const dateB = new Date(b[1][0]?.event_start_time || 0);
+        return dateA.getTime() - dateB.getTime();
+      })
+    );
+    
+    for (const [monthKey, monthEvents] of sortedEventsByMonth) {
+      // Sort events within the month by date
+      const sortedMonthEvents = [...monthEvents].sort((a, b) => {
+        const dateA = new Date(a.event_start_time);
+        const dateB = new Date(b.event_start_time);
+        return dateA.getTime() - dateB.getTime();
+      });
+      
+      for (const event of sortedMonthEvents) {
         try {
           const eventDate = new Date(event.event_start_time);
           
           // Generate the new event title with session number
           // Pass workout_id for accurate position calculation
+          // Clear cache before each calculation to ensure fresh data
+          const { sessionInfoCache } = await import('../utils/traineeSessionUtils');
+          sessionInfoCache.invalidate(traineeId);
+          
           const newTitle = await generateGoogleCalendarEventTitle(
             traineeId,
             trainerId,
