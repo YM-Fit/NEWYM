@@ -616,6 +616,12 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                         const hasSupersets = exercise.sets.some(set => set.superset_exercise_id || set.set_type === 'superset');
                         const hasDropsets = exercise.sets.some(set => (set.dropset_weight || 0) > 0 || set.set_type === 'dropset');
 
+                        // Get unique superset exercise names
+                        const supersetExerciseNames = exercise.sets
+                          .filter(set => set.superset_exercise?.name)
+                          .map(set => set.superset_exercise!.name)
+                          .filter((name, idx, arr) => arr.indexOf(name) === idx);
+
                         // Get unique equipment from sets
                         const equipmentList = exercise.sets
                           .filter(set => set.equipment?.name)
@@ -672,7 +678,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                         ? 'bg-purple-400/30 text-purple-100'
                                         : 'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400'
                                     }`}>
-                                      🔗 סופר-סט
+                                      🔗 {supersetExerciseNames.length > 0 ? supersetExerciseNames.join(', ') : 'סופר-סט'}
                                     </span>
                                   )}
                                   {hasDropsets && (
@@ -847,7 +853,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                         {/* Superset detail */}
                                         {hasSuperset && (
                                           <div className="text-base text-purple-200 mt-1">
-                                            🔗 +{set.superset_weight ?? 0}ק״ג × {set.superset_reps ?? 0}
+                                            🔗 {set.superset_exercise?.name || 'סופר-סט'}: {set.superset_weight ?? 0}ק״ג × {set.superset_reps ?? 0}
                                           </div>
                                         )}
                                         {/* Dropset detail */}

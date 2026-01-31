@@ -145,6 +145,10 @@ export async function getWorkoutDetails(
             id,
             name,
             emoji
+          ),
+          superset_exercise:superset_exercise_id (
+            id,
+            name
           )
         )
       `)

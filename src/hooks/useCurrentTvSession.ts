@@ -21,6 +21,10 @@ interface TvWorkoutExerciseSet {
   superset_exercise_id?: string | null;
   superset_weight?: number | null;
   superset_reps?: number | null;
+  superset_exercise?: {
+    id: string;
+    name: string;
+  } | null;
   dropset_weight?: number | null;
   dropset_reps?: number | null;
   equipment_id?: string | null;
@@ -232,6 +236,7 @@ export function useCurrentTvSession(
                     superset_exercise_id: set.superset_exercise_id || null,
                     superset_weight: set.superset_weight || null,
                     superset_reps: set.superset_reps || null,
+                    superset_exercise: set.superset_exercise || null,
                     dropset_weight: set.dropset_weight || null,
                     dropset_reps: set.dropset_reps || null,
                     equipment_id: set.equipment_id || null,
@@ -438,6 +443,7 @@ export function useCurrentTvSession(
                     superset_exercise_id: set.superset_exercise_id || null,
                     superset_weight: set.superset_weight || null,
                     superset_reps: set.superset_reps || null,
+                    superset_exercise: set.superset_exercise || null,
                     dropset_weight: set.dropset_weight || null,
                     dropset_reps: set.dropset_reps || null,
                     equipment_id: set.equipment_id || null,
@@ -733,6 +739,7 @@ export function useCurrentTvSession(
               superset_exercise_id: set.superset_exercise_id || null,
               superset_weight: set.superset_weight || null,
               superset_reps: set.superset_reps || null,
+              superset_exercise: set.superset_exercise || null,
               dropset_weight: set.dropset_weight || null,
               dropset_reps: set.dropset_reps || null,
               equipment_id: set.equipment_id || null,
