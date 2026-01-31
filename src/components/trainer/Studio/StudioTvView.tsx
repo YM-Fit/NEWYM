@@ -110,7 +110,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         setShowWelcomeScreen(true);
         const timer = setTimeout(() => {
           setShowWelcomeScreen(false);
-        }, 6000); // Show for 6 seconds
+        }, 4000); // Show for 4 seconds (faster)
         return () => clearTimeout(timer);
       } else {
         // If sets are already filled, mark as shown so it doesn't appear again
@@ -438,61 +438,101 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         </div>
       )}
 
-      {/* Welcome Screen */}
+      {/* Welcome Screen - Clean and Professional */}
       {showWelcomeScreen && session?.trainee && (
-        <div 
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/80 backdrop-blur-sm animate-fade-in"
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
           onClick={() => setShowWelcomeScreen(false)}
         >
-          <div className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white px-12 py-8 2xl:px-20 2xl:py-12 rounded-3xl 2xl:rounded-[2rem] shadow-glow-xl animate-scale-in border-4 2xl:border-[6px] border-white/30 backdrop-blur-sm max-w-4xl mx-4">
-            <div className="flex flex-col items-center gap-4 2xl:gap-6">
-              <div className="tv-heading-xl font-extrabold text-center animate-tv-number-pop">
-                ברוך הבא {session.trainee.full_name}!
-              </div>
-              {lastWorkout && (
-                <div className="w-full mt-4 2xl:mt-6">
-                  <div className="tv-text-lg font-semibold text-center mb-4 2xl:mb-6">
-                    האימון שבוצע בפעם האחרונה:
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0" style={{
+              backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+              backgroundSize: '40px 40px'
+            }}></div>
+          </div>
+
+          <div className="relative z-10 text-center max-w-4xl mx-auto px-8">
+            {/* Logo/Avatar */}
+            <div className="mb-8 flex justify-center">
+              {isPairWorkout ? (
+                <div className="flex items-center gap-4">
+                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center shadow-2xl shadow-cyan-500/30 animate-[scale-in_0.5s_ease-out]">
+                    <span className="text-4xl font-black text-white">1</span>
                   </div>
-                  <div className="bg-white/10 rounded-2xl 2xl:rounded-3xl p-6 2xl:p-8 backdrop-blur-sm">
-                    <div className="tv-text-lg font-semibold mb-3 2xl:mb-4">
-                      {new Date(lastWorkout.workout_date).toLocaleDateString('he-IL', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </div>
-                    {lastWorkout.workout_exercises && lastWorkout.workout_exercises.length > 0 && (
-                      <div className="space-y-2 2xl:space-y-3">
-                        <div className="tv-text-lg font-semibold mb-2">תרגילים:</div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 2xl:gap-3">
-                          {lastWorkout.workout_exercises.slice(0, 6).map((we: any, idx: number) => {
-                            const totalSets = we.exercise_sets?.length || 0;
-                            const totalReps = we.exercise_sets?.reduce((sum: number, set: any) => sum + (set.reps || 0), 0) || 0;
-                            const maxWeight = Math.max(...(we.exercise_sets?.map((set: any) => set.weight || 0) || [0]), 0);
-                            return (
-                              <div key={we.id} className="bg-white/10 rounded-xl p-3 2xl:p-4">
-                                <div className="font-semibold text-lg 2xl:text-xl">{we.exercises?.name || 'תרגיל'}</div>
-                                <div className="text-sm 2xl:text-base opacity-90">
-                                  {maxWeight} ק״ג × {totalReps} חזרות ({totalSets} סטים)
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        {lastWorkout.workout_exercises.length > 6 && (
-                          <div className="text-sm 2xl:text-base opacity-75 mt-2">
-                            +{lastWorkout.workout_exercises.length - 6} תרגילים נוספים
-                          </div>
-                        )}
-                      </div>
-                    )}
+                  <div className="text-4xl text-white/50">+</div>
+                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-500/30 animate-[scale-in_0.5s_ease-out_0.1s_both]">
+                    <span className="text-4xl font-black text-white">2</span>
                   </div>
                 </div>
+              ) : (
+                <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-500/30 animate-[scale-in_0.5s_ease-out]">
+                  <span className="text-5xl font-black text-white">{initials || '👋'}</span>
+                </div>
               )}
-              <div className="tv-text-lg mt-4 2xl:mt-6 opacity-90 animate-pulse">
-                לחץ כדי להמשיך...
+            </div>
+
+            {/* Welcome Text */}
+            <h1 className="text-5xl font-black text-white mb-3 animate-[fade-in-up_0.5s_ease-out_0.2s_both]">
+              {isPairWorkout ? (
+                <>ברוכים הבאים!</>
+              ) : (
+                <>ברוך הבא, {session.trainee.full_name?.split(' ')[0]}!</>
+              )}
+            </h1>
+
+            {isPairWorkout && (
+              <p className="text-2xl text-emerald-400 font-semibold mb-6 animate-[fade-in-up_0.5s_ease-out_0.3s_both]">
+                {pairName1} + {pairName2}
+              </p>
+            )}
+
+            {/* Last Workout Summary - Compact */}
+            {lastWorkout && (
+              <div className="mt-8 animate-[fade-in-up_0.5s_ease-out_0.4s_both]">
+                <p className="text-gray-400 text-lg mb-4">האימון האחרון שלך:</p>
+                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                  <div className="flex items-center justify-center gap-8 text-white">
+                    <div className="text-center">
+                      <div className="text-3xl font-black text-emerald-400">
+                        {lastWorkout.workout_exercises?.length || 0}
+                      </div>
+                      <div className="text-sm text-gray-400">תרגילים</div>
+                    </div>
+                    <div className="w-px h-12 bg-white/20"></div>
+                    <div className="text-center">
+                      <div className="text-3xl font-black text-emerald-400">
+                        {lastWorkout.workout_exercises?.reduce((sum: number, we: any) =>
+                          sum + (we.exercise_sets?.length || 0), 0) || 0}
+                      </div>
+                      <div className="text-sm text-gray-400">סטים</div>
+                    </div>
+                    <div className="w-px h-12 bg-white/20"></div>
+                    <div className="text-center">
+                      <div className="text-3xl font-black text-emerald-400">
+                        {Math.round(lastWorkout.workout_exercises?.reduce((sum: number, we: any) =>
+                          sum + (we.exercise_sets?.reduce((setSum: number, set: any) =>
+                            setSum + ((set.weight || 0) * (set.reps || 0)), 0) || 0), 0) || 0).toLocaleString()}
+                      </div>
+                      <div className="text-sm text-gray-400">ק״ג נפח</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 text-gray-500 text-sm">
+                    {new Date(lastWorkout.workout_date).toLocaleDateString('he-IL', {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long',
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Continue Hint */}
+            <div className="mt-10 animate-[fade-in-up_0.5s_ease-out_0.5s_both]">
+              <div className="inline-flex items-center gap-2 text-gray-500 text-lg">
+                <span>לחץ להתחלה</span>
+                <span className="animate-pulse">→</span>
               </div>
             </div>
           </div>
