@@ -1,5 +1,5 @@
 import { ArrowRight, Dumbbell, Copy, Edit2, Trash2, Calendar, User, Sparkles, List, Table2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
 
 interface Workout {
@@ -22,6 +22,7 @@ interface WorkoutsListProps {
   onEditWorkout: (workout: Workout) => void;
   onDuplicateWorkout: (workout: Workout) => void;
   onWorkoutsUpdated: () => void;
+  onRefresh?: () => void;
 }
 
 export default function WorkoutsList({
@@ -31,9 +32,15 @@ export default function WorkoutsList({
   onViewWorkout,
   onEditWorkout,
   onDuplicateWorkout,
-  onWorkoutsUpdated
+  onWorkoutsUpdated,
+  onRefresh
 }: WorkoutsListProps) {
   const [viewMode, setViewMode] = useState<'list' | 'table'>('list');
+
+  // Refresh data on mount to ensure we have the latest workouts
+  useEffect(() => {
+    onRefresh?.();
+  }, [onRefresh]);
 
   const handleDeleteWorkout = async (workoutId: string, e: React.MouseEvent) => {
     e.stopPropagation();

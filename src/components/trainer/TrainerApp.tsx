@@ -1270,6 +1270,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
               onNewMeasurement={() => handleNewMeasurement(selectedTrainee)}
               onEditMeasurement={handleEditMeasurement}
               onMeasurementDeleted={() => loadMeasurements(selectedTrainee.id)}
+              onRefresh={() => loadMeasurements(selectedTrainee.id)}
               onBack={() => setActiveView('trainee-profile')}
             />
           </Suspense>
@@ -1289,6 +1290,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
               onEditWorkout={handleEditWorkout}
               onDuplicateWorkout={handleDuplicateWorkout}
               onWorkoutsUpdated={() => loadWorkouts(selectedTrainee.id)}
+              onRefresh={() => loadWorkouts(selectedTrainee.id)}
             />
           </Suspense>
         ) : null;

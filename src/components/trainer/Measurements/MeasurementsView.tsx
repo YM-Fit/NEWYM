@@ -10,13 +10,19 @@ interface MeasurementsViewProps {
   onNewMeasurement: () => void;
   onEditMeasurement?: (measurement: BodyMeasurement) => void;
   onMeasurementDeleted?: () => void;
+  onRefresh?: () => void;
   onBack?: () => void;
 }
 
-export default function MeasurementsView({ trainee, measurements, onNewMeasurement, onEditMeasurement, onMeasurementDeleted, onBack }: MeasurementsViewProps) {
+export default function MeasurementsView({ trainee, measurements, onNewMeasurement, onEditMeasurement, onMeasurementDeleted, onRefresh, onBack }: MeasurementsViewProps) {
   const [selectedMetric, setSelectedMetric] = useState<'weight' | 'bodyFat' | 'muscleMass' | 'waterPercentage' | 'metabolicAge'>('weight');
   const [selectedMember, setSelectedMember] = useState<'member_1' | 'member_2' | 'all'>('all');
   const [viewMode, setViewMode] = useState<'list' | 'table'>('list');
+
+  // Refresh data on mount to ensure we have the latest measurements
+  useEffect(() => {
+    onRefresh?.();
+  }, [onRefresh]);
 
   const filteredMeasurements = useMemo(() => {
     if (!trainee.isPair) {
