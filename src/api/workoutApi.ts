@@ -122,6 +122,7 @@ export async function getWorkoutDetails(
         id,
         exercise_id,
         order_index,
+        pair_member,
         exercises (
           id,
           name,

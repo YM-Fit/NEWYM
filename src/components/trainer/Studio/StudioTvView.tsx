@@ -277,6 +277,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         previousData: previous,
         sets: sortedSets, // Include sets for display
         exercise: exercise, // Keep reference to original exercise
+        pair_member: exercise.pair_member || null, // For pair workouts
       };
     });
     
@@ -378,6 +379,29 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       return 0;
     });
   }, [completedExercisesData, currentExercise]);
+
+  // Detect if this is a pair workout
+  const isPairWorkout = useMemo(() => {
+    // Check if trainee is marked as pair
+    if (session?.trainee?.isPair) return true;
+    // Or check if any exercise has pair_member
+    return completedExercisesData.some(ex => ex.pair_member);
+  }, [session?.trainee?.isPair, completedExercisesData]);
+
+  // Split exercises by member for pair workouts
+  const member1Exercises = useMemo(() => {
+    if (!isPairWorkout) return [];
+    return sortedCompletedExercisesData.filter(ex => ex.pair_member === 'member_1');
+  }, [isPairWorkout, sortedCompletedExercisesData]);
+
+  const member2Exercises = useMemo(() => {
+    if (!isPairWorkout) return [];
+    return sortedCompletedExercisesData.filter(ex => ex.pair_member === 'member_2');
+  }, [isPairWorkout, sortedCompletedExercisesData]);
+
+  // Get pair member names
+  const pairName1 = session?.trainee?.pairName1 || 'מתאמן 1';
+  const pairName2 = session?.trainee?.pairName2 || 'מתאמן 2';
 
   const latestLogs = logs.slice(0, 6);
 
@@ -548,24 +572,48 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                   <div className="flex items-center justify-between px-6 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
                     {/* Left: Trainee Info */}
                     <div className="flex items-center gap-4">
-                      <div className="h-14 w-14 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg">
-                        <span className="text-2xl font-black text-white">
-                          {initials || '?'}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="text-2xl font-black text-gray-900 dark:text-white">
-                          {session?.trainee?.full_name || 'מתאמן'}
-                        </div>
-                        <div className="text-base text-gray-500 dark:text-gray-400">
-                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                            {completedExercisesData.filter(e => e.isCompleted).length}
-                          </span>
-                          {' '}מתוך{' '}
-                          <span className="font-bold">{completedExercisesData.length}</span>
-                          {' '}תרגילים
-                        </div>
-                      </div>
+                      {isPairWorkout ? (
+                        <>
+                          {/* Pair workout - show both names */}
+                          <div className="flex items-center gap-2">
+                            <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-cyan-500 to-cyan-600 shadow-lg">
+                              <span className="text-lg font-black text-white">1</span>
+                            </div>
+                            <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg">
+                              <span className="text-lg font-black text-white">2</span>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xl font-black text-gray-900 dark:text-white">
+                              {pairName1} + {pairName2}
+                            </div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                              אימון זוגי
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="h-14 w-14 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg">
+                            <span className="text-2xl font-black text-white">
+                              {initials || '?'}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="text-2xl font-black text-gray-900 dark:text-white">
+                              {session?.trainee?.full_name || 'מתאמן'}
+                            </div>
+                            <div className="text-base text-gray-500 dark:text-gray-400">
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                                {completedExercisesData.filter(e => e.isCompleted).length}
+                              </span>
+                              {' '}מתוך{' '}
+                              <span className="font-bold">{completedExercisesData.length}</span>
+                              {' '}תרגילים
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     {/* Center: Total Workout Stats */}
@@ -607,8 +655,111 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
                   {/* TV Exercise Cards - Optimized for 55" viewing */}
                   <div className="flex-1 overflow-auto px-4 py-3">
-                    <div className="grid gap-3">
-                      {sortedCompletedExercisesData.map((exercise, index) => {
+                    {isPairWorkout ? (
+                      /* Split Screen Layout for Pair Workouts */
+                      <div className="grid grid-cols-2 gap-4 h-full">
+                        {/* Member 1 Column */}
+                        <div className="flex flex-col">
+                          <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-4 py-2 rounded-t-xl mb-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center font-black">1</span>
+                                <span className="text-lg font-bold">{pairName1}</span>
+                              </div>
+                              <div className="text-sm">
+                                {member1Exercises.filter(e => e.isCompleted).length}/{member1Exercises.length} תרגילים
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex-1 overflow-auto space-y-2">
+                            {member1Exercises.map((exercise, index) => {
+                              const isActiveExercise = exercise.id === currentExercise?.id;
+                              const setsProgress = exercise.totalSets > 0 ? (exercise.completedSets / exercise.totalSets) * 100 : 0;
+                              const hasSupersets = exercise.sets.some(set => set.superset_exercise_id || set.set_type === 'superset');
+                              const hasDropsets = exercise.sets.some(set => (set.dropset_weight || 0) > 0 || set.set_type === 'dropset');
+                              const supersetExerciseNames = exercise.sets.filter(set => set.superset_exercise?.name).map(set => set.superset_exercise!.name).filter((name, idx, arr) => arr.indexOf(name) === idx);
+                              const equipmentList = exercise.sets.filter(set => set.equipment?.name).map(set => ({ emoji: set.equipment?.emoji || '🏋️', name: set.equipment?.name })).filter((eq, idx, arr) => arr.findIndex(e => e.name === eq.name) === idx);
+
+                              return (
+                                <div key={exercise.id} className={`rounded-xl p-3 transition-all ${isActiveExercise ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg ring-2 ring-cyan-300/50' : exercise.isCompleted ? 'bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800' : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'}`}>
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg font-black ${isActiveExercise ? 'bg-white text-cyan-600' : exercise.isCompleted ? 'bg-cyan-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
+                                      {exercise.isCompleted && !isActiveExercise ? '✓' : index + 1}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className={`text-lg font-bold truncate ${isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{exercise.name}</div>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        {hasSupersets && <span className={`text-xs px-2 py-0.5 rounded ${isActiveExercise ? 'bg-purple-400/30 text-purple-100' : 'bg-purple-100 text-purple-600'}`}>🔗 {supersetExerciseNames[0] || 'סופר-סט'}</span>}
+                                        {hasDropsets && <span className={`text-xs px-2 py-0.5 rounded ${isActiveExercise ? 'bg-orange-400/30 text-orange-100' : 'bg-orange-100 text-orange-600'}`}>⬇️ דרופ</span>}
+                                        {equipmentList[0] && <span className={`text-xs px-2 py-0.5 rounded ${isActiveExercise ? 'bg-blue-400/30 text-blue-100' : 'bg-blue-100 text-blue-600'}`}>{equipmentList[0].emoji}</span>}
+                                        {exercise.hasFailure && <span className="text-xs">⚠️</span>}
+                                      </div>
+                                    </div>
+                                    <div className="text-left flex-shrink-0">
+                                      <div className={`text-xl font-black ${isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{exercise.maxWeight > 0 ? `${exercise.maxWeight}ק״ג` : '—'}</div>
+                                      <div className={`text-sm ${isActiveExercise ? 'text-cyan-100' : 'text-gray-500'}`}>{exercise.completedSets}/{exercise.totalSets} סטים</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            {member1Exercises.length === 0 && <div className="text-center text-gray-400 py-8">אין תרגילים</div>}
+                          </div>
+                        </div>
+
+                        {/* Member 2 Column */}
+                        <div className="flex flex-col">
+                          <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 py-2 rounded-t-xl mb-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center font-black">2</span>
+                                <span className="text-lg font-bold">{pairName2}</span>
+                              </div>
+                              <div className="text-sm">
+                                {member2Exercises.filter(e => e.isCompleted).length}/{member2Exercises.length} תרגילים
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex-1 overflow-auto space-y-2">
+                            {member2Exercises.map((exercise, index) => {
+                              const isActiveExercise = exercise.id === currentExercise?.id;
+                              const setsProgress = exercise.totalSets > 0 ? (exercise.completedSets / exercise.totalSets) * 100 : 0;
+                              const hasSupersets = exercise.sets.some(set => set.superset_exercise_id || set.set_type === 'superset');
+                              const hasDropsets = exercise.sets.some(set => (set.dropset_weight || 0) > 0 || set.set_type === 'dropset');
+                              const supersetExerciseNames = exercise.sets.filter(set => set.superset_exercise?.name).map(set => set.superset_exercise!.name).filter((name, idx, arr) => arr.indexOf(name) === idx);
+                              const equipmentList = exercise.sets.filter(set => set.equipment?.name).map(set => ({ emoji: set.equipment?.emoji || '🏋️', name: set.equipment?.name })).filter((eq, idx, arr) => arr.findIndex(e => e.name === eq.name) === idx);
+
+                              return (
+                                <div key={exercise.id} className={`rounded-xl p-3 transition-all ${isActiveExercise ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg ring-2 ring-emerald-300/50' : exercise.isCompleted ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'}`}>
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg font-black ${isActiveExercise ? 'bg-white text-emerald-600' : exercise.isCompleted ? 'bg-emerald-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
+                                      {exercise.isCompleted && !isActiveExercise ? '✓' : index + 1}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className={`text-lg font-bold truncate ${isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{exercise.name}</div>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        {hasSupersets && <span className={`text-xs px-2 py-0.5 rounded ${isActiveExercise ? 'bg-purple-400/30 text-purple-100' : 'bg-purple-100 text-purple-600'}`}>🔗 {supersetExerciseNames[0] || 'סופר-סט'}</span>}
+                                        {hasDropsets && <span className={`text-xs px-2 py-0.5 rounded ${isActiveExercise ? 'bg-orange-400/30 text-orange-100' : 'bg-orange-100 text-orange-600'}`}>⬇️ דרופ</span>}
+                                        {equipmentList[0] && <span className={`text-xs px-2 py-0.5 rounded ${isActiveExercise ? 'bg-blue-400/30 text-blue-100' : 'bg-blue-100 text-blue-600'}`}>{equipmentList[0].emoji}</span>}
+                                        {exercise.hasFailure && <span className="text-xs">⚠️</span>}
+                                      </div>
+                                    </div>
+                                    <div className="text-left flex-shrink-0">
+                                      <div className={`text-xl font-black ${isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{exercise.maxWeight > 0 ? `${exercise.maxWeight}ק״ג` : '—'}</div>
+                                      <div className={`text-sm ${isActiveExercise ? 'text-emerald-100' : 'text-gray-500'}`}>{exercise.completedSets}/{exercise.totalSets} סטים</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            {member2Exercises.length === 0 && <div className="text-center text-gray-400 py-8">אין תרגילים</div>}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Single Column Layout for Personal Workouts */
+                      <div className="grid gap-3">
+                        {sortedCompletedExercisesData.map((exercise, index) => {
                         const isActiveExercise = exercise.id === currentExercise?.id;
                         const setsProgress = exercise.totalSets > 0 ? (exercise.completedSets / exercise.totalSets) * 100 : 0;
 
@@ -871,7 +1022,8 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                           </div>
                         );
                       })}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : session?.workout ? (

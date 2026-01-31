@@ -8,6 +8,9 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 interface TvTrainee {
   id: string;
   full_name: string;
+  isPair?: boolean;
+  pairName1?: string | null;
+  pairName2?: string | null;
 }
 
 interface TvWorkoutExerciseSet {
@@ -40,12 +43,14 @@ interface TvWorkoutExercise {
   name: string;
   muscle_group_id: string | null;
   sets: TvWorkoutExerciseSet[];
+  pair_member?: 'member_1' | 'member_2' | null;
 }
 
 export interface TvWorkout {
   id: string;
   workout_date: string;
   is_completed: boolean;
+  workout_type?: 'personal' | 'pair' | null;
   exercises: TvWorkoutExercise[];
 }
 
@@ -172,7 +177,7 @@ export function useCurrentTvSession(
               event_end_time,
               event_summary,
               sync_status,
-              trainees!inner(id, full_name)
+              trainees!inner(id, full_name, is_pair, pair_name_1, pair_name_2)
             `
           )
           .eq('trainer_id', user.id)
@@ -204,7 +209,7 @@ export function useCurrentTvSession(
               workout_date,
               workout_trainees!inner(
                 trainee_id,
-                trainees!inner(id, full_name)
+                trainees!inner(id, full_name, is_pair, pair_name_1, pair_name_2)
               )
             `)
             .eq('trainer_id', user.id)
@@ -225,6 +230,7 @@ export function useCurrentTvSession(
                   id: ex.id,
                   name: ex.exercises?.name ?? 'תרגיל',
                   muscle_group_id: ex.exercises?.muscle_group_id ?? null,
+                  pair_member: ex.pair_member || null,
                   sets: (ex.exercise_sets ?? []).map((set: any) => ({
                     id: set.id,
                     set_number: set.set_number,
@@ -248,6 +254,9 @@ export function useCurrentTvSession(
                   trainee: {
                     id: traineeData.id,
                     full_name: traineeData.full_name,
+                    isPair: traineeData.is_pair || false,
+                    pairName1: traineeData.pair_name_1 || null,
+                    pairName2: traineeData.pair_name_2 || null,
                   },
                   workout: {
                     id: workout.id,
@@ -326,7 +335,7 @@ export function useCurrentTvSession(
           return;
         }
 
-        const trainee = activeRecord.trainees as { id: string; full_name: string } | null;
+        const trainee = activeRecord.trainees as { id: string; full_name: string; is_pair?: boolean; pair_name_1?: string | null; pair_name_2?: string | null } | null;
 
         // 3. Load workout details - try linked workout first, then find active workout for trainee
         let workout: TvWorkout | null = null;
@@ -432,6 +441,7 @@ export function useCurrentTvSession(
                   id: ex.id,
                   name: ex.exercises?.name ?? 'תרגיל',
                   muscle_group_id: ex.exercises?.muscle_group_id ?? null,
+                  pair_member: ex.pair_member || null,
                   sets: (ex.exercise_sets ?? []).map((set: any) => ({
                     id: set.id,
                     set_number: set.set_number,
@@ -564,6 +574,9 @@ export function useCurrentTvSession(
             ? {
                 id: trainee.id,
                 full_name: trainee.full_name,
+                isPair: trainee.is_pair || false,
+                pairName1: trainee.pair_name_1 || null,
+                pairName2: trainee.pair_name_2 || null,
               }
             : null,
           workout,
@@ -728,6 +741,7 @@ export function useCurrentTvSession(
             id: ex.id,
             name: ex.exercises?.name ?? 'תרגיל',
             muscle_group_id: ex.exercises?.muscle_group_id ?? null,
+            pair_member: ex.pair_member || null,
             sets: (ex.exercise_sets ?? []).map((set: any) => ({
               id: set.id,
               set_number: set.set_number,
