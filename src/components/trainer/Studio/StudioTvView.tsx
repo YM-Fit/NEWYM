@@ -384,8 +384,8 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   const isUnauthorized = !user || userType !== 'trainer';
 
   return (
-    <div 
-      className="h-screen w-screen overflow-hidden flex flex-col relative tv-view-container bg-emerald-50 dark:bg-gradient-dark"
+    <div
+      className="h-screen w-screen overflow-hidden flex flex-col relative tv-view-container bg-white dark:bg-gray-900"
     >
       {/* Enhanced Confetti animation */}
       {showConfetti && (
