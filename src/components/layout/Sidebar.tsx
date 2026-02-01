@@ -106,7 +106,7 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
           {isMinimized ? (
             // Minimized: Show logo only
             <Logo 
-              size="sm" 
+              size="md" 
               className="drop-shadow-[0_2px_8px_rgba(74,107,42,0.2)]"
               animated={true}
             />
@@ -115,7 +115,7 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
             <>
               <div className="flex items-center gap-3">
                 <Logo 
-                  size="sm" 
+                  size="md" 
                   className="drop-shadow-[0_2px_8px_rgba(74,107,42,0.2)]"
                   animated={true}
                 />

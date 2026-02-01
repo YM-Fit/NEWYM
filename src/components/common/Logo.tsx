@@ -14,17 +14,17 @@ interface LogoProps {
 }
 
 const sizeMap: Record<LogoSize, { width: string; height: string }> = {
-  sm: { width: '40px', height: '40px' },
-  md: { width: '56px', height: '56px' },
-  lg: { width: '72px', height: '72px' },
-  xl: { width: '96px', height: '96px' },
+  sm: { width: '56px', height: '56px' },
+  md: { width: '80px', height: '80px' },
+  lg: { width: '120px', height: '120px' },
+  xl: { width: '160px', height: '160px' },
 };
 
 const responsiveSizeMap: Record<LogoSize, { mobile: string; tablet: string; desktop: string }> = {
-  sm: { mobile: '32px', tablet: '40px', desktop: '48px' },
-  md: { mobile: '48px', tablet: '56px', desktop: '64px' },
-  lg: { mobile: '64px', tablet: '72px', desktop: '80px' },
-  xl: { mobile: '80px', tablet: '96px', desktop: '120px' },
+  sm: { mobile: '48px', tablet: '56px', desktop: '72px' },
+  md: { mobile: '64px', tablet: '80px', desktop: '100px' },
+  lg: { mobile: '96px', tablet: '120px', desktop: '150px' },
+  xl: { mobile: '120px', tablet: '160px', desktop: '200px' },
 };
 
 export default function Logo({
@@ -40,12 +40,15 @@ export default function Logo({
   const [imageLoaded, setImageLoaded] = useState(false);
 
   // Determine which logo to use based on theme
+  // Always use dark bg in dark mode, white bg in light mode
   const logoSrc = isDark 
     ? '/logo-dark-bg.png' 
     : '/logo-white-bg.jpg';
 
-  // Fallback to white bg if dark version fails
-  const fallbackSrc = '/logo-white-bg.jpg';
+  // Fallback - use opposite if current fails
+  const fallbackSrc = isDark 
+    ? '/logo-white-bg.jpg' 
+    : '/logo-dark-bg.png';
 
   useEffect(() => {
     setImageError(false);
@@ -73,6 +76,7 @@ export default function Logo({
     ${className}
   `.trim().replace(/\s+/g, ' ');
 
+
   const imageClasses = `
     transition-opacity duration-300
     ${imageLoaded ? 'opacity-100' : 'opacity-0'}
@@ -80,16 +84,19 @@ export default function Logo({
   `.trim().replace(/\s+/g, ' ');
 
   const containerStyle: React.CSSProperties = {
-    width: `clamp(${responsiveDimensions.mobile}, 4vw, ${responsiveDimensions.desktop})`,
-    height: `clamp(${responsiveDimensions.mobile}, 4vw, ${responsiveDimensions.desktop})`,
-    maxWidth: dimensions.width,
-    maxHeight: dimensions.height,
+    width: `clamp(${responsiveDimensions.mobile}, 6vw, ${responsiveDimensions.desktop})`,
+    height: `clamp(${responsiveDimensions.mobile}, 6vw, ${responsiveDimensions.desktop})`,
+    minWidth: dimensions.width,
+    minHeight: dimensions.height,
   };
 
   return (
     <div
       className={baseClasses}
-      style={containerStyle}
+      style={{
+        ...containerStyle,
+        backgroundColor: 'transparent',
+      }}
       onClick={onClick}
       role={onClick ? 'button' : 'img'}
       aria-label="FITNESS NUTRITION Logo"
@@ -111,21 +118,32 @@ export default function Logo({
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-700/20 to-emerald-800/20 rounded-xl animate-pulse" />
       )}
 
-      {/* Logo image */}
-      <img
-        src={imageError ? fallbackSrc : logoSrc}
-        alt="FITNESS NUTRITION - YM Coach Logo"
-        className={imageClasses}
+      {/* Logo image with background blending */}
+      <div 
+        className="relative w-full h-full"
         style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
+          backgroundColor: isDark ? 'rgba(26, 46, 22, 0.95)' : 'transparent',
+          borderRadius: '8px',
+          padding: isDark && logoSrc.includes('white') ? '2px' : '0',
         }}
-        onError={handleImageError}
-        onLoad={handleImageLoad}
-        loading="lazy"
-        decoding="async"
-      />
+      >
+        <img
+          src={imageError ? fallbackSrc : logoSrc}
+          alt="FITNESS NUTRITION - YM Coach Logo"
+          className={imageClasses}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            objectPosition: 'center',
+            display: 'block',
+          }}
+          onError={handleImageError}
+          onLoad={handleImageLoad}
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
 
       {/* Fallback text if image fails */}
       {imageError && (

@@ -32,9 +32,9 @@ export default function Header({ onLogout, trainerName, onNavigateToTrainee, onT
           )}
           <div className="flex items-center gap-3">
             <div className="relative group">
-              <div className="p-1.5 sm:p-2 rounded-xl transition-all duration-300 group-hover:scale-105">
+              <div className="rounded-xl transition-all duration-300 group-hover:scale-105">
                 <Logo 
-                  size="sm" 
+                  size="md" 
                   className="drop-shadow-[0_2px_8px_rgba(74,107,42,0.2)] group-hover:drop-shadow-[0_4px_16px_rgba(74,107,42,0.4)] transition-all duration-300" 
                   animated={true}
                 />

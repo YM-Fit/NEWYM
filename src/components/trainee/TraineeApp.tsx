@@ -85,7 +85,7 @@ export default function TraineeApp() {
         <div className="mx-auto max-w-5xl flex justify-between items-center gap-3">
           <div className="flex items-center gap-3">
             <Logo 
-              size="sm" 
+              size="md" 
               className="drop-shadow-[0_2px_8px_rgba(74,107,42,0.2)]"
               animated={true}
             />
