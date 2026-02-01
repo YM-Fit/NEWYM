@@ -561,12 +561,16 @@ export async function calculateMonthlyPositionsFromDb(
     });
 
     // Helper function to calculate historical position for an event
-    // Uses the original date string from database for accurate comparison
+    // Normalizes dates for comparison to avoid format issues
     const calculateHistoricalPosition = (traineeId: string, workoutDateStr: string): number => {
       const historicalDates = traineeHistoricalDates.get(traineeId) || [];
+      if (historicalDates.length === 0) return 0;
+
+      // Normalize the workout date for comparison (convert to timestamp)
+      const workoutTime = new Date(workoutDateStr).getTime();
+
       // Count how many workouts happened on or before this date
-      // Both historicalDates and workoutDateStr are in the same format from DB
-      return historicalDates.filter(d => d <= workoutDateStr).length;
+      return historicalDates.filter(d => new Date(d).getTime() <= workoutTime).length;
     };
 
     // Now process each event and find its position
