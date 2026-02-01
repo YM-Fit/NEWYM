@@ -294,7 +294,7 @@ export function formatTraineeNameWithSession(
 
 /**
  * Format trainee name with event position for display
- * This shows the historical position of the workout (e.g., "אריאל 45" - 45th workout ever)
+ * This shows the monthly position of the workout (e.g., "אריאל 3/8" - 3rd workout out of 8 this month)
  */
 export function formatTraineeNameWithPosition(
   traineeName: string,
@@ -306,9 +306,11 @@ export function formatTraineeNameWithPosition(
     return formatTraineeNameWithSession(traineeName, sessionInfo);
   }
 
-  // Use historical position if available, otherwise fall back to monthly position
-  const displayPosition = positionInfo.historicalPosition || positionInfo.position;
-  const sessionText = `${displayPosition}`;
+  // Show monthly position/total format (e.g., "3/8")
+  const totalInMonth = positionInfo.totalInMonth;
+  const sessionText = totalInMonth > 1
+    ? `${positionInfo.position}/${totalInMonth}`
+    : `${positionInfo.position}`;
 
   return {
     displayName: `${traineeName} ${sessionText}`,
@@ -616,8 +618,8 @@ export async function calculateMonthlyPositionsFromDb(
       }
 
       const traineeWorkoutList = traineeWorkouts.get(traineeId) || [];
-      // Use displayed events count as primary, fall back to DB count
-      const monthlyTotal = Math.max(displayedTotal, 1);
+      // Use database count for accurate monthly total
+      const monthlyTotal = traineeWorkoutList.length > 0 ? traineeWorkoutList.length : Math.max(displayedTotal, 1);
 
       // Find position by matching google event ID or date in database
       let position = -1;
