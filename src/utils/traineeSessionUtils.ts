@@ -573,14 +573,37 @@ export async function calculateMonthlyPositionsFromDb(
       return historicalDates.filter(d => new Date(d).getTime() <= workoutTime).length;
     };
 
+    // Build a map of google_event_id to workout info for direct lookup
+    const googleEventIdToWorkout = new Map<string, { traineeId: string; dateStr: string }>();
+    workouts.forEach(workout => {
+      const googleEventId = (workout as any).google_event_id;
+      if (googleEventId) {
+        const traineeLink = (links || []).find(l => l.workout_id === (workout as any).id);
+        if (traineeLink) {
+          googleEventIdToWorkout.set(googleEventId, {
+            traineeId: traineeLink.trainee_id,
+            dateStr: (workout as any).workout_date,
+          });
+        }
+      }
+    });
+
     // Now process each event and find its position
     events.forEach(event => {
-      const traineeId = traineeNameToId.get(event.traineeName);
       const displayedEventsForTrainee = displayedEventsByTrainee.get(event.traineeName) || [];
       const displayedTotal = displayedEventsForTrainee.length;
 
+      // First try to find trainee by google event ID (most reliable)
+      let traineeId = googleEventIdToWorkout.get(event.id)?.traineeId || null;
+      let matchedWorkoutDateStr = googleEventIdToWorkout.get(event.id)?.dateStr || null;
+
+      // Fallback to name matching if no google event ID match
       if (!traineeId) {
-        // No trainee match, use displayed events for position
+        traineeId = traineeNameToId.get(event.traineeName) || null;
+      }
+
+      if (!traineeId) {
+        // No trainee match at all, use displayed events for position
         const position = displayedEventsForTrainee.findIndex(e => e.id === event.id) + 1;
 
         result.set(event.id, {
@@ -594,20 +617,25 @@ export async function calculateMonthlyPositionsFromDb(
 
       const traineeWorkoutList = traineeWorkouts.get(traineeId) || [];
       // Use displayed events count as primary, fall back to DB count
-      // This ensures correct total after deletions even if DB sync is delayed
       const monthlyTotal = Math.max(displayedTotal, 1);
 
       // Find position by matching google event ID or date in database
       let position = -1;
-      let matchedWorkoutDateStr: string | null = null;
 
       // First try to match by Google event ID in database workouts
-      const matchByGoogleId = traineeWorkoutList.findIndex(w => w.googleEventId === event.id);
-      if (matchByGoogleId >= 0) {
-        position = matchByGoogleId + 1;
-        matchedWorkoutDateStr = traineeWorkoutList[matchByGoogleId].dateStr;
+      if (!matchedWorkoutDateStr) {
+        const matchByGoogleId = traineeWorkoutList.findIndex(w => w.googleEventId === event.id);
+        if (matchByGoogleId >= 0) {
+          position = matchByGoogleId + 1;
+          matchedWorkoutDateStr = traineeWorkoutList[matchByGoogleId].dateStr;
+        }
       } else {
-        // Match by date (find closest date match)
+        // Already have the date from googleEventIdToWorkout lookup
+        position = traineeWorkoutList.findIndex(w => w.dateStr === matchedWorkoutDateStr) + 1;
+      }
+
+      // If still no match, try matching by date
+      if (position <= 0) {
         const eventTime = event.startDate.getTime();
         let closestIndex = -1;
         let closestDiff = Infinity;
