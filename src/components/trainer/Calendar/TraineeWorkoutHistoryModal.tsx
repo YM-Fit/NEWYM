@@ -163,56 +163,83 @@ export default function TraineeWorkoutHistoryModal({
       const startOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
       const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0, 23, 59, 59);
 
-      // Get all workouts for this month
-      const { data: workoutsData, error: workoutsError } = await supabase
-        .from('workouts')
-        .select(`
-          id,
-          workout_date,
-          google_event_id
-        `)
-        .eq('trainer_id', user.id)
-        .gte('workout_date', startOfMonth.toISOString())
-        .lte('workout_date', endOfMonth.toISOString())
-        .order('workout_date', { ascending: true });
+      // Get all workouts for this month AND all historical workouts for numbering
+      const [monthWorkoutsResult, allWorkoutsResult] = await Promise.all([
+        // Workouts for this month
+        supabase
+          .from('workouts')
+          .select('id, workout_date, google_event_id')
+          .eq('trainer_id', user.id)
+          .gte('workout_date', startOfMonth.toISOString())
+          .lte('workout_date', endOfMonth.toISOString())
+          .order('workout_date', { ascending: true }),
+        // All historical workouts for this trainer (for numbering)
+        supabase
+          .from('workouts')
+          .select('id, workout_date')
+          .eq('trainer_id', user.id)
+          .lte('workout_date', endOfMonth.toISOString())
+          .order('workout_date', { ascending: true })
+      ]);
 
-      if (workoutsError) {
-        logger.error('Error loading workouts', workoutsError, 'TraineeWorkoutHistoryModal');
+      if (monthWorkoutsResult.error) {
+        logger.error('Error loading workouts', monthWorkoutsResult.error, 'TraineeWorkoutHistoryModal');
         toast.error('שגיאה בטעינת אימונים');
         return;
       }
+
+      const workoutsData = monthWorkoutsResult.data;
+      const allWorkoutsData = allWorkoutsResult.data || [];
 
       if (!workoutsData || workoutsData.length === 0) {
         setWorkouts([]);
         return;
       }
 
-      // Get workout-trainee links for this trainee
-      const workoutIds = workoutsData.map(w => w.id);
-      const { data: links, error: linksError } = await supabase
-        .from('workout_trainees')
-        .select('workout_id')
-        .eq('trainee_id', resolvedTraineeId)
-        .in('workout_id', workoutIds);
+      // Get workout-trainee links for this trainee (for both month and all historical)
+      const monthWorkoutIds = workoutsData.map(w => w.id);
+      const allWorkoutIds = allWorkoutsData.map(w => w.id);
 
-      if (linksError) {
-        logger.error('Error loading workout links', linksError, 'TraineeWorkoutHistoryModal');
+      const [monthLinksResult, allLinksResult] = await Promise.all([
+        supabase
+          .from('workout_trainees')
+          .select('workout_id')
+          .eq('trainee_id', resolvedTraineeId)
+          .in('workout_id', monthWorkoutIds),
+        supabase
+          .from('workout_trainees')
+          .select('workout_id')
+          .eq('trainee_id', resolvedTraineeId)
+          .in('workout_id', allWorkoutIds)
+      ]);
+
+      if (monthLinksResult.error) {
+        logger.error('Error loading workout links', monthLinksResult.error, 'TraineeWorkoutHistoryModal');
       }
 
-      const traineeWorkoutIds = new Set((links || []).map(l => l.workout_id));
-      
-      // Filter and map workouts
+      const traineeMonthWorkoutIds = new Set((monthLinksResult.data || []).map(l => l.workout_id));
+      const traineeAllWorkoutIds = new Set((allLinksResult.data || []).map(l => l.workout_id));
+
+      // Build historical dates list for this trainee (sorted)
+      const allHistoricalDates = allWorkoutsData
+        .filter(w => traineeAllWorkoutIds.has(w.id))
+        .map(w => w.workout_date)
+        .sort();
+
+      // Filter and map workouts for this month with historical numbering
       const traineeWorkouts = workoutsData
-        .filter(w => traineeWorkoutIds.has(w.id))
-        .map((w, index) => {
+        .filter(w => traineeMonthWorkoutIds.has(w.id))
+        .map((w) => {
           const date = new Date(w.workout_date);
+          // Calculate historical workout number (position in all-time history)
+          const workoutNumber = allHistoricalDates.filter(d => d <= w.workout_date).length;
           return {
             id: w.id,
             googleEventId: w.google_event_id || '',
             workoutDate: w.workout_date,
             startTime: date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
             endTime: new Date(date.getTime() + 60 * 60 * 1000).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-            workoutNumber: index + 1,
+            workoutNumber,
           };
         });
 
