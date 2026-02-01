@@ -75,6 +75,7 @@ export interface EventPositionInfo {
   position: number;        // Sequential position (1, 2, 3...) within month
   totalInMonth: number;    // Total workouts this month for the trainee
   traineeName: string;
+  historicalPosition?: number;  // Position in all-time history (1, 2, 3... since first workout)
 }
 
 /**
@@ -293,7 +294,7 @@ export function formatTraineeNameWithSession(
 
 /**
  * Format trainee name with event position for display
- * This shows the sequential position of the workout in the month (e.g., "אריאל 3/8")
+ * This shows the historical position of the workout (e.g., "אריאל 45" - 45th workout ever)
  */
 export function formatTraineeNameWithPosition(
   traineeName: string,
@@ -305,12 +306,10 @@ export function formatTraineeNameWithPosition(
     return formatTraineeNameWithSession(traineeName, sessionInfo);
   }
 
-  // Show position/total format for monthly workout count (e.g., "3/8")
-  const totalInMonth = positionInfo.totalInMonth;
-  const sessionText = totalInMonth > 1 
-    ? `${positionInfo.position}/${totalInMonth}`
-    : `${positionInfo.position}`;
-  
+  // Use historical position if available, otherwise fall back to monthly position
+  const displayPosition = positionInfo.historicalPosition || positionInfo.position;
+  const sessionText = `${displayPosition}`;
+
   return {
     displayName: `${traineeName} ${sessionText}`,
     sessionText,
@@ -431,44 +430,90 @@ export async function calculateMonthlyPositionsFromDb(
       }
     });
     
-    // Get all workouts for this month
-    const { data: workouts, error: workoutsError } = await supabase
-      .from('workouts')
-      .select('id, workout_date, google_event_id')
-      .eq('trainer_id', trainerId)
-      .gte('workout_date', startOfMonth.toISOString())
-      .lte('workout_date', endOfMonth.toISOString())
-      .order('workout_date', { ascending: true });
-    
-    if (workoutsError || !workouts) {
-      logger.error('Error fetching workouts for monthly positions', workoutsError, 'traineeSessionUtils');
+    // Get all workouts for this month AND all historical workouts (for historical numbering)
+    const [monthWorkoutsResult, allWorkoutsResult] = await Promise.all([
+      // Workouts for this month
+      supabase
+        .from('workouts')
+        .select('id, workout_date, google_event_id')
+        .eq('trainer_id', trainerId)
+        .gte('workout_date', startOfMonth.toISOString())
+        .lte('workout_date', endOfMonth.toISOString())
+        .order('workout_date', { ascending: true }),
+      // All historical workouts (for calculating historical position)
+      supabase
+        .from('workouts')
+        .select('id, workout_date')
+        .eq('trainer_id', trainerId)
+        .lte('workout_date', endOfMonth.toISOString())
+        .order('workout_date', { ascending: true })
+    ]);
+
+    const workouts = monthWorkoutsResult.data;
+    const allWorkouts = allWorkoutsResult.data || [];
+
+    if (monthWorkoutsResult.error || !workouts) {
+      logger.error('Error fetching workouts for monthly positions', monthWorkoutsResult.error, 'traineeSessionUtils');
       return calculateEventPositions(events) as Map<string, MonthlyPositionInfo>;
     }
-    
+
     if (workouts.length === 0) {
       // No workouts in DB, use events as is
       return calculateEventPositions(events) as Map<string, MonthlyPositionInfo>;
     }
-    
-    // Get workout-trainee links
+
+    // Get workout-trainee links for both month and all historical
     const workoutIds = workouts.map(w => (w as any).id);
+    const allWorkoutIds = allWorkouts.map(w => (w as any).id);
     const traineeIds = [...new Set(Array.from(traineeNameToId.values()))];
     
-    const { data: links, error: linksError } = await batchQuery(
-      async (ids) => supabase
-        .from('workout_trainees')
-        .select('workout_id, trainee_id')
-        .in('workout_id', ids),
-      workoutIds
-    );
-    
-    if (linksError) {
-      logger.error('Error fetching workout links for monthly positions', linksError, 'traineeSessionUtils');
+    // Get links for both month workouts and all historical workouts
+    const [monthLinksResult, allLinksResult] = await Promise.all([
+      batchQuery(
+        async (ids) => supabase
+          .from('workout_trainees')
+          .select('workout_id, trainee_id')
+          .in('workout_id', ids),
+        workoutIds
+      ),
+      allWorkoutIds.length > 0
+        ? batchQuery(
+            async (ids) => supabase
+              .from('workout_trainees')
+              .select('workout_id, trainee_id')
+              .in('workout_id', ids),
+            allWorkoutIds
+          )
+        : Promise.resolve({ data: [], error: null })
+    ]);
+
+    const links = monthLinksResult.data;
+    const allLinks = allLinksResult.data || [];
+
+    if (monthLinksResult.error) {
+      logger.error('Error fetching workout links for monthly positions', monthLinksResult.error, 'traineeSessionUtils');
     }
-    
-    // Create a map of trainee ID to their workouts (sorted by date)
+
+    // Build historical dates per trainee (for calculating historical position)
+    const allWorkoutDateMap = new Map(allWorkouts.map(w => [(w as any).id, (w as any).workout_date]));
+    const traineeHistoricalDates = new Map<string, string[]>();
+    allLinks.forEach(link => {
+      if (!traineeHistoricalDates.has(link.trainee_id)) {
+        traineeHistoricalDates.set(link.trainee_id, []);
+      }
+      const date = allWorkoutDateMap.get(link.workout_id);
+      if (date) {
+        traineeHistoricalDates.get(link.trainee_id)!.push(date);
+      }
+    });
+    // Sort historical dates for each trainee
+    traineeHistoricalDates.forEach((dates) => {
+      dates.sort();
+    });
+
+    // Create a map of trainee ID to their workouts in this month (sorted by date)
     const traineeWorkouts = new Map<string, Array<{ workoutId: string; date: Date; googleEventId: string | null }>>();
-    
+
     workouts.forEach(workout => {
       const traineeLink = (links || []).find(l => l.workout_id === (workout as any).id);
       if (traineeLink) {
@@ -481,7 +526,7 @@ export async function calculateMonthlyPositionsFromDb(
         traineeWorkouts.set(traineeLink.trainee_id, existing);
       }
     });
-    
+
     // Sort each trainee's workouts by date
     traineeWorkouts.forEach((workoutList) => {
       workoutList.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -514,6 +559,14 @@ export async function calculateMonthlyPositionsFromDb(
       eventList.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
     });
 
+    // Helper function to calculate historical position for an event
+    const calculateHistoricalPosition = (traineeId: string, workoutDate: Date): number => {
+      const historicalDates = traineeHistoricalDates.get(traineeId) || [];
+      const workoutDateStr = workoutDate.toISOString();
+      // Count how many workouts happened on or before this date
+      return historicalDates.filter(d => d <= workoutDateStr).length;
+    };
+
     // Now process each event and find its position
     events.forEach(event => {
       const traineeId = traineeNameToId.get(event.traineeName);
@@ -537,14 +590,16 @@ export async function calculateMonthlyPositionsFromDb(
       // Use displayed events count as primary, fall back to DB count
       // This ensures correct total after deletions even if DB sync is delayed
       const monthlyTotal = Math.max(displayedTotal, 1);
-      
+
       // Find position by matching google event ID or date in database
       let position = -1;
+      let matchedWorkoutDate: Date | null = null;
 
       // First try to match by Google event ID in database workouts
       const matchByGoogleId = traineeWorkoutList.findIndex(w => w.googleEventId === event.id);
       if (matchByGoogleId >= 0) {
         position = matchByGoogleId + 1;
+        matchedWorkoutDate = traineeWorkoutList[matchByGoogleId].date;
       } else {
         // Match by date (find closest date match)
         const eventTime = event.startDate.getTime();
@@ -562,6 +617,7 @@ export async function calculateMonthlyPositionsFromDb(
 
         if (closestIndex >= 0) {
           position = closestIndex + 1;
+          matchedWorkoutDate = traineeWorkoutList[closestIndex].date;
         }
       }
 
@@ -572,11 +628,18 @@ export async function calculateMonthlyPositionsFromDb(
         position = displayedPosition > 0 ? displayedPosition : 1;
       }
 
+      // Calculate historical position (all-time position since first workout)
+      const historicalPosition = calculateHistoricalPosition(
+        traineeId,
+        matchedWorkoutDate || event.startDate
+      );
+
       result.set(event.id, {
         position,
         totalInMonth: monthlyTotal,
         traineeName: event.traineeName,
         monthlyTotalFromDb: traineeWorkoutList.length,
+        historicalPosition: historicalPosition > 0 ? historicalPosition : undefined,
       });
     });
     
