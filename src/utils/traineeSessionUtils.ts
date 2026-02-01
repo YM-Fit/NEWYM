@@ -512,7 +512,7 @@ export async function calculateMonthlyPositionsFromDb(
     });
 
     // Create a map of trainee ID to their workouts in this month (sorted by date)
-    const traineeWorkouts = new Map<string, Array<{ workoutId: string; date: Date; googleEventId: string | null }>>();
+    const traineeWorkouts = new Map<string, Array<{ workoutId: string; date: Date; dateStr: string; googleEventId: string | null }>>();
 
     workouts.forEach(workout => {
       const traineeLink = (links || []).find(l => l.workout_id === (workout as any).id);
@@ -521,6 +521,7 @@ export async function calculateMonthlyPositionsFromDb(
         existing.push({
           workoutId: (workout as any).id,
           date: new Date((workout as any).workout_date),
+          dateStr: (workout as any).workout_date, // Keep original string for comparison
           googleEventId: (workout as any).google_event_id,
         });
         traineeWorkouts.set(traineeLink.trainee_id, existing);
@@ -560,10 +561,11 @@ export async function calculateMonthlyPositionsFromDb(
     });
 
     // Helper function to calculate historical position for an event
-    const calculateHistoricalPosition = (traineeId: string, workoutDate: Date): number => {
+    // Uses the original date string from database for accurate comparison
+    const calculateHistoricalPosition = (traineeId: string, workoutDateStr: string): number => {
       const historicalDates = traineeHistoricalDates.get(traineeId) || [];
-      const workoutDateStr = workoutDate.toISOString();
       // Count how many workouts happened on or before this date
+      // Both historicalDates and workoutDateStr are in the same format from DB
       return historicalDates.filter(d => d <= workoutDateStr).length;
     };
 
@@ -593,13 +595,13 @@ export async function calculateMonthlyPositionsFromDb(
 
       // Find position by matching google event ID or date in database
       let position = -1;
-      let matchedWorkoutDate: Date | null = null;
+      let matchedWorkoutDateStr: string | null = null;
 
       // First try to match by Google event ID in database workouts
       const matchByGoogleId = traineeWorkoutList.findIndex(w => w.googleEventId === event.id);
       if (matchByGoogleId >= 0) {
         position = matchByGoogleId + 1;
-        matchedWorkoutDate = traineeWorkoutList[matchByGoogleId].date;
+        matchedWorkoutDateStr = traineeWorkoutList[matchByGoogleId].dateStr;
       } else {
         // Match by date (find closest date match)
         const eventTime = event.startDate.getTime();
@@ -617,7 +619,7 @@ export async function calculateMonthlyPositionsFromDb(
 
         if (closestIndex >= 0) {
           position = closestIndex + 1;
-          matchedWorkoutDate = traineeWorkoutList[closestIndex].date;
+          matchedWorkoutDateStr = traineeWorkoutList[closestIndex].dateStr;
         }
       }
 
@@ -629,9 +631,10 @@ export async function calculateMonthlyPositionsFromDb(
       }
 
       // Calculate historical position (all-time position since first workout)
+      // Use matched workout date string, or convert event date to ISO string as fallback
       const historicalPosition = calculateHistoricalPosition(
         traineeId,
-        matchedWorkoutDate || event.startDate
+        matchedWorkoutDateStr || event.startDate.toISOString()
       );
 
       result.set(event.id, {
