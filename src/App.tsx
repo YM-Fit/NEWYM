@@ -1,7 +1,7 @@
 import { useState, Suspense, lazy, useEffect, useRef } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ComponentErrorBoundary from './components/common/ComponentErrorBoundary';
 import LoginForm from './components/auth/LoginForm';
@@ -139,6 +139,7 @@ function TvTestPage() {
 
 function AppContent() {
   const { user, loading, userType } = useAuth();
+  const { isDark } = useTheme();
   const [forceShowLogin, setForceShowLogin] = useState(false);
 
   // Debug logging - use ref to avoid unnecessary re-renders
@@ -213,12 +214,20 @@ function AppContent() {
 
   // Show login immediately if forced or if loading for too long
   if (loading && !forceShowLogin) {
+    const bgGradient = isDark 
+      ? 'linear-gradient(to bottom right, #09090b, #18181b)'
+      : 'linear-gradient(to bottom right, #f0f5ed, #ffffff, #e8f0e0)';
+    const textColor = isDark ? '#ffffff' : '#1a2e16';
+    const spinnerBorderColor = isDark ? 'rgba(16, 185, 129, 0.3)' : 'rgba(74, 107, 42, 0.3)';
+    const spinnerTopColor = isDark ? '#10b981' : '#4a6b2a';
+    const glowColor = isDark ? 'rgba(16, 185, 129, 0.2)' : 'rgba(74, 107, 42, 0.2)';
+    
     return (
       <div 
-        className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center"
+        className="min-h-screen flex items-center justify-center"
         style={{
           minHeight: '100vh',
-          background: 'linear-gradient(to bottom right, #09090b, #18181b)',
+          background: bgGradient,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -237,35 +246,35 @@ function AppContent() {
             style={{ position: 'relative', display: 'inline-block' }}
           >
             <div 
-              className="absolute inset-0 bg-emerald-700/20 rounded-full blur-xl animate-pulse-soft"
+              className="absolute inset-0 rounded-full blur-xl animate-pulse-soft"
               style={{
                 position: 'absolute',
                 inset: 0,
-                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                backgroundColor: glowColor,
                 borderRadius: '50%',
                 filter: 'blur(20px)',
               }}
             />
             <div 
-              className="relative inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-700/30 border-t-emerald-600"
+              className="relative inline-block animate-spin rounded-full h-12 w-12 border-4 border-t"
               style={{
                 position: 'relative',
                 display: 'inline-block',
                 width: '3rem',
                 height: '3rem',
-                border: '4px solid rgba(16, 185, 129, 0.3)',
-                borderTopColor: '#10b981',
+                border: `4px solid ${spinnerBorderColor}`,
+                borderTopColor: spinnerTopColor,
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite',
               }}
             />
           </div>
           <p 
-            className="mt-6 text-emerald-900 dark:text-muted font-medium animate-fade-in-up" 
+            className="mt-6 font-medium animate-fade-in-up" 
             style={{ 
               animationDelay: '0.2s',
               marginTop: '1.5rem',
-              color: '#ffffff',
+              color: textColor,
               fontSize: '1.125rem',
               fontWeight: 500,
             }}
@@ -273,11 +282,12 @@ function AppContent() {
             טוען...
           </p>
           <p 
-            className="mt-4 text-sm text-emerald-800/70 dark:text-muted/70 animate-fade-in-up" 
+            className="mt-4 text-sm animate-fade-in-up" 
             style={{ 
               animationDelay: '0.4s',
               marginTop: '1rem',
-              color: '#a1a1aa',
+              color: textColor,
+              opacity: 0.5,
               fontSize: '0.875rem',
             }}
           >

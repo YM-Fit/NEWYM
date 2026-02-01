@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Activity, User, Dumbbell, Eye, EyeOff, ArrowRight, AlertTriangle, Mail, Phone, Lock, Star } from 'lucide-react';
+import { User, Dumbbell, Eye, EyeOff, ArrowRight, AlertTriangle, Mail, Phone, Lock, Star } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { checkRateLimit, recordFailedAttempt, clearRateLimit, getRateLimitMessage } from '../../utils/rateLimit';
+import Logo from '../common/Logo';
 
 interface LoginFormProps {
   onToggleMode: () => void;
@@ -140,30 +141,32 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
           >
             {/* Logo with enhanced effects */}
             <div 
-              className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 mb-6 shadow-2xl shadow-emerald-500/30 animate-float-slow relative overflow-hidden group"
+              className="inline-flex items-center justify-center mb-6 animate-float-slow relative"
               style={{
-                width: '6rem',
-                height: '6rem',
-                borderRadius: '1rem',
-                backgroundColor: '#10b981',
                 marginBottom: '1.5rem',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              {/* Animated background gradient */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-white/10 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-emerald-400/20 to-emerald-300/30 animate-gradient-x" />
+              {/* Glow effect behind logo */}
+              <div className="absolute inset-0 bg-emerald-400/20 blur-2xl animate-pulse-soft -z-10" style={{
+                width: '120%',
+                height: '120%',
+                top: '-10%',
+                left: '-10%',
+              }} />
               
-              {/* Icon */}
-              <Activity className="w-12 h-12 text-inverse relative z-10 drop-shadow-lg transition-transform group-hover:scale-110" />
-              
-              {/* Glow effect */}
-              <div className="absolute inset-0 bg-emerald-400/40 blur-2xl animate-pulse-soft" />
+              {/* Logo component */}
+              <Logo 
+                size="lg" 
+                className="drop-shadow-[0_4px_20px_rgba(74,107,42,0.3)] hover:drop-shadow-[0_6px_30px_rgba(74,107,42,0.5)] transition-all duration-300"
+                animated={true}
+              />
               
               {/* Sparkle effects */}
-              <Star className="absolute top-2 right-2 w-4 h-4 text-inverse/60 animate-pulse fill-white/40" style={{ animationDelay: '0.5s' }} />
+              <Star className="absolute top-2 right-2 w-4 h-4 text-emerald-400/60 animate-pulse fill-emerald-400/40" style={{ animationDelay: '0.5s' }} />
+              <Star className="absolute bottom-2 left-2 w-3 h-3 text-emerald-300/50 animate-pulse fill-emerald-300/30" style={{ animationDelay: '1s' }} />
             </div>
             
             {/* Title */}

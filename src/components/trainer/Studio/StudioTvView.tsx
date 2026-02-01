@@ -409,7 +409,8 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
   return (
     <div
-      className="h-screen w-screen overflow-hidden flex flex-col relative tv-view-container bg-white dark:bg-gray-900"
+      className="overflow-hidden flex flex-col relative tv-view-container bg-white dark:bg-gray-900"
+      style={{ width: '100vw', height: '100vh' }}
     >
       {/* Enhanced Confetti animation */}
       {showConfetti && (
@@ -452,28 +453,28 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
             }}></div>
           </div>
 
-          <div className="relative z-10 text-center max-w-4xl mx-auto px-8">
+          <div className="relative z-10 text-center max-w-5xl mx-auto px-12">
             {/* Logo/Avatar */}
-            <div className="mb-8 flex justify-center">
+            <div className="mb-12 flex justify-center">
               {isPairWorkout ? (
-                <div className="flex items-center gap-4">
-                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center shadow-2xl shadow-cyan-500/30 animate-[scale-in_0.5s_ease-out]">
-                    <span className="text-4xl font-black text-white">1</span>
+                <div className="flex items-center gap-6">
+                  <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center shadow-2xl shadow-cyan-500/30 animate-[scale-in_0.5s_ease-out]">
+                    <span className="text-5xl font-black text-white">1</span>
                   </div>
-                  <div className="text-4xl text-white/50">+</div>
-                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-500/30 animate-[scale-in_0.5s_ease-out_0.1s_both]">
-                    <span className="text-4xl font-black text-white">2</span>
+                  <div className="text-5xl text-white/50">+</div>
+                  <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-500/30 animate-[scale-in_0.5s_ease-out_0.1s_both]">
+                    <span className="text-5xl font-black text-white">2</span>
                   </div>
                 </div>
               ) : (
-                <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-500/30 animate-[scale-in_0.5s_ease-out]">
-                  <span className="text-5xl font-black text-white">{initials || '👋'}</span>
+                <div className="w-36 h-36 rounded-3xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-500/30 animate-[scale-in_0.5s_ease-out]">
+                  <span className="text-6xl font-black text-white">{initials || '👋'}</span>
                 </div>
               )}
             </div>
 
             {/* Welcome Text */}
-            <h1 className="text-5xl font-black text-white mb-3 animate-[fade-in-up_0.5s_ease-out_0.2s_both]">
+            <h1 className="text-7xl font-black text-white mb-4 animate-[fade-in-up_0.5s_ease-out_0.2s_both]">
               {isPairWorkout ? (
                 <>ברוכים הבאים!</>
               ) : (
@@ -482,42 +483,42 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
             </h1>
 
             {isPairWorkout && (
-              <p className="text-2xl text-emerald-400 font-semibold mb-6 animate-[fade-in-up_0.5s_ease-out_0.3s_both]">
+              <p className="text-3xl text-emerald-400 font-semibold mb-8 animate-[fade-in-up_0.5s_ease-out_0.3s_both]">
                 {pairName1} + {pairName2}
               </p>
             )}
 
             {/* Last Workout Summary - Compact */}
             {lastWorkout && (
-              <div className="mt-8 animate-[fade-in-up_0.5s_ease-out_0.4s_both]">
-                <p className="text-gray-400 text-lg mb-4">האימון האחרון שלך:</p>
-                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-                  <div className="flex items-center justify-center gap-8 text-white">
+              <div className="mt-10 animate-[fade-in-up_0.5s_ease-out_0.4s_both]">
+                <p className="text-gray-400 text-xl mb-6">האימון האחרון שלך:</p>
+                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
+                  <div className="flex items-center justify-center gap-12 text-white">
                     <div className="text-center">
-                      <div className="text-3xl font-black text-emerald-400">
+                      <div className="text-4xl font-black text-emerald-400">
                         {lastWorkout.workout_exercises?.length || 0}
                       </div>
-                      <div className="text-sm text-gray-400">תרגילים</div>
+                      <div className="text-base text-gray-400">תרגילים</div>
                     </div>
-                    <div className="w-px h-12 bg-white/20"></div>
+                    <div className="w-px h-16 bg-white/20"></div>
                     <div className="text-center">
-                      <div className="text-3xl font-black text-emerald-400">
+                      <div className="text-4xl font-black text-emerald-400">
                         {lastWorkout.workout_exercises?.reduce((sum: number, we: any) =>
                           sum + (we.exercise_sets?.length || 0), 0) || 0}
                       </div>
-                      <div className="text-sm text-gray-400">סטים</div>
+                      <div className="text-base text-gray-400">סטים</div>
                     </div>
-                    <div className="w-px h-12 bg-white/20"></div>
+                    <div className="w-px h-16 bg-white/20"></div>
                     <div className="text-center">
-                      <div className="text-3xl font-black text-emerald-400">
+                      <div className="text-4xl font-black text-emerald-400">
                         {Math.round(lastWorkout.workout_exercises?.reduce((sum: number, we: any) =>
                           sum + (we.exercise_sets?.reduce((setSum: number, set: any) =>
                             setSum + ((set.weight || 0) * (set.reps || 0)), 0) || 0), 0) || 0).toLocaleString()}
                       </div>
-                      <div className="text-sm text-gray-400">ק״ג נפח</div>
+                      <div className="text-base text-gray-400">ק״ג נפח</div>
                     </div>
                   </div>
-                  <div className="mt-4 text-gray-500 text-sm">
+                  <div className="mt-6 text-gray-500 text-base">
                     {new Date(lastWorkout.workout_date).toLocaleDateString('he-IL', {
                       weekday: 'long',
                       day: 'numeric',
@@ -529,10 +530,10 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
             )}
 
             {/* Continue Hint */}
-            <div className="mt-10 animate-[fade-in-up_0.5s_ease-out_0.5s_both]">
-              <div className="inline-flex items-center gap-2 text-gray-500 text-lg">
+            <div className="mt-12 animate-[fade-in-up_0.5s_ease-out_0.5s_both]">
+              <div className="inline-flex items-center gap-3 text-gray-500 text-xl">
                 <span>לחץ להתחלה</span>
-                <span className="animate-pulse">→</span>
+                <span className="animate-pulse text-2xl">→</span>
               </div>
             </div>
           </div>
@@ -609,41 +610,41 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
               {session?.workout && ((session.workout.exercises && session.workout.exercises.length > 0) || completedExercisesData.length > 0) ? (
                 <div className="h-full w-full flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
                   {/* Header - Larger for TV */}
-                  <div className="flex items-center justify-between px-6 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+                  <div className="flex items-center justify-between px-10 py-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
                     {/* Left: Trainee Info */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-6">
                       {isPairWorkout ? (
                         <>
                           {/* Pair workout - show both names */}
-                          <div className="flex items-center gap-2">
-                            <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-cyan-500 to-cyan-600 shadow-lg">
-                              <span className="text-lg font-black text-white">1</span>
+                          <div className="flex items-center gap-3">
+                            <div className="h-16 w-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-cyan-500 to-cyan-600 shadow-lg">
+                              <span className="text-2xl font-black text-white">1</span>
                             </div>
-                            <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg">
-                              <span className="text-lg font-black text-white">2</span>
+                            <div className="h-16 w-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg">
+                              <span className="text-2xl font-black text-white">2</span>
                             </div>
                           </div>
                           <div>
-                            <div className="text-xl font-black text-gray-900 dark:text-white">
+                            <div className="text-3xl font-black text-gray-900 dark:text-white">
                               {pairName1} + {pairName2}
                             </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                            <div className="text-base text-gray-500 dark:text-gray-400">
                               אימון זוגי
                             </div>
                           </div>
                         </>
                       ) : (
                         <>
-                          <div className="h-14 w-14 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg">
-                            <span className="text-2xl font-black text-white">
+                          <div className="h-20 w-20 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg">
+                            <span className="text-4xl font-black text-white">
                               {initials || '?'}
                             </span>
                           </div>
                           <div>
-                            <div className="text-2xl font-black text-gray-900 dark:text-white">
+                            <div className="text-4xl font-black text-gray-900 dark:text-white">
                               {session?.trainee?.full_name || 'מתאמן'}
                             </div>
-                            <div className="text-base text-gray-500 dark:text-gray-400">
+                            <div className="text-lg text-gray-500 dark:text-gray-400">
                               <span className="text-emerald-600 dark:text-emerald-400 font-bold">
                                 {completedExercisesData.filter(e => e.isCompleted).length}
                               </span>
@@ -657,26 +658,26 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                     </div>
 
                     {/* Center: Total Workout Stats */}
-                    <div className="flex items-center gap-8 bg-gray-50 dark:bg-gray-800 px-6 py-2 rounded-xl">
+                    <div className="flex items-center gap-12 bg-gray-50 dark:bg-gray-800 px-10 py-4 rounded-xl">
                       <div className="text-center">
-                        <div className="text-sm text-gray-400">נפח כולל</div>
-                        <div className="text-2xl font-black text-gray-900 dark:text-white">
+                        <div className="text-base text-gray-400">נפח כולל</div>
+                        <div className="text-4xl font-black text-gray-900 dark:text-white">
                           {Math.round(completedExercisesData.reduce((sum, e) => sum + (e.totalVolume || 0), 0))}
-                          <span className="text-base mr-1">ק״ג</span>
+                          <span className="text-lg mr-1">ק״ג</span>
                         </div>
                       </div>
-                      <div className="h-10 w-px bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-14 w-px bg-gray-200 dark:bg-gray-700"></div>
                       <div className="text-center">
-                        <div className="text-sm text-gray-400">סה״כ סטים</div>
-                        <div className="text-2xl font-black text-gray-900 dark:text-white">
+                        <div className="text-base text-gray-400">סה״כ סטים</div>
+                        <div className="text-4xl font-black text-gray-900 dark:text-white">
                           {completedExercisesData.reduce((sum, e) => sum + (e.completedSets || 0), 0)}
-                          <span className="text-base mr-1 text-gray-400">/{completedExercisesData.reduce((sum, e) => sum + (e.totalSets || 0), 0)}</span>
+                          <span className="text-lg mr-1 text-gray-400">/{completedExercisesData.reduce((sum, e) => sum + (e.totalSets || 0), 0)}</span>
                         </div>
                       </div>
-                      <div className="h-10 w-px bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-14 w-px bg-gray-200 dark:bg-gray-700"></div>
                       <div className="text-center">
-                        <div className="text-sm text-gray-400">סה״כ חזרות</div>
-                        <div className="text-2xl font-black text-gray-900 dark:text-white">
+                        <div className="text-base text-gray-400">סה״כ חזרות</div>
+                        <div className="text-4xl font-black text-gray-900 dark:text-white">
                           {completedExercisesData.reduce((sum, e) => sum + (e.totalReps || 0), 0)}
                         </div>
                       </div>
@@ -684,34 +685,34 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
                     {/* Right: Time */}
                     <div className="text-left">
-                      <div className="text-4xl font-black text-gray-900 dark:text-white tabular-nums">
+                      <div className="text-6xl font-black text-gray-900 dark:text-white tabular-nums">
                         {formatClock(now)}
                       </div>
-                      <div className="text-base text-gray-500 dark:text-gray-400">
+                      <div className="text-lg text-gray-500 dark:text-gray-400">
                         {formatDate(now)}
                       </div>
                     </div>
                   </div>
 
                   {/* TV Exercise Cards - Optimized for 55" viewing */}
-                  <div className="flex-1 overflow-auto px-4 py-3">
+                  <div className="flex-1 overflow-auto px-6 py-4">
                     {isPairWorkout ? (
                       /* Split Screen Layout for Pair Workouts */
-                      <div className="grid grid-cols-2 gap-4 h-full">
+                      <div className="grid grid-cols-2 gap-6 h-full">
                         {/* Member 1 Column */}
                         <div className="flex flex-col">
-                          <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-4 py-2 rounded-t-xl mb-2">
+                          <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-6 py-3 rounded-t-xl mb-3">
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center font-black">1</span>
-                                <span className="text-lg font-bold">{pairName1}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center font-black text-xl">1</span>
+                                <span className="text-2xl font-bold">{pairName1}</span>
                               </div>
-                              <div className="text-sm">
+                              <div className="text-base">
                                 {member1Exercises.filter(e => e.isCompleted).length}/{member1Exercises.length} תרגילים
                               </div>
                             </div>
                           </div>
-                          <div className="flex-1 overflow-auto space-y-2">
+                          <div className="flex-1 overflow-auto space-y-3">
                             {member1Exercises.map((exercise, index) => {
                               const isActiveExercise = exercise.id === currentExercise?.id;
                               const setsProgress = exercise.totalSets > 0 ? (exercise.completedSets / exercise.totalSets) * 100 : 0;
@@ -721,23 +722,23 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                               const equipmentList = exercise.sets.filter(set => set.equipment?.name).map(set => ({ emoji: set.equipment?.emoji || '🏋️', name: set.equipment?.name })).filter((eq, idx, arr) => arr.findIndex(e => e.name === eq.name) === idx);
 
                               return (
-                                <div key={exercise.id} className={`rounded-xl p-3 transition-all ${isActiveExercise ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg ring-2 ring-cyan-300/50' : exercise.isCompleted ? 'bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800' : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'}`}>
-                                  <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg font-black ${isActiveExercise ? 'bg-white text-cyan-600' : exercise.isCompleted ? 'bg-cyan-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
+                                <div key={exercise.id} className={`rounded-xl p-5 transition-all ${isActiveExercise ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg ring-2 ring-cyan-300/50' : exercise.isCompleted ? 'bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800' : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'}`}>
+                                  <div className="flex items-center gap-4">
+                                    <div className={`w-14 h-14 rounded-lg flex items-center justify-center text-2xl font-black ${isActiveExercise ? 'bg-white text-cyan-600' : exercise.isCompleted ? 'bg-cyan-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
                                       {exercise.isCompleted && !isActiveExercise ? '✓' : index + 1}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <div className={`text-lg font-bold truncate ${isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{exercise.name}</div>
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        {hasSupersets && <span className={`text-xs px-2 py-0.5 rounded ${isActiveExercise ? 'bg-purple-400/30 text-purple-100' : 'bg-purple-100 text-purple-600'}`}>🔗 {supersetExerciseNames[0] || 'סופר-סט'}</span>}
-                                        {hasDropsets && <span className={`text-xs px-2 py-0.5 rounded ${isActiveExercise ? 'bg-orange-400/30 text-orange-100' : 'bg-orange-100 text-orange-600'}`}>⬇️ דרופ</span>}
-                                        {equipmentList[0] && <span className={`text-xs px-2 py-0.5 rounded ${isActiveExercise ? 'bg-blue-400/30 text-blue-100' : 'bg-blue-100 text-blue-600'}`}>{equipmentList[0].emoji}</span>}
-                                        {exercise.hasFailure && <span className="text-xs">⚠️</span>}
+                                      <div className={`text-2xl font-bold truncate ${isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{exercise.name}</div>
+                                      <div className="flex items-center gap-3 flex-wrap mt-1">
+                                        {hasSupersets && <span className={`text-sm px-3 py-1 rounded ${isActiveExercise ? 'bg-purple-400/30 text-purple-100' : 'bg-purple-100 text-purple-600'}`}>🔗 {supersetExerciseNames[0] || 'סופר-סט'}</span>}
+                                        {hasDropsets && <span className={`text-sm px-3 py-1 rounded ${isActiveExercise ? 'bg-orange-400/30 text-orange-100' : 'bg-orange-100 text-orange-600'}`}>⬇️ דרופ</span>}
+                                        {equipmentList[0] && <span className={`text-sm px-3 py-1 rounded ${isActiveExercise ? 'bg-blue-400/30 text-blue-100' : 'bg-blue-100 text-blue-600'}`}>{equipmentList[0].emoji}</span>}
+                                        {exercise.hasFailure && <span className="text-base">⚠️</span>}
                                       </div>
                                     </div>
                                     <div className="text-left flex-shrink-0">
-                                      <div className={`text-xl font-black ${isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{exercise.maxWeight > 0 ? `${exercise.maxWeight}ק״ג` : '—'}</div>
-                                      <div className={`text-sm ${isActiveExercise ? 'text-cyan-100' : 'text-gray-500'}`}>{exercise.completedSets}/{exercise.totalSets} סטים</div>
+                                      <div className={`text-3xl font-black ${isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{exercise.maxWeight > 0 ? `${exercise.maxWeight}ק״ג` : '—'}</div>
+                                      <div className={`text-base ${isActiveExercise ? 'text-cyan-100' : 'text-gray-500'}`}>{exercise.completedSets}/{exercise.totalSets} סטים</div>
                                     </div>
                                   </div>
                                 </div>
@@ -749,18 +750,18 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
                         {/* Member 2 Column */}
                         <div className="flex flex-col">
-                          <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 py-2 rounded-t-xl mb-2">
+                          <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-3 rounded-t-xl mb-3">
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center font-black">2</span>
-                                <span className="text-lg font-bold">{pairName2}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center font-black text-xl">2</span>
+                                <span className="text-2xl font-bold">{pairName2}</span>
                               </div>
-                              <div className="text-sm">
+                              <div className="text-base">
                                 {member2Exercises.filter(e => e.isCompleted).length}/{member2Exercises.length} תרגילים
                               </div>
                             </div>
                           </div>
-                          <div className="flex-1 overflow-auto space-y-2">
+                          <div className="flex-1 overflow-auto space-y-3">
                             {member2Exercises.map((exercise, index) => {
                               const isActiveExercise = exercise.id === currentExercise?.id;
                               const setsProgress = exercise.totalSets > 0 ? (exercise.completedSets / exercise.totalSets) * 100 : 0;
@@ -770,23 +771,23 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                               const equipmentList = exercise.sets.filter(set => set.equipment?.name).map(set => ({ emoji: set.equipment?.emoji || '🏋️', name: set.equipment?.name })).filter((eq, idx, arr) => arr.findIndex(e => e.name === eq.name) === idx);
 
                               return (
-                                <div key={exercise.id} className={`rounded-xl p-3 transition-all ${isActiveExercise ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg ring-2 ring-emerald-300/50' : exercise.isCompleted ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'}`}>
-                                  <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg font-black ${isActiveExercise ? 'bg-white text-emerald-600' : exercise.isCompleted ? 'bg-emerald-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
+                                <div key={exercise.id} className={`rounded-xl p-5 transition-all ${isActiveExercise ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg ring-2 ring-emerald-300/50' : exercise.isCompleted ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'}`}>
+                                  <div className="flex items-center gap-4">
+                                    <div className={`w-14 h-14 rounded-lg flex items-center justify-center text-2xl font-black ${isActiveExercise ? 'bg-white text-emerald-600' : exercise.isCompleted ? 'bg-emerald-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
                                       {exercise.isCompleted && !isActiveExercise ? '✓' : index + 1}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <div className={`text-lg font-bold truncate ${isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{exercise.name}</div>
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        {hasSupersets && <span className={`text-xs px-2 py-0.5 rounded ${isActiveExercise ? 'bg-purple-400/30 text-purple-100' : 'bg-purple-100 text-purple-600'}`}>🔗 {supersetExerciseNames[0] || 'סופר-סט'}</span>}
-                                        {hasDropsets && <span className={`text-xs px-2 py-0.5 rounded ${isActiveExercise ? 'bg-orange-400/30 text-orange-100' : 'bg-orange-100 text-orange-600'}`}>⬇️ דרופ</span>}
-                                        {equipmentList[0] && <span className={`text-xs px-2 py-0.5 rounded ${isActiveExercise ? 'bg-blue-400/30 text-blue-100' : 'bg-blue-100 text-blue-600'}`}>{equipmentList[0].emoji}</span>}
-                                        {exercise.hasFailure && <span className="text-xs">⚠️</span>}
+                                      <div className={`text-2xl font-bold truncate ${isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{exercise.name}</div>
+                                      <div className="flex items-center gap-3 flex-wrap mt-1">
+                                        {hasSupersets && <span className={`text-sm px-3 py-1 rounded ${isActiveExercise ? 'bg-purple-400/30 text-purple-100' : 'bg-purple-100 text-purple-600'}`}>🔗 {supersetExerciseNames[0] || 'סופר-סט'}</span>}
+                                        {hasDropsets && <span className={`text-sm px-3 py-1 rounded ${isActiveExercise ? 'bg-orange-400/30 text-orange-100' : 'bg-orange-100 text-orange-600'}`}>⬇️ דרופ</span>}
+                                        {equipmentList[0] && <span className={`text-sm px-3 py-1 rounded ${isActiveExercise ? 'bg-blue-400/30 text-blue-100' : 'bg-blue-100 text-blue-600'}`}>{equipmentList[0].emoji}</span>}
+                                        {exercise.hasFailure && <span className="text-base">⚠️</span>}
                                       </div>
                                     </div>
                                     <div className="text-left flex-shrink-0">
-                                      <div className={`text-xl font-black ${isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{exercise.maxWeight > 0 ? `${exercise.maxWeight}ק״ג` : '—'}</div>
-                                      <div className={`text-sm ${isActiveExercise ? 'text-emerald-100' : 'text-gray-500'}`}>{exercise.completedSets}/{exercise.totalSets} סטים</div>
+                                      <div className={`text-3xl font-black ${isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{exercise.maxWeight > 0 ? `${exercise.maxWeight}ק״ג` : '—'}</div>
+                                      <div className={`text-base ${isActiveExercise ? 'text-emerald-100' : 'text-gray-500'}`}>{exercise.completedSets}/{exercise.totalSets} סטים</div>
                                     </div>
                                   </div>
                                 </div>
@@ -798,7 +799,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                       </div>
                     ) : (
                       /* Single Column Layout for Personal Workouts */
-                      <div className="grid gap-3">
+                      <div className="grid gap-5">
                         {sortedCompletedExercisesData.map((exercise, index) => {
                         const isActiveExercise = exercise.id === currentExercise?.id;
                         const setsProgress = exercise.totalSets > 0 ? (exercise.completedSets / exercise.totalSets) * 100 : 0;
@@ -822,7 +823,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                         return (
                           <div
                             key={exercise.id}
-                            className={`rounded-2xl p-4 transition-all duration-300 ${
+                            className={`rounded-2xl p-6 transition-all duration-300 ${
                               isActiveExercise
                                 ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-xl ring-2 ring-emerald-300/50'
                                 : exercise.isCompleted
@@ -831,9 +832,9 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                             }`}
                           >
                             {/* Main Row */}
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-6">
                               {/* Number Badge */}
-                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-black flex-shrink-0 ${
+                              <div className={`w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-black flex-shrink-0 ${
                                 isActiveExercise
                                   ? 'bg-white text-emerald-600'
                                   : exercise.isCompleted
@@ -845,26 +846,26 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
                               {/* Exercise Info */}
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-3">
-                                  <span className={`text-2xl font-bold ${
+                                <div className="flex items-center gap-4">
+                                  <span className={`text-3xl font-bold ${
                                     isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'
                                   }`}>
                                     {exercise.name}
                                   </span>
                                   {isActiveExercise && (
-                                    <span className="px-3 py-1 text-sm bg-red-500 text-white rounded-full animate-pulse font-bold">
+                                    <span className="px-4 py-2 text-base bg-red-500 text-white rounded-full animate-pulse font-bold">
                                       🔴 עכשיו
                                     </span>
                                   )}
                                   {exercise.hasFailure && (
-                                    <span className="text-lg" title="כשל">⚠️</span>
+                                    <span className="text-2xl" title="כשל">⚠️</span>
                                   )}
                                 </div>
 
                                 {/* Superset / Dropset / Equipment - Below exercise name */}
-                                <div className="flex items-center gap-2 flex-wrap mt-1">
+                                <div className="flex items-center gap-3 flex-wrap mt-2">
                                   {hasSupersets && (
-                                    <span className={`text-sm font-medium px-2 py-0.5 rounded ${
+                                    <span className={`text-base font-medium px-3 py-1 rounded ${
                                       isActiveExercise
                                         ? 'bg-purple-400/30 text-purple-100'
                                         : 'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400'
@@ -873,7 +874,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                     </span>
                                   )}
                                   {hasDropsets && (
-                                    <span className={`text-sm font-medium px-2 py-0.5 rounded ${
+                                    <span className={`text-base font-medium px-3 py-1 rounded ${
                                       isActiveExercise
                                         ? 'bg-orange-400/30 text-orange-100'
                                         : 'bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400'
@@ -884,7 +885,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                   {equipmentList.map((eq, eqIdx) => (
                                     <span
                                       key={eqIdx}
-                                      className={`text-sm font-medium px-2 py-0.5 rounded ${
+                                      className={`text-base font-medium px-3 py-1 rounded ${
                                         isActiveExercise
                                           ? 'bg-blue-400/30 text-blue-100'
                                           : 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
@@ -897,31 +898,31 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                               </div>
 
                               {/* Stats - Compact */}
-                              <div className="flex items-center gap-6 flex-shrink-0">
+                              <div className="flex items-center gap-8 flex-shrink-0">
                                 {/* Weight */}
                                 <div className="text-center">
-                                  <div className={`text-sm font-medium ${
+                                  <div className={`text-base font-medium ${
                                     isActiveExercise ? 'text-emerald-100' : 'text-gray-400'
                                   }`}>
                                     משקל מקס׳
                                   </div>
-                                  <div className={`text-2xl font-black ${
+                                  <div className={`text-4xl font-black ${
                                     isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'
                                   }`}>
                                     {exercise.maxWeight > 0 ? (
-                                      <>{exercise.maxWeight}<span className="text-base mr-1">ק״ג</span></>
+                                      <>{exercise.maxWeight}<span className="text-lg mr-1">ק״ג</span></>
                                     ) : '—'}
                                   </div>
                                 </div>
 
                                 {/* Reps */}
                                 <div className="text-center">
-                                  <div className={`text-sm font-medium ${
+                                  <div className={`text-base font-medium ${
                                     isActiveExercise ? 'text-emerald-100' : 'text-gray-400'
                                   }`}>
                                     סה״כ חזרות
                                   </div>
-                                  <div className={`text-2xl font-black ${
+                                  <div className={`text-4xl font-black ${
                                     isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'
                                   }`}>
                                     {exercise.totalReps > 0 ? exercise.totalReps : '—'}
@@ -930,28 +931,28 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
                                 {/* Volume */}
                                 <div className="text-center">
-                                  <div className={`text-sm font-medium ${
+                                  <div className={`text-base font-medium ${
                                     isActiveExercise ? 'text-emerald-100' : 'text-gray-400'
                                   }`}>
                                     נפח כולל
                                   </div>
-                                  <div className={`text-2xl font-black ${
+                                  <div className={`text-4xl font-black ${
                                     isActiveExercise ? 'text-white' : 'text-gray-900 dark:text-white'
                                   }`}>
                                     {exercise.totalVolume > 0 ? (
-                                      <>{Math.round(exercise.totalVolume)}<span className="text-base mr-1">ק״ג</span></>
+                                      <>{Math.round(exercise.totalVolume)}<span className="text-lg mr-1">ק״ג</span></>
                                     ) : '—'}
                                   </div>
                                 </div>
 
                                 {/* Sets Progress - Visual */}
-                                <div className="text-center min-w-[100px]">
-                                  <div className={`text-sm font-medium ${
+                                <div className="text-center min-w-[140px]">
+                                  <div className={`text-base font-medium ${
                                     isActiveExercise ? 'text-emerald-100' : 'text-gray-400'
                                   }`}>
                                     סטים
                                   </div>
-                                  <div className={`text-2xl font-black mb-1 ${
+                                  <div className={`text-4xl font-black mb-2 ${
                                     isActiveExercise
                                       ? 'text-white'
                                       : exercise.completedSets === exercise.totalSets
@@ -961,7 +962,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                     {exercise.completedSets}/{exercise.totalSets}
                                   </div>
                                   {/* Progress Bar */}
-                                  <div className={`h-1.5 rounded-full overflow-hidden ${
+                                  <div className={`h-2 rounded-full overflow-hidden ${
                                     isActiveExercise ? 'bg-white/30' : 'bg-gray-200 dark:bg-gray-700'
                                   }`}>
                                     <div
@@ -978,7 +979,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                 </div>
 
                                 {/* Progress Indicator */}
-                                <div className={`w-16 h-14 rounded-xl flex flex-col items-center justify-center flex-shrink-0 ${
+                                <div className={`w-20 h-18 rounded-xl flex flex-col items-center justify-center flex-shrink-0 ${
                                   isActiveExercise
                                     ? 'bg-white/20'
                                     : exercise.progressIndicator === 'up'
@@ -989,22 +990,22 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                 }`}>
                                   {exercise.progressIndicator === 'up' ? (
                                     <>
-                                      <TrendingUp className={`w-5 h-5 ${isActiveExercise ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
-                                      <span className={`text-xs font-black ${isActiveExercise ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                      <TrendingUp className={`w-6 h-6 ${isActiveExercise ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
+                                      <span className={`text-sm font-black ${isActiveExercise ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`}>
                                         +{Math.abs(exercise.progressPercent || 0)}%
                                       </span>
                                     </>
                                   ) : exercise.progressIndicator === 'down' ? (
                                     <>
-                                      <TrendingUp className={`w-5 h-5 rotate-180 ${isActiveExercise ? 'text-white' : 'text-red-600 dark:text-red-400'}`} />
-                                      <span className={`text-xs font-black ${isActiveExercise ? 'text-white' : 'text-red-600 dark:text-red-400'}`}>
+                                      <TrendingUp className={`w-6 h-6 rotate-180 ${isActiveExercise ? 'text-white' : 'text-red-600 dark:text-red-400'}`} />
+                                      <span className={`text-sm font-black ${isActiveExercise ? 'text-white' : 'text-red-600 dark:text-red-400'}`}>
                                         {exercise.progressPercent || 0}%
                                       </span>
                                     </>
                                   ) : exercise.progressIndicator === 'same' ? (
-                                    <span className={`text-lg font-black ${isActiveExercise ? 'text-white' : 'text-gray-500'}`}>=</span>
+                                    <span className={`text-xl font-black ${isActiveExercise ? 'text-white' : 'text-gray-500'}`}>=</span>
                                   ) : (
-                                    <span className={`text-sm font-medium ${isActiveExercise ? 'text-white/50' : 'text-gray-400'}`}>—</span>
+                                    <span className={`text-base font-medium ${isActiveExercise ? 'text-white/50' : 'text-gray-400'}`}>—</span>
                                   )}
                                 </div>
                               </div>
@@ -1012,8 +1013,8 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
                             {/* Sets Detail Row - Only for active exercise */}
                             {isActiveExercise && exercise.sets.length > 0 && (
-                              <div className="mt-5 pt-5 border-t border-white/20">
-                                <div className="flex items-center gap-4 flex-wrap">
+                              <div className="mt-6 pt-6 border-t border-white/20">
+                                <div className="flex items-center gap-6 flex-wrap">
                                   {exercise.sets.map((set) => {
                                     const isFilled = (set.weight || 0) > 0 || (set.reps || 0) > 0;
                                     const hasSuperset = set.superset_exercise_id && ((set.superset_weight || 0) > 0 || (set.superset_reps || 0) > 0);
@@ -1022,7 +1023,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                     return (
                                       <div
                                         key={set.id}
-                                        className={`px-5 py-3 rounded-2xl text-xl font-bold transition-all ${
+                                        className={`px-7 py-4 rounded-2xl text-2xl font-bold transition-all ${
                                           isFilled
                                             ? set.failure
                                               ? 'bg-red-500/40 text-white border-2 border-red-300'
@@ -1030,7 +1031,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                             : 'bg-white/10 text-white/40 border-2 border-white/10'
                                         }`}
                                       >
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-3">
                                           <span className="text-emerald-200 font-black">סט {set.set_number}</span>
                                           <span className="text-white/50">|</span>
                                           <span>{set.weight ?? 0}ק״ג</span>
@@ -1043,13 +1044,13 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                         </div>
                                         {/* Superset detail */}
                                         {hasSuperset && (
-                                          <div className="text-base text-purple-200 mt-1">
+                                          <div className="text-lg text-purple-200 mt-2">
                                             🔗 {set.superset_exercise?.name || 'סופר-סט'}: {set.superset_weight ?? 0}ק״ג × {set.superset_reps ?? 0}
                                           </div>
                                         )}
                                         {/* Dropset detail */}
                                         {hasDropset && (
-                                          <div className="text-base text-orange-200 mt-1">
+                                          <div className="text-lg text-orange-200 mt-2">
                                             ⬇️ {set.dropset_weight ?? 0}ק״ג × {set.dropset_reps ?? 0}
                                           </div>
                                         )}

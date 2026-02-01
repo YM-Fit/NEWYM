@@ -2790,6 +2790,123 @@
     color: rgba(255, 255, 255, 0.7);
   }
 
+  /* ============================================
+     Logo Component Styling
+     ============================================ */
+
+  /* Logo container with premium effects */
+  .logo-container {
+    position: relative;
+    display: inline-block;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Logo glow effects */
+  .logo-glow {
+    filter: drop-shadow(0 2px 8px rgba(74, 107, 42, 0.2));
+    transition: filter 0.3s ease;
+  }
+
+  .logo-glow:hover {
+    filter: drop-shadow(0 4px 16px rgba(74, 107, 42, 0.4)) drop-shadow(0 0 20px rgba(74, 107, 42, 0.2));
+  }
+
+  /* Logo premium shadow */
+  .logo-shadow-premium {
+    filter: drop-shadow(0 4px 20px rgba(74, 107, 42, 0.3)) drop-shadow(0 0 30px rgba(74, 107, 42, 0.15));
+  }
+
+  /* Logo animation - subtle pulse */
+  @keyframes logo-pulse {
+    0%, 100% {
+      transform: scale(1);
+      filter: drop-shadow(0 2px 8px rgba(74, 107, 42, 0.2));
+    }
+    50% {
+      transform: scale(1.02);
+      filter: drop-shadow(0 4px 16px rgba(74, 107, 42, 0.3));
+    }
+  }
+
+  .logo-animate-pulse {
+    animation: logo-pulse 3s ease-in-out infinite;
+  }
+
+  /* Logo hover scale effect */
+  .logo-hover-scale {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .logo-hover-scale:hover {
+    transform: scale(1.05);
+  }
+
+  /* Logo loading shimmer */
+  @keyframes logo-shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .logo-loading {
+    background: linear-gradient(
+      90deg,
+      rgba(74, 107, 42, 0.1) 0%,
+      rgba(74, 107, 42, 0.2) 50%,
+      rgba(74, 107, 42, 0.1) 100%
+    );
+    background-size: 200% 100%;
+    animation: logo-shimmer 2s infinite;
+  }
+
+  /* Light mode logo adjustments */
+  .light .logo-glow {
+    filter: drop-shadow(0 2px 8px rgba(74, 107, 42, 0.15));
+  }
+
+  .light .logo-glow:hover {
+    filter: drop-shadow(0 4px 16px rgba(74, 107, 42, 0.25)) drop-shadow(0 0 20px rgba(74, 107, 42, 0.15));
+  }
+
+  /* Logo responsive sizing */
+  @media (max-width: 640px) {
+    .logo-container {
+      max-width: 48px;
+      max-height: 48px;
+    }
+  }
+
+  @media (min-width: 641px) and (max-width: 1024px) {
+    .logo-container {
+      max-width: 64px;
+      max-height: 64px;
+    }
+  }
+
+  @media (min-width: 1025px) {
+    .logo-container {
+      max-width: 80px;
+      max-height: 80px;
+    }
+  }
+
+  /* TV mode logo - larger with enhanced glow */
+  .tv-view-container .logo-container {
+    max-width: 120px;
+    max-height: 120px;
+  }
+
+  .tv-view-container .logo-glow {
+    filter: drop-shadow(0 8px 32px rgba(74, 107, 42, 0.4)) drop-shadow(0 0 40px rgba(74, 107, 42, 0.3));
+  }
+
+  .tv-view-container .logo-glow:hover {
+    filter: drop-shadow(0 12px 48px rgba(74, 107, 42, 0.6)) drop-shadow(0 0 60px rgba(74, 107, 42, 0.4));
+  }
+
 }
 
 /* ============================================
@@ -3340,4 +3457,32 @@ html body .tv-view-container .text-muted-tv,
     0 10px 40px rgba(16, 185, 129, 0.4),
     0 0 80px rgba(16, 185, 129, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ============================================
+   TV Mode - Full Screen Support
+   Removes all margins/padding to utilize full screen
+   ============================================ */
+body.tv-mode-active,
+html.tv-mode-active {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+body.tv-mode-active #root {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+.tv-view-container {
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }

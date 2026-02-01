@@ -83,6 +83,24 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
     ? 'studio-tv' 
     : 'dashboard';
   const [activeView, setActiveView] = useState(initialView);
+  
+  // Add/remove tv-mode-active class to body when TV mode is active
+  useEffect(() => {
+    if (activeView === 'studio-tv') {
+      document.body.classList.add('tv-mode-active');
+      document.documentElement.classList.add('tv-mode-active');
+    } else {
+      document.body.classList.remove('tv-mode-active');
+      document.documentElement.classList.remove('tv-mode-active');
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove('tv-mode-active');
+      document.documentElement.classList.remove('tv-mode-active');
+    };
+  }, [activeView]);
+  
   const [selectedTrainee, setSelectedTrainee] = useState<Trainee | null>(null);
   const [selectedWorkout, setSelectedWorkout] = useState<any | null>(null);
   const [previousWorkoutForNew, setPreviousWorkoutForNew] = useState<any | null>(null);

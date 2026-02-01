@@ -1,6 +1,7 @@
 import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3, Search, LucideIcon, Calendar, Activity, Settings, FileSpreadsheet, Monitor } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { getFromStorage, setToStorage, STORAGE_KEYS } from '../../utils/storage';
+import Logo from '../common/Logo';
 
 interface SidebarProps {
   activeView: string;
@@ -100,34 +101,45 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
       aria-label="תפריט ניווט צדדי"
     >
       <div className="flex-1 py-6 overflow-y-auto overflow-x-hidden">
-        <div className={`flex items-center justify-between mb-4 ${isMinimized ? 'px-4' : 'px-5'}`}>
-          {!isMinimized && (
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-emerald-600" />
-              <div className="flex flex-col items-start">
-                <span className="text-xs font-semibold text-muted uppercase tracking-wider">
-                  תפריט
-                </span>
-                <span className="mt-0.5 inline-flex items-center rounded-full border border-emerald-700/30 bg-emerald-700/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600">
-                  מצב עבודה: {isTablet ? 'טאבלט / מגע' : 'מחשב'}
-                </span>
+        {/* Logo Section */}
+        <div className={`flex items-center ${isMinimized ? 'justify-center' : 'justify-between'} mb-6 ${isMinimized ? 'px-4' : 'px-5'}`}>
+          {isMinimized ? (
+            // Minimized: Show logo only
+            <Logo 
+              size="sm" 
+              className="drop-shadow-[0_2px_8px_rgba(74,107,42,0.2)]"
+              animated={true}
+            />
+          ) : (
+            // Expanded: Show logo with text
+            <>
+              <div className="flex items-center gap-3">
+                <Logo 
+                  size="sm" 
+                  className="drop-shadow-[0_2px_8px_rgba(74,107,42,0.2)]"
+                  animated={true}
+                />
+                <div className="flex flex-col items-start">
+                  <span className="text-xs font-semibold text-muted uppercase tracking-wider">
+                    תפריט
+                  </span>
+                  <span className="mt-0.5 inline-flex items-center rounded-full border border-emerald-700/30 bg-emerald-700/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600">
+                    מצב עבודה: {isTablet ? 'טאבלט / מגע' : 'מחשב'}
+                  </span>
+                </div>
               </div>
-            </div>
+              <button
+                onClick={() => setIsMinimized(!isMinimized)}
+                className="p-2 rounded-xl text-muted hover:text-emerald-600 hover:bg-emerald-700/10 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-700/50"
+                title="מזער"
+                aria-label="מזער תפריט"
+                aria-expanded={!isMinimized}
+                aria-controls="main-navigation"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </>
           )}
-          <button
-            onClick={() => setIsMinimized(!isMinimized)}
-            className="p-2 rounded-xl text-muted hover:text-emerald-600 hover:bg-emerald-700/10 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-700/50"
-            title={isMinimized ? 'הרחב' : 'מזער'}
-            aria-label={isMinimized ? 'הרחב תפריט' : 'מזער תפריט'}
-            aria-expanded={!isMinimized}
-            aria-controls="main-navigation"
-          >
-            {isMinimized ? (
-              <ChevronLeft className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </button>
         </div>
 
         {!isMinimized && (

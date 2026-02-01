@@ -15,6 +15,7 @@ import SelfWorkoutSession from './SelfWorkoutSession';
 import MyCardio from './MyCardio';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
+import Logo from '../common/Logo';
 
 interface Trainee {
   id: string;
@@ -83,11 +84,11 @@ export default function TraineeApp() {
       >
         <div className="mx-auto max-w-5xl flex justify-between items-center gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-400 to-teal-500 flex items-center justify-center shadow-glow animate-scale-bounce">
-              <span className="text-foreground font-bold text-lg md:text-xl">
-                {trainee?.full_name?.charAt(0) || 'U'}
-              </span>
-            </div>
+            <Logo 
+              size="sm" 
+              className="drop-shadow-[0_2px_8px_rgba(74,107,42,0.2)]"
+              animated={true}
+            />
             <div>
               <h1 className="text-base md:text-lg font-semibold text-[var(--color-text-primary)]">
                 שלום, {getFirstName(trainee?.full_name || '')}

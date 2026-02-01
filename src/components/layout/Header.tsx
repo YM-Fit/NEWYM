@@ -1,6 +1,7 @@
-import { User, LogOut, Activity, Menu, Sun, Moon } from 'lucide-react';
+import { User, LogOut, Menu, Sun, Moon } from 'lucide-react';
 import NotificationBell from '../trainer/Notifications/NotificationBell';
 import { useTheme } from '../../contexts/ThemeContext';
+import Logo from '../common/Logo';
 
 interface HeaderProps {
   onLogout?: () => void;
@@ -31,11 +32,14 @@ export default function Header({ onLogout, trainerName, onNavigateToTrainee, onT
           )}
           <div className="flex items-center gap-3">
             <div className="relative group">
-              <div className="bg-gradient-to-br from-emerald-700 to-emerald-800 p-2.5 rounded-xl shadow-glow-lg transition-all duration-300 group-hover:shadow-glow-xl group-hover:scale-105">
-                <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground [.light_&]:text-primary-foreground transition-transform group-hover:rotate-12" />
+              <div className="p-1.5 sm:p-2 rounded-xl transition-all duration-300 group-hover:scale-105">
+                <Logo 
+                  size="sm" 
+                  className="drop-shadow-[0_2px_8px_rgba(74,107,42,0.2)] group-hover:drop-shadow-[0_4px_16px_rgba(74,107,42,0.4)] transition-all duration-300" 
+                  animated={true}
+                />
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-600 rounded-full border-2 border-[var(--color-bg-base)] animate-pulse" />
-              <div className="absolute inset-0 bg-emerald-600/30 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-emerald-600/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
             </div>
             <div className="hidden sm:block animate-fade-in">
               <h1 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
