@@ -5,10 +5,24 @@ import { logger } from '../../../../utils/logger';
 import type { WorkoutDay } from '../types';
 import { createEmptyDay } from '../types';
 
+export interface PlanSettings {
+  daysPerWeek: number;
+  restDaysBetween: number; // 0-3
+  includeCardio: boolean;
+  cardioTypeId: string | null;
+  cardioFrequency: number; // 0-7
+  cardioWeeklyGoalSteps: number | null;
+}
+
 export function useWorkoutPlanState(traineeId: string) {
   const [planName, setPlanName] = useState('');
   const [planDescription, setPlanDescription] = useState('');
   const [daysPerWeek, setDaysPerWeek] = useState(3);
+  const [restDaysBetween, setRestDaysBetween] = useState(0);
+  const [includeCardio, setIncludeCardio] = useState(false);
+  const [cardioTypeId, setCardioTypeId] = useState<string | null>(null);
+  const [cardioFrequency, setCardioFrequency] = useState(0);
+  const [cardioWeeklyGoalSteps, setCardioWeeklyGoalSteps] = useState<number | null>(null);
   const [days, setDays] = useState<WorkoutDay[]>([]);
   const [selectedDay, setSelectedDay] = useState<WorkoutDay | null>(null);
   const [activePlanId, setActivePlanId] = useState<string | null>(null);
@@ -38,6 +52,11 @@ export function useWorkoutPlanState(traineeId: string) {
         setPlanName(planData.name || '');
         setPlanDescription(planData.description || '');
         setDaysPerWeek(planData.days_per_week || 3);
+        setRestDaysBetween(planData.rest_days_between ?? 0);
+        setIncludeCardio(planData.include_cardio ?? false);
+        setCardioTypeId(planData.cardio_type_id || null);
+        setCardioFrequency(planData.cardio_frequency ?? 0);
+        setCardioWeeklyGoalSteps(planData.cardio_weekly_goal_steps || null);
         await loadPlanDays(planData.id);
       }
     } catch (error) {
@@ -128,6 +147,11 @@ export function useWorkoutPlanState(traineeId: string) {
     planName,
     planDescription,
     daysPerWeek,
+    restDaysBetween,
+    includeCardio,
+    cardioTypeId,
+    cardioFrequency,
+    cardioWeeklyGoalSteps,
     days,
     selectedDay,
     activePlanId,
@@ -136,6 +160,11 @@ export function useWorkoutPlanState(traineeId: string) {
     setPlanName,
     setPlanDescription,
     setDaysPerWeek,
+    setRestDaysBetween,
+    setIncludeCardio,
+    setCardioTypeId,
+    setCardioFrequency,
+    setCardioWeeklyGoalSteps,
     setDays,
     setSelectedDay,
     setActivePlanId,

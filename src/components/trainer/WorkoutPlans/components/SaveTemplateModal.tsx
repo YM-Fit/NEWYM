@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface SaveTemplateModalProps {
   isOpen: boolean;
   templateName: string;
   onTemplateNameChange: (name: string) => void;
-  onSave: () => void;
+  onSave: (isGeneral: boolean) => void;
   onClose: () => void;
+  traineeName?: string;
 }
 
 export default function SaveTemplateModal({
@@ -14,7 +15,10 @@ export default function SaveTemplateModal({
   onTemplateNameChange,
   onSave,
   onClose,
+  traineeName,
 }: SaveTemplateModalProps) {
+  const [isGeneralTemplate, setIsGeneralTemplate] = useState(true);
+
   if (!isOpen) return null;
 
   return (
@@ -35,9 +39,52 @@ export default function SaveTemplateModal({
           />
         </div>
 
+        {/* Template Type Selection */}
+        <div className="mb-6">
+          <label className="block text-sm font-semibold text-muted700 mb-3">סוג תבנית</label>
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-surface50"
+              style={{
+                borderColor: isGeneralTemplate ? '#10b981' : '#e5e7eb',
+                backgroundColor: isGeneralTemplate ? '#ecfdf5' : 'transparent'
+              }}>
+              <input
+                type="radio"
+                name="templateType"
+                checked={isGeneralTemplate}
+                onChange={() => setIsGeneralTemplate(true)}
+                className="w-5 h-5 text-emerald-600 focus:ring-emerald-500"
+              />
+              <div className="flex-1">
+                <div className="font-semibold text-muted900">תבנית כללית</div>
+                <div className="text-sm text-muted600">ניתן להשתמש עם כל המתאמנים</div>
+              </div>
+            </label>
+            {traineeName && (
+              <label className="flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-surface50"
+                style={{
+                  borderColor: !isGeneralTemplate ? '#10b981' : '#e5e7eb',
+                  backgroundColor: !isGeneralTemplate ? '#ecfdf5' : 'transparent'
+                }}>
+                <input
+                  type="radio"
+                  name="templateType"
+                  checked={!isGeneralTemplate}
+                  onChange={() => setIsGeneralTemplate(false)}
+                  className="w-5 h-5 text-emerald-600 focus:ring-emerald-500"
+                />
+                <div className="flex-1">
+                  <div className="font-semibold text-muted900">תבנית למתאמן זה</div>
+                  <div className="text-sm text-muted600">ספציפי ל-{traineeName}</div>
+                </div>
+              </label>
+            )}
+          </div>
+        </div>
+
         <div className="flex gap-3">
           <button
-            onClick={onSave}
+            onClick={() => onSave(isGeneralTemplate)}
             className="flex-1 py-4 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
           >
             שמור

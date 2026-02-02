@@ -27,6 +27,9 @@ import {
   BookOpen,
 } from 'lucide-react';
 import ExerciseInstructionsModal from '../common/ExerciseInstructionsModal';
+import WorkoutPlanTable from './WorkoutPlanTable';
+import EditExerciseModal from './EditExerciseModal';
+import WorkoutPlanProgress from './WorkoutPlanProgress';
 
 interface MyWorkoutPlanProps {
   traineeId: string | null;
@@ -40,6 +43,7 @@ interface WorkoutPlan {
   is_active: boolean;
   updated_at: string | null;
   last_modified_by: string | null;
+  trainer_id: string;
 }
 
 interface WorkoutDay {
@@ -139,7 +143,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   const [days, setDays] = useState<WorkoutDay[]>([]);
   const [dayExercises, setDayExercises] = useState<Record<string, DayExercise[]>>({});
   const [loading, setLoading] = useState(true);
-  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set()); // Kept for legacy code
   const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
   const [editingExercise, setEditingExercise] = useState<string | null>(null);
   const [editData, setEditData] = useState<{ trainee_notes: string; trainee_target_weight: number | null }>({
@@ -154,6 +158,11 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     name: string;
     instructions: string | null | undefined;
   } | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedExerciseForEdit, setSelectedExerciseForEdit] = useState<DayExercise | null>(null);
+  const [selectedDayIdForAdd, setSelectedDayIdForAdd] = useState<string | null>(null);
+  const [isAddingNewExercise, setIsAddingNewExercise] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
 
   useEffect(() => {
     if (traineeId) {
@@ -283,6 +292,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   };
 
   const toggleDay = (dayId: string) => {
+    // Legacy function - kept for compatibility
     setExpandedDays(prev => {
       const newSet = new Set(prev);
       if (newSet.has(dayId)) {
@@ -295,11 +305,16 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   };
 
   const startEditing = (exercise: DayExercise) => {
-    setEditingExercise(exercise.id);
-    setEditData({
-      trainee_notes: exercise.trainee_notes || '',
-      trainee_target_weight: exercise.trainee_target_weight,
-    });
+    setSelectedExerciseForEdit(exercise);
+    setIsAddingNewExercise(false);
+    setShowEditModal(true);
+  };
+
+  const handleAddExercise = (dayId: string) => {
+    setSelectedDayIdForAdd(dayId);
+    setSelectedExerciseForEdit(null);
+    setIsAddingNewExercise(true);
+    setShowEditModal(true);
   };
 
   const cancelEditing = () => {
@@ -557,7 +572,36 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
         </div>
       )}
 
-      {/* Workout Days Grid - Accordion Pattern */}
+      {/* Progress Tracking */}
+      {showProgress && (
+        <WorkoutPlanProgress
+          days={days}
+          dayExercises={dayExercises}
+          completedExercises={completedExercises}
+          getCompletedCount={getCompletedCount}
+          calculateDayVolume={calculateDayVolume}
+        />
+      )}
+
+      {/* Workout Plan Table */}
+      <WorkoutPlanTable
+        days={days}
+        dayExercises={dayExercises}
+        completedExercises={completedExercises}
+        editingExercise={editingExercise}
+        onToggleExerciseComplete={toggleExerciseComplete}
+        onStartEditing={startEditing}
+        onAddExercise={handleAddExercise}
+        onShowInstructions={(name, instructions) => setInstructionsExercise({ name, instructions })}
+        instructionsExercise={instructionsExercise}
+        onSetInstructionsExercise={setInstructionsExercise}
+        calculateDayVolume={calculateDayVolume}
+        getCompletedCount={getCompletedCount}
+        formatRestTime={formatRestTime}
+      />
+
+      {/* Legacy Accordion View - Hidden but kept for reference */}
+      {false && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
         {days.map((day, dayIndex) => {
           const gradient = dayGradients[dayIndex % dayGradients.length];
@@ -953,6 +997,27 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           <p className="text-[var(--color-text-primary)] font-bold text-lg">אין ימי אימון בתוכנית</p>
           <p className="text-sm text-[var(--color-text-muted)] mt-2">המאמן שלך יוסיף ימי אימון בקרוב</p>
         </div>
+      )}
+
+      {/* Edit Exercise Modal */}
+      {plan && traineeId && (
+        <EditExerciseModal
+          isOpen={showEditModal}
+          exercise={selectedExerciseForEdit}
+          dayId={selectedDayIdForAdd || selectedExerciseForEdit?.day_id || ''}
+          traineeId={traineeId}
+          planId={plan.id}
+          trainerId={plan.trainer_id}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedExerciseForEdit(null);
+            setSelectedDayIdForAdd(null);
+          }}
+          onSave={() => {
+            loadActivePlan();
+          }}
+          isAddingNew={isAddingNewExercise}
+        />
       )}
 
       {/* Exercise Instructions Modal */}

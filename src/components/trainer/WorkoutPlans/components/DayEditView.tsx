@@ -112,7 +112,7 @@ export default function DayEditView({
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 lg:p-6">
       {/* Day Edit Header */}
-      <div className="bg-white rounded-2xl shadow-xl p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10 transition-all duration-300">
+      <div className="premium-card-static p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
             <button
@@ -183,7 +183,7 @@ export default function DayEditView({
           return (
             <div
               key={exercise.tempId}
-              className={`bg-white rounded-2xl shadow-xl transition-all duration-300 hover:shadow-2xl ${
+              className={`premium-card-static transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] ${
                 !isMinimized ? '' : 'bg-gradient-to-br from-emerald-50 to-teal-50 border-r-4 border-emerald-500'
               }`}
               style={{

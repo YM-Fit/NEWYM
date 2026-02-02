@@ -9,15 +9,25 @@ export function useWorkoutPlanTemplates() {
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [templateName, setTemplateName] = useState('');
 
-  const loadTemplates = useCallback(async () => {
+  const loadTemplates = useCallback(async (traineeId?: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data } = await supabase
+    let query = supabase
       .from('workout_plan_templates')
       .select('*')
-      .eq('trainer_id', user.id)
-      .order('created_at', { ascending: false });
+      .eq('trainer_id', user.id);
+
+    // If traineeId is provided, load both general templates (trainee_id IS NULL) 
+    // and trainee-specific templates (trainee_id = traineeId)
+    if (traineeId) {
+      query = query.or(`trainee_id.is.null,trainee_id.eq.${traineeId}`);
+    } else {
+      // Load only general templates
+      query = query.is('trainee_id', null);
+    }
+
+    const { data } = await query.order('created_at', { ascending: false });
 
     if (data) {
       setTemplates(data);
@@ -44,7 +54,7 @@ export function useWorkoutPlanTemplates() {
     setShowLoadTemplateModal(false);
   }, []);
 
-  const saveTemplate = useCallback(async (templateName: string, planDescription: string, days: WorkoutDay[]) => {
+  const saveTemplate = useCallback(async (templateName: string, planDescription: string, days: WorkoutDay[], traineeId?: string | null) => {
     if (!templateName.trim()) {
       toast.error('נא להזין שם לתבנית');
       return false;
@@ -62,6 +72,7 @@ export function useWorkoutPlanTemplates() {
       .from('workout_plan_templates')
       .insert({
         trainer_id: user.id,
+        trainee_id: traineeId || null,
         name: templateName,
         description: planDescription || null,
         days: days.map(day => ({
@@ -87,7 +98,7 @@ export function useWorkoutPlanTemplates() {
     toast.success('תבנית נשמרה בהצלחה!');
     setShowSaveTemplateModal(false);
     setTemplateName('');
-    await loadTemplates();
+    await loadTemplates(traineeId || undefined);
     return true;
   }, [loadTemplates]);
 

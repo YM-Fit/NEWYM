@@ -19,7 +19,7 @@ export default function LoadTemplateModal({
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50 p-4 transition-all duration-300">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col transition-all duration-300">
+      <div className="premium-card-static max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col transition-all duration-300">
         <div className="p-6 border-b border-border200 bg-gradient-to-br from-blue-50 to-sky-50">
           <h3 className="text-2xl font-bold text-muted900">בחר תבנית</h3>
           <p className="text-muted600 mt-1">טען תוכנית אימון מוכנה מראש</p>

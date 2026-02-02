@@ -153,6 +153,14 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
     if (notification.notification_type === 'food_diary_completed' && onNavigateToTrainee) {
       onNavigateToTrainee(notification.trainee_id, 'food_diary');
       setShowDropdown(false);
+    } else if (
+      (notification.notification_type === 'workout_plan_exercise_edited' ||
+       notification.notification_type === 'workout_plan_exercise_added' ||
+       notification.notification_type === 'workout_plan_exercise_removed') &&
+      onNavigateToTrainee
+    ) {
+      onNavigateToTrainee(notification.trainee_id, 'workout-plans');
+      setShowDropdown(false);
     }
   };
 
@@ -162,6 +170,10 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
         return ClipboardCheck;
       case 'workout_completed':
         return Calendar;
+      case 'workout_plan_exercise_edited':
+      case 'workout_plan_exercise_added':
+      case 'workout_plan_exercise_removed':
+        return ClipboardCheck;
       default:
         return Bell;
     }
@@ -180,6 +192,14 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
           iconColor: 'text-blue-600',
           bgColor: 'bg-gradient-to-br from-blue-100 to-cyan-100',
           borderColor: 'border-blue-200'
+        };
+      case 'workout_plan_exercise_edited':
+      case 'workout_plan_exercise_added':
+      case 'workout_plan_exercise_removed':
+        return {
+          iconColor: 'text-cyan-600',
+          bgColor: 'bg-gradient-to-br from-cyan-100 to-blue-100',
+          borderColor: 'border-cyan-200'
         };
       default:
         return {
