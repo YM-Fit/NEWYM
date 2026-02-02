@@ -71,6 +71,7 @@ interface WorkoutPlanTableProps {
   editingExercise: string | null;
   onToggleExerciseComplete: (exerciseId: string) => void;
   onStartEditing: (exercise: DayExercise) => void;
+  onAddExercise: (dayId: string) => void;
   onShowInstructions: (name: string, instructions: string | null | undefined) => void;
   instructionsExercise: { name: string; instructions: string | null | undefined } | null;
   onSetInstructionsExercise: (exercise: { name: string; instructions: string | null | undefined } | null) => void;
