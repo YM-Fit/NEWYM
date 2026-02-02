@@ -15,9 +15,10 @@ import MyCardio from './MyCardio';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import Logo from '../common/Logo';
+import { lazyWithRetry } from '../../utils/lazyWithRetry';
 
-// Lazy load MyWorkoutPlan to avoid module loading issues
-const MyWorkoutPlan = lazy(() => import('./MyWorkoutPlan'));
+// Lazy load MyWorkoutPlan with retry to handle module loading issues
+const MyWorkoutPlan = lazyWithRetry(() => import('./MyWorkoutPlan'), 3);
 
 interface Trainee {
   id: string;
