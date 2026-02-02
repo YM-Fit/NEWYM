@@ -177,7 +177,7 @@ export default function TodayTraineesSection({
         try {
           const { data: lastWorkoutsData } = await supabase
             .from('workout_trainees')
-            .select('trainee_id, workouts!inner(workout_date)')
+            .select('trainee_id, workouts(workout_date)')
             .in('trainee_id', allTraineeIds)
             .eq('workouts.is_completed', true)
             .order('workouts.workout_date', { ascending: false });

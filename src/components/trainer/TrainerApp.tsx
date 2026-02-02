@@ -310,7 +310,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
       if (traineeIds.length > 0) {
         const { data: lastWorkouts } = await supabase
           .from('workout_trainees')
-          .select('trainee_id, workouts!inner(workout_date, is_completed)')
+          .select('trainee_id, workouts(workout_date, is_completed)')
           .in('trainee_id', traineeIds)
           .eq('workouts.is_completed', true)
           .order('workouts(workout_date)', { ascending: false });
