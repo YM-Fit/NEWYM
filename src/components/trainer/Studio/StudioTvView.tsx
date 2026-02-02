@@ -46,6 +46,8 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showPRMessage, setShowPRMessage] = useState(false);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
+  const [showCompletionScreen, setShowCompletionScreen] = useState(false);
+  const [completionScreenShown, setCompletionScreenShown] = useState<string | null>(null);
   const [lastWorkout, setLastWorkout] = useState<any>(null);
   const [welcomeScreenShown, setWelcomeScreenShown] = useState<string | null>(null); // Store workout ID instead of boolean
 
@@ -403,6 +405,40 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
   const pairName1 = session?.trainee?.pairName1 || 'מתאמן 1';
   const pairName2 = session?.trainee?.pairName2 || 'מתאמן 2';
 
+  // Calculate overall workout progress percentage
+  const overallProgress = useMemo(() => {
+    if (completedExercisesData.length === 0) return { percentage: 0, completedExercises: 0, totalExercises: 0, completedSets: 0, totalSets: 0 };
+
+    const completedExercises = completedExercisesData.filter(e => e.isCompleted).length;
+    const totalExercises = completedExercisesData.length;
+    const completedSets = completedExercisesData.reduce((sum, e) => sum + (e.completedSets || 0), 0);
+    const totalSets = completedExercisesData.reduce((sum, e) => sum + (e.totalSets || 0), 0);
+
+    // Calculate percentage based on sets completed (more granular than exercises)
+    const percentage = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
+
+    return { percentage, completedExercises, totalExercises, completedSets, totalSets };
+  }, [completedExercisesData]);
+
+  // Show completion celebration when workout is 100% complete
+  useEffect(() => {
+    const currentWorkoutId = session?.workout?.id;
+    if (!currentWorkoutId || completionScreenShown === currentWorkoutId) return;
+
+    if (overallProgress.percentage === 100 && overallProgress.totalExercises > 0) {
+      setShowCompletionScreen(true);
+      setShowConfetti(true);
+      setCompletionScreenShown(currentWorkoutId);
+
+      // Auto-hide after 8 seconds
+      const timer = setTimeout(() => {
+        setShowCompletionScreen(false);
+        setShowConfetti(false);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [overallProgress.percentage, overallProgress.totalExercises, session?.workout?.id, completionScreenShown]);
+
   const latestLogs = logs.slice(0, 6);
 
   const isUnauthorized = !user || userType !== 'trainer';
@@ -439,7 +475,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         </div>
       )}
 
-      {/* Welcome Screen - Clean and Professional */}
+      {/* Welcome Screen - Enhanced with workout info and clear states */}
       {showWelcomeScreen && session?.trainee && (
         <div
           className="fixed inset-0 flex items-center justify-center z-50 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
@@ -453,9 +489,21 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
             }}></div>
           </div>
 
+          {/* Decorative elements */}
+          <div className="absolute top-10 right-10 text-emerald-500/20 text-[150px] font-black animate-pulse">💪</div>
+          <div className="absolute bottom-10 left-10 text-emerald-500/20 text-[120px] font-black animate-pulse" style={{ animationDelay: '0.5s' }}>🏋️</div>
+
           <div className="relative z-10 text-center max-w-5xl mx-auto px-12">
+            {/* Status Badge */}
+            <div className="mb-6 animate-[fade-in-up_0.5s_ease-out]">
+              <span className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-lg font-bold">
+                <span className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></span>
+                אימון מתחיל
+              </span>
+            </div>
+
             {/* Logo/Avatar */}
-            <div className="mb-12 flex justify-center">
+            <div className="mb-8 flex justify-center">
               {isPairWorkout ? (
                 <div className="flex items-center gap-6">
                   <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center shadow-2xl shadow-cyan-500/30 animate-[scale-in_0.5s_ease-out]">
@@ -488,52 +536,61 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
               </p>
             )}
 
-            {/* Last Workout Summary - Compact */}
-            {lastWorkout && (
-              <div className="mt-10 animate-[fade-in-up_0.5s_ease-out_0.4s_both]">
-                <p className="text-gray-400 text-xl mb-6">האימון האחרון שלך:</p>
-                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-                  <div className="flex items-center justify-center gap-12 text-white">
-                    <div className="text-center">
-                      <div className="text-4xl font-black text-emerald-400">
-                        {lastWorkout.workout_exercises?.length || 0}
-                      </div>
-                      <div className="text-base text-gray-400">תרגילים</div>
+            {/* Today's Workout Info */}
+            <div className="mt-8 animate-[fade-in-up_0.5s_ease-out_0.35s_both]">
+              <p className="text-gray-300 text-xl mb-4">האימון של היום:</p>
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                <div className="flex items-center justify-center gap-10 text-white">
+                  <div className="text-center">
+                    <div className="text-4xl font-black text-emerald-400 mb-1">
+                      {session?.workout?.exercises?.length || completedExercisesData.length || 0}
                     </div>
-                    <div className="w-px h-16 bg-white/20"></div>
-                    <div className="text-center">
-                      <div className="text-4xl font-black text-emerald-400">
-                        {lastWorkout.workout_exercises?.reduce((sum: number, we: any) =>
-                          sum + (we.exercise_sets?.length || 0), 0) || 0}
-                      </div>
-                      <div className="text-base text-gray-400">סטים</div>
-                    </div>
-                    <div className="w-px h-16 bg-white/20"></div>
-                    <div className="text-center">
-                      <div className="text-4xl font-black text-emerald-400">
-                        {Math.round(lastWorkout.workout_exercises?.reduce((sum: number, we: any) =>
-                          sum + (we.exercise_sets?.reduce((setSum: number, set: any) =>
-                            setSum + ((set.weight || 0) * (set.reps || 0)), 0) || 0), 0) || 0).toLocaleString()}
-                      </div>
-                      <div className="text-base text-gray-400">ק״ג נפח</div>
-                    </div>
+                    <div className="text-base text-gray-300">תרגילים</div>
                   </div>
-                  <div className="mt-6 text-gray-500 text-base">
-                    {new Date(lastWorkout.workout_date).toLocaleDateString('he-IL', {
-                      weekday: 'long',
-                      day: 'numeric',
-                      month: 'long',
-                    })}
+                  <div className="w-px h-16 bg-white/20"></div>
+                  <div className="text-center">
+                    <div className="text-4xl font-black text-cyan-400 mb-1">
+                      {(session?.workout?.exercises || []).reduce((sum, ex) => sum + (ex.sets?.length || 0), 0)}
+                    </div>
+                    <div className="text-base text-gray-300">סטים</div>
+                  </div>
+                  <div className="w-px h-16 bg-white/20"></div>
+                  <div className="text-center">
+                    <div className="text-4xl font-black text-amber-400 mb-1">
+                      0%
+                    </div>
+                    <div className="text-base text-gray-300">הושלם</div>
                   </div>
                 </div>
+
+                {/* Progress bar at 0% */}
+                <div className="mt-4 h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full w-0 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full transition-all duration-1000"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Last Workout Summary - Compact */}
+            {lastWorkout && (
+              <div className="mt-4 animate-[fade-in-up_0.5s_ease-out_0.45s_both]">
+                <p className="text-gray-500 text-sm">באימון הקודם: {Math.round(lastWorkout.workout_exercises?.reduce((sum: number, we: any) =>
+                  sum + (we.exercise_sets?.reduce((setSum: number, set: any) =>
+                    setSum + ((set.weight || 0) * (set.reps || 0)), 0) || 0), 0) || 0).toLocaleString()} ק״ג נפח</p>
               </div>
             )}
 
+            {/* Motivational Message */}
+            <div className="mt-6 animate-[fade-in-up_0.5s_ease-out_0.5s_both]">
+              <p className="text-xl text-white/80 font-medium">
+                {['בואו נעשה את זה! 💪', 'היום נשבור שיאים! 🏆', 'אימון חזק מתחיל עכשיו! 🔥', 'הגוף שלך יודה לך! ⭐'][Math.floor(Date.now() / 86400000) % 4]}
+              </p>
+            </div>
+
             {/* Continue Hint */}
-            <div className="mt-12 animate-[fade-in-up_0.5s_ease-out_0.5s_both]">
-              <div className="inline-flex items-center gap-3 text-gray-500 text-xl">
+            <div className="mt-8 animate-[fade-in-up_0.5s_ease-out_0.6s_both]">
+              <div className="inline-flex items-center gap-3 px-8 py-4 bg-emerald-500/20 rounded-full border border-emerald-500/30 text-emerald-400 text-xl font-bold cursor-pointer hover:bg-emerald-500/30 transition-all">
                 <span>לחץ להתחלה</span>
-                <span className="animate-pulse text-2xl">→</span>
+                <span className="animate-bounce">👆</span>
               </div>
             </div>
           </div>
@@ -555,6 +612,115 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                 {latestRecord.type === 'max_reps' && `${latestRecord.newValue} חזרות`}
                 {latestRecord.type === 'max_volume' && `${Math.round(latestRecord.newValue)} ק״ג`}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Workout Completion Celebration Screen */}
+      {showCompletionScreen && session?.trainee && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900"
+          onClick={() => setShowCompletionScreen(false)}
+        >
+          {/* Animated background particles */}
+          <div className="absolute inset-0 overflow-hidden">
+            {[...Array(30)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute text-4xl animate-float"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 3}s`,
+                  animationDuration: `${4 + Math.random() * 4}s`,
+                }}
+              >
+                {['🎉', '💪', '🏆', '⭐', '🔥'][Math.floor(Math.random() * 5)]}
+              </div>
+            ))}
+          </div>
+
+          <div className="relative z-10 text-center max-w-4xl mx-auto px-8">
+            {/* Celebration Icon */}
+            <div className="mb-8 animate-[scale-in_0.5s_ease-out]">
+              <div className="w-36 h-36 mx-auto rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-2xl shadow-yellow-500/50 animate-pulse">
+                <Trophy className="w-20 h-20 text-white" />
+              </div>
+            </div>
+
+            {/* Completion Text */}
+            <h1 className="text-6xl font-black text-white mb-4 animate-[fade-in-up_0.5s_ease-out_0.2s_both]">
+              כל הכבוד! 🎉
+            </h1>
+            <p className="text-2xl text-emerald-300 font-bold mb-8 animate-[fade-in-up_0.5s_ease-out_0.3s_both]">
+              {isPairWorkout ? `${pairName1} + ${pairName2}` : session.trainee.full_name?.split(' ')[0]} - סיימת את האימון!
+            </p>
+
+            {/* Final Stats */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 animate-[fade-in-up_0.5s_ease-out_0.4s_both]">
+              <div className="grid grid-cols-4 gap-6 text-white">
+                <div className="text-center">
+                  <div className="text-4xl font-black text-emerald-400 mb-1">
+                    {overallProgress.completedExercises}
+                  </div>
+                  <div className="text-base text-gray-300">תרגילים</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl font-black text-cyan-400 mb-1">
+                    {overallProgress.completedSets}
+                  </div>
+                  <div className="text-base text-gray-300">סטים</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl font-black text-amber-400 mb-1">
+                    {completedExercisesData.reduce((sum, e) => sum + (e.totalReps || 0), 0)}
+                  </div>
+                  <div className="text-base text-gray-300">חזרות</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl font-black text-purple-400 mb-1">
+                    {Math.round(completedExercisesData.reduce((sum, e) => sum + (e.totalVolume || 0), 0)).toLocaleString()}
+                  </div>
+                  <div className="text-base text-gray-300">ק״ג נפח</div>
+                </div>
+              </div>
+
+              {/* Progress comparison with last workout */}
+              {lastWorkout && (
+                <div className="mt-4 pt-4 border-t border-white/20">
+                  <div className="text-base text-gray-300">
+                    {(() => {
+                      const lastVolume = lastWorkout.workout_exercises?.reduce((sum: number, we: any) =>
+                        sum + (we.exercise_sets?.reduce((setSum: number, set: any) =>
+                          setSum + ((set.weight || 0) * (set.reps || 0)), 0) || 0), 0) || 0;
+                      const currentVolume = completedExercisesData.reduce((sum, e) => sum + (e.totalVolume || 0), 0);
+                      const diff = currentVolume - lastVolume;
+                      const percent = lastVolume > 0 ? Math.round((diff / lastVolume) * 100) : 0;
+
+                      if (diff > 0) {
+                        return (
+                          <span className="text-emerald-400 font-bold">
+                            📈 {percent}% יותר נפח מהאימון הקודם! (+{Math.round(diff).toLocaleString()} ק״ג)
+                          </span>
+                        );
+                      } else if (diff < 0) {
+                        return (
+                          <span className="text-gray-400">
+                            נפח: {Math.round(currentVolume).toLocaleString()} ק״ג (קודם: {Math.round(lastVolume).toLocaleString()} ק״ג)
+                          </span>
+                        );
+                      }
+                      return <span className="text-gray-400">נפח זהה לאימון הקודם</span>;
+                    })()}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Dismiss hint */}
+            <div className="mt-6 animate-[fade-in-up_0.5s_ease-out_0.6s_both]">
+              <p className="text-gray-400 text-base">לחץ לסגירה</p>
             </div>
           </div>
         </div>
@@ -657,28 +823,80 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                       )}
                     </div>
 
-                    {/* Center: Total Workout Stats */}
-                    <div className="flex items-center gap-12 bg-gray-50 dark:bg-gray-800 px-10 py-4 rounded-xl">
-                      <div className="text-center">
-                        <div className="text-base text-gray-400">נפח כולל</div>
-                        <div className="text-4xl font-black text-gray-900 dark:text-white">
-                          {Math.round(completedExercisesData.reduce((sum, e) => sum + (e.totalVolume || 0), 0))}
-                          <span className="text-lg mr-1">ק״ג</span>
+                    {/* Center: Progress Circle + Stats */}
+                    <div className="flex items-center gap-6">
+                      {/* Large Progress Circle */}
+                      <div className="relative w-24 h-24 flex-shrink-0">
+                        {/* Background circle */}
+                        <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 80 80">
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="32"
+                            stroke="currentColor"
+                            strokeWidth="8"
+                            fill="none"
+                            className="text-gray-200 dark:text-gray-700"
+                          />
+                          {/* Progress circle */}
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="32"
+                            stroke="currentColor"
+                            strokeWidth="8"
+                            fill="none"
+                            strokeLinecap="round"
+                            className={`transition-all duration-500 ${
+                              overallProgress.percentage === 100
+                                ? 'text-emerald-500'
+                                : overallProgress.percentage >= 75
+                                ? 'text-cyan-500'
+                                : overallProgress.percentage >= 50
+                                ? 'text-blue-500'
+                                : overallProgress.percentage >= 25
+                                ? 'text-amber-500'
+                                : 'text-gray-400'
+                            }`}
+                            strokeDasharray={`${2 * Math.PI * 32}`}
+                            strokeDashoffset={`${2 * Math.PI * 32 * (1 - overallProgress.percentage / 100)}`}
+                          />
+                        </svg>
+                        {/* Percentage text in center */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className={`text-2xl font-black ${
+                            overallProgress.percentage === 100
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : 'text-gray-900 dark:text-white'
+                          }`}>
+                            {overallProgress.percentage}%
+                          </span>
                         </div>
                       </div>
-                      <div className="h-14 w-px bg-gray-200 dark:bg-gray-700"></div>
-                      <div className="text-center">
-                        <div className="text-base text-gray-400">סה״כ סטים</div>
-                        <div className="text-4xl font-black text-gray-900 dark:text-white">
-                          {completedExercisesData.reduce((sum, e) => sum + (e.completedSets || 0), 0)}
-                          <span className="text-lg mr-1 text-gray-400">/{completedExercisesData.reduce((sum, e) => sum + (e.totalSets || 0), 0)}</span>
+
+                      {/* Stats */}
+                      <div className="flex items-center gap-8 bg-gray-50 dark:bg-gray-800 px-8 py-3 rounded-xl">
+                        <div className="text-center">
+                          <div className="text-sm text-gray-400">נפח</div>
+                          <div className="text-2xl font-black text-gray-900 dark:text-white">
+                            {Math.round(completedExercisesData.reduce((sum, e) => sum + (e.totalVolume || 0), 0))}
+                            <span className="text-base mr-0.5">ק״ג</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="h-14 w-px bg-gray-200 dark:bg-gray-700"></div>
-                      <div className="text-center">
-                        <div className="text-base text-gray-400">סה״כ חזרות</div>
-                        <div className="text-4xl font-black text-gray-900 dark:text-white">
-                          {completedExercisesData.reduce((sum, e) => sum + (e.totalReps || 0), 0)}
+                        <div className="h-10 w-px bg-gray-200 dark:bg-gray-700"></div>
+                        <div className="text-center">
+                          <div className="text-sm text-gray-400">סטים</div>
+                          <div className="text-2xl font-black text-gray-900 dark:text-white">
+                            {overallProgress.completedSets}
+                            <span className="text-base mr-0.5 text-gray-400">/{overallProgress.totalSets}</span>
+                          </div>
+                        </div>
+                        <div className="h-10 w-px bg-gray-200 dark:bg-gray-700"></div>
+                        <div className="text-center">
+                          <div className="text-sm text-gray-400">חזרות</div>
+                          <div className="text-2xl font-black text-gray-900 dark:text-white">
+                            {completedExercisesData.reduce((sum, e) => sum + (e.totalReps || 0), 0)}
+                          </div>
                         </div>
                       </div>
                     </div>
