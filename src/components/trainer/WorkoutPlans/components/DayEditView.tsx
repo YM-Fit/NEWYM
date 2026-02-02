@@ -71,6 +71,7 @@ export default function DayEditView({
   onCompleteExercise,
   onShowInstructions,
   onUpdateExercise,
+  onUpdateAllExercises,
   onAddSet,
   onRemoveSet,
   onUpdateSet,
@@ -118,11 +119,13 @@ export default function DayEditView({
     weight?: number;
     rpe?: number | null;
   }) => {
-    // Update each exercise individually using onUpdateExercise
-    day.exercises.forEach((exercise, exerciseIndex) => {
+    // Build all updated exercises at once, then update them all together
+    const updatedExercises = day.exercises.map((exercise) => {
+      let newExercise = { ...exercise };
+
       // Update rest seconds if needed
       if (updates.restSeconds !== undefined) {
-        onUpdateExercise(exerciseIndex, 'rest_seconds', updates.restSeconds);
+        newExercise = { ...newExercise, rest_seconds: updates.restSeconds };
       }
 
       // Update sets
@@ -182,9 +185,12 @@ export default function DayEditView({
         return updatedSet;
       });
 
-      // Update the exercise's sets
-      onUpdateExercise(exerciseIndex, 'sets', newSets);
+      newExercise.sets = newSets;
+      return newExercise;
     });
+
+    // Update all exercises at once
+    onUpdateAllExercises(updatedExercises);
   };
 
   return (

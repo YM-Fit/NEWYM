@@ -71,7 +71,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
     setSelectedDay
   );
 
-  const { addExercise, removeExercise, updateExercise } = useWorkoutPlanExercises(
+  const { addExercise, removeExercise, updateExercise, updateAllExercises } = useWorkoutPlanExercises(
     selectedDay,
     days,
     setDays,
@@ -447,6 +447,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
         onCompleteExercise={completeExercise}
         onShowInstructions={(name, instructions) => setInstructionsExercise({ name, instructions })}
         onUpdateExercise={updateExercise}
+        onUpdateAllExercises={updateAllExercises}
         onAddSet={addSet}
         onRemoveSet={removeSet}
         onUpdateSet={updateSet}
