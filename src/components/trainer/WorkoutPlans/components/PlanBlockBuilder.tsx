@@ -40,22 +40,11 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock }: P
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Get trainer_id from user
-      const { data: trainerData } = await supabase
-        .from('trainers')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!trainerData) {
-        setLoading(false);
-        return;
-      }
-
+      // trainers.id equals auth.uid(), so we can use user.id directly
       const { data, error } = await supabase
         .from('workout_plan_blocks')
         .select('*')
-        .eq('trainer_id', trainerData.id)
+        .eq('trainer_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -89,30 +78,46 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock }: P
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: trainerData } = await supabase
-        .from('trainers')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
+      // Clean and serialize the days data for JSONB storage
+      const cleanedDays = selectedDays.map(day => ({
+        day_number: day.day_number,
+        day_name: day.day_name || null,
+        focus: day.focus || null,
+        notes: day.notes || null,
+        exercises: day.exercises.map(ex => ({
+          exercise_id: ex.exercise?.id || null,
+          exercise_name: ex.exercise?.name || null,
+          sets: ex.sets.map(set => ({
+            set_number: set.set_number,
+            weight: set.weight || null,
+            reps: set.reps || null,
+            rpe: set.rpe || null,
+            set_type: set.set_type || 'regular',
+            failure: set.failure || false,
+            equipment_id: set.equipment_id || null,
+            superset_exercise_id: set.superset_exercise_id || null,
+            superset_weight: set.superset_weight || null,
+            superset_reps: set.superset_reps || null,
+            superset_rpe: set.superset_rpe || null,
+            superset_equipment_id: set.superset_equipment_id || null,
+            superset_dropset_weight: set.superset_dropset_weight || null,
+            superset_dropset_reps: set.superset_dropset_reps || null,
+            dropset_weight: set.dropset_weight || null,
+            dropset_reps: set.dropset_reps || null,
+          })),
+          rest_seconds: ex.rest_seconds || 90,
+          notes: ex.notes || null,
+        })),
+      }));
 
-      if (!trainerData) {
-        toast.error('מאמן לא נמצא');
-        return;
-      }
-
+      // trainers.id equals auth.uid(), so we can use user.id directly
       const { error } = await supabase
         .from('workout_plan_blocks')
         .insert({
-          trainer_id: trainerData.id,
+          trainer_id: user.id,
           name: newBlockName,
           description: newBlockDescription || null,
-          days: selectedDays.map(day => ({
-            day_number: day.day_number,
-            day_name: day.day_name,
-            focus: day.focus,
-            notes: day.notes,
-            exercises: day.exercises,
-          })),
+          days: cleanedDays,
         } as any);
 
       if (error) throw error;

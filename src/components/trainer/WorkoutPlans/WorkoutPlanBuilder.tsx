@@ -187,24 +187,55 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
       if (activePlanId) {
         // Update existing plan - first save all new data, then delete old
         // Step 1: Update plan metadata
-        const updateData = {
+        const updateData: any = {
           name: planName,
           description: planDescription || null,
           days_per_week: daysPerWeek,
           rest_days_between: restDaysBetween,
           include_cardio: includeCardio,
-          cardio_type_id: includeCardio ? cardioTypeId : null,
-          cardio_frequency: includeCardio ? cardioFrequency : null,
-          cardio_weekly_goal_steps: includeCardio ? cardioWeeklyGoalSteps : null,
           updated_at: new Date().toISOString(),
         };
-        const { error: updateError } = await (supabase
-          .from('trainee_workout_plans') as any)
-          .update(updateData as any)
+
+        // Only include cardio fields if cardio is included
+        if (includeCardio) {
+          if (cardioTypeId) {
+            updateData.cardio_type_id = cardioTypeId;
+          } else {
+            updateData.cardio_type_id = null;
+          }
+          if (cardioFrequency !== null && cardioFrequency !== undefined) {
+            updateData.cardio_frequency = cardioFrequency;
+          } else {
+            updateData.cardio_frequency = null;
+          }
+          if (cardioWeeklyGoalSteps !== null && cardioWeeklyGoalSteps !== undefined) {
+            updateData.cardio_weekly_goal_steps = cardioWeeklyGoalSteps;
+          } else {
+            updateData.cardio_weekly_goal_steps = null;
+          }
+        } else {
+          // Clear cardio fields if cardio is not included
+          updateData.cardio_type_id = null;
+          updateData.cardio_frequency = null;
+          updateData.cardio_weekly_goal_steps = null;
+        }
+
+        const { error: updateError } = await supabase
+          .from('trainee_workout_plans')
+          .update(updateData)
           .eq('id', activePlanId);
 
         if (updateError) {
-          toast.error('שגיאה בעדכון תוכנית');
+          logger.error('Error updating plan', updateError, 'WorkoutPlanBuilder');
+          console.error('Plan update error details:', {
+            message: updateError.message,
+            details: updateError.details,
+            hint: updateError.hint,
+            code: updateError.code,
+            updateData,
+            activePlanId,
+          });
+          toast.error(`שגיאה בעדכון תוכנית: ${updateError.message || 'שגיאה לא ידועה'}`);
           setSaving(false);
           return;
         }
@@ -310,26 +341,53 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
         }
       } else {
         // Create new plan
+        const insertData: any = {
+          trainer_id: user.id,
+          trainee_id: traineeId,
+          name: planName,
+          description: planDescription || null,
+          days_per_week: daysPerWeek,
+          rest_days_between: restDaysBetween,
+          include_cardio: includeCardio,
+          is_active: true,
+        };
+
+        // Only include cardio fields if cardio is included
+        if (includeCardio) {
+          if (cardioTypeId) {
+            insertData.cardio_type_id = cardioTypeId;
+          }
+          if (cardioFrequency !== null && cardioFrequency !== undefined) {
+            insertData.cardio_frequency = cardioFrequency;
+          }
+          if (cardioWeeklyGoalSteps !== null && cardioWeeklyGoalSteps !== undefined) {
+            insertData.cardio_weekly_goal_steps = cardioWeeklyGoalSteps;
+          }
+        }
+
         const { data: plan, error: planError } = await supabase
           .from('trainee_workout_plans')
-          .insert({
-            trainer_id: user.id,
-            trainee_id: traineeId,
-            name: planName,
-            description: planDescription || null,
-            days_per_week: daysPerWeek,
-            rest_days_between: restDaysBetween,
-            include_cardio: includeCardio,
-            cardio_type_id: includeCardio ? cardioTypeId : null,
-            cardio_frequency: includeCardio ? cardioFrequency : null,
-            cardio_weekly_goal_steps: includeCardio ? cardioWeeklyGoalSteps : null,
-            is_active: true,
-          } as any)
+          .insert(insertData)
           .select()
           .single();
 
-        if (planError || !plan) {
-          toast.error('שגיאה ביצירת תוכנית');
+        if (planError) {
+          logger.error('Error creating plan', planError, 'WorkoutPlanBuilder');
+          console.error('Plan insert error details:', {
+            message: planError.message,
+            details: planError.details,
+            hint: planError.hint,
+            code: planError.code,
+            insertData,
+          });
+          toast.error(`שגיאה ביצירת תוכנית: ${planError.message || 'שגיאה לא ידועה'}`);
+          setSaving(false);
+          return;
+        }
+
+        if (!plan) {
+          logger.error('No plan returned after insert', null, 'WorkoutPlanBuilder');
+          toast.error('שגיאה ביצירת תוכנית - לא התקבל מזהה תוכנית');
           setSaving(false);
           return;
         }
