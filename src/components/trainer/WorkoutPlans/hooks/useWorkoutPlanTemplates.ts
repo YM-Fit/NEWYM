@@ -85,25 +85,68 @@ export function useWorkoutPlanTemplates() {
             for (const ex of day.exercises) {
               // If we have exercise_id, fetch the full exercise data
               let exerciseData = ex.exercise;
-              if (ex.exercise_id && !exerciseData) {
-                const { data: exercise, error: exerciseError } = await supabase
+              
+              // Check if we need to load exercise from database
+              if (ex.exercise_id) {
+                if (!exerciseData || !exerciseData.id) {
+                  const { data: exercise, error: exerciseError } = await supabase
+                    .from('exercises')
+                    .select('id, name, muscle_group_id')
+                    .eq('id', ex.exercise_id)
+                    .single();
+                  
+                  if (exerciseError) {
+                    logger.warn('Error loading exercise for template', exerciseError, 'useWorkoutPlanTemplates');
+                    continue;
+                  }
+                  exerciseData = exercise;
+                }
+              } else if (ex.exercise_name) {
+                // If we only have exercise_name, try to find the exercise
+                const { data: exercises, error: exerciseError } = await supabase
                   .from('exercises')
                   .select('id, name, muscle_group_id')
-                  .eq('id', ex.exercise_id)
-                  .single();
+                  .eq('name', ex.exercise_name)
+                  .limit(1);
                 
-                if (exerciseError) {
-                  logger.warn('Error loading exercise for template', exerciseError, 'useWorkoutPlanTemplates');
-                  continue;
+                if (!exerciseError && exercises && exercises.length > 0) {
+                  exerciseData = exercises[0];
+                } else {
+                  // Create a temporary exercise object if not found
+                  exerciseData = {
+                    id: `temp-${Date.now()}-${Math.random()}`,
+                    name: ex.exercise_name,
+                    muscle_group_id: null,
+                  };
                 }
-                exerciseData = exercise;
               }
               
               if (exerciseData) {
+                // Reconstruct sets from saved data
+                const sets = (ex.sets || []).map((set: any, index: number) => ({
+                  id: `${day.day_number}-${ex.exercise_id || Date.now()}-${index}`,
+                  set_number: set.set_number || index + 1,
+                  weight: set.weight || null,
+                  reps: set.reps || null,
+                  rpe: set.rpe || null,
+                  set_type: set.set_type || 'regular',
+                  failure: set.failure || false,
+                  equipment_id: set.equipment_id || null,
+                  superset_exercise_id: set.superset_exercise_id || null,
+                  superset_weight: set.superset_weight || null,
+                  superset_reps: set.superset_reps || null,
+                  superset_rpe: set.superset_rpe || null,
+                  superset_equipment_id: set.superset_equipment_id || null,
+                  superset_dropset_weight: set.superset_dropset_weight || null,
+                  superset_dropset_reps: set.superset_dropset_reps || null,
+                  dropset_weight: set.dropset_weight || null,
+                  dropset_reps: set.dropset_reps || null,
+                }));
+                
                 planExercises.push({
-                  tempId: `${day.day_number}-${ex.exercise_id || Date.now()}`,
+                  tempId: `${day.day_number}-${ex.exercise_id || Date.now()}-${Math.random()}`,
                   exercise: exerciseData,
-                  sets: ex.sets || [],
+                  sets: sets.length > 0 ? sets : [{ id: `${Date.now()}-${Math.random()}`, set_number: 1, weight: null, reps: null, rpe: null, set_type: 'regular', failure: false }],
                   rest_seconds: ex.rest_seconds || 90,
                   notes: ex.notes || '',
                 });
@@ -126,6 +169,8 @@ export function useWorkoutPlanTemplates() {
         setPlanDescription(template.description || '');
         setDaysPerWeek(template.days.length);
         toast.success('תבנית נטענה בהצלחה!');
+      } else {
+        toast.error('התבנית ריקה');
       }
     } catch (error) {
       logger.error('Error loading template', error, 'useWorkoutPlanTemplates');

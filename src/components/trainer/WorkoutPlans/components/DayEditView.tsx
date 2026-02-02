@@ -1,10 +1,11 @@
-import React from 'react';
-import { ArrowRight, Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowRight, Plus, Settings } from 'lucide-react';
 import ExerciseSelector from '../../Workouts/ExerciseSelector';
 import QuickNumericPad from '../../Workouts/QuickNumericPad';
 import EquipmentSelector from '../../Equipment/EquipmentSelector';
 import ExerciseInstructionsModal from '../../../common/ExerciseInstructionsModal';
-import type { WorkoutDay, PlanExercise, Exercise, Equipment } from '../types';
+import BulkEditModal from './BulkEditModal';
+import type { WorkoutDay, PlanExercise, Exercise, Equipment, SetData } from '../types';
 import type { NumericPadState, SupersetNumericPadState, DropsetNumericPadState, SupersetDropsetNumericPadState, SelectorState } from '../types';
 import { dayColors } from '../constants';
 import WorkoutExerciseCard from './WorkoutExerciseCard';
@@ -106,8 +107,85 @@ export default function DayEditView({
   onSetSupersetEquipmentSelector,
   onSetInstructionsExercise,
 }: DayEditViewProps) {
+  const [showBulkEdit, setShowBulkEdit] = useState(false);
   const colorIndex = (day.day_number - 1) % dayColors.length;
   const color = dayColors[colorIndex];
+
+  const handleBulkEdit = (updates: {
+    setsCount?: number;
+    reps?: number;
+    restSeconds?: number;
+    weight?: number;
+    rpe?: number | null;
+  }) => {
+    // Update each exercise individually using onUpdateExercise
+    day.exercises.forEach((exercise, exerciseIndex) => {
+      // Update rest seconds if needed
+      if (updates.restSeconds !== undefined) {
+        onUpdateExercise(exerciseIndex, 'rest_seconds', updates.restSeconds);
+      }
+
+      // Update sets
+      let newSets = [...exercise.sets];
+      
+      if (updates.setsCount !== undefined) {
+        // Adjust sets count
+        if (updates.setsCount > newSets.length) {
+          // Add new sets based on the last set
+          const lastSet = newSets.length > 0 ? newSets[newSets.length - 1] : {
+            id: `${Date.now()}-${Math.random()}`,
+            set_number: 1,
+            weight: null,
+            reps: null,
+            rpe: null,
+            set_type: 'regular' as const,
+            failure: false,
+            equipment_id: null,
+            superset_exercise_id: null,
+            superset_weight: null,
+            superset_reps: null,
+            superset_rpe: null,
+            superset_equipment_id: null,
+            superset_dropset_weight: null,
+            superset_dropset_reps: null,
+            dropset_weight: null,
+            dropset_reps: null,
+          };
+          
+          for (let i = newSets.length; i < updates.setsCount; i++) {
+            newSets.push({
+              ...lastSet,
+              id: `${Date.now()}-${Math.random()}-${i}`,
+              set_number: i + 1,
+            });
+          }
+        } else if (updates.setsCount < newSets.length) {
+          // Remove sets
+          newSets = newSets.slice(0, updates.setsCount);
+        }
+      }
+
+      // Update all sets with new values
+      newSets = newSets.map((set, index) => {
+        const updatedSet = { ...set, set_number: index + 1 };
+        
+        if (updates.reps !== undefined) {
+          updatedSet.reps = updates.reps;
+        }
+        if (updates.weight !== undefined) {
+          updatedSet.weight = updates.weight;
+        }
+        if (updates.rpe !== undefined) {
+          updatedSet.rpe = updates.rpe;
+        }
+        
+        return updatedSet;
+      });
+
+      // Update the exercise's sets
+      onUpdateExercise(exerciseIndex, 'sets', newSets);
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 lg:p-6">
@@ -131,12 +209,24 @@ export default function DayEditView({
               </div>
             </div>
           </div>
-          <button
-            onClick={() => onComplete(day.tempId)}
-            className="bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground px-5 py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-          >
-            סיים יום
-          </button>
+          <div className="flex items-center gap-2">
+            {day.exercises.length > 0 && (
+              <button
+                onClick={() => setShowBulkEdit(true)}
+                className="bg-surface200 hover:bg-surface300 text-muted700 px-4 py-3 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-2"
+                title="עריכה קולקטיבית"
+              >
+                <Settings className="w-4 h-4" />
+                עריכה קולקטיבית
+              </button>
+            )}
+            <button
+              onClick={() => onComplete(day.tempId)}
+              className="bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground px-5 py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            >
+              סיים יום
+            </button>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -216,13 +306,32 @@ export default function DayEditView({
         })}
       </div>
 
-      <button
-        onClick={() => onSetShowExerciseSelector(true)}
-        className="w-full mt-4 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]"
-      >
-        <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
-        <span className="font-bold text-lg lg:text-xl">הוסף תרגיל</span>
-      </button>
+      <div className="flex gap-3 mt-4">
+        {day.exercises.length > 0 && (
+          <button
+            onClick={() => setShowBulkEdit(true)}
+            className="flex-1 bg-surface200 hover:bg-surface300 text-muted700 py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-lg hover:shadow-xl font-bold text-lg lg:text-xl"
+          >
+            <Settings className="h-6 w-6 lg:h-7 lg:w-7" />
+            <span>עריכה קולקטיבית</span>
+          </button>
+        )}
+        <button
+          onClick={() => onSetShowExerciseSelector(true)}
+          className={`${day.exercises.length > 0 ? 'flex-1' : 'w-full'} bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]`}
+        >
+          <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
+          <span className="font-bold text-lg lg:text-xl">הוסף תרגיל</span>
+        </button>
+      </div>
+
+      {/* Bulk Edit Modal */}
+      <BulkEditModal
+        isOpen={showBulkEdit}
+        day={day}
+        onClose={() => setShowBulkEdit(false)}
+        onApply={handleBulkEdit}
+      />
 
       {showExerciseSelector && (
         <ExerciseSelector
