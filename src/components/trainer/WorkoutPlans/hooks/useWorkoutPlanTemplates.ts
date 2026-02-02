@@ -14,24 +14,61 @@ export function useWorkoutPlanTemplates() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    let query = supabase
-      .from('workout_plan_templates')
-      .select('*')
-      .eq('trainer_id', user.id);
+    try {
+      let query = supabase
+        .from('workout_plan_templates')
+        .select('*')
+        .eq('trainer_id', user.id);
 
-    // If traineeId is provided, load both general templates (trainee_id IS NULL) 
-    // and trainee-specific templates (trainee_id = traineeId)
-    if (traineeId) {
-      query = query.or(`trainee_id.is.null,trainee_id.eq.${traineeId}`);
-    } else {
-      // Load only general templates
-      query = query.is('trainee_id', null);
-    }
+      // If traineeId is provided, load both general templates (trainee_id IS NULL) 
+      // and trainee-specific templates (trainee_id = traineeId)
+      if (traineeId) {
+        // Use separate queries and combine results, as or() with null checks can be problematic
+        const [generalResult, specificResult] = await Promise.all([
+          supabase
+            .from('workout_plan_templates')
+            .select('*')
+            .eq('trainer_id', user.id)
+            .is('trainee_id', null)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('workout_plan_templates')
+            .select('*')
+            .eq('trainer_id', user.id)
+            .eq('trainee_id', traineeId)
+            .order('created_at', { ascending: false }),
+        ]);
 
-    const { data } = await query.order('created_at', { ascending: false });
-
-    if (data) {
-      setTemplates(data);
+        const generalTemplates = generalResult.data || [];
+        const specificTemplates = specificResult.data || [];
+        
+        // Combine and deduplicate by id
+        const allTemplates = [...generalTemplates, ...specificTemplates];
+        const uniqueTemplates = allTemplates.filter((template, index, self) =>
+          index === self.findIndex(t => t.id === template.id)
+        );
+        
+        // Sort by created_at descending
+        uniqueTemplates.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        
+        setTemplates(uniqueTemplates);
+      } else {
+        // Load only general templates
+        const { data, error } = await query.is('trainee_id', null).order('created_at', { ascending: false });
+        
+        if (error) {
+          logger.error('Error loading templates', error, 'useWorkoutPlanTemplates');
+          return;
+        }
+        
+        if (data) {
+          setTemplates(data);
+        }
+      }
+    } catch (error) {
+      logger.error('Error loading templates', error, 'useWorkoutPlanTemplates');
     }
   }, []);
 
@@ -144,15 +181,23 @@ export function useWorkoutPlanTemplates() {
       })),
     }));
 
-    const { error } = await supabase
+    const insertData: any = {
+      trainer_id: user.id,
+      name: templateName,
+      description: planDescription || null,
+      days: cleanedDays,
+    };
+
+    // Only include trainee_id if it's provided (not null/undefined)
+    if (traineeId) {
+      insertData.trainee_id = traineeId;
+    }
+
+    const { error, data } = await supabase
       .from('workout_plan_templates')
-      .insert({
-        trainer_id: user.id,
-        trainee_id: traineeId || null,
-        name: templateName,
-        description: planDescription || null,
-        days: cleanedDays,
-      });
+      .insert(insertData)
+      .select()
+      .single();
 
     if (error) {
       logger.error('Error saving template', error, 'useWorkoutPlanTemplates');
