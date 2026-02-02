@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../../../../lib/supabase';
 import toast from 'react-hot-toast';
+import { logger } from '../../../../utils/logger';
 import type { WorkoutPlanTemplate, WorkoutDay } from '../types';
 
 export function useWorkoutPlanTemplates() {
@@ -34,24 +35,67 @@ export function useWorkoutPlanTemplates() {
     }
   }, []);
 
-  const loadTemplate = useCallback((template: WorkoutPlanTemplate, setDays: (days: WorkoutDay[]) => void, setPlanName: (name: string) => void, setPlanDescription: (desc: string) => void, setDaysPerWeek: (days: number) => void) => {
-    if (template.days && template.days.length > 0) {
-      const loadedDays: WorkoutDay[] = template.days.map((day: any, index: number) => ({
-        tempId: Date.now().toString() + Math.random() + index,
-        day_number: day.day_number,
-        day_name: day.day_name || '',
-        focus: day.focus || '',
-        notes: day.notes || '',
-        exercises: day.exercises || [],
-      }));
+  const loadTemplate = useCallback(async (template: WorkoutPlanTemplate, setDays: (days: WorkoutDay[]) => void, setPlanName: (name: string) => void, setPlanDescription: (desc: string) => void, setDaysPerWeek: (days: number) => void) => {
+    try {
+      if (template.days && template.days.length > 0) {
+        // Load exercises from database if we only have IDs
+        const loadedDays: WorkoutDay[] = [];
+        
+        for (const day of template.days as any[]) {
+          const planExercises: any[] = [];
+          
+          if (day.exercises && Array.isArray(day.exercises)) {
+            for (const ex of day.exercises) {
+              // If we have exercise_id, fetch the full exercise data
+              let exerciseData = ex.exercise;
+              if (ex.exercise_id && !exerciseData) {
+                const { data: exercise, error: exerciseError } = await supabase
+                  .from('exercises')
+                  .select('id, name, muscle_group_id')
+                  .eq('id', ex.exercise_id)
+                  .single();
+                
+                if (exerciseError) {
+                  logger.warn('Error loading exercise for template', exerciseError, 'useWorkoutPlanTemplates');
+                  continue;
+                }
+                exerciseData = exercise;
+              }
+              
+              if (exerciseData) {
+                planExercises.push({
+                  tempId: `${day.day_number}-${ex.exercise_id || Date.now()}`,
+                  exercise: exerciseData,
+                  sets: ex.sets || [],
+                  rest_seconds: ex.rest_seconds || 90,
+                  notes: ex.notes || '',
+                });
+              }
+            }
+          }
+          
+          loadedDays.push({
+            tempId: Date.now().toString() + Math.random(),
+            day_number: day.day_number,
+            day_name: day.day_name || '',
+            focus: day.focus || '',
+            notes: day.notes || '',
+            exercises: planExercises,
+          });
+        }
 
-      setDays(loadedDays);
-      setPlanName(template.name);
-      setPlanDescription(template.description || '');
-      setDaysPerWeek(template.days.length);
-      toast.success('תבנית נטענה בהצלחה!');
+        setDays(loadedDays);
+        setPlanName(template.name);
+        setPlanDescription(template.description || '');
+        setDaysPerWeek(template.days.length);
+        toast.success('תבנית נטענה בהצלחה!');
+      }
+    } catch (error) {
+      logger.error('Error loading template', error, 'useWorkoutPlanTemplates');
+      toast.error('שגיאה בטעינת התבנית');
+    } finally {
+      setShowLoadTemplateModal(false);
     }
-    setShowLoadTemplateModal(false);
   }, []);
 
   const saveTemplate = useCallback(async (templateName: string, planDescription: string, days: WorkoutDay[], traineeId?: string | null) => {
@@ -68,6 +112,38 @@ export function useWorkoutPlanTemplates() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
+    // Clean and serialize the data for JSONB storage
+    const cleanedDays = days.map(day => ({
+      day_number: day.day_number,
+      day_name: day.day_name || null,
+      focus: day.focus || null,
+      notes: day.notes || null,
+      exercises: day.exercises.map(ex => ({
+        exercise_id: ex.exercise?.id || null,
+        exercise_name: ex.exercise?.name || null,
+        sets: ex.sets.map(set => ({
+          set_number: set.set_number,
+          weight: set.weight || null,
+          reps: set.reps || null,
+          rpe: set.rpe || null,
+          set_type: set.set_type || 'regular',
+          failure: set.failure || false,
+          equipment_id: set.equipment_id || null,
+          superset_exercise_id: set.superset_exercise_id || null,
+          superset_weight: set.superset_weight || null,
+          superset_reps: set.superset_reps || null,
+          superset_rpe: set.superset_rpe || null,
+          superset_equipment_id: set.superset_equipment_id || null,
+          superset_dropset_weight: set.superset_dropset_weight || null,
+          superset_dropset_reps: set.superset_dropset_reps || null,
+          dropset_weight: set.dropset_weight || null,
+          dropset_reps: set.dropset_reps || null,
+        })),
+        rest_seconds: ex.rest_seconds || 90,
+        notes: ex.notes || null,
+      })),
+    }));
+
     const { error } = await supabase
       .from('workout_plan_templates')
       .insert({
@@ -75,23 +151,12 @@ export function useWorkoutPlanTemplates() {
         trainee_id: traineeId || null,
         name: templateName,
         description: planDescription || null,
-        days: days.map(day => ({
-          day_number: day.day_number,
-          day_name: day.day_name,
-          focus: day.focus,
-          notes: day.notes,
-          exercises: day.exercises.map(ex => ({
-            tempId: ex.tempId,
-            exercise: ex.exercise,
-            sets: ex.sets,
-            rest_seconds: ex.rest_seconds,
-            notes: ex.notes,
-          })),
-        })),
+        days: cleanedDays,
       });
 
     if (error) {
-      toast.error('שגיאה בשמירת התבנית');
+      logger.error('Error saving template', error, 'useWorkoutPlanTemplates');
+      toast.error(`שגיאה בשמירת התבנית: ${error.message || 'שגיאה לא ידועה'}`);
       return false;
     }
 

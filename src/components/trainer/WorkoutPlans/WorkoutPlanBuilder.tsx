@@ -157,8 +157,8 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
     loadCardioTypes();
   }, [traineeId, loadActivePlan, loadTemplates]);
 
-  const handleLoadTemplate = (template: WorkoutPlanTemplate) => {
-    loadTemplate(template, setDays, setPlanName, setPlanDescription, setDaysPerWeek);
+  const handleLoadTemplate = async (template: WorkoutPlanTemplate) => {
+    await loadTemplate(template, setDays, setPlanName, setPlanDescription, setDaysPerWeek);
   };
 
   const handleSaveAsTemplate = async (isGeneral: boolean) => {
