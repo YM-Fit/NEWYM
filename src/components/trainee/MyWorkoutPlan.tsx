@@ -987,6 +987,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           );
         })}
       </div>
+      )}
 
       {/* Empty State */}
       {days.length === 0 && (

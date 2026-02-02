@@ -18,7 +18,28 @@ import Logo from '../common/Logo';
 import { lazyWithRetry } from '../../utils/lazyWithRetry';
 
 // Lazy load MyWorkoutPlan with retry to handle module loading issues
-const MyWorkoutPlan = lazyWithRetry(() => import('./MyWorkoutPlan'), 3);
+// Using a more robust import with error handling
+const MyWorkoutPlan = lazyWithRetry(
+  () => import('./MyWorkoutPlan').catch((error) => {
+    console.error('[TraineeApp] Failed to load MyWorkoutPlan:', error);
+    // Return a fallback component if import fails
+    return {
+      default: ({ traineeId }: { traineeId: string | null }) => (
+        <div className="p-6 text-center">
+          <p className="text-red-400 mb-4">שגיאה בטעינת תוכנית האימון</p>
+          <p className="text-sm text-gray-400 mb-4">אנא נסה לרענן את הדף</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+          >
+            רענן דף
+          </button>
+        </div>
+      )
+    };
+  }),
+  3
+);
 
 interface Trainee {
   id: string;
@@ -241,7 +262,9 @@ export default function TraineeApp() {
         <div className="mx-auto max-w-5xl space-y-4 md:space-y-6">
         {activeTab === 'dashboard' && <TraineeDashboard traineeId={traineeId} traineeName={trainee?.full_name || ''} />}
         {activeTab === 'workout-plan' && (
-          <Suspense fallback={<LoadingSpinner size="lg" text="טוען תוכנית אימון..." />}>
+          <Suspense 
+            fallback={<LoadingSpinner size="lg" text="טוען תוכנית אימון..." />}
+          >
             <MyWorkoutPlan traineeId={traineeId} />
           </Suspense>
         )}
