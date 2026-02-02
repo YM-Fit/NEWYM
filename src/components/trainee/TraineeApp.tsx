@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { supabase } from '../../lib/supabase';
@@ -8,7 +8,6 @@ import TraineeDashboard from './TraineeDashboard';
 import MyMeasurements from './MyMeasurements';
 import WorkoutHistory from './WorkoutHistory';
 import MyMealPlan from './MyMealPlan';
-import MyWorkoutPlan from './MyWorkoutPlan';
 import MyMentalTools from './MyMentalTools';
 import FoodDiary from './FoodDiary';
 import SelfWorkoutSession from './SelfWorkoutSession';
@@ -16,6 +15,9 @@ import MyCardio from './MyCardio';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import Logo from '../common/Logo';
+
+// Lazy load MyWorkoutPlan to avoid module loading issues
+const MyWorkoutPlan = lazy(() => import('./MyWorkoutPlan'));
 
 interface Trainee {
   id: string;
@@ -237,7 +239,11 @@ export default function TraineeApp() {
       >
         <div className="mx-auto max-w-5xl space-y-4 md:space-y-6">
         {activeTab === 'dashboard' && <TraineeDashboard traineeId={traineeId} traineeName={trainee?.full_name || ''} />}
-        {activeTab === 'workout-plan' && <MyWorkoutPlan traineeId={traineeId} />}
+        {activeTab === 'workout-plan' && (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען תוכנית אימון..." />}>
+            <MyWorkoutPlan traineeId={traineeId} />
+          </Suspense>
+        )}
         {activeTab === 'workouts' && <WorkoutHistory traineeId={traineeId} traineeName={trainee?.full_name} trainerId={trainee?.trainer_id} />}
         {activeTab === 'measurements' && <MyMeasurements traineeId={traineeId} trainerId={trainee?.trainer_id} traineeName={trainee?.full_name} />}
         {activeTab === 'menu' && <MyMealPlan traineeId={traineeId} />}
