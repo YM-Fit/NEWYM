@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface UseAsyncOptions<T> {
   immediate?: boolean;
@@ -26,18 +26,33 @@ export function useAsync<T>(
     loading: immediate,
     error: null,
   });
+  const mountedRef = useRef(true);
+
+  // Track mounted state
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const execute = useCallback(async () => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
       const data = await asyncFunction();
-      setState({ data, loading: false, error: null });
-      onSuccess?.(data);
+      // Only update state if component is still mounted
+      if (mountedRef.current) {
+        setState({ data, loading: false, error: null });
+        onSuccess?.(data);
+      }
     } catch (error) {
-      const err = error instanceof Error ? error : new Error('שגיאה בלתי צפויה');
-      setState({ data: null, loading: false, error: err });
-      onError?.(err);
+      // Only update state if component is still mounted
+      if (mountedRef.current) {
+        const err = error instanceof Error ? error : new Error('שגיאה בלתי צפויה');
+        setState({ data: null, loading: false, error: err });
+        onError?.(err);
+      }
     }
   }, [asyncFunction, onSuccess, onError]);
 

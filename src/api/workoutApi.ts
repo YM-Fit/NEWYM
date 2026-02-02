@@ -280,6 +280,11 @@ export async function syncWorkoutToCalendar(
       return { error: 'אימון לא נמצא' };
     }
 
+    // Validate workout has trainees
+    if (!workout.workout_trainees || workout.workout_trainees.length === 0) {
+      return { error: 'אימון ללא מתאמנים' };
+    }
+
     // Check if already synced
     const { data: existingSync } = await supabase
       .from('google_calendar_sync')
@@ -322,8 +327,7 @@ export async function syncWorkoutToCalendar(
         startTime: workoutDate,
         endTime: endDate,
         attendees: trainee?.email ? [trainee.email] : undefined,
-      },
-      accessToken
+      }
     );
 
     if (eventResult.error || !eventResult.data) {

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 interface OptimisticUpdateOptions<T> {
@@ -16,6 +16,10 @@ export function useOptimisticUpdate<T>(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
+  // Use refs to avoid recreating callback when options change
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
   const execute = useCallback(
     async (optimisticData: T, actualData?: T) => {
       setIsLoading(true);
@@ -23,13 +27,13 @@ export function useOptimisticUpdate<T>(
 
       try {
         const result = await updateFn(actualData || optimisticData);
-        
-        if (options.onSuccess) {
-          options.onSuccess(result);
+
+        if (optionsRef.current.onSuccess) {
+          optionsRef.current.onSuccess(result);
         }
-        
-        if (options.successMessage) {
-          toast.success(options.successMessage);
+
+        if (optionsRef.current.successMessage) {
+          toast.success(optionsRef.current.successMessage);
         }
 
         return result;
@@ -37,12 +41,12 @@ export function useOptimisticUpdate<T>(
         const error = err instanceof Error ? err : new Error('שגיאה בלתי צפויה');
         setError(error);
 
-        if (options.onError) {
-          options.onError(error);
+        if (optionsRef.current.onError) {
+          optionsRef.current.onError(error);
         }
 
-        if (options.errorMessage) {
-          toast.error(options.errorMessage);
+        if (optionsRef.current.errorMessage) {
+          toast.error(optionsRef.current.errorMessage);
         } else {
           toast.error(error.message || 'שגיאה בעדכון הנתונים');
         }
@@ -52,7 +56,7 @@ export function useOptimisticUpdate<T>(
         setIsLoading(false);
       }
     },
-    [updateFn, options]
+    [updateFn]
   );
 
   return {

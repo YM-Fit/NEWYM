@@ -201,13 +201,21 @@ function AppContent() {
     });
 
     // Track bundle performance after load
+    let loadHandler: (() => void) | null = null;
     if (document.readyState === 'complete') {
       trackBundlePerformance();
     } else {
-      window.addEventListener('load', () => {
+      loadHandler = () => {
         setTimeout(trackBundlePerformance, 0);
-      });
+      };
+      window.addEventListener('load', loadHandler);
     }
+
+    return () => {
+      if (loadHandler) {
+        window.removeEventListener('load', loadHandler);
+      }
+    };
   }, []);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const isTablet = useIsTablet();

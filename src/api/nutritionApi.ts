@@ -45,11 +45,24 @@ export async function getActiveMealPlanWithMeals(
   // Load food items for each meal
   const mealsWithFoodItems = await Promise.all(
     (meals || []).map(async (meal) => {
-      const { data: foodItems } = await supabase
+      const { data: foodItems, error: foodItemsError } = await supabase
         .from('meal_plan_food_items')
         .select('*')
         .eq('meal_id', meal.id)
         .order('order_index', { ascending: true });
+
+      // Handle error by returning meal with empty food items
+      if (foodItemsError) {
+        console.error('Error loading food items for meal:', meal.id, foodItemsError);
+        return {
+          ...meal,
+          food_items: [],
+          total_calories: null,
+          total_protein: null,
+          total_carbs: null,
+          total_fat: null,
+        };
+      }
 
       // Calculate totals from food items
       const totals = (foodItems || []).reduce(
@@ -167,7 +180,7 @@ export async function getWeekDiaryData(
     return { meals: [], waterLogs: [], diaryEntries: [] };
   }
 
-  const [{ data: meals }, { data: waterLogs }, { data: diaryEntries }] =
+  const [mealsResult, waterLogsResult, diaryEntriesResult] =
     await Promise.all([
       supabase
         .from('meals')
@@ -190,10 +203,21 @@ export async function getWeekDiaryData(
         .lte('diary_date', endDate),
     ]);
 
+  // Log errors but continue with available data
+  if (mealsResult.error) {
+    console.error('Error loading meals:', mealsResult.error);
+  }
+  if (waterLogsResult.error) {
+    console.error('Error loading water logs:', waterLogsResult.error);
+  }
+  if (diaryEntriesResult.error) {
+    console.error('Error loading diary entries:', diaryEntriesResult.error);
+  }
+
   return {
-    meals: meals || [],
-    waterLogs: waterLogs || [],
-    diaryEntries: diaryEntries || [],
+    meals: mealsResult.data || [],
+    waterLogs: waterLogsResult.data || [],
+    diaryEntries: diaryEntriesResult.data || [],
   };
 }
 

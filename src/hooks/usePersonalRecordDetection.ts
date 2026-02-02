@@ -24,6 +24,7 @@ export function usePersonalRecordDetection(
   const [records, setRecords] = useState<PersonalRecordEvent[]>([]);
   const [latestRecord, setLatestRecord] = useState<PersonalRecordEvent | null>(null);
   const processedSetsRef = useRef<Set<string>>(new Set());
+  const latestRecordTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!traineeId || !workout || !workout.exercises) {
@@ -133,8 +134,13 @@ export function usePersonalRecordDetection(
           const latest = newRecords[newRecords.length - 1];
           setLatestRecord(latest);
 
+          // Clear previous timeout if exists
+          if (latestRecordTimeoutRef.current) {
+            clearTimeout(latestRecordTimeoutRef.current);
+          }
+
           // Clear latest record after 5 seconds
-          setTimeout(() => {
+          latestRecordTimeoutRef.current = setTimeout(() => {
             setLatestRecord(null);
           }, 5000);
         }
@@ -151,6 +157,9 @@ export function usePersonalRecordDetection(
 
     return () => {
       clearInterval(interval);
+      if (latestRecordTimeoutRef.current) {
+        clearTimeout(latestRecordTimeoutRef.current);
+      }
     };
   }, [traineeId, workout?.id, workout?.exercises]);
 
