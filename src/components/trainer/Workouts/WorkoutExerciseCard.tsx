@@ -239,13 +239,13 @@ export const WorkoutExerciseCard = memo(({
   }
 
   return (
-    <div className="premium-card-static mb-4 lg:mb-6 overflow-hidden">
-      <div className="p-4 lg:p-6">
+    <div className="premium-card-static mb-4 lg:mb-6 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+      <div className="p-5 lg:p-6">
         {/* Header with exercise name and stats */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-lg lg:text-2xl font-bold text-foreground">{workoutExercise.exercise.name}</h3>
+        <div className="flex items-start justify-between mb-5 lg:mb-6 gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-3">
+              <h3 className="text-xl lg:text-2xl font-bold text-foreground">{workoutExercise.exercise.name}</h3>
               <button
                 type="button"
                 onClick={(e) => {
@@ -253,27 +253,27 @@ export const WorkoutExerciseCard = memo(({
                   e.stopPropagation();
                   setShowInstructions(true);
                 }}
-                className="p-1.5 hover:bg-cyan-500/15 text-cyan-400 rounded-lg transition-all cursor-pointer"
+                className="p-2 hover:bg-cyan-500/15 text-cyan-400 rounded-lg transition-all cursor-pointer shadow-sm hover:shadow-md"
                 aria-label="איך לבצע"
                 title="איך לבצע"
               >
-                <Info className="h-4 w-4 lg:h-5 lg:w-5" />
+                <Info className="h-5 w-5 lg:h-6 lg:w-6" />
               </button>
             </div>
             
             {/* Stats row */}
             {workoutExercise.sets.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 lg:gap-3">
+              <div className="flex flex-wrap items-center gap-3 lg:gap-4">
                 {/* Progress indicator */}
-                <div className="flex items-center gap-2 bg-surface px-3 py-1.5 rounded-lg border border-border">
-                  <div className="relative w-8 h-8 lg:w-10 lg:h-10">
+                <div className="flex items-center gap-2.5 bg-surface px-4 py-2 rounded-xl border border-border shadow-sm">
+                  <div className="relative w-10 h-10 lg:w-12 lg:h-12">
                     <svg className="w-full h-full transform -rotate-90">
                       <circle
                         className="text-muted700"
                         strokeWidth="3"
                         stroke="currentColor"
                         fill="transparent"
-                        r="14"
+                        r="16"
                         cx="50%"
                         cy="50%"
                       />
@@ -283,34 +283,34 @@ export const WorkoutExerciseCard = memo(({
                         strokeLinecap="round"
                         stroke="currentColor"
                         fill="transparent"
-                        r="14"
+                        r="16"
                         cx="50%"
                         cy="50%"
-                        strokeDasharray={`${2 * Math.PI * 14}`}
-                        strokeDashoffset={`${2 * Math.PI * 14 * (1 - progressPercent / 100)}`}
+                        strokeDasharray={`${2 * Math.PI * 16}`}
+                        strokeDashoffset={`${2 * Math.PI * 16 * (1 - progressPercent / 100)}`}
                       />
                     </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-[10px] lg:text-xs font-bold text-foreground">
+                    <span className="absolute inset-0 flex items-center justify-center text-xs lg:text-sm font-bold text-foreground">
                       {completedSets}/{workoutExercise.sets.length}
                     </span>
                   </div>
-                  <span className="text-xs lg:text-sm text-muted">סטים</span>
+                  <span className="text-sm lg:text-base text-muted font-medium">סטים</span>
                 </div>
                 
                 {/* Volume */}
-                <div className="flex items-center gap-1.5 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/30">
-                  <TrendingUp className="h-4 w-4 text-emerald-400" />
-                  <span className="text-emerald-400 font-semibold text-sm lg:text-base">{totalVolume.toLocaleString()}</span>
-                  <span className="text-emerald-400/70 text-xs">ק״ג</span>
+                <div className="flex items-center gap-2 bg-emerald-500/15 px-4 py-2 rounded-xl border border-emerald-500/40 shadow-sm">
+                  <TrendingUp className="h-5 w-5 text-emerald-400" />
+                  <span className="text-emerald-400 font-bold text-base lg:text-lg">{totalVolume.toLocaleString()}</span>
+                  <span className="text-emerald-400/80 text-xs lg:text-sm">ק״ג</span>
                 </div>
                 
                 {/* Average stats */}
                 {avgStats.avgWeight > 0 && (
-                  <div className="hidden lg:flex items-center gap-2 text-sm text-muted">
-                    <span>ממוצע:</span>
-                    <span className="font-medium text-foreground">{avgStats.avgWeight} ק״ג</span>
-                    <span>×</span>
-                    <span className="font-medium text-foreground">{avgStats.avgReps} חזרות</span>
+                  <div className="hidden lg:flex items-center gap-2 text-sm bg-surface/50 px-4 py-2 rounded-xl border border-border">
+                    <span className="text-muted">ממוצע:</span>
+                    <span className="font-semibold text-foreground">{avgStats.avgWeight} ק״ג</span>
+                    <span className="text-muted">×</span>
+                    <span className="font-semibold text-foreground">{avgStats.avgReps} חזרות</span>
                   </div>
                 )}
               </div>
@@ -318,7 +318,7 @@ export const WorkoutExerciseCard = memo(({
           </div>
           
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5 flex-shrink-0">
             <button
               type="button"
               onClick={(e) => {
@@ -326,7 +326,7 @@ export const WorkoutExerciseCard = memo(({
                 e.stopPropagation();
                 onComplete();
               }}
-              className="px-4 py-2 lg:px-5 lg:py-2.5 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-xl transition-all text-sm lg:text-base font-semibold cursor-pointer btn-press-feedback shadow-md"
+              className="px-5 py-2.5 lg:px-6 lg:py-3 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-xl transition-all text-sm lg:text-base font-bold cursor-pointer btn-press-feedback shadow-md hover:shadow-lg"
             >
               סיים תרגיל
             </button>
@@ -337,7 +337,7 @@ export const WorkoutExerciseCard = memo(({
                 e.stopPropagation();
                 onRemove();
               }}
-              className="p-2 lg:p-3 hover:bg-red-500/15 text-red-400 rounded-xl transition-all touch-manipulation cursor-pointer"
+              className="p-2.5 lg:p-3.5 hover:bg-red-500/15 text-red-400 rounded-xl transition-all touch-manipulation cursor-pointer shadow-sm hover:shadow-md"
               aria-label="מחק תרגיל"
             >
               <Trash2 className="h-5 w-5 lg:h-6 lg:w-6" />
@@ -346,7 +346,7 @@ export const WorkoutExerciseCard = memo(({
         </div>
 
         {/* Sets list */}
-        <div className="space-y-3 lg:space-y-4">
+        <div className="space-y-3.5 lg:space-y-4">
           {workoutExercise.sets.map((set, setIndex) => (
             <div 
               key={set.id} 
@@ -386,9 +386,9 @@ export const WorkoutExerciseCard = memo(({
             e.stopPropagation();
             onAddSet();
           }}
-          className="w-full mt-4 lg:mt-5 py-4 lg:py-5 border-2 border-dashed border-border rounded-xl hover:border-emerald-500/50 hover:bg-emerald-500/10 text-muted hover:text-emerald-400 font-semibold text-base lg:text-lg transition-all touch-manipulation cursor-pointer btn-press-feedback flex items-center justify-center gap-2"
+          className="w-full mt-5 lg:mt-6 py-4 lg:py-5 border-2 border-dashed border-border rounded-xl hover:border-emerald-500/50 hover:bg-emerald-500/10 text-muted hover:text-emerald-400 font-bold text-base lg:text-lg transition-all touch-manipulation cursor-pointer btn-press-feedback flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
         >
-          <Plus className="h-5 w-5" />
+          <Plus className="h-5 w-5 lg:h-6 lg:w-6" />
           <span>הוסף סט</span>
         </button>
       </div>

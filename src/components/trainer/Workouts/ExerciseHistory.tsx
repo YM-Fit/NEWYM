@@ -134,26 +134,35 @@ export default function ExerciseHistory({
   };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-scale-in">
+    <>
+      {/* Overlay - not full screen, allows seeing exercise list */}
+      <div 
+        className="fixed inset-0 backdrop-blur-sm bg-black/40 z-40"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      
+      {/* Side Panel */}
+      <div className="fixed right-0 top-0 bottom-0 w-full max-w-md lg:max-w-lg xl:max-w-xl z-50 flex flex-col shadow-2xl bg-card border-r border-border animate-slide-in-right exercise-history-panel">
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-4 lg:p-6">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-3 rtl:space-x-reverse">
-              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-4 lg:p-6 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3 rtl:space-x-reverse flex-1 min-w-0">
+              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl flex-shrink-0">
                 <Dumbbell className="h-5 w-5 text-foreground" />
               </div>
-              <div>
-                <h2 className="text-xl lg:text-2xl font-bold text-foreground">{exerciseName}</h2>
-                <p className="text-sm text-emerald-100">{traineeName}</p>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg lg:text-xl font-bold text-foreground truncate">{exerciseName}</h2>
+                <p className="text-sm text-emerald-100 truncate">{traineeName}</p>
               </div>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-xl transition-all"
+              className="p-2 hover:bg-white/20 rounded-xl transition-all flex-shrink-0 mr-2"
+              aria-label="סגור"
             >
-              <X className="h-6 w-6 text-foreground" />
+              <X className="h-5 w-5 lg:h-6 lg:w-6 text-foreground" />
             </button>
           </div>
         </div>
@@ -182,7 +191,7 @@ export default function ExerciseHistory({
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-card">
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-card min-h-0">
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
@@ -313,6 +322,6 @@ export default function ExerciseHistory({
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }

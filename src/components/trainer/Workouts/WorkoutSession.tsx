@@ -747,7 +747,7 @@ export default function WorkoutSession({
     loadMuscleGroups();
   }, []);
 
-  const handleAddExerciseWithAutoFill = async (exercise: Exercise) => {
+  const handleAddExerciseWithAutoFill = async (exercise: Exercise, loadPreviousData: boolean = false) => {
     // Prevent duplicate additions - check if exercise is already being loaded
     if (loadingExercise === exercise.id) {
       logger.debug('Exercise already being added, skipping duplicate request', { exerciseId: exercise.id }, 'WorkoutSession');
@@ -756,7 +756,7 @@ export default function WorkoutSession({
 
     // Set loading state IMMEDIATELY to prevent rapid clicks from adding duplicates
     setLoadingExercise(exercise.id);
-    logger.debug('Adding exercise:', { exerciseId: exercise.id, exerciseName: exercise.name }, 'WorkoutSession');
+    logger.debug('Adding exercise:', { exerciseId: exercise.id, exerciseName: exercise.name, loadPreviousData }, 'WorkoutSession');
 
     try {
       // Create workout if this is the first exercise
@@ -798,6 +798,13 @@ export default function WorkoutSession({
         return;
       }
 
+      // If not loading previous data, just add exercise without data
+      if (!loadPreviousData) {
+        addExercise(exercise);
+        setLoadingExercise(null);
+        return;
+      }
+
       // Check cache first (cache valid for 5 minutes)
       const cacheKey = `${trainee.id}-${exercise.id}`;
       const cached = exerciseCacheRef.current.get(cacheKey);
@@ -807,13 +814,17 @@ export default function WorkoutSession({
           if (!prev.length) return prev;
           const updated = [...prev];
           const lastIndex = updated.length - 1;
-          updated[lastIndex] = {
-            ...updated[lastIndex],
-            sets: cached.sets.map((set, index) => ({
-              ...set,
-              id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${index}`,
-            })),
-          };
+          // Only load the first set
+          const firstSet = cached.sets[0];
+          if (firstSet) {
+            updated[lastIndex] = {
+              ...updated[lastIndex],
+              sets: [{
+                ...firstSet,
+                id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-0`,
+              }],
+            };
+          }
           return updated;
         });
         setLoadingExercise(null);
@@ -881,52 +892,84 @@ export default function WorkoutSession({
         return;
       }
 
-      const mappedSets: SetData[] = previousSets
-        .sort((a: any, b: any) => (a.set_number || 0) - (b.set_number || 0))
-        .map((set: any, index: number) => ({
-          id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${index}`,
-          set_number: set.set_number || index + 1,
-          weight: set.weight || 0,
-          reps: set.reps || 0,
-          rpe: set.rpe,
-          set_type: set.set_type || 'regular',
-          failure: set.failure || false,
-          superset_exercise_id: set.superset_exercise_id,
-          superset_exercise_name: undefined,
-          superset_weight: set.superset_weight,
-          superset_reps: set.superset_reps,
-          superset_rpe: set.superset_rpe,
-          superset_equipment_id: set.superset_equipment_id,
-          superset_equipment: null,
-          superset_dropset_weight: set.superset_dropset_weight,
-          superset_dropset_reps: set.superset_dropset_reps,
-          dropset_weight: set.dropset_weight,
-          dropset_reps: set.dropset_reps,
-          equipment_id: set.equipment_id,
-          equipment: null,
-        }));
+      // Sort sets and take only the first one
+      const sortedSets = previousSets.sort((a: any, b: any) => (a.set_number || 0) - (b.set_number || 0));
+      const firstSet = sortedSets[0];
 
-      // Cache the sets for future use
+      if (!firstSet) {
+        addExercise(exercise);
+        setLoadingExercise(null);
+        return;
+      }
+
+      // Map only the first set
+      const mappedFirstSet: SetData = {
+        id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-0`,
+        set_number: firstSet.set_number || 1,
+        weight: firstSet.weight || 0,
+        reps: firstSet.reps || 0,
+        rpe: firstSet.rpe,
+        set_type: firstSet.set_type || 'regular',
+        failure: firstSet.failure || false,
+        superset_exercise_id: firstSet.superset_exercise_id,
+        superset_exercise_name: undefined,
+        superset_weight: firstSet.superset_weight,
+        superset_reps: firstSet.superset_reps,
+        superset_rpe: firstSet.superset_rpe,
+        superset_equipment_id: firstSet.superset_equipment_id,
+        superset_equipment: null,
+        superset_dropset_weight: firstSet.superset_dropset_weight,
+        superset_dropset_reps: firstSet.superset_dropset_reps,
+        dropset_weight: firstSet.dropset_weight,
+        dropset_reps: firstSet.dropset_reps,
+        equipment_id: firstSet.equipment_id,
+        equipment: null,
+      };
+
+      // Cache all sets for future use (in case user wants to see history)
+      const allMappedSets: SetData[] = sortedSets.map((set: any, index: number) => ({
+        id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${index}`,
+        set_number: set.set_number || index + 1,
+        weight: set.weight || 0,
+        reps: set.reps || 0,
+        rpe: set.rpe,
+        set_type: set.set_type || 'regular',
+        failure: set.failure || false,
+        superset_exercise_id: set.superset_exercise_id,
+        superset_exercise_name: undefined,
+        superset_weight: set.superset_weight,
+        superset_reps: set.superset_reps,
+        superset_rpe: set.superset_rpe,
+        superset_equipment_id: set.superset_equipment_id,
+        superset_equipment: null,
+        superset_dropset_weight: set.superset_dropset_weight,
+        superset_dropset_reps: set.superset_dropset_reps,
+        dropset_weight: set.dropset_weight,
+        dropset_reps: set.dropset_reps,
+        equipment_id: set.equipment_id,
+        equipment: null,
+      }));
+
       exerciseCacheRef.current.set(cacheKey, {
-        sets: mappedSets,
+        sets: allMappedSets,
         timestamp: Date.now(),
       });
 
       // Add the exercise using the existing hook logic (minimize previous exercise etc.)
       addExercise(exercise);
 
-      // Replace the just-added exercise's sets with the auto-filled ones
+      // Replace the just-added exercise's sets with only the first set
       setExercises((prev) => {
         if (!prev.length) return prev;
         const updated = [...prev];
         const lastIndex = updated.length - 1;
         updated[lastIndex] = {
           ...updated[lastIndex],
-          sets: mappedSets,
+          sets: [mappedFirstSet],
         };
         return updated;
       });
-      toast.success('התרגיל נטען עם הנתונים מהאימון הקודם');
+      toast.success('התרגיל נטען עם הסט הראשון מהאימון הקודם');
     } catch (err) {
       logger.error('Unexpected error in exercise autofill:', err, 'WorkoutSession');
       toast.error('שגיאה בטעינת התרגיל, התרגיל נוסף ללא נתונים');

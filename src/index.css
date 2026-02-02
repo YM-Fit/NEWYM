@@ -2262,7 +2262,7 @@
   @keyframes slide-in-right {
     0% {
       opacity: 0;
-      transform: translateX(20px);
+      transform: translateX(100%);
     }
     100% {
       opacity: 1;
@@ -2595,7 +2595,18 @@
 
   /* Workout exercise card spacing */
   .tablet .workout-exercise-card {
-    padding: 1.5rem;
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Exercise card stats larger on tablet */
+  .tablet .workout-exercise-card .stats-row {
+    gap: 1rem;
+  }
+
+  .tablet .workout-exercise-card .stats-row > * {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
   }
 
   /* Better spacing for tablet workout session */
@@ -2650,9 +2661,28 @@
 
   /* Muscle group buttons larger on tablet */
   .tablet .muscle-group-btn {
-    min-height: 52px;
-    padding: 0.875rem 1rem;
+    min-height: 56px;
+    padding: 1rem 1.25rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+
+  /* Exercise history side panel for tablet */
+  .tablet .exercise-history-panel {
+    max-width: 500px;
+  }
+
+  /* Exercise selector buttons larger on tablet */
+  .tablet .exercise-selector button {
+    min-height: 56px;
+    padding: 1rem 1.25rem;
     font-size: 1rem;
+  }
+
+  /* Recent exercises grid better on tablet */
+  .tablet .recent-exercises-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
   }
 
   /* Numeric pad improvements for tablet */

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, X, Plus, Clock, PlusCircle, Trash2, Info, Edit2, TrendingUp, Star, Zap, Pencil } from 'lucide-react';
+import { Search, X, Plus, Clock, PlusCircle, Trash2, Info, Edit2, TrendingUp, Star, Zap, Pencil, History } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
@@ -8,6 +8,7 @@ import { useExerciseCache } from '../../../hooks/useExerciseCache';
 import { useIsTouchDevice } from '../../../hooks/useIsTouchDevice';
 import ExerciseInstructionsModal from '../../common/ExerciseInstructionsModal';
 import EditExerciseInstructionsModal from './EditExerciseInstructionsModal';
+import { Modal } from '../../ui/Modal';
 
 interface Exercise {
   id: string;
@@ -34,7 +35,7 @@ interface RecentExercise {
 interface ExerciseSelectorProps {
   traineeId?: string;
   traineeName?: string;
-  onSelect: (exercise: Exercise) => void;
+  onSelect: (exercise: Exercise, loadPreviousData?: boolean) => void;
   onClose: () => void;
   loadingExerciseId?: string | null;
   isTablet?: boolean;
@@ -55,6 +56,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
   const [recentExercises, setRecentExercises] = useState<RecentExercise[]>([]);
   const [exerciseLastData, setExerciseLastData] = useState<Map<string, { weight: number; reps: number; date: string }>>(new Map());
   const [showRecentSection, setShowRecentSection] = useState(true);
+  const [confirmationExercise, setConfirmationExercise] = useState<{ exercise: Exercise; lastData: { weight: number; reps: number; date: string } } | null>(null);
 
   // Enable on-screen keyboard for specific fields on tablet/touch devices
   const [nameKeyboardEnabled, setNameKeyboardEnabled] = useState(false);
@@ -387,6 +389,42 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
     return `לפני ${Math.floor(diffDays / 30)} חודשים`;
   };
 
+  // Handle exercise selection with confirmation if previous data exists
+  const handleExerciseSelect = (exercise: Exercise) => {
+    if (!traineeId) {
+      // No trainee, just select without confirmation
+      onSelect(exercise, false);
+      onClose();
+      return;
+    }
+
+    const lastData = exerciseLastData.get(exercise.id);
+    if (lastData && lastData.weight > 0 && lastData.reps > 0) {
+      // Show confirmation modal
+      setConfirmationExercise({ exercise, lastData });
+    } else {
+      // No previous data, select without confirmation
+      onSelect(exercise, false);
+      onClose();
+    }
+  };
+
+  const handleConfirmLoadData = () => {
+    if (confirmationExercise) {
+      onSelect(confirmationExercise.exercise, true);
+      setConfirmationExercise(null);
+      onClose();
+    }
+  };
+
+  const handleConfirmNoData = () => {
+    if (confirmationExercise) {
+      onSelect(confirmationExercise.exercise, false);
+      setConfirmationExercise(null);
+      onClose();
+    }
+  };
+
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
       <div className={`bg-card border border-border rounded-2xl ${isTablet ? 'max-w-5xl' : 'max-w-4xl'} w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl transition-all animate-scale-in`}>
@@ -436,20 +474,22 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
 
         {/* Recent Exercises Section */}
         {traineeId && recentExercises.length > 0 && !searchTerm && showRecentSection && (
-          <div className="p-4 lg:p-6 border-b border-border bg-gradient-to-b from-emerald-500/5 to-transparent">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-amber-400" />
-                <h3 className="font-semibold text-foreground text-sm lg:text-base">תרגילים אחרונים</h3>
+          <div className="p-4 lg:p-6 border-b border-border bg-gradient-to-b from-emerald-500/5 via-emerald-500/3 to-transparent">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 bg-amber-500/20 rounded-lg">
+                  <Zap className="h-4 w-4 lg:h-5 lg:w-5 text-amber-400" />
+                </div>
+                <h3 className="font-bold text-foreground text-base lg:text-lg">תרגילים אחרונים</h3>
               </div>
               <button
                 onClick={() => setShowRecentSection(false)}
-                className="text-xs text-muted hover:text-muted transition-all"
+                className="text-xs text-muted hover:text-foreground transition-all px-2 py-1 rounded-lg hover:bg-surface/50"
               >
                 הסתר
               </button>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
+            <div className={`grid ${isTablet ? 'grid-cols-3' : 'grid-cols-2'} lg:grid-cols-4 gap-3 lg:gap-4`}>
               {recentExercises.map((recent) => {
                 const exercise = getExerciseFromRecent(recent);
                 if (!exercise) return null;
@@ -458,22 +498,21 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                   <button
                     key={recent.exerciseId}
                     onClick={() => {
-                      onSelect(exercise);
-                      onClose();
+                      handleExerciseSelect(exercise);
                     }}
                     disabled={loadingExerciseId === exercise.id}
-                    className="p-3 lg:p-4 bg-surface hover:bg-emerald-500/10 border border-border hover:border-emerald-500/30 rounded-xl transition-all text-right group btn-press-feedback"
+                    className="p-4 lg:p-5 bg-surface hover:bg-emerald-500/10 border border-border hover:border-emerald-500/40 rounded-xl transition-all text-right group btn-press-feedback shadow-sm hover:shadow-md"
                   >
-                    <div className="font-medium text-foreground group-hover:text-emerald-400 text-sm lg:text-base truncate mb-1">
+                    <div className="font-semibold text-foreground group-hover:text-emerald-400 text-sm lg:text-base truncate mb-2">
                       {recent.exerciseName}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted">
-                      <span className="font-semibold text-emerald-400">{recent.lastWeight}</span>
-                      <span>ק״ג</span>
+                    <div className="flex items-center gap-2 text-xs lg:text-sm mb-2">
+                      <span className="font-bold text-emerald-400">{recent.lastWeight}</span>
+                      <span className="text-muted">ק״ג</span>
                       <span className="text-muted">×</span>
-                      <span className="font-semibold text-cyan-400">{recent.lastReps}</span>
+                      <span className="font-bold text-cyan-400">{recent.lastReps}</span>
                     </div>
-                    <div className="text-[10px] text-muted mt-1">
+                    <div className="text-[10px] lg:text-xs text-muted bg-surface/50 px-2 py-0.5 rounded-md inline-block">
                       {formatRelativeDate(recent.lastDate)}
                     </div>
                   </button>
@@ -490,22 +529,28 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
         ) : (
           <div className="flex-1 overflow-y-auto p-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1 space-y-2">
-                <h3 className="font-semibold text-muted mb-3">קבוצות שרירים</h3>
+              <div className="lg:col-span-1 space-y-2.5">
+                <h3 className="font-bold text-foreground mb-4 text-base lg:text-lg">קבוצות שרירים</h3>
                 {filteredGroups.map((group) => (
                   <button
                     key={group.id}
                     onClick={() => setSelectedGroup(group.id)}
-                    className={`w-full text-right px-4 py-3 rounded-xl transition-all ${
+                    className={`w-full text-right px-4 lg:px-5 py-3.5 lg:py-4 rounded-xl transition-all font-medium ${
                       selectedGroup === group.id
-                        ? 'bg-emerald-500 text-foreground font-medium'
-                        : 'bg-surface hover:bg-surface text-foreground border border-border hover:border-border-hover'
+                        ? 'bg-emerald-500 text-foreground shadow-md border-2 border-emerald-600'
+                        : 'bg-surface hover:bg-surface/80 text-foreground border border-border hover:border-emerald-500/30 hover:shadow-sm'
                     }`}
                   >
-                    {group.name}
-                    <span className={`mr-2 text-sm ${selectedGroup === group.id ? 'text-emerald-100' : 'text-muted'}`}>
-                      ({group.exercises.length})
-                    </span>
+                    <div className="flex items-center justify-between">
+                      <span>{group.name}</span>
+                      <span className={`text-sm px-2 py-0.5 rounded-lg ${
+                        selectedGroup === group.id 
+                          ? 'bg-emerald-600/30 text-emerald-100' 
+                          : 'bg-elevated/50 text-muted'
+                      }`}>
+                        {group.exercises.length}
+                      </span>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -642,10 +687,10 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                             {traineeId && (
                               <button
                                 onClick={() => setHistoryExercise(exercise)}
-                                className="p-3 lg:p-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-xl transition-all btn-press-feedback"
+                                className="p-3 lg:p-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-xl transition-all btn-press-feedback shadow-sm hover:shadow-md"
                                 title="היסטוריה"
                               >
-                                <Clock className="h-5 w-5 text-cyan-400" />
+                                <Clock className="h-5 w-5 lg:h-6 lg:w-6 text-cyan-400" />
                               </button>
                             )}
 
@@ -655,10 +700,10 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                                 e.stopPropagation();
                                 setViewingInstructions(exercise);
                               }}
-                              className="p-3 lg:p-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-xl transition-all btn-press-feedback"
+                              className="p-3 lg:p-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-xl transition-all btn-press-feedback shadow-sm hover:shadow-md"
                               title="הצג הסבר"
                             >
-                              <Info className="h-5 w-5 text-cyan-400" />
+                              <Info className="h-5 w-5 lg:h-6 lg:w-6 text-cyan-400" />
                             </button>
 
                             {/* Edit button */}
@@ -667,56 +712,57 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                                 e.stopPropagation();
                                 setEditingExercise(exercise);
                               }}
-                              className="p-3 lg:p-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl transition-all btn-press-feedback"
+                              className="p-3 lg:p-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl transition-all btn-press-feedback shadow-sm hover:shadow-md"
                               title="ערוך הסבר"
                             >
-                              <Edit2 className="h-5 w-5 text-emerald-400" />
+                              <Edit2 className="h-5 w-5 lg:h-6 lg:w-6 text-emerald-400" />
                             </button>
 
                             {/* Main exercise button */}
                             <button
                               onClick={() => {
-                                onSelect(exercise);
-                                onClose();
+                                handleExerciseSelect(exercise);
                               }}
                               disabled={loadingExerciseId === exercise.id}
-                              className="flex-1 text-right px-4 lg:px-6 py-3 lg:py-4 bg-surface/30 border border-border hover:border-emerald-500/30 hover:bg-emerald-500/10 rounded-xl transition-all group disabled:opacity-50 disabled:cursor-wait btn-press-feedback"
+                              className="flex-1 text-right px-4 lg:px-6 py-3.5 lg:py-4 bg-surface/50 border border-border hover:border-emerald-500/40 hover:bg-emerald-500/10 rounded-xl transition-all group disabled:opacity-50 disabled:cursor-wait btn-press-feedback shadow-sm hover:shadow-md"
                             >
                               <div className="flex items-center justify-between gap-3">
                                 <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-semibold text-foreground group-hover:text-emerald-400 text-base lg:text-lg truncate">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-bold text-foreground group-hover:text-emerald-400 text-base lg:text-lg truncate">
                                       {exercise.name}
                                     </span>
                                     {loadingExerciseId === exercise.id && (
-                                      <span className="text-xs text-emerald-400 animate-pulse">טוען...</span>
+                                      <span className="text-xs text-emerald-400 animate-pulse font-medium">טוען...</span>
                                     )}
                                   </div>
                                   
                                   {/* Last workout data preview */}
                                   {lastData && traineeId && (
-                                    <div className="flex items-center gap-2 mt-1 text-xs text-muted">
-                                      <span>אחרון:</span>
-                                      <span className="font-semibold text-emerald-400">{lastData.weight}</span>
-                                      <span>ק״ג</span>
-                                      <span className="text-muted">×</span>
-                                      <span className="font-semibold text-cyan-400">{lastData.reps}</span>
-                                      <span className="text-muted mr-1">({formatRelativeDate(lastData.date)})</span>
+                                    <div className="flex items-center gap-2 mt-2 text-xs lg:text-sm">
+                                      <span className="text-muted">אחרון:</span>
+                                      <div className="flex items-center gap-1.5 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
+                                        <span className="font-bold text-emerald-400">{lastData.weight}</span>
+                                        <span className="text-muted text-[10px]">ק״ג</span>
+                                        <span className="text-muted">×</span>
+                                        <span className="font-bold text-cyan-400">{lastData.reps}</span>
+                                      </div>
+                                      <span className="text-muted text-[10px]">({formatRelativeDate(lastData.date)})</span>
                                     </div>
                                   )}
                                 </div>
                                 
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-shrink-0">
                                   {lastData && (
-                                    <div className="hidden lg:flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-lg">
-                                      <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
+                                    <div className="hidden lg:flex items-center gap-1 bg-emerald-500/15 px-2.5 py-1.5 rounded-lg border border-emerald-500/30">
+                                      <TrendingUp className="h-4 w-4 text-emerald-400" />
                                     </div>
                                   )}
-                                  <div className="p-2 bg-elevated/50 group-hover:bg-emerald-500/20 rounded-lg transition-all">
+                                  <div className="p-2.5 bg-elevated/60 group-hover:bg-emerald-500/20 rounded-lg transition-all">
                                     {loadingExerciseId === exercise.id ? (
                                       <div className="h-5 w-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                                     ) : (
-                                      <Plus className="h-5 w-5 text-muted group-hover:text-emerald-400" />
+                                      <Plus className="h-5 w-5 text-muted group-hover:text-emerald-400 transition-colors" />
                                     )}
                                   </div>
                                 </div>
@@ -729,10 +775,10 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                                 e.stopPropagation();
                                 handleDeleteExercise(exercise.id, exercise.name);
                               }}
-                              className="p-3 lg:p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl transition-all btn-press-feedback"
+                              className="p-3 lg:p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl transition-all btn-press-feedback shadow-sm hover:shadow-md"
                               title="מחק תרגיל"
                             >
-                              <Trash2 className="h-5 w-5 text-red-400" />
+                              <Trash2 className="h-5 w-5 lg:h-6 lg:w-6 text-red-400" />
                             </button>
                           </div>
                         );
@@ -782,6 +828,66 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
           currentInstructions={editingExercise.instructions}
           onSave={handleSaveInstructions}
         />
+      )}
+
+      {/* Confirmation Modal for Loading Previous Data */}
+      {confirmationExercise && (
+        <Modal
+          isOpen={!!confirmationExercise}
+          onClose={() => setConfirmationExercise(null)}
+          title="טען נתונים קודמים?"
+          size="md"
+        >
+          <div className="space-y-4" dir="rtl">
+            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-emerald-500/20 rounded-lg">
+                  <History className="h-5 w-5 text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg">{confirmationExercise.exercise.name}</h3>
+                  <p className="text-sm text-muted">נתונים מהאימון האחרון</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-3 mt-4">
+                <div className="bg-surface rounded-lg p-3 border border-border text-center">
+                  <div className="text-2xl font-bold text-emerald-400">{confirmationExercise.lastData.weight}</div>
+                  <div className="text-xs text-muted mt-1">ק״ג</div>
+                </div>
+                <div className="bg-surface rounded-lg p-3 border border-border text-center">
+                  <div className="text-2xl font-bold text-cyan-400">{confirmationExercise.lastData.reps}</div>
+                  <div className="text-xs text-muted mt-1">חזרות</div>
+                </div>
+                <div className="bg-surface rounded-lg p-3 border border-border text-center">
+                  <div className="text-sm font-semibold text-foreground">{formatRelativeDate(confirmationExercise.lastData.date)}</div>
+                  <div className="text-xs text-muted mt-1">תאריך</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3">
+              <p className="text-sm text-muted text-center">
+                רק הסט הראשון יטען עם הנתונים הקודמים
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={handleConfirmNoData}
+                className="flex-1 px-6 py-3 bg-surface hover:bg-surface/80 border border-border rounded-xl transition-all font-medium text-foreground"
+              >
+                הוסף ללא נתונים
+              </button>
+              <button
+                onClick={handleConfirmLoadData}
+                className="flex-1 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-xl transition-all font-medium shadow-md"
+              >
+                טען עם נתונים
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );
