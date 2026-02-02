@@ -136,12 +136,6 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
     setSelectedDay(null);
   };
 
-  useEffect(() => {
-    loadActivePlan();
-    loadTemplates(traineeId);
-    loadCardioTypes();
-  }, [traineeId, loadActivePlan, loadTemplates]);
-
   const loadCardioTypes = async () => {
     try {
       setLoadingCardioTypes(true);
@@ -157,148 +151,11 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
     }
   };
 
-  // Override loadPlanDays with full implementation
-  const loadPlanDays = async (planId: string) => {
-    try {
-      const { data: daysData } = await supabase
-        .from('workout_plan_days')
-        .select('*')
-        .eq('plan_id', planId)
-        .order('order_index', { ascending: true });
-
-      if (!daysData || daysData.length === 0) {
-        setDays([]);
-        return;
-      }
-
-      const loadedDays: WorkoutDay[] = [];
-      
-      for (const day of daysData as any[]) {
-        const { data: exercisesData } = await supabase
-          .from('workout_plan_day_exercises')
-          .select(`
-            *,
-            exercise:exercise_id(
-              id,
-              name,
-              muscle_group_id
-            ),
-            equipment:equipment_id(
-              id,
-              name,
-              emoji
-            ),
-            superset_exercise:superset_exercise_id(
-              id,
-              name
-            ),
-            superset_equipment:superset_equipment_id(
-              id,
-              name,
-              emoji
-            )
-          `)
-          .eq('day_id', day.id)
-          .order('order_index', { ascending: true });
-
-        const planExercises: PlanExercise[] = [];
-        
-        if (exercisesData) {
-          for (const ex of exercisesData as any[]) {
-            if (!ex.exercise) continue;
-            
-            const setsCount = ex.sets_count || 1;
-            const repsRange = ex.reps_range || '10-12';
-            const reps = parseInt(repsRange.split('-')[0]) || 10;
-            
-            const sets: SetData[] = Array.from({ length: setsCount }, (_, i) => ({
-              id: `${day.id}-${ex.id}-${i}`,
-              set_number: i + 1,
-              weight: ex.target_weight || 0,
-              reps: reps,
-              rpe: ex.target_rpe || null,
-              set_type: (ex.set_type || 'regular') as 'regular' | 'superset' | 'dropset',
-              failure: ex.failure || false,
-              superset_exercise_id: ex.superset_exercise_id || null,
-              superset_exercise_name: ex.superset_exercise?.name || null,
-              superset_weight: ex.superset_weight || null,
-              superset_reps: ex.superset_reps || null,
-              superset_rpe: ex.superset_rpe || null,
-              superset_equipment_id: ex.superset_equipment_id || null,
-              superset_equipment: ex.superset_equipment || null,
-              superset_dropset_weight: ex.superset_dropset_weight || null,
-              superset_dropset_reps: ex.superset_dropset_reps || null,
-              dropset_weight: ex.dropset_weight || null,
-              dropset_reps: ex.dropset_reps || null,
-              equipment_id: ex.equipment_id || null,
-              equipment: ex.equipment || null,
-            }));
-
-            planExercises.push({
-              tempId: `${day.id}-${ex.id}`,
-              exercise: ex.exercise,
-              sets: sets,
-              rest_seconds: ex.rest_seconds || 90,
-              notes: ex.notes || '',
-            });
-          }
-        }
-
-        loadedDays.push({
-          tempId: day.id,
-          day_number: day.day_number,
-          day_name: day.day_name || '',
-          focus: day.focus || '',
-          notes: day.notes || '',
-          exercises: planExercises,
-        });
-      }
-
-      setDays(loadedDays);
-    } catch (error) {
-      logger.error('Error loading plan days', error, 'WorkoutPlanBuilder');
-      toast.error('שגיאה בטעינת התוכנית');
-    }
-  };
-
-  // Override loadActivePlan to use custom loadPlanDays
   useEffect(() => {
-    const loadActivePlanWithDays = async () => {
-      setLoading(true);
-      try {
-    const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          setLoading(false);
-          return;
-        }
-
-        const { data: planData } = await supabase
-          .from('trainee_workout_plans')
-          .select('*')
-          .eq('trainee_id', traineeId)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (planData) {
-          const plan = planData as any;
-          setActivePlanId(plan.id);
-          setPlanName(plan.name || '');
-          setPlanDescription(plan.description || '');
-          setDaysPerWeek(plan.days_per_week || 3);
-          await loadPlanDays(plan.id);
-        }
-      } catch (error) {
-        logger.error('Error loading active plan', error, 'WorkoutPlanBuilder');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadActivePlanWithDays();
-    loadTemplates();
-  }, [traineeId, loadTemplates]);
+    loadActivePlan();
+    loadTemplates(traineeId);
+    loadCardioTypes();
+  }, [traineeId, loadActivePlan, loadTemplates]);
 
   const handleLoadTemplate = (template: WorkoutPlanTemplate) => {
     loadTemplate(template, setDays, setPlanName, setPlanDescription, setDaysPerWeek);
@@ -328,7 +185,8 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
       let planId = activePlanId;
 
       if (activePlanId) {
-        // Update existing plan
+        // Update existing plan - first save all new data, then delete old
+        // Step 1: Update plan metadata
         const updateData = {
           name: planName,
           description: planDescription || null,
@@ -351,17 +209,104 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           return;
         }
 
-        // Delete existing days and exercises (cascade will handle exercises)
-        const { data: existingDays } = await supabase
+        // Step 2: Save all new days and exercises first
+        const savedDayIds: string[] = [];
+        for (const day of days) {
+          const { data: dayData, error: dayError } = await supabase
+            .from('workout_plan_days')
+            .insert({
+              plan_id: activePlanId,
+              day_number: day.day_number,
+              day_name: day.day_name || null,
+              focus: day.focus || null,
+              notes: day.notes || null,
+              order_index: day.day_number - 1,
+            } as any)
+            .select()
+            .single();
+
+          if (dayError || !dayData) {
+            logger.error('Error inserting day', dayError, 'WorkoutPlanBuilder');
+            toast.error(`שגיאה בהוספת יום ${day.day_number}`);
+            // Rollback: delete any days we've already saved
+            if (savedDayIds.length > 0) {
+              await supabase
+                .from('workout_plan_days')
+                .delete()
+                .in('id', savedDayIds);
+            }
+            setSaving(false);
+            return;
+          }
+
+          const dayDataTyped = dayData as any;
+          savedDayIds.push(dayDataTyped.id);
+
+          // Save exercises for this day
+          for (let i = 0; i < day.exercises.length; i++) {
+            const exercise = day.exercises[i];
+            const firstSet = exercise.sets[0];
+
+            const { error: exerciseError } = await supabase
+              .from('workout_plan_day_exercises')
+              .insert({
+                day_id: dayDataTyped.id,
+                exercise_id: exercise.exercise.id,
+                sets_count: exercise.sets.length,
+                reps_range: firstSet ? `${firstSet.reps}` : '10-12',
+                rest_seconds: exercise.rest_seconds,
+                notes: exercise.notes || null,
+                order_index: i,
+                target_weight: firstSet?.weight || null,
+                target_rpe: firstSet?.rpe && firstSet.rpe >= 1 && firstSet.rpe <= 10 ? firstSet.rpe : null,
+                equipment_id: firstSet?.equipment_id || null,
+                set_type: firstSet?.set_type || 'regular',
+                failure: firstSet?.failure || false,
+                superset_exercise_id: firstSet?.superset_exercise_id || null,
+                superset_weight: firstSet?.superset_weight || null,
+                superset_reps: firstSet?.superset_reps || null,
+                superset_rpe: firstSet?.superset_rpe && firstSet.superset_rpe >= 1 && firstSet.superset_rpe <= 10 ? firstSet.superset_rpe : null,
+                superset_equipment_id: firstSet?.superset_equipment_id || null,
+                superset_dropset_weight: firstSet?.superset_dropset_weight || null,
+                superset_dropset_reps: firstSet?.superset_dropset_reps || null,
+                dropset_weight: firstSet?.dropset_weight || null,
+                dropset_reps: firstSet?.dropset_reps || null,
+              } as any);
+
+            if (exerciseError) {
+              logger.error('Error inserting exercise', exerciseError, 'WorkoutPlanBuilder');
+              toast.error(`שגיאה בהוספת תרגיל ${exercise.exercise.name}`);
+              // Rollback: delete any days we've already saved
+              if (savedDayIds.length > 0) {
+                await supabase
+                  .from('workout_plan_days')
+                  .delete()
+                  .in('id', savedDayIds);
+              }
+              setSaving(false);
+              return;
+            }
+          }
+        }
+
+        // Step 3: Only after all new data is saved successfully, delete old days
+        const { data: allExistingDays } = await supabase
           .from('workout_plan_days')
           .select('id')
           .eq('plan_id', activePlanId);
 
-        if (existingDays && existingDays.length > 0) {
+        if (allExistingDays && allExistingDays.length > 0) {
+          // Filter out the newly saved days
+          const oldDayIds = allExistingDays
+            .map(d => d.id)
+            .filter(id => !savedDayIds.includes(id));
+          
+          if (oldDayIds.length > 0) {
           await supabase
             .from('workout_plan_days')
             .delete()
-            .eq('plan_id', activePlanId);
+              .in('id', oldDayIds);
+          }
         }
       } else {
         // Create new plan
@@ -400,62 +345,75 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
         return;
       }
 
-      // Insert new days and exercises
-      for (const day of days) {
-        const { data: dayData, error: dayError } = await supabase
-          .from('workout_plan_days')
-          .insert({
-            plan_id: planId,
-            day_number: day.day_number,
-            day_name: day.day_name || null,
-            focus: day.focus || null,
-            notes: day.notes || null,
-            order_index: day.day_number - 1,
-          } as any)
-          .select()
-          .single();
-
-        if (dayError || !dayData) {
-          toast.error('שגיאה בהוספת יום');
-          continue;
-        }
-
-        const dayDataTyped = dayData as any;
-
-        for (let i = 0; i < day.exercises.length; i++) {
-          const exercise = day.exercises[i];
-          const firstSet = exercise.sets[0];
-
-          await supabase
-            .from('workout_plan_day_exercises')
+      // For new plans, insert days and exercises
+      if (!activePlanId) {
+        for (const day of days) {
+          const { data: dayData, error: dayError } = await supabase
+            .from('workout_plan_days')
             .insert({
-              day_id: dayDataTyped.id,
-              exercise_id: exercise.exercise.id,
-              sets_count: exercise.sets.length,
-              reps_range: firstSet ? `${firstSet.reps}` : '10-12',
-              rest_seconds: exercise.rest_seconds,
-              notes: exercise.notes || null,
-              order_index: i,
-              target_weight: firstSet?.weight || null,
-              target_rpe: firstSet?.rpe && firstSet.rpe >= 1 && firstSet.rpe <= 10 ? firstSet.rpe : null,
-              equipment_id: firstSet?.equipment_id || null,
-              set_type: firstSet?.set_type || 'regular',
-              failure: firstSet?.failure || false,
-              superset_exercise_id: firstSet?.superset_exercise_id || null,
-              superset_weight: firstSet?.superset_weight || null,
-              superset_reps: firstSet?.superset_reps || null,
-              superset_rpe: firstSet?.superset_rpe && firstSet.superset_rpe >= 1 && firstSet.superset_rpe <= 10 ? firstSet.superset_rpe : null,
-              superset_equipment_id: firstSet?.superset_equipment_id || null,
-              superset_dropset_weight: firstSet?.superset_dropset_weight || null,
-              superset_dropset_reps: firstSet?.superset_dropset_reps || null,
-              dropset_weight: firstSet?.dropset_weight || null,
-              dropset_reps: firstSet?.dropset_reps || null,
-            } as any);
+              plan_id: planId,
+              day_number: day.day_number,
+              day_name: day.day_name || null,
+              focus: day.focus || null,
+              notes: day.notes || null,
+              order_index: day.day_number - 1,
+            } as any)
+            .select()
+            .single();
+
+          if (dayError || !dayData) {
+            logger.error('Error inserting day', dayError, 'WorkoutPlanBuilder');
+            toast.error(`שגיאה בהוספת יום ${day.day_number}`);
+            continue;
+          }
+
+          const dayDataTyped = dayData as any;
+
+          for (let i = 0; i < day.exercises.length; i++) {
+            const exercise = day.exercises[i];
+            const firstSet = exercise.sets[0];
+
+            const { error: exerciseError } = await supabase
+              .from('workout_plan_day_exercises')
+              .insert({
+                day_id: dayDataTyped.id,
+                exercise_id: exercise.exercise.id,
+                sets_count: exercise.sets.length,
+                reps_range: firstSet ? `${firstSet.reps}` : '10-12',
+                rest_seconds: exercise.rest_seconds,
+                notes: exercise.notes || null,
+                order_index: i,
+                target_weight: firstSet?.weight || null,
+                target_rpe: firstSet?.rpe && firstSet.rpe >= 1 && firstSet.rpe <= 10 ? firstSet.rpe : null,
+                equipment_id: firstSet?.equipment_id || null,
+                set_type: firstSet?.set_type || 'regular',
+                failure: firstSet?.failure || false,
+                superset_exercise_id: firstSet?.superset_exercise_id || null,
+                superset_weight: firstSet?.superset_weight || null,
+                superset_reps: firstSet?.superset_reps || null,
+                superset_rpe: firstSet?.superset_rpe && firstSet.superset_rpe >= 1 && firstSet.superset_rpe <= 10 ? firstSet.superset_rpe : null,
+                superset_equipment_id: firstSet?.superset_equipment_id || null,
+                superset_dropset_weight: firstSet?.superset_dropset_weight || null,
+                superset_dropset_reps: firstSet?.superset_dropset_reps || null,
+                dropset_weight: firstSet?.dropset_weight || null,
+                dropset_reps: firstSet?.dropset_reps || null,
+              } as any);
+
+            if (exerciseError) {
+              logger.error('Error inserting exercise', exerciseError, 'WorkoutPlanBuilder');
+              toast.error(`שגיאה בהוספת תרגיל ${exercise.exercise.name}`);
+            }
+          }
         }
       }
 
       toast.success(activePlanId ? 'תוכנית עודכנה בהצלחה!' : 'תוכנית נשמרה בהצלחה!');
-      onBack();
+      
+      // Reload the plan to ensure state is synced
+      await loadActivePlan();
+      
+      // Don't navigate back automatically - let user continue editing
+      // onBack();
     } catch (error) {
       logger.error('Error saving plan', error, 'WorkoutPlanBuilder');
       toast.error('שגיאה בשמירת התוכנית');
@@ -556,10 +514,17 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           <div className="flex items-center gap-3">
             {activePlanId && (
               <button
-                onClick={() => {
+                onClick={async () => {
                   // Reload plan to discard changes
-                  loadActivePlan();
-                  toast.success('שינויים בוטלו');
+                  setLoading(true);
+                  try {
+                    await loadActivePlan();
+                    toast.success('שינויים בוטלו');
+                  } catch (error) {
+                    toast.error('שגיאה בטעינת התוכנית');
+                  } finally {
+                    setLoading(false);
+                  }
                 }}
                 className="px-4 lg:px-6 py-3 lg:py-4 bg-surface200 hover:bg-surface300 text-muted700 font-bold rounded-xl transition-all duration-300 flex items-center space-x-2 rtl:space-x-reverse shadow-md hover:shadow-lg"
                 aria-label="בטל שינויים"
@@ -568,16 +533,16 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                 <span className="text-base lg:text-lg">בטל</span>
               </button>
             )}
-            <button
-              onClick={handleSave}
-              disabled={saving || days.length === 0 || !planName.trim()}
+          <button
+            onClick={handleSave}
+            disabled={saving || days.length === 0 || !planName.trim()}
               className="bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
               aria-label={saving ? 'שומר תוכנית' : activePlanId ? 'עדכן תוכנית' : 'שמור תוכנית'}
               aria-disabled={saving || days.length === 0 || !planName.trim()}
-            >
-              <Save className="h-5 w-5 lg:h-6 lg:w-6" />
+          >
+            <Save className="h-5 w-5 lg:h-6 lg:w-6" />
               <span className="font-bold text-base lg:text-lg">{saving ? 'שומר...' : activePlanId ? 'עדכן תוכנית' : 'שמור תוכנית'}</span>
-            </button>
+          </button>
           </div>
         </div>
 
@@ -737,27 +702,27 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
           <div className="flex gap-3 pt-2">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <button
-                type="button"
-                onClick={() => {
+            <button
+              type="button"
+              onClick={() => {
                   loadTemplates(traineeId);
-                  setShowLoadTemplateModal(true);
-                }}
+                setShowLoadTemplateModal(true);
+              }}
                 className="py-4 px-4 bg-gradient-to-br from-blue-50 to-sky-50 hover:from-blue-100 hover:to-sky-100 text-blue-700 font-bold rounded-xl transition-all duration-300 border-2 border-blue-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 aria-label="טען תבנית"
-              >
-                טען תבנית
-              </button>
-              {days.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setShowSaveTemplateModal(true)}
+            >
+              טען תבנית
+            </button>
+            {days.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowSaveTemplateModal(true)}
                   className="py-4 px-4 bg-gradient-to-br from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 text-emerald-700 font-bold rounded-xl transition-all duration-300 border-2 border-emerald-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                   aria-label="שמור כתבנית"
-                >
-                  שמור כתבנית
-                </button>
-              )}
+              >
+                שמור כתבנית
+              </button>
+            )}
               <button
                 type="button"
                 onClick={() => setShowBlockBuilder(true)}
@@ -838,10 +803,14 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             onSelectBlock={(block) => {
               // Add block days to current plan
               if (block.days && Array.isArray(block.days) && block.days.length > 0) {
+                // Calculate the next day number based on existing days
+                const maxDayNumber = days.length > 0 
+                  ? Math.max(...days.map(d => d.day_number))
+                  : 0;
                 const newDays = block.days.map((day: any, index: number) => ({
                   ...day,
                   tempId: Date.now().toString() + Math.random() + index,
-                  day_number: days.length + index + 1,
+                  day_number: maxDayNumber + index + 1,
                   exercises: day.exercises || [],
                 }));
                 setDays([...days, ...newDays]);

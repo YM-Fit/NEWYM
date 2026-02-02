@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '../../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../../../utils/logger';
-import type { WorkoutDay } from '../types';
+import type { WorkoutDay, PlanExercise, SetData } from '../types';
 import { createEmptyDay } from '../types';
 
 export interface PlanSettings {
@@ -28,6 +28,123 @@ export function useWorkoutPlanState(traineeId: string) {
   const [activePlanId, setActivePlanId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [minimizedDays, setMinimizedDays] = useState<Set<string>>(new Set());
+
+  const loadPlanDays = useCallback(async (planId: string) => {
+    try {
+      const { data: daysData, error: daysError } = await supabase
+        .from('workout_plan_days')
+        .select('*')
+        .eq('plan_id', planId)
+        .order('order_index', { ascending: true });
+
+      if (daysError) {
+        logger.error('Error loading days', daysError, 'WorkoutPlanBuilder');
+        toast.error('שגיאה בטעינת ימי התוכנית');
+        return;
+      }
+
+      if (!daysData || daysData.length === 0) {
+        setDays([]);
+        return;
+      }
+
+      const loadedDays: WorkoutDay[] = [];
+      
+      for (const day of daysData as any[]) {
+        const { data: exercisesData, error: exercisesError } = await supabase
+          .from('workout_plan_day_exercises')
+          .select(`
+            *,
+            exercise:exercise_id(
+              id,
+              name,
+              muscle_group_id
+            ),
+            equipment:equipment_id(
+              id,
+              name,
+              emoji
+            ),
+            superset_exercise:superset_exercise_id(
+              id,
+              name
+            ),
+            superset_equipment:superset_equipment_id(
+              id,
+              name,
+              emoji
+            )
+          `)
+          .eq('day_id', day.id)
+          .order('order_index', { ascending: true });
+
+        if (exercisesError) {
+          logger.error('Error loading exercises for day', exercisesError, 'WorkoutPlanBuilder');
+          // Continue with empty exercises array for this day
+        }
+
+        const planExercises: PlanExercise[] = [];
+        
+        if (exercisesData) {
+          for (const ex of exercisesData as any[]) {
+            if (!ex.exercise) {
+              logger.warn('Exercise data missing for exercise_id', ex.exercise_id, 'WorkoutPlanBuilder');
+              continue;
+            }
+            
+            const setsCount = ex.sets_count || 1;
+            const repsRange = ex.reps_range || '10-12';
+            const reps = parseInt(repsRange.split('-')[0]) || 10;
+            
+            const sets: SetData[] = Array.from({ length: setsCount }, (_, i) => ({
+              id: `${day.id}-${ex.id}-${i}`,
+              set_number: i + 1,
+              weight: ex.target_weight || 0,
+              reps: reps,
+              rpe: ex.target_rpe || null,
+              set_type: (ex.set_type || 'regular') as 'regular' | 'superset' | 'dropset',
+              failure: ex.failure || false,
+              superset_exercise_id: ex.superset_exercise_id || null,
+              superset_exercise_name: ex.superset_exercise?.name || null,
+              superset_weight: ex.superset_weight || null,
+              superset_reps: ex.superset_reps || null,
+              superset_rpe: ex.superset_rpe || null,
+              superset_equipment_id: ex.superset_equipment_id || null,
+              superset_equipment: ex.superset_equipment || null,
+              superset_dropset_weight: ex.superset_dropset_weight || null,
+              superset_dropset_reps: ex.superset_dropset_reps || null,
+              dropset_weight: ex.dropset_weight || null,
+              dropset_reps: ex.dropset_reps || null,
+              equipment_id: ex.equipment_id || null,
+              equipment: ex.equipment || null,
+            }));
+
+            planExercises.push({
+              tempId: `${day.id}-${ex.id}`,
+              exercise: ex.exercise,
+              sets: sets,
+              rest_seconds: ex.rest_seconds || 90,
+              notes: ex.notes || '',
+            });
+          }
+        }
+
+        loadedDays.push({
+          tempId: day.id,
+          day_number: day.day_number,
+          day_name: day.day_name || '',
+          focus: day.focus || '',
+          notes: day.notes || '',
+          exercises: planExercises,
+        });
+      }
+
+      setDays(loadedDays);
+    } catch (error) {
+      logger.error('Error loading plan days', error, 'WorkoutPlanBuilder');
+      toast.error('שגיאה בטעינת התוכנית');
+    }
+  }, []);
 
   const loadActivePlan = useCallback(async () => {
     setLoading(true);
@@ -58,49 +175,36 @@ export function useWorkoutPlanState(traineeId: string) {
         setCardioFrequency(planData.cardio_frequency ?? 0);
         setCardioWeeklyGoalSteps(planData.cardio_weekly_goal_steps || null);
         await loadPlanDays(planData.id);
+      } else {
+        // No active plan found - reset state
+        setActivePlanId(null);
+        setPlanName('');
+        setPlanDescription('');
+        setDaysPerWeek(3);
+        setRestDaysBetween(0);
+        setIncludeCardio(false);
+        setCardioTypeId(null);
+        setCardioFrequency(0);
+        setCardioWeeklyGoalSteps(null);
+        setDays([]);
       }
     } catch (error) {
       logger.error('Error loading active plan', error, 'WorkoutPlanBuilder');
+      toast.error('שגיאה בטעינת התוכנית');
     } finally {
       setLoading(false);
     }
-  }, [traineeId]);
-
-  const loadPlanDays = useCallback(async (planId: string) => {
-    try {
-      const { data: daysData } = await supabase
-        .from('workout_plan_days')
-        .select('*')
-        .eq('plan_id', planId)
-        .order('order_index', { ascending: true });
-
-      if (!daysData || daysData.length === 0) {
-        setDays([]);
-        return;
-      }
-
-      // Load days with exercises and sets (simplified - full implementation would include all relations)
-      const loadedDays: WorkoutDay[] = daysData.map((day) => ({
-        tempId: day.id,
-        day_number: day.day_number,
-        day_name: day.day_name || '',
-        focus: day.focus || '',
-        notes: day.notes || '',
-        exercises: [], // Will be loaded separately if needed
-      }));
-
-      setDays(loadedDays);
-    } catch (error) {
-      logger.error('Error loading plan days', error, 'WorkoutPlanBuilder');
-      toast.error('שגיאה בטעינת התוכנית');
-    }
-  }, []);
+  }, [traineeId, loadPlanDays]);
 
   const addDay = useCallback(() => {
-    const newDay = createEmptyDay(days.length + 1);
+    // Calculate the next day number based on existing days
+    const maxDayNumber = days.length > 0 
+      ? Math.max(...days.map(d => d.day_number))
+      : 0;
+    const newDay = createEmptyDay(maxDayNumber + 1);
     setDays([...days, newDay]);
     setSelectedDay(newDay);
-  }, [days.length]);
+  }, [days]);
 
   const removeDay = useCallback((dayId: string) => {
     if (!confirm('האם למחוק את היום?')) return;
@@ -111,10 +215,14 @@ export function useWorkoutPlanState(traineeId: string) {
   }, [days, selectedDay]);
 
   const duplicateDay = useCallback((day: WorkoutDay) => {
+    // Calculate the next day number based on existing days
+    const maxDayNumber = days.length > 0 
+      ? Math.max(...days.map(d => d.day_number))
+      : 0;
     const newDay: WorkoutDay = {
       ...day,
       tempId: Date.now().toString() + Math.random(),
-      day_number: days.length + 1,
+      day_number: maxDayNumber + 1,
       day_name: day.day_name ? `${day.day_name} (עותק)` : '',
       exercises: day.exercises.map(ex => ({
         ...ex,
