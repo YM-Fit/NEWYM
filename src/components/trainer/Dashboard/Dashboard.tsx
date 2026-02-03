@@ -24,6 +24,7 @@ interface DashboardProps {
   onTraineeClick?: (traineeId: string) => void;
   onSaveMeasurement?: (traineeId: string, traineeName: string, reading: ScaleReading) => Promise<boolean>;
   onNewWorkout?: (trainee: Trainee) => void;
+  onNewPreparedWorkout?: (trainee: Trainee, scheduledWorkoutId?: string) => void;
   onViewWorkoutPlan?: (trainee: Trainee) => void;
   onViewMealPlan?: (trainee: Trainee) => void;
 }
@@ -37,6 +38,7 @@ export default function Dashboard({
   onTraineeClick,
   onSaveMeasurement,
   onNewWorkout,
+  onNewPreparedWorkout,
   onViewWorkoutPlan,
   onViewMealPlan
 }: DashboardProps) {
@@ -259,6 +261,7 @@ export default function Dashboard({
         <TodayTraineesSection
           trainees={trainees}
           onNewWorkout={onNewWorkout}
+          onNewPreparedWorkout={onNewPreparedWorkout}
           onViewWorkoutPlan={onViewWorkoutPlan}
           onViewMealPlan={onViewMealPlan}
           onTraineeClick={onTraineeClick ? (trainee: Trainee) => {
