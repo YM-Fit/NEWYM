@@ -203,18 +203,20 @@ export function useCurrentTvSession(
         // If no calendar events, try to find active workout for any trainee of this trainer
         if (!syncRecords || syncRecords.length === 0) {
           // Try to find the most recent active workout for any trainee
+          // Include prepared workouts even if completed (they should still show on TV)
           const { data: recentWorkouts, error: recentError } = await supabase
             .from('workouts')
             .select(`
               id,
               workout_date,
+              is_prepared,
               workout_trainees!inner(
                 trainee_id,
                 trainees!inner(id, full_name, is_pair, pair_name_1, pair_name_2)
               )
             `)
             .eq('trainer_id', user.id)
-            .eq('is_completed', false)
+            .or('is_completed.eq.false,is_prepared.eq.true') // Include incomplete workouts OR prepared workouts
             .order('workout_date', { ascending: false })
             .limit(1);
 
@@ -358,17 +360,19 @@ export function useCurrentTvSession(
           const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
           const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
           
-          // First try to find active (incomplete) workout
+          // First try to find active (incomplete) workout OR prepared workout
+          // Prepared workouts should show on TV even if completed
           const { data: activeWorkouts, error: workoutSearchError } = await supabase
             .from('workouts')
             .select(`
               id,
               workout_date,
+              is_prepared,
               workout_trainees!inner(trainee_id)
             `)
             .eq('trainer_id', user.id)
             .eq('workout_trainees.trainee_id', trainee.id)
-            .eq('is_completed', false)
+            .or('is_completed.eq.false,is_prepared.eq.true') // Include incomplete workouts OR prepared workouts
             .order('workout_date', { ascending: false })
             .limit(1);
 
@@ -382,17 +386,20 @@ export function useCurrentTvSession(
             } else {
               // If no active workout, try to find the most recent workout from today (even if completed)
               // This handles the case where workout was just saved
+              // Also include prepared workouts (they should show on TV)
               const { data: todayWorkouts, error: todayError } = await supabase
                 .from('workouts')
                 .select(`
                   id,
                   workout_date,
+                  is_prepared,
                   workout_trainees!inner(trainee_id)
                 `)
                 .eq('trainer_id', user.id)
                 .eq('workout_trainees.trainee_id', trainee.id)
                 .gte('workout_date', todayStart)
                 .lte('workout_date', todayEnd)
+                .or('is_completed.eq.false,is_prepared.eq.true') // Include incomplete workouts OR prepared workouts
                 .order('workout_date', { ascending: false })
                 .limit(1);
 
