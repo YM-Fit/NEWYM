@@ -47,7 +47,17 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock }: P
         .eq('trainer_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '42P01' || error.code === 'PGRST116' || 
+            error.message?.includes('does not exist') || 
+            error.message?.includes('relation')) {
+          logger.warn('workout_plan_blocks table does not exist yet', error, 'PlanBlockBuilder');
+          setBlocks([]);
+          setLoading(false);
+          return;
+        }
+        throw error;
+      }
 
       if (data) {
         setBlocks(data.map(block => ({

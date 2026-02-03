@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Check, Edit3, BookOpen, Dumbbell, Target, Clock, Repeat, Activity, Award, Info, TrendingUp, Plus } from 'lucide-react';
 import ExerciseInstructionsModal from '../common/ExerciseInstructionsModal';
 
@@ -199,9 +199,8 @@ export default function WorkoutPlanTable({
                 const isExpanded = expandedRows.has(day.id);
 
                 return (
-                  <>
+                  <React.Fragment key={day.id}>
                     <tr
-                      key={day.id}
                       className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg-surface)] transition-colors cursor-pointer"
                       onClick={() => toggleRow(day.id)}
                     >
@@ -401,7 +400,7 @@ export default function WorkoutPlanTable({
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 );
               })}
             </tbody>
