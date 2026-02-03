@@ -331,6 +331,7 @@ export default function MealPlanBuilder({
           meals={meals}
           expandedMeals={expandedMeals}
           saving={false}
+          trainerId={trainerId}
           onUpdatePlan={(updates) => updatePlan(activePlan.id, updates)}
           onAddMeal={addMeal}
           onUpdateMeal={updateMeal}

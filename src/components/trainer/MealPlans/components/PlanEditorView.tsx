@@ -4,12 +4,14 @@ import { createFoodItem, deleteFoodItem } from '../../../../api/nutritionApi';
 import type { NutritionFoodItem } from '../../../../types/nutritionTypes';
 import type { Meal, MealPlan } from '../types/mealPlanTypes';
 import { MEAL_NAMES } from '../constants/mealPlanConstants';
+import { FoodItemEditor } from '../../../shared/FoodSearch';
 
 interface PlanEditorViewProps {
   plan: MealPlan;
   meals: Meal[];
   expandedMeals: Set<number>;
   saving: boolean;
+  trainerId?: string;
   onUpdatePlan: (updates: Partial<MealPlan>) => void;
   onAddMeal: () => void;
   onUpdateMeal: (index: number, field: keyof Meal, value: any) => void;
@@ -33,6 +35,7 @@ export function PlanEditorView({
   meals,
   expandedMeals,
   saving,
+  trainerId,
   onUpdatePlan,
   onAddMeal,
   onUpdateMeal,
@@ -418,99 +421,25 @@ export function PlanEditorView({
                                   {meal.food_items && meal.food_items.length > 0 ? (
                                   <div className="space-y-2">
                                     {meal.food_items.map((item, itemIndex) => (
-                                      <div
+                                      <FoodItemEditor
                                         key={item.id}
-                                        className="bg-[var(--color-bg-surface)] rounded-xl p-4 border border-[var(--color-border)]"
-                                      >
-                                        <div className="grid grid-cols-12 gap-3 items-end">
-                                          <div className="col-span-4">
-                                            <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">שם מזון</label>
-                                            <input
-                                              type="text"
-                                              value={item.food_name}
-                                              onChange={(e) => {
-                                                debouncedUpdateFoodItem(item.id, { food_name: e.target.value }, displayIndex, itemIndex);
-                                              }}
-                                              className="glass-input w-full px-3 py-2 text-sm text-[var(--color-text-primary)]"
-                                              placeholder="לדוגמה: ביצה"
-                                            />
-                                          </div>
-                                          <div className="col-span-2">
-                                            <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">כמות</label>
-                                            <input
-                                              type="number"
-                                              step="0.1"
-                                              value={item.quantity}
-                                              onChange={(e) => {
-                                                debouncedUpdateFoodItem(item.id, { quantity: parseFloat(e.target.value) || 0 }, displayIndex, itemIndex);
-                                              }}
-                                              className="glass-input w-full px-3 py-2 text-sm text-[var(--color-text-primary)]"
-                                            />
-                                          </div>
-                                          <div className="col-span-2">
-                                            <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">יחידה</label>
-                                            <select
-                                              value={item.unit}
-                                              onChange={(e) => {
-                                                debouncedUpdateFoodItem(item.id, { unit: e.target.value }, displayIndex, itemIndex);
-                                              }}
-                                              className="glass-input w-full px-3 py-2 text-sm text-[var(--color-text-primary)]"
-                                            >
-                                              <option value="g">גרם</option>
-                                              <option value="unit">יחידה</option>
-                                              <option value="ml">מ"ל</option>
-                                              <option value="cup">כוס</option>
-                                              <option value="tbsp">כף</option>
-                                              <option value="tsp">כפית</option>
-                                            </select>
-                                          </div>
-                                          <div className="col-span-3 flex gap-2">
-                                            <div className="flex-1">
-                                              <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">קל'</label>
-                                              <input
-                                                type="number"
-                                                value={item.calories || ''}
-                                                onChange={(e) => {
-                                                  debouncedUpdateFoodItem(item.id, { calories: e.target.value ? parseInt(e.target.value) : null }, displayIndex, itemIndex);
-                                                }}
-                                                className="glass-input w-full px-2 py-2 text-xs text-[var(--color-text-primary)]"
-                                                placeholder="קל'"
-                                              />
-                                            </div>
-                                            <div className="flex-1">
-                                              <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">חלבון</label>
-                                              <input
-                                                type="number"
-                                                value={item.protein || ''}
-                                                onChange={(e) => {
-                                                  debouncedUpdateFoodItem(item.id, { protein: e.target.value ? parseInt(e.target.value) : null }, displayIndex, itemIndex);
-                                                }}
-                                                className="glass-input w-full px-2 py-2 text-xs text-[var(--color-text-primary)]"
-                                                placeholder="גרם"
-                                              />
-                                            </div>
-                                          </div>
-                                          <div className="col-span-1">
-                                            <button
-                                              onClick={async () => {
-                                                if (await deleteFoodItem(item.id)) {
-                                                  const updatedMeals = [...meals];
-                                                  updatedMeals[displayIndex] = {
-                                                    ...updatedMeals[displayIndex],
-                                                    food_items: (updatedMeals[displayIndex].food_items || []).filter(fi => fi.id !== item.id),
-                                                  };
-                                                  setMeals(updatedMeals);
-                                                  toast.success('פריט מזון נמחק');
-                                                }
-                                              }}
-                                              className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-all"
-                                              title="מחק"
-                                            >
-                                              <Trash2 className="h-4 w-4" />
-                                            </button>
-                                          </div>
-                                        </div>
-                                      </div>
+                                        item={item}
+                                        trainerId={trainerId}
+                                        onUpdate={(updates) => {
+                                          debouncedUpdateFoodItem(item.id, updates, displayIndex, itemIndex);
+                                        }}
+                                        onDelete={async () => {
+                                          if (await deleteFoodItem(item.id)) {
+                                            const updatedMeals = [...meals];
+                                            updatedMeals[displayIndex] = {
+                                              ...updatedMeals[displayIndex],
+                                              food_items: (updatedMeals[displayIndex].food_items || []).filter(fi => fi.id !== item.id),
+                                            };
+                                            setMeals(updatedMeals);
+                                            toast.success('פריט מזון נמחק');
+                                          }
+                                        }}
+                                      />
                                     ))}
                                   </div>
                                 ) : (
