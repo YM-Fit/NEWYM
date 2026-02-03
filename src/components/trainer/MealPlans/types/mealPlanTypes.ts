@@ -1,4 +1,7 @@
-import type { NutritionFoodItem } from '../../../../types/nutritionTypes';
+import type { NutritionFoodItem, MealPlan as BaseMealPlan } from '../../../../types/nutritionTypes';
+
+// Re-export MealPlan from nutritionTypes to avoid duplication
+export type MealPlan = BaseMealPlan;
 
 export interface MealPlanBuilderProps {
   traineeId: string;
@@ -14,32 +17,14 @@ export interface Meal {
   meal_name: string;
   description: string;
   alternatives: string;
-  calories: number | null;
-  protein: number | null;
-  carbs: number | null;
-  fat: number | null;
   notes: string;
   order_index: number;
   food_items?: NutritionFoodItem[];
+  // Calculated totals from food_items
   total_calories?: number | null;
   total_protein?: number | null;
   total_carbs?: number | null;
   total_fat?: number | null;
-}
-
-export interface MealPlan {
-  id: string;
-  name: string;
-  description: string | null;
-  is_active: boolean;
-  daily_calories: number | null;
-  daily_water_ml: number | null;
-  protein_grams: number | null;
-  carbs_grams: number | null;
-  fat_grams: number | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string | null;
 }
 
 export interface MealPlanTemplate {

@@ -259,24 +259,13 @@ export function PlanEditorView({
                             dinner: '19:00',
                             evening_snack: '21:00',
                           };
-                          const newMeal: Meal = {
-                            meal_time: defaultTimes[mealType.value] || '12:00',
-                            meal_name: mealType.value,
-                            description: '',
-                            alternatives: '',
-                            calories: null,
-                            protein: null,
-                            carbs: null,
-                            fat: null,
-                            notes: '',
-                            order_index: meals.length,
-                          };
+                          const defaultTime = defaultTimes[mealType.value] || '12:00';
                           onAddMeal();
                           // Update the new meal to match the meal type
                           setTimeout(() => {
                             const lastIndex = meals.length;
                             onUpdateMeal(lastIndex, 'meal_name', mealType.value);
-                            onUpdateMeal(lastIndex, 'meal_time', newMeal.meal_time);
+                            onUpdateMeal(lastIndex, 'meal_time', defaultTime);
                           }, 100);
                         }}
                         className="flex items-center gap-2 px-3 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-500/30 transition-all duration-300"

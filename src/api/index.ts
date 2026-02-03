@@ -15,3 +15,4 @@ export * from './workoutFeedbackApi';
 export * from './analyticsApi';
 export * from './cardioApi';
 export * from './nutritionApi';
+export * from './foodApi';

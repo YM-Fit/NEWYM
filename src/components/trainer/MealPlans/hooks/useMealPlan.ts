@@ -190,12 +190,13 @@ export function useMealPlan(traineeId: string, trainerId: string) {
       meal_name: 'breakfast',
       description: '',
       alternatives: '',
-      calories: null,
-      protein: null,
-      carbs: null,
-      fat: null,
       notes: '',
       order_index: meals.length,
+      food_items: [],
+      total_calories: null,
+      total_protein: null,
+      total_carbs: null,
+      total_fat: null,
     };
     setMeals([...meals, newMeal]);
   }, [meals.length]);
@@ -213,28 +214,53 @@ export function useMealPlan(traineeId: string, trainerId: string) {
   }, [meals]);
 
   const saveMeals = useCallback(async (planId: string, onHistorySave?: (description: string) => Promise<void>) => {
+    // First, delete existing meals
     await supabase.from('meal_plan_meals').delete().eq('plan_id', planId);
 
-    const mealsToInsert = meals.map((meal) => ({
-      plan_id: planId,
-      meal_time: meal.meal_time,
-      meal_name: meal.meal_name,
-      description: meal.description,
-      alternatives: meal.alternatives,
-      calories: meal.calories,
-      protein: meal.protein,
-      carbs: meal.carbs,
-      fat: meal.fat,
-      notes: meal.notes,
-      order_index: meal.order_index,
-    }));
+    // Insert meals with food items
+    for (const meal of meals) {
+      const mealToInsert = {
+        plan_id: planId,
+        meal_time: meal.meal_time,
+        meal_name: meal.meal_name,
+        description: meal.description,
+        alternatives: meal.alternatives,
+        notes: meal.notes,
+        order_index: meal.order_index,
+      };
 
-    if (mealsToInsert.length > 0) {
-      const { error } = await supabase.from('meal_plan_meals').insert(mealsToInsert);
+      const { data: insertedMeal, error: mealError } = await supabase
+        .from('meal_plan_meals')
+        .insert(mealToInsert)
+        .select()
+        .single();
 
-      if (error) {
-        toast.error('שגיאה בשמירת ארוחות');
+      if (mealError) {
+        toast.error('שגיאה בשמירת ארוחה');
         return false;
+      }
+
+      // Insert food items for this meal
+      if (meal.food_items && meal.food_items.length > 0) {
+        const foodItemsToInsert = meal.food_items.map((item, idx) => ({
+          meal_id: insertedMeal.id,
+          food_name: item.food_name,
+          quantity: item.quantity,
+          unit: item.unit,
+          calories: item.calories,
+          protein: item.protein,
+          carbs: item.carbs,
+          fat: item.fat,
+          order_index: idx,
+        }));
+
+        const { error: foodError } = await supabase
+          .from('meal_plan_food_items')
+          .insert(foodItemsToInsert);
+
+        if (foodError) {
+          console.error('Error saving food items:', foodError);
+        }
       }
     }
 
@@ -246,7 +272,7 @@ export function useMealPlan(traineeId: string, trainerId: string) {
     toast.success('הארוחות נשמרו בהצלחה');
     await loadMeals(planId);
     return true;
-  }, [meals, updatePlan]);
+  }, [meals, updatePlan, loadMeals]);
 
   const getMealLabel = useCallback((value: string) => {
     return MEAL_NAMES.find((m) => m.value === value)?.label || value;
@@ -255,10 +281,10 @@ export function useMealPlan(traineeId: string, trainerId: string) {
   const calculateTotalMacros = useCallback(() => {
     return meals.reduce(
       (acc, meal) => ({
-        calories: acc.calories + (meal.calories || 0),
-        protein: acc.protein + (meal.protein || 0),
-        carbs: acc.carbs + (meal.carbs || 0),
-        fat: acc.fat + (meal.fat || 0),
+        calories: acc.calories + (meal.total_calories || 0),
+        protein: acc.protein + (meal.total_protein || 0),
+        carbs: acc.carbs + (meal.total_carbs || 0),
+        fat: acc.fat + (meal.total_fat || 0),
       }),
       { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
