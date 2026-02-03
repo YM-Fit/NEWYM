@@ -55,7 +55,10 @@ export default function WorkoutPlanHistory({ planId, onClose }: WorkoutPlanHisto
         .limit(100);
 
       if (error) {
-        if (error.code === '42P01') {
+        if (error.code === '42P01' || error.code === 'PGRST116' || 
+            error.message?.includes('does not exist') || 
+            error.message?.includes('relation') ||
+            error.message?.includes('Could not find')) {
           logger.warn('workout_plan_weekly_executions table does not exist yet', error, 'WorkoutPlanHistory');
           setExecutions([]);
           setLoading(false);
@@ -185,11 +188,11 @@ export default function WorkoutPlanHistory({ planId, onClose }: WorkoutPlanHisto
 
                     {isExpanded && (
                       <div className="p-4 pt-0 space-y-2 bg-surface50 border-t border-border200">
-                        {weekExecutions.map((execution) => {
+                        {weekExecutions.map((execution, execIndex) => {
                           const day = execution.day as { day_number: number; day_name: string | null } | undefined;
                           return (
                             <div
-                              key={execution.id}
+                              key={execution.id || `exec-${weekKey}-${execIndex}`}
                               className="p-3 bg-surface0 rounded-xl border border-border200"
                             >
                               <div className="flex items-start justify-between">

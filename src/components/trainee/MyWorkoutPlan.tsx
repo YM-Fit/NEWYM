@@ -444,13 +444,16 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           } as any);
 
         if (error) {
-          if (error.code === '42P01') {
+          if (error.code === '42P01' || error.code === 'PGRST116' || 
+              error.message?.includes('does not exist') || 
+              error.message?.includes('relation') ||
+              error.message?.includes('Could not find')) {
             logger.warn('workout_plan_weekly_executions table does not exist yet', error, 'MyWorkoutPlan');
-            toast.error('טבלת ביצועים שבועיים עדיין לא קיימת. אנא הפעל את המיגרציות.');
+            toast.error('טבלת ביצועים שבועיים עדיין לא קיימת. אנא הפעל את המיגרציות: supabase/migrations/20260203000006_create_workout_plan_weekly_executions.sql', { duration: 6000 });
             return;
           }
           logger.error('Error marking day complete', error, 'MyWorkoutPlan');
-          toast.error('שגיאה בשמירת ביצוע');
+          toast.error(`שגיאה בשמירת ביצוע: ${error.message || 'שגיאה לא ידועה'}`);
           return;
         }
         toast.success('יום סומן כהושלם!');
@@ -481,12 +484,30 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           days.length
         );
 
-        const { data: executions } = await supabase
+        const { data: executions, error: execError } = await supabase
           .from('workout_plan_weekly_executions')
           .select('id')
           .eq('plan_id', plan.id)
           .eq('day_id', day.id)
           .eq('week_start_date', weekStartStr);
+
+        // If table doesn't exist (404, 42P01, or PGRST116), set count to 0
+        if (execError) {
+          if (execError.code === '42P01' || execError.code === 'PGRST116' || 
+              execError.message?.includes('does not exist') || 
+              execError.message?.includes('relation') ||
+              execError.message?.includes('Could not find')) {
+            // Table doesn't exist - migrations not run yet
+            logger.warn('workout_plan_weekly_executions table does not exist', { dayId: day.id, error: execError }, 'MyWorkoutPlan');
+            completions[day.id] = {
+              count: 0,
+              required,
+            };
+            continue;
+          }
+          // Other error - log but continue
+          logger.warn('Error loading executions for day', { dayId: day.id, error: execError }, 'MyWorkoutPlan');
+        }
 
         completions[day.id] = {
           count: executions?.length || 0,
