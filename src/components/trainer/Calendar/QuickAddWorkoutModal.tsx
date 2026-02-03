@@ -129,6 +129,7 @@ export default function QuickAddWorkoutModal({
           workout_date: startTime.toISOString(),
           workout_type: 'personal',
           is_completed: false,
+          is_prepared: false, // Quick add workouts are always dynamic
           google_event_id: googleEventId,
           synced_from_google: false,
           notes: '',

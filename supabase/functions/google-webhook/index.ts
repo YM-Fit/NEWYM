@@ -370,6 +370,7 @@ async function processCalendarEvents(
             workout_date: startTime.toISOString().split("T")[0],
             notes: event.description || null,
             is_completed: false,
+            is_prepared: false, // Google Calendar workouts are always dynamic
           })
           .select()
           .single();

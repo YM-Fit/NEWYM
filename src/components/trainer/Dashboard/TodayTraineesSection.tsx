@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Dumbbell, ClipboardList, UtensilsCrossed, Clock, Users, Calendar, AlertCircle, Scale, CalendarDays, CalendarCheck, User, Trash2 } from 'lucide-react';
+import { Dumbbell, ClipboardList, UtensilsCrossed, Clock, Users, Calendar, AlertCircle, Scale, CalendarDays, CalendarCheck, User, Trash2, FileText } from 'lucide-react';
 import { Trainee } from '../../../types';
 import { supabase } from '../../../lib/supabase';
 import { logger } from '../../../utils/logger';
@@ -33,6 +33,7 @@ export interface TodayTrainee {
 interface TodayTraineesSectionProps {
   trainees: Trainee[];
   onNewWorkout: (trainee: Trainee, scheduledWorkoutId?: string) => void;
+  onNewPreparedWorkout?: (trainee: Trainee, scheduledWorkoutId?: string) => void;
   onViewWorkoutPlan: (trainee: Trainee) => void;
   onViewMealPlan: (trainee: Trainee) => void;
   onTraineeClick?: (trainee: Trainee) => void;
@@ -76,6 +77,7 @@ const getUnseenWeightsCount = async (traineeId: string): Promise<number> => {
 export default function TodayTraineesSection({
   trainees,
   onNewWorkout,
+  onNewPreparedWorkout,
   onViewWorkoutPlan,
   onViewMealPlan,
   onTraineeClick
@@ -693,6 +695,7 @@ export default function TodayTraineesSection({
                         todayTrainee={item}
                         index={index}
                         onNewWorkout={onNewWorkout}
+                        onNewPreparedWorkout={onNewPreparedWorkout}
                         onViewWorkoutPlan={onViewWorkoutPlan}
                         onViewMealPlan={onViewMealPlan}
                         onTraineeClick={onTraineeClick}
@@ -788,6 +791,7 @@ export default function TodayTraineesSection({
                         todayTrainee={item}
                         index={index}
                         onNewWorkout={onNewWorkout}
+                        onNewPreparedWorkout={onNewPreparedWorkout}
                         onViewWorkoutPlan={onViewWorkoutPlan}
                         onViewMealPlan={onViewMealPlan}
                         onTraineeClick={onTraineeClick}
@@ -809,6 +813,7 @@ interface TraineeTableRowProps {
   todayTrainee: TodayTrainee;
   index: number;
   onNewWorkout: (trainee: Trainee, scheduledWorkoutId?: string) => void;
+  onNewPreparedWorkout?: (trainee: Trainee, scheduledWorkoutId?: string) => void;
   onViewWorkoutPlan: (trainee: Trainee) => void;
   onViewMealPlan: (trainee: Trainee) => void;
   onTraineeClick?: (trainee: Trainee) => void;
@@ -819,6 +824,7 @@ function TraineeTableRow({
   todayTrainee,
   index,
   onNewWorkout,
+  onNewPreparedWorkout,
   onViewWorkoutPlan,
   onViewMealPlan,
   onTraineeClick,
@@ -950,11 +956,30 @@ function TraineeTableRow({
                        shadow-lg shadow-emerald-700/50 hover:shadow-2xl hover:shadow-emerald-700/70
                        focus:outline-none focus:ring-2 focus:ring-emerald-700/50 focus:ring-offset-2"
             aria-label={`הוסף אימון חדש ל${trainee.full_name}`}
-            title="אימון חדש"
+            title="אימון חדש (דינמי)"
           >
             <Dumbbell className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span className="text-[10px] md:text-xs font-bold hidden sm:inline">אימון</span>
           </button>
+          {onNewPreparedWorkout && (
+            <button
+              onClick={() => {
+                // If there's a scheduled workout (not completed), pass its ID
+                const scheduledWorkoutId = !workout.is_completed ? workout.id : undefined;
+                onNewPreparedWorkout(trainee, scheduledWorkoutId);
+              }}
+              className="bg-cyan-500/20 hover:bg-cyan-500/30 border-2 border-cyan-500/30 
+                         hover:border-cyan-500/50 p-1.5 md:p-2 rounded-lg flex items-center gap-1 md:gap-1.5
+                         transition-all duration-300 hover:scale-110 active:scale-95
+                         shadow-lg shadow-cyan-500/20 hover:shadow-2xl hover:shadow-cyan-500/40 text-cyan-600 dark:text-cyan-400
+                         focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:ring-offset-2"
+              aria-label={`הוסף אימון שהוכן מראש ל${trainee.full_name}`}
+              title="אימון שהוכן מראש"
+            >
+              <FileText className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <span className="text-[10px] md:text-xs font-bold hidden sm:inline">הוכן מראש</span>
+            </button>
+          )}
           {/* Delete button - only show for scheduled workouts (not completed) */}
           {!workout.is_completed && onDeleteWorkout && (
             <button
@@ -1019,6 +1044,7 @@ interface TraineeCardTodayProps {
   todayTrainee: TodayTrainee;
   index: number;
   onNewWorkout: (trainee: Trainee, scheduledWorkoutId?: string) => void;
+  onNewPreparedWorkout?: (trainee: Trainee, scheduledWorkoutId?: string) => void;
   onViewWorkoutPlan: (trainee: Trainee) => void;
   onViewMealPlan: (trainee: Trainee) => void;
   onTraineeClick?: (trainee: Trainee) => void;
@@ -1029,6 +1055,7 @@ function TraineeCardToday({
   todayTrainee,
   index,
   onNewWorkout,
+  onNewPreparedWorkout,
   onViewWorkoutPlan,
   onViewMealPlan,
   onTraineeClick,
@@ -1177,7 +1204,7 @@ function TraineeCardToday({
         </div>
 
         {/* Enhanced Action Buttons */}
-        <div className={`grid ${onTraineeClick ? (onDeleteWorkout && !workout.is_completed ? 'grid-cols-5' : 'grid-cols-4') : (onDeleteWorkout && !workout.is_completed ? 'grid-cols-4' : 'grid-cols-3')} gap-2.5 sm:gap-3`}>
+        <div className={`grid ${onTraineeClick ? (onDeleteWorkout && !workout.is_completed ? (onNewPreparedWorkout ? 'grid-cols-6' : 'grid-cols-5') : (onNewPreparedWorkout ? 'grid-cols-5' : 'grid-cols-4')) : (onDeleteWorkout && !workout.is_completed ? (onNewPreparedWorkout ? 'grid-cols-5' : 'grid-cols-4') : (onNewPreparedWorkout ? 'grid-cols-4' : 'grid-cols-3'))} gap-2.5 sm:gap-3`}>
           {/* אימון חדש - Primary */}
           <button
             onClick={() => {
@@ -1205,6 +1232,36 @@ function TraineeCardToday({
             <Dumbbell className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" aria-hidden="true" />
             <span className="text-xs sm:text-sm font-bold relative z-10">אימון חדש</span>
           </button>
+
+          {/* אימון שהוכן מראש */}
+          {onNewPreparedWorkout && (
+            <button
+              onClick={() => {
+                const scheduledWorkoutId = !workout.is_completed ? workout.id : undefined;
+                onNewPreparedWorkout(trainee, scheduledWorkoutId);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  const scheduledWorkoutId = !workout.is_completed ? workout.id : undefined;
+                  onNewPreparedWorkout(trainee, scheduledWorkoutId);
+                }
+              }}
+              className="bg-cyan-500/20 hover:bg-cyan-500/30 border-2 border-cyan-500/30 
+                         hover:border-cyan-500/50 p-4 sm:p-5 rounded-xl flex flex-col items-center gap-2
+                         transition-all duration-300 hover:scale-110 active:scale-95
+                         shadow-lg shadow-cyan-500/30 hover:shadow-2xl hover:shadow-cyan-500/50
+                         focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:ring-offset-2
+                         group/btn relative overflow-hidden text-cyan-600 dark:text-cyan-400"
+              aria-label={`הוסף אימון שהוכן מראש ל${trainee.full_name}`}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
+                            translate-x-[-100%] group-hover/btn:translate-x-[100%] 
+                            transition-transform duration-700" />
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" aria-hidden="true" />
+              <span className="text-xs sm:text-sm font-bold relative z-10">הוכן מראש</span>
+            </button>
+          )}
 
           {/* מחק אימון - only for scheduled workouts */}
           {!workout.is_completed && onDeleteWorkout && (

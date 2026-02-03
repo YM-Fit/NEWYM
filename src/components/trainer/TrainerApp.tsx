@@ -22,6 +22,7 @@ const TraineeProfile = lazy(() => import('./Trainees/TraineeProfile'));
 const AddTraineeForm = lazy(() => import('./Trainees/AddTraineeForm'));
 const EditTraineeForm = lazy(() => import('./Trainees/EditTraineeForm'));
 const WorkoutSession = lazy(() => import('./Workouts/WorkoutSession'));
+const PreparedWorkoutSession = lazy(() => import('./Workouts/PreparedWorkoutSession'));
 const WorkoutsList = lazy(() => import('./Workouts/WorkoutsList'));
 const WorkoutDetails = lazy(() => import('./Workouts/WorkoutDetails'));
 const WorkoutProgress = lazy(() => import('./Workouts/WorkoutProgress'));
@@ -668,7 +669,17 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
     }
   };
 
-  const loadScheduledWorkoutForEditing = async (workoutId: string, trainee: Trainee) => {
+  const handleNewPreparedWorkout = (trainee: Trainee, scheduledWorkoutId?: string) => {
+    setSelectedTrainee(trainee);
+    // If there's a scheduled workout ID, load it and pass as editingWorkout
+    if (scheduledWorkoutId) {
+      loadScheduledWorkoutForEditing(scheduledWorkoutId, trainee, true);
+    } else {
+      setActiveView('prepared-workout-session');
+    }
+  };
+
+  const loadScheduledWorkoutForEditing = async (workoutId: string, trainee: Trainee, isPrepared: boolean = false) => {
     try {
       const { data: workoutExercises } = await supabase
         .from('workout_exercises')
@@ -727,7 +738,9 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
           id: workoutId,
           exercises: formattedExercises,
         });
-        if (trainee.is_pair) {
+        if (isPrepared) {
+          setActiveView('prepared-workout-session');
+        } else if (trainee.is_pair) {
           setActiveView('workout-type-selection');
         } else {
           setActiveView('workout-session');
@@ -738,7 +751,9 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
           id: workoutId,
           exercises: [],
         });
-        if (trainee.is_pair) {
+        if (isPrepared) {
+          setActiveView('prepared-workout-session');
+        } else if (trainee.is_pair) {
           setActiveView('workout-type-selection');
         } else {
           setActiveView('workout-session');
@@ -748,7 +763,9 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
       logger.error('Error loading scheduled workout for editing:', err, 'TrainerApp');
       toast.error('שגיאה בטעינת האימון המתוזמן');
       // Fallback to regular new workout
-      if (trainee.is_pair) {
+      if (isPrepared) {
+        setActiveView('prepared-workout-session');
+      } else if (trainee.is_pair) {
         setActiveView('workout-type-selection');
       } else {
         setActiveView('workout-session');
@@ -1115,6 +1132,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             }}
             onSaveMeasurement={handleSaveScaleMeasurement}
             onNewWorkout={handleNewWorkout}
+            onNewPreparedWorkout={handleNewPreparedWorkout}
             onViewWorkoutPlan={handleViewWorkoutPlan}
             onViewMealPlan={handleViewMealPlan}
           />
@@ -1204,6 +1222,46 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
               onSelectPersonal={handleSelectPersonalWorkout}
               onSelectPair={handleSelectPairWorkout}
               onBack={() => setActiveView('trainee-profile')}
+            />
+          </Suspense>
+        ) : null;
+
+      case 'prepared-workout-session':
+        return selectedTrainee ? (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <PreparedWorkoutSession
+              trainee={convertTraineeToDisplayFormat(selectedTrainee)}
+              initialSelectedMember={selectedPairMember}
+              isTablet={isTablet}
+              scheduledWorkoutId={selectedWorkout?.id}
+              onBack={() => {
+                if (selectedWorkout) {
+                  setActiveView('workouts-list');
+                } else {
+                  setActiveView('trainee-profile');
+                }
+                setSelectedPairMember(null);
+              }}
+              onSave={async (workout) => {
+                await loadWorkouts(selectedTrainee.id);
+                setSelectedWorkout(null);
+                setPreviousWorkoutForNew(null);
+                setSelectedPairMember(null);
+                if (selectedWorkout) {
+                  setActiveView('workouts-list');
+                } else {
+                  setActiveView('trainee-profile');
+                }
+              }}
+              previousWorkout={previousWorkoutForNew || undefined}
+              editingWorkout={
+                selectedWorkout
+                  ? {
+                      id: selectedWorkout.id,
+                      exercises: selectedWorkout.exercises || [],
+                    }
+                  : undefined
+              }
             />
           </Suspense>
         ) : null;

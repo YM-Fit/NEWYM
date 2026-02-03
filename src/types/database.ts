@@ -113,6 +113,7 @@ export type Database = {
           workout_type: 'personal' | 'pair';
           notes: string;
           created_at: string;
+          is_prepared: boolean;
         };
         Insert: {
           id?: string;
@@ -121,6 +122,7 @@ export type Database = {
           workout_type?: 'personal' | 'pair';
           notes?: string;
           created_at?: string;
+          is_prepared?: boolean;
         };
         Update: {
           id?: string;
@@ -129,6 +131,7 @@ export type Database = {
           workout_type?: 'personal' | 'pair';
           notes?: string;
           created_at?: string;
+          is_prepared?: boolean;
         };
       };
       workout_trainees: {

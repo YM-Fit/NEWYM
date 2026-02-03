@@ -201,6 +201,7 @@ interface SaveWorkoutRequest {
   pair_member?: 'member_1' | 'member_2' | null;
   workout_id?: string;
   is_auto_save?: boolean;
+  is_prepared?: boolean;
 }
 
 Deno.serve(async (req: Request) => {
@@ -303,6 +304,7 @@ Deno.serve(async (req: Request) => {
       pair_member,
       workout_id,
       is_auto_save,
+      is_prepared,
     }: SaveWorkoutRequest = await req.json();
 
     // Verify trainer_id matches authenticated user
@@ -483,6 +485,11 @@ Deno.serve(async (req: Request) => {
         workout_date: finalWorkoutDate, // Preserve date, use current time
       };
       
+      // Update is_prepared if provided
+      if (is_prepared !== undefined) {
+        updateData.is_prepared = is_prepared;
+      }
+      
       // Preserve is_completed status if workout was already completed
       // Only mark as completed if this is an explicit save (not auto-save) AND workout wasn't already completed
       if (existingWorkout?.is_completed === true) {
@@ -617,6 +624,7 @@ Deno.serve(async (req: Request) => {
             notes,
             workout_date: finalWorkoutDate,
             is_completed: !is_auto_save, // Only mark as completed if this is an explicit save (not auto-save)
+            is_prepared: is_prepared || false, // Default to false (dynamic) if not specified
           },
         ])
         .select()

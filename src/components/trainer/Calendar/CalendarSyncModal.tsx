@@ -459,6 +459,7 @@ export default function CalendarSyncModal({
                   workout_date: eventStartTime,
                   workout_type: 'personal',
                   is_completed: isInPast, // Only mark completed if in the past
+                  is_prepared: false, // Calendar sync workouts are always dynamic
                   google_event_id: event.id,
                   google_event_summary: event.summary || '',
                   synced_from_google: true,

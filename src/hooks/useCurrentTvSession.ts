@@ -51,6 +51,7 @@ export interface TvWorkout {
   workout_date: string;
   is_completed: boolean;
   workout_type?: 'personal' | 'pair' | null;
+  is_prepared?: boolean;
   exercises: TvWorkoutExercise[];
 }
 
@@ -223,6 +224,13 @@ export function useCurrentTvSession(
             const traineeData = traineeLink?.trainees;
             
             if (traineeData) {
+              // Get workout metadata (including is_prepared)
+              const { data: workoutMeta } = await supabase
+                .from('workouts')
+                .select('id, workout_date, is_completed, is_prepared, workout_type')
+                .eq('id', workout.id)
+                .single();
+
               const workoutDetails = await getWorkoutDetails(workout.id);
               
               if ('data' in workoutDetails && workoutDetails.data) {
@@ -260,8 +268,10 @@ export function useCurrentTvSession(
                   },
                   workout: {
                     id: workout.id,
-                    workout_date: workout.workout_date,
-                    is_completed: false,
+                    workout_date: workoutMeta?.workout_date || workout.workout_date,
+                    is_completed: workoutMeta?.is_completed || false,
+                    is_prepared: workoutMeta?.is_prepared || false,
+                    workout_type: workoutMeta?.workout_type || null,
                     exercises,
                   },
                   calendarEvent: null,
@@ -405,6 +415,13 @@ export function useCurrentTvSession(
 
         if (workoutId) {
           try {
+            // Get workout metadata (including is_prepared) first
+            const { data: workoutMeta, error: workoutMetaError } = await supabase
+              .from('workouts')
+              .select('id, workout_date, is_completed, is_prepared, workout_type')
+              .eq('id', workoutId)
+              .single();
+
             const workoutDetails = await getWorkoutDetails(workoutId);
 
             if ('error' in workoutDetails && workoutDetails.error) {
@@ -432,8 +449,10 @@ export function useCurrentTvSession(
                 
                 workout = {
                   id: workoutId,
-                  workout_date: activeRecord.event_start_time,
-                  is_completed: false,
+                  workout_date: workoutMeta?.workout_date || activeRecord.event_start_time,
+                  is_completed: workoutMeta?.is_completed || false,
+                  is_prepared: workoutMeta?.is_prepared || false,
+                  workout_type: workoutMeta?.workout_type || null,
                   exercises: existingExercises, // Keep existing exercises if available
                 };
               } else {
@@ -510,8 +529,10 @@ export function useCurrentTvSession(
 
                 workout = {
                   id: workoutId,
-                  workout_date: activeRecord.event_start_time,
-                  is_completed: false,
+                  workout_date: workoutMeta?.workout_date || activeRecord.event_start_time,
+                  is_completed: workoutMeta?.is_completed || false,
+                  is_prepared: workoutMeta?.is_prepared || false,
+                  workout_type: workoutMeta?.workout_type || null,
                   exercises: finalExercises,
                 };
                 

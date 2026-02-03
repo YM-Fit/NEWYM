@@ -73,6 +73,7 @@ interface WorkoutSessionProps {
   };
   initialSelectedMember?: 'member_1' | 'member_2' | null;
   isTablet?: boolean;
+  isPrepared?: boolean;
 }
 
 export default function WorkoutSession({
@@ -83,6 +84,7 @@ export default function WorkoutSession({
   editingWorkout,
   initialSelectedMember,
   isTablet,
+  isPrepared = false,
 }: WorkoutSessionProps) {
   const { user } = useAuth();
   const { handleError } = useErrorHandler();
@@ -303,6 +305,7 @@ export default function WorkoutSession({
             notes: notes || null,
             workout_date: workoutDate.toISOString(),
             is_completed: false, // Mark as incomplete - will be completed when user saves
+            is_prepared: isPrepared, // Use the isPrepared prop
           },
         ])
         .select()
@@ -1353,6 +1356,7 @@ export default function WorkoutSession({
         exercises: exercisesData,
         pair_member: trainee.is_pair ? selectedMember : null,
         workout_id: workoutId || undefined,
+        is_prepared: isPrepared,
       };
 
       const result = await saveWorkout(requestBody, session.access_token);

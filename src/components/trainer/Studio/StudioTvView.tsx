@@ -5,7 +5,7 @@ import { useTraineeProgressData } from '../../../hooks/useTraineeProgressData';
 import { usePersonalRecordDetection } from '../../../hooks/usePersonalRecordDetection';
 import { Card } from '../../ui/Card';
 import { useThemeClasses } from '../../../contexts/ThemeContext';
-import { Flame, TrendingUp, Trophy, Calendar, Target, AlertCircle } from 'lucide-react';
+import { Flame, TrendingUp, Trophy, Calendar, Target, AlertCircle, FileText } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 
 interface StudioTvViewProps {
@@ -33,6 +33,9 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
     pollIntervalMs,
   });
   const themeClasses = useThemeClasses();
+
+  // Check if this is a prepared workout
+  const isPreparedWorkout = session?.workout?.is_prepared === true;
 
   // Load progress data
   const progressData = useTraineeProgressData(session?.trainee?.id || null);
@@ -913,7 +916,15 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                   </div>
 
                   {/* TV Exercise Cards - Optimized for 55" viewing */}
-                  <div className="flex-1 overflow-auto px-6 py-4">
+                  <div className={`flex-1 ${isPreparedWorkout ? 'overflow-hidden' : 'overflow-auto'} px-6 py-4`}>
+                    {isPreparedWorkout && (
+                      <div className="mb-4 px-4 py-2 bg-cyan-500/20 border border-cyan-500/30 rounded-xl">
+                        <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
+                          <FileText className="w-5 h-5" />
+                          <span className="text-lg font-bold">אימון שהוכן מראש</span>
+                        </div>
+                      </div>
+                    )}
                     {isPairWorkout ? (
                       /* Split Screen Layout for Pair Workouts */
                       <div className="grid grid-cols-2 gap-6 h-full">
@@ -1017,7 +1028,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                       </div>
                     ) : (
                       /* Single Column Layout for Personal Workouts */
-                      <div className="grid gap-5">
+                      <div className={`grid gap-5 ${isPreparedWorkout ? 'grid-cols-2 auto-rows-max h-full overflow-hidden' : ''}`}>
                         {sortedCompletedExercisesData.map((exercise, index) => {
                         const isActiveExercise = exercise.id === currentExercise?.id;
                         const setsProgress = exercise.totalSets > 0 ? (exercise.completedSets / exercise.totalSets) * 100 : 0;
@@ -1229,8 +1240,8 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                               </div>
                             </div>
 
-                            {/* Sets Detail Row - Only for active exercise */}
-                            {isActiveExercise && exercise.sets.length > 0 && (
+                            {/* Sets Detail Row - Show all sets for prepared workouts, or only active for dynamic */}
+                            {((isPreparedWorkout && exercise.sets.length > 0) || (isActiveExercise && exercise.sets.length > 0)) && (
                               <div className="mt-6 pt-6 border-t border-white/20">
                                 <div className="flex items-center gap-6 flex-wrap">
                                   {exercise.sets.map((set) => {
