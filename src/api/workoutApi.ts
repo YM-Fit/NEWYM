@@ -139,6 +139,10 @@ export async function getWorkoutDetails(
           superset_exercise_id,
           superset_weight,
           superset_reps,
+          superset_rpe,
+          superset_equipment_id,
+          superset_dropset_weight,
+          superset_dropset_reps,
           dropset_weight,
           dropset_reps,
           equipment_id,
@@ -150,6 +154,11 @@ export async function getWorkoutDetails(
           superset_exercise:superset_exercise_id (
             id,
             name
+          ),
+          superset_equipment:superset_equipment_id (
+            id,
+            name,
+            emoji
           )
         )
       `)

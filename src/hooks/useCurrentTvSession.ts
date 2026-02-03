@@ -24,9 +24,18 @@ interface TvWorkoutExerciseSet {
   superset_exercise_id?: string | null;
   superset_weight?: number | null;
   superset_reps?: number | null;
+  superset_rpe?: number | null;
+  superset_equipment_id?: string | null;
+  superset_dropset_weight?: number | null;
+  superset_dropset_reps?: number | null;
   superset_exercise?: {
     id: string;
     name: string;
+  } | null;
+  superset_equipment?: {
+    id: string;
+    name: string;
+    emoji: string | null;
   } | null;
   dropset_weight?: number | null;
   dropset_reps?: number | null;
@@ -252,7 +261,12 @@ export function useCurrentTvSession(
                     superset_exercise_id: set.superset_exercise_id || null,
                     superset_weight: set.superset_weight || null,
                     superset_reps: set.superset_reps || null,
+                    superset_rpe: set.superset_rpe || null,
+                    superset_equipment_id: set.superset_equipment_id || null,
+                    superset_dropset_weight: set.superset_dropset_weight || null,
+                    superset_dropset_reps: set.superset_dropset_reps || null,
                     superset_exercise: set.superset_exercise || null,
+                    superset_equipment: set.superset_equipment || null,
                     dropset_weight: set.dropset_weight || null,
                     dropset_reps: set.dropset_reps || null,
                     equipment_id: set.equipment_id || null,
@@ -526,7 +540,12 @@ export function useCurrentTvSession(
                     superset_exercise_id: set.superset_exercise_id || null,
                     superset_weight: set.superset_weight || null,
                     superset_reps: set.superset_reps || null,
+                    superset_rpe: set.superset_rpe || null,
+                    superset_equipment_id: set.superset_equipment_id || null,
+                    superset_dropset_weight: set.superset_dropset_weight || null,
+                    superset_dropset_reps: set.superset_dropset_reps || null,
                     superset_exercise: set.superset_exercise || null,
+                    superset_equipment: set.superset_equipment || null,
                     dropset_weight: set.dropset_weight || null,
                     dropset_reps: set.dropset_reps || null,
                     equipment_id: set.equipment_id || null,

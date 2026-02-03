@@ -1046,6 +1046,18 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                 const hasSupersets = exercise.sets.some(set => set.superset_exercise_id || set.set_type === 'superset');
                                 const hasDropsets = exercise.sets.some(set => (set.dropset_weight || 0) > 0 || set.set_type === 'dropset');
                                 
+                                // Get unique superset exercise names
+                                const supersetExerciseNames = exercise.sets
+                                  .filter(set => set.superset_exercise?.name)
+                                  .map(set => set.superset_exercise!.name)
+                                  .filter((name, idx, arr) => arr.indexOf(name) === idx);
+                                
+                                // Get unique equipment from sets
+                                const equipmentList = exercise.sets
+                                  .filter(set => set.equipment?.name)
+                                  .map(set => ({ emoji: set.equipment?.emoji || '🏋️', name: set.equipment?.name }))
+                                  .filter((eq, idx, arr) => arr.findIndex(e => e.name === eq.name) === idx);
+                                
                                 return (
                                   <tr 
                                     key={exercise.id}
@@ -1056,21 +1068,68 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                     <td className="py-4 px-6 text-2xl font-black text-cyan-600 dark:text-cyan-400">{index + 1}</td>
                                     <td className="py-4 px-6">
                                       <div className="text-2xl font-bold text-gray-900 dark:text-white">{exercise.name}</div>
-                                      <div className="flex items-center gap-2 mt-1">
-                                        {hasSupersets && <span className="text-sm px-2 py-1 rounded bg-purple-100 text-purple-600">🔗 סופר-סט</span>}
-                                        {hasDropsets && <span className="text-sm px-2 py-1 rounded bg-orange-100 text-orange-600">⬇️ דרופ</span>}
-                                        {exercise.hasFailure && <span className="text-base">⚠️</span>}
+                                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                        {hasSupersets && (
+                                          <span className="text-sm px-3 py-1 rounded-lg bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 font-semibold border border-purple-200 dark:border-purple-800">
+                                            🔗 סופר-סט {supersetExerciseNames.length > 0 && `(${supersetExerciseNames.join(', ')})`}
+                                          </span>
+                                        )}
+                                        {hasDropsets && (
+                                          <span className="text-sm px-3 py-1 rounded-lg bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 font-semibold border border-orange-200 dark:border-orange-800">
+                                            ⬇️ דרופ-סט
+                                          </span>
+                                        )}
+                                        {equipmentList.length > 0 && equipmentList.map((eq, idx) => (
+                                          <span key={idx} className="text-sm px-3 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-semibold border border-blue-200 dark:border-blue-800">
+                                            {eq.emoji} {eq.name}
+                                          </span>
+                                        ))}
+                                        {exercise.hasFailure && (
+                                          <span className="text-base text-red-500" title="כשל">⚠️</span>
+                                        )}
                                       </div>
                                     </td>
                                     <td className="py-4 px-6">
-                                      <div className="space-y-2">
-                                        {exercise.sets.map((set) => (
-                                          <div key={set.id} className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                                            סט {set.set_number}: {set.weight ?? 0}ק״ג × {set.reps ?? 0}
-                                            {set.failure && <span className="mr-1">⚠️</span>}
-                                            {set.equipment?.emoji && <span className="mr-1">{set.equipment.emoji}</span>}
-                                          </div>
-                                        ))}
+                                      <div className="space-y-3">
+                                        {exercise.sets.map((set) => {
+                                          const hasSuperset = set.superset_exercise_id && ((set.superset_weight || 0) > 0 || (set.superset_reps || 0) > 0);
+                                          const hasDropset = (set.dropset_weight || 0) > 0 || (set.dropset_reps || 0) > 0;
+                                          
+                                          return (
+                                            <div key={set.id} className="border-b border-gray-200 dark:border-gray-700 pb-2 last:border-0 last:pb-0">
+                                              <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                                                <span className="font-black text-cyan-600 dark:text-cyan-400">סט {set.set_number}:</span> {set.weight ?? 0}ק״ג × {set.reps ?? 0}
+                                                {set.failure && <span className="mr-1 text-red-500">⚠️</span>}
+                                                {set.equipment && (
+                                                  <span className="mr-2 text-base" title={set.equipment.name}>
+                                                    {set.equipment.emoji} {set.equipment.name}
+                                                  </span>
+                                                )}
+                                              </div>
+                                              {/* Superset detail */}
+                                              {hasSuperset && (
+                                                <div className="text-base text-purple-600 dark:text-purple-400 mt-1 mr-4">
+                                                  🔗 סופר-סט: {set.superset_exercise?.name || 'סופר-סט'} - {set.superset_weight ?? 0}ק״ג × {set.superset_reps ?? 0}
+                                                  {set.superset_equipment && (
+                                                    <span className="mr-2">({set.superset_equipment.emoji} {set.superset_equipment.name})</span>
+                                                  )}
+                                                </div>
+                                              )}
+                                              {/* Dropset detail */}
+                                              {hasDropset && (
+                                                <div className="text-base text-orange-600 dark:text-orange-400 mt-1 mr-4">
+                                                  ⬇️ דרופ-סט: {set.dropset_weight ?? 0}ק״ג × {set.dropset_reps ?? 0}
+                                                </div>
+                                              )}
+                                              {/* Superset dropset detail */}
+                                              {set.superset_dropset_weight && set.superset_dropset_reps && (
+                                                <div className="text-base text-orange-500 dark:text-orange-300 mt-1 mr-4">
+                                                  ⬇️ דרופ סופר-סט: {set.superset_dropset_weight ?? 0}ק״ג × {set.superset_dropset_reps ?? 0}
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                        })}
                                       </div>
                                     </td>
                                     <td className="py-4 px-6 text-2xl font-black text-gray-900 dark:text-white">
@@ -1105,7 +1164,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                         </div>
                       ) : (
                         /* Grid Layout for Dynamic Workouts */
-                        <div className="grid gap-5">
+                      <div className="grid gap-5">
                         {sortedCompletedExercisesData.map((exercise, index) => {
                         const isActiveExercise = exercise.id === currentExercise?.id;
                         const setsProgress = exercise.totalSets > 0 ? (exercise.completedSets / exercise.totalSets) * 100 : 0;
