@@ -1370,6 +1370,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                         );
                       })}
                       </div>
+                      )
                     )}
                   </div>
                 </div>
