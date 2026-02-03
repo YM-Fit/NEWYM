@@ -36,6 +36,16 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
   // Check if this is a prepared workout
   const isPreparedWorkout = session?.workout?.is_prepared === true;
+  
+  // Debug log
+  if (session?.workout) {
+    console.log('[TV] Workout details:', {
+      id: session.workout.id,
+      is_prepared: session.workout.is_prepared,
+      isPreparedWorkout,
+      workout_date: session.workout.workout_date,
+    });
+  }
 
   // Load progress data
   const progressData = useTraineeProgressData(session?.trainee?.id || null);

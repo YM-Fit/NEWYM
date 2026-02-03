@@ -271,8 +271,8 @@ export function useCurrentTvSession(
                   workout: {
                     id: workout.id,
                     workout_date: workoutMeta?.workout_date || workout.workout_date,
-                    is_completed: workoutMeta?.is_completed || false,
-                    is_prepared: workoutMeta?.is_prepared || false,
+                    is_completed: workoutMeta?.is_completed ?? false,
+                    is_prepared: workoutMeta?.is_prepared ?? false, // Use ?? instead of || to handle false values correctly
                     workout_type: workoutMeta?.workout_type || null,
                     exercises,
                   },
@@ -350,8 +350,40 @@ export function useCurrentTvSession(
         const trainee = activeRecord.trainees as { id: string; full_name: string; is_pair?: boolean; pair_name_1?: string | null; pair_name_2?: string | null } | null;
 
         // 3. Load workout details - try linked workout first, then find active workout for trainee
+        // BUT: If there's a prepared workout for this trainee, prioritize it over calendar events
         let workout: TvWorkout | null = null;
         let workoutId: string | null = activeRecord.workout_id as string | null;
+        
+        // Check if there's a prepared workout for this trainee (prioritize over calendar events)
+        if (trainee) {
+          const now = new Date();
+          const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+          const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
+          
+          const { data: preparedWorkouts } = await supabase
+            .from('workouts')
+            .select(`
+              id,
+              is_prepared,
+              workout_trainees!inner(trainee_id)
+            `)
+            .eq('trainer_id', user.id)
+            .eq('is_prepared', true)
+            .eq('workout_trainees.trainee_id', trainee.id)
+            .gte('workout_date', todayStart)
+            .lte('workout_date', todayEnd)
+            .order('workout_date', { ascending: false })
+            .limit(1);
+          
+          if (preparedWorkouts && preparedWorkouts.length > 0) {
+            workoutId = preparedWorkouts[0].id;
+            pushLog({
+              level: 'info',
+              message: `נמצא אימון שהוכן מראש עבור ${trainee.full_name} - מעדיף על פני אירוע יומן`,
+              details: { workoutId: preparedWorkouts[0].id },
+            });
+          }
+        }
 
         // If no workout_id in calendar sync, try to find active workout for this trainee
         // Also check for completed workouts from today (in case workout was just saved)
@@ -423,11 +455,36 @@ export function useCurrentTvSession(
         if (workoutId) {
           try {
             // Get workout metadata (including is_prepared) first
-            const { data: workoutMeta, error: workoutMetaError } = await supabase
+            let workoutMeta: { id: string; workout_date: string; is_completed: boolean; is_prepared: boolean; workout_type: string | null } | null = null;
+            const { data: workoutMetaData, error: workoutMetaError } = await supabase
               .from('workouts')
               .select('id, workout_date, is_completed, is_prepared, workout_type')
               .eq('id', workoutId)
               .single();
+
+            workoutMeta = workoutMetaData;
+
+            // Debug log
+            console.log('[TV] Workout metadata loaded:', {
+              workoutId,
+              workoutMeta,
+              is_prepared: workoutMeta?.is_prepared,
+              workoutMetaError,
+            });
+
+            // If workoutMeta failed to load, try to get is_prepared directly
+            if (workoutMetaError || !workoutMeta) {
+              console.warn('[TV] Failed to load workout metadata, trying direct query:', workoutMetaError);
+              const { data: directMeta } = await supabase
+                .from('workouts')
+                .select('is_prepared')
+                .eq('id', workoutId)
+                .single();
+              if (directMeta) {
+                workoutMeta = { ...(workoutMeta || {}), is_prepared: directMeta.is_prepared } as any;
+                console.log('[TV] Loaded is_prepared directly:', directMeta.is_prepared);
+              }
+            }
 
             const workoutDetails = await getWorkoutDetails(workoutId);
 
@@ -456,12 +513,18 @@ export function useCurrentTvSession(
                 
                 workout = {
                   id: workoutId,
-                  workout_date: workoutMeta?.workout_date || activeRecord.event_start_time,
-                  is_completed: workoutMeta?.is_completed || false,
-                  is_prepared: workoutMeta?.is_prepared || false,
+                  workout_date: workoutMeta?.workout_date || activeRecord?.event_start_time || new Date().toISOString(),
+                  is_completed: workoutMeta?.is_completed ?? false,
+                  is_prepared: workoutMeta?.is_prepared ?? false, // Use ?? instead of || to handle false values correctly
                   workout_type: workoutMeta?.workout_type || null,
                   exercises: existingExercises, // Keep existing exercises if available
                 };
+                
+                console.log('[TV] Created workout object (no exercises):', {
+                  id: workout.id,
+                  is_prepared: workout.is_prepared,
+                  workoutMeta_is_prepared: workoutMeta?.is_prepared,
+                });
               } else {
                 const exercises: TvWorkoutExercise[] = exercisesData.map(ex => ({
                   id: ex.id,
@@ -536,12 +599,19 @@ export function useCurrentTvSession(
 
                 workout = {
                   id: workoutId,
-                  workout_date: workoutMeta?.workout_date || activeRecord.event_start_time,
-                  is_completed: workoutMeta?.is_completed || false,
-                  is_prepared: workoutMeta?.is_prepared || false,
+                  workout_date: workoutMeta?.workout_date || activeRecord?.event_start_time || new Date().toISOString(),
+                  is_completed: workoutMeta?.is_completed ?? false,
+                  is_prepared: workoutMeta?.is_prepared ?? false, // Use ?? instead of || to handle false values correctly
                   workout_type: workoutMeta?.workout_type || null,
                   exercises: finalExercises,
                 };
+                
+                console.log('[TV] Created workout object (with exercises):', {
+                  id: workout.id,
+                  is_prepared: workout.is_prepared,
+                  workoutMeta_is_prepared: workoutMeta?.is_prepared,
+                  exerciseCount: finalExercises.length,
+                });
                 
                 pushLog({
                   level: 'info',
