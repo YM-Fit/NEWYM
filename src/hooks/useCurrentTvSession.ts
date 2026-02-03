@@ -464,17 +464,8 @@ export function useCurrentTvSession(
 
             workoutMeta = workoutMetaData;
 
-            // Debug log
-            console.log('[TV] Workout metadata loaded:', {
-              workoutId,
-              workoutMeta,
-              is_prepared: workoutMeta?.is_prepared,
-              workoutMetaError,
-            });
-
             // If workoutMeta failed to load, try to get is_prepared directly
             if (workoutMetaError || !workoutMeta) {
-              console.warn('[TV] Failed to load workout metadata, trying direct query:', workoutMetaError);
               const { data: directMeta } = await supabase
                 .from('workouts')
                 .select('is_prepared')
@@ -482,7 +473,6 @@ export function useCurrentTvSession(
                 .single();
               if (directMeta) {
                 workoutMeta = { ...(workoutMeta || {}), is_prepared: directMeta.is_prepared } as any;
-                console.log('[TV] Loaded is_prepared directly:', directMeta.is_prepared);
               }
             }
 
@@ -519,12 +509,6 @@ export function useCurrentTvSession(
                   workout_type: workoutMeta?.workout_type || null,
                   exercises: existingExercises, // Keep existing exercises if available
                 };
-                
-                console.log('[TV] Created workout object (no exercises):', {
-                  id: workout.id,
-                  is_prepared: workout.is_prepared,
-                  workoutMeta_is_prepared: workoutMeta?.is_prepared,
-                });
               } else {
                 const exercises: TvWorkoutExercise[] = exercisesData.map(ex => ({
                   id: ex.id,
@@ -590,13 +574,6 @@ export function useCurrentTvSession(
                   finalExercises = exercises;
                 }
 
-                console.log('[TV-POLLING] Exercises from DB', {
-                  dbCount: exercises.length,
-                  existingCount: existingExercises.length,
-                  finalCount: finalExercises.length,
-                  deletedCount: existingExercises.length - finalExercises.length,
-                });
-
                 workout = {
                   id: workoutId,
                   workout_date: workoutMeta?.workout_date || activeRecord?.event_start_time || new Date().toISOString(),
@@ -605,13 +582,6 @@ export function useCurrentTvSession(
                   workout_type: workoutMeta?.workout_type || null,
                   exercises: finalExercises,
                 };
-                
-                console.log('[TV] Created workout object (with exercises):', {
-                  id: workout.id,
-                  is_prepared: workout.is_prepared,
-                  workoutMeta_is_prepared: workoutMeta?.is_prepared,
-                  exerciseCount: finalExercises.length,
-                });
                 
                 pushLog({
                   level: 'info',

@@ -36,16 +36,6 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
 
   // Check if this is a prepared workout
   const isPreparedWorkout = session?.workout?.is_prepared === true;
-  
-  // Debug log
-  if (session?.workout) {
-    console.log('[TV] Workout details:', {
-      id: session.workout.id,
-      is_prepared: session.workout.is_prepared,
-      isPreparedWorkout,
-      workout_date: session.workout.workout_date,
-    });
-  }
 
   // Load progress data
   const progressData = useTraineeProgressData(session?.trainee?.id || null);
@@ -125,7 +115,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
         setShowWelcomeScreen(true);
         const timer = setTimeout(() => {
           setShowWelcomeScreen(false);
-        }, 4000); // Show for 4 seconds (faster)
+        }, 5000); // Show for 5 seconds
         return () => clearTimeout(timer);
       } else {
         // If sets are already filled, mark as shown so it doesn't appear again
@@ -491,7 +481,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
       {/* Welcome Screen - Enhanced with workout info and clear states */}
       {showWelcomeScreen && session?.trainee && (
         <div
-          className="fixed inset-0 flex items-center justify-center z-50 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-900"
           onClick={() => setShowWelcomeScreen(false)}
         >
           {/* Background Pattern */}
@@ -503,8 +493,8 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
           </div>
 
           {/* Decorative elements */}
-          <div className="absolute top-10 right-10 text-emerald-500/20 text-[150px] font-black animate-pulse">💪</div>
-          <div className="absolute bottom-10 left-10 text-emerald-500/20 text-[120px] font-black animate-pulse" style={{ animationDelay: '0.5s' }}>🏋️</div>
+          <div className="absolute top-10 right-10 text-emerald-400/30 text-[150px] font-black animate-pulse">💪</div>
+          <div className="absolute bottom-10 left-10 text-emerald-400/30 text-[120px] font-black animate-pulse" style={{ animationDelay: '0.5s' }}>🏋️</div>
 
           <div className="relative z-10 text-center max-w-5xl mx-auto px-12">
             {/* Status Badge */}
@@ -1037,8 +1027,85 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                         </div>
                       </div>
                     ) : (
-                      /* Single Column Layout for Personal Workouts */
-                      <div className={`grid gap-5 ${isPreparedWorkout ? 'grid-cols-2 auto-rows-max h-full overflow-hidden' : ''}`}>
+                      /* Single Column Layout for Personal Workouts - Table for prepared workouts */
+                      isPreparedWorkout ? (
+                        /* Table Layout for Prepared Workouts */
+                        <div className="flex-1 overflow-hidden">
+                          <table className="w-full h-full border-collapse">
+                            <thead>
+                              <tr className="bg-cyan-500/20 border-b-2 border-cyan-500/30">
+                                <th className="text-right py-4 px-6 text-xl font-bold text-cyan-600 dark:text-cyan-400">#</th>
+                                <th className="text-right py-4 px-6 text-xl font-bold text-cyan-600 dark:text-cyan-400">תרגיל</th>
+                                <th className="text-right py-4 px-6 text-xl font-bold text-cyan-600 dark:text-cyan-400">סטים</th>
+                                <th className="text-right py-4 px-6 text-xl font-bold text-cyan-600 dark:text-cyan-400">משקל מקסימלי</th>
+                                <th className="text-right py-4 px-6 text-xl font-bold text-cyan-600 dark:text-cyan-400">התקדמות</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sortedCompletedExercisesData.map((exercise, index) => {
+                                const hasSupersets = exercise.sets.some(set => set.superset_exercise_id || set.set_type === 'superset');
+                                const hasDropsets = exercise.sets.some(set => (set.dropset_weight || 0) > 0 || set.set_type === 'dropset');
+                                
+                                return (
+                                  <tr 
+                                    key={exercise.id}
+                                    className={`border-b border-cyan-500/20 hover:bg-cyan-500/10 transition-colors ${
+                                      exercise.isCompleted ? 'bg-cyan-50/50 dark:bg-cyan-900/20' : 'bg-white/50 dark:bg-gray-800/50'
+                                    }`}
+                                  >
+                                    <td className="py-4 px-6 text-2xl font-black text-cyan-600 dark:text-cyan-400">{index + 1}</td>
+                                    <td className="py-4 px-6">
+                                      <div className="text-2xl font-bold text-gray-900 dark:text-white">{exercise.name}</div>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        {hasSupersets && <span className="text-sm px-2 py-1 rounded bg-purple-100 text-purple-600">🔗 סופר-סט</span>}
+                                        {hasDropsets && <span className="text-sm px-2 py-1 rounded bg-orange-100 text-orange-600">⬇️ דרופ</span>}
+                                        {exercise.hasFailure && <span className="text-base">⚠️</span>}
+                                      </div>
+                                    </td>
+                                    <td className="py-4 px-6">
+                                      <div className="space-y-2">
+                                        {exercise.sets.map((set) => (
+                                          <div key={set.id} className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                                            סט {set.set_number}: {set.weight ?? 0}ק״ג × {set.reps ?? 0}
+                                            {set.failure && <span className="mr-1">⚠️</span>}
+                                            {set.equipment?.emoji && <span className="mr-1">{set.equipment.emoji}</span>}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </td>
+                                    <td className="py-4 px-6 text-2xl font-black text-gray-900 dark:text-white">
+                                      {exercise.maxWeight > 0 ? `${exercise.maxWeight}ק״ג` : '—'}
+                                    </td>
+                                    <td className="py-4 px-6">
+                                      {exercise.progressIndicator === 'up' ? (
+                                        <div className="flex items-center gap-2">
+                                          <TrendingUp className="w-6 h-6 text-emerald-500" />
+                                          <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">
+                                            {exercise.progressPercent || 0}%
+                                          </span>
+                                        </div>
+                                      ) : exercise.progressIndicator === 'down' ? (
+                                        <div className="flex items-center gap-2">
+                                          <TrendingUp className="w-6 h-6 text-red-500 rotate-180" />
+                                          <span className="text-xl font-black text-red-600 dark:text-red-400">
+                                            {exercise.progressPercent || 0}%
+                                          </span>
+                                        </div>
+                                      ) : exercise.progressIndicator === 'same' ? (
+                                        <span className="text-xl font-black text-gray-500">=</span>
+                                      ) : (
+                                        <span className="text-base font-medium text-gray-400">—</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        /* Grid Layout for Dynamic Workouts */
+                        <div className="grid gap-5">
                         {sortedCompletedExercisesData.map((exercise, index) => {
                         const isActiveExercise = exercise.id === currentExercise?.id;
                         const setsProgress = exercise.totalSets > 0 ? (exercise.completedSets / exercise.totalSets) * 100 : 0;
@@ -1063,7 +1130,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                           <div
                             key={exercise.id}
                             className={`rounded-2xl p-6 transition-all duration-300 ${
-                              isActiveExercise
+                              isActiveExercise && !isPreparedWorkout
                                 ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-xl ring-2 ring-emerald-300/50'
                                 : exercise.isCompleted
                                 ? 'bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800'
@@ -1074,13 +1141,13 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                             <div className="flex items-center gap-6">
                               {/* Number Badge */}
                               <div className={`w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-black flex-shrink-0 ${
-                                isActiveExercise
+                                isActiveExercise && !isPreparedWorkout
                                   ? 'bg-white text-emerald-600'
                                   : exercise.isCompleted
                                   ? 'bg-emerald-500 text-white'
                                   : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-300'
                               }`}>
-                                {exercise.isCompleted && !isActiveExercise ? '✓' : index + 1}
+                                {exercise.isCompleted && (!isActiveExercise || isPreparedWorkout) ? '✓' : index + 1}
                               </div>
 
                               {/* Exercise Info */}
@@ -1091,7 +1158,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                                   }`}>
                                     {exercise.name}
                                   </span>
-                                  {isActiveExercise && (
+                                  {isActiveExercise && !isPreparedWorkout && (
                                     <span className="px-4 py-2 text-base bg-red-500 text-white rounded-full animate-pulse font-bold">
                                       🔴 עכשיו
                                     </span>
@@ -1251,7 +1318,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
                             </div>
 
                             {/* Sets Detail Row - Show all sets for prepared workouts, or only active for dynamic */}
-                            {((isPreparedWorkout && exercise.sets.length > 0) || (isActiveExercise && exercise.sets.length > 0)) && (
+                            {((isPreparedWorkout && exercise.sets.length > 0) || (isActiveExercise && !isPreparedWorkout && exercise.sets.length > 0)) && (
                               <div className="mt-6 pt-6 border-t border-white/20">
                                 <div className="flex items-center gap-6 flex-wrap">
                                   {exercise.sets.map((set) => {
