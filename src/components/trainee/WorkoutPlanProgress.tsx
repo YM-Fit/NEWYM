@@ -25,7 +25,7 @@ interface DayExercise {
 interface WorkoutPlanProgressProps {
   days: WorkoutDay[];
   dayExercises: Record<string, DayExercise[]>;
-  completedExercises: Set<string>;
+  dayCompletions: Record<string, { count: number; required: number }>;
   getCompletedCount: (dayId: string) => number;
   calculateDayVolume: (dayId: string) => number;
 }
@@ -33,40 +33,52 @@ interface WorkoutPlanProgressProps {
 export default function WorkoutPlanProgress({
   days,
   dayExercises,
-  completedExercises,
+  dayCompletions,
   getCompletedCount,
   calculateDayVolume,
 }: WorkoutPlanProgressProps) {
   const stats = useMemo(() => {
     const totalExercises = Object.values(dayExercises).reduce((sum, exercises) => sum + exercises.length, 0);
-    const completedExercisesCount = completedExercises.size;
     const totalDays = days.length;
     const completedDays = days.filter(day => {
-      const exercises = dayExercises[day.id] || [];
-      const completedCount = getCompletedCount(day.id);
-      return exercises.length > 0 && completedCount === exercises.length;
+      const completion = dayCompletions[day.id];
+      return completion && completion.count >= completion.required;
     }).length;
+    
+    // Calculate total required executions for the week
+    const totalRequired = days.reduce((sum, day) => {
+      const completion = dayCompletions[day.id];
+      return sum + (completion?.required || 1);
+    }, 0);
+    
+    // Calculate total completed executions for the week
+    const totalCompleted = days.reduce((sum, day) => {
+      const completion = dayCompletions[day.id];
+      return sum + (completion?.count || 0);
+    }, 0);
 
     const totalVolume = days.reduce((sum, day) => sum + calculateDayVolume(day.id), 0);
     const avgVolume = totalDays > 0 ? totalVolume / totalDays : 0;
 
-    const overallProgress = totalExercises > 0 ? (completedExercisesCount / totalExercises) * 100 : 0;
+    const overallProgress = totalRequired > 0 ? (totalCompleted / totalRequired) * 100 : 0;
 
     return {
       totalExercises,
-      completedExercisesCount,
+      totalCompleted,
+      totalRequired,
       totalDays,
       completedDays,
       totalVolume,
       avgVolume,
       overallProgress,
     };
-  }, [days, dayExercises, completedExercises, getCompletedCount, calculateDayVolume]);
+  }, [days, dayExercises, dayCompletions, getCompletedCount, calculateDayVolume]);
 
   const dayProgressData = useMemo(() => {
     return days.map(day => {
       const exercises = dayExercises[day.id] || [];
-      const completedCount = getCompletedCount(day.id);
+      const completion = dayCompletions[day.id] || { count: 0, required: 1 };
+      const completedCount = completion.count;
       const progress = exercises.length > 0 ? (completedCount / exercises.length) * 100 : 0;
       const volume = calculateDayVolume(day.id);
 
@@ -81,13 +93,12 @@ export default function WorkoutPlanProgress({
   }, [days, dayExercises, getCompletedCount, calculateDayVolume]);
 
   const exerciseProgressData = useMemo(() => {
-    const exerciseMap = new Map<string, { name: string; completed: boolean; volume: number }>();
+    const exerciseMap = new Map<string, { name: string; volume: number }>();
 
     days.forEach(day => {
       const exercises = dayExercises[day.id] || [];
       exercises.forEach(exercise => {
         const exerciseName = exercise.exercise?.name || 'תרגיל';
-        const isCompleted = completedExercises.has(exercise.id);
         const weight = exercise.trainee_target_weight || exercise.target_weight || 0;
         const avgReps = exercise.reps_range.includes('-')
           ? (parseInt(exercise.reps_range.split('-')[0]) + parseInt(exercise.reps_range.split('-')[1])) / 2
@@ -96,12 +107,10 @@ export default function WorkoutPlanProgress({
 
         const existing = exerciseMap.get(exerciseName);
         if (existing) {
-          existing.completed = existing.completed && isCompleted;
           existing.volume += volume;
         } else {
           exerciseMap.set(exerciseName, {
             name: exerciseName,
-            completed: isCompleted,
             volume,
           });
         }
@@ -109,7 +118,7 @@ export default function WorkoutPlanProgress({
     });
 
     return Array.from(exerciseMap.values()).slice(0, 10); // Top 10 exercises
-  }, [days, dayExercises, completedExercises]);
+  }, [days, dayExercises, dayCompletions]);
 
   return (
     <div className="space-y-6">
@@ -152,7 +161,7 @@ export default function WorkoutPlanProgress({
             <div>
               <p className="text-xs text-[var(--color-text-muted)] mb-1">תרגילים שהושלמו</p>
               <p className="text-2xl font-bold text-amber-400">
-                {stats.completedExercisesCount}/{stats.totalExercises}
+                {stats.totalCompleted}/{stats.totalRequired}
               </p>
             </div>
             <div className="p-3 bg-amber-500/15 rounded-xl">

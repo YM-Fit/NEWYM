@@ -100,6 +100,11 @@ export default function WorkoutDayCard({
 
         <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/20">
           <span className="font-medium">{day.exercises.length} תרגילים</span>
+          {day.times_per_week !== undefined && day.times_per_week !== null && (
+            <span className="font-medium opacity-80">
+              • {day.times_per_week} פעמים בשבוע
+            </span>
+          )}
         </div>
       </div>
 

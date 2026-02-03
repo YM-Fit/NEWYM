@@ -52,6 +52,7 @@ export interface WorkoutDay {
   focus: string;
   notes: string;
   exercises: PlanExercise[];
+  times_per_week?: number; // Number of times per week this day should be executed (0-7, default 1)
 }
 
 export interface WorkoutPlanTemplate {
@@ -135,6 +136,7 @@ export function createEmptyDay(dayNumber: number): WorkoutDay {
     focus: '',
     notes: '',
     exercises: [],
+    times_per_week: 1, // Default: once per week
   };
 }
 

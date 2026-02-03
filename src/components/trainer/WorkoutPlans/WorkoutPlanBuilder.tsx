@@ -252,6 +252,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
               focus: day.focus || null,
               notes: day.notes || null,
               order_index: day.day_number - 1,
+              times_per_week: day.times_per_week ?? 1, // Save times_per_week, default to 1
             } as any)
             .select()
             .single();
@@ -415,6 +416,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
               focus: day.focus || null,
               notes: day.notes || null,
               order_index: day.day_number - 1,
+              times_per_week: day.times_per_week ?? 1, // Save times_per_week, default to 1
             } as any)
             .select()
             .single();

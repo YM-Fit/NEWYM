@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../utils/logger';
+import { useWorkoutPlanWeeklyExecutions } from '../../hooks/useWorkoutPlanWeeklyExecutions';
+import { getRequiredFrequency, getWeekStartDate } from '../../utils/workoutPlanUtils';
 import {
   Calendar,
   Clock,
@@ -30,6 +32,7 @@ import ExerciseInstructionsModal from '../common/ExerciseInstructionsModal';
 import WorkoutPlanTable from './WorkoutPlanTable';
 import EditExerciseModal from './EditExerciseModal';
 import WorkoutPlanProgress from './WorkoutPlanProgress';
+import WorkoutPlanHistory from './WorkoutPlanHistory';
 
 interface MyWorkoutPlanProps {
   traineeId: string | null;
@@ -54,6 +57,7 @@ interface WorkoutDay {
   focus: string | null;
   notes: string | null;
   order_index: number;
+  times_per_week?: number | null; // Number of times per week this day should be executed
 }
 
 interface DayExercise {
@@ -144,7 +148,8 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   const [dayExercises, setDayExercises] = useState<Record<string, DayExercise[]>>({});
   const [loading, setLoading] = useState(true);
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set()); // Kept for legacy code
-  const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
+  // Removed completedExercises - now using weekly executions per day
+  const [dayCompletions, setDayCompletions] = useState<Record<string, { count: number; required: number }>>({});
   const [editingExercise, setEditingExercise] = useState<string | null>(null);
   const [editData, setEditData] = useState<{ trainee_notes: string; trainee_target_weight: number | null }>({
     trainee_notes: '',
@@ -163,6 +168,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   const [selectedDayIdForAdd, setSelectedDayIdForAdd] = useState<string | null>(null);
   const [isAddingNewExercise, setIsAddingNewExercise] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
+  const [showExecutionHistory, setShowExecutionHistory] = useState(false);
 
   useEffect(() => {
     if (traineeId) {
@@ -202,6 +208,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     setPlan(planData as WorkoutPlan);
     await loadPlanDays((planData as WorkoutPlan).id);
     await loadHistory((planData as WorkoutPlan).id);
+    // Load day completions will be called automatically by useEffect when plan and days are set
 
     setLoading(false);
   };
@@ -377,21 +384,171 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     setSaving(false);
   };
 
-  const toggleExerciseComplete = (exerciseId: string) => {
-    setCompletedExercises((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(exerciseId)) {
-        newSet.delete(exerciseId);
+  // Create hooks for each day to track weekly executions
+  const dayExecutionHooks = useMemo(() => {
+    const hooks: Record<string, ReturnType<typeof useWorkoutPlanWeeklyExecutions>> = {};
+    if (plan) {
+      days.forEach(day => {
+        // We'll create hooks dynamically, but for now we'll use a simpler approach
+        // with a single state that tracks all days
+      });
+    }
+    return hooks;
+  }, [plan, days]);
+
+  // Toggle day complete - marks the entire day as completed
+  const toggleDayComplete = async (dayId: string) => {
+    if (!plan) return;
+    
+    const day = days.find(d => d.id === dayId);
+    if (!day) return;
+
+    try {
+      const weekStart = getWeekStartDate(new Date());
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+
+      // Check if already completed this week
+      const { data: existingExecutions } = await supabase
+        .from('workout_plan_weekly_executions')
+        .select('id')
+        .eq('plan_id', plan.id)
+        .eq('day_id', dayId)
+        .eq('week_start_date', weekStartStr);
+
+      if (existingExecutions && existingExecutions.length > 0) {
+        // Unmark - delete the execution
+        const { error } = await supabase
+          .from('workout_plan_weekly_executions')
+          .delete()
+          .eq('plan_id', plan.id)
+          .eq('day_id', dayId)
+          .eq('week_start_date', weekStartStr);
+
+        if (error) {
+          logger.error('Error unmarking day complete', error, 'MyWorkoutPlan');
+          toast.error('שגיאה בביטול ביצוע');
+          return;
+        }
+        toast.success('ביצוע בוטל');
       } else {
-        newSet.add(exerciseId);
+        // Mark as complete
+        const executionDate = new Date().toISOString().split('T')[0];
+        const { error } = await supabase
+          .from('workout_plan_weekly_executions')
+          .insert({
+            plan_id: plan.id,
+            day_id: dayId,
+            week_start_date: weekStartStr,
+            execution_date: executionDate,
+            completed_at: new Date().toISOString(),
+          } as any);
+
+        if (error) {
+          if (error.code === '42P01') {
+            logger.warn('workout_plan_weekly_executions table does not exist yet', error, 'MyWorkoutPlan');
+            toast.error('טבלת ביצועים שבועיים עדיין לא קיימת. אנא הפעל את המיגרציות.');
+            return;
+          }
+          logger.error('Error marking day complete', error, 'MyWorkoutPlan');
+          toast.error('שגיאה בשמירת ביצוע');
+          return;
+        }
+        toast.success('יום סומן כהושלם!');
       }
-      return newSet;
-    });
+
+      // Reload completions
+      await loadDayCompletions();
+    } catch (error) {
+      logger.error('Error toggling day complete', error, 'MyWorkoutPlan');
+      toast.error('שגיאה בעדכון ביצוע');
+    }
   };
 
+  // Load day completions for current week
+  const loadDayCompletions = async () => {
+    if (!plan) return;
+
+    try {
+      const weekStart = currentWeekStart || getWeekStartDate(new Date());
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+
+      const completions: Record<string, { count: number; required: number }> = {};
+
+      for (const day of days) {
+        const required = getRequiredFrequency(
+          { times_per_week: day.times_per_week },
+          plan.days_per_week,
+          days.length
+        );
+
+        const { data: executions } = await supabase
+          .from('workout_plan_weekly_executions')
+          .select('id')
+          .eq('plan_id', plan.id)
+          .eq('day_id', day.id)
+          .eq('week_start_date', weekStartStr);
+
+        completions[day.id] = {
+          count: executions?.length || 0,
+          required,
+        };
+      }
+
+      setDayCompletions(completions);
+    } catch (error) {
+      logger.error('Error loading day completions', error, 'MyWorkoutPlan');
+    }
+  };
+
+  // Track current week to detect week changes
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date | null>(null);
+
+  // Check for week change and reset if needed
+  useEffect(() => {
+    if (!plan || days.length === 0) return;
+
+    const now = new Date();
+    const weekStart = getWeekStartDate(now);
+
+    // Initialize current week or check if week has changed
+    if (!currentWeekStart) {
+      setCurrentWeekStart(weekStart);
+      loadDayCompletions();
+    } else if (weekStart.getTime() !== currentWeekStart.getTime()) {
+      // Week has changed - reset completions for new week
+      logger.info('Week changed, resetting completions', { oldWeek: currentWeekStart, newWeek: weekStart }, 'MyWorkoutPlan');
+      setCurrentWeekStart(weekStart);
+      // Reload completions for the new week
+      loadDayCompletions();
+    } else {
+      // Same week - just reload to get latest data
+      loadDayCompletions();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan, days]);
+
+  // Also check periodically (every hour) for week changes
+  useEffect(() => {
+    if (!plan || days.length === 0 || !currentWeekStart) return;
+
+    const checkInterval = setInterval(() => {
+      const now = new Date();
+      const weekStart = getWeekStartDate(now);
+
+      if (weekStart.getTime() !== currentWeekStart.getTime()) {
+        // Week has changed
+        logger.info('Week changed (periodic check), resetting completions', { oldWeek: currentWeekStart, newWeek: weekStart }, 'MyWorkoutPlan');
+        setCurrentWeekStart(weekStart);
+        loadDayCompletions();
+      }
+    }, 60 * 60 * 1000); // Check every hour
+
+    return () => clearInterval(checkInterval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan, days, currentWeekStart]);
+
   const getCompletedCount = (dayId: string) => {
-    const exercises = dayExercises[dayId] || [];
-    return exercises.filter((ex) => completedExercises.has(ex.id)).length;
+    return dayCompletions[dayId]?.count || 0;
   };
 
   const calculateDayVolume = (dayId: string) => {
@@ -526,6 +683,22 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                 </span>
               </div>
             )}
+
+            <button
+              onClick={() => setShowProgress(!showProgress)}
+              className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-4 py-2 rounded-xl backdrop-blur-sm hover:bg-blue-500/20 transition-all"
+            >
+              <TrendingUp className="w-4 h-4 text-blue-400" />
+              <span className="font-semibold text-sm text-blue-400">התקדמות</span>
+            </button>
+
+            <button
+              onClick={() => setShowExecutionHistory(true)}
+              className="flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 px-4 py-2 rounded-xl backdrop-blur-sm hover:bg-purple-500/20 transition-all"
+            >
+              <History className="w-4 h-4 text-purple-400" />
+              <span className="font-semibold text-sm text-purple-400">היסטוריית ביצועים</span>
+            </button>
           </div>
         </div>
       </div>
@@ -577,7 +750,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
         <WorkoutPlanProgress
           days={days}
           dayExercises={dayExercises}
-          completedExercises={completedExercises}
+          dayCompletions={dayCompletions}
           getCompletedCount={getCompletedCount}
           calculateDayVolume={calculateDayVolume}
         />
@@ -587,9 +760,9 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
       <WorkoutPlanTable
         days={days}
         dayExercises={dayExercises}
-        completedExercises={completedExercises}
+        dayCompletions={dayCompletions}
         editingExercise={editingExercise}
-        onToggleExerciseComplete={toggleExerciseComplete}
+        onToggleDayComplete={toggleDayComplete}
         onStartEditing={startEditing}
         onAddExercise={handleAddExercise}
         onShowInstructions={(name, instructions) => setInstructionsExercise({ name, instructions })}
@@ -598,6 +771,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
         calculateDayVolume={calculateDayVolume}
         getCompletedCount={getCompletedCount}
         formatRestTime={formatRestTime}
+        plan={plan}
       />
 
       {/* Legacy Accordion View - Hidden but kept for reference */}
@@ -1028,6 +1202,14 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           onClose={() => setInstructionsExercise(null)}
           exerciseName={instructionsExercise.name}
           instructions={instructionsExercise.instructions}
+        />
+      )}
+
+      {/* Execution History Modal */}
+      {plan && showExecutionHistory && (
+        <WorkoutPlanHistory
+          planId={plan.id}
+          onClose={() => setShowExecutionHistory(false)}
         />
       )}
     </div>

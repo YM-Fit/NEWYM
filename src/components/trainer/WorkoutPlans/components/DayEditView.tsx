@@ -268,6 +268,28 @@ export default function DayEditView({
               placeholder="הערות כלליות ליום האימון..."
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-muted700 mb-2">
+              תדירות בשבוע (כמה פעמים בשבוע)
+            </label>
+            <input
+              type="number"
+              value={day.times_per_week ?? 1}
+              onChange={(e) => {
+                const value = parseInt(e.target.value) || 1;
+                const clampedValue = Math.max(0, Math.min(7, value));
+                onUpdateDay(day.tempId, 'times_per_week', clampedValue);
+              }}
+              min="0"
+              max="7"
+              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              placeholder="1"
+            />
+            <p className="text-xs text-muted600 mt-1">
+              כמה פעמים בשבוע צריך לבצע את היום הזה (0-7). ברירת מחדל: 1
+            </p>
+          </div>
         </div>
       </div>
 

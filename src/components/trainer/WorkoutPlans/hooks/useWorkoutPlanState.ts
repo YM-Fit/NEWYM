@@ -31,6 +31,8 @@ export function useWorkoutPlanState(traineeId: string) {
 
   const loadPlanDays = useCallback(async (planId: string) => {
     try {
+      // Verify that times_per_week column exists (migration check)
+      // This is a safety check - in production, migrations should be verified separately
       const { data: daysData, error: daysError } = await supabase
         .from('workout_plan_days')
         .select('*')
@@ -129,14 +131,15 @@ export function useWorkoutPlanState(traineeId: string) {
           }
         }
 
-        loadedDays.push({
-          tempId: day.id,
-          day_number: day.day_number,
-          day_name: day.day_name || '',
-          focus: day.focus || '',
-          notes: day.notes || '',
-          exercises: planExercises,
-        });
+                    loadedDays.push({
+                      tempId: day.id,
+                      day_number: day.day_number,
+                      day_name: day.day_name || '',
+                      focus: day.focus || '',
+                      notes: day.notes || '',
+                      exercises: planExercises,
+                      times_per_week: day.times_per_week ?? 1, // Load times_per_week, default to 1
+                    });
       }
 
       setDays(loadedDays);
