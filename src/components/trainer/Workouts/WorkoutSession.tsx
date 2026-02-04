@@ -17,6 +17,10 @@ import DraftModal from '../../common/DraftModal';
 import WorkoutTemplates from './WorkoutTemplates';
 import { WorkoutHeader } from './WorkoutHeader';
 import { WorkoutExerciseCard } from './WorkoutExerciseCard';
+import { WorkoutTable } from './WorkoutTable';
+import { WorkoutQuickActions } from './WorkoutQuickActions';
+import { WorkoutProgressBar } from './WorkoutProgressBar';
+import { WorkoutStats } from './WorkoutStats';
 import WorkoutHistoryModal from './WorkoutHistoryModal';
 import { WorkoutTemplate, WorkoutTemplateExercise, Trainee, Workout } from '../../../types';
 
@@ -1611,250 +1615,67 @@ export default function WorkoutSession({
 
       {/* Workout Progress Bar - Only show when workout has exercises */}
       {exercises.length > 0 && (
-        <div className="premium-card-static p-3 lg:p-4 mb-4 animate-fade-in">
-          {/* Progress bar */}
-          <div className="relative h-2 bg-surface rounded-full overflow-hidden mb-3">
-            <div 
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
-              style={{ width: `${workoutProgress.progressPercent}%` }}
-            />
-          </div>
-          
-          {/* Stats row */}
-          <div className="flex items-center justify-between flex-wrap gap-2 lg:gap-4">
-            {/* Timer */}
-            <div className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-lg">
-              <Timer className="h-4 w-4 text-amber-400" />
-              <span className="font-mono font-semibold text-foreground text-sm lg:text-base">{formatTime(elapsedTime)}</span>
-            </div>
-            
-            {/* Sets progress */}
-            <div className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-lg">
-              <Target className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm lg:text-base">
-                <span className="font-semibold text-cyan-400">{workoutProgress.completedSets}</span>
-                <span className="text-muted">/{workoutProgress.totalSets}</span>
-                <span className="text-muted mr-1">סטים</span>
-              </span>
-            </div>
-            
-            {/* Volume */}
-            <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/30">
-              <TrendingUp className="h-4 w-4 text-emerald-400" />
-              <span className="font-semibold text-emerald-400 text-sm lg:text-base">{totalVolume.toLocaleString()}</span>
-              <span className="text-emerald-400/70 text-xs">ק״ג</span>
-            </div>
-            
-            {/* Exercises progress */}
-            <div className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-lg">
-              <Zap className="h-4 w-4 text-purple-400" />
-              <span className="text-sm lg:text-base">
-                <span className="font-semibold text-purple-400">{workoutProgress.completedExercises}</span>
-                <span className="text-muted">/{workoutProgress.totalExercises}</span>
-                <span className="text-muted mr-1">תרגילים</span>
-              </span>
-            </div>
-            
-            {/* Progress percentage */}
-            <div className="flex items-center gap-1">
-              <span className="text-lg lg:text-xl font-bold text-foreground">{workoutProgress.progressPercent}%</span>
-              <span className="text-xs text-muted">הושלמו</span>
-            </div>
-          </div>
-        </div>
+        <WorkoutProgressBar
+          totalSets={workoutProgress.totalSets}
+          completedSets={workoutProgress.completedSets}
+          totalExercises={workoutProgress.totalExercises}
+          completedExercises={workoutProgress.completedExercises}
+          totalVolume={totalVolume}
+          elapsedTime={elapsedTime}
+          progressPercent={workoutProgress.progressPercent}
+        />
       )}
 
-      <div className={isTablet ? 'trainer-workout-layout grid gap-4' : 'space-y-4'}>
-        {exercises.map((workoutExercise, exerciseIndex) => (
-          <WorkoutExerciseCard
-            key={workoutExercise.tempId}
-            workoutExercise={workoutExercise}
-            exerciseIndex={exerciseIndex}
-            isMinimized={minimizedExercises.includes(workoutExercise.tempId)}
-            collapsedSets={collapsedSets}
-            summary={getExerciseSummary(workoutExercise)}
-            totalVolume={calculateExerciseVolume(workoutExercise)}
-            onRemove={() => {
-              const exercise = exercises[exerciseIndex];
-              const exerciseId = exercise.exercise.id;
-              const exerciseTempId = exercise.tempId;
+      {/* Workout Stats - Only show when workout has exercises */}
+      {exercises.length > 0 && (() => {
+        // Calculate average weight and reps
+        const allSets = exercises.flatMap(ex => ex.sets);
+        const setsWithData = allSets.filter(s => s.weight > 0 && s.reps > 0);
+        const avgWeight = setsWithData.length > 0
+          ? setsWithData.reduce((sum, s) => sum + s.weight, 0) / setsWithData.length
+          : 0;
+        const avgReps = setsWithData.length > 0
+          ? setsWithData.reduce((sum, s) => sum + s.reps, 0) / setsWithData.length
+          : 0;
 
-              console.log('[DELETE] Starting exercise deletion', {
-                exerciseIndex,
-                exerciseName: exercise.exercise.name,
-                exerciseId,
-                tempId: exerciseTempId,
-                workoutId,
-                totalExercises: exercises.length,
-                currentDeletedIds: Array.from(deletedExerciseIdsRef.current),
-                currentDeletingIds: Array.from(deletingExerciseIdsRef.current)
-              });
-
-              logger.debug('Removing exercise', {
-                exerciseIndex,
-                exerciseName: exercise.exercise.name,
-                exerciseId,
-                tempId: exerciseTempId,
-                workoutId,
-                totalExercises: exercises.length
-              }, 'WorkoutSession');
-
-              // Mark exercise as "deleting" (async operation in progress)
-              deletingExerciseIdsRef.current.add(exerciseId);
-              // Also mark as "deleted" to prevent auto-save from re-adding it
-              deletedExerciseIdsRef.current.add(exerciseId);
-
-              console.log('[DELETE] Added to tracking refs', {
-                deletedIds: Array.from(deletedExerciseIdsRef.current),
-                deletingIds: Array.from(deletingExerciseIdsRef.current)
-              });
-
-              // IMMEDIATELY remove from local state for responsive UI
-              removeExercise(exerciseIndex);
-              toast.success('התרגיל הוסר');
-              logger.debug('Exercise removed from local state', {
-                exerciseIndex,
-                remainingExercises: exercises.length - 1
-              }, 'WorkoutSession');
-
-              // Then delete from database in the background (if workoutId exists)
-              if (workoutId) {
-                logger.debug('Deleting exercise from database in background', {
-                  workoutId,
-                  exerciseId
-                }, 'WorkoutSession');
-
-                // Run DB deletion asynchronously without blocking UI
-                (async () => {
-                  try {
-                    // Find the workout_exercise by workout_id and exercise_id
-                    const { data: workoutExercises, error: findError } = await supabase
-                      .from('workout_exercises')
-                      .select('id')
-                      .eq('workout_id', workoutId)
-                      .eq('exercise_id', exerciseId);
-
-                    if (findError) {
-                      logger.error('Error finding exercise in database:', findError, 'WorkoutSession');
-                      // Remove from "deleting" but keep in "deleted" to be safe
-                      deletingExerciseIdsRef.current.delete(exerciseId);
-                      return;
-                    }
-
-                    if (workoutExercises && workoutExercises.length > 0) {
-                      // Delete all sets for these workout_exercises
-                      const workoutExerciseIds = workoutExercises.map(we => we.id);
-
-                      const { error: setsDeleteError } = await supabase
-                        .from('exercise_sets')
-                        .delete()
-                        .in('workout_exercise_id', workoutExerciseIds);
-
-                      if (setsDeleteError) {
-                        logger.error('Error deleting exercise sets from database:', setsDeleteError, 'WorkoutSession');
-                      }
-
-                      // Delete the workout_exercises
-                      const { error: exerciseDeleteError } = await supabase
-                        .from('workout_exercises')
-                        .delete()
-                        .in('id', workoutExerciseIds);
-
-                      if (exerciseDeleteError) {
-                        logger.error('Error deleting exercise from database:', exerciseDeleteError, 'WorkoutSession');
-                        // Remove from "deleting" but keep in "deleted" to be safe
-                        deletingExerciseIdsRef.current.delete(exerciseId);
-                      } else {
-                        logger.debug('Deleted exercise from database successfully', { workoutExerciseIds }, 'WorkoutSession');
-                        // Remove from "deleting" - DB deletion completed
-                        deletingExerciseIdsRef.current.delete(exerciseId);
-                        // Keep in "deleted" set for much longer to ensure auto-save doesn't re-add it
-                        setTimeout(() => {
-                          deletedExerciseIdsRef.current.delete(exerciseId);
-                          logger.debug('Removed exercise from deleted tracking', { exerciseId }, 'WorkoutSession');
-                        }, 60000); // 60 seconds - much safer than 5 seconds
-                      }
-                    } else {
-                      // Exercise not in DB, remove from tracking
-                      deletingExerciseIdsRef.current.delete(exerciseId);
-                      // Keep in "deleted" for safety
-                      setTimeout(() => {
-                        deletedExerciseIdsRef.current.delete(exerciseId);
-                      }, 60000);
-                    }
-                  } catch (error) {
-                    logger.error('Error deleting exercise from database:', error, 'WorkoutSession');
-                    // Remove from "deleting" but keep in "deleted" to be safe
-                    deletingExerciseIdsRef.current.delete(exerciseId);
-                  }
-                })();
-              } else {
-                // No workoutId - new workout, just remove from tracking
-                deletingExerciseIdsRef.current.delete(exerciseId);
-                // Keep in "deleted" briefly in case workout gets created
-                setTimeout(() => {
-                  deletedExerciseIdsRef.current.delete(exerciseId);
-                }, 10000);
-              }
-            }}
-            onToggleMinimize={() => toggleMinimizeExercise(workoutExercise.tempId)}
-            onComplete={() => completeExercise(workoutExercise.tempId)}
-            onAddSet={() => addSet(exerciseIndex)}
-            onDuplicateSet={(setIndex) => duplicateSet(exerciseIndex, setIndex)}
-            onRemoveSet={(setIndex) => removeSet(exerciseIndex, setIndex)}
-            onToggleCollapseSet={toggleCollapseSet}
-            onCompleteSet={(setIndex) => completeSetAndMoveNext(exerciseIndex, setIndex)}
-            onOpenNumericPad={(setIndex, field) =>
-              openNumericPad(
-                exerciseIndex,
-                setIndex,
-                field,
-                field === 'weight'
-                  ? 'משקל (ק״ג)'
-                  : field === 'reps'
-                  ? 'חזרות'
-                  : 'RPE (1-10)'
-              )
-            }
-            onOpenEquipmentSelector={(setIndex) => setEquipmentSelector({ exerciseIndex, setIndex })}
-            onOpenSupersetSelector={(setIndex) => setSupersetSelector({ exerciseIndex, setIndex })}
-            onOpenSupersetNumericPad={(setIndex, field) =>
-              openSupersetNumericPad(
-                exerciseIndex,
-                setIndex,
-                field,
-                field === 'superset_weight'
-                  ? 'משקל סופר-סט (ק״ג)'
-                  : field === 'superset_reps'
-                  ? 'חזרות סופר-סט'
-                  : 'RPE סופר-סט (1-10)'
-              )
-            }
-            onOpenSupersetEquipmentSelector={(setIndex) =>
-              setSupersetEquipmentSelector({ exerciseIndex, setIndex })
-            }
-            onOpenDropsetNumericPad={(setIndex, field) =>
-              openDropsetNumericPad(
-                exerciseIndex,
-                setIndex,
-                field,
-                field === 'dropset_weight' ? 'משקל דרופ-סט (ק״ג)' : 'חזרות דרופ-סט'
-              )
-            }
-            onOpenSupersetDropsetNumericPad={(setIndex, field) =>
-              openSupersetDropsetNumericPad(
-                exerciseIndex,
-                setIndex,
-                field,
-                field === 'superset_dropset_weight'
-                  ? 'משקל דרופ-סט סופר (ק״ג)'
-                  : 'חזרות דרופ-סט סופר'
-              )
-            }
-            onUpdateSet={(setIndex, field, value) => updateSet(exerciseIndex, setIndex, field, value)}
+        return (
+          <WorkoutStats
+            totalVolume={totalVolume}
+            averageWeight={avgWeight}
+            averageReps={avgReps}
+            totalSets={workoutProgress.totalSets}
+            totalExercises={workoutProgress.totalExercises}
+            elapsedTime={elapsedTime}
+            isTablet={isTablet}
           />
-        ))}
-      </div>
+        );
+      })()}
+
+      {/* Workout Table */}
+      {exercises.length > 0 && (
+        <WorkoutTable
+          exercises={exercises}
+          onOpenNumericPad={(exerciseIndex, setIndex, field) =>
+            openNumericPad(
+              exerciseIndex,
+              setIndex,
+              field,
+              field === 'weight'
+                ? 'משקל (ק״ג)'
+                : field === 'reps'
+                ? 'חזרות'
+                : 'RPE (1-10)'
+            )
+          }
+          onOpenEquipmentSelector={(exerciseIndex, setIndex) => setEquipmentSelector({ exerciseIndex, setIndex })}
+          onUpdateSet={updateSet}
+          onRemoveSet={removeSet}
+          onDuplicateSet={duplicateSet}
+          onCompleteSet={(exerciseIndex, setIndex) => completeSetAndMoveNext(exerciseIndex, setIndex)}
+          onAddSet={addSet}
+          isTablet={isTablet}
+        />
+      )}
 
       {exercises.length === 0 && !workoutId && (
         <div className="premium-card-static p-6 mb-4">
@@ -2149,109 +1970,14 @@ export default function WorkoutSession({
 
       {/* Floating Action Buttons for tablet - Quick actions + finish + history */}
       {isTablet && exercises.length > 0 && !showExerciseSelector && !numericPad && !showSummary && (
-        <>
-          {/* Left side - Main actions */}
-          <div className="fixed bottom-6 left-6 z-40 flex flex-col gap-3 animate-fade-in">
-            {/* Finish workout */}
-            <button
-              type="button"
-              onClick={() => {
-                if (!saving) {
-                  handleSave();
-                }
-              }}
-              className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback disabled:opacity-60"
-              title="סיים אימון"
-              disabled={saving || exercises.length === 0}
-            >
-              <CheckCircle2 className="h-6 w-6" />
-            </button>
-
-            {/* Workout history */}
-            <button
-              type="button"
-              onClick={() => setShowWorkoutHistory(true)}
-              className="w-14 h-14 bg-cyan-500 hover:bg-cyan-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
-              title="היסטוריית אימונים לתרגילים"
-            >
-              <History className="h-6 w-6" />
-            </button>
-            
-            {/* Add exercise */}
-            <button
-              type="button"
-              onClick={() => setShowExerciseSelector(true)}
-              className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
-              title="הוסף תרגיל (קיצור: Ctrl+N)"
-            >
-              <BookMarked className="h-6 w-6" />
-            </button>
-          </div>
-
-          {/* Right side - Quick shortcuts for weight, reps, RPE, sets */}
-          {exercises.length > 0 && exercises[0].sets.length > 0 && (
-            <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3 animate-fade-in">
-              {/* Quick Weight - Open weight pad for active exercise and set */}
-              <button
-                type="button"
-                onClick={() => {
-                  const active = findActiveExerciseAndSet();
-                  if (active) {
-                    openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
-                  }
-                }}
-                className="w-16 h-16 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
-                title="משקל"
-              >
-                <span className="text-xs font-bold leading-tight text-center">משקל</span>
-              </button>
-
-              {/* Quick Reps - Open reps pad for active exercise and set */}
-              <button
-                type="button"
-                onClick={() => {
-                  const active = findActiveExerciseAndSet();
-                  if (active) {
-                    openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
-                  }
-                }}
-                className="w-16 h-16 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
-                title="חזרות"
-              >
-                <span className="text-xs font-bold leading-tight text-center">חזרות</span>
-              </button>
-
-              {/* Quick RPE - Open RPE pad for active exercise and set */}
-              <button
-                type="button"
-                onClick={() => {
-                  const active = findActiveExerciseAndSet();
-                  if (active) {
-                    openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
-                  }
-                }}
-                className="w-16 h-16 bg-purple-500 hover:bg-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
-                title="RPE"
-              >
-                <span className="text-xs font-bold leading-tight text-center">RPE</span>
-              </button>
-
-              {/* Quick Sets - Add set to last exercise */}
-              <button
-                type="button"
-                onClick={() => {
-                  const lastExerciseIndex = exercises.length - 1;
-                  addSet(lastExerciseIndex);
-                  toast.success('סט חדש נוסף', { duration: 1500, position: 'bottom-center' });
-                }}
-                className="w-16 h-16 bg-cyan-500 hover:bg-cyan-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
-                title="סט"
-              >
-                <span className="text-xs font-bold leading-tight text-center">סט</span>
-              </button>
-            </div>
-          )}
-        </>
+        <WorkoutQuickActions
+          exercisesCount={exercises.length}
+          saving={saving}
+          isTablet={isTablet}
+          onAddExercise={() => setShowExerciseSelector(true)}
+          onSave={handleSave}
+          onShowHistory={() => setShowWorkoutHistory(true)}
+        />
       )}
     </div>
   );

@@ -1,0 +1,330 @@
+import { memo, useRef, useEffect } from 'react';
+import { Trash2, Copy, CheckCircle2 } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
+
+interface Equipment {
+  id: string;
+  name: string;
+  emoji: string | null;
+}
+
+interface SetData {
+  id: string;
+  set_number: number;
+  weight: number;
+  reps: number;
+  rpe: number | null;
+  set_type: 'regular' | 'superset' | 'dropset';
+  failure?: boolean;
+  equipment_id?: string | null;
+  equipment?: Equipment | null;
+  dropset_weight?: number | null;
+  dropset_reps?: number | null;
+  superset_weight?: number | null;
+  superset_reps?: number | null;
+}
+
+interface WorkoutTableRowProps {
+  exerciseName: string;
+  set: SetData;
+  exerciseIndex: number;
+  setIndex: number;
+  isActive?: boolean;
+  isFirstSet?: boolean;
+  isLastSet?: boolean;
+  isNewExercise?: boolean;
+  onOpenNumericPad: (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe') => void;
+  onOpenEquipmentSelector: (exerciseIndex: number, setIndex: number) => void;
+  onUpdateSet: (exerciseIndex: number, setIndex: number, field: string, value: any) => void;
+  onRemoveSet: (exerciseIndex: number, setIndex: number) => void;
+  onDuplicateSet: (exerciseIndex: number, setIndex: number) => void;
+  onCompleteSet: (exerciseIndex: number, setIndex: number) => void;
+  canDelete: boolean;
+  isTablet?: boolean;
+}
+
+export const WorkoutTableRow = memo(({
+  exerciseName,
+  set,
+  exerciseIndex,
+  setIndex,
+  isActive = false,
+  isFirstSet = false,
+  isLastSet = false,
+  isNewExercise = false,
+  onOpenNumericPad,
+  onOpenEquipmentSelector,
+  onUpdateSet,
+  onRemoveSet,
+  onDuplicateSet,
+  onCompleteSet,
+  canDelete,
+  isTablet,
+}: WorkoutTableRowProps) => {
+  const hasData = set.weight > 0 && set.reps > 0;
+  const setVolume = set.weight * set.reps + 
+    (set.dropset_weight && set.dropset_reps ? set.dropset_weight * set.dropset_reps : 0) +
+    (set.superset_weight && set.superset_reps ? set.superset_weight * set.superset_reps : 0);
+
+  const weightButtonRef = useRef<HTMLButtonElement>(null);
+  const repsButtonRef = useRef<HTMLButtonElement>(null);
+  const rpeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Auto-focus on active row
+  useEffect(() => {
+    if (isActive && weightButtonRef.current) {
+      // Don't auto-focus on mobile/tablet
+      if (!isTablet) {
+        setTimeout(() => {
+          weightButtonRef.current?.focus();
+        }, 100);
+      }
+    }
+  }, [isActive, isTablet]);
+
+  const handleKeyDown = (e: React.KeyboardEvent, field: 'weight' | 'reps' | 'rpe') => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onOpenNumericPad(exerciseIndex, setIndex, field);
+    } else if (e.key === 'Tab' && !e.shiftKey) {
+      // Tab navigation - move to next field
+      e.preventDefault();
+      if (field === 'weight' && repsButtonRef.current) {
+        repsButtonRef.current.focus();
+      } else if (field === 'reps' && rpeButtonRef.current) {
+        rpeButtonRef.current.focus();
+      }
+    } else if (e.key === 'Tab' && e.shiftKey) {
+      // Shift+Tab - move to previous field
+      e.preventDefault();
+      if (field === 'rpe' && repsButtonRef.current) {
+        repsButtonRef.current.focus();
+      } else if (field === 'reps' && weightButtonRef.current) {
+        weightButtonRef.current.focus();
+      }
+    }
+  };
+
+  return (
+    <tr
+      className={`
+        workout-table-row border-b border-border/50 transition-all duration-200
+        ${isActive ? 'workout-table-row-active bg-emerald-500/10 border-l-4 border-l-emerald-500' : ''}
+        ${isNewExercise && isFirstSet ? 'border-t-2 border-t-emerald-500/30' : ''}
+        ${hasData ? 'bg-surface/30' : 'bg-surface/10'}
+        hover:bg-emerald-500/5
+      `}
+    >
+      {/* תרגיל */}
+      <td className={`px-4 py-3 text-right font-medium text-foreground sticky right-0 bg-inherit z-10 min-w-[150px] border-r-2 border-emerald-500/20 ${isFirstSet ? 'bg-emerald-500/5' : ''}`}>
+        {isFirstSet ? (
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+            <span className="font-semibold text-base">{exerciseName}</span>
+          </div>
+        ) : (
+          <span className="text-muted text-sm">↳</span>
+        )}
+      </td>
+
+      {/* סט */}
+      <td className="px-4 py-3 text-center">
+        <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-sm">
+          {set.set_number}
+        </span>
+      </td>
+
+      {/* משקל */}
+      <td className="px-4 py-3 text-center">
+        <button
+          ref={weightButtonRef}
+          type="button"
+          onClick={() => onOpenNumericPad(exerciseIndex, setIndex, 'weight')}
+          onKeyDown={(e) => handleKeyDown(e, 'weight')}
+          className={`
+            workout-table-cell w-full px-3 py-2 rounded-lg font-bold text-lg transition-all
+            ${hasData && set.weight > 0 
+              ? 'bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/50' 
+              : 'bg-surface/50 text-muted border-2 border-border hover:border-emerald-500/30'
+            }
+            hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
+            focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2
+          `}
+          tabIndex={isActive ? 0 : -1}
+        >
+          {set.weight || '0'}
+        </button>
+      </td>
+
+      {/* חזרות */}
+      <td className="px-4 py-3 text-center">
+        <button
+          ref={repsButtonRef}
+          type="button"
+          onClick={() => onOpenNumericPad(exerciseIndex, setIndex, 'reps')}
+          onKeyDown={(e) => handleKeyDown(e, 'reps')}
+          className={`
+            w-full px-3 py-2 rounded-lg font-bold text-lg transition-all
+            ${hasData && set.reps > 0 
+              ? 'bg-cyan-500/20 text-cyan-400 border-2 border-cyan-500/50' 
+              : 'bg-surface/50 text-muted border-2 border-border hover:border-cyan-500/30'
+            }
+            hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
+            focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2
+          `}
+          tabIndex={isActive ? 0 : -1}
+        >
+          {set.reps || '0'}
+        </button>
+      </td>
+
+      {/* RPE */}
+      <td className="px-4 py-3 text-center">
+        <button
+          ref={rpeButtonRef}
+          type="button"
+          onClick={() => onOpenNumericPad(exerciseIndex, setIndex, 'rpe')}
+          onKeyDown={(e) => handleKeyDown(e, 'rpe')}
+          className={`
+            w-full px-3 py-2 rounded-lg font-bold text-lg transition-all
+            ${set.rpe 
+              ? 'bg-amber-500/20 text-amber-400 border-2 border-amber-500/50' 
+              : 'bg-surface/50 text-muted border-2 border-border hover:border-amber-500/30'
+            }
+            hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
+            focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2
+          `}
+          tabIndex={isActive ? 0 : -1}
+        >
+          {set.rpe || '-'}
+        </button>
+      </td>
+
+      {/* ציוד */}
+      <td className="px-4 py-3 text-center">
+        <button
+          type="button"
+          onClick={() => onOpenEquipmentSelector(exerciseIndex, setIndex)}
+          className={`
+            w-full px-3 py-2 rounded-lg transition-all text-sm
+            ${set.equipment 
+              ? 'bg-cyan-500/20 text-cyan-400 border-2 border-cyan-500/50' 
+              : 'bg-surface/50 text-muted border-2 border-border hover:border-cyan-500/30'
+            }
+            hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
+          `}
+        >
+          {set.equipment?.emoji && <span className="text-lg mr-1">{set.equipment.emoji}</span>}
+          <span className="font-medium">{set.equipment?.name || 'ציוד'}</span>
+        </button>
+      </td>
+
+      {/* סוג סט */}
+      <td className="px-4 py-3 text-center">
+        <div className="flex gap-1 justify-center">
+          <button
+            type="button"
+            onClick={() => onUpdateSet(exerciseIndex, setIndex, 'set_type', 'regular')}
+            className={`
+              px-2 py-1 rounded text-xs font-medium transition-all
+              ${set.set_type === 'regular' 
+                ? 'bg-emerald-500 text-foreground' 
+                : 'bg-surface/50 text-muted hover:bg-emerald-500/20'
+              }
+            `}
+          >
+            רגיל
+          </button>
+          <button
+            type="button"
+            onClick={() => onUpdateSet(exerciseIndex, setIndex, 'set_type', 'superset')}
+            className={`
+              px-2 py-1 rounded text-xs font-medium transition-all
+              ${set.set_type === 'superset' 
+                ? 'bg-cyan-500 text-foreground' 
+                : 'bg-surface/50 text-muted hover:bg-cyan-500/20'
+              }
+            `}
+          >
+            סופר
+          </button>
+          <button
+            type="button"
+            onClick={() => onUpdateSet(exerciseIndex, setIndex, 'set_type', 'dropset')}
+            className={`
+              px-2 py-1 rounded text-xs font-medium transition-all
+              ${set.set_type === 'dropset' 
+                ? 'bg-amber-500 text-foreground' 
+                : 'bg-surface/50 text-muted hover:bg-amber-500/20'
+              }
+            `}
+          >
+            דרופ
+          </button>
+        </div>
+      </td>
+
+      {/* כשל */}
+      <td className="px-4 py-3 text-center">
+        <button
+          type="button"
+          onClick={() => onUpdateSet(exerciseIndex, setIndex, 'failure', !set.failure)}
+          className={`
+            w-full px-3 py-2 rounded-lg transition-all text-lg
+            ${set.failure 
+              ? 'bg-red-500/20 text-red-400 border-2 border-red-500/50' 
+              : 'bg-surface/50 text-muted border-2 border-border hover:border-red-500/30'
+            }
+            hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
+          `}
+        >
+          {set.failure ? '🔥' : '💪'}
+        </button>
+      </td>
+
+      {/* נפח */}
+      <td className="px-4 py-3 text-center">
+        {hasData && (
+          <div className="flex items-center justify-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/30">
+            <TrendingUp className="h-4 w-4 text-emerald-400" />
+            <span className="text-emerald-400 font-semibold text-sm">{setVolume.toLocaleString()}</span>
+          </div>
+        )}
+      </td>
+
+      {/* פעולות */}
+      <td className="px-4 py-3 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => onCompleteSet(exerciseIndex, setIndex)}
+            className="p-2 hover:bg-emerald-500/20 text-emerald-400 rounded-lg transition-all cursor-pointer"
+            title="סיים סט"
+          >
+            <CheckCircle2 className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onDuplicateSet(exerciseIndex, setIndex)}
+            className="p-2 hover:bg-cyan-500/20 text-cyan-400 rounded-lg transition-all cursor-pointer"
+            title="שכפל סט"
+          >
+            <Copy className="h-5 w-5" />
+          </button>
+          {canDelete && (
+            <button
+              type="button"
+              onClick={() => onRemoveSet(exerciseIndex, setIndex)}
+              className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-all cursor-pointer"
+              title="מחק סט"
+            >
+              <Trash2 className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+});
+
+WorkoutTableRow.displayName = 'WorkoutTableRow';

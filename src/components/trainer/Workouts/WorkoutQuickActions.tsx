@@ -1,0 +1,100 @@
+import { memo } from 'react';
+import { Plus, BookMarked, CheckCircle2, History } from 'lucide-react';
+
+interface WorkoutQuickActionsProps {
+  exercisesCount: number;
+  saving: boolean;
+  isTablet?: boolean;
+  onAddExercise: () => void;
+  onSave: () => void;
+  onShowHistory?: () => void;
+  onLoadTemplate?: () => void;
+}
+
+export const WorkoutQuickActions = memo(({
+  exercisesCount,
+  saving,
+  isTablet,
+  onAddExercise,
+  onSave,
+  onShowHistory,
+  onLoadTemplate,
+}: WorkoutQuickActionsProps) => {
+  if (!isTablet) {
+    return null; // Only show on tablet
+  }
+
+  return (
+    <>
+      {/* Left side - Main actions */}
+      <div className="fixed bottom-6 left-6 z-40 flex flex-col gap-3 animate-fade-in">
+        {/* Finish workout */}
+        <button
+          type="button"
+          onClick={onSave}
+          className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback disabled:opacity-60"
+          title="סיים אימון"
+          disabled={saving || exercisesCount === 0}
+        >
+          <CheckCircle2 className="h-6 w-6" />
+        </button>
+
+        {/* Workout history */}
+        {onShowHistory && (
+          <button
+            type="button"
+            onClick={onShowHistory}
+            className="w-14 h-14 bg-cyan-500 hover:bg-cyan-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            title="היסטוריית אימונים לתרגילים"
+          >
+            <History className="h-6 w-6" />
+          </button>
+        )}
+        
+        {/* Add exercise */}
+        <button
+          type="button"
+          onClick={onAddExercise}
+          className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+          title="הוסף תרגיל (קיצור: Ctrl+N)"
+        >
+          <BookMarked className="h-6 w-6" />
+        </button>
+      </div>
+
+      {/* Right side - Quick shortcuts for weight, reps, RPE */}
+      {exercisesCount > 0 && (
+        <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3 animate-fade-in">
+          {/* Quick Weight */}
+          <button
+            type="button"
+            className="w-16 h-16 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            title="משקל (W)"
+          >
+            <span className="text-xs font-bold leading-tight text-center">משקל</span>
+          </button>
+
+          {/* Quick Reps */}
+          <button
+            type="button"
+            className="w-16 h-16 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            title="חזרות (R)"
+          >
+            <span className="text-xs font-bold leading-tight text-center">חזרות</span>
+          </button>
+
+          {/* Quick RPE */}
+          <button
+            type="button"
+            className="w-16 h-16 bg-purple-500 hover:bg-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            title="RPE (E)"
+          >
+            <span className="text-xs font-bold leading-tight text-center">RPE</span>
+          </button>
+        </div>
+      )}
+    </>
+  );
+});
+
+WorkoutQuickActions.displayName = 'WorkoutQuickActions';

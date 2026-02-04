@@ -3531,3 +3531,100 @@ body.tv-mode-active #root {
   margin: 0 !important;
   padding: 0 !important;
 }
+
+/* ============================================
+   Workout Table Animations
+   ============================================ */
+
+/* Table row animations */
+@keyframes table-row-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.workout-table-row {
+  animation: table-row-enter 0.3s ease-out;
+}
+
+/* Table cell focus animation */
+@keyframes table-cell-focus {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.workout-table-cell:focus {
+  animation: table-cell-focus 0.3s ease-out;
+}
+
+/* Table row hover animation */
+.workout-table-row:hover {
+  transform: translateX(-2px);
+  transition: transform 0.2s ease-out;
+}
+
+/* Table active row pulse */
+@keyframes table-active-row-pulse {
+  0%, 100% {
+    background-color: rgba(16, 185, 129, 0.1);
+  }
+  50% {
+    background-color: rgba(16, 185, 129, 0.15);
+  }
+}
+
+.workout-table-row-active {
+  animation: table-active-row-pulse 2s ease-in-out infinite;
+}
+
+/* Table cell value change animation */
+@keyframes table-cell-update {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+    background-color: rgba(16, 185, 129, 0.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.workout-table-cell-updated {
+  animation: table-cell-update 0.4s ease-out;
+}
+
+/* Table header sticky animation */
+.workout-table-header {
+  transition: box-shadow 0.3s ease-out;
+}
+
+.workout-table-header.scrolled {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Shimmer animation for progress bar */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
