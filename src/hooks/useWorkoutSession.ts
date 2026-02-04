@@ -144,12 +144,19 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
       return; // Don't add duplicate
     }
 
-    if (exercises.length > 0) {
-      const lastExercise = exercises[exercises.length - 1];
-      if (!minimizedExercises.includes(lastExercise.tempId)) {
-        setMinimizedExercises(prev => [...prev, lastExercise.tempId]);
-      }
-    }
+    // Collapse all sets of previous exercises when adding new exercise
+    exercises.forEach(ex => {
+      const setIds = ex.sets.map(s => s.id);
+      setCollapsedSets(prev => {
+        const newCollapsed = [...prev];
+        setIds.forEach(id => {
+          if (!newCollapsed.includes(id)) {
+            newCollapsed.push(id);
+          }
+        });
+        return newCollapsed;
+      });
+    });
 
     // Generate unique tempId with additional randomness to prevent duplicates
     // This ensures uniqueness even if called in rapid succession
@@ -159,6 +166,9 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
       sets: [createEmptySet(1)],
     };
     setExercises([...exercises, newExercise]);
+    
+    // Return the new exercise tempId for scrolling
+    return newExercise.tempId;
   };
 
   const removeExercise = (exerciseIndex: number) => {
@@ -311,6 +321,30 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     });
   };
 
+  const toggleExerciseCollapse = (exerciseIndex: number) => {
+    const exercise = exercises[exerciseIndex];
+    if (!exercise) return;
+    
+    const setIds = exercise.sets.map(s => s.id);
+    const allCollapsed = setIds.every(id => collapsedSets.includes(id));
+    
+    setCollapsedSets(prev => {
+      if (allCollapsed) {
+        // Open all sets - remove from collapsed
+        return prev.filter(id => !setIds.includes(id));
+      } else {
+        // Close all sets - add to collapsed
+        const newCollapsed = [...prev];
+        setIds.forEach(id => {
+          if (!newCollapsed.includes(id)) {
+            newCollapsed.push(id);
+          }
+        });
+        return newCollapsed;
+      }
+    });
+  };
+
   const completeExercise = (exerciseId: string) => {
     if (!minimizedExercises.includes(exerciseId)) {
       setMinimizedExercises(prev => [...prev, exerciseId]);
@@ -343,5 +377,6 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     toggleCollapseSet,
     expandAllSets,
     completeSetAndMoveNext,
+    toggleExerciseCollapse,
   };
 }

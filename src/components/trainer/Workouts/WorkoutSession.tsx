@@ -115,6 +115,7 @@ export default function WorkoutSession({
     getExerciseSummary,
     toggleCollapseSet,
     completeSetAndMoveNext,
+    toggleExerciseCollapse,
   } = useWorkoutSession({ initialExercises: editingWorkout?.exercises });
 
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
@@ -800,15 +801,33 @@ export default function WorkoutSession({
       }
 
       if (!user) {
-        addExercise(exercise);
+        const newExerciseId = addExercise(exercise);
         setLoadingExercise(null);
+        // Scroll to new exercise after a short delay
+        if (newExerciseId) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
         return;
       }
 
       // If not loading previous data, just add exercise without data
       if (!loadPreviousData) {
-        addExercise(exercise);
+        const newExerciseId = addExercise(exercise);
         setLoadingExercise(null);
+        // Scroll to new exercise after a short delay
+        if (newExerciseId) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
         return;
       }
 
@@ -816,7 +835,7 @@ export default function WorkoutSession({
       const cacheKey = `${trainee.id}-${exercise.id}`;
       const cached = exerciseCacheRef.current.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
-        addExercise(exercise);
+        const newExerciseId = addExercise(exercise);
         setExercises((prev) => {
           if (!prev.length) return prev;
           const updated = [...prev];
@@ -835,6 +854,15 @@ export default function WorkoutSession({
           return updated;
         });
         setLoadingExercise(null);
+        // Scroll to new exercise
+        if (newExerciseId) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
         return;
       }
 
@@ -879,14 +907,30 @@ export default function WorkoutSession({
       if (error) {
         logger.error('Error loading last exercise for autofill:', error, 'WorkoutSession');
         toast.error('שגיאה בטעינת התרגיל הקודם, התרגיל נוסף ללא נתונים');
-        addExercise(exercise);
+        const newExerciseId = addExercise(exercise);
         setLoadingExercise(null);
+        if (newExerciseId) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
         return;
       }
 
       if (!workouts || workouts.length === 0 || !workouts[0].workout_exercises?.length) {
-        addExercise(exercise);
+        const newExerciseId = addExercise(exercise);
         setLoadingExercise(null);
+        if (newExerciseId) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
         return;
       }
 
@@ -894,8 +938,16 @@ export default function WorkoutSession({
       const previousSets = lastExercise.exercise_sets || [];
 
       if (!previousSets.length) {
-        addExercise(exercise);
+        const newExerciseId = addExercise(exercise);
         setLoadingExercise(null);
+        if (newExerciseId) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
         return;
       }
 
@@ -904,8 +956,16 @@ export default function WorkoutSession({
       const firstSet = sortedSets[0];
 
       if (!firstSet) {
-        addExercise(exercise);
+        const newExerciseId = addExercise(exercise);
         setLoadingExercise(null);
+        if (newExerciseId) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
         return;
       }
 
@@ -963,7 +1023,7 @@ export default function WorkoutSession({
       });
 
       // Add the exercise using the existing hook logic (minimize previous exercise etc.)
-      addExercise(exercise);
+      const newExerciseId = addExercise(exercise);
 
       // Replace the just-added exercise's sets with only the first set
       setExercises((prev) => {
@@ -977,10 +1037,28 @@ export default function WorkoutSession({
         return updated;
       });
       toast.success('התרגיל נטען עם הסט הראשון מהאימון הקודם');
+      
+      // Scroll to new exercise
+      if (newExerciseId) {
+        setTimeout(() => {
+          const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
+      }
     } catch (err) {
       logger.error('Unexpected error in exercise autofill:', err, 'WorkoutSession');
       toast.error('שגיאה בטעינת התרגיל, התרגיל נוסף ללא נתונים');
-      addExercise(exercise);
+      const newExerciseId = addExercise(exercise);
+      if (newExerciseId) {
+        setTimeout(() => {
+          const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
+      }
     } finally {
       setLoadingExercise(null);
     }
