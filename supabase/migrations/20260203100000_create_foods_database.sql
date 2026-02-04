@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS unit_types (
 
   name_he VARCHAR(50) NOT NULL,           -- שם בעברית: "כף", "כפית", "כוס"
   name_en VARCHAR(50),                     -- שם באנגלית: "tbsp", "tsp", "cup"
-  abbreviation VARCHAR(10),                -- קיצור: "כף", "כפית"
+  abbreviation VARCHAR(20),                -- קיצור: "כף", "כפית"
 
   -- המרה בסיסית
   base_grams DECIMAL(8,2),                 -- כמה גרם ביחידה (ברירת מחדל)
