@@ -44,6 +44,7 @@ interface WorkoutTableRowProps {
   onCompleteSet: (exerciseIndex: number, setIndex: number) => void;
   canDelete: boolean;
   isTablet?: boolean;
+  isTvMode?: boolean;
 }
 
 export const WorkoutTableRow = memo(({
@@ -66,6 +67,7 @@ export const WorkoutTableRow = memo(({
   onCompleteSet,
   canDelete,
   isTablet,
+  isTvMode = false,
 }: WorkoutTableRowProps) => {
   const hasData = set.weight > 0 && set.reps > 0;
   const setVolume = set.weight * set.reps + 
@@ -251,61 +253,161 @@ export const WorkoutTableRow = memo(({
 
       {/* סוג סט */}
       <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
-        <div className="flex gap-0.5 justify-center">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onUpdateSet(exerciseIndex, setIndex, 'set_type', 'regular');
-            }}
-            className={`
-              px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all
-              ${isCompleted ? 'text-[10px]' : 'text-xs'}
-              ${set.set_type === 'regular' 
-                ? 'bg-emerald-500 text-foreground' 
-                : 'bg-surface/50 text-muted hover:bg-emerald-500/20'
-              }
-            `}
-          >
-            רגיל
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onUpdateSet(exerciseIndex, setIndex, 'set_type', 'superset');
-            }}
-            className={`
-              px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all
-              ${isCompleted ? 'text-[10px]' : 'text-xs'}
-              ${set.set_type === 'superset' 
-                ? 'bg-cyan-500 text-foreground' 
-                : 'bg-surface/50 text-muted hover:bg-cyan-500/20'
-              }
-            `}
-          >
-            סופר
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onUpdateSet(exerciseIndex, setIndex, 'set_type', 'dropset');
-            }}
-            className={`
-              px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all
-              ${isCompleted ? 'text-[10px]' : 'text-xs'}
-              ${set.set_type === 'dropset' 
-                ? 'bg-amber-500 text-foreground' 
-                : 'bg-surface/50 text-muted hover:bg-amber-500/20'
-              }
-            `}
-          >
-            דרופ
-          </button>
+        <div className="flex flex-col gap-1">
+          <div className="flex gap-0.5 justify-center">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onUpdateSet(exerciseIndex, setIndex, 'set_type', 'regular');
+              }}
+              className={`
+                px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all
+                ${isCompleted ? 'text-[10px]' : 'text-xs'}
+                ${set.set_type === 'regular' 
+                  ? 'bg-emerald-500 text-foreground' 
+                  : 'bg-surface/50 text-muted hover:bg-emerald-500/20'
+                }
+              `}
+            >
+              רגיל
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (set.set_type === 'superset' && set.superset_exercise_id) {
+                  // Already a superset with exercise - toggle back to regular
+                  onUpdateSet(exerciseIndex, setIndex, 'set_type', 'regular');
+                } else if (onOpenSupersetSelector) {
+                  // Open selector to choose exercise
+                  onOpenSupersetSelector(exerciseIndex, setIndex);
+                } else {
+                  // Fallback - just set type
+                  onUpdateSet(exerciseIndex, setIndex, 'set_type', 'superset');
+                }
+              }}
+              className={`
+                px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all
+                ${isCompleted ? 'text-[10px]' : 'text-xs'}
+                ${set.set_type === 'superset' 
+                  ? 'bg-cyan-500 text-foreground' 
+                  : 'bg-surface/50 text-muted hover:bg-cyan-500/20'
+                }
+              `}
+            >
+              סופר
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onUpdateSet(exerciseIndex, setIndex, 'set_type', 'dropset');
+              }}
+              className={`
+                px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all
+                ${isCompleted ? 'text-[10px]' : 'text-xs'}
+                ${set.set_type === 'dropset' 
+                  ? 'bg-amber-500 text-foreground' 
+                  : 'bg-surface/50 text-muted hover:bg-amber-500/20'
+                }
+              `}
+            >
+              דרופ
+            </button>
+          </div>
+          {/* Superset data - Show if superset type is selected */}
+          {set.set_type === 'superset' && (
+            <div className="flex flex-col gap-1">
+              {!set.superset_exercise_id && onOpenSupersetSelector && !isTvMode && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onOpenSupersetSelector(exerciseIndex, setIndex);
+                  }}
+                  className={`px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 ${isTvMode ? 'text-xs' : 'text-[10px]'}`}
+                >
+                  בחר תרגיל
+                </button>
+              )}
+              {set.superset_exercise_id && onOpenSupersetNumericPad && (
+                <div className={`flex gap-0.5 justify-center ${isTvMode ? 'text-xs' : 'text-[10px]'}`}>
+                  {!isTvMode && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_weight', 'משקל סופר');
+                        }}
+                        className="px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30"
+                      >
+                        {set.superset_weight || '0'} ק״ג
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_reps', 'חזרות סופר');
+                        }}
+                        className="px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30"
+                      >
+                        {set.superset_reps || '0'} חזרות
+                      </button>
+                    </>
+                  )}
+                  {isTvMode && (
+                    <div className="text-cyan-400">
+                      {set.superset_weight || '0'} ק״ג × {set.superset_reps || '0'}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          {/* Dropset data - Show if dropset type is selected */}
+          {set.set_type === 'dropset' && (
+            <div className={`flex gap-0.5 justify-center ${isTvMode ? 'text-xs' : 'text-[10px]'}`}>
+              {!isTvMode && onOpenDropsetNumericPad && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onOpenDropsetNumericPad(exerciseIndex, setIndex, 'dropset_weight', 'משקל דרופ');
+                    }}
+                    className="px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30"
+                  >
+                    {set.dropset_weight || '0'} ק״ג
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onOpenDropsetNumericPad(exerciseIndex, setIndex, 'dropset_reps', 'חזרות דרופ');
+                    }}
+                    className="px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30"
+                  >
+                    {set.dropset_reps || '0'} חזרות
+                  </button>
+                </>
+              )}
+              {isTvMode && (
+                <div className="text-amber-400">
+                  {set.dropset_weight || '0'} ק״ג × {set.dropset_reps || '0'}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </td>
 

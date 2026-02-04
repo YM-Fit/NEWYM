@@ -179,6 +179,7 @@ export const WorkoutTable = memo(({
                           onCompleteSet={onCompleteSet}
                           canDelete={canDelete}
                           isTablet={isTablet}
+                          isTvMode={isTvMode}
                         />
                         {/* Add Set button only after the last visible set of each exercise */}
                         {isLastRowOfExercise && (
