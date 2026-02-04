@@ -104,50 +104,54 @@ export const WorkoutTable = memo(({
               const canDelete = exercises[row.exerciseIndex].sets.length > 1;
               const prevRow = index > 0 ? tableRows[index - 1] : null;
               const isNewExercise = !prevRow || prevRow.exerciseIndex !== row.exerciseIndex;
+              const nextRow = index < tableRows.length - 1 ? tableRows[index + 1] : null;
+              const isLastRowOfExercise = !nextRow || nextRow.exerciseIndex !== row.exerciseIndex;
               
               return (
-                <WorkoutTableRow
-                  key={`${row.exerciseIndex}-${row.setIndex}-${row.set.id}`}
-                  exerciseName={row.exerciseName}
-                  set={row.set}
-                  exerciseIndex={row.exerciseIndex}
-                  setIndex={row.setIndex}
-                  isActive={isFirstSetOfExercise && index === 0}
-                  isFirstSet={isFirstSetOfExercise}
-                  isLastSet={isLastSetOfExercise}
-                  isNewExercise={isNewExercise}
-                  onOpenNumericPad={onOpenNumericPad}
-                  onOpenEquipmentSelector={onOpenEquipmentSelector}
-                  onUpdateSet={onUpdateSet}
-                  onRemoveSet={onRemoveSet}
-                  onDuplicateSet={onDuplicateSet}
-                  onCompleteSet={onCompleteSet}
-                  canDelete={canDelete}
-                  isTablet={isTablet}
-                />
+                <>
+                  <WorkoutTableRow
+                    key={`${row.exerciseIndex}-${row.setIndex}-${row.set.id}`}
+                    exerciseName={row.exerciseName}
+                    set={row.set}
+                    exerciseIndex={row.exerciseIndex}
+                    setIndex={row.setIndex}
+                    isActive={isFirstSetOfExercise && index === 0}
+                    isFirstSet={isFirstSetOfExercise}
+                    isLastSet={isLastSetOfExercise}
+                    isNewExercise={isNewExercise}
+                    onOpenNumericPad={onOpenNumericPad}
+                    onOpenEquipmentSelector={onOpenEquipmentSelector}
+                    onUpdateSet={onUpdateSet}
+                    onRemoveSet={onRemoveSet}
+                    onDuplicateSet={onDuplicateSet}
+                    onCompleteSet={onCompleteSet}
+                    canDelete={canDelete}
+                    isTablet={isTablet}
+                  />
+                  {/* Add Set button only after the last set of each exercise - Single button per exercise */}
+                  {isLastRowOfExercise && (
+                    <tr
+                      key={`add-set-${row.exerciseIndex}`}
+                      className="border-b border-border/20 bg-surface/10 hover:bg-emerald-500/5 transition-all"
+                    >
+                      <td colSpan={10} className="px-2 py-1 text-center">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onAddSet(row.exerciseIndex);
+                          }}
+                          className="w-full py-1 px-2 border border-dashed border-emerald-500/30 rounded hover:border-emerald-500/50 hover:bg-emerald-500/10 text-emerald-400 text-xs font-medium transition-all cursor-pointer"
+                        >
+                          + הוסף סט ל-{row.exerciseName}
+                        </button>
+                      </td>
+                    </tr>
+                  )}
+                </>
               );
             })}
-            {/* Add Set Row for each exercise - Minimized */}
-            {exercises.map((exercise, exerciseIndex) => (
-              <tr
-                key={`add-set-${exercise.tempId}`}
-                className="border-b border-border/20 bg-surface/10 hover:bg-emerald-500/5 transition-all"
-              >
-                <td colSpan={10} className="px-2 py-1 text-center">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onAddSet(exerciseIndex);
-                    }}
-                    className="w-full py-1 px-2 border border-dashed border-emerald-500/30 rounded hover:border-emerald-500/50 hover:bg-emerald-500/10 text-emerald-400 text-xs font-medium transition-all cursor-pointer"
-                  >
-                    + סט
-                  </button>
-                </td>
-              </tr>
-            ))}
           </tbody>
         </table>
       </div>

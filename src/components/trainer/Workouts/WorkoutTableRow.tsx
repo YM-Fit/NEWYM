@@ -105,22 +105,26 @@ export const WorkoutTableRow = memo(({
     }
   };
 
+  // Minimize completed sets - make them more compact
+  const isCompleted = hasData && set.weight > 0 && set.reps > 0;
+  
   return (
     <tr
       className={`
         workout-table-row border-b border-border/50 transition-all duration-200
         ${isActive ? 'workout-table-row-active bg-emerald-500/10 border-l-4 border-l-emerald-500' : ''}
         ${isNewExercise && isFirstSet ? 'border-t-2 border-t-emerald-500/30' : ''}
-        ${hasData ? 'bg-surface/50' : 'bg-surface/20'}
+        ${isCompleted ? 'bg-surface/30 opacity-90' : 'bg-surface/20'}
         hover:bg-emerald-500/10
+        ${isCompleted ? 'py-1' : ''}
       `}
     >
       {/* תרגיל */}
-      <td className={`px-3 py-2 text-right font-medium text-foreground sticky right-0 bg-inherit z-10 min-w-[120px] border-r-2 border-emerald-500/20 ${isFirstSet ? 'bg-emerald-500/5' : ''}`}>
+      <td className={`px-3 ${isCompleted ? 'py-1' : 'py-2'} text-right font-medium text-foreground sticky right-0 bg-inherit z-10 min-w-[120px] border-r-2 border-emerald-500/20 ${isFirstSet ? 'bg-emerald-500/5' : ''}`}>
         {isFirstSet ? (
           <div className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-            <span className="font-semibold text-sm">{exerciseName}</span>
+            <span className={`font-semibold ${isCompleted ? 'text-xs' : 'text-sm'}`}>{exerciseName}</span>
           </div>
         ) : (
           <span className="text-muted text-xs">↳</span>
@@ -128,14 +132,14 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* סט */}
-      <td className="px-2 py-2 text-center">
-        <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-xs">
+      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
+        <span className={`inline-flex items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 font-bold ${isCompleted ? 'w-6 h-6 text-[10px]' : 'w-7 h-7 text-xs'}`}>
           {set.set_number}
         </span>
       </td>
 
       {/* משקל */}
-      <td className="px-2 py-2 text-center">
+      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
         <button
           ref={weightButtonRef}
           type="button"
@@ -146,7 +150,8 @@ export const WorkoutTableRow = memo(({
           }}
           onKeyDown={(e) => handleKeyDown(e, 'weight')}
           className={`
-            workout-table-cell w-full px-2 py-1.5 rounded-lg font-bold text-base transition-all
+            workout-table-cell w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold transition-all
+            ${isCompleted ? 'text-sm' : 'text-base'}
             ${hasData && set.weight > 0 
               ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' 
               : 'bg-surface/50 text-muted border border-border hover:border-emerald-500/30'
@@ -161,7 +166,7 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* חזרות */}
-      <td className="px-2 py-2 text-center">
+      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
         <button
           ref={repsButtonRef}
           type="button"
@@ -172,7 +177,8 @@ export const WorkoutTableRow = memo(({
           }}
           onKeyDown={(e) => handleKeyDown(e, 'reps')}
           className={`
-            w-full px-2 py-1.5 rounded-lg font-bold text-base transition-all
+            w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold transition-all
+            ${isCompleted ? 'text-sm' : 'text-base'}
             ${hasData && set.reps > 0 
               ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' 
               : 'bg-surface/50 text-muted border border-border hover:border-cyan-500/30'
@@ -187,7 +193,7 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* RPE */}
-      <td className="px-2 py-2 text-center">
+      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
         <button
           ref={rpeButtonRef}
           type="button"
@@ -198,7 +204,8 @@ export const WorkoutTableRow = memo(({
           }}
           onKeyDown={(e) => handleKeyDown(e, 'rpe')}
           className={`
-            w-full px-2 py-1.5 rounded-lg font-bold text-base transition-all
+            w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold transition-all
+            ${isCompleted ? 'text-sm' : 'text-base'}
             ${set.rpe 
               ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50' 
               : 'bg-surface/50 text-muted border border-border hover:border-amber-500/30'
@@ -213,7 +220,7 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* ציוד */}
-      <td className="px-2 py-2 text-center">
+      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
         <button
           type="button"
           onClick={(e) => {
@@ -222,7 +229,8 @@ export const WorkoutTableRow = memo(({
             onOpenEquipmentSelector(exerciseIndex, setIndex);
           }}
           className={`
-            w-full px-2 py-1 rounded-lg transition-all text-xs
+            w-full px-2 ${isCompleted ? 'py-0.5' : 'py-1'} rounded-lg transition-all
+            ${isCompleted ? 'text-[10px]' : 'text-xs'}
             ${set.equipment 
               ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' 
               : 'bg-surface/50 text-muted border border-border hover:border-cyan-500/30'
@@ -230,13 +238,13 @@ export const WorkoutTableRow = memo(({
             hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
           `}
         >
-          {set.equipment?.emoji && <span className="text-sm mr-0.5">{set.equipment.emoji}</span>}
-          <span className="font-medium text-xs">{set.equipment?.name || 'ציוד'}</span>
+          {set.equipment?.emoji && <span className={`${isCompleted ? 'text-xs' : 'text-sm'} mr-0.5`}>{set.equipment.emoji}</span>}
+          <span className={`font-medium ${isCompleted ? 'text-[10px]' : 'text-xs'}`}>{set.equipment?.name || 'ציוד'}</span>
         </button>
       </td>
 
       {/* סוג סט */}
-      <td className="px-2 py-2 text-center">
+      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
         <div className="flex gap-0.5 justify-center">
           <button
             type="button"
@@ -246,7 +254,8 @@ export const WorkoutTableRow = memo(({
               onUpdateSet(exerciseIndex, setIndex, 'set_type', 'regular');
             }}
             className={`
-              px-1.5 py-0.5 rounded text-xs font-medium transition-all
+              px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all
+              ${isCompleted ? 'text-[10px]' : 'text-xs'}
               ${set.set_type === 'regular' 
                 ? 'bg-emerald-500 text-foreground' 
                 : 'bg-surface/50 text-muted hover:bg-emerald-500/20'
@@ -263,7 +272,8 @@ export const WorkoutTableRow = memo(({
               onUpdateSet(exerciseIndex, setIndex, 'set_type', 'superset');
             }}
             className={`
-              px-1.5 py-0.5 rounded text-xs font-medium transition-all
+              px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all
+              ${isCompleted ? 'text-[10px]' : 'text-xs'}
               ${set.set_type === 'superset' 
                 ? 'bg-cyan-500 text-foreground' 
                 : 'bg-surface/50 text-muted hover:bg-cyan-500/20'
@@ -280,7 +290,8 @@ export const WorkoutTableRow = memo(({
               onUpdateSet(exerciseIndex, setIndex, 'set_type', 'dropset');
             }}
             className={`
-              px-1.5 py-0.5 rounded text-xs font-medium transition-all
+              px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all
+              ${isCompleted ? 'text-[10px]' : 'text-xs'}
               ${set.set_type === 'dropset' 
                 ? 'bg-amber-500 text-foreground' 
                 : 'bg-surface/50 text-muted hover:bg-amber-500/20'
@@ -293,7 +304,7 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* כשל */}
-      <td className="px-2 py-2 text-center">
+      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
         <button
           type="button"
           onClick={(e) => {
@@ -302,7 +313,8 @@ export const WorkoutTableRow = memo(({
             onUpdateSet(exerciseIndex, setIndex, 'failure', !set.failure);
           }}
           className={`
-            w-full px-2 py-1 rounded-lg transition-all text-base
+            w-full px-2 ${isCompleted ? 'py-0.5' : 'py-1'} rounded-lg transition-all
+            ${isCompleted ? 'text-sm' : 'text-base'}
             ${set.failure 
               ? 'bg-red-500/20 text-red-400 border border-red-500/50' 
               : 'bg-surface/50 text-muted border border-border hover:border-red-500/30'
@@ -315,17 +327,17 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* נפח */}
-      <td className="px-2 py-2 text-center">
+      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
         {hasData && (
-          <div className="flex items-center justify-center gap-0.5 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">
-            <TrendingUp className="h-3 w-3 text-emerald-400" />
-            <span className="text-emerald-400 font-semibold text-xs">{setVolume.toLocaleString()}</span>
+          <div className={`flex items-center justify-center gap-0.5 bg-emerald-500/10 px-1.5 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded border border-emerald-500/30`}>
+            <TrendingUp className={`${isCompleted ? 'h-2.5 w-2.5' : 'h-3 w-3'} text-emerald-400`} />
+            <span className={`text-emerald-400 font-semibold ${isCompleted ? 'text-[10px]' : 'text-xs'}`}>{setVolume.toLocaleString()}</span>
           </div>
         )}
       </td>
 
       {/* פעולות */}
-      <td className="px-4 py-3 text-center">
+      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
         <div className="flex items-center justify-center gap-1">
           <button
             type="button"
@@ -334,10 +346,10 @@ export const WorkoutTableRow = memo(({
               e.stopPropagation();
               onCompleteSet(exerciseIndex, setIndex);
             }}
-            className="p-1.5 hover:bg-emerald-500/20 text-emerald-400 rounded-lg transition-all cursor-pointer"
+            className={`${isCompleted ? 'p-1' : 'p-1.5'} hover:bg-emerald-500/20 text-emerald-400 rounded-lg transition-all cursor-pointer`}
             title="סיים סט (Enter)"
           >
-            <CheckCircle2 className="h-4 w-4" />
+            <CheckCircle2 className={`${isCompleted ? 'h-3 w-3' : 'h-4 w-4'}`} />
           </button>
           <button
             type="button"
@@ -346,10 +358,10 @@ export const WorkoutTableRow = memo(({
               e.stopPropagation();
               onDuplicateSet(exerciseIndex, setIndex);
             }}
-            className="p-1.5 hover:bg-cyan-500/20 text-cyan-400 rounded-lg transition-all cursor-pointer"
+            className={`${isCompleted ? 'p-1' : 'p-1.5'} hover:bg-cyan-500/20 text-cyan-400 rounded-lg transition-all cursor-pointer`}
             title="שכפל סט"
           >
-            <Copy className="h-4 w-4" />
+            <Copy className={`${isCompleted ? 'h-3 w-3' : 'h-4 w-4'}`} />
           </button>
           {canDelete && (
             <button
@@ -359,10 +371,10 @@ export const WorkoutTableRow = memo(({
                 e.stopPropagation();
                 onRemoveSet(exerciseIndex, setIndex);
               }}
-              className="p-1.5 hover:bg-red-500/20 text-red-400 rounded-lg transition-all cursor-pointer"
+              className={`${isCompleted ? 'p-1' : 'p-1.5'} hover:bg-red-500/20 text-red-400 rounded-lg transition-all cursor-pointer`}
               title="מחק סט"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className={`${isCompleted ? 'h-3 w-3' : 'h-4 w-4'}`} />
             </button>
           )}
         </div>
