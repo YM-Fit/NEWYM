@@ -1093,9 +1093,14 @@ export default function WorkoutSession({
     }
   };
 
-  const openSupersetNumericPad = (exerciseIndex: number, setIndex: number, field: 'superset_weight' | 'superset_reps' | 'superset_rpe', label: string) => {
+  const openSupersetNumericPad = (exerciseIndex: number, setIndex: number, field: 'superset_weight' | 'superset_reps' | 'superset_rpe' | 'superset_dropset_weight' | 'superset_dropset_reps', label: string) => {
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
-    setSupersetNumericPad({ exerciseIndex, setIndex, field, value: currentValue as number, label });
+    // For superset dropset fields, use the supersetDropsetNumericPad state
+    if (field === 'superset_dropset_weight' || field === 'superset_dropset_reps') {
+      setSupersetDropsetNumericPad({ exerciseIndex, setIndex, field, value: currentValue as number, label });
+    } else {
+      setSupersetNumericPad({ exerciseIndex, setIndex, field: field as 'superset_weight' | 'superset_reps' | 'superset_rpe', value: currentValue as number, label });
+    }
   };
 
   const handleSupersetEquipmentSelect = (equipment: Equipment | null) => {
@@ -1749,6 +1754,7 @@ export default function WorkoutSession({
         onOpenSupersetNumericPad={openSupersetNumericPad}
         onOpenDropsetNumericPad={openDropsetNumericPad}
         onOpenSupersetSelector={(exerciseIndex, setIndex) => setSupersetSelector({ exerciseIndex, setIndex })}
+        onOpenSupersetEquipmentSelector={(exerciseIndex, setIndex) => setSupersetEquipmentSelector({ exerciseIndex, setIndex })}
         onUpdateSet={updateSet}
         onRemoveSet={removeSet}
         onDuplicateSet={duplicateSet}
