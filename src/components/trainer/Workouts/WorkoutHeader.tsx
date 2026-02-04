@@ -148,16 +148,13 @@ export const WorkoutHeader = memo(({
         </div>
       </div>
 
-      <div className="mt-4 bg-surface/30 border border-border rounded-xl p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Calendar className="h-4 w-4 text-muted" />
-          <label className="text-sm font-medium text-muted">תאריך האימון</label>
-        </div>
+      <div className="mt-3 flex items-center gap-2">
+        <Calendar className="h-3 w-3 text-muted" />
         <input
           type="date"
           value={workoutDate.toISOString().split('T')[0]}
           onChange={(e) => onDateChange(new Date(e.target.value))}
-          className="w-full px-4 py-3 bg-surface border border-border text-foreground rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+          className="text-xs px-2 py-1 bg-surface border border-border text-foreground rounded-lg focus:ring-1 focus:ring-emerald-500 focus:border-transparent transition-all"
           readOnly={isTablet}
           tabIndex={isTablet ? -1 : 0}
           inputMode={isTablet ? 'none' : undefined}
@@ -188,31 +185,6 @@ export const WorkoutHeader = memo(({
             }
           }}
         />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 mt-4">
-        <button
-          type="button"
-          onClick={handlePersonalClick}
-          className={`py-3 lg:py-4 px-4 rounded-xl border transition-all touch-manipulation cursor-pointer ${
-            workoutType === 'personal'
-              ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-400 font-bold'
-              : 'border-border bg-surface/30 hover:bg-surface text-muted hover:text-foreground'
-          }`}
-        >
-          <span className="text-base lg:text-lg">אימון אישי</span>
-        </button>
-        <button
-          type="button"
-          onClick={handlePairClick}
-          className={`py-3 lg:py-4 px-4 rounded-xl border transition-all touch-manipulation cursor-pointer ${
-            workoutType === 'pair'
-              ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-400 font-bold'
-              : 'border-border bg-surface/30 hover:bg-surface text-muted hover:text-foreground'
-          }`}
-        >
-          <span className="text-base lg:text-lg">אימון זוגי</span>
-        </button>
       </div>
     </div>
   );

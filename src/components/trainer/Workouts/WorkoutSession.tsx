@@ -1975,6 +1975,31 @@ export default function WorkoutSession({
           onAddExercise={() => setShowExerciseSelector(true)}
           onSave={handleSave}
           onShowHistory={() => setShowWorkoutHistory(true)}
+          onAddSet={() => {
+            if (exercises.length > 0) {
+              const lastExerciseIndex = exercises.length - 1;
+              addSet(lastExerciseIndex);
+              toast.success('סט חדש נוסף', { duration: 1500, position: 'bottom-center' });
+            }
+          }}
+          onOpenWeightPad={() => {
+            const active = findActiveExerciseAndSet();
+            if (active) {
+              openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+            }
+          }}
+          onOpenRepsPad={() => {
+            const active = findActiveExerciseAndSet();
+            if (active) {
+              openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+            }
+          }}
+          onOpenRpePad={() => {
+            const active = findActiveExerciseAndSet();
+            if (active) {
+              openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
+            }
+          }}
         />
       )}
     </div>

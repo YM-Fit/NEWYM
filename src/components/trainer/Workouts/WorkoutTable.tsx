@@ -127,19 +127,23 @@ export const WorkoutTable = memo(({
                 />
               );
             })}
-            {/* Add Set Row for each exercise */}
+            {/* Add Set Row for each exercise - Minimized */}
             {exercises.map((exercise, exerciseIndex) => (
               <tr
                 key={`add-set-${exercise.tempId}`}
-                className="border-b border-border/30 bg-surface/20 hover:bg-emerald-500/5 transition-all"
+                className="border-b border-border/20 bg-surface/10 hover:bg-emerald-500/5 transition-all"
               >
-                <td colSpan={10} className="px-4 py-3 text-center">
+                <td colSpan={10} className="px-2 py-1 text-center">
                   <button
                     type="button"
-                    onClick={() => onAddSet(exerciseIndex)}
-                    className="w-full py-2 px-4 border-2 border-dashed border-emerald-500/50 rounded-lg hover:border-emerald-500 hover:bg-emerald-500/10 text-emerald-400 font-medium transition-all cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onAddSet(exerciseIndex);
+                    }}
+                    className="w-full py-1 px-2 border border-dashed border-emerald-500/30 rounded hover:border-emerald-500/50 hover:bg-emerald-500/10 text-emerald-400 text-xs font-medium transition-all cursor-pointer"
                   >
-                    + הוסף סט ל-{exercise.exercise.name}
+                    + סט
                   </button>
                 </td>
               </tr>

@@ -116,39 +116,43 @@ export const WorkoutTableRow = memo(({
       `}
     >
       {/* תרגיל */}
-      <td className={`px-4 py-3 text-right font-medium text-foreground sticky right-0 bg-inherit z-10 min-w-[150px] border-r-2 border-emerald-500/20 ${isFirstSet ? 'bg-emerald-500/5' : ''}`}>
+      <td className={`px-3 py-2 text-right font-medium text-foreground sticky right-0 bg-inherit z-10 min-w-[120px] border-r-2 border-emerald-500/20 ${isFirstSet ? 'bg-emerald-500/5' : ''}`}>
         {isFirstSet ? (
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-            <span className="font-semibold text-base">{exerciseName}</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+            <span className="font-semibold text-sm">{exerciseName}</span>
           </div>
         ) : (
-          <span className="text-muted text-sm">↳</span>
+          <span className="text-muted text-xs">↳</span>
         )}
       </td>
 
       {/* סט */}
-      <td className="px-4 py-3 text-center">
-        <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-sm">
+      <td className="px-2 py-2 text-center">
+        <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-xs">
           {set.set_number}
         </span>
       </td>
 
       {/* משקל */}
-      <td className="px-4 py-3 text-center">
+      <td className="px-2 py-2 text-center">
         <button
           ref={weightButtonRef}
           type="button"
-          onClick={() => onOpenNumericPad(exerciseIndex, setIndex, 'weight')}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onOpenNumericPad(exerciseIndex, setIndex, 'weight');
+          }}
           onKeyDown={(e) => handleKeyDown(e, 'weight')}
           className={`
-            workout-table-cell w-full px-3 py-2 rounded-lg font-bold text-lg transition-all
+            workout-table-cell w-full px-2 py-1.5 rounded-lg font-bold text-base transition-all
             ${hasData && set.weight > 0 
-              ? 'bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/50' 
-              : 'bg-surface/50 text-muted border-2 border-border hover:border-emerald-500/30'
+              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' 
+              : 'bg-surface/50 text-muted border border-border hover:border-emerald-500/30'
             }
             hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
-            focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2
+            focus:outline-none focus:ring-1 focus:ring-emerald-500
           `}
           tabIndex={isActive ? 0 : -1}
         >
@@ -157,20 +161,24 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* חזרות */}
-      <td className="px-4 py-3 text-center">
+      <td className="px-2 py-2 text-center">
         <button
           ref={repsButtonRef}
           type="button"
-          onClick={() => onOpenNumericPad(exerciseIndex, setIndex, 'reps')}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onOpenNumericPad(exerciseIndex, setIndex, 'reps');
+          }}
           onKeyDown={(e) => handleKeyDown(e, 'reps')}
           className={`
-            w-full px-3 py-2 rounded-lg font-bold text-lg transition-all
+            w-full px-2 py-1.5 rounded-lg font-bold text-base transition-all
             ${hasData && set.reps > 0 
-              ? 'bg-cyan-500/20 text-cyan-400 border-2 border-cyan-500/50' 
-              : 'bg-surface/50 text-muted border-2 border-border hover:border-cyan-500/30'
+              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' 
+              : 'bg-surface/50 text-muted border border-border hover:border-cyan-500/30'
             }
             hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
-            focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2
+            focus:outline-none focus:ring-1 focus:ring-cyan-500
           `}
           tabIndex={isActive ? 0 : -1}
         >
@@ -179,20 +187,24 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* RPE */}
-      <td className="px-4 py-3 text-center">
+      <td className="px-2 py-2 text-center">
         <button
           ref={rpeButtonRef}
           type="button"
-          onClick={() => onOpenNumericPad(exerciseIndex, setIndex, 'rpe')}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onOpenNumericPad(exerciseIndex, setIndex, 'rpe');
+          }}
           onKeyDown={(e) => handleKeyDown(e, 'rpe')}
           className={`
-            w-full px-3 py-2 rounded-lg font-bold text-lg transition-all
+            w-full px-2 py-1.5 rounded-lg font-bold text-base transition-all
             ${set.rpe 
-              ? 'bg-amber-500/20 text-amber-400 border-2 border-amber-500/50' 
-              : 'bg-surface/50 text-muted border-2 border-border hover:border-amber-500/30'
+              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50' 
+              : 'bg-surface/50 text-muted border border-border hover:border-amber-500/30'
             }
             hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
-            focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2
+            focus:outline-none focus:ring-1 focus:ring-amber-500
           `}
           tabIndex={isActive ? 0 : -1}
         >
@@ -201,32 +213,40 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* ציוד */}
-      <td className="px-4 py-3 text-center">
+      <td className="px-2 py-2 text-center">
         <button
           type="button"
-          onClick={() => onOpenEquipmentSelector(exerciseIndex, setIndex)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onOpenEquipmentSelector(exerciseIndex, setIndex);
+          }}
           className={`
-            w-full px-3 py-2 rounded-lg transition-all text-sm
+            w-full px-2 py-1 rounded-lg transition-all text-xs
             ${set.equipment 
-              ? 'bg-cyan-500/20 text-cyan-400 border-2 border-cyan-500/50' 
-              : 'bg-surface/50 text-muted border-2 border-border hover:border-cyan-500/30'
+              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' 
+              : 'bg-surface/50 text-muted border border-border hover:border-cyan-500/30'
             }
             hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
           `}
         >
-          {set.equipment?.emoji && <span className="text-lg mr-1">{set.equipment.emoji}</span>}
-          <span className="font-medium">{set.equipment?.name || 'ציוד'}</span>
+          {set.equipment?.emoji && <span className="text-sm mr-0.5">{set.equipment.emoji}</span>}
+          <span className="font-medium text-xs">{set.equipment?.name || 'ציוד'}</span>
         </button>
       </td>
 
       {/* סוג סט */}
-      <td className="px-4 py-3 text-center">
-        <div className="flex gap-1 justify-center">
+      <td className="px-2 py-2 text-center">
+        <div className="flex gap-0.5 justify-center">
           <button
             type="button"
-            onClick={() => onUpdateSet(exerciseIndex, setIndex, 'set_type', 'regular')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onUpdateSet(exerciseIndex, setIndex, 'set_type', 'regular');
+            }}
             className={`
-              px-2 py-1 rounded text-xs font-medium transition-all
+              px-1.5 py-0.5 rounded text-xs font-medium transition-all
               ${set.set_type === 'regular' 
                 ? 'bg-emerald-500 text-foreground' 
                 : 'bg-surface/50 text-muted hover:bg-emerald-500/20'
@@ -237,9 +257,13 @@ export const WorkoutTableRow = memo(({
           </button>
           <button
             type="button"
-            onClick={() => onUpdateSet(exerciseIndex, setIndex, 'set_type', 'superset')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onUpdateSet(exerciseIndex, setIndex, 'set_type', 'superset');
+            }}
             className={`
-              px-2 py-1 rounded text-xs font-medium transition-all
+              px-1.5 py-0.5 rounded text-xs font-medium transition-all
               ${set.set_type === 'superset' 
                 ? 'bg-cyan-500 text-foreground' 
                 : 'bg-surface/50 text-muted hover:bg-cyan-500/20'
@@ -250,9 +274,13 @@ export const WorkoutTableRow = memo(({
           </button>
           <button
             type="button"
-            onClick={() => onUpdateSet(exerciseIndex, setIndex, 'set_type', 'dropset')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onUpdateSet(exerciseIndex, setIndex, 'set_type', 'dropset');
+            }}
             className={`
-              px-2 py-1 rounded text-xs font-medium transition-all
+              px-1.5 py-0.5 rounded text-xs font-medium transition-all
               ${set.set_type === 'dropset' 
                 ? 'bg-amber-500 text-foreground' 
                 : 'bg-surface/50 text-muted hover:bg-amber-500/20'
@@ -265,15 +293,19 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* כשל */}
-      <td className="px-4 py-3 text-center">
+      <td className="px-2 py-2 text-center">
         <button
           type="button"
-          onClick={() => onUpdateSet(exerciseIndex, setIndex, 'failure', !set.failure)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onUpdateSet(exerciseIndex, setIndex, 'failure', !set.failure);
+          }}
           className={`
-            w-full px-3 py-2 rounded-lg transition-all text-lg
+            w-full px-2 py-1 rounded-lg transition-all text-base
             ${set.failure 
-              ? 'bg-red-500/20 text-red-400 border-2 border-red-500/50' 
-              : 'bg-surface/50 text-muted border-2 border-border hover:border-red-500/30'
+              ? 'bg-red-500/20 text-red-400 border border-red-500/50' 
+              : 'bg-surface/50 text-muted border border-border hover:border-red-500/30'
             }
             hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
           `}
@@ -283,42 +315,54 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* נפח */}
-      <td className="px-4 py-3 text-center">
+      <td className="px-2 py-2 text-center">
         {hasData && (
-          <div className="flex items-center justify-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/30">
-            <TrendingUp className="h-4 w-4 text-emerald-400" />
-            <span className="text-emerald-400 font-semibold text-sm">{setVolume.toLocaleString()}</span>
+          <div className="flex items-center justify-center gap-0.5 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">
+            <TrendingUp className="h-3 w-3 text-emerald-400" />
+            <span className="text-emerald-400 font-semibold text-xs">{setVolume.toLocaleString()}</span>
           </div>
         )}
       </td>
 
       {/* פעולות */}
       <td className="px-4 py-3 text-center">
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-1">
           <button
             type="button"
-            onClick={() => onCompleteSet(exerciseIndex, setIndex)}
-            className="p-2 hover:bg-emerald-500/20 text-emerald-400 rounded-lg transition-all cursor-pointer"
-            title="סיים סט"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onCompleteSet(exerciseIndex, setIndex);
+            }}
+            className="p-1.5 hover:bg-emerald-500/20 text-emerald-400 rounded-lg transition-all cursor-pointer"
+            title="סיים סט (Enter)"
           >
-            <CheckCircle2 className="h-5 w-5" />
+            <CheckCircle2 className="h-4 w-4" />
           </button>
           <button
             type="button"
-            onClick={() => onDuplicateSet(exerciseIndex, setIndex)}
-            className="p-2 hover:bg-cyan-500/20 text-cyan-400 rounded-lg transition-all cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onDuplicateSet(exerciseIndex, setIndex);
+            }}
+            className="p-1.5 hover:bg-cyan-500/20 text-cyan-400 rounded-lg transition-all cursor-pointer"
             title="שכפל סט"
           >
-            <Copy className="h-5 w-5" />
+            <Copy className="h-4 w-4" />
           </button>
           {canDelete && (
             <button
               type="button"
-              onClick={() => onRemoveSet(exerciseIndex, setIndex)}
-              className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-all cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onRemoveSet(exerciseIndex, setIndex);
+              }}
+              className="p-1.5 hover:bg-red-500/20 text-red-400 rounded-lg transition-all cursor-pointer"
               title="מחק סט"
             >
-              <Trash2 className="h-5 w-5" />
+              <Trash2 className="h-4 w-4" />
             </button>
           )}
         </div>

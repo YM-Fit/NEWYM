@@ -9,6 +9,10 @@ interface WorkoutQuickActionsProps {
   onSave: () => void;
   onShowHistory?: () => void;
   onLoadTemplate?: () => void;
+  onAddSet?: () => void;
+  onOpenWeightPad?: () => void;
+  onOpenRepsPad?: () => void;
+  onOpenRpePad?: () => void;
 }
 
 export const WorkoutQuickActions = memo(({
@@ -19,6 +23,10 @@ export const WorkoutQuickActions = memo(({
   onSave,
   onShowHistory,
   onLoadTemplate,
+  onAddSet,
+  onOpenWeightPad,
+  onOpenRepsPad,
+  onOpenRpePad,
 }: WorkoutQuickActionsProps) => {
   if (!isTablet) {
     return null; // Only show on tablet
@@ -62,12 +70,32 @@ export const WorkoutQuickActions = memo(({
         </button>
       </div>
 
-      {/* Right side - Quick shortcuts for weight, reps, RPE */}
+      {/* Right side - Quick shortcuts for weight, reps, RPE, add set */}
       {exercisesCount > 0 && (
         <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3 animate-fade-in">
+          {/* Quick Add Set */}
+          <button
+            type="button"
+            onClick={() => {
+              // This will be handled by parent component
+              if (onAddSet) {
+                onAddSet();
+              }
+            }}
+            className="w-16 h-16 bg-cyan-500 hover:bg-cyan-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            title="הוסף סט (+)"
+          >
+            <Plus className="h-6 w-6" />
+          </button>
+
           {/* Quick Weight */}
           <button
             type="button"
+            onClick={() => {
+              if (onOpenWeightPad) {
+                onOpenWeightPad();
+              }
+            }}
             className="w-16 h-16 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
             title="משקל (W)"
           >
@@ -77,6 +105,11 @@ export const WorkoutQuickActions = memo(({
           {/* Quick Reps */}
           <button
             type="button"
+            onClick={() => {
+              if (onOpenRepsPad) {
+                onOpenRepsPad();
+              }
+            }}
             className="w-16 h-16 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
             title="חזרות (R)"
           >
@@ -86,6 +119,11 @@ export const WorkoutQuickActions = memo(({
           {/* Quick RPE */}
           <button
             type="button"
+            onClick={() => {
+              if (onOpenRpePad) {
+                onOpenRpePad();
+              }
+            }}
             className="w-16 h-16 bg-purple-500 hover:bg-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
             title="RPE (E)"
           >
