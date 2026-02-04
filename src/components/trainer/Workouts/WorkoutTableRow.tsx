@@ -35,6 +35,9 @@ interface WorkoutTableRowProps {
   isNewExercise?: boolean;
   onOpenNumericPad: (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe') => void;
   onOpenEquipmentSelector: (exerciseIndex: number, setIndex: number) => void;
+  onOpenSupersetNumericPad?: (exerciseIndex: number, setIndex: number, field: 'superset_weight' | 'superset_reps' | 'superset_rpe', label: string) => void;
+  onOpenDropsetNumericPad?: (exerciseIndex: number, setIndex: number, field: 'dropset_weight' | 'dropset_reps', label: string) => void;
+  onOpenSupersetSelector?: (exerciseIndex: number, setIndex: number) => void;
   onUpdateSet: (exerciseIndex: number, setIndex: number, field: string, value: any) => void;
   onRemoveSet: (exerciseIndex: number, setIndex: number) => void;
   onDuplicateSet: (exerciseIndex: number, setIndex: number) => void;
@@ -54,6 +57,9 @@ export const WorkoutTableRow = memo(({
   isNewExercise = false,
   onOpenNumericPad,
   onOpenEquipmentSelector,
+  onOpenSupersetNumericPad,
+  onOpenDropsetNumericPad,
+  onOpenSupersetSelector,
   onUpdateSet,
   onRemoveSet,
   onDuplicateSet,

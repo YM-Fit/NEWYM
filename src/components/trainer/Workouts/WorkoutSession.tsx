@@ -1746,6 +1746,9 @@ export default function WorkoutSession({
               )
             }
         onOpenEquipmentSelector={(exerciseIndex, setIndex) => setEquipmentSelector({ exerciseIndex, setIndex })}
+        onOpenSupersetNumericPad={openSupersetNumericPad}
+        onOpenDropsetNumericPad={openDropsetNumericPad}
+        onOpenSupersetSelector={(exerciseIndex, setIndex) => setSupersetSelector({ exerciseIndex, setIndex })}
         onUpdateSet={updateSet}
         onRemoveSet={removeSet}
         onDuplicateSet={duplicateSet}

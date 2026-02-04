@@ -42,6 +42,9 @@ interface WorkoutTableProps {
   collapsedSets?: string[];
   onOpenNumericPad: (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe') => void;
   onOpenEquipmentSelector: (exerciseIndex: number, setIndex: number) => void;
+  onOpenSupersetNumericPad?: (exerciseIndex: number, setIndex: number, field: 'superset_weight' | 'superset_reps' | 'superset_rpe', label: string) => void;
+  onOpenDropsetNumericPad?: (exerciseIndex: number, setIndex: number, field: 'dropset_weight' | 'dropset_reps', label: string) => void;
+  onOpenSupersetSelector?: (exerciseIndex: number, setIndex: number) => void;
   onUpdateSet: (exerciseIndex: number, setIndex: number, field: string, value: any) => void;
   onRemoveSet: (exerciseIndex: number, setIndex: number) => void;
   onDuplicateSet: (exerciseIndex: number, setIndex: number) => void;
@@ -56,6 +59,9 @@ export const WorkoutTable = memo(({
   collapsedSets = [],
   onOpenNumericPad,
   onOpenEquipmentSelector,
+  onOpenSupersetNumericPad,
+  onOpenDropsetNumericPad,
+  onOpenSupersetSelector,
   onUpdateSet,
   onRemoveSet,
   onDuplicateSet,
@@ -164,6 +170,9 @@ export const WorkoutTable = memo(({
                           isNewExercise={false}
                           onOpenNumericPad={onOpenNumericPad}
                           onOpenEquipmentSelector={onOpenEquipmentSelector}
+                          onOpenSupersetNumericPad={onOpenSupersetNumericPad}
+                          onOpenDropsetNumericPad={onOpenDropsetNumericPad}
+                          onOpenSupersetSelector={onOpenSupersetSelector}
                           onUpdateSet={onUpdateSet}
                           onRemoveSet={onRemoveSet}
                           onDuplicateSet={onDuplicateSet}
