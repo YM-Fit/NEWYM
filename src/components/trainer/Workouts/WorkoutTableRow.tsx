@@ -111,8 +111,8 @@ export const WorkoutTableRow = memo(({
         workout-table-row border-b border-border/50 transition-all duration-200
         ${isActive ? 'workout-table-row-active bg-emerald-500/10 border-l-4 border-l-emerald-500' : ''}
         ${isNewExercise && isFirstSet ? 'border-t-2 border-t-emerald-500/30' : ''}
-        ${hasData ? 'bg-surface/30' : 'bg-surface/10'}
-        hover:bg-emerald-500/5
+        ${hasData ? 'bg-surface/50' : 'bg-surface/20'}
+        hover:bg-emerald-500/10
       `}
     >
       {/* תרגיל */}

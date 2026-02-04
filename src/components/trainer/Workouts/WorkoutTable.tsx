@@ -85,7 +85,7 @@ export const WorkoutTable = memo(({
 
   if (exercises.length === 0) {
     return (
-      <div className="premium-card-static p-8 text-center">
+      <div className="premium-card-static p-8 text-center mb-4">
         <p className="text-muted text-lg">אין תרגילים באימון</p>
         <p className="text-muted text-sm mt-2">הוסף תרגיל כדי להתחיל</p>
       </div>
@@ -93,9 +93,9 @@ export const WorkoutTable = memo(({
   }
 
   return (
-    <div className="premium-card-static overflow-hidden">
+    <div className="premium-card-static overflow-hidden mb-4 shadow-lg border-2 border-emerald-500/30" style={{ display: 'block' }}>
       <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-        <table className="w-full border-collapse min-w-[1000px]">
+        <table className="w-full border-collapse min-w-[1000px] bg-surface/50" style={{ display: 'table' }}>
           <WorkoutTableHeader isTablet={isTablet} />
           <tbody>
             {tableRows.map((row, index) => {

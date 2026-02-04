@@ -1651,31 +1651,29 @@ export default function WorkoutSession({
         );
       })()}
 
-      {/* Workout Table */}
-      {exercises.length > 0 && (
-        <WorkoutTable
-          exercises={exercises}
-          onOpenNumericPad={(exerciseIndex, setIndex, field) =>
-            openNumericPad(
-              exerciseIndex,
-              setIndex,
-              field,
-              field === 'weight'
-                ? 'משקל (ק״ג)'
-                : field === 'reps'
-                ? 'חזרות'
-                : 'RPE (1-10)'
-            )
-          }
-          onOpenEquipmentSelector={(exerciseIndex, setIndex) => setEquipmentSelector({ exerciseIndex, setIndex })}
-          onUpdateSet={updateSet}
-          onRemoveSet={removeSet}
-          onDuplicateSet={duplicateSet}
-          onCompleteSet={(exerciseIndex, setIndex) => completeSetAndMoveNext(exerciseIndex, setIndex)}
-          onAddSet={addSet}
-          isTablet={isTablet}
-        />
-      )}
+      {/* Workout Table - Always show table view instead of cards */}
+      <WorkoutTable
+        exercises={exercises}
+        onOpenNumericPad={(exerciseIndex, setIndex, field) =>
+              openNumericPad(
+                exerciseIndex,
+                setIndex,
+                field,
+                field === 'weight'
+                  ? 'משקל (ק״ג)'
+                  : field === 'reps'
+                  ? 'חזרות'
+                  : 'RPE (1-10)'
+              )
+            }
+        onOpenEquipmentSelector={(exerciseIndex, setIndex) => setEquipmentSelector({ exerciseIndex, setIndex })}
+        onUpdateSet={updateSet}
+        onRemoveSet={removeSet}
+        onDuplicateSet={duplicateSet}
+        onCompleteSet={(exerciseIndex, setIndex) => completeSetAndMoveNext(exerciseIndex, setIndex)}
+        onAddSet={addSet}
+        isTablet={isTablet}
+      />
 
       {exercises.length === 0 && !workoutId && (
         <div className="premium-card-static p-6 mb-4">
