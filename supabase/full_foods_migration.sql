@@ -208,20 +208,20 @@ CREATE POLICY "Anyone can read foods"
 CREATE POLICY "Trainer can insert own foods"
   ON foods FOR INSERT
   TO authenticated
-  WITH CHECK (trainer_id = get_current_trainer_id() OR trainer_id IS NULL);
+  WITH CHECK (trainer_id = auth.uid() OR trainer_id IS NULL);
 
 -- Foods - מאמן יכול לעדכן מזון שלו
 CREATE POLICY "Trainer can update own foods"
   ON foods FOR UPDATE
   TO authenticated
-  USING (trainer_id = get_current_trainer_id())
-  WITH CHECK (trainer_id = get_current_trainer_id());
+  USING (trainer_id = auth.uid())
+  WITH CHECK (trainer_id = auth.uid());
 
 -- Foods - מאמן יכול למחוק מזון שלו
 CREATE POLICY "Trainer can delete own foods"
   ON foods FOR DELETE
   TO authenticated
-  USING (trainer_id = get_current_trainer_id());
+  USING (trainer_id = auth.uid());
 
 -- Food unit conversions - כולם יכולים לקרוא
 CREATE POLICY "Anyone can read food_unit_conversions"
@@ -233,15 +233,15 @@ CREATE POLICY "Anyone can read food_unit_conversions"
 CREATE POLICY "Trainer can manage own favorite_foods"
   ON favorite_foods FOR ALL
   TO authenticated
-  USING (trainer_id = get_current_trainer_id())
-  WITH CHECK (trainer_id = get_current_trainer_id());
+  USING (trainer_id = auth.uid())
+  WITH CHECK (trainer_id = auth.uid());
 
 -- Food usage history - מאמן יכול לנהל היסטוריה שלו
 CREATE POLICY "Trainer can manage own food_usage_history"
   ON food_usage_history FOR ALL
   TO authenticated
-  USING (trainer_id = get_current_trainer_id())
-  WITH CHECK (trainer_id = get_current_trainer_id());
+  USING (trainer_id = auth.uid())
+  WITH CHECK (trainer_id = auth.uid());
 
 -- =============================================
 -- 9. פונקציה לעדכון search_text
