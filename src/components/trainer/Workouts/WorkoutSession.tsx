@@ -1732,6 +1732,7 @@ export default function WorkoutSession({
       {/* Workout Table - Always show table view instead of cards */}
       <WorkoutTable
         exercises={exercises}
+        collapsedSets={collapsedSets}
         onOpenNumericPad={(exerciseIndex, setIndex, field) =>
               openNumericPad(
                 exerciseIndex,
@@ -1750,6 +1751,7 @@ export default function WorkoutSession({
         onDuplicateSet={duplicateSet}
         onCompleteSet={(exerciseIndex, setIndex) => completeSetAndMoveNext(exerciseIndex, setIndex)}
         onAddSet={addSet}
+        onToggleExerciseCollapse={toggleExerciseCollapse}
         isTablet={isTablet}
       />
 
@@ -2061,23 +2063,23 @@ export default function WorkoutSession({
             }
           }}
           onOpenWeightPad={() => {
-            const active = findActiveExerciseAndSet();
-            if (active) {
-              openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
-            }
-          }}
+                  const active = findActiveExerciseAndSet();
+                  if (active) {
+                    openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+                  }
+                }}
           onOpenRepsPad={() => {
-            const active = findActiveExerciseAndSet();
-            if (active) {
-              openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
-            }
-          }}
+                  const active = findActiveExerciseAndSet();
+                  if (active) {
+                    openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+                  }
+                }}
           onOpenRpePad={() => {
-            const active = findActiveExerciseAndSet();
-            if (active) {
-              openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
-            }
-          }}
+                  const active = findActiveExerciseAndSet();
+                  if (active) {
+                    openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
+                  }
+                }}
         />
       )}
     </div>

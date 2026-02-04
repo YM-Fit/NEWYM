@@ -39,6 +39,7 @@ interface WorkoutExercise {
 
 interface WorkoutTableProps {
   exercises: WorkoutExercise[];
+  collapsedSets?: string[];
   onOpenNumericPad: (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe') => void;
   onOpenEquipmentSelector: (exerciseIndex: number, setIndex: number) => void;
   onUpdateSet: (exerciseIndex: number, setIndex: number, field: string, value: any) => void;
@@ -46,12 +47,13 @@ interface WorkoutTableProps {
   onDuplicateSet: (exerciseIndex: number, setIndex: number) => void;
   onCompleteSet: (exerciseIndex: number, setIndex: number) => void;
   onAddSet: (exerciseIndex: number) => void;
+  onToggleExerciseCollapse?: (exerciseIndex: number) => void;
   isTablet?: boolean;
 }
 
 export const WorkoutTable = memo(({
   exercises,
-  collapsedSets,
+  collapsedSets = [],
   onOpenNumericPad,
   onOpenEquipmentSelector,
   onUpdateSet,
@@ -59,7 +61,7 @@ export const WorkoutTable = memo(({
   onDuplicateSet,
   onCompleteSet,
   onAddSet,
-  onToggleExerciseCollapse,
+  onToggleExerciseCollapse = () => {},
   isTablet,
 }: WorkoutTableProps) => {
   // Flatten exercises and sets into rows, filtering out collapsed sets
@@ -74,7 +76,7 @@ export const WorkoutTable = memo(({
     exercises.forEach((exercise, exerciseIndex) => {
       exercise.sets.forEach((set, setIndex) => {
         // Only include sets that are not collapsed
-        if (!collapsedSets.includes(set.id)) {
+        if (!collapsedSets || !collapsedSets.includes(set.id)) {
           rows.push({
             exerciseIndex,
             setIndex,
@@ -108,7 +110,7 @@ export const WorkoutTable = memo(({
           <tbody>
             {exercises.map((exercise, exerciseIndex) => {
               const exerciseRows = tableRows.filter(r => r.exerciseIndex === exerciseIndex);
-              const allSetsCollapsed = exercise.sets.every(set => collapsedSets.includes(set.id));
+              const allSetsCollapsed = exercise.sets.length > 0 && exercise.sets.every(set => collapsedSets && collapsedSets.includes(set.id));
               const hasVisibleSets = exerciseRows.length > 0;
               
               return (
