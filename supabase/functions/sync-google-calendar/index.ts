@@ -270,22 +270,26 @@ async function syncTrainerCalendar(
 
       // Update workout if exists
       if (existingSync.workout_id) {
+        // IMPORTANT: workout_date is timestamptz, so we need to preserve the full timestamp
+        // Use the exact startTime from Google Calendar event to maintain consistency
         await supabase
           .from("workouts")
           .update({
-            workout_date: startTime.toISOString().split("T")[0],
+            workout_date: startTime.toISOString(), // Full timestamp, not just date
             notes: event.description || null,
           })
           .eq("id", existingSync.workout_id);
       }
     } else {
       // Create new workout and sync record
+      // IMPORTANT: workout_date is timestamptz, so we need to preserve the full timestamp
+      // Use the exact startTime from Google Calendar event to maintain consistency
       const { data: newWorkout } = await supabase
         .from("workouts")
         .insert({
           trainer_id: trainerId,
           workout_type: "personal",
-          workout_date: startTime.toISOString().split("T")[0],
+          workout_date: startTime.toISOString(), // Full timestamp, not just date
           notes: event.description || null,
           is_completed: false,
         })

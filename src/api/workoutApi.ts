@@ -207,12 +207,27 @@ export async function deleteWorkout(
       .maybeSingle();
 
     // Delete the Google Calendar event if it exists
+    // IMPORTANT: Delete from Google Calendar BEFORE deleting from database
+    // to ensure consistency and prevent orphaned sync records
     if (syncRecord?.google_event_id && trainerId) {
       try {
         const { deleteGoogleCalendarEvent } = await import('./googleCalendarApi');
-        await deleteGoogleCalendarEvent(trainerId, syncRecord.google_event_id);
+        const deleteResult = await deleteGoogleCalendarEvent(trainerId, syncRecord.google_event_id);
+        
+        if (deleteResult.error) {
+          // Log error but continue - workout will still be deleted
+          const { logger } = await import('../utils/logger');
+          logger.warn('Failed to delete Google Calendar event during workout deletion', 
+            { error: deleteResult.error, eventId: syncRecord.google_event_id, workoutId }, 
+            'deleteWorkout');
+        } else {
+          // Small delay to ensure Google Calendar API has processed the deletion
+          // This helps prevent race conditions
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       } catch (calendarErr) {
-        console.error('Error deleting Google Calendar event:', calendarErr);
+        const { logger } = await import('../utils/logger');
+        logger.error('Error deleting Google Calendar event', calendarErr, 'deleteWorkout');
         // Continue with workout deletion even if calendar delete fails
       }
     }

@@ -45,6 +45,7 @@ interface WorkoutTableRowProps {
   onOpenSupersetNumericPad?: (exerciseIndex: number, setIndex: number, field: 'superset_weight' | 'superset_reps' | 'superset_rpe' | 'superset_dropset_weight' | 'superset_dropset_reps', label: string) => void;
   onOpenDropsetNumericPad?: (exerciseIndex: number, setIndex: number, field: 'dropset_weight' | 'dropset_reps', label: string) => void;
   onOpenSupersetSelector?: (exerciseIndex: number, setIndex: number) => void;
+  onOpenSupersetEquipmentSelector?: (exerciseIndex: number, setIndex: number) => void;
   onUpdateSet: (exerciseIndex: number, setIndex: number, field: string, value: any) => void;
   onRemoveSet: (exerciseIndex: number, setIndex: number) => void;
   onDuplicateSet: (exerciseIndex: number, setIndex: number) => void;
@@ -80,7 +81,8 @@ export const WorkoutTableRow = memo(({
   const hasData = set.weight > 0 && set.reps > 0;
   const setVolume = set.weight * set.reps + 
     (set.dropset_weight && set.dropset_reps ? set.dropset_weight * set.dropset_reps : 0) +
-    (set.superset_weight && set.superset_reps ? set.superset_weight * set.superset_reps : 0);
+    (set.superset_weight && set.superset_reps ? set.superset_weight * set.superset_reps : 0) +
+    (set.superset_dropset_weight && set.superset_dropset_reps ? set.superset_dropset_weight * set.superset_dropset_reps : 0);
 
   const weightButtonRef = useRef<HTMLButtonElement>(null);
   const repsButtonRef = useRef<HTMLButtonElement>(null);
@@ -438,19 +440,21 @@ export const WorkoutTableRow = memo(({
                           >
                             {set.superset_reps || '0'} חזרות
                           </button>
-                          {set.superset_rpe !== null && set.superset_rpe !== undefined && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_rpe', 'RPE סופר');
-                              }}
-                              className="px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 touch-manipulation active:scale-95 transition-all"
-                            >
-                              RPE {set.superset_rpe}
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_rpe', 'RPE סופר');
+                            }}
+                            className={`px-1 py-0.5 rounded border border-cyan-500/30 hover:bg-cyan-500/30 touch-manipulation active:scale-95 transition-all ${
+                              set.superset_rpe !== null && set.superset_rpe !== undefined
+                                ? 'bg-cyan-500/20 text-cyan-400'
+                                : 'bg-surface/50 text-muted hover:border-cyan-500/50'
+                            }`}
+                          >
+                            RPE {set.superset_rpe || '-'}
+                          </button>
                         </>
                       )}
                       {isTvMode && (
@@ -491,40 +495,60 @@ export const WorkoutTableRow = memo(({
                   )}
                   
                   {/* Superset dropset */}
-                  {(set.superset_dropset_weight || set.superset_dropset_reps) && onOpenSupersetNumericPad && (
-                    <div className={`flex gap-0.5 justify-center ${isTvMode ? 'text-xs' : 'text-[10px]'} text-amber-400`}>
-                      {!isTvMode && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_dropset_weight', 'משקל דרופ סופר');
-                            }}
-                            className="px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 touch-manipulation active:scale-95 transition-all"
-                          >
-                            דרופ: {set.superset_dropset_weight || '0'} ק״ג
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_dropset_reps', 'חזרות דרופ סופר');
-                            }}
-                            className="px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 touch-manipulation active:scale-95 transition-all"
-                          >
-                            {set.superset_dropset_reps || '0'} חזרות
-                          </button>
-                        </>
-                      )}
-                      {isTvMode && (
-                        <div>
-                          דרופ: {set.superset_dropset_weight || '0'} ק״ג × {set.superset_dropset_reps || '0'}
+                  {set.superset_exercise_id && onOpenSupersetNumericPad && (
+                    <>
+                      {(set.superset_dropset_weight || set.superset_dropset_reps) ? (
+                        <div className={`flex gap-0.5 justify-center ${isTvMode ? 'text-xs' : 'text-[10px]'} text-amber-400`}>
+                          {!isTvMode && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_dropset_weight', 'משקל דרופ סופר');
+                                }}
+                                className="px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 touch-manipulation active:scale-95 transition-all"
+                              >
+                                דרופ: {set.superset_dropset_weight || '0'} ק״ג
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_dropset_reps', 'חזרות דרופ סופר');
+                                }}
+                                className="px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 touch-manipulation active:scale-95 transition-all"
+                              >
+                                {set.superset_dropset_reps || '0'} חזרות
+                              </button>
+                            </>
+                          )}
+                          {isTvMode && (
+                            <div>
+                              דרופ: {set.superset_dropset_weight || '0'} ק״ג × {set.superset_dropset_reps || '0'}
+                            </div>
+                          )}
                         </div>
+                      ) : (
+                        !isTvMode && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              // Initialize dropset with 0 values to show the input buttons
+                              onUpdateSet(exerciseIndex, setIndex, 'superset_dropset_weight', 0);
+                              onUpdateSet(exerciseIndex, setIndex, 'superset_dropset_reps', 0);
+                            }}
+                            className="px-1 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-dashed border-amber-500/30 hover:bg-amber-500/20 hover:border-amber-500/50 text-[10px] touch-manipulation active:scale-95 transition-all"
+                          >
+                            + הוסף דרופ סופר
+                          </button>
+                        )
                       )}
-                    </div>
+                    </>
                   )}
                 </div>
               )}

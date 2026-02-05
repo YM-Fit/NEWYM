@@ -716,63 +716,63 @@ Deno.serve(async (req: Request) => {
         // Check if already synced
         const { data: existingSync } = await supabase
           .from('google_calendar_sync')
-          .select('google_event_id')
+          .select('google_event_id, event_start_time, event_end_time, event_summary, event_description')
           .eq('workout_id', workout.id)
           .maybeSingle();
 
-        if (!existingSync) {
-          // Get trainee details
-          const { data: traineeData } = await supabase
-            .from('workout_trainees')
-            .select('trainee_id, trainees!inner(full_name, email)')
-            .eq('workout_id', workout.id)
-            .limit(1)
-            .single();
+        // Get trainee details (needed for both create and update)
+        const { data: traineeData } = await supabase
+          .from('workout_trainees')
+          .select('trainee_id, trainees!inner(full_name, email)')
+          .eq('workout_id', workout.id)
+          .limit(1)
+          .single();
 
-          if (traineeData?.trainees) {
-            const trainee = traineeData.trainees;
-            const workoutDate = new Date(workout.workout_date);
-            const endDate = new Date(workoutDate);
-            endDate.setHours(workoutDate.getHours() + 1);
+        if (traineeData?.trainees) {
+          const trainee = traineeData.trainees;
+          const workoutDate = new Date(workout.workout_date);
+          const endDate = new Date(workoutDate);
+          endDate.setHours(workoutDate.getHours() + 1);
 
-            // Check and refresh token if needed
-            let accessToken = credentials.access_token;
-            if (new Date(credentials.token_expires_at) < new Date()) {
-              const refreshResponse = await fetch("https://oauth2.googleapis.com/token", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({
-                  client_id: Deno.env.get("GOOGLE_CLIENT_ID") || "",
-                  client_secret: Deno.env.get("GOOGLE_CLIENT_SECRET") || "",
-                  refresh_token: credentials.refresh_token,
-                  grant_type: "refresh_token",
-                }),
-              });
+          // Check and refresh token if needed
+          let accessToken = credentials.access_token;
+          if (new Date(credentials.token_expires_at) < new Date()) {
+            const refreshResponse = await fetch("https://oauth2.googleapis.com/token", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams({
+                client_id: Deno.env.get("GOOGLE_CLIENT_ID") || "",
+                client_secret: Deno.env.get("GOOGLE_CLIENT_SECRET") || "",
+                refresh_token: credentials.refresh_token,
+                grant_type: "refresh_token",
+              }),
+            });
 
-              if (refreshResponse.ok) {
-                const refreshData = await refreshResponse.json();
-                accessToken = refreshData.access_token;
-                await supabase
-                  .from("trainer_google_credentials")
-                  .update({
-                    access_token: refreshData.access_token,
-                    token_expires_at: new Date(Date.now() + refreshData.expires_in * 1000).toISOString(),
-                  })
-                  .eq("trainer_id", trainer_id);
-              }
+            if (refreshResponse.ok) {
+              const refreshData = await refreshResponse.json();
+              accessToken = refreshData.access_token;
+              await supabase
+                .from("trainer_google_credentials")
+                .update({
+                  access_token: refreshData.access_token,
+                  token_expires_at: new Date(Date.now() + refreshData.expires_in * 1000).toISOString(),
+                })
+                .eq("trainer_id", trainer_id);
             }
+          }
 
-            // Create calendar event with session info
-            const calendarId = credentials.default_calendar_id || 'primary';
-            const eventSummary = await generateEventTitle(
-              supabase,
-              traineeData.trainee_id,
-              trainer_id,
-              trainee.full_name,
-              workoutDate,
-              workout.id
-            );
-            
+          const calendarId = credentials.default_calendar_id || 'primary';
+          const eventSummary = await generateEventTitle(
+            supabase,
+            traineeData.trainee_id,
+            trainer_id,
+            trainee.full_name,
+            workoutDate,
+            workout.id
+          );
+
+          if (!existingSync) {
+            // CREATE: New workout - create calendar event
             const eventPayload: any = {
               summary: eventSummary,
               start: {
@@ -829,6 +829,259 @@ Deno.serve(async (req: Request) => {
                   event_description: workout.notes || null,
                   last_synced_at: new Date().toISOString(),
                 });
+            }
+          } else {
+            // UPDATE: Existing workout - update calendar event
+            // Check if anything changed that requires calendar update
+            // Compare dates with tolerance (within 1 second) to account for timezone/format differences
+            const oldStartTime = existingSync.event_start_time ? new Date(existingSync.event_start_time).getTime() : null;
+            const newStartTime = workoutDate.getTime();
+            const oldEndTime = existingSync.event_end_time ? new Date(existingSync.event_end_time).getTime() : null;
+            const newEndTime = endDate.getTime();
+            const oldSummary = existingSync.event_summary;
+            const oldDescription = existingSync.event_description || null;
+            const newDescription = workout.notes || null;
+
+            // Check if times differ by more than 1 second (to account for rounding)
+            const startTimeChanged = oldStartTime === null || Math.abs(oldStartTime - newStartTime) > 1000;
+            const endTimeChanged = oldEndTime === null || Math.abs(oldEndTime - newEndTime) > 1000;
+            const summaryChanged = oldSummary !== eventSummary;
+            const descriptionChanged = oldDescription !== newDescription;
+
+            const needsUpdate = startTimeChanged || endTimeChanged || summaryChanged || descriptionChanged;
+
+            if (needsUpdate) {
+              // Get existing event first to preserve other fields
+              const getEventResponse = await fetch(
+                `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${existingSync.google_event_id}`,
+                {
+                  headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                  },
+                }
+              );
+
+              if (getEventResponse.ok) {
+                const existingEvent = await getEventResponse.json();
+                
+                // Update only changed fields
+                const updatedEvent: any = {
+                  ...existingEvent,
+                  summary: eventSummary,
+                  start: {
+                    dateTime: workoutDate.toISOString(),
+                    timeZone: 'Asia/Jerusalem',
+                  },
+                  end: {
+                    dateTime: endDate.toISOString(),
+                    timeZone: 'Asia/Jerusalem',
+                  },
+                };
+
+                if (workout.notes !== undefined) {
+                  updatedEvent.description = workout.notes || '';
+                }
+
+                // Update attendees if trainee email exists
+                if (trainee.email) {
+                  const existingAttendees = existingEvent.attendees || [];
+                  const traineeAttendee = existingAttendees.find((a: any) => a.email === trainee.email);
+                  if (!traineeAttendee) {
+                    updatedEvent.attendees = [...existingAttendees, { email: trainee.email }];
+                  }
+                }
+
+                const updateEventResponse = await fetch(
+                  `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${existingSync.google_event_id}`,
+                  {
+                    method: 'PUT',
+                    headers: {
+                      'Authorization': `Bearer ${accessToken}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(updatedEvent),
+                  }
+                );
+
+                if (updateEventResponse.ok) {
+                  // Update sync record with new values
+                  await supabase
+                    .from('google_calendar_sync')
+                    .update({
+                      event_start_time: workoutDate.toISOString(),
+                      event_end_time: endDate.toISOString(),
+                      event_summary: eventSummary,
+                      event_description: workout.notes || null,
+                      last_synced_at: new Date().toISOString(),
+                      sync_status: 'synced',
+                    })
+                    .eq('workout_id', workout.id);
+                } else {
+                  // If update fails, check if event was deleted
+                  const errorData = await updateEventResponse.json().catch(() => ({}));
+                  if (updateEventResponse.status === 404 || updateEventResponse.status === 410) {
+                    // Event was deleted from Google Calendar - try to recreate it
+                    console.log(`Event ${existingSync.google_event_id} was deleted during update, recreating...`);
+                    
+                    // Delete old sync record first
+                    await supabase
+                      .from('google_calendar_sync')
+                      .delete()
+                      .eq('workout_id', workout.id);
+                    
+                    // Create new event (same as CREATE flow)
+                    const eventPayload: any = {
+                      summary: eventSummary,
+                      start: {
+                        dateTime: workoutDate.toISOString(),
+                        timeZone: 'Asia/Jerusalem',
+                      },
+                      end: {
+                        dateTime: endDate.toISOString(),
+                        timeZone: 'Asia/Jerusalem',
+                      },
+                    };
+
+                    if (workout.notes) {
+                      eventPayload.description = workout.notes;
+                    }
+
+                    if (trainee.email) {
+                      eventPayload.attendees = [{ email: trainee.email }];
+                    }
+
+                    const createEventResponse = await fetch(
+                      `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`,
+                      {
+                        method: 'POST',
+                        headers: {
+                          'Authorization': `Bearer ${accessToken}`,
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(eventPayload),
+                      }
+                    );
+
+                    if (createEventResponse.ok) {
+                      const newEvent = await createEventResponse.json();
+                      
+                      // Create new sync record
+                      const syncDirection = credentials.sync_direction === 'bidirectional' 
+                        ? 'bidirectional' 
+                        : 'to_google';
+                      
+                      await supabase
+                        .from('google_calendar_sync')
+                        .insert({
+                          trainer_id: trainer_id,
+                          trainee_id: traineeData.trainee_id,
+                          workout_id: workout.id,
+                          google_event_id: newEvent.id,
+                          google_calendar_id: calendarId,
+                          sync_status: 'synced',
+                          sync_direction: syncDirection,
+                          event_start_time: workoutDate.toISOString(),
+                          event_end_time: endDate.toISOString(),
+                          event_summary: eventPayload.summary,
+                          event_description: workout.notes || null,
+                          last_synced_at: new Date().toISOString(),
+                        });
+                      
+                      console.log(`Successfully recreated event ${newEvent.id} for workout ${workout.id}`);
+                    } else {
+                      const createErrorData = await createEventResponse.json().catch(() => ({}));
+                      console.error('Failed to recreate Google Calendar event:', createErrorData);
+                    }
+                  } else {
+                    // Other error - mark as failed
+                    await supabase
+                      .from('google_calendar_sync')
+                      .update({
+                        sync_status: 'failed',
+                        last_synced_at: new Date().toISOString(),
+                      })
+                      .eq('workout_id', workout.id);
+                    console.error('Failed to update Google Calendar event:', errorData);
+                  }
+                }
+              } else if (getEventResponse.status === 404 || getEventResponse.status === 410) {
+                // Event was deleted from Google Calendar - try to recreate it
+                console.log(`Event ${existingSync.google_event_id} was deleted, recreating...`);
+                
+                // Delete old sync record first
+                await supabase
+                  .from('google_calendar_sync')
+                  .delete()
+                  .eq('workout_id', workout.id);
+                
+                // Create new event (same as CREATE flow)
+                const eventPayload: any = {
+                  summary: eventSummary,
+                  start: {
+                    dateTime: workoutDate.toISOString(),
+                    timeZone: 'Asia/Jerusalem',
+                  },
+                  end: {
+                    dateTime: endDate.toISOString(),
+                    timeZone: 'Asia/Jerusalem',
+                  },
+                };
+
+                if (workout.notes) {
+                  eventPayload.description = workout.notes;
+                }
+
+                if (trainee.email) {
+                  eventPayload.attendees = [{ email: trainee.email }];
+                }
+
+                const createEventResponse = await fetch(
+                  `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${accessToken}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(eventPayload),
+                  }
+                );
+
+                if (createEventResponse.ok) {
+                  const newEvent = await createEventResponse.json();
+                  
+                  // Create new sync record
+                  const syncDirection = credentials.sync_direction === 'bidirectional' 
+                    ? 'bidirectional' 
+                    : 'to_google';
+                  
+                  await supabase
+                    .from('google_calendar_sync')
+                    .insert({
+                      trainer_id: trainer_id,
+                      trainee_id: traineeData.trainee_id,
+                      workout_id: workout.id,
+                      google_event_id: newEvent.id,
+                      google_calendar_id: calendarId,
+                      sync_status: 'synced',
+                      sync_direction: syncDirection,
+                      event_start_time: workoutDate.toISOString(),
+                      event_end_time: endDate.toISOString(),
+                      event_summary: eventPayload.summary,
+                      event_description: workout.notes || null,
+                      last_synced_at: new Date().toISOString(),
+                    });
+                  
+                  console.log(`Successfully recreated event ${newEvent.id} for workout ${workout.id}`);
+                } else {
+                  const errorData = await createEventResponse.json().catch(() => ({}));
+                  console.error('Failed to recreate Google Calendar event:', errorData);
+                }
+              } else {
+                // Other error getting event - log but don't fail
+                const errorData = await getEventResponse.json().catch(() => ({}));
+                console.error('Error getting Google Calendar event:', errorData);
+              }
             }
           }
         }
