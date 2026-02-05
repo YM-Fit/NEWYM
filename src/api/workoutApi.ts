@@ -459,6 +459,7 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     
     // First, get Google Calendar sync records to identify workouts synced FROM Google
     // These need to be filtered by event_start_time, not workout_date
+    // CRITICAL: Include both 'from_google' and 'bidirectional' because both can have events from Google Calendar
     const { data: googleSyncDataFromGoogle, error: googleSyncError } = await supabase
       .from('google_calendar_sync')
       .select(`
@@ -487,6 +488,11 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       });
     }
 
+    // CRITICAL: Get ALL workouts that might be relevant, then filter by sync status
+    // We need to get workouts that:
+    // 1. Are synced FROM Google (use event_start_time) - already have IDs from googleSyncDataFromGoogle
+    // 2. Are NOT synced FROM Google (use workout_date) - need to query by workout_date
+    
     // Get workouts synced FROM Google (by their IDs from sync records)
     // These are already filtered by event_start_time in the query above
     let workoutsDataFromGoogle: any[] = [];
@@ -535,9 +541,17 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     }
 
     // Filter out workouts synced FROM Google (they're handled separately)
-    const workoutsDataManual = (workoutsDataAll || []).filter(
-      workout => !workoutIdsFromGoogle.has(workout.id)
-    );
+    // Also filter out workouts with bidirectional sync if their event_start_time is not in range
+    const workoutsDataManual = (workoutsDataAll || []).filter(workout => {
+      // Skip if already handled as Google-synced workout
+      if (workoutIdsFromGoogle.has(workout.id)) {
+        return false;
+      }
+      
+      // For workouts with bidirectional sync, check event_start_time
+      // We'll check this later when we have sync records, but for now include them
+      return true;
+    });
 
     // Combine both sources - workouts from Google (filtered by event_start_time) and manual workouts (filtered by workout_date)
     const workoutsData = [
@@ -694,7 +708,14 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         let actualWorkoutDate: Date;
         let eventStartTime: string | undefined;
         
-        if (isFromGoogle && syncRecord?.event_start_time) {
+        if (isFromGoogle) {
+          // For workouts synced FROM Google, we MUST use event_start_time
+          // If there's no event_start_time, this is an error - skip it
+          if (!syncRecord?.event_start_time) {
+            console.warn(`Workout ${wt.workout_id} is marked as from Google but has no event_start_time`);
+            return null;
+          }
+          
           // Use event_start_time from Google Calendar for accurate time
           eventStartTime = syncRecord.event_start_time;
           actualWorkoutDate = new Date(eventStartTime);
@@ -713,6 +734,20 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         } else {
           // Use workout_date for manually created workouts or workouts synced TO Google
           // workout_date is already filtered by date range in the query above
+          // BUT: if there's a sync record with event_start_time, check if it's in range
+          // (This handles cases where workout was synced TO Google but then changed in Google Calendar)
+          if (syncRecord?.event_start_time) {
+            const syncEventDate = new Date(syncRecord.event_start_time);
+            const syncEventDateStr = `${syncEventDate.getFullYear()}-${String(syncEventDate.getMonth() + 1).padStart(2, '0')}-${String(syncEventDate.getDate()).padStart(2, '0')}`;
+            const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            const tomorrowDateStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+            
+            // If sync_direction is 'bidirectional' and event_start_time is not in range, exclude it
+            if (syncRecord.sync_direction === 'bidirectional' && syncEventDateStr !== todayDateStr && syncEventDateStr !== tomorrowDateStr) {
+              return null;
+            }
+          }
+          
           actualWorkoutDate = new Date(workout.workout_date);
           eventStartTime = undefined;
         }
