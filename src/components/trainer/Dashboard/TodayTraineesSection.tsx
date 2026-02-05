@@ -91,12 +91,7 @@ export default function TodayTraineesSection({
   const lastTraineeIdsRef = useRef<string>('');
   const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const realtimeChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const loadTodayTraineesRef = useRef(loadTodayTrainees);
-  
-  // Keep ref updated with latest function
-  useEffect(() => {
-    loadTodayTraineesRef.current = loadTodayTrainees;
-  }, [loadTodayTrainees]);
+  const loadTodayTraineesRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
 
   // Create a stable dependency based on trainee IDs
   const traineeIdsString = useMemo(() => {
@@ -477,6 +472,11 @@ export default function TodayTraineesSection({
     }
   }, [user, loadTodayTrainees]);
 
+  // Keep ref updated with latest function
+  useEffect(() => {
+    loadTodayTraineesRef.current = loadTodayTrainees;
+  }, [loadTodayTrainees]);
+
   useEffect(() => {
     // Skip if already loading or if trainee IDs haven't changed
     if (isLoadingRef.current || lastTraineeIdsRef.current === traineeIdsString) {
@@ -595,10 +595,10 @@ export default function TodayTraineesSection({
                   workoutDate,
                 }, 'TodayTraineesSection');
                 
-                if (!isLoadingRef.current) {
+                if (!isLoadingRef.current && loadTodayTraineesRef.current) {
                   loadTodayTraineesRef.current(true); // Silent refresh
                 } else {
-                  logger.debug('⏸️ Skipping refresh - already loading', {}, 'TodayTraineesSection');
+                  logger.debug('⏸️ Skipping refresh - already loading or ref not ready', {}, 'TodayTraineesSection');
                 }
               } else {
                 logger.debug('⏭️ Skipping refresh - workout date out of range', {
@@ -667,10 +667,10 @@ export default function TodayTraineesSection({
                     eventStartTime,
                   }, 'TodayTraineesSection');
                   
-                  if (!isLoadingRef.current) {
+                  if (!isLoadingRef.current && loadTodayTraineesRef.current) {
                     loadTodayTraineesRef.current(true); // Silent refresh
                   } else {
-                    logger.debug('⏸️ Skipping refresh - already loading', {}, 'TodayTraineesSection');
+                    logger.debug('⏸️ Skipping refresh - already loading or ref not ready', {}, 'TodayTraineesSection');
                   }
                 } else {
                   logger.debug('⏭️ Skipping refresh - trainee not in our list', {
