@@ -174,6 +174,7 @@ export const WorkoutTable = memo(({
                           onOpenSupersetNumericPad={onOpenSupersetNumericPad}
                           onOpenDropsetNumericPad={onOpenDropsetNumericPad}
                           onOpenSupersetSelector={onOpenSupersetSelector}
+                          onOpenSupersetEquipmentSelector={onOpenSupersetEquipmentSelector}
                           onUpdateSet={onUpdateSet}
                           onRemoveSet={onRemoveSet}
                           onDuplicateSet={onDuplicateSet}

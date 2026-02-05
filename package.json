@@ -16,7 +16,8 @@
     "test:e2e:headed": "playwright test --config=e2e/config/playwright.config.ts --headed",
     "db:check": "tsx scripts/check-database-sync.ts",
     "db:migrate": "tsx scripts/run-migrations.ts",
-    "db:connect": "tsx scripts/connect-and-update-db.ts"
+    "db:connect": "tsx scripts/connect-and-update-db.ts",
+    "test:sync": "tsx scripts/test-bidirectional-sync.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

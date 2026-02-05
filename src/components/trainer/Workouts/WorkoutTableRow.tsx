@@ -42,7 +42,7 @@ interface WorkoutTableRowProps {
   isNewExercise?: boolean;
   onOpenNumericPad: (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe') => void;
   onOpenEquipmentSelector: (exerciseIndex: number, setIndex: number) => void;
-  onOpenSupersetNumericPad?: (exerciseIndex: number, setIndex: number, field: 'superset_weight' | 'superset_reps' | 'superset_rpe', label: string) => void;
+  onOpenSupersetNumericPad?: (exerciseIndex: number, setIndex: number, field: 'superset_weight' | 'superset_reps' | 'superset_rpe' | 'superset_dropset_weight' | 'superset_dropset_reps', label: string) => void;
   onOpenDropsetNumericPad?: (exerciseIndex: number, setIndex: number, field: 'dropset_weight' | 'dropset_reps', label: string) => void;
   onOpenSupersetSelector?: (exerciseIndex: number, setIndex: number) => void;
   onUpdateSet: (exerciseIndex: number, setIndex: number, field: string, value: any) => void;
@@ -156,177 +156,237 @@ export const WorkoutTableRow = memo(({
 
       {/* משקל */}
       <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
-        <button
-          ref={weightButtonRef}
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onOpenNumericPad(exerciseIndex, setIndex, 'weight');
-          }}
-          onKeyDown={(e) => handleKeyDown(e, 'weight')}
-          className={`
-            workout-table-cell w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold transition-all
+        {!isTvMode ? (
+          <button
+            ref={weightButtonRef}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onOpenNumericPad(exerciseIndex, setIndex, 'weight');
+            }}
+            onKeyDown={(e) => handleKeyDown(e, 'weight')}
+            className={`
+              workout-table-cell w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold transition-all
+              ${isCompleted ? 'text-sm' : 'text-base'}
+              ${hasData && set.weight > 0 
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' 
+                : 'bg-surface/50 text-muted border border-border hover:border-emerald-500/30'
+              }
+              hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
+              focus:outline-none focus:ring-1 focus:ring-emerald-500
+            `}
+            tabIndex={isActive ? 0 : -1}
+          >
+            {set.weight || '0'}
+          </button>
+        ) : (
+          <div className={`
+            w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold
             ${isCompleted ? 'text-sm' : 'text-base'}
             ${hasData && set.weight > 0 
               ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' 
-              : 'bg-surface/50 text-muted border border-border hover:border-emerald-500/30'
+              : 'bg-surface/50 text-muted border border-border'
             }
-            hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
-            focus:outline-none focus:ring-1 focus:ring-emerald-500
-          `}
-          tabIndex={isActive ? 0 : -1}
-        >
-          {set.weight || '0'}
-        </button>
+          `}>
+            {set.weight || '0'}
+          </div>
+        )}
       </td>
 
       {/* חזרות */}
       <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
-        <button
-          ref={repsButtonRef}
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onOpenNumericPad(exerciseIndex, setIndex, 'reps');
-          }}
-          onKeyDown={(e) => handleKeyDown(e, 'reps')}
-          className={`
-            w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold transition-all
+        {!isTvMode ? (
+          <button
+            ref={repsButtonRef}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onOpenNumericPad(exerciseIndex, setIndex, 'reps');
+            }}
+            onKeyDown={(e) => handleKeyDown(e, 'reps')}
+            className={`
+              w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold transition-all
+              ${isCompleted ? 'text-sm' : 'text-base'}
+              ${hasData && set.reps > 0 
+                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' 
+                : 'bg-surface/50 text-muted border border-border hover:border-cyan-500/30'
+              }
+              hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
+              focus:outline-none focus:ring-1 focus:ring-cyan-500
+            `}
+            tabIndex={isActive ? 0 : -1}
+          >
+            {set.reps || '0'}
+          </button>
+        ) : (
+          <div className={`
+            w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold
             ${isCompleted ? 'text-sm' : 'text-base'}
             ${hasData && set.reps > 0 
               ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' 
-              : 'bg-surface/50 text-muted border border-border hover:border-cyan-500/30'
+              : 'bg-surface/50 text-muted border border-border'
             }
-            hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
-            focus:outline-none focus:ring-1 focus:ring-cyan-500
-          `}
-          tabIndex={isActive ? 0 : -1}
-        >
-          {set.reps || '0'}
-        </button>
+          `}>
+            {set.reps || '0'}
+          </div>
+        )}
       </td>
 
       {/* RPE */}
       <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
-        <button
-          ref={rpeButtonRef}
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onOpenNumericPad(exerciseIndex, setIndex, 'rpe');
-          }}
-          onKeyDown={(e) => handleKeyDown(e, 'rpe')}
-          className={`
-            w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold transition-all
+        {!isTvMode ? (
+          <button
+            ref={rpeButtonRef}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onOpenNumericPad(exerciseIndex, setIndex, 'rpe');
+            }}
+            onKeyDown={(e) => handleKeyDown(e, 'rpe')}
+            className={`
+              w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold transition-all
+              ${isCompleted ? 'text-sm' : 'text-base'}
+              ${set.rpe 
+                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50' 
+                : 'bg-surface/50 text-muted border border-border hover:border-amber-500/30'
+              }
+              hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
+              focus:outline-none focus:ring-1 focus:ring-amber-500
+            `}
+            tabIndex={isActive ? 0 : -1}
+          >
+            {set.rpe || '-'}
+          </button>
+        ) : (
+          <div className={`
+            w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold
             ${isCompleted ? 'text-sm' : 'text-base'}
             ${set.rpe 
               ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50' 
-              : 'bg-surface/50 text-muted border border-border hover:border-amber-500/30'
+              : 'bg-surface/50 text-muted border border-border'
             }
-            hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
-            focus:outline-none focus:ring-1 focus:ring-amber-500
-          `}
-          tabIndex={isActive ? 0 : -1}
-        >
-          {set.rpe || '-'}
-        </button>
+          `}>
+            {set.rpe || '-'}
+          </div>
+        )}
       </td>
 
       {/* ציוד */}
       <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onOpenEquipmentSelector(exerciseIndex, setIndex);
-          }}
-          className={`
-            w-full px-2 ${isCompleted ? 'py-0.5' : 'py-1'} rounded-lg transition-all
-            ${isCompleted ? 'text-[10px]' : 'text-xs'}
-            ${set.equipment 
-              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' 
-              : 'bg-surface/50 text-muted border border-border hover:border-cyan-500/30'
-            }
-            hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
-          `}
-        >
-          {set.equipment?.emoji && <span className={`${isCompleted ? 'text-xs' : 'text-sm'} mr-0.5`}>{set.equipment.emoji}</span>}
-          <span className={`font-medium ${isCompleted ? 'text-[10px]' : 'text-xs'}`}>{set.equipment?.name || 'ציוד'}</span>
-        </button>
+        {!isTvMode ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onOpenEquipmentSelector(exerciseIndex, setIndex);
+            }}
+            className={`
+              w-full px-2 ${isCompleted ? 'py-0.5' : 'py-1'} rounded-lg transition-all
+              ${isCompleted ? 'text-[10px]' : 'text-xs'}
+              ${set.equipment 
+                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' 
+                : 'bg-surface/50 text-muted border border-border hover:border-cyan-500/30'
+              }
+              hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
+            `}
+          >
+            {set.equipment?.emoji && <span className={`${isCompleted ? 'text-xs' : 'text-sm'} mr-0.5`}>{set.equipment.emoji}</span>}
+            <span className={`font-medium ${isCompleted ? 'text-[10px]' : 'text-xs'}`}>{set.equipment?.name || 'ציוד'}</span>
+          </button>
+        ) : (
+          <div className={`flex items-center justify-center gap-0.5 ${isCompleted ? 'text-[10px]' : 'text-xs'}`}>
+            {set.equipment?.emoji && <span>{set.equipment.emoji}</span>}
+            <span className="text-cyan-400">{set.equipment?.name || '-'}</span>
+          </div>
+        )}
       </td>
 
       {/* סוג סט */}
       <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
         <div className="flex flex-col gap-1">
-          <div className="flex gap-0.5 justify-center">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onUpdateSet(exerciseIndex, setIndex, 'set_type', 'regular');
-              }}
-              className={`
-                px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all
-                ${isCompleted ? 'text-[10px]' : 'text-xs'}
-                ${set.set_type === 'regular' 
-                  ? 'bg-emerald-500 text-foreground' 
-                  : 'bg-surface/50 text-muted hover:bg-emerald-500/20'
-                }
-              `}
-            >
-              רגיל
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (set.set_type === 'superset' && set.superset_exercise_id) {
-                  // Already a superset with exercise - toggle back to regular
+          {!isTvMode ? (
+            <div className="flex gap-0.5 justify-center">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   onUpdateSet(exerciseIndex, setIndex, 'set_type', 'regular');
-                } else if (onOpenSupersetSelector) {
-                  // Open selector to choose exercise
-                  onOpenSupersetSelector(exerciseIndex, setIndex);
-                } else {
-                  // Fallback - just set type
-                  onUpdateSet(exerciseIndex, setIndex, 'set_type', 'superset');
-                }
-              }}
-              className={`
-                px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all
-                ${isCompleted ? 'text-[10px]' : 'text-xs'}
-                ${set.set_type === 'superset' 
-                  ? 'bg-cyan-500 text-foreground' 
-                  : 'bg-surface/50 text-muted hover:bg-cyan-500/20'
-                }
-              `}
-            >
-              סופר
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onUpdateSet(exerciseIndex, setIndex, 'set_type', 'dropset');
-              }}
-              className={`
-                px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all
-                ${isCompleted ? 'text-[10px]' : 'text-xs'}
-                ${set.set_type === 'dropset' 
-                  ? 'bg-amber-500 text-foreground' 
-                  : 'bg-surface/50 text-muted hover:bg-amber-500/20'
-                }
-              `}
-            >
-              דרופ
-            </button>
-          </div>
+                }}
+                className={`
+                  px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all touch-manipulation active:scale-95
+                  ${isCompleted ? 'text-[10px]' : 'text-xs'}
+                  ${set.set_type === 'regular' 
+                    ? 'bg-emerald-500 text-foreground' 
+                    : 'bg-surface/50 text-muted hover:bg-emerald-500/20'
+                  }
+                `}
+              >
+                רגיל
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (set.set_type === 'superset' && set.superset_exercise_id) {
+                    // Already a superset with exercise - toggle back to regular
+                    onUpdateSet(exerciseIndex, setIndex, 'set_type', 'regular');
+                  } else if (onOpenSupersetSelector) {
+                    // Open selector to choose exercise
+                    onOpenSupersetSelector(exerciseIndex, setIndex);
+                  } else {
+                    // Fallback - just set type
+                    onUpdateSet(exerciseIndex, setIndex, 'set_type', 'superset');
+                  }
+                }}
+                className={`
+                  px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all touch-manipulation active:scale-95
+                  ${isCompleted ? 'text-[10px]' : 'text-xs'}
+                  ${set.set_type === 'superset' 
+                    ? 'bg-cyan-500 text-foreground' 
+                    : 'bg-surface/50 text-muted hover:bg-cyan-500/20'
+                  }
+                `}
+              >
+                סופר
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onUpdateSet(exerciseIndex, setIndex, 'set_type', 'dropset');
+                }}
+                className={`
+                  px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all touch-manipulation active:scale-95
+                  ${isCompleted ? 'text-[10px]' : 'text-xs'}
+                  ${set.set_type === 'dropset' 
+                    ? 'bg-amber-500 text-foreground' 
+                    : 'bg-surface/50 text-muted hover:bg-amber-500/20'
+                  }
+                `}
+              >
+                דרופ
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center">
+              <span className={`${isCompleted ? 'text-[10px]' : 'text-xs'} font-medium ${
+                set.set_type === 'regular' ? 'text-emerald-400' :
+                set.set_type === 'superset' ? 'text-cyan-400' :
+                'text-amber-400'
+              }`}>
+                {set.set_type === 'regular' ? 'רגיל' :
+                 set.set_type === 'superset' ? 'סופר' :
+                 'דרופ'}
+              </span>
+            </div>
+          )}
           {/* Superset data - Show if superset type is selected */}
           {set.set_type === 'superset' && (
             <div className="flex flex-col gap-1">
@@ -338,7 +398,7 @@ export const WorkoutTableRow = memo(({
                     e.stopPropagation();
                     onOpenSupersetSelector(exerciseIndex, setIndex);
                   }}
-                  className={`px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 ${isTvMode ? 'text-xs' : 'text-[10px]'}`}
+                  className={`px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 ${isTvMode ? 'text-xs' : 'text-[10px]'} touch-manipulation active:scale-95 transition-all`}
                 >
                   בחר תרגיל
                 </button>
@@ -363,7 +423,7 @@ export const WorkoutTableRow = memo(({
                               e.stopPropagation();
                               onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_weight', 'משקל סופר');
                             }}
-                            className="px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30"
+                            className="px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 touch-manipulation active:scale-95 transition-all"
                           >
                             {set.superset_weight || '0'} ק״ג
                           </button>
@@ -374,7 +434,7 @@ export const WorkoutTableRow = memo(({
                               e.stopPropagation();
                               onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_reps', 'חזרות סופר');
                             }}
-                            className="px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30"
+                            className="px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 touch-manipulation active:scale-95 transition-all"
                           >
                             {set.superset_reps || '0'} חזרות
                           </button>
@@ -386,7 +446,7 @@ export const WorkoutTableRow = memo(({
                                 e.stopPropagation();
                                 onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_rpe', 'RPE סופר');
                               }}
-                              className="px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30"
+                              className="px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 touch-manipulation active:scale-95 transition-all"
                             >
                               RPE {set.superset_rpe}
                             </button>
@@ -403,8 +463,28 @@ export const WorkoutTableRow = memo(({
                   )}
                   
                   {/* Superset equipment */}
-                  {set.superset_equipment && (
-                    <div className={`flex items-center justify-center gap-0.5 ${isTvMode ? 'text-xs' : 'text-[10px]'}`}>
+                  {!isTvMode && onOpenSupersetEquipmentSelector && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onOpenSupersetEquipmentSelector?.(exerciseIndex, setIndex);
+                      }}
+                      className={`px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 text-[10px] flex items-center justify-center gap-0.5 touch-manipulation active:scale-95 transition-all`}
+                    >
+                      {set.superset_equipment ? (
+                        <>
+                          {set.superset_equipment.emoji && <span>{set.superset_equipment.emoji}</span>}
+                          <span>{set.superset_equipment.name}</span>
+                        </>
+                      ) : (
+                        'ציוד'
+                      )}
+                    </button>
+                  )}
+                  {isTvMode && set.superset_equipment && (
+                    <div className={`flex items-center justify-center gap-0.5 text-xs`}>
                       {set.superset_equipment.emoji && <span>{set.superset_equipment.emoji}</span>}
                       <span className="text-cyan-400">{set.superset_equipment.name}</span>
                     </div>
@@ -420,9 +500,9 @@ export const WorkoutTableRow = memo(({
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_dropset_weight' as any, 'משקל דרופ סופר');
+                              onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_dropset_weight', 'משקל דרופ סופר');
                             }}
-                            className="px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30"
+                            className="px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 touch-manipulation active:scale-95 transition-all"
                           >
                             דרופ: {set.superset_dropset_weight || '0'} ק״ג
                           </button>
@@ -431,9 +511,9 @@ export const WorkoutTableRow = memo(({
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_dropset_reps' as any, 'חזרות דרופ סופר');
+                              onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_dropset_reps', 'חזרות דרופ סופר');
                             }}
-                            className="px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30"
+                            className="px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 touch-manipulation active:scale-95 transition-all"
                           >
                             {set.superset_dropset_reps || '0'} חזרות
                           </button>
@@ -462,7 +542,7 @@ export const WorkoutTableRow = memo(({
                       e.stopPropagation();
                       onOpenDropsetNumericPad(exerciseIndex, setIndex, 'dropset_weight', 'משקל דרופ');
                     }}
-                    className="px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30"
+                    className="px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 touch-manipulation active:scale-95 transition-all"
                   >
                     {set.dropset_weight || '0'} ק״ג
                   </button>
@@ -473,7 +553,7 @@ export const WorkoutTableRow = memo(({
                       e.stopPropagation();
                       onOpenDropsetNumericPad(exerciseIndex, setIndex, 'dropset_reps', 'חזרות דרופ');
                     }}
-                    className="px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30"
+                    className="px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 touch-manipulation active:scale-95 transition-all"
                   >
                     {set.dropset_reps || '0'} חזרות
                   </button>
@@ -491,25 +571,31 @@ export const WorkoutTableRow = memo(({
 
       {/* כשל */}
       <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onUpdateSet(exerciseIndex, setIndex, 'failure', !set.failure);
-          }}
-          className={`
-            w-full px-2 ${isCompleted ? 'py-0.5' : 'py-1'} rounded-lg transition-all
-            ${isCompleted ? 'text-sm' : 'text-base'}
-            ${set.failure 
-              ? 'bg-red-500/20 text-red-400 border border-red-500/50' 
-              : 'bg-surface/50 text-muted border border-border hover:border-red-500/30'
-            }
-            hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
-          `}
-        >
-          {set.failure ? '🔥' : '💪'}
-        </button>
+        {!isTvMode ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onUpdateSet(exerciseIndex, setIndex, 'failure', !set.failure);
+            }}
+            className={`
+              w-full px-2 ${isCompleted ? 'py-0.5' : 'py-1'} rounded-lg transition-all
+              ${isCompleted ? 'text-sm' : 'text-base'}
+              ${set.failure 
+                ? 'bg-red-500/20 text-red-400 border border-red-500/50' 
+                : 'bg-surface/50 text-muted border border-border hover:border-red-500/30'
+              }
+              hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
+            `}
+          >
+            {set.failure ? '🔥' : '💪'}
+          </button>
+        ) : (
+          <div className={`flex items-center justify-center ${isCompleted ? 'text-sm' : 'text-base'}`}>
+            {set.failure ? '🔥' : '💪'}
+          </div>
+        )}
       </td>
 
       {/* נפח */}
@@ -524,46 +610,54 @@ export const WorkoutTableRow = memo(({
 
       {/* פעולות */}
       <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
-        <div className="flex items-center justify-center gap-1">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onCompleteSet(exerciseIndex, setIndex);
-            }}
-            className={`${isCompleted ? 'p-1' : 'p-1.5'} hover:bg-emerald-500/20 text-emerald-400 rounded-lg transition-all cursor-pointer`}
-            title="סיים סט (Enter)"
-          >
-            <CheckCircle2 className={`${isCompleted ? 'h-3 w-3' : 'h-4 w-4'}`} />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onDuplicateSet(exerciseIndex, setIndex);
-            }}
-            className={`${isCompleted ? 'p-1' : 'p-1.5'} hover:bg-cyan-500/20 text-cyan-400 rounded-lg transition-all cursor-pointer`}
-            title="שכפל סט"
-          >
-            <Copy className={`${isCompleted ? 'h-3 w-3' : 'h-4 w-4'}`} />
-          </button>
-          {canDelete && (
+        {!isTvMode ? (
+          <div className="flex items-center justify-center gap-1">
             <button
               type="button"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                onRemoveSet(exerciseIndex, setIndex);
+                onCompleteSet(exerciseIndex, setIndex);
               }}
-              className={`${isCompleted ? 'p-1' : 'p-1.5'} hover:bg-red-500/20 text-red-400 rounded-lg transition-all cursor-pointer`}
-              title="מחק סט"
+              className={`${isCompleted ? 'p-1' : 'p-1.5'} hover:bg-emerald-500/20 text-emerald-400 rounded-lg transition-all cursor-pointer`}
+              title="סיים סט (Enter)"
             >
-              <Trash2 className={`${isCompleted ? 'h-3 w-3' : 'h-4 w-4'}`} />
+              <CheckCircle2 className={`${isCompleted ? 'h-3 w-3' : 'h-4 w-4'}`} />
             </button>
-          )}
-        </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDuplicateSet(exerciseIndex, setIndex);
+              }}
+              className={`${isCompleted ? 'p-1' : 'p-1.5'} hover:bg-cyan-500/20 text-cyan-400 rounded-lg transition-all cursor-pointer`}
+              title="שכפל סט"
+            >
+              <Copy className={`${isCompleted ? 'h-3 w-3' : 'h-4 w-4'}`} />
+            </button>
+            {canDelete && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onRemoveSet(exerciseIndex, setIndex);
+                }}
+                className={`${isCompleted ? 'p-1' : 'p-1.5'} hover:bg-red-500/20 text-red-400 rounded-lg transition-all cursor-pointer`}
+                title="מחק סט"
+              >
+                <Trash2 className={`${isCompleted ? 'h-3 w-3' : 'h-4 w-4'}`} />
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center gap-1 text-muted">
+            {set.weight > 0 && set.reps > 0 && (
+              <CheckCircle2 className={`${isCompleted ? 'h-3 w-3' : 'h-4 w-4'} text-emerald-400`} />
+            )}
+          </div>
+        )}
       </td>
     </tr>
   );

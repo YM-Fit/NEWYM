@@ -637,6 +637,7 @@ export default function WorkoutSession({
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle shortcuts when modals are open or input is focused
       if (showExerciseSelector || numericPad || equipmentSelector || supersetSelector || 
+          dropsetNumericPad || supersetNumericPad || supersetDropsetNumericPad || supersetEquipmentSelector ||
           showDraftModal || showTemplateModal || showSaveTemplateModal || showSummary ||
           document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
         return;
