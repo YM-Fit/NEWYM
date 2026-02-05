@@ -272,8 +272,9 @@ export default function SmartReportView() {
     try {
       const startOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
       const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0, 23, 59, 59);
-      const startOfMonthStr = startOfMonth.toISOString().split('T')[0];
-      const endOfMonthStr = endOfMonth.toISOString().split('T')[0];
+      // Use ISO timestamps for TIMESTAMPTZ field comparison
+      const startOfMonthStr = startOfMonth.toISOString();
+      const endOfMonthStr = endOfMonth.toISOString();
 
       // OPTIMIZATION: Load all data in parallel instead of sequentially
       const [workoutsResult, cardsResult, allWorkoutsResult] = await Promise.all([
@@ -282,8 +283,8 @@ export default function SmartReportView() {
           .from('workouts')
           .select('id, workout_date')
           .eq('trainer_id', user.id)
-          .gte('workout_date', startOfMonth.toISOString())
-          .lte('workout_date', endOfMonth.toISOString())
+          .gte('workout_date', startOfMonthStr)
+          .lte('workout_date', endOfMonthStr)
           .order('workout_date', { ascending: true }),
         
         // Get all trainee cards for this trainer
@@ -298,7 +299,7 @@ export default function SmartReportView() {
           .from('workouts')
           .select('id, workout_date')
           .eq('trainer_id', user.id)
-          .lte('workout_date', endOfMonth.toISOString())
+          .lte('workout_date', endOfMonthStr)
           .order('workout_date', { ascending: true })
       ]);
 

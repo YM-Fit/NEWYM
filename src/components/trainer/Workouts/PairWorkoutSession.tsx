@@ -376,7 +376,8 @@ export default function PairWorkoutSession({
         .insert([
           {
             trainer_id: user.id,
-            workout_date: new Date().toISOString().split('T')[0],
+            // Use full timestamp for TIMESTAMPTZ field
+            workout_date: new Date().toISOString(),
             workout_type: 'pair',
             is_completed: true,
           },

@@ -16,10 +16,70 @@ import LoadTemplateModal from './components/LoadTemplateModal';
 import SaveTemplateModal from './components/SaveTemplateModal';
 import PlanBlockBuilder from './components/PlanBlockBuilder';
 
+// Validation function
+function validatePlan(planName: string, days: WorkoutDay[]): { valid: boolean; error?: string } {
+  if (!planName.trim()) {
+    return { valid: false, error: 'נא להזין שם לתוכנית' };
+  }
+
+  if (days.length === 0) {
+    return { valid: false, error: 'נא להוסיף לפחות יום אימון אחד' };
+  }
+
+  for (const day of days) {
+    if (day.exercises.length === 0) {
+      return { valid: false, error: `יום ${day.day_number}${day.day_name ? ` (${day.day_name})` : ''} חייב להכיל לפחות תרגיל אחד` };
+    }
+
+    for (const exercise of day.exercises) {
+      if (exercise.sets.length === 0) {
+        return { valid: false, error: `תרגיל "${exercise.exercise.name}" ביום ${day.day_number} חייב להכיל לפחות סט אחד` };
+      }
+
+      for (const set of exercise.sets) {
+        // Validate RPE
+        if (set.rpe !== null && (set.rpe < 1 || set.rpe > 10)) {
+          return { valid: false, error: `RPE חייב להיות בין 1-10 (תרגיל: ${exercise.exercise.name})` };
+        }
+
+        // Validate reps
+        if (set.reps < 0 || set.reps > 1000) {
+          return { valid: false, error: `מספר חזרות חייב להיות בין 0-1000 (תרגיל: ${exercise.exercise.name})` };
+        }
+
+        // Validate weight
+        if (set.weight < 0 || set.weight > 10000) {
+          return { valid: false, error: `משקל חייב להיות בין 0-10000 ק"ג (תרגיל: ${exercise.exercise.name})` };
+        }
+
+        // Validate superset RPE
+        if (set.superset_rpe !== null && set.superset_rpe !== undefined && (set.superset_rpe < 1 || set.superset_rpe > 10)) {
+          return { valid: false, error: `RPE של סופרסט חייב להיות בין 1-10 (תרגיל: ${exercise.exercise.name})` };
+        }
+      }
+
+      // Validate rest seconds
+      if (exercise.rest_seconds < 0 || exercise.rest_seconds > 3600) {
+        return { valid: false, error: `זמן מנוחה חייב להיות בין 0-3600 שניות (תרגיל: ${exercise.exercise.name})` };
+      }
+    }
+
+    // Validate times_per_week
+    if (day.times_per_week !== undefined && day.times_per_week !== null) {
+      if (day.times_per_week < 0 || day.times_per_week > 7) {
+        return { valid: false, error: `תדירות שבועית חייבת להיות בין 0-7 (יום ${day.day_number})` };
+      }
+    }
+  }
+
+  return { valid: true };
+}
+
 export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: WorkoutPlanBuilderProps) {
   const [selectedExerciseIndex, setSelectedExerciseIndex] = useState<number | null>(null);
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [instructionsExercise, setInstructionsExercise] = useState<{
     name: string;
     instructions: string | null | undefined;
@@ -157,6 +217,24 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
     loadCardioTypes();
   }, [traineeId, loadActivePlan, loadTemplates]);
 
+  // Track changes to mark as unsaved (only after initial load)
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  
+  useEffect(() => {
+    if (loading) {
+      setIsInitialLoad(true);
+      setHasUnsavedChanges(false);
+    } else if (!loading && isInitialLoad) {
+      setIsInitialLoad(false);
+    }
+  }, [loading, isInitialLoad]);
+
+  useEffect(() => {
+    if (activePlanId && !loading && !isInitialLoad) {
+      setHasUnsavedChanges(true);
+    }
+  }, [planName, planDescription, daysPerWeek, restDaysBetween, includeCardio, cardioTypeId, cardioFrequency, cardioWeeklyGoalSteps, days, activePlanId, loading, isInitialLoad]);
+
   const handleLoadTemplate = async (template: WorkoutPlanTemplate) => {
     await loadTemplate(template, setDays, setPlanName, setPlanDescription, setDaysPerWeek);
   };
@@ -166,13 +244,10 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
   };
 
   const handleSave = async () => {
-    if (!planName.trim()) {
-      toast.error('נא להזין שם לתוכנית');
-      return;
-    }
-
-    if (days.length === 0) {
-      toast.error('נא להוסיף לפחות יום אימון אחד');
+    // Validate plan before saving
+    const validation = validatePlan(planName, days);
+    if (!validation.valid) {
+      toast.error(validation.error || 'שגיאה באימות התוכנית');
       return;
     }
 
@@ -185,7 +260,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
       let planId = activePlanId;
 
       if (activePlanId) {
-        // Update existing plan - first save all new data, then delete old
+        // Update existing plan - use smart UPDATE/INSERT logic
         // Step 1: Update plan metadata
         const updateData: any = {
           name: planName,
@@ -240,104 +315,179 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           return;
         }
 
-        // Step 2: Save all new days and exercises first
-        const savedDayIds: string[] = [];
-        for (const day of days) {
-          const { data: dayData, error: dayError } = await supabase
-            .from('workout_plan_days')
-            .insert({
-              plan_id: activePlanId,
-              day_number: day.day_number,
-              day_name: day.day_name || null,
-              focus: day.focus || null,
-              notes: day.notes || null,
-              order_index: day.day_number - 1,
-              times_per_week: day.times_per_week ?? 1, // Save times_per_week, default to 1
-            } as any)
-            .select()
-            .single();
+        // Step 2: Get all existing days to determine which to update/delete
+        const { data: allExistingDays, error: existingDaysError } = await supabase
+          .from('workout_plan_days')
+          .select('id, day_number')
+          .eq('plan_id', activePlanId);
 
-          if (dayError || !dayData) {
-            logger.error('Error inserting day', dayError, 'WorkoutPlanBuilder');
-            toast.error(`שגיאה בהוספת יום ${day.day_number}`);
-            // Rollback: delete any days we've already saved
-            if (savedDayIds.length > 0) {
-              await supabase
-                .from('workout_plan_days')
-                .delete()
-                .in('id', savedDayIds);
+        if (existingDaysError) {
+          logger.error('Error loading existing days', existingDaysError, 'WorkoutPlanBuilder');
+          toast.error('שגיאה בטעינת ימים קיימים');
+          setSaving(false);
+          return;
+        }
+
+        const existingDayIds = new Set((allExistingDays || []).map((d: any) => d.id));
+        const currentDayIds = new Set(days.filter(d => d.dayId).map(d => d.dayId!));
+        
+        // Days to delete: exist in DB but not in current days
+        const daysToDelete = Array.from(existingDayIds).filter(id => !currentDayIds.has(id));
+
+        // Step 3: Process each day - UPDATE if exists, INSERT if new
+        for (const day of days) {
+          let dayDbId: string;
+
+          if (day.dayId && existingDayIds.has(day.dayId)) {
+            // Update existing day
+            const { error: dayUpdateError } = await supabase
+              .from('workout_plan_days')
+              .update({
+                day_number: day.day_number,
+                day_name: day.day_name || null,
+                focus: day.focus || null,
+                notes: day.notes || null,
+                order_index: day.day_number - 1,
+                times_per_week: day.times_per_week ?? 1,
+              } as any)
+              .eq('id', day.dayId);
+
+            if (dayUpdateError) {
+              logger.error('Error updating day', dayUpdateError, 'WorkoutPlanBuilder');
+              toast.error(`שגיאה בעדכון יום ${day.day_number}`);
+              setSaving(false);
+              return;
             }
+
+            dayDbId = day.dayId;
+          } else {
+            // Insert new day
+            const { data: dayData, error: dayError } = await supabase
+              .from('workout_plan_days')
+              .insert({
+                plan_id: activePlanId,
+                day_number: day.day_number,
+                day_name: day.day_name || null,
+                focus: day.focus || null,
+                notes: day.notes || null,
+                order_index: day.day_number - 1,
+                times_per_week: day.times_per_week ?? 1,
+              } as any)
+              .select()
+              .single();
+
+            if (dayError || !dayData) {
+              logger.error('Error inserting day', dayError, 'WorkoutPlanBuilder');
+              toast.error(`שגיאה בהוספת יום ${day.day_number}`);
+              setSaving(false);
+              return;
+            }
+
+            dayDbId = (dayData as any).id;
+          }
+
+          // Step 4: Get existing exercises for this day
+          const { data: existingExercises, error: existingExercisesError } = await supabase
+            .from('workout_plan_day_exercises')
+            .select('id, order_index')
+            .eq('day_id', dayDbId);
+
+          if (existingExercisesError) {
+            logger.error('Error loading existing exercises', existingExercisesError, 'WorkoutPlanBuilder');
+            toast.error(`שגיאה בטעינת תרגילים ליום ${day.day_number}`);
             setSaving(false);
             return;
           }
 
-          const dayDataTyped = dayData as any;
-          savedDayIds.push(dayDataTyped.id);
+          const existingExerciseIds = new Set((existingExercises || []).map((ex: any) => ex.id));
+          const currentExerciseIds = new Set(day.exercises.filter(ex => ex.exerciseId).map(ex => ex.exerciseId!));
 
-          // Save exercises for this day
-          for (let i = 0; i < day.exercises.length; i++) {
-            const exercise = day.exercises[i];
-            const firstSet = exercise.sets[0];
-
-            const { error: exerciseError } = await supabase
+          // Exercises to delete: exist in DB but not in current exercises
+          const exercisesToDelete = Array.from(existingExerciseIds).filter(id => !currentExerciseIds.has(id));
+          if (exercisesToDelete.length > 0) {
+            const { error: deleteError } = await supabase
               .from('workout_plan_day_exercises')
-              .insert({
-                day_id: dayDataTyped.id,
-                exercise_id: exercise.exercise.id,
-                sets_count: exercise.sets.length,
-                reps_range: firstSet ? `${firstSet.reps}` : '10-12',
-                rest_seconds: exercise.rest_seconds,
-                notes: exercise.notes || null,
-                order_index: i,
-                target_weight: firstSet?.weight || null,
-                target_rpe: firstSet?.rpe && firstSet.rpe >= 1 && firstSet.rpe <= 10 ? firstSet.rpe : null,
-                equipment_id: firstSet?.equipment_id || null,
-                set_type: firstSet?.set_type || 'regular',
-                failure: firstSet?.failure || false,
-                superset_exercise_id: firstSet?.superset_exercise_id || null,
-                superset_weight: firstSet?.superset_weight || null,
-                superset_reps: firstSet?.superset_reps || null,
-                superset_rpe: firstSet?.superset_rpe && firstSet.superset_rpe >= 1 && firstSet.superset_rpe <= 10 ? firstSet.superset_rpe : null,
-                superset_equipment_id: firstSet?.superset_equipment_id || null,
-                superset_dropset_weight: firstSet?.superset_dropset_weight || null,
-                superset_dropset_reps: firstSet?.superset_dropset_reps || null,
-                dropset_weight: firstSet?.dropset_weight || null,
-                dropset_reps: firstSet?.dropset_reps || null,
-              } as any);
+              .delete()
+              .in('id', exercisesToDelete);
 
-            if (exerciseError) {
-              logger.error('Error inserting exercise', exerciseError, 'WorkoutPlanBuilder');
-              toast.error(`שגיאה בהוספת תרגיל ${exercise.exercise.name}`);
-              // Rollback: delete any days we've already saved
-              if (savedDayIds.length > 0) {
-                await supabase
-                  .from('workout_plan_days')
-                  .delete()
-                  .in('id', savedDayIds);
-              }
+            if (deleteError) {
+              logger.error('Error deleting exercises', deleteError, 'WorkoutPlanBuilder');
+              toast.error(`שגיאה במחיקת תרגילים ליום ${day.day_number}`);
               setSaving(false);
               return;
             }
           }
+
+          // Step 5: Process each exercise - UPDATE if exists, INSERT if new
+          for (let i = 0; i < day.exercises.length; i++) {
+            const exercise = day.exercises[i];
+            const firstSet = exercise.sets[0];
+
+            const exerciseData: any = {
+              day_id: dayDbId,
+              exercise_id: exercise.exercise.id,
+              sets_count: exercise.sets.length,
+              reps_range: firstSet ? `${firstSet.reps}` : '10-12',
+              rest_seconds: exercise.rest_seconds,
+              notes: exercise.notes || null,
+              order_index: i,
+              target_weight: firstSet?.weight || null,
+              target_rpe: firstSet?.rpe && firstSet.rpe >= 1 && firstSet.rpe <= 10 ? firstSet.rpe : null,
+              equipment_id: firstSet?.equipment_id || null,
+              set_type: firstSet?.set_type || 'regular',
+              failure: firstSet?.failure || false,
+              superset_exercise_id: firstSet?.superset_exercise_id || null,
+              superset_weight: firstSet?.superset_weight || null,
+              superset_reps: firstSet?.superset_reps || null,
+              superset_rpe: firstSet?.superset_rpe && firstSet.superset_rpe >= 1 && firstSet.superset_rpe <= 10 ? firstSet.superset_rpe : null,
+              superset_equipment_id: firstSet?.superset_equipment_id || null,
+              superset_dropset_weight: firstSet?.superset_dropset_weight || null,
+              superset_dropset_reps: firstSet?.superset_dropset_reps || null,
+              dropset_weight: firstSet?.dropset_weight || null,
+              dropset_reps: firstSet?.dropset_reps || null,
+            };
+
+            if (exercise.exerciseId && existingExerciseIds.has(exercise.exerciseId)) {
+              // Update existing exercise
+              const { error: exerciseUpdateError } = await supabase
+                .from('workout_plan_day_exercises')
+                .update(exerciseData)
+                .eq('id', exercise.exerciseId);
+
+              if (exerciseUpdateError) {
+                logger.error('Error updating exercise', exerciseUpdateError, 'WorkoutPlanBuilder');
+                toast.error(`שגיאה בעדכון תרגיל ${exercise.exercise.name}`);
+                setSaving(false);
+                return;
+              }
+            } else {
+              // Insert new exercise
+              const { error: exerciseInsertError } = await supabase
+                .from('workout_plan_day_exercises')
+                .insert(exerciseData);
+
+              if (exerciseInsertError) {
+                logger.error('Error inserting exercise', exerciseInsertError, 'WorkoutPlanBuilder');
+                toast.error(`שגיאה בהוספת תרגיל ${exercise.exercise.name}`);
+                setSaving(false);
+                return;
+              }
+            }
+          }
         }
 
-        // Step 3: Only after all new data is saved successfully, delete old days
-        const { data: allExistingDays } = await supabase
-          .from('workout_plan_days')
-          .select('id')
-          .eq('plan_id', activePlanId);
-
-        if (allExistingDays && allExistingDays.length > 0) {
-          // Filter out the newly saved days
-          const oldDayIds = allExistingDays
-            .map(d => d.id)
-            .filter(id => !savedDayIds.includes(id));
-          
-          if (oldDayIds.length > 0) {
-          await supabase
+        // Step 6: Delete days that were removed (only after all updates succeeded)
+        if (daysToDelete.length > 0) {
+          const { error: deleteDaysError } = await supabase
             .from('workout_plan_days')
             .delete()
-              .in('id', oldDayIds);
+            .in('id', daysToDelete);
+
+          if (deleteDaysError) {
+            logger.error('Error deleting days', deleteDaysError, 'WorkoutPlanBuilder');
+            toast.error('שגיאה במחיקת ימים');
+            setSaving(false);
+            return;
           }
         }
       } else {
@@ -469,6 +619,9 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
       toast.success(activePlanId ? 'תוכנית עודכנה בהצלחה!' : 'תוכנית נשמרה בהצלחה!');
       
+      // Clear unsaved changes flag
+      setHasUnsavedChanges(false);
+      
       // Reload the plan to ensure state is synced
       await loadActivePlan();
       
@@ -597,12 +750,15 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           <button
             onClick={handleSave}
             disabled={saving || days.length === 0 || !planName.trim()}
-              className="bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+              className={`bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${hasUnsavedChanges ? 'ring-2 ring-amber-500 ring-offset-2' : ''}`}
               aria-label={saving ? 'שומר תוכנית' : activePlanId ? 'עדכן תוכנית' : 'שמור תוכנית'}
               aria-disabled={saving || days.length === 0 || !planName.trim()}
           >
             <Save className="h-5 w-5 lg:h-6 lg:w-6" />
-              <span className="font-bold text-base lg:text-lg">{saving ? 'שומר...' : activePlanId ? 'עדכן תוכנית' : 'שמור תוכנית'}</span>
+              <span className="font-bold text-base lg:text-lg">
+                {saving ? 'שומר...' : activePlanId ? 'עדכן תוכנית' : 'שמור תוכנית'}
+                {hasUnsavedChanges && !saving && <span className="ml-2 text-amber-300">●</span>}
+              </span>
           </button>
           </div>
         </div>
@@ -613,7 +769,10 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             <input
               type="text"
               value={planName}
-              onChange={(e) => setPlanName(e.target.value)}
+              onChange={(e) => {
+                setPlanName(e.target.value);
+                setHasUnsavedChanges(true);
+              }}
               className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
               placeholder="לדוגמה: תוכנית כוח - שלב 1"
             />
@@ -623,7 +782,10 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             <label className="block text-sm font-semibold text-muted700 mb-2">תיאור</label>
             <textarea
               value={planDescription}
-              onChange={(e) => setPlanDescription(e.target.value)}
+              onChange={(e) => {
+                setPlanDescription(e.target.value);
+                setHasUnsavedChanges(true);
+              }}
               className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
               rows={2}
               placeholder="מטרות, הערות כלליות..."
@@ -634,7 +796,10 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             <label className="block text-sm font-semibold text-muted700 mb-2">ימי אימון בשבוע</label>
             <select
               value={daysPerWeek}
-              onChange={(e) => setDaysPerWeek(parseInt(e.target.value))}
+              onChange={(e) => {
+                setDaysPerWeek(parseInt(e.target.value));
+                setHasUnsavedChanges(true);
+              }}
               className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
             >
               {[1, 2, 3, 4, 5, 6, 7].map(n => (

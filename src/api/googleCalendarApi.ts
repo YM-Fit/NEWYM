@@ -1352,7 +1352,8 @@ export async function updateCalendarEventBidirectional(
       const workoutUpdates: { workout_date?: string; notes?: string | null } = {};
       
       if (updates.startTime) {
-        workoutUpdates.workout_date = updates.startTime.toISOString().split('T')[0];
+        // IMPORTANT: workout_date is TIMESTAMPTZ, so we need to preserve the full timestamp including time
+        workoutUpdates.workout_date = updates.startTime.toISOString();
       }
       if (updates.description !== undefined) {
         workoutUpdates.notes = updates.description || null;

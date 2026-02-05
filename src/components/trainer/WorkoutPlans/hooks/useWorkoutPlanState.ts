@@ -52,94 +52,117 @@ export function useWorkoutPlanState(traineeId: string) {
 
       const loadedDays: WorkoutDay[] = [];
       
-      for (const day of daysData as any[]) {
-        const { data: exercisesData, error: exercisesError } = await supabase
-          .from('workout_plan_day_exercises')
-          .select(`
-            *,
-            exercise:exercise_id(
-              id,
-              name,
-              muscle_group_id
-            ),
-            equipment:equipment_id(
-              id,
-              name,
-              emoji
-            ),
-            superset_exercise:superset_exercise_id(
-              id,
-              name
-            ),
-            superset_equipment:superset_equipment_id(
-              id,
-              name,
-              emoji
-            )
-          `)
-          .eq('day_id', day.id)
-          .order('order_index', { ascending: true });
+      // Load all exercises for all days in parallel for better performance
+      const dayIds = daysData.map((d: any) => d.id);
+      const { data: allExercisesData, error: exercisesError } = await supabase
+        .from('workout_plan_day_exercises')
+        .select(`
+          *,
+          exercise:exercise_id(
+            id,
+            name,
+            muscle_group_id
+          ),
+          equipment:equipment_id(
+            id,
+            name,
+            emoji
+          ),
+          superset_exercise:superset_exercise_id(
+            id,
+            name
+          ),
+          superset_equipment:superset_equipment_id(
+            id,
+            name,
+            emoji
+          )
+        `)
+        .in('day_id', dayIds)
+        .order('day_id, order_index', { ascending: true });
 
-        if (exercisesError) {
-          logger.error('Error loading exercises for day', exercisesError, 'WorkoutPlanBuilder');
-          // Continue with empty exercises array for this day
+      if (exercisesError) {
+        logger.error('Error loading exercises', exercisesError, 'WorkoutPlanBuilder');
+      }
+
+      // Group exercises by day_id
+      const exercisesByDayId = new Map<string, any[]>();
+      if (allExercisesData) {
+        for (const ex of allExercisesData) {
+          const dayId = (ex as any).day_id;
+          if (!exercisesByDayId.has(dayId)) {
+            exercisesByDayId.set(dayId, []);
+          }
+          exercisesByDayId.get(dayId)!.push(ex);
         }
-
+      }
+      
+      for (const day of daysData as any[]) {
+        const exercisesData = exercisesByDayId.get(day.id) || [];
         const planExercises: PlanExercise[] = [];
         
-        if (exercisesData) {
-          for (const ex of exercisesData as any[]) {
-            if (!ex.exercise) {
-              logger.warn('Exercise data missing for exercise_id', ex.exercise_id, 'WorkoutPlanBuilder');
-              continue;
-            }
-            
-            const setsCount = ex.sets_count || 1;
-            const repsRange = ex.reps_range || '10-12';
-            const reps = parseInt(repsRange.split('-')[0]) || 10;
-            
-            const sets: SetData[] = Array.from({ length: setsCount }, (_, i) => ({
-              id: `${day.id}-${ex.id}-${i}`,
-              set_number: i + 1,
-              weight: ex.target_weight || 0,
-              reps: reps,
-              rpe: ex.target_rpe || null,
-              set_type: (ex.set_type || 'regular') as 'regular' | 'superset' | 'dropset',
-              failure: ex.failure || false,
-              superset_exercise_id: ex.superset_exercise_id || null,
-              superset_exercise_name: ex.superset_exercise?.name || null,
-              superset_weight: ex.superset_weight || null,
-              superset_reps: ex.superset_reps || null,
-              superset_rpe: ex.superset_rpe || null,
-              superset_equipment_id: ex.superset_equipment_id || null,
-              superset_equipment: ex.superset_equipment || null,
-              superset_dropset_weight: ex.superset_dropset_weight || null,
-              superset_dropset_reps: ex.superset_dropset_reps || null,
-              dropset_weight: ex.dropset_weight || null,
-              dropset_reps: ex.dropset_reps || null,
-              equipment_id: ex.equipment_id || null,
-              equipment: ex.equipment || null,
-            }));
-
-            planExercises.push({
-              tempId: `${day.id}-${ex.id}`,
-              exercise: ex.exercise,
-              sets: sets,
-              rest_seconds: ex.rest_seconds || 90,
-              notes: ex.notes || '',
-            });
+        for (const ex of exercisesData) {
+          if (!ex.exercise) {
+            logger.warn('Exercise data missing for exercise_id', ex.exercise_id, 'WorkoutPlanBuilder');
+            continue;
           }
+          
+          const setsCount = ex.sets_count || 1;
+          const repsRange = ex.reps_range || '10-12';
+          // Parse reps range - handle both "10-12" and "10" formats
+          let reps = 10;
+          if (repsRange.includes('-')) {
+            const [min, max] = repsRange.split('-').map(r => parseInt(r.trim()));
+            reps = min || 10; // Use first number as default
+          } else {
+            reps = parseInt(repsRange) || 10;
+          }
+          
+          // Create sets array - all sets use the same data from the exercise record
+          // This is a limitation of current schema - all sets share the same data
+          const sets: SetData[] = Array.from({ length: setsCount }, (_, i) => ({
+            id: `${day.id}-${ex.id}-${i}`,
+            set_number: i + 1,
+            weight: ex.target_weight || 0,
+            reps: reps,
+            rpe: ex.target_rpe || null,
+            set_type: (ex.set_type || 'regular') as 'regular' | 'superset' | 'dropset',
+            failure: ex.failure || false,
+            superset_exercise_id: ex.superset_exercise_id || null,
+            superset_exercise_name: ex.superset_exercise?.name || null,
+            superset_weight: ex.superset_weight || null,
+            superset_reps: ex.superset_reps || null,
+            superset_rpe: ex.superset_rpe || null,
+            superset_equipment_id: ex.superset_equipment_id || null,
+            superset_equipment: ex.superset_equipment || null,
+            superset_dropset_weight: ex.superset_dropset_weight || null,
+            superset_dropset_reps: ex.superset_dropset_reps || null,
+            dropset_weight: ex.dropset_weight || null,
+            dropset_reps: ex.dropset_reps || null,
+            equipment_id: ex.equipment_id || null,
+            equipment: ex.equipment || null,
+          }));
+
+          planExercises.push({
+            tempId: `${day.id}-${ex.id}`,
+            exerciseId: ex.id, // Store database ID
+            exercise: ex.exercise,
+            sets: sets,
+            rest_seconds: ex.rest_seconds || 90,
+            notes: ex.notes || '',
+          });
         }
 
-                    loadedDays.push({
-                      tempId: day.id,
-                      day_number: day.day_number,
-                      day_name: day.day_name || '',
-                      focus: day.focus || '',
-                      notes: day.notes || '',
-                      exercises: planExercises,
-                      times_per_week: day.times_per_week ?? 1, // Load times_per_week, default to 1
-                    });
+        loadedDays.push({
+          tempId: day.id,
+          dayId: day.id, // Store database ID
+          day_number: day.day_number,
+          day_name: day.day_name || '',
+          focus: day.focus || '',
+          notes: day.notes || '',
+          exercises: planExercises,
+          times_per_week: day.times_per_week ?? 1, // Load times_per_week, default to 1
+        });
       }
 
       setDays(loadedDays);

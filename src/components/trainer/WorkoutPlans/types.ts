@@ -39,6 +39,7 @@ export interface SetData {
 
 export interface PlanExercise {
   tempId: string;
+  exerciseId?: string; // Database ID if exercise exists in DB
   exercise: Exercise;
   sets: SetData[];
   rest_seconds: number;
@@ -47,6 +48,7 @@ export interface PlanExercise {
 
 export interface WorkoutDay {
   tempId: string;
+  dayId?: string; // Database ID if day exists in DB (UUID format)
   day_number: number;
   day_name: string;
   focus: string;

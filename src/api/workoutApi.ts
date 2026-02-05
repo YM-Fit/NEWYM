@@ -642,9 +642,12 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     
     const todayWorkouts = allWorkouts
       .filter(item => {
+        // Compare dates by converting to date strings (YYYY-MM-DD) to avoid timezone issues
+        // workoutDate is a Date object, so we need to compare the date part only
         const itemDate = new Date(item.workoutDate);
-        itemDate.setHours(0, 0, 0, 0);
-        const isToday = itemDate.getTime() === today.getTime();
+        const itemDateStr = `${itemDate.getFullYear()}-${String(itemDate.getMonth() + 1).padStart(2, '0')}-${String(itemDate.getDate()).padStart(2, '0')}`;
+        const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        const isToday = itemDateStr === todayDateStr;
         return isToday;
       })
       .map(item => {
@@ -689,9 +692,12 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
 
     const tomorrowWorkouts = allWorkouts
       .filter(item => {
+        // Compare dates by converting to date strings (YYYY-MM-DD) to avoid timezone issues
+        // workoutDate is a Date object, so we need to compare the date part only
         const itemDate = new Date(item.workoutDate);
-        itemDate.setHours(0, 0, 0, 0);
-        return itemDate.getTime() === tomorrow.getTime();
+        const itemDateStr = `${itemDate.getFullYear()}-${String(itemDate.getMonth() + 1).padStart(2, '0')}-${String(itemDate.getDate()).padStart(2, '0')}`;
+        const tomorrowDateStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+        return itemDateStr === tomorrowDateStr;
       })
       .map(item => {
         // For Google Calendar workouts, use eventStartTime if available for accurate time comparison
