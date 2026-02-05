@@ -91,6 +91,12 @@ export default function TodayTraineesSection({
   const lastTraineeIdsRef = useRef<string>('');
   const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const realtimeChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const loadTodayTraineesRef = useRef(loadTodayTrainees);
+  
+  // Keep ref updated with latest function
+  useEffect(() => {
+    loadTodayTraineesRef.current = loadTodayTrainees;
+  }, [loadTodayTrainees]);
 
   // Create a stable dependency based on trainee IDs
   const traineeIdsString = useMemo(() => {
@@ -510,6 +516,7 @@ export default function TodayTraineesSection({
     if (!user || trainees.length === 0) {
       // Clean up existing channel if no user or trainees
       if (realtimeChannelRef.current) {
+        logger.debug('🧹 Cleaning up Realtime channel - no user or trainees', {}, 'TodayTraineesSection');
         supabase.removeChannel(realtimeChannelRef.current);
         realtimeChannelRef.current = null;
       }
@@ -518,10 +525,17 @@ export default function TodayTraineesSection({
 
     const trainerId = trainees[0]?.trainer_id || user.id;
     if (!trainerId) {
+      logger.debug('⚠️ No trainer ID available for Realtime subscription', {}, 'TodayTraineesSection');
       return;
     }
 
     const traineeIds = trainees.map(t => t.id);
+    
+    logger.debug('🔧 Setting up Realtime subscription', {
+      trainerId,
+      traineeCount: traineeIds.length,
+      traineeIds: traineeIds.slice(0, 5), // Log first 5 for debugging
+    }, 'TodayTraineesSection');
     
     // Calculate date range for today and tomorrow
     const now = new Date();
@@ -551,25 +565,54 @@ export default function TodayTraineesSection({
         },
         (payload) => {
           try {
+            logger.debug('📥 Realtime workout event received', {
+              eventType: payload.eventType,
+              workoutId: payload.new?.id || payload.old?.id,
+              workoutDate: payload.new?.workout_date || payload.old?.workout_date,
+              trainerId: payload.new?.trainer_id || payload.old?.trainer_id,
+            }, 'TodayTraineesSection');
+            
             // Check if this workout is relevant (today or tomorrow)
             const workoutDate = payload.new?.workout_date || payload.old?.workout_date;
             if (workoutDate) {
               const date = new Date(workoutDate);
-              if (date >= today && date < dayAfterTomorrow) {
+              const isInRange = date >= today && date < dayAfterTomorrow;
+              
+              logger.debug('📅 Checking workout date range', {
+                workoutDate,
+                date: date.toISOString(),
+                today: today.toISOString(),
+                dayAfterTomorrow: dayAfterTomorrow.toISOString(),
+                isInRange,
+              }, 'TodayTraineesSection');
+              
+              if (isInRange) {
                 // Check if workout is linked to one of our trainees
                 // We'll refresh if it's a relevant date, the trainee check happens in loadTodayTrainees
-                logger.debug('Realtime: Workout changed, refreshing dashboard', {
+                logger.info('🔄 Realtime: Workout changed in date range, refreshing dashboard', {
                   workoutId: payload.new?.id || payload.old?.id,
                   event: payload.eventType,
+                  workoutDate,
                 }, 'TodayTraineesSection');
                 
                 if (!isLoadingRef.current) {
-                  loadTodayTrainees(true); // Silent refresh
+                  loadTodayTraineesRef.current(true); // Silent refresh
+                } else {
+                  logger.debug('⏸️ Skipping refresh - already loading', {}, 'TodayTraineesSection');
                 }
+              } else {
+                logger.debug('⏭️ Skipping refresh - workout date out of range', {
+                  workoutDate,
+                  dateRange: `${today.toISOString()} - ${dayAfterTomorrow.toISOString()}`,
+                }, 'TodayTraineesSection');
               }
+            } else {
+              logger.debug('⏭️ Skipping refresh - no workout date in payload', {
+                payloadKeys: Object.keys(payload.new || payload.old || {}),
+              }, 'TodayTraineesSection');
             }
           } catch (err) {
-            logger.error('Error processing Realtime workout change', err, 'TodayTraineesSection');
+            logger.error('❌ Error processing Realtime workout change', err, 'TodayTraineesSection');
           }
         }
       )
@@ -583,45 +626,98 @@ export default function TodayTraineesSection({
         },
         (payload) => {
           try {
+            logger.debug('📥 Realtime calendar sync event received', {
+              eventType: payload.eventType,
+              syncId: payload.new?.id || payload.old?.id,
+              eventStartTime: payload.new?.event_start_time || payload.old?.event_start_time,
+              traineeId: payload.new?.trainee_id || payload.old?.trainee_id,
+              trainerId: payload.new?.trainer_id || payload.old?.trainer_id,
+            }, 'TodayTraineesSection');
+            
             // Check if this sync record is relevant (today or tomorrow)
             const eventStartTime = payload.new?.event_start_time || payload.old?.event_start_time;
             if (eventStartTime) {
               const date = new Date(eventStartTime);
-              if (date >= today && date < dayAfterTomorrow) {
+              const isInRange = date >= today && date < dayAfterTomorrow;
+              
+              logger.debug('📅 Checking sync date range', {
+                eventStartTime,
+                date: date.toISOString(),
+                today: today.toISOString(),
+                dayAfterTomorrow: dayAfterTomorrow.toISOString(),
+                isInRange,
+              }, 'TodayTraineesSection');
+              
+              if (isInRange) {
                 // Check if sync is linked to one of our trainees
                 const traineeId = payload.new?.trainee_id || payload.old?.trainee_id;
-                if (traineeId && traineeIds.includes(traineeId)) {
-                  logger.debug('Realtime: Google Calendar sync changed, refreshing dashboard', {
+                const isOurTrainee = traineeId && traineeIds.includes(traineeId);
+                
+                logger.debug('👤 Checking trainee match', {
+                  traineeId,
+                  isOurTrainee,
+                  ourTraineeIds: traineeIds,
+                }, 'TodayTraineesSection');
+                
+                if (isOurTrainee) {
+                  logger.info('🔄 Realtime: Google Calendar sync changed for our trainee, refreshing dashboard', {
                     syncId: payload.new?.id || payload.old?.id,
                     traineeId,
                     event: payload.eventType,
+                    eventStartTime,
                   }, 'TodayTraineesSection');
                   
                   if (!isLoadingRef.current) {
-                    loadTodayTrainees(true); // Silent refresh
+                    loadTodayTraineesRef.current(true); // Silent refresh
+                  } else {
+                    logger.debug('⏸️ Skipping refresh - already loading', {}, 'TodayTraineesSection');
                   }
+                } else {
+                  logger.debug('⏭️ Skipping refresh - trainee not in our list', {
+                    traineeId,
+                    ourTraineeIds: traineeIds,
+                  }, 'TodayTraineesSection');
                 }
+              } else {
+                logger.debug('⏭️ Skipping refresh - sync date out of range', {
+                  eventStartTime,
+                  dateRange: `${today.toISOString()} - ${dayAfterTomorrow.toISOString()}`,
+                }, 'TodayTraineesSection');
               }
+            } else {
+              logger.debug('⏭️ Skipping refresh - no event_start_time in payload', {
+                payloadKeys: Object.keys(payload.new || payload.old || {}),
+              }, 'TodayTraineesSection');
             }
           } catch (err) {
-            logger.error('Error processing Realtime calendar sync change', err, 'TodayTraineesSection');
+            logger.error('❌ Error processing Realtime calendar sync change', err, 'TodayTraineesSection');
           }
         }
       )
       .subscribe((status, err) => {
         if (status === 'SUBSCRIBED') {
-          logger.debug('Realtime subscription active for scheduled workouts', { trainerId }, 'TodayTraineesSection');
+          logger.info('✅ Realtime subscription active for scheduled workouts', { 
+            trainerId,
+            channelName: `scheduled-workouts-${trainerId}`,
+            traineeCount: traineeIds.length
+          }, 'TodayTraineesSection');
         } else if (status === 'CHANNEL_ERROR') {
-          logger.error('Realtime subscription error, falling back to polling', {
+          logger.error('❌ Realtime subscription error, falling back to polling', {
             trainerId,
             error: err?.message || 'Unknown error',
             details: err,
           }, 'TodayTraineesSection');
           // Polling will continue to work as fallback
         } else if (status === 'TIMED_OUT') {
-          logger.warn('Realtime subscription timed out, will retry on next render', { trainerId }, 'TodayTraineesSection');
+          logger.warn('⏱️ Realtime subscription timed out, will retry on next render', { trainerId }, 'TodayTraineesSection');
         } else if (status === 'CLOSED') {
-          logger.debug('Realtime subscription closed', { trainerId }, 'TodayTraineesSection');
+          logger.debug('🔒 Realtime subscription closed', { trainerId }, 'TodayTraineesSection');
+        } else {
+          logger.debug('📡 Realtime subscription status changed', { 
+            trainerId, 
+            status,
+            error: err 
+          }, 'TodayTraineesSection');
         }
       });
 
@@ -629,11 +725,13 @@ export default function TodayTraineesSection({
 
     return () => {
       if (realtimeChannelRef.current) {
+        logger.debug('🧹 Cleaning up Realtime channel on unmount', { trainerId }, 'TodayTraineesSection');
         supabase.removeChannel(realtimeChannelRef.current);
         realtimeChannelRef.current = null;
       }
     };
-  }, [user, trainees, loadTodayTrainees]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, traineeIdsString]); // Only depend on stable values to avoid re-subscriptions
 
   // Set up periodic refresh as fallback (in case Realtime fails)
   // Increased to 60 seconds since Realtime should handle most updates immediately
