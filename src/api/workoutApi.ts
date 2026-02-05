@@ -487,10 +487,34 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       });
     }
 
-    // Get all workouts in the date range
-    // For workouts synced FROM Google, we'll filter by event_start_time later
-    // For other workouts, we filter by workout_date here
-    const { data: workoutsData, error: workoutsError } = await supabase
+    // Get workouts synced FROM Google (by their IDs from sync records)
+    // These are already filtered by event_start_time in the query above
+    let workoutsDataFromGoogle: any[] = [];
+    if (workoutIdsFromGoogle.size > 0) {
+      const { data: workoutsDataGoogle, error: workoutsErrorGoogle } = await supabase
+        .from('workouts')
+        .select(`
+          id,
+          workout_date,
+          workout_type,
+          is_completed,
+          notes,
+          created_at,
+          trainer_id
+        `)
+        .eq('trainer_id', trainerId)
+        .in('id', Array.from(workoutIdsFromGoogle));
+
+      if (!workoutsErrorGoogle && workoutsDataGoogle) {
+        workoutsDataFromGoogle = workoutsDataGoogle;
+      }
+    }
+
+    // Get workouts that are NOT synced FROM Google (manual or synced TO Google only)
+    // These use workout_date for filtering
+    // CRITICAL: We need to exclude workouts that are synced FROM Google
+    // Since Supabase doesn't support .not().in() easily, we'll filter in memory
+    const { data: workoutsDataAll, error: workoutsErrorAll } = await supabase
       .from('workouts')
       .select(`
         id,
@@ -506,16 +530,31 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       .lt('workout_date', dayAfterTomorrowStr)
       .order('workout_date', { ascending: true });
 
-    if (workoutsError) {
-      console.warn('Error loading workouts:', workoutsError);
+    if (workoutsErrorAll) {
+      console.warn('Error loading workouts:', workoutsErrorAll);
+    }
+
+    // Filter out workouts synced FROM Google (they're handled separately)
+    const workoutsDataManual = (workoutsDataAll || []).filter(
+      workout => !workoutIdsFromGoogle.has(workout.id)
+    );
+
+    // Combine both sources - workouts from Google (filtered by event_start_time) and manual workouts (filtered by workout_date)
+    const workoutsData = [
+      ...(workoutsDataFromGoogle || []),
+      ...(workoutsDataManual || [])
+    ];
+
+    // Remove duplicates (in case a workout appears in both lists)
+    const uniqueWorkoutsData = Array.from(
+      new Map(workoutsData.map(w => [w.id, w])).values()
+    );
+
+    if (uniqueWorkoutsData.length === 0) {
       return { data: { today: [], tomorrow: [] }, success: true };
     }
 
-    if (!workoutsData || workoutsData.length === 0) {
-      return { data: { today: [], tomorrow: [] }, success: true };
-    }
-
-    const workoutIds = workoutsData.map(w => w.id);
+    const workoutIds = uniqueWorkoutsData.map(w => w.id);
 
     // Get workout_trainees for these workouts, filtered by our trainee IDs
     const { data: workoutTraineesData, error: wtError } = await supabase
@@ -552,6 +591,7 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     }
 
     // Get all Google Calendar sync records for these workouts (for metadata)
+    // This includes both workouts synced FROM Google and TO Google
     const { data: googleSyncData, error: googleSyncError2 } = await supabase
       .from('google_calendar_sync')
       .select(`
@@ -610,13 +650,13 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
 
     // Create maps for quick lookup
     const traineesMap = new Map((traineesData || []).map(t => [t.id, t]));
-    const workoutsMap = new Map(workoutsData.map(w => [w.id, w]));
+    const workoutsMap = new Map(uniqueWorkoutsData.map(w => [w.id, w]));
 
     // Create a map of completed workouts by trainee and date (YYYY-MM-DD)
     // Format: "traineeId:YYYY-MM-DD" -> true
     const completedWorkoutsByTraineeAndDate = new Map<string, boolean>();
-    // Filter workoutsData to get only completed workouts
-    const completedWorkoutsData = workoutsData.filter(w => w.is_completed);
+    // Filter uniqueWorkoutsData to get only completed workouts
+    const completedWorkoutsData = uniqueWorkoutsData.filter(w => w.is_completed);
     if (completedWorkoutsData && completedWorkoutsData.length > 0) {
       const completedWorkoutIds = completedWorkoutsData.map(w => w.id);
       const { data: completedWorkoutTrainees } = await supabase
