@@ -453,9 +453,13 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     const tomorrowStr = tomorrow.toISOString();
     const dayAfterTomorrowStr = dayAfterTomorrow.toISOString();
 
-    // CRITICAL FIX: Start from google_calendar_sync table to ensure we only show synced workouts
-    // Filter by event_start_time (not workout_date) and only include synced workouts
-    const { data: googleSyncData, error: googleSyncError } = await supabase
+    // CRITICAL FIX: Get workouts from both sources:
+    // 1. Workouts synced FROM Google Calendar (use event_start_time for filtering and display)
+    // 2. Workouts created manually or synced TO Google (use workout_date)
+    
+    // First, get Google Calendar sync records to identify workouts synced FROM Google
+    // These need to be filtered by event_start_time, not workout_date
+    const { data: googleSyncDataFromGoogle, error: googleSyncError } = await supabase
       .from('google_calendar_sync')
       .select(`
         workout_id,
@@ -468,30 +472,24 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       `)
       .eq('trainer_id', trainerId)
       .in('trainee_id', traineeIds)
-      .eq('sync_status', 'synced') // Only show synced workouts
-      .in('sync_direction', ['from_google', 'bidirectional']) // Only workouts synced FROM Google
-      .gte('event_start_time', todayStr) // Use event_start_time for filtering
-      .lt('event_start_time', dayAfterTomorrowStr)
-      .order('event_start_time', { ascending: true });
+      .eq('sync_status', 'synced')
+      .in('sync_direction', ['from_google', 'bidirectional'])
+      .gte('event_start_time', todayStr)
+      .lt('event_start_time', dayAfterTomorrowStr);
 
-    if (googleSyncError) {
-      console.warn('Error loading Google Calendar sync records:', googleSyncError);
-      return { data: { today: [], tomorrow: [] }, success: true };
+    // Get workout IDs synced FROM Google (these use event_start_time)
+    const workoutIdsFromGoogle = new Set<string>();
+    if (!googleSyncError && googleSyncDataFromGoogle) {
+      googleSyncDataFromGoogle.forEach(sync => {
+        if (sync.workout_id) {
+          workoutIdsFromGoogle.add(sync.workout_id);
+        }
+      });
     }
 
-    if (!googleSyncData || googleSyncData.length === 0) {
-      return { data: { today: [], tomorrow: [] }, success: true };
-    }
-
-    // Get unique workout IDs and trainee IDs from sync records
-    const workoutIds = [...new Set(googleSyncData.map(sync => sync.workout_id).filter(Boolean) as string[])];
-    const traineeIdsInSync = [...new Set(googleSyncData.map(sync => sync.trainee_id).filter(Boolean) as string[])];
-
-    if (workoutIds.length === 0 || traineeIdsInSync.length === 0) {
-      return { data: { today: [], tomorrow: [] }, success: true };
-    }
-
-    // Get workout details
+    // Get all workouts in the date range
+    // For workouts synced FROM Google, we'll filter by event_start_time later
+    // For other workouts, we filter by workout_date here
     const { data: workoutsData, error: workoutsError } = await supabase
       .from('workouts')
       .select(`
@@ -503,8 +501,10 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         created_at,
         trainer_id
       `)
-      .in('id', workoutIds)
-      .eq('trainer_id', trainerId);
+      .eq('trainer_id', trainerId)
+      .gte('workout_date', todayStr)
+      .lt('workout_date', dayAfterTomorrowStr)
+      .order('workout_date', { ascending: true });
 
     if (workoutsError) {
       console.warn('Error loading workouts:', workoutsError);
@@ -515,7 +515,9 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       return { data: { today: [], tomorrow: [] }, success: true };
     }
 
-    // Get workout_trainees for these workouts
+    const workoutIds = workoutsData.map(w => w.id);
+
+    // Get workout_trainees for these workouts, filtered by our trainee IDs
     const { data: workoutTraineesData, error: wtError } = await supabase
       .from('workout_trainees')
       .select('trainee_id, workout_id')
@@ -531,35 +533,72 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       return { data: { today: [], tomorrow: [] }, success: true };
     }
 
+    // Get unique trainee IDs from the results
+    const traineeIdsInWorkouts = [...new Set(workoutTraineesData.map(wt => wt.trainee_id))];
+
     // Fetch trainee details
+    if (traineeIdsInWorkouts.length === 0) {
+      return { data: { today: [], tomorrow: [] }, success: true };
+    }
+
     const { data: traineesData, error: traineesError } = await supabase
       .from('trainees')
       .select('id, full_name, gender, phone, email, is_pair, pair_name_1, pair_name_2')
-      .in('id', traineeIdsInSync);
+      .in('id', traineeIdsInWorkouts);
 
     if (traineesError) {
       console.warn('Error loading trainees:', traineesError);
       return { data: { today: [], tomorrow: [] }, success: true };
     }
 
-    // Create maps from sync data
+    // Get all Google Calendar sync records for these workouts (for metadata)
+    const { data: googleSyncData, error: googleSyncError2 } = await supabase
+      .from('google_calendar_sync')
+      .select(`
+        workout_id,
+        trainee_id,
+        sync_direction,
+        event_start_time,
+        event_end_time,
+        google_event_id,
+        sync_status
+      `)
+      .in('workout_id', workoutIds)
+      .eq('sync_status', 'synced'); // Only synced workouts
+
+    // Build maps from sync data
     const googleSyncEventTimes = new Map<string, string>(); // Map workout_id -> event_start_time
     const googleEventIds = new Map<string, string>(); // Map workout_id -> google_event_id
     const googleSyncedWorkoutIds = new Set<string>(); // Set of workout IDs synced from Google
-    const syncByWorkoutId = new Map<string, typeof googleSyncData[0]>(); // Map workout_id -> sync record
+    const syncByWorkoutId = new Map<string, typeof googleSyncData?.[0]>(); // Map workout_id -> sync record
 
-    googleSyncData.forEach(sync => {
-      if (sync.workout_id) {
-        googleSyncedWorkoutIds.add(sync.workout_id);
-        syncByWorkoutId.set(sync.workout_id, sync);
-        if (sync.event_start_time) {
-          googleSyncEventTimes.set(sync.workout_id, sync.event_start_time);
+    // Use data from googleSyncDataFromGoogle (already filtered by date) for workouts FROM Google
+    if (!googleSyncError && googleSyncDataFromGoogle) {
+      googleSyncDataFromGoogle.forEach(sync => {
+        if (sync.workout_id) {
+          googleSyncedWorkoutIds.add(sync.workout_id);
+          syncByWorkoutId.set(sync.workout_id, sync);
+          if (sync.event_start_time) {
+            googleSyncEventTimes.set(sync.workout_id, sync.event_start_time);
+          }
+          if (sync.google_event_id) {
+            googleEventIds.set(sync.workout_id, sync.google_event_id);
+          }
         }
-        if (sync.google_event_id) {
-          googleEventIds.set(sync.workout_id, sync.google_event_id);
+      });
+    }
+
+    // Also add other sync records (to_google) for metadata
+    if (!googleSyncError2 && googleSyncData) {
+      googleSyncData.forEach(sync => {
+        if (sync.workout_id && !syncByWorkoutId.has(sync.workout_id)) {
+          syncByWorkoutId.set(sync.workout_id, sync);
+          if (sync.google_event_id) {
+            googleEventIds.set(sync.workout_id, sync.google_event_id);
+          }
         }
-      }
-    });
+      });
+    }
 
     // Create maps for quick lookup
     const traineesMap = new Map((traineesData || []).map(t => [t.id, t]));
@@ -591,23 +630,44 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     }
 
     // Build the data structure - combine workout_trainees with workouts and trainees
-    // CRITICAL: Only include workouts that have sync records (from Google Calendar)
+    // CRITICAL: Filter out workouts synced FROM Google that are not in the date range
     const allWorkouts = workoutTraineesData
       .map(wt => {
         const workout = workoutsMap.get(wt.workout_id);
         const trainee = traineesMap.get(wt.trainee_id);
-        const syncRecord = syncByWorkoutId.get(wt.workout_id);
         
-        // CRITICAL: Only include workouts that are synced from Google Calendar
-        if (!workout || !trainee || !syncRecord) return null;
+        if (!workout || !trainee) return null;
 
-        // CRITICAL: Use event_start_time from sync record, not workout_date
-        // This ensures we use the actual time from Google Calendar
-        const eventStartTime = syncRecord.event_start_time;
-        if (!eventStartTime) return null;
-
-        const actualWorkoutDate = new Date(eventStartTime);
-        const isFromGoogle = true; // All workouts here are from Google Calendar
+        const syncRecord = syncByWorkoutId.get(wt.workout_id);
+        const isFromGoogle = googleSyncedWorkoutIds.has(wt.workout_id);
+        
+        // CRITICAL: For workouts synced FROM Google, use event_start_time
+        // For other workouts (manual or synced TO Google), use workout_date
+        let actualWorkoutDate: Date;
+        let eventStartTime: string | undefined;
+        
+        if (isFromGoogle && syncRecord?.event_start_time) {
+          // Use event_start_time from Google Calendar for accurate time
+          eventStartTime = syncRecord.event_start_time;
+          actualWorkoutDate = new Date(eventStartTime);
+          
+          // CRITICAL: If workout is synced FROM Google but event_start_time is not in date range, exclude it
+          // (This handles cases where workout_date is in range but event was moved to different day)
+          const eventDate = actualWorkoutDate;
+          const eventDateStr = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}-${String(eventDate.getDate()).padStart(2, '0')}`;
+          const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+          const tomorrowDateStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+          
+          // If event_start_time is not today or tomorrow, exclude this workout
+          if (eventDateStr !== todayDateStr && eventDateStr !== tomorrowDateStr) {
+            return null;
+          }
+        } else {
+          // Use workout_date for manually created workouts or workouts synced TO Google
+          // workout_date is already filtered by date range in the query above
+          actualWorkoutDate = new Date(workout.workout_date);
+          eventStartTime = undefined;
+        }
         
         // Check if there's a completed workout for this trainee on the same date
         const dateKey = `${actualWorkoutDate.getFullYear()}-${String(actualWorkoutDate.getMonth() + 1).padStart(2, '0')}-${String(actualWorkoutDate.getDate()).padStart(2, '0')}`;
@@ -623,7 +683,7 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
             notes: workout.notes,
             isFromGoogle,
             hasCompletedWorkout, // Flag to indicate if there's a completed workout for this date
-            eventStartTime: eventStartTime, // Always use event_start_time from sync record
+            eventStartTime: eventStartTime, // Use event_start_time if synced FROM Google, otherwise undefined
             googleEventId: isFromGoogle && googleEventIds.has(workout.id)
               ? googleEventIds.get(workout.id)!
               : undefined // Store google_event_id for deletion
@@ -647,8 +707,9 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     
     const todayWorkouts = allWorkouts
       .filter(item => {
+        // CRITICAL: For workouts synced FROM Google, use eventStartTime (which is event_start_time)
+        // For other workouts, use workoutDate (which is workout_date)
         // Compare dates by converting to date strings (YYYY-MM-DD) to avoid timezone issues
-        // workoutDate is a Date object, so we need to compare the date part only
         const itemDate = new Date(item.workoutDate);
         const itemDateStr = `${itemDate.getFullYear()}-${String(itemDate.getMonth() + 1).padStart(2, '0')}-${String(itemDate.getDate()).padStart(2, '0')}`;
         const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
