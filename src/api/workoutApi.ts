@@ -570,7 +570,15 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     const googleSyncEventTimes = new Map<string, string>(); // Map workout_id -> event_start_time
     const googleEventIds = new Map<string, string>(); // Map workout_id -> google_event_id
     const googleSyncedWorkoutIds = new Set<string>(); // Set of workout IDs synced from Google
-    const syncByWorkoutId = new Map<string, typeof googleSyncData?.[0]>(); // Map workout_id -> sync record
+    const syncByWorkoutId = new Map<string, {
+      workout_id: string | null;
+      trainee_id: string | null;
+      sync_direction: string;
+      event_start_time: string;
+      event_end_time: string | null;
+      google_event_id: string;
+      sync_status: string;
+    }>(); // Map workout_id -> sync record
 
     // Use data from googleSyncDataFromGoogle (already filtered by date) for workouts FROM Google
     if (!googleSyncError && googleSyncDataFromGoogle) {
