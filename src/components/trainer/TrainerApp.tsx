@@ -1235,6 +1235,14 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
               initialSelectedMember={selectedPairMember}
               isTablet={isTablet}
               scheduledWorkoutId={selectedWorkout?.id}
+              editingWorkout={
+                selectedWorkout
+                  ? {
+                      id: selectedWorkout.id,
+                      exercises: selectedWorkout.exercises || [],
+                    }
+                  : undefined
+              }
               onBack={() => {
                 if (selectedWorkout) {
                   setActiveView('workouts-list');

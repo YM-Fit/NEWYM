@@ -239,10 +239,15 @@ export default function WorkoutSession({
 
   // Create initial workout when first exercise is added
   const createInitialWorkout = useCallback(async (): Promise<string | null> => {
-    // If we already have a workout ID (from editingWorkout), use it
     if (editingWorkout?.id) {
+      if (isPrepared) {
+        await supabase
+          .from('workouts')
+          .update({ is_prepared: true })
+          .eq('id', editingWorkout.id);
+      }
       setWorkoutId(editingWorkout.id);
-      isEditingWorkout.current = true; // Mark as editing workout to prevent deletion
+      isEditingWorkout.current = true;
       return editingWorkout.id;
     }
     
@@ -281,20 +286,24 @@ export default function WorkoutSession({
         .lte('workouts.workout_date', workoutDateEnd.toISOString())
         .limit(1);
 
-      // If there's an existing scheduled workout, use it instead of creating a new one
       if (existingScheduledWorkouts && existingScheduledWorkouts.length > 0) {
         const workoutData = existingScheduledWorkouts[0];
-        // workouts can be an object or array depending on Supabase query structure
         let workout;
         if (Array.isArray(workoutData.workouts)) {
           workout = workoutData.workouts[0];
         } else {
           workout = workoutData.workouts;
         }
-        
+
         if (workout && workout.id) {
+          if (isPrepared) {
+            await supabase
+              .from('workouts')
+              .update({ is_prepared: true })
+              .eq('id', workout.id);
+          }
           setWorkoutId(workout.id);
-          logger.info('Using existing scheduled workout', { workoutId: workout.id }, 'WorkoutSession');
+          logger.info('Using existing scheduled workout', { workoutId: workout.id, isPrepared }, 'WorkoutSession');
           setCreatingWorkout(false);
           return workout.id;
         }
