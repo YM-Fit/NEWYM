@@ -77,7 +77,7 @@ function TraineeCard({ trainee, onClick, onQuickEdit, unseenWeightsCount = 0, vi
                 )}
               </div>
               <div className="flex items-center gap-4 text-sm text-secondary">
-                <span>{trainee.is_pair ? 'זוג אימונים' : (trainee.gender === 'male' ? 'זכר' : 'נקבה')}</span>
+                <span>{trainee.is_pair ? 'זוג אימונים' : (trainee.gender === 'male' ? 'זכר' : trainee.gender === 'female' ? 'נקבה' : 'לא צוין')}</span>
                 {trainee.phone && (
                   <div className="flex items-center gap-1">
                     <Phone className="h-3 w-3" />
@@ -182,7 +182,7 @@ function TraineeCard({ trainee, onClick, onQuickEdit, unseenWeightsCount = 0, vi
               )}
             </div>
             <p className="text-sm text-secondary">
-              {trainee.is_pair ? 'זוג אימונים' : (trainee.gender === 'male' ? 'זכר' : 'נקבה')}
+              {trainee.is_pair ? 'זוג אימונים' : (trainee.gender === 'male' ? 'זכר' : trainee.gender === 'female' ? 'נקבה' : 'לא צוין')}
             </p>
           </div>
         </div>

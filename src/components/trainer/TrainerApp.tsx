@@ -254,6 +254,10 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
             notes: reading.notes,
           })
           .eq('id', reading.id);
+
+        if (notesError) {
+          logger.error('Error updating scale reading notes:', notesError, 'TrainerApp');
+        }
       }
 
       const { error: traineeUpdateError } = await supabase
@@ -303,50 +307,43 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
         .neq('status', 'deleted') // Filter out deleted trainees
         .order('created_at', { ascending: false });
 
-    if (!error && data) {
-      // Get last workout dates for all trainees in one query (more efficient)
-      const traineeIds = data.map(t => t.id);
-      let lastWorkoutMap = new Map<string, string>();
-      
-      if (traineeIds.length > 0) {
-        const { data: lastWorkouts } = await supabase
-          .from('workout_trainees')
-          .select('trainee_id, workouts(workout_date, is_completed)')
-          .in('trainee_id', traineeIds)
-          .eq('workouts.is_completed', true)
-          .order('workouts(workout_date)', { ascending: false });
+      if (!error && data) {
+        // Get last workout dates for all trainees in one query (more efficient)
+        const traineeIds = data.map(t => t.id);
+        let lastWorkoutMap = new Map<string, string>();
 
-        // Create a map of trainee_id -> last workout date
-        if (lastWorkouts) {
-          lastWorkouts.forEach((wt: any) => {
-            const traineeId = wt.trainee_id;
-            const workoutDate = wt.workouts?.workout_date;
-            if (workoutDate && (!lastWorkoutMap.has(traineeId) || workoutDate > lastWorkoutMap.get(traineeId)!)) {
-              lastWorkoutMap.set(traineeId, workoutDate);
-            }
-          });
+        if (traineeIds.length > 0) {
+          const { data: lastWorkouts } = await supabase
+            .from('workout_trainees')
+            .select('trainee_id, workouts(workout_date, is_completed)')
+            .in('trainee_id', traineeIds)
+            .eq('workouts.is_completed', true)
+            .order('workouts(workout_date)', { ascending: false });
+
+          // Create a map of trainee_id -> last workout date
+          if (lastWorkouts) {
+            lastWorkouts.forEach((wt: any) => {
+              const traineeId = wt.trainee_id;
+              const workoutDate = wt.workouts?.workout_date;
+              if (workoutDate && (!lastWorkoutMap.has(traineeId) || workoutDate > lastWorkoutMap.get(traineeId)!)) {
+                lastWorkoutMap.set(traineeId, workoutDate);
+              }
+            });
+          }
         }
+
+        // Add lastWorkout to each trainee
+        const traineesWithLastWorkout = data.map(trainee => ({
+          ...trainee,
+          lastWorkout: lastWorkoutMap.get(trainee.id) || null,
+        }));
+
+        setTrainees(traineesWithLastWorkout);
+      } else if (error) {
+        logger.error('Error loading trainees:', { message: error.message, code: error.code, details: error.details, hint: error.hint }, 'TrainerApp');
       }
-
-      // Add lastWorkout to each trainee
-      const traineesWithLastWorkout = data.map(trainee => ({
-        ...trainee,
-        lastWorkout: lastWorkoutMap.get(trainee.id) || null,
-      }));
-
-      setTrainees(traineesWithLastWorkout);
-    } else if (error) {
-      logger.error('Error loading trainees:', error, 'TrainerApp');
-      console.error('Trainees query error details:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-      });
-    }
     } catch (err) {
       logger.error('Unexpected error loading trainees:', err, 'TrainerApp');
-      console.error('Unexpected error:', err);
     }
   }, [user?.id]);
 
@@ -546,7 +543,16 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
       name: trainee.full_name,
       email: trainee.email || '',
       phone: trainee.phone || '',
-      age: trainee.birth_date ? new Date().getFullYear() - new Date(trainee.birth_date).getFullYear() : 0,
+      age: trainee.birth_date ? (() => {
+        const today = new Date();
+        const birth = new Date(trainee.birth_date!);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+          age--;
+        }
+        return age;
+      })() : 0,
       gender: (trainee.gender || 'male') as 'male' | 'female',
       height: trainee.height || 0,
       startDate: trainee.start_date,
@@ -1011,7 +1017,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
       .order('order_index', { ascending: true });
 
     if (!workoutExercises) {
-      alert('שגיאה בטעינת האימון');
+      toast.error('שגיאה בטעינת האימון');
       return;
     }
 
@@ -1029,7 +1035,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
       .single();
 
     if (workoutError || !newWorkout) {
-      alert('שגיאה ביצירת אימון חדש');
+      toast.error('שגיאה ביצירת אימון חדש');
       return;
     }
 
@@ -1071,7 +1077,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
       }
     }
 
-    alert('האימון שוכפל בהצלחה!');
+    toast.success('האימון שוכפל בהצלחה!');
     await loadWorkouts(selectedTrainee.id);
   };
 
@@ -1563,7 +1569,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
     }
   };
 
-  const isWorkoutSession = activeView === 'workout-session' || activeView === 'pair-workout-session';
+  const isWorkoutSession = activeView === 'workout-session' || activeView === 'pair-workout-session' || activeView === 'prepared-workout-session';
   const showCollapseControls = isWorkoutSession;
   const isThemeShowcase =
     import.meta.env.DEV &&
