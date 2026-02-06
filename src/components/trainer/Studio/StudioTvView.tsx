@@ -98,32 +98,33 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
     loadLastWorkout();
   }, [session?.trainee?.id, session?.workout?.id, welcomeScreenShown]);
 
-  // Show welcome screen when first exercise appears, but hide it after first set is filled
-  // Only show once per workout (tracked by workout ID)
   useEffect(() => {
     const currentWorkoutId = session?.workout?.id;
     if (!currentWorkoutId || welcomeScreenShown === currentWorkoutId) return;
-    
+
+    if (isPreparedWorkout) {
+      setWelcomeScreenShown(currentWorkoutId);
+      setShowWelcomeScreen(false);
+      return;
+    }
+
     if (session?.workout?.exercises && session.workout.exercises.length > 0 && session?.trainee) {
-      // Check if any exercise has at least one set with data (weight or reps > 0)
-      const hasFilledSet = session.workout.exercises.some(exercise => 
+      const hasFilledSet = session.workout.exercises.some(exercise =>
         exercise.sets?.some(set => (set.weight || 0) > 0 || (set.reps || 0) > 0)
       );
-      
+
       if (!hasFilledSet) {
-        // Show welcome screen only if no sets are filled yet
         setShowWelcomeScreen(true);
         const timer = setTimeout(() => {
           setShowWelcomeScreen(false);
-        }, 5000); // Show for 5 seconds
+        }, 5000);
         return () => clearTimeout(timer);
       } else {
-        // If sets are already filled, mark as shown so it doesn't appear again
         setWelcomeScreenShown(currentWorkoutId);
         setShowWelcomeScreen(false);
       }
     }
-  }, [session?.workout?.exercises, session?.workout?.id, welcomeScreenShown, session?.trainee]);
+  }, [session?.workout?.exercises, session?.workout?.id, welcomeScreenShown, session?.trainee, isPreparedWorkout]);
 
   // Hide welcome screen when first set is filled and mark workout as shown
   useEffect(() => {
