@@ -1,5 +1,4 @@
 import { Users, Target, Sparkles, Activity, AlertCircle } from 'lucide-react';
-import StatsCard from './StatsCard';
 import RecentActivity from './RecentActivity';
 import QuickActions from './QuickActions';
 import RecentScaleReadings from './RecentScaleReadings';
@@ -8,9 +7,8 @@ import TodayTraineesSection from './TodayTraineesSection';
 import { IdentifiedReading } from '../../../hooks/useGlobalScaleListener';
 import { ScaleReading } from '../../../hooks/useScaleListener';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useState, useEffect } from 'react';
-import { supabase } from '../../../lib/supabase';
-import { logger } from '../../../utils/logger';
+import { useMemo } from 'react';
+import { useDashboardStatsQuery } from '../../../hooks/queries/useDashboardQueries';
 import { Trainee } from '../../../types';
 
 interface DashboardProps {
@@ -43,81 +41,10 @@ export default function Dashboard({
   onViewMealPlan
 }: DashboardProps) {
   const { user } = useAuth();
-  const [todayWorkouts, setTodayWorkouts] = useState(0);
-  const [recentMeasurements, setRecentMeasurements] = useState(0);
-
-  useEffect(() => {
-    if (user && trainees.length > 0) {
-      loadTodayStats();
-    }
-  }, [user, trainees]);
-
-  const loadTodayStats = async () => {
-    if (!user) return;
-    
-    try {
-      // workout_date is TIMESTAMPTZ, so we need to use date range comparison
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      
-      const todayStr = today.toISOString();
-      const tomorrowStr = tomorrow.toISOString();
-      
-      const traineeIds = trainees.map(t => t.id);
-
-      if (traineeIds.length === 0) {
-        setTodayWorkouts(0);
-        setRecentMeasurements(0);
-        return;
-      }
-
-      // Count today's workouts
-      const { data: workoutTrainees } = await supabase
-        .from('workout_trainees')
-        .select('workout_id')
-        .in('trainee_id', traineeIds);
-
-      const workoutIds = workoutTrainees?.map(wt => wt.workout_id) || [];
-      
-      if (workoutIds.length > 0) {
-        // Batch query to avoid URL length limits when there are many workout IDs
-        const BATCH_SIZE = 100;
-        let totalCount = 0;
-        
-        for (let i = 0; i < workoutIds.length; i += BATCH_SIZE) {
-          const batch = workoutIds.slice(i, i + BATCH_SIZE);
-          const { count } = await supabase
-            .from('workouts')
-            .select('*', { count: 'exact', head: true })
-            .in('id', batch)
-            .gte('workout_date', todayStr)
-            .lt('workout_date', tomorrowStr);
-          
-          totalCount += count || 0;
-        }
-        
-        setTodayWorkouts(totalCount);
-      } else {
-        setTodayWorkouts(0);
-      }
-
-      // Count recent measurements (last 7 days)
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      const { count: measurementsCount } = await supabase
-        .from('measurements')
-        .select('*', { count: 'exact', head: true })
-        .in('trainee_id', traineeIds)
-        .gte('measurement_date', sevenDaysAgo.toISOString().split('T')[0]);
-
-      setRecentMeasurements(measurementsCount || 0);
-    } catch (error) {
-      logger.error('Error loading stats:', error, 'Dashboard');
-    }
-  };
+  const traineeIds = useMemo(() => trainees.map(t => t.id), [trainees]);
+  const { data: stats } = useDashboardStatsQuery(user?.id ?? null, traineeIds);
+  const todayWorkouts = stats?.todayWorkouts ?? 0;
+  const recentMeasurements = stats?.recentMeasurements ?? 0;
 
   const handleQuickAction = (action: string) => {
     switch (action) {

@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
 import { Dumbbell, Scale, Flame, TrendingUp, Sparkles, Lightbulb, ClipboardList, CheckCircle2, Activity, CalendarCheck2 } from 'lucide-react';
-import { habitsApi } from '../../api/habitsApi';
-import { smartRecommendations, Recommendation } from '../../utils/smartRecommendations';
-import { logger } from '../../utils/logger';
+import { Recommendation } from '../../utils/smartRecommendations';
+import { useTraineeDashboardQuery } from '../../hooks/queries/useTraineeDashboardQueries';
 
 const MOTIVATIONAL_QUOTES = [
   'הצלחה היא סכום של מאמצים קטנים, יום אחרי יום',
@@ -33,36 +31,19 @@ interface TraineeDashboardProps {
   traineeName: string;
 }
 
-interface DashboardStats {
-  workoutsThisMonth: number;
-  lastWeight: number | null;
-  consecutiveDays: number;
-  personalGoal: string | null;
-}
-
-interface WorkoutDay {
-  date: Date;
-  hasWorkout: boolean;
-  isToday: boolean;
-}
-
 export default function TraineeDashboard({ traineeId, traineeName }: TraineeDashboardProps) {
-  const [stats, setStats] = useState<DashboardStats>({
-    workoutsThisMonth: 0,
-    lastWeight: null,
-    consecutiveDays: 0,
-    personalGoal: null,
-  });
-  const [weekDays, setWeekDays] = useState<WorkoutDay[]>([]);
+  const { data: dashboardData, isLoading: loading } = useTraineeDashboardQuery(traineeId);
+  const stats = dashboardData?.stats ?? { workoutsThisMonth: 0, lastWeight: null, consecutiveDays: 0, personalGoal: null };
+  const weekDays = dashboardData?.weekDays ?? [];
+  const habitsStreak = dashboardData?.habitsStreak ?? 0;
+  const recommendations = dashboardData?.recommendations ?? [];
+  const todayWorkoutStatus = dashboardData?.todayStatuses?.workout ?? 'none';
+  const todayFoodStatus = dashboardData?.todayStatuses?.food ?? 'none';
+  const todayHabitsStatus = dashboardData?.todayStatuses?.habits ?? 'none';
+  const todayWeighInStatus = dashboardData?.todayStatuses?.weighIn ?? 'none';
+
   const [currentQuote, setCurrentQuote] = useState('');
   const [quoteVisible, setQuoteVisible] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [habitsStreak, setHabitsStreak] = useState(0);
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [todayWorkoutStatus, setTodayWorkoutStatus] = useState<'none' | 'planned' | 'in_progress' | 'completed'>('none');
-  const [todayFoodStatus, setTodayFoodStatus] = useState<'none' | 'partial' | 'completed'>('none');
-  const [todayHabitsStatus, setTodayHabitsStatus] = useState<'none' | 'partial' | 'completed'>('none');
-  const [todayWeighInStatus, setTodayWeighInStatus] = useState<'none' | 'recent'>('none');
 
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
@@ -79,245 +60,6 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
 
     return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    if (traineeId) {
-      loadDashboardData();
-    }
-  }, [traineeId]);
-
-  const loadDashboardData = async () => {
-    if (!traineeId) return;
-    setLoading(true);
-
-    try {
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      // Use ISO timestamp for TIMESTAMPTZ field comparison
-      const startOfMonthStr = startOfMonth.toISOString();
-
-      const { count: workoutsCount } = await supabase
-        .from('workout_trainees')
-        .select('workouts!inner(id, workout_date, is_completed)', { count: 'exact', head: true })
-        .eq('trainee_id', traineeId)
-        .eq('workouts.is_completed', true)
-        .gte('workouts.workout_date', startOfMonthStr);
-
-      const { data: lastMeasurement } = await supabase
-        .from('measurements')
-        .select('weight')
-        .eq('trainee_id', traineeId)
-        .not('weight', 'is', null)
-        .order('measurement_date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      const consecutiveDays = await calculateConsecutiveDays(traineeId);
-
-      const weekWorkouts = await loadWeekWorkouts(traineeId);
-
-      // Load habits streak (if table exists)
-      try {
-        const habits = await habitsApi.getTraineeHabits(traineeId);
-        let maxStreak = 0;
-        for (const habit of habits) {
-          const streak = await habitsApi.getHabitStreak(habit.id);
-          maxStreak = Math.max(maxStreak, streak);
-        }
-        setHabitsStreak(maxStreak);
-      } catch (error) {
-        // Table might not exist yet, set streak to 0
-        logger.warn('Habits table not available:', error, 'TraineeDashboard');
-        setHabitsStreak(0);
-      }
-
-      // Load recommendations
-      const recs = await smartRecommendations.getTraineeRecommendations(traineeId);
-      setRecommendations(recs.slice(0, 3)); // Show top 3
-
-      // Load today's checklist statuses
-      await loadTodayStatuses(traineeId);
-
-      setStats({
-        workoutsThisMonth: workoutsCount || 0,
-        lastWeight: lastMeasurement?.weight || null,
-        consecutiveDays,
-        personalGoal: null,
-      });
-
-      setWeekDays(weekWorkouts);
-    } catch (error) {
-      logger.error('Error loading dashboard data:', error, 'TraineeDashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadTodayStatuses = async (traineeId: string) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    // Use ISO timestamps for TIMESTAMPTZ field comparison
-    const todayStr = today.toISOString();
-    const tomorrowStr = tomorrow.toISOString();
-
-    // Workout today - workout_date is TIMESTAMPTZ, so use gte/lt for date range
-    const { data: todayWorkouts } = await supabase
-      .from('workout_trainees')
-      .select('workouts!inner(id, workout_date, is_completed)')
-      .eq('trainee_id', traineeId)
-      .gte('workouts.workout_date', todayStr)
-      .lt('workouts.workout_date', tomorrowStr);
-
-    if (todayWorkouts && todayWorkouts.length > 0) {
-      const anyCompleted = todayWorkouts.some((w: any) => w.workouts.is_completed);
-      setTodayWorkoutStatus(anyCompleted ? 'completed' : 'planned');
-    } else {
-      setTodayWorkoutStatus('none');
-    }
-
-    // Food diary today (simple: any entries for today)
-    // meal_date is DATE (not TIMESTAMPTZ), so use date string (YYYY-MM-DD)
-    const todayDateStr = today.toISOString().split('T')[0];
-    const { data: todayMeals } = await supabase
-      .from('meals')
-      .select('id, meal_type')
-      .eq('trainee_id', traineeId)
-      .eq('meal_date', todayDateStr);
-
-    if (todayMeals && todayMeals.length > 0) {
-      const mealTypes = new Set(todayMeals.map((e: any) => e.meal_type));
-      // heuristic: 3+ meal types => completed, אחרת חלקי
-      setTodayFoodStatus(mealTypes.size >= 3 ? 'completed' : 'partial');
-    } else {
-      setTodayFoodStatus('none');
-    }
-
-    // Habits today: any logged habits for today
-    // Need to join through trainee_habits since habit_logs has habit_id, not trainee_id
-    const { data: traineeHabits } = await supabase
-      .from('trainee_habits')
-      .select('id')
-      .eq('trainee_id', traineeId)
-      .eq('is_active', true);
-
-    if (traineeHabits && traineeHabits.length > 0) {
-      const habitIds = traineeHabits.map((h: any) => h.id);
-      const { data: todayHabitsLogs } = await supabase
-        .from('habit_logs')
-        .select('id')
-        .in('habit_id', habitIds)
-        .eq('log_date', todayStr);
-
-      if (todayHabitsLogs && todayHabitsLogs.length > 0) {
-        // לא יודעים אחוז מדויק, אבל יש ביצוע
-        setTodayHabitsStatus('partial');
-      } else {
-        setTodayHabitsStatus('none');
-      }
-    } else {
-      setTodayHabitsStatus('none');
-    }
-
-    // Recent weigh-in (last 7 days)
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(today.getDate() - 7);
-    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
-
-    const { data: recentWeights } = await supabase
-      .from('trainee_self_weights')
-      .select('id, weight_date')
-      .eq('trainee_id', traineeId)
-      .gte('weight_date', sevenDaysAgoStr);
-
-    setTodayWeighInStatus(recentWeights && recentWeights.length > 0 ? 'recent' : 'none');
-  };
-
-  const calculateConsecutiveDays = async (traineeId: string): Promise<number> => {
-    const { data: workouts } = await supabase
-      .from('workout_trainees')
-      .select('workouts!inner(workout_date, is_completed)')
-      .eq('trainee_id', traineeId)
-      .eq('workouts.is_completed', true)
-      .order('workouts(workout_date)', { ascending: false });
-
-    if (!workouts || workouts.length === 0) return 0;
-
-    const workoutDates = new Set(
-      workouts.map((w: any) => w.workouts.workout_date)
-    );
-
-    let consecutiveDays = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    for (let i = 0; i <= 365; i++) {
-      const checkDate = new Date(today);
-      checkDate.setDate(today.getDate() - i);
-      const dateStr = checkDate.toISOString().split('T')[0];
-
-      if (workoutDates.has(dateStr)) {
-        consecutiveDays++;
-      } else if (i > 0) {
-        break;
-      }
-    }
-
-    return consecutiveDays;
-  };
-
-  const loadWeekWorkouts = async (traineeId: string): Promise<WorkoutDay[]> => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const dayOfWeek = today.getDay();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - dayOfWeek);
-
-    const weekDates: WorkoutDay[] = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startOfWeek);
-      date.setDate(startOfWeek.getDate() + i);
-      weekDates.push({
-        date,
-        hasWorkout: false,
-        isToday: date.toDateString() === today.toDateString(),
-      });
-    }
-
-    // Use ISO timestamps for TIMESTAMPTZ field comparison
-    const startStr = startOfWeek.toISOString();
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999); // End of day
-    const endStr = endOfWeek.toISOString();
-
-    const { data: workouts } = await supabase
-      .from('workout_trainees')
-      .select('workouts!inner(workout_date, is_completed)')
-      .eq('trainee_id', traineeId)
-      .eq('workouts.is_completed', true)
-      .gte('workouts.workout_date', startStr)
-      .lte('workouts.workout_date', endStr);
-
-    if (workouts) {
-      // Create a set of date strings (YYYY-MM-DD) for comparison
-      const workoutDates = new Set(
-        workouts.map((w: any) => {
-          const workoutDate = new Date(w.workouts.workout_date);
-          return `${workoutDate.getFullYear()}-${String(workoutDate.getMonth() + 1).padStart(2, '0')}-${String(workoutDate.getDate()).padStart(2, '0')}`;
-        })
-      );
-
-      weekDates.forEach((day) => {
-        const dateStr = `${day.date.getFullYear()}-${String(day.date.getMonth() + 1).padStart(2, '0')}-${String(day.date.getDate()).padStart(2, '0')}`;
-        day.hasWorkout = workoutDates.has(dateStr);
-      });
-    }
-
-    return weekDates;
-  };
 
   const getHebrewDate = () => {
     const options: Intl.DateTimeFormatOptions = {

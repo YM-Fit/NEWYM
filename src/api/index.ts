@@ -15,3 +15,8 @@ export * from './workoutFeedbackApi';
 export * from './analyticsApi';
 export * from './cardioApi';
 export * from './nutritionApi';
+export * from './measurementsApi';
+export * from './equipmentApi';
+export * from './notesApi';
+export * from './mentalToolsApi';
+export * from './notificationsApi';

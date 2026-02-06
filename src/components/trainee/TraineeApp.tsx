@@ -1,9 +1,8 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { supabase } from '../../lib/supabase';
+import { useTraineeQuery } from '../../hooks/queries/useTraineeQueries';
 import { Home, Dumbbell, Scale, LogOut, ClipboardList, Calendar, Brain, Utensils, Activity, Plus, Sun, Moon } from 'lucide-react';
-import toast from 'react-hot-toast';
 import TraineeDashboard from './TraineeDashboard';
 import MyMeasurements from './MyMeasurements';
 import WorkoutHistory from './WorkoutHistory';
@@ -41,43 +40,12 @@ const MyWorkoutPlan = lazyWithRetry(
   3
 );
 
-interface Trainee {
-  id: string;
-  full_name: string;
-  trainer_id: string;
-  trainer?: {
-    full_name: string;
-  };
-}
-
 export default function TraineeApp() {
   const { signOut, traineeId } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [trainee, setTrainee] = useState<Trainee | null>(null);
+  const { data: trainee, isLoading: loading } = useTraineeQuery(traineeId ?? null);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [loading, setLoading] = useState(true);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-
-  useEffect(() => {
-    loadTraineeData();
-  }, [traineeId]);
-
-  const loadTraineeData = async () => {
-    if (!traineeId) return;
-
-    const { data, error } = await supabase
-      .from('trainees')
-      .select('*, trainer:trainers(full_name)')
-      .eq('id', traineeId)
-      .maybeSingle();
-
-    if (error) {
-      toast.error('שגיאה בטעינת נתונים');
-    } else if (data) {
-      setTrainee(data);
-    }
-    setLoading(false);
-  };
 
   // Keyboard shortcuts
   useKeyboardShortcut('k', () => {

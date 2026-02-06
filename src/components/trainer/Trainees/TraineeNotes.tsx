@@ -1,19 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, FileText, Plus, Pin, Trash2, Edit2 } from 'lucide-react';
-import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import toast from 'react-hot-toast';
-
-interface Note {
-  id: string;
-  trainee_id: string;
-  trainer_id: string;
-  note_text: string;
-  is_pinned: boolean;
-  category: 'general' | 'health' | 'nutrition' | 'training' | 'personal';
-  created_at: string;
-  updated_at: string;
-}
+import { TrainerNote } from '../../../api/notesApi';
+import {
+  useNotesQuery,
+  useCreateNoteMutation,
+  useUpdateNoteMutation,
+  useDeleteNoteMutation,
+} from '../../../hooks/queries/useNoteQueries';
 
 interface TraineeNotesProps {
   traineeId: string;
@@ -31,74 +26,49 @@ const CATEGORIES = {
 
 export default function TraineeNotes({ traineeId, traineeName, onClose }: TraineeNotesProps) {
   const { user } = useAuth();
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: notes = [], isLoading: loading } = useNotesQuery(traineeId);
+  const createMutation = useCreateNoteMutation(traineeId);
+  const updateMutation = useUpdateNoteMutation(traineeId);
+  const deleteMutation = useDeleteNoteMutation(traineeId);
+
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingNote, setEditingNote] = useState<Note | null>(null);
-  const [filter, setFilter] = useState<'all' | Note['category']>('all');
+  const [editingNote, setEditingNote] = useState<TrainerNote | null>(null);
+  const [filter, setFilter] = useState<'all' | TrainerNote['category']>('all');
 
   const [formData, setFormData] = useState({
     note_text: '',
-    category: 'general' as Note['category'],
+    category: 'general' as TrainerNote['category'],
     is_pinned: false,
   });
-
-  useEffect(() => {
-    loadNotes();
-  }, [traineeId]);
-
-  const loadNotes = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('trainer_notes')
-      .select('*')
-      .eq('trainee_id', traineeId)
-      .order('is_pinned', { ascending: false })
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      toast.error('שגיאה בטעינת ההערות');
-    } else {
-      setNotes(data || []);
-    }
-    setLoading(false);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
-    const noteData = {
-      trainee_id: traineeId,
-      trainer_id: user.id,
-      note_text: formData.note_text,
-      category: formData.category,
-      is_pinned: formData.is_pinned,
-    };
-
-    if (editingNote) {
-      const { error } = await supabase
-        .from('trainer_notes')
-        .update({ ...noteData, updated_at: new Date().toISOString() })
-        .eq('id', editingNote.id);
-
-      if (error) {
-        toast.error('שגיאה בעדכון ההערה');
-      } else {
+    try {
+      if (editingNote) {
+        await updateMutation.mutateAsync({
+          noteId: editingNote.id,
+          updates: {
+            note_text: formData.note_text,
+            category: formData.category,
+            is_pinned: formData.is_pinned,
+          },
+        });
         toast.success('ההערה עודכנה');
-        loadNotes();
-        resetForm();
-      }
-    } else {
-      const { error } = await supabase.from('trainer_notes').insert(noteData);
-
-      if (error) {
-        toast.error('שגיאה בהוספת ההערה');
       } else {
+        await createMutation.mutateAsync({
+          trainee_id: traineeId,
+          trainer_id: user.id,
+          note_text: formData.note_text,
+          category: formData.category,
+          is_pinned: formData.is_pinned,
+        });
         toast.success('ההערה נוספה');
-        loadNotes();
-        resetForm();
       }
+      resetForm();
+    } catch {
+      toast.error(editingNote ? 'שגיאה בעדכון ההערה' : 'שגיאה בהוספת ההערה');
     }
   };
 
@@ -108,7 +78,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
     setEditingNote(null);
   };
 
-  const handleEdit = (note: Note) => {
+  const handleEdit = (note: TrainerNote) => {
     setFormData({
       note_text: note.note_text,
       category: note.category,
@@ -120,26 +90,22 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
 
   const handleDelete = async (noteId: string) => {
     if (!confirm('האם אתה בטוח שברצונך למחוק הערה זו?')) return;
-
-    const { error } = await supabase.from('trainer_notes').delete().eq('id', noteId);
-    if (error) {
-      toast.error('שגיאה במחיקת ההערה');
-    } else {
+    try {
+      await deleteMutation.mutateAsync(noteId);
       toast.success('ההערה נמחקה');
-      loadNotes();
+    } catch {
+      toast.error('שגיאה במחיקת ההערה');
     }
   };
 
-  const handleTogglePin = async (note: Note) => {
-    const { error } = await supabase
-      .from('trainer_notes')
-      .update({ is_pinned: !note.is_pinned, updated_at: new Date().toISOString() })
-      .eq('id', note.id);
-
-    if (error) {
+  const handleTogglePin = async (note: TrainerNote) => {
+    try {
+      await updateMutation.mutateAsync({
+        noteId: note.id,
+        updates: { is_pinned: !note.is_pinned },
+      });
+    } catch {
       toast.error('שגיאה בעדכון ההערה');
-    } else {
-      loadNotes();
     }
   };
 
@@ -179,7 +145,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
             {Object.entries(CATEGORIES).map(([key, { label, bg, text, border }]) => (
               <button
                 key={key}
-                onClick={() => setFilter(key as Note['category'])}
+                onClick={() => setFilter(key as TrainerNote['category'])}
                 className={`px-3 py-2 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
                   filter === key ? `${bg} ${text} border ${border}` : 'bg-surface800/50 text-muted400 border border-border700/30'
                 }`}
@@ -279,7 +245,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                   <label className="block text-sm font-medium text-muted400 mb-2">קטגוריה</label>
                   <select
                     value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value as Note['category'] })}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value as TrainerNote['category'] })}
                     className="w-full glass-input px-4 py-3"
                   >
                     {Object.entries(CATEGORIES).map(([key, { label }]) => (

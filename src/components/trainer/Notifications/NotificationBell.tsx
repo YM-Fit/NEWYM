@@ -1,52 +1,41 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Bell, X, Calendar, ClipboardCheck, Check } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
-import toast from 'react-hot-toast';
-import { logger } from '../../../utils/logger';
-
-interface Notification {
-  id: string;
-  trainee_id: string;
-  notification_type: string;
-  title: string;
-  message: string | null;
-  is_read: boolean;
-  created_at: string;
-}
+import { useAuth } from '../../../contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  useNotificationsQuery,
+  useMarkNotificationReadMutation,
+  useMarkAllNotificationsReadMutation,
+  useDeleteNotificationMutation,
+} from '../../../hooks/queries/useNotificationQueries';
 
 interface NotificationBellProps {
   onNavigateToTrainee?: (traineeId: string, tab?: string) => void;
 }
 
 export default function NotificationBell({ onNavigateToTrainee }: NotificationBellProps) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { data: notifications = [] } = useNotificationsQuery(user?.id ?? null);
+  const markReadMutation = useMarkNotificationReadMutation();
+  const markAllReadMutation = useMarkAllNotificationsReadMutation();
+  const deleteMutation = useDeleteNotificationMutation();
   const [showDropdown, setShowDropdown] = useState(false);
-  const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    loadNotifications();
+  const unreadCount = useMemo(() => notifications.filter((n: any) => !n.is_read).length, [notifications]);
 
+  useEffect(() => {
+    if (!user) return;
     const channel = supabase
       .channel('trainer_notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'trainer_notifications',
-        },
-        () => {
-          loadNotifications();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trainer_notifications' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      })
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+    return () => { supabase.removeChannel(channel); };
+  }, [user, queryClient]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -54,98 +43,24 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
         setShowDropdown(false);
       }
     };
-
-    if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    if (showDropdown) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDropdown]);
 
-  const loadNotifications = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('trainer_notifications')
-        .select('*')
-        .eq('trainer_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-
-      setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.is_read).length || 0);
-    } catch (error) {
-      logger.error('Error loading notifications', error, 'NotificationBell');
-    }
+  const handleMarkAsRead = (notificationId: string) => {
+    markReadMutation.mutate(notificationId);
   };
 
-  const handleMarkAsRead = async (notificationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('trainer_notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
-
-      setNotifications(notifications.map(n =>
-        n.id === notificationId ? { ...n, is_read: true } : n
-      ));
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      logger.error('Error marking notification as read', error, 'NotificationBell');
-    }
+  const handleMarkAllAsRead = () => {
+    if (!user) return;
+    markAllReadMutation.mutate(user.id);
   };
 
-  const handleMarkAllAsRead = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { error } = await supabase
-        .from('trainer_notifications')
-        .update({ is_read: true })
-        .eq('trainer_id', user.id)
-        .eq('is_read', false);
-
-      if (error) throw error;
-
-      setNotifications(notifications.map(n => ({ ...n, is_read: true })));
-      setUnreadCount(0);
-      toast.success('כל התראות סומנו כנקראו');
-    } catch (error) {
-      logger.error('Error marking all as read', error, 'NotificationBell');
-      toast.error('שגיאה בסימון התראות');
-    }
+  const handleDeleteNotification = (notificationId: string) => {
+    deleteMutation.mutate(notificationId);
   };
 
-  const handleDeleteNotification = async (notificationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('trainer_notifications')
-        .delete()
-        .eq('id', notificationId);
-
-      if (error) throw error;
-
-      const notification = notifications.find(n => n.id === notificationId);
-      if (notification && !notification.is_read) {
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      }
-      setNotifications(notifications.filter(n => n.id !== notificationId));
-    } catch (error) {
-      logger.error('Error deleting notification', error, 'NotificationBell');
-      toast.error('שגיאה במחיקת התראה');
-    }
-  };
-
-  const handleNotificationClick = async (notification: Notification) => {
+  const handleNotificationClick = async (notification: any) => {
     if (!notification.is_read) {
       await handleMarkAsRead(notification.id);
     }

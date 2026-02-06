@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../../../lib/supabase';
+import { useState } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import {
   ArrowRight,
@@ -16,29 +15,23 @@ import {
   X,
   Sparkles,
   ChevronDown,
-  ChevronUp,
   Star,
   CheckCircle,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { MentalTool } from '../../../api/mentalToolsApi';
+import {
+  useMentalToolsQuery,
+  useCreateMentalToolMutation,
+  useUpdateMentalToolMutation,
+  useDeleteMentalToolMutation,
+  useToggleMentalToolCompleteMutation,
+} from '../../../hooks/queries/useMentalToolQueries';
 
 interface MentalToolsEditorProps {
   traineeId: string;
   traineeName: string;
   onBack: () => void;
-}
-
-interface MentalTool {
-  id: string;
-  trainee_id: string;
-  trainer_id: string;
-  title: string;
-  description: string | null;
-  category: 'motivation' | 'discipline' | 'patience' | 'focus' | 'other';
-  priority: number;
-  is_completed: boolean;
-  completed_at: string | null;
-  created_at: string;
 }
 
 const categories = [
@@ -91,8 +84,12 @@ const getCategoryLabel = (category: string) => {
 
 export default function MentalToolsEditor({ traineeId, traineeName, onBack }: MentalToolsEditorProps) {
   const { user } = useAuth();
-  const [tools, setTools] = useState<MentalTool[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: tools = [], isLoading: loading } = useMentalToolsQuery(traineeId);
+  const createMutation = useCreateMentalToolMutation();
+  const updateMutation = useUpdateMentalToolMutation(traineeId);
+  const deleteMutation = useDeleteMentalToolMutation(traineeId);
+  const toggleCompleteMutation = useToggleMentalToolCompleteMutation(traineeId);
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [editingTool, setEditingTool] = useState<MentalTool | null>(null);
@@ -106,126 +103,75 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
     priority: 3,
   });
 
-  useEffect(() => {
-    loadTools();
-  }, [traineeId]);
-
-  const loadTools = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('mental_tools')
-      .select('*')
-      .eq('trainee_id', traineeId)
-      .order('priority', { ascending: false })
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      toast.error('שגיאה בטעינת הכלים');
-    } else {
-      setTools(data || []);
-    }
-    setLoading(false);
-  };
-
   const handleSave = async () => {
     if (!user || !formData.title.trim()) {
       toast.error('יש להזין כותרת');
       return;
     }
 
-    if (editingTool) {
-      const { error } = await supabase
-        .from('mental_tools')
-        .update({
-          title: formData.title.trim(),
-          description: formData.description.trim() || null,
-          category: formData.category,
-          priority: formData.priority,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', editingTool.id);
-
-      if (error) {
-        toast.error('שגיאה בעדכון הכלי');
-      } else {
+    try {
+      if (editingTool) {
+        await updateMutation.mutateAsync({
+          toolId: editingTool.id,
+          updates: {
+            title: formData.title.trim(),
+            description: formData.description.trim() || null,
+            category: formData.category,
+            priority: formData.priority,
+          },
+        });
         toast.success('הכלי עודכן בהצלחה');
         setEditingTool(null);
-        setShowAddForm(false);
-        resetForm();
-        await loadTools();
-      }
-    } else {
-      const { error } = await supabase.from('mental_tools').insert([
-        {
+      } else {
+        await createMutation.mutateAsync({
           trainee_id: traineeId,
           trainer_id: user.id,
           title: formData.title.trim(),
           description: formData.description.trim() || null,
           category: formData.category,
           priority: formData.priority,
-        },
-      ]);
-
-      if (error) {
-        toast.error('שגיאה בהוספת הכלי');
-      } else {
+        });
         toast.success('הכלי נוסף בהצלחה');
-        setShowAddForm(false);
-        resetForm();
-        await loadTools();
       }
+      setShowAddForm(false);
+      resetForm();
+    } catch {
+      toast.error(editingTool ? 'שגיאה בעדכון הכלי' : 'שגיאה בהוספת הכלי');
     }
   };
 
   const handleDelete = async (toolId: string) => {
     if (!confirm('האם אתה בטוח שברצונך למחוק כלי זה?')) return;
-
-    const { error } = await supabase.from('mental_tools').delete().eq('id', toolId);
-
-    if (error) {
-      toast.error('שגיאה במחיקת הכלי');
-    } else {
+    try {
+      await deleteMutation.mutateAsync(toolId);
       toast.success('הכלי נמחק');
       setOpenMenuId(null);
-      await loadTools();
+    } catch {
+      toast.error('שגיאה במחיקת הכלי');
     }
   };
 
   const handleToggleComplete = async (tool: MentalTool) => {
-    const { error } = await supabase
-      .from('mental_tools')
-      .update({
-        is_completed: !tool.is_completed,
-        completed_at: !tool.is_completed ? new Date().toISOString() : null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', tool.id);
-
-    if (error) {
+    try {
+      await toggleCompleteMutation.mutateAsync({ toolId: tool.id, isCompleted: !tool.is_completed });
+    } catch {
       toast.error('שגיאה בעדכון הסטטוס');
-    } else {
-      await loadTools();
     }
   };
 
   const handleAddFromTemplate = async (template: typeof templates[0]) => {
     if (!user) return;
-
-    const { error } = await supabase.from('mental_tools').insert([
-      {
+    try {
+      await createMutation.mutateAsync({
         trainee_id: traineeId,
         trainer_id: user.id,
         title: template.title,
         category: template.category,
         priority: template.priority,
-      },
-    ]);
-
-    if (error) {
-      toast.error('שגיאה בהוספת הכלי');
-    } else {
+      });
       toast.success('הכלי נוסף בהצלחה');
-      await loadTools();
+    } catch {
+      toast.error('שגיאה בהוספת הכלי');
     }
   };
 
@@ -268,7 +214,6 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
 
   return (
     <div className="space-y-6 pb-6">
-      {/* Premium Header */}
       <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 rounded-2xl p-6 shadow-xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -301,7 +246,6 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
         </div>
       </div>
 
-      {/* Category Filter Pills */}
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setFilterCategory('all')}
@@ -334,7 +278,6 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
         })}
       </div>
 
-      {/* Add/Edit Form */}
       {showAddForm && (
         <div className="bg-white rounded-2xl border border-border200 p-6 shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between mb-6">
@@ -437,7 +380,6 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
         </div>
       )}
 
-      {/* Templates Section */}
       <div className="bg-white rounded-2xl border border-border200 overflow-hidden shadow-xl transition-all duration-300 hover:shadow-2xl">
         <button
           onClick={() => setShowTemplates(!showTemplates)}
@@ -488,7 +430,6 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
         )}
       </div>
 
-      {/* Active Tools */}
       {activeTools.length > 0 && (
         <div className="space-y-4">
           <h3 className="font-bold text-muted900 text-lg flex items-center gap-2">
@@ -509,7 +450,6 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
         </div>
       )}
 
-      {/* Completed Tools */}
       {completedTools.length > 0 && (
         <div className="space-y-4">
           <h3 className="font-bold text-muted500 text-lg flex items-center gap-2">
@@ -530,7 +470,6 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
         </div>
       )}
 
-      {/* Empty State */}
       {tools.length === 0 && (
         <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-border200 shadow-lg">
           <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -643,13 +582,6 @@ function ToolCard({ tool, openMenuId, setOpenMenuId, onEdit, onDelete, onToggleC
                 />
               ))}
             </div>
-
-            {tool.is_completed && tool.completed_at && (
-              <span className="text-xs text-muted400 flex items-center gap-1">
-                <CheckCircle className="w-3.5 h-3.5" />
-                הושלם: {new Date(tool.completed_at).toLocaleDateString('he-IL')}
-              </span>
-            )}
           </div>
         </div>
       </div>
