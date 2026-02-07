@@ -23,7 +23,7 @@ export const notificationsApi = {
       .eq('trainer_id', trainerId)
       .order('created_at', { ascending: false })
       .limit(limit);
-    if (error) throw handleApiError(error, { context: 'notificationsApi.getByTrainer' });
+    if (error) throw handleApiError(error, 'שגיאה בטעינת התראות', 'notificationsApi.getByTrainer');
     return data as TrainerNotification[];
   },
 
@@ -34,7 +34,7 @@ export const notificationsApi = {
       .select('*', { count: 'exact', head: true })
       .eq('trainer_id', trainerId)
       .eq('is_read', false);
-    if (error) throw handleApiError(error, { context: 'notificationsApi.getUnreadCount' });
+    if (error) throw handleApiError(error, 'שגיאה בספירת התראות', 'notificationsApi.getUnreadCount');
     return count || 0;
   },
 
@@ -42,19 +42,19 @@ export const notificationsApi = {
     rateLimiter.check('markNotificationRead', 100);
     const { error } = await supabase
       .from('trainer_notifications')
-      .update({ is_read: true })
+      .update({ is_read: true } as never)
       .eq('id', notificationId);
-    if (error) throw handleApiError(error, { context: 'notificationsApi.markAsRead' });
+    if (error) throw handleApiError(error, 'שגיאה בסימון התראה כנקראה', 'notificationsApi.markAsRead');
   },
 
   async markAllAsRead(trainerId: string) {
     rateLimiter.check('markAllNotificationsRead', 20);
     const { error } = await supabase
       .from('trainer_notifications')
-      .update({ is_read: true })
+      .update({ is_read: true } as never)
       .eq('trainer_id', trainerId)
       .eq('is_read', false);
-    if (error) throw handleApiError(error, { context: 'notificationsApi.markAllAsRead' });
+    if (error) throw handleApiError(error, 'שגיאה בסימון כל ההתראות כנקראו', 'notificationsApi.markAllAsRead');
   },
 
   async delete(notificationId: string) {
@@ -63,6 +63,6 @@ export const notificationsApi = {
       .from('trainer_notifications')
       .delete()
       .eq('id', notificationId);
-    if (error) throw handleApiError(error, { context: 'notificationsApi.delete' });
+    if (error) throw handleApiError(error, 'שגיאה במחיקת התראה', 'notificationsApi.delete');
   },
 };

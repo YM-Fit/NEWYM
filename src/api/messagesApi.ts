@@ -59,7 +59,7 @@ export const messagesApi = {
     try {
       const { data, error } = await supabase
         .from('trainer_trainee_messages')
-        .insert([input])
+        .insert([input] as never)
         .select()
         .single();
 
@@ -84,7 +84,7 @@ export const messagesApi = {
         .update({
           is_read: true,
           read_at: new Date().toISOString(),
-        })
+        } as never)
         .eq('id', messageId);
 
       if (error) throw error;

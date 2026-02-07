@@ -36,7 +36,7 @@ export const notesApi = {
       .eq('trainee_id', traineeId)
       .order('is_pinned', { ascending: false })
       .order('created_at', { ascending: false });
-    if (error) throw handleApiError(error, { context: 'notesApi.getByTrainee' });
+    if (error) throw handleApiError(error, 'שגיאה בטעינת הערות', 'notesApi.getByTrainee');
     return data as TrainerNote[];
   },
 
@@ -44,10 +44,10 @@ export const notesApi = {
     rateLimiter.check('createNote', 50);
     const { data, error } = await supabase
       .from('trainer_notes')
-      .insert(input)
+      .insert(input as never)
       .select()
       .single();
-    if (error) throw handleApiError(error, { context: 'notesApi.create' });
+    if (error) throw handleApiError(error, 'שגיאה ביצירת הערה', 'notesApi.create');
     return data as TrainerNote;
   },
 
@@ -55,11 +55,11 @@ export const notesApi = {
     rateLimiter.check('updateNote', 50);
     const { data, error } = await supabase
       .from('trainer_notes')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update({ ...updates, updated_at: new Date().toISOString() } as never)
       .eq('id', noteId)
       .select()
       .single();
-    if (error) throw handleApiError(error, { context: 'notesApi.update' });
+    if (error) throw handleApiError(error, 'שגיאה בעדכון הערה', 'notesApi.update');
     return data as TrainerNote;
   },
 
@@ -69,6 +69,6 @@ export const notesApi = {
       .from('trainer_notes')
       .delete()
       .eq('id', noteId);
-    if (error) throw handleApiError(error, { context: 'notesApi.delete' });
+    if (error) throw handleApiError(error, 'שגיאה במחיקת הערה', 'notesApi.delete');
   },
 };

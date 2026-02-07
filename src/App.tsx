@@ -181,9 +181,9 @@ function AppContent() {
       if (typeof window !== 'undefined' && (window as any).gtag) {
         (window as any).gtag('event', metric.name.toLowerCase(), {
           value: Math.round(metric.value),
-          metric_id: metric.id,
+          metric_id: metric.timestamp,
           metric_value: metric.value,
-          metric_delta: metric.delta,
+          metric_rating: metric.rating,
         });
       }
     });

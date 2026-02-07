@@ -576,14 +576,14 @@
     box-shadow: 0 6px 24px rgba(74, 107, 42, 0.3);
   }
 
-  .action-btn-cyan {
-    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  .action-btn-sky {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
     color: #ffffff;
-    box-shadow: 0 4px 16px rgba(6, 182, 212, 0.25);
+    box-shadow: 0 4px 16px rgba(14, 165, 233, 0.25);
   }
 
-  .action-btn-cyan:hover {
-    box-shadow: 0 6px 24px rgba(6, 182, 212, 0.35);
+  .action-btn-sky:hover {
+    box-shadow: 0 6px 24px rgba(14, 165, 233, 0.35);
   }
 
   .action-btn-amber {
@@ -596,14 +596,14 @@
     box-shadow: 0 6px 24px rgba(245, 158, 11, 0.35);
   }
 
-  .action-btn-teal {
-    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  .action-btn-green {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
     color: #ffffff;
-    box-shadow: 0 4px 16px rgba(20, 184, 166, 0.25);
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.25);
   }
 
-  .action-btn-teal:hover {
-    box-shadow: 0 6px 24px rgba(20, 184, 166, 0.35);
+  .action-btn-green:hover {
+    box-shadow: 0 6px 24px rgba(34, 197, 94, 0.35);
   }
 
   .action-btn-slate {

@@ -84,7 +84,7 @@ export async function createTrainee(
           trainer_id: trainerId,
           ...traineeData,
         },
-      ])
+      ] as never)
       .select()
       .single();
 
@@ -115,7 +115,7 @@ export async function updateTrainee(
   try {
     const { data, error } = await supabase
       .from('trainees')
-      .update(traineeData)
+      .update(traineeData as never)
       .eq('id', traineeId)
       .select()
       .single();

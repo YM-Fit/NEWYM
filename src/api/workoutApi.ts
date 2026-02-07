@@ -194,7 +194,7 @@ export async function deleteWorkout(
       .from('workouts')
       .select('trainer_id, workout_trainees(trainee_id)')
       .eq('id', workoutId)
-      .single();
+      .single() as { data: { trainer_id: string; workout_trainees: { trainee_id: string }[] } | null };
 
     const trainerId = workoutInfo?.trainer_id;
     const traineeId = workoutInfo?.workout_trainees?.[0]?.trainee_id;
@@ -204,7 +204,7 @@ export async function deleteWorkout(
       .from('google_calendar_sync')
       .select('google_event_id')
       .eq('workout_id', workoutId)
-      .maybeSingle();
+      .maybeSingle() as { data: { google_event_id: string } | null };
 
     // Delete the Google Calendar event if it exists
     // IMPORTANT: Delete from Google Calendar BEFORE deleting from database
@@ -287,6 +287,13 @@ export async function syncWorkoutToCalendar(
 
   try {
     // Get workout details
+    interface WorkoutData {
+      id: string;
+      trainer_id: string;
+      workout_date: string;
+      notes: string | null;
+      workout_trainees: { trainee_id: string; trainees: { full_name: string; email: string | null } }[];
+    }
     const { data: workout, error: workoutError } = await supabase
       .from('workouts')
       .select(`
@@ -298,7 +305,7 @@ export async function syncWorkoutToCalendar(
       `)
       .eq('id', workoutId)
       .eq('trainer_id', trainerId)
-      .single();
+      .single() as { data: WorkoutData | null; error: { message: string } | null };
 
     if (workoutError || !workout) {
       return { error: 'אימון לא נמצא' };
@@ -309,7 +316,7 @@ export async function syncWorkoutToCalendar(
       .from('google_calendar_sync')
       .select('google_event_id')
       .eq('workout_id', workoutId)
-      .maybeSingle();
+      .maybeSingle() as { data: { google_event_id: string } | null };
 
     if (existingSync?.google_event_id) {
       // Already synced, return existing event ID
@@ -318,7 +325,7 @@ export async function syncWorkoutToCalendar(
 
     // Import createGoogleCalendarEvent function
     const { createGoogleCalendarEvent } = await import('./googleCalendarApi');
-    
+
     const trainee = workout.workout_trainees?.[0]?.trainees;
     const workoutDate = new Date(workout.workout_date);
     const endDate = new Date(workoutDate);
@@ -346,8 +353,7 @@ export async function syncWorkoutToCalendar(
         startTime: workoutDate,
         endTime: endDate,
         attendees: trainee?.email ? [trainee.email] : undefined,
-      },
-      accessToken
+      }
     );
 
     if (eventResult.error || !eventResult.data) {
@@ -372,7 +378,7 @@ export async function syncWorkoutToCalendar(
         event_summary: eventSummary,
         event_description: workout.notes || null,
         last_synced_at: new Date().toISOString(),
-      });
+      } as never);
 
     if (syncError) {
       return { error: syncError.message };
@@ -382,7 +388,7 @@ export async function syncWorkoutToCalendar(
     // to ensure session numbers are current
     try {
       const { syncTraineeEventsToCalendar } = await import('../services/traineeCalendarSyncService');
-      
+
       // Sync current month events to update session numbers
       // Fire and forget - don't block the response
       syncTraineeEventsToCalendar(
@@ -457,6 +463,15 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     // Then get workouts and filter them based on sync status
     
     // Get ALL Google Calendar sync records for these trainees (not filtered by date yet)
+    interface SyncRecord {
+      workout_id: string | null;
+      trainee_id: string;
+      sync_direction: string;
+      event_start_time: string | null;
+      event_end_time: string | null;
+      google_event_id: string;
+      sync_status: string;
+    }
     const { data: allGoogleSyncData, error: allGoogleSyncError } = await supabase
       .from('google_calendar_sync')
       .select(`
@@ -470,13 +485,13 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       `)
       .eq('trainer_id', trainerId)
       .in('trainee_id', traineeIds)
-      .eq('sync_status', 'synced');
+      .eq('sync_status', 'synced') as { data: SyncRecord[] | null; error: { message: string } | null };
 
     // Build maps: which workouts are synced FROM Google and their event_start_time
     const workoutIdsFromGoogle = new Set<string>();
     const eventStartTimesByWorkoutId = new Map<string, string>();
-    const syncRecordsByWorkoutId = new Map<string, any>();
-    
+    const syncRecordsByWorkoutId = new Map<string, SyncRecord>();
+
     if (!allGoogleSyncError && allGoogleSyncData) {
       allGoogleSyncData.forEach(sync => {
         if (sync.workout_id) {
@@ -497,6 +512,15 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
 
     // Get ALL workouts that might be in the date range (by workout_date)
     // We'll filter them later based on sync status
+    interface WorkoutRecord {
+      id: string;
+      workout_date: string;
+      workout_type: string | null;
+      is_completed: boolean | null;
+      notes: string | null;
+      created_at: string;
+      trainer_id: string;
+    }
     const { data: workoutsDataAll, error: workoutsErrorAll } = await supabase
       .from('workouts')
       .select(`
@@ -509,7 +533,7 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         trainer_id
       `)
       .eq('trainer_id', trainerId)
-      .order('workout_date', { ascending: true });
+      .order('workout_date', { ascending: true }) as { data: WorkoutRecord[] | null; error: { message: string } | null };
 
     if (workoutsErrorAll) {
       console.warn('Error loading workouts:', workoutsErrorAll);
@@ -550,11 +574,15 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
     const workoutIds = uniqueWorkoutsData.map(w => w.id);
 
     // Get workout_trainees for these workouts, filtered by our trainee IDs
+    interface WorkoutTraineeRecord {
+      trainee_id: string;
+      workout_id: string;
+    }
     const { data: workoutTraineesData, error: wtError } = await supabase
       .from('workout_trainees')
       .select('trainee_id, workout_id')
       .in('workout_id', workoutIds)
-      .in('trainee_id', traineeIds);
+      .in('trainee_id', traineeIds) as { data: WorkoutTraineeRecord[] | null; error: { message: string } | null };
 
     if (wtError) {
       console.warn('Error loading workout_trainees:', wtError);
@@ -633,7 +661,7 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         .from('workout_trainees')
         .select('trainee_id, workout_id')
         .in('workout_id', completedWorkoutIds)
-        .in('trainee_id', traineeIds);
+        .in('trainee_id', traineeIds) as { data: WorkoutTraineeRecord[] | null };
 
       if (completedWorkoutTrainees) {
         completedWorkoutTrainees.forEach(wt => {

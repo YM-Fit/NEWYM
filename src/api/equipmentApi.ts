@@ -18,7 +18,7 @@ export const equipmentApi = {
       .select('*')
       .eq('trainer_id', trainerId)
       .order('name');
-    if (error) throw handleApiError(error, { context: 'equipmentApi.getAll' });
+    if (error) throw handleApiError(error, 'שגיאה בטעינת ציוד', 'equipmentApi.getAll');
     return data as Equipment[];
   },
 
@@ -26,10 +26,10 @@ export const equipmentApi = {
     rateLimiter.check('createEquipment', 50);
     const { data, error } = await supabase
       .from('equipment')
-      .insert({ trainer_id: trainerId, name, category })
+      .insert({ trainer_id: trainerId, name, category } as never)
       .select()
       .single();
-    if (error) throw handleApiError(error, { context: 'equipmentApi.create' });
+    if (error) throw handleApiError(error, 'שגיאה ביצירת ציוד', 'equipmentApi.create');
     return data as Equipment;
   },
 
@@ -37,11 +37,11 @@ export const equipmentApi = {
     rateLimiter.check('updateEquipment', 50);
     const { data, error } = await supabase
       .from('equipment')
-      .update(updates)
+      .update(updates as never)
       .eq('id', equipmentId)
       .select()
       .single();
-    if (error) throw handleApiError(error, { context: 'equipmentApi.update' });
+    if (error) throw handleApiError(error, 'שגיאה בעדכון ציוד', 'equipmentApi.update');
     return data as Equipment;
   },
 
@@ -51,6 +51,6 @@ export const equipmentApi = {
       .from('equipment')
       .delete()
       .eq('id', equipmentId);
-    if (error) throw handleApiError(error, { context: 'equipmentApi.delete' });
+    if (error) throw handleApiError(error, 'שגיאה במחיקת ציוד', 'equipmentApi.delete');
   },
 };

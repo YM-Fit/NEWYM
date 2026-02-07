@@ -78,7 +78,7 @@ export const goalsApi = {
     try {
       const { data, error } = await supabase
         .from('trainee_goals')
-        .update(updates as any)
+        .update(updates as never)
         .eq('id', goalId)
         .select()
         .single();
@@ -109,7 +109,7 @@ export const goalsApi = {
     try {
       const { data, error } = await supabase
         .from('trainee_goals')
-        .update({ current_value: currentValue } as any)
+        .update({ current_value: currentValue } as never)
         .eq('id', goalId)
         .select()
         .single();

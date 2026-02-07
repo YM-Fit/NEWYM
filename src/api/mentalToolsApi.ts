@@ -41,7 +41,7 @@ export const mentalToolsApi = {
       .eq('trainee_id', traineeId)
       .order('priority', { ascending: false })
       .order('created_at', { ascending: false });
-    if (error) throw handleApiError(error, { context: 'mentalToolsApi.getByTrainee' });
+    if (error) throw handleApiError(error, 'שגיאה בטעינת כלים מנטליים', 'mentalToolsApi.getByTrainee');
     return data as MentalTool[];
   },
 
@@ -49,10 +49,10 @@ export const mentalToolsApi = {
     rateLimiter.check('createMentalTool', 50);
     const { data, error } = await supabase
       .from('mental_tools')
-      .insert(input)
+      .insert(input as never)
       .select()
       .single();
-    if (error) throw handleApiError(error, { context: 'mentalToolsApi.create' });
+    if (error) throw handleApiError(error, 'שגיאה ביצירת כלי מנטלי', 'mentalToolsApi.create');
     return data as MentalTool;
   },
 
@@ -60,11 +60,11 @@ export const mentalToolsApi = {
     rateLimiter.check('updateMentalTool', 50);
     const { data, error } = await supabase
       .from('mental_tools')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update({ ...updates, updated_at: new Date().toISOString() } as never)
       .eq('id', toolId)
       .select()
       .single();
-    if (error) throw handleApiError(error, { context: 'mentalToolsApi.update' });
+    if (error) throw handleApiError(error, 'שגיאה בעדכון כלי מנטלי', 'mentalToolsApi.update');
     return data as MentalTool;
   },
 
@@ -74,7 +74,7 @@ export const mentalToolsApi = {
       .from('mental_tools')
       .delete()
       .eq('id', toolId);
-    if (error) throw handleApiError(error, { context: 'mentalToolsApi.delete' });
+    if (error) throw handleApiError(error, 'שגיאה במחיקת כלי מנטלי', 'mentalToolsApi.delete');
   },
 
   async toggleComplete(toolId: string, isCompleted: boolean): Promise<MentalTool> {
@@ -84,11 +84,11 @@ export const mentalToolsApi = {
       .update({
         is_completed: isCompleted,
         updated_at: new Date().toISOString(),
-      })
+      } as never)
       .eq('id', toolId)
       .select()
       .single();
-    if (error) throw handleApiError(error, { context: 'mentalToolsApi.toggleComplete' });
+    if (error) throw handleApiError(error, 'שגיאה בעדכון סטטוס כלי מנטלי', 'mentalToolsApi.toggleComplete');
     return data as MentalTool;
   },
 };

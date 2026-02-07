@@ -60,7 +60,7 @@ export const measurementsApi = {
     }
 
     const { data, error } = await query;
-    if (error) throw handleApiError(error, { context: 'measurementsApi.getByTrainee' });
+    if (error) throw handleApiError(error, 'שגיאה בטעינת מדידות', 'measurementsApi.getByTrainee');
     return data as MeasurementRecord[];
   },
 
@@ -68,10 +68,10 @@ export const measurementsApi = {
     rateLimiter.check('createMeasurement', 50);
     const { data, error } = await supabase
       .from('measurements')
-      .insert(input)
+      .insert(input as never)
       .select()
       .single();
-    if (error) throw handleApiError(error, { context: 'measurementsApi.create' });
+    if (error) throw handleApiError(error, 'שגיאה ביצירת מדידה', 'measurementsApi.create');
     return data as MeasurementRecord;
   },
 
@@ -79,11 +79,11 @@ export const measurementsApi = {
     rateLimiter.check('updateMeasurement', 50);
     const { data, error } = await supabase
       .from('measurements')
-      .update(updates)
+      .update(updates as never)
       .eq('id', measurementId)
       .select()
       .single();
-    if (error) throw handleApiError(error, { context: 'measurementsApi.update' });
+    if (error) throw handleApiError(error, 'שגיאה בעדכון מדידה', 'measurementsApi.update');
     return data as MeasurementRecord;
   },
 
@@ -93,6 +93,6 @@ export const measurementsApi = {
       .from('measurements')
       .delete()
       .eq('id', measurementId);
-    if (error) throw handleApiError(error, { context: 'measurementsApi.delete' });
+    if (error) throw handleApiError(error, 'שגיאה במחיקת מדידה', 'measurementsApi.delete');
   },
 };

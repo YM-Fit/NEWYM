@@ -646,8 +646,8 @@ export async function getGoogleCalendarEvents(
                       .eq('trainer_id', trainerId)
                       .eq('sync_status', 'synced')
                       .gte('event_start_time', dateRange.start.toISOString())
-                      .lte('event_start_time', dateRange.end.toISOString());
-                    
+                      .lte('event_start_time', dateRange.end.toISOString()) as { data: { id: string; google_event_id: string; workout_id: string | null; sync_direction: string }[] | null };
+
                     if (allSyncRecords) {
                       for (const syncRecord of allSyncRecords) {
                         if (!existingEventIds.has(syncRecord.google_event_id)) {
@@ -659,7 +659,7 @@ export async function getGoogleCalendarEvents(
                               .eq('id', syncRecord.workout_id)
                               .eq('trainer_id', trainerId);
                           }
-                          
+
                           // Delete sync record
                           await supabase
                             .from('google_calendar_sync')
@@ -1039,7 +1039,7 @@ export async function updateGoogleCalendarEvent(
     let currentToken = tokenResult.data;
 
     // Helper function to perform the update
-    const performUpdate = async (token: string): Promise<{ success: boolean; error?: string; needsRetry?: boolean }> => {
+    const performUpdate = async (token: string): Promise<{ success: boolean; error?: string; needsRetry?: boolean; eventDeleted?: boolean }> => {
       // Get existing event first
       const getResponse = await fetch(
         `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`,
@@ -1338,8 +1338,7 @@ export async function updateCalendarEventBidirectional(
           endTime: updates.endTime,
           summary: updates.summary,
           description: updates.description,
-        },
-        accessToken
+        }
       );
 
       if (updateResult.error) {
@@ -1626,8 +1625,8 @@ export async function bulkUpdateCalendarEvents(
               .from('google_calendar_sync')
               .select('workout_id, sync_direction')
               .eq('id', (record as any).id)
-              .maybeSingle();
-            
+              .maybeSingle() as { data: { workout_id: string | null; sync_direction: string } | null };
+
             // Delete workout if exists and sync direction allows it
             if (syncRecord?.workout_id && syncRecord.sync_direction !== 'to_google') {
               await supabase
@@ -1652,7 +1651,7 @@ export async function bulkUpdateCalendarEvents(
             // Update sync status to failed
             await supabase
               .from('google_calendar_sync')
-              .update({ sync_status: 'failed' } as any)
+              .update({ sync_status: 'failed' } as never)
               .eq('id', (record as any).id);
           }
         } else {
@@ -1665,7 +1664,7 @@ export async function bulkUpdateCalendarEvents(
               event_summary: updates.summary,
               last_synced_at: new Date().toISOString(),
               sync_status: 'synced'
-            } as any)
+            } as never)
             .eq('id', (record as any).id);
         }
       } catch (err: unknown) {

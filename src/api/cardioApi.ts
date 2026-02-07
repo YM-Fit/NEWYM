@@ -245,7 +245,7 @@ export const cardioApi = {
       
       const { data, error } = await supabase
         .from('cardio_activities')
-        .update(updates as any)
+        .update(updates as never)
         .eq('id', activityId)
         .select('*, cardio_type:cardio_types(id, name)')
         .single();
@@ -328,7 +328,7 @@ export const cardioApi = {
 
       const { data, error } = await supabase
         .from('cardio_types')
-        .update({ name: name.trim() } as any)
+        .update({ name: name.trim() } as never)
         .eq('id', typeId)
         .select()
         .single();

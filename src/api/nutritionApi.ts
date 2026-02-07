@@ -35,7 +35,7 @@ export async function getActiveMealPlanWithMeals(
   const { data: meals, error: mealsError } = await supabase
     .from('meal_plan_meals')
     .select('*')
-    .eq('plan_id', plan.id)
+    .eq('plan_id', (plan as { id: string }).id)
     .order('order_index', { ascending: true });
 
   if (mealsError) {
@@ -92,7 +92,7 @@ export async function createFoodItem(
     .insert({
       meal_id: mealId,
       ...foodItem,
-    })
+    } as never)
     .select()
     .single();
 
@@ -117,7 +117,7 @@ export async function updateFoodItem(
 
   const { data, error } = await supabase
     .from('meal_plan_food_items')
-    .update(updates)
+    .update(updates as never)
     .eq('id', foodItemId)
     .select()
     .single();
