@@ -159,7 +159,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
             <button
               type="button"
               onClick={onBack}
-              className="p-2 md:p-2.5 hover:bg-white/20 rounded-lg transition-all text-foreground flex-shrink-0"
+              className="p-2.5 hover:bg-white/20 rounded-lg transition-all text-foreground flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
               aria-label="חזור"
             >
               <ArrowRight className="h-5 w-5 md:h-6 md:w-6" />
@@ -180,10 +180,10 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
             type="button"
             onClick={() => handleSave()}
             disabled={saving || exercises.length === 0}
-            className="bg-white text-emerald-600 px-4 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl flex items-center space-x-1.5 rtl:space-x-reverse transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-sm md:text-base flex-shrink-0 ml-2"
+            className="bg-white text-emerald-600 px-4 md:px-5 py-2.5 md:py-3 rounded-lg md:rounded-xl flex items-center space-x-1.5 rtl:space-x-reverse transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-sm md:text-base flex-shrink-0 ml-2 min-h-[44px] active:scale-95"
           >
             <Save className="h-4 w-4 md:h-5 md:w-5" />
-            <span className="font-semibold md:font-bold hidden sm:inline">{saving ? 'שומר...' : 'סיים'}</span>
+            <span className="font-semibold md:font-bold">{saving ? 'שומר...' : 'סיים'}</span>
           </button>
         </div>
 

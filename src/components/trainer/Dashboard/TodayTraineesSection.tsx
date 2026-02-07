@@ -859,7 +859,7 @@ export default function TodayTraineesSection({
   return (
     <div className="space-y-6 md:space-y-8">
       {/* Today's Trainees Section */}
-      <div className="premium-card-static p-6 md:p-8 lg:p-10 relative overflow-hidden
+      <div className="premium-card-static p-4 sm:p-6 md:p-8 lg:p-10 relative overflow-hidden
                       border-2 border-primary/10 hover:border-primary/20 transition-all duration-500">
         {/* Enhanced Background gradient effects */}
         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-primary/10 via-emerald-700/5 to-transparent 
@@ -885,12 +885,12 @@ export default function TodayTraineesSection({
                   </div>
                 </div>
                 <div>
-                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight mb-1
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight mb-1
                               bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
                     מתאמנים של היום
                   </h2>
-                  <p className="text-sm md:text-base text-secondary/80 font-medium">
-                    כל המתאמנים עם אימון מתוזמן להיום • ניהול מהיר ונוח
+                  <p className="text-xs sm:text-sm md:text-base text-secondary/80 font-medium">
+                    כל המתאמנים עם אימון מתוזמן להיום
                   </p>
                 </div>
               </div>
@@ -956,7 +956,7 @@ export default function TodayTraineesSection({
 
       {/* Tomorrow's Trainees Section */}
       {tomorrowTrainees.length > 0 && (
-        <div className="premium-card-static p-6 md:p-8 lg:p-10 relative overflow-hidden
+        <div className="premium-card-static p-4 sm:p-6 md:p-8 lg:p-10 relative overflow-hidden
                         border-2 border-warning/10 hover:border-warning/20 transition-all duration-500">
           {/* Enhanced Background gradient effects */}
           <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-warning/10 via-amber-500/5 to-transparent 
@@ -982,12 +982,12 @@ export default function TodayTraineesSection({
                     </div>
                   </div>
                   <div>
-                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight mb-1
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight mb-1
                                 bg-gradient-to-r from-foreground to-warning bg-clip-text text-transparent">
                       מתאמנים של מחר
                     </h2>
-                    <p className="text-sm md:text-base text-secondary/80 font-medium">
-                      כל המתאמנים עם אימון מתוזמן למחר • תכנון מראש
+                    <p className="text-xs sm:text-sm md:text-base text-secondary/80 font-medium">
+                      כל המתאמנים עם אימון מתוזמן למחר
                     </p>
                   </div>
                 </div>
@@ -1174,94 +1174,88 @@ function TraineeTableRow({
 
       {/* Actions */}
       <td className="py-3 px-3 md:py-4 md:px-4">
-        <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 flex-wrap">
           <button
             onClick={() => {
-              // If there's a scheduled workout (not completed), pass its ID
               const scheduledWorkoutId = !workout.is_completed ? workout.id : undefined;
               onNewWorkout(trainee, scheduledWorkoutId);
             }}
-            className="btn-primary p-1.5 md:p-2 rounded-lg flex items-center gap-1 md:gap-1.5
-                       hover:scale-110 active:scale-95 transition-all duration-300
-                       shadow-lg shadow-emerald-700/50 hover:shadow-2xl hover:shadow-emerald-700/70
-                       focus:outline-none focus:ring-2 focus:ring-emerald-700/50 focus:ring-offset-2"
+            className="btn-primary min-w-[36px] min-h-[36px] p-2 md:p-2.5 rounded-lg flex items-center gap-1 md:gap-1.5
+                       hover:scale-105 active:scale-95 transition-all duration-300
+                       shadow-lg shadow-emerald-700/50
+                       focus:outline-none focus:ring-2 focus:ring-emerald-700/50"
             aria-label={`הוסף אימון חדש ל${trainee.full_name}`}
             title="אימון חדש (דינמי)"
           >
-            <Dumbbell className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <Dumbbell className="w-4 h-4" />
             <span className="text-[10px] md:text-xs font-bold hidden sm:inline">אימון</span>
           </button>
           {onNewPreparedWorkout && (
             <button
               onClick={() => {
-                // If there's a scheduled workout (not completed), pass its ID
                 const scheduledWorkoutId = !workout.is_completed ? workout.id : undefined;
                 onNewPreparedWorkout(trainee, scheduledWorkoutId);
               }}
-              className="bg-cyan-500/20 hover:bg-cyan-500/30 border-2 border-cyan-500/30 
-                         hover:border-cyan-500/50 p-1.5 md:p-2 rounded-lg flex items-center gap-1 md:gap-1.5
-                         transition-all duration-300 hover:scale-110 active:scale-95
-                         shadow-lg shadow-cyan-500/20 hover:shadow-2xl hover:shadow-cyan-500/40 text-cyan-600 dark:text-cyan-400
-                         focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:ring-offset-2"
+              className="bg-cyan-500/20 hover:bg-cyan-500/30 border-2 border-cyan-500/30
+                         hover:border-cyan-500/50 min-w-[36px] min-h-[36px] p-2 md:p-2.5 rounded-lg flex items-center gap-1 md:gap-1.5
+                         transition-all duration-300 active:scale-95
+                         text-cyan-600 dark:text-cyan-400
+                         focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
               aria-label={`הוסף אימון שהוכן מראש ל${trainee.full_name}`}
               title="אימון שהוכן מראש"
             >
-              <FileText className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <FileText className="w-4 h-4" />
               <span className="text-[10px] md:text-xs font-bold hidden sm:inline">הוכן מראש</span>
             </button>
           )}
-          {/* Delete button - only show for scheduled workouts (not completed) */}
           {!workout.is_completed && onDeleteWorkout && (
             <button
               onClick={() => onDeleteWorkout(workout.id, trainee.id, workout.googleEventId)}
-              className="bg-danger/20 hover:bg-danger/30 border-2 border-danger/30 
-                         hover:border-danger/50 p-1.5 md:p-2 rounded-lg flex items-center gap-1 md:gap-1.5
-                         transition-all duration-300 hover:scale-105 active:scale-95
-                         hover:shadow-lg hover:shadow-danger/20 text-danger
-                         focus:outline-none focus:ring-2 focus:ring-danger/50 focus:ring-offset-2"
+              className="bg-danger/20 hover:bg-danger/30 border-2 border-danger/30
+                         hover:border-danger/50 min-w-[36px] min-h-[36px] p-2 md:p-2.5 rounded-lg flex items-center gap-1 md:gap-1.5
+                         transition-all duration-300 active:scale-95
+                         text-danger
+                         focus:outline-none focus:ring-2 focus:ring-danger/50"
               aria-label={`מחק אימון מתוזמן של ${trainee.full_name}`}
               title="מחק אימון"
             >
-              <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <Trash2 className="w-4 h-4" />
               <span className="text-[10px] md:text-xs font-bold hidden sm:inline">מחק</span>
             </button>
           )}
           <button
             onClick={() => onViewWorkoutPlan(trainee)}
-            className="bg-surface/60 hover:bg-surface border-2 border-border/20 
-                       hover:border-primary/50 p-1.5 md:p-2 rounded-lg flex items-center gap-1 md:gap-1.5
-                       transition-all duration-300 hover:scale-105 active:scale-95
-                       hover:shadow-lg hover:shadow-primary/20
-                       focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
+            className="bg-surface/60 hover:bg-surface border-2 border-border/20
+                       hover:border-primary/50 min-w-[36px] min-h-[36px] p-2 md:p-2.5 rounded-lg flex items-center justify-center
+                       transition-all duration-300 active:scale-95
+                       focus:outline-none focus:ring-2 focus:ring-primary/50"
             aria-label={`צפה בתוכנית אימון של ${trainee.full_name}`}
             title="תוכנית אימון"
           >
-            <ClipboardList className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
+            <ClipboardList className="w-4 h-4 text-primary" />
           </button>
           <button
             onClick={() => onViewMealPlan(trainee)}
-            className="bg-surface/60 hover:bg-surface border-2 border-border/20 
-                       hover:border-primary/50 p-1.5 md:p-2 rounded-lg flex items-center gap-1 md:gap-1.5
-                       transition-all duration-300 hover:scale-105 active:scale-95
-                       hover:shadow-lg hover:shadow-primary/20
-                       focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
+            className="bg-surface/60 hover:bg-surface border-2 border-border/20
+                       hover:border-primary/50 min-w-[36px] min-h-[36px] p-2 md:p-2.5 rounded-lg flex items-center justify-center
+                       transition-all duration-300 active:scale-95
+                       focus:outline-none focus:ring-2 focus:ring-primary/50"
             aria-label={`צפה בתפריט של ${trainee.full_name}`}
             title="תפריט"
           >
-            <UtensilsCrossed className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
+            <UtensilsCrossed className="w-4 h-4 text-primary" />
           </button>
           {onTraineeClick && (
             <button
               onClick={() => onTraineeClick(trainee)}
-              className="bg-surface/60 hover:bg-surface border-2 border-border/20 
-                         hover:border-primary/50 p-1.5 md:p-2 rounded-lg flex items-center gap-1 md:gap-1.5
-                         transition-all duration-300 hover:scale-105 active:scale-95
-                         hover:shadow-lg hover:shadow-primary/20
-                         focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
+              className="bg-surface/60 hover:bg-surface border-2 border-border/20
+                         hover:border-primary/50 min-w-[36px] min-h-[36px] p-2 md:p-2.5 rounded-lg flex items-center justify-center
+                         transition-all duration-300 active:scale-95
+                         focus:outline-none focus:ring-2 focus:ring-primary/50"
               aria-label={`פתח כרטיס לקוח של ${trainee.full_name}`}
               title="כרטיס לקוח"
             >
-              <User className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
+              <User className="w-4 h-4 text-primary" />
             </button>
           )}
         </div>

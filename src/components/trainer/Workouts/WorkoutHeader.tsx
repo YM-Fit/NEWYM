@@ -60,9 +60,9 @@ export const WorkoutHeader = memo(({
     onWorkoutTypeChange('pair');
   };
   return (
-    <div className="premium-card-static p-2 lg:p-3 mb-2 lg:mb-3 sticky top-0 z-10">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2 lg:gap-3">
+    <div className="premium-card-static p-2 sm:p-3 lg:p-3 mb-2 lg:mb-3 sticky top-0 z-10">
+      <div className="flex items-center justify-between mb-2 gap-2">
+        <div className="flex items-center gap-2 lg:gap-3 min-w-0 flex-1">
           <button
             type="button"
             onClick={(e) => {
@@ -70,7 +70,7 @@ export const WorkoutHeader = memo(({
               e.stopPropagation();
               onBack();
             }}
-            className="p-1.5 rounded-lg bg-surface text-muted hover:text-foreground hover:bg-elevated/50 transition-all touch-manipulation cursor-pointer"
+            className="p-2 sm:p-2.5 rounded-lg bg-surface text-muted hover:text-foreground hover:bg-elevated/50 transition-all touch-manipulation cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center flex-shrink-0 active:scale-95"
             aria-label="חזור"
           >
             <ArrowRight className="h-4 w-4 lg:h-5 lg:w-5" />
@@ -103,7 +103,7 @@ export const WorkoutHeader = memo(({
           </div>
         </div>
 
-        <div className="flex gap-1.5">
+        <div className="flex gap-1 sm:gap-1.5 flex-shrink-0">
           {exercisesCount === 0 && !workoutId && (
             <button
               type="button"
@@ -112,9 +112,9 @@ export const WorkoutHeader = memo(({
                 e.stopPropagation();
                 onLoadPrevious();
               }}
-              className="bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-400 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg flex items-center gap-1.5 transition-all touch-manipulation cursor-pointer"
+              className="bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-400 px-2 lg:px-3 py-2 lg:py-2.5 rounded-lg flex items-center gap-1.5 transition-all touch-manipulation cursor-pointer min-h-[40px] active:scale-95"
             >
-              <Copy className="h-3 w-3 lg:h-4 lg:w-4" />
+              <Copy className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
               <span className="font-medium text-xs lg:text-sm hidden sm:inline">טען אחרון</span>
             </button>
           )}
@@ -126,9 +126,9 @@ export const WorkoutHeader = memo(({
                 e.stopPropagation();
                 onSaveTemplate();
               }}
-              className="bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg flex items-center gap-1.5 transition-all touch-manipulation cursor-pointer"
+              className="bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 px-2 lg:px-3 py-2 lg:py-2.5 rounded-lg flex items-center gap-1.5 transition-all touch-manipulation cursor-pointer min-h-[40px] active:scale-95"
             >
-              <BookMarked className="h-3 w-3 lg:h-4 lg:w-4" />
+              <BookMarked className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
               <span className="font-medium text-xs lg:text-sm hidden sm:inline">תבנית</span>
             </button>
           )}
@@ -140,9 +140,9 @@ export const WorkoutHeader = memo(({
               onSave();
             }}
             disabled={saving || exercisesCount === 0}
-            className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-elevated disabled:text-muted text-foreground px-3 lg:px-4 py-1.5 lg:py-2 rounded-lg flex items-center gap-1.5 transition-all disabled:cursor-not-allowed touch-manipulation font-bold cursor-pointer text-xs lg:text-sm"
+            className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-elevated disabled:text-muted text-foreground px-3 lg:px-4 py-2 lg:py-2.5 rounded-lg flex items-center gap-1.5 transition-all disabled:cursor-not-allowed touch-manipulation font-bold cursor-pointer text-xs lg:text-sm min-h-[40px] active:scale-95"
           >
-            <Save className="h-3 w-3 lg:h-4 lg:w-4" />
+            <Save className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
             <span>{saving ? 'שומר...' : (workoutId ? 'עדכן' : 'שמור')}</span>
           </button>
         </div>

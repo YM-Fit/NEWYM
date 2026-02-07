@@ -1682,7 +1682,7 @@ export default function WorkoutSession({
 
   return (
     <div
-      className={`trainer-workout-session min-h-screen bg-[var(--color-bg-base)] p-4 lg:p-6 transition-colors duration-300 ${
+      className={`trainer-workout-session min-h-screen bg-[var(--color-bg-base)] p-2 sm:p-4 lg:p-6 transition-colors duration-300 ${
         isTablet ? 'tablet-padding' : ''
       }`}
     >

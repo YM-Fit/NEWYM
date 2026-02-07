@@ -157,14 +157,14 @@ export default function TraineeApp() {
                 onClick={() => { setActiveTab('workout-plan'); setShowMoreMenu(false); }}
               />
 
-              <div className="relative -mt-10">
+              <div className="relative -mt-8 sm:-mt-10">
                 <button
                   onClick={() => { setActiveTab('self-workout'); setShowMoreMenu(false); }}
-                  className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow transition-transform hover:scale-105 active:scale-95 border-4 border-[var(--color-bg-base)] focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow transition-transform hover:scale-105 active:scale-95 border-4 border-[var(--color-bg-base)] focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                   aria-label="התחל אימון חדש"
                   title="אימון חדש"
                 >
-                  <Plus className="w-7 h-7 text-foreground" aria-hidden="true" />
+                  <Plus className="w-6 h-6 sm:w-7 sm:h-7 text-foreground" aria-hidden="true" />
                 </button>
               </div>
 
@@ -185,10 +185,10 @@ export default function TraineeApp() {
         </div>
       </nav>
 
-      <div className="fixed bottom-24 left-4 z-40">
+      <div className="fixed bottom-[104px] left-3 sm:left-4 z-40">
         <button
           onClick={() => setShowMoreMenu(!showMoreMenu)}
-          className={`glass-card px-4 py-2.5 rounded-xl text-sm font-medium transition-all border shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
+          className={`glass-card px-3.5 sm:px-4 py-2.5 rounded-xl text-sm font-medium transition-all border shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/50 active:scale-95 min-h-[44px] ${
             showMoreMenu ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10 shadow-emerald-500/20' : 'text-[var(--color-text-secondary)] border-[var(--color-border)] hover:border-emerald-500/30 hover:text-emerald-400'
           }`}
           aria-label={showMoreMenu ? 'סגור תפריט נוסף' : 'פתח תפריט נוסף'}
@@ -199,9 +199,9 @@ export default function TraineeApp() {
         </button>
       </div>
 
-      <main 
+      <main
         id="main-content"
-        className="pb-32 px-4 pt-4"
+        className="pb-36 px-3 sm:px-4 pt-3 sm:pt-4"
         role="main"
         aria-label="תוכן ראשי"
       >
@@ -242,14 +242,14 @@ function TabButton({ icon: Icon, label, active, onClick }: TabButtonProps) {
   return (
     <button
       onClick={onClick}
-      className={`relative flex flex-col items-center py-1.5 px-2.5 rounded-2xl transition-all ${
+      className={`relative flex flex-col items-center min-w-[52px] min-h-[48px] py-2 px-3 rounded-2xl transition-all active:scale-95 ${
         active
           ? 'text-emerald-400'
           : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
       }`}
     >
       {active && (
-        <span className="absolute inset-x-1 bottom-0 h-6 -z-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 shadow-glow-sm" />
+        <span className="absolute inset-x-1 bottom-0 h-7 -z-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 shadow-glow-sm" />
       )}
       <Icon className={`w-5 h-5 ${active ? 'drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]' : ''}`} />
       <span className="text-[10px] mt-1.5 font-medium tracking-wide">{label}</span>

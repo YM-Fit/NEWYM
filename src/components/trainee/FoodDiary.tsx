@@ -936,8 +936,8 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="premium-card-static rounded-2xl p-6 shadow-xl sticky top-0 z-10 bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700">
-        <div className="flex items-center justify-between mb-4">
+      <div className="premium-card-static rounded-2xl p-4 sm:p-6 shadow-xl sticky top-0 z-10 bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div className="flex items-center gap-2 w-full">
             <button
               onClick={() => {
@@ -945,13 +945,13 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 else if (viewMode === 'week') navigateWeek('next');
                 else navigateMonth('next');
               }}
-              className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-foreground flex-shrink-0"
+              className="p-2.5 hover:bg-white/20 rounded-xl transition-all duration-300 text-foreground flex-shrink-0 active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
             <div className="text-center text-foreground flex-1 min-w-0">
-              <h2 className="text-2xl font-bold">יומן אכילה</h2>
-              <p className="text-sm text-foreground/90 mt-1">{getViewTitle()}</p>
+              <h2 className="text-xl sm:text-2xl font-bold">יומן אכילה</h2>
+              <p className="text-xs sm:text-sm text-foreground/90 mt-1 truncate">{getViewTitle()}</p>
             </div>
             <button
               onClick={() => {
@@ -959,17 +959,17 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 else if (viewMode === 'week') navigateWeek('prev');
                 else navigateMonth('prev');
               }}
-              className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-foreground flex-shrink-0"
+              className="p-2.5 hover:bg-white/20 rounded-xl transition-all duration-300 text-foreground flex-shrink-0 active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
         {/* View Mode Selector */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-1.5 sm:gap-2 mt-3 sm:mt-4">
           <button
             onClick={() => setViewMode('day')}
-            className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 min-h-[44px] active:scale-95 ${
               viewMode === 'day'
                 ? 'bg-white/20 text-foreground shadow-lg'
                 : 'bg-white/10 text-foreground/80 hover:bg-white/15'
@@ -980,7 +980,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
           </button>
           <button
             onClick={() => setViewMode('week')}
-            className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 min-h-[44px] active:scale-95 ${
               viewMode === 'week'
                 ? 'bg-white/20 text-foreground shadow-lg'
                 : 'bg-white/10 text-foreground/80 hover:bg-white/15'
@@ -991,7 +991,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
           </button>
           <button
             onClick={() => setViewMode('month')}
-            className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 min-h-[44px] active:scale-95 ${
               viewMode === 'month'
                 ? 'bg-white/20 text-foreground shadow-lg'
                 : 'bg-white/10 text-foreground/80 hover:bg-white/15'

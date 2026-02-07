@@ -113,7 +113,7 @@ export const WorkoutTable = memo(({
   return (
     <div className="premium-card-static overflow-hidden mb-4 shadow-lg border-2 border-emerald-500/30" style={{ display: 'block' }}>
       <div className={`overflow-x-auto ${isTvMode ? 'max-h-[calc(100vh-200px)]' : 'max-h-[calc(100vh-300px)]'} overflow-y-auto`}>
-        <table className={`w-full border-collapse ${isTvMode ? 'min-w-[1200px]' : 'min-w-[1400px]'} bg-surface/50`} style={{ display: 'table' }}>
+        <table className={`w-full border-collapse ${isTvMode ? 'min-w-[1200px]' : 'min-w-[900px] lg:min-w-[1200px]'} bg-surface/50`} style={{ display: 'table' }}>
           <WorkoutTableHeader isTablet={isTablet} />
           <tbody>
             {exercises.map((exercise, exerciseIndex) => {

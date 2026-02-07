@@ -124,7 +124,7 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-muted hover:text-foreground hover:bg-surface transition-all"
+            className="p-2.5 rounded-xl text-muted hover:text-foreground hover:bg-surface transition-all min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
             aria-label="סגור תפריט"
           >
             <X className="h-5 w-5" />
