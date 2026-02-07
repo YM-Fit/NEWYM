@@ -84,7 +84,7 @@ export default memo(function Dashboard({
                   {getGreeting()}
                 </span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2 tracking-tight">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 tracking-tight">
                 {trainerName ? `שלום, ${trainerName}` : 'שלום'}
               </h1>
               <p className="text-secondary">
@@ -105,7 +105,7 @@ export default memo(function Dashboard({
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/20 to-primary-dark/10 flex items-center justify-center">
             <Users className="w-8 h-8 text-primary" />
           </div>
-          <h3 className="text-xl font-bold text-foreground mb-3">התחל עכשיו!</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-3">התחל עכשיו!</h3>
           <p className="text-secondary mb-6 max-w-md mx-auto">
             הוסף את המתאמן הראשון שלך כדי להתחיל לעבוד עם המערכת
           </p>
@@ -153,7 +153,7 @@ export default memo(function Dashboard({
                           rounded-xl border-2 border-border/20 hover:border-primary/30
                           transition-all duration-300 hover:scale-105 shadow-sm">
               <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-lg shadow-primary/50" />
-              <span className="text-sm font-semibold text-foreground">
+              <span className="text-sm font-semibold text-gray-900">
                 {new Date().toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })}
               </span>
             </div>
@@ -164,13 +164,13 @@ export default memo(function Dashboard({
                             border border-primary/20 hover:border-primary/30 transition-all duration-300 hover:scale-105
                             shadow-sm">
                 <Users className="w-4 h-4 text-primary" />
-                <span className="text-base font-extrabold text-foreground">{trainees.length}</span>
+                <span className="text-base font-extrabold text-gray-900">{trainees.length}</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-info/15 to-blue-500/10
                             border border-info/20 hover:border-info/30 transition-all duration-300 hover:scale-105
                             shadow-sm">
                 <Activity className="w-4 h-4 text-info" />
-                <span className="text-base font-extrabold text-foreground">{todayWorkouts}</span>
+                <span className="text-base font-extrabold text-gray-900">{todayWorkouts}</span>
               </div>
             </div>
 
@@ -201,7 +201,7 @@ export default memo(function Dashboard({
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/20 to-primary-dark/10 flex items-center justify-center">
             <Users className="w-8 h-8 text-primary" />
           </div>
-          <h3 className="text-xl font-bold text-foreground mb-3">מתאמנים של היום</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-3">מתאמנים של היום</h3>
           <p className="text-secondary mb-6 max-w-md mx-auto">
             אין אימונים מתוזמנים להיום
           </p>
@@ -231,18 +231,18 @@ export default memo(function Dashboard({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Stats Cards */}
         <div className="premium-card-static p-4 md:p-5">
-          <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Target className="w-4 h-4 text-success" />
             סטטיסטיקות מהירות
           </h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-2 rounded-lg bg-surface/50">
               <span className="text-xs text-secondary">מדידות (7 ימים)</span>
-              <span className="text-sm font-bold text-foreground">{recentMeasurements}</span>
+              <span className="text-sm font-bold text-gray-900">{recentMeasurements}</span>
             </div>
             <div className="flex items-center justify-between p-2 rounded-lg bg-surface/50">
               <span className="text-xs text-secondary">קריאות מאזניים</span>
-              <span className="text-sm font-bold text-foreground">{scaleReadings.length}</span>
+              <span className="text-sm font-bold text-gray-900">{scaleReadings.length}</span>
             </div>
           </div>
         </div>

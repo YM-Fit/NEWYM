@@ -391,7 +391,7 @@ export default function RecentScaleReadings({
             <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-600/30 to-emerald-500/30 shadow-lg">
               <Calendar className="h-6 w-6 text-emerald-400" />
             </div>
-            <h3 className="text-xl font-bold text-foreground">בחר תאריך</h3>
+            <h3 className="text-xl font-bold text-gray-900">בחר תאריך</h3>
           </div>
           <button
             onClick={() => {
@@ -401,14 +401,14 @@ export default function RecentScaleReadings({
               setSelectedDate('');
               setNotesInput('');
             }}
-            className="p-2 text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all duration-300"
+            className="p-2 text-muted hover:text-gray-900 hover:bg-surface rounded-xl transition-all duration-300"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {editingDateTraineeName && (
-          <p className="text-sm text-muted mb-6">שמירה עבור מתאמן: <span className="font-semibold text-foreground">{editingDateTraineeName}</span></p>
+          <p className="text-sm text-muted mb-6">שמירה עבור מתאמן: <span className="font-semibold text-gray-900">{editingDateTraineeName}</span></p>
         )}
 
         <div className="mb-8">
@@ -417,7 +417,7 @@ export default function RecentScaleReadings({
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-input border border-border text-foreground focus:ring-2 focus:ring-emerald-600/50 focus:border-emerald-600/50 transition-all duration-300"
+            className="w-full px-4 py-3 rounded-xl bg-input border border-border text-gray-900 focus:ring-2 focus:ring-emerald-600/50 focus:border-emerald-600/50 transition-all duration-300"
           />
         </div>
 
@@ -428,7 +428,7 @@ export default function RecentScaleReadings({
             onChange={(e) => setNotesInput(e.target.value)}
             placeholder="הוסף הערות על השקילה..."
             rows={3}
-            className="w-full px-4 py-3 rounded-xl bg-input border border-border text-foreground placeholder-muted focus:ring-2 focus:ring-emerald-600/50 focus:border-emerald-600/50 transition-all duration-300 resize-none"
+            className="w-full px-4 py-3 rounded-xl bg-input border border-border text-gray-900 placeholder-muted focus:ring-2 focus:ring-emerald-600/50 focus:border-emerald-600/50 transition-all duration-300 resize-none"
           />
         </div>
 
@@ -477,7 +477,7 @@ export default function RecentScaleReadings({
               <Scale className="h-6 w-6 text-emerald-400" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-foreground">שקילויות והערות</h3>
+              <h3 className="font-bold text-lg text-gray-900">שקילויות והערות</h3>
               <div className="flex items-center gap-2 text-sm mt-1">
                 <span className={`inline-flex items-center gap-1.5 ${isListening ? 'text-emerald-400' : 'text-muted'}`}>
                   <span className={`h-2.5 w-2.5 rounded-full ${isListening ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50' : 'bg-muted'}`}></span>
@@ -497,7 +497,7 @@ export default function RecentScaleReadings({
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
               activeTab === 'readings'
                 ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-inverse shadow-lg'
-                : 'text-muted hover:text-foreground hover:bg-elevated'
+                : 'text-muted hover:text-gray-900 hover:bg-elevated'
             }`}
           >
             <Scale className="h-4 w-4" />
@@ -508,7 +508,7 @@ export default function RecentScaleReadings({
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
               activeTab === 'notes'
                 ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-inverse shadow-lg'
-                : 'text-muted hover:text-foreground hover:bg-elevated'
+                : 'text-muted hover:text-gray-900 hover:bg-elevated'
             }`}
           >
             <FileText className="h-4 w-4" />
@@ -528,7 +528,7 @@ export default function RecentScaleReadings({
                     placeholder="חיפוש לפי שם, משקל או הערות..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-4 pr-10 py-2 rounded-xl bg-input border border-border text-foreground placeholder-muted focus:ring-2 focus:ring-emerald-600/50 focus:border-emerald-600/50 transition-all"
+                    className="w-full pl-4 pr-10 py-2 rounded-xl bg-input border border-border text-gray-900 placeholder-muted focus:ring-2 focus:ring-emerald-600/50 focus:border-emerald-600/50 transition-all"
                   />
                 </div>
               </div>
@@ -570,11 +570,11 @@ export default function RecentScaleReadings({
               <div className="p-4 bg-surface rounded-xl border border-border space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">מקור</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">מקור</label>
                     <select
                       value={filterSource}
                       onChange={(e) => setFilterSource(e.target.value as any)}
-                      className="w-full px-4 py-2 rounded-xl bg-input border border-border text-foreground focus:ring-2 focus:ring-emerald-600/50"
+                      className="w-full px-4 py-2 rounded-xl bg-input border border-border text-gray-900 focus:ring-2 focus:ring-emerald-600/50"
                     >
                       <option value="all">הכל</option>
                       <option value="identified">זוהו</option>
@@ -583,11 +583,11 @@ export default function RecentScaleReadings({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">מיון לפי</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">מיון לפי</label>
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as any)}
-                      className="w-full px-4 py-2 rounded-xl bg-input border border-border text-foreground focus:ring-2 focus:ring-emerald-600/50"
+                      className="w-full px-4 py-2 rounded-xl bg-input border border-border text-gray-900 focus:ring-2 focus:ring-emerald-600/50"
                     >
                       <option value="date">תאריך</option>
                       <option value="weight">משקל</option>
@@ -596,10 +596,10 @@ export default function RecentScaleReadings({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">סדר</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">סדר</label>
                     <button
                       onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                      className="w-full px-4 py-2 rounded-xl bg-input border border-border text-foreground hover:bg-elevated transition-all flex items-center justify-center gap-2"
+                      className="w-full px-4 py-2 rounded-xl bg-input border border-border text-gray-900 hover:bg-elevated transition-all flex items-center justify-center gap-2"
                     >
                       {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
                       {sortOrder === 'asc' ? 'עולה' : 'יורד'}
@@ -609,21 +609,21 @@ export default function RecentScaleReadings({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">תאריך התחלה</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">תאריך התחלה</label>
                     <input
                       type="date"
                       value={dateRange.start}
                       onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                      className="w-full px-4 py-2 rounded-xl bg-input border border-border text-foreground focus:ring-2 focus:ring-emerald-600/50"
+                      className="w-full px-4 py-2 rounded-xl bg-input border border-border text-gray-900 focus:ring-2 focus:ring-emerald-600/50"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">תאריך סיום</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">תאריך סיום</label>
                     <input
                       type="date"
                       value={dateRange.end}
                       onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                      className="w-full px-4 py-2 rounded-xl bg-input border border-border text-foreground focus:ring-2 focus:ring-emerald-600/50"
+                      className="w-full px-4 py-2 rounded-xl bg-input border border-border text-gray-900 focus:ring-2 focus:ring-emerald-600/50"
                     />
                   </div>
                 </div>
@@ -638,7 +638,7 @@ export default function RecentScaleReadings({
               <div className="flex items-center justify-between pb-2 border-b border-border">
                 <button
                   onClick={handleSelectAll}
-                  className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
+                  className="flex items-center gap-2 text-sm text-muted hover:text-gray-900 transition-colors"
                 >
                   {selectedReadings.size === filteredReadings.length ? (
                     <CheckSquare className="h-4 w-4 text-emerald-400" />
@@ -692,7 +692,7 @@ export default function RecentScaleReadings({
                   <div>
                     {item.bestMatch ? (
                       <>
-                        <p className="font-semibold text-foreground text-lg">{item.bestMatch.traineeName}</p>
+                        <p className="font-semibold text-gray-900 text-lg">{item.bestMatch.traineeName}</p>
                         <div className="flex items-center gap-3 text-sm text-muted mt-1">
                           <span className="font-medium">{item.reading.weight_kg?.toFixed(1)} ק״ג</span>
                           {item.reading.body_fat_percent && (
@@ -776,7 +776,7 @@ export default function RecentScaleReadings({
                     setFilterSource('all');
                     setDateRange({ start: '', end: '' });
                   }}
-                  className="mt-4 px-4 py-2 rounded-xl bg-surface text-secondary hover:text-foreground transition-colors text-sm"
+                  className="mt-4 px-4 py-2 rounded-xl bg-surface text-secondary hover:text-gray-900 transition-colors text-sm"
                 >
                   נקה סינון
                 </button>
@@ -811,7 +811,7 @@ export default function RecentScaleReadings({
                         <User className="h-5 w-5 text-emerald-400" />
                       </div>
                       <div>
-                        <p className="font-semibold text-foreground text-lg">{note.trainee_name}</p>
+                        <p className="font-semibold text-gray-900 text-lg">{note.trainee_name}</p>
                         <div className="flex items-center gap-3 text-sm text-muted mt-1">
                           <span className="font-medium">{note.weight_kg?.toFixed(1)} ק״ג</span>
                           {note.body_fat_percent && (

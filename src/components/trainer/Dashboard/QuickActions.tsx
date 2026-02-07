@@ -27,7 +27,7 @@ export default function QuickActions({ onAction }: QuickActionsProps) {
       <div className="p-5 border-b border-border/10">
         <div className="flex items-center gap-2">
           <Zap className="h-4 w-4 text-primary" />
-          <h3 className="text-base font-semibold text-foreground">פעולות מהירות</h3>
+          <h3 className="text-base font-semibold text-gray-900">פעולות מהירות</h3>
         </div>
       </div>
       <div className="p-5 space-y-3">
@@ -40,7 +40,7 @@ export default function QuickActions({ onAction }: QuickActionsProps) {
               className={`w-full p-4 rounded-xl transition-all duration-250 flex items-center gap-4 group ${
                 action.primary
                   ? 'bg-gradient-to-r from-primary to-primary-dark text-primary-foreground shadow-glow hover:shadow-glow-lg'
-                  : 'bg-surface/50 text-foreground hover:bg-surface border border-border/10 hover:border-primary/30'
+                  : 'bg-surface/50 text-gray-900 hover:bg-surface border border-border/10 hover:border-primary/30'
               }`}
             >
               <div className={`p-2.5 rounded-xl ${

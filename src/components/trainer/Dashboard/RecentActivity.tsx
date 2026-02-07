@@ -47,7 +47,7 @@ export default function RecentActivity() {
       <div className="p-5 border-b border-border/10">
         <div className="flex items-center gap-2">
           <Activity className="h-4 w-4 text-primary" />
-          <h3 className="text-base font-semibold text-foreground">פעילות אחרונה</h3>
+          <h3 className="text-base font-semibold text-gray-900">פעילות אחרונה</h3>
         </div>
       </div>
       <div className="p-5">
@@ -84,7 +84,7 @@ export default function RecentActivity() {
                     {getIcon(activity.type)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">{activity.trainee}</p>
+                    <p className="text-sm font-medium text-gray-900">{activity.trainee}</p>
                     <p className="text-sm text-secondary mt-0.5">{activity.description}</p>
                   </div>
                   <span className="text-xs text-muted whitespace-nowrap">{activity.time}</span>

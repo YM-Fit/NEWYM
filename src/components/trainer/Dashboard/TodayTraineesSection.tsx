@@ -765,10 +765,10 @@ export default function TodayTraineesSection({
         <table className="w-full min-w-[600px] md:min-w-0">
           <thead className="bg-surface/50">
             <tr className="border-b-2 border-primary/20">
-              <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[150px]">מתאמן</th>
-              <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[100px]">שעה</th>
-              <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[120px]">סטטוס</th>
-              <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[180px]">פעולות</th>
+              <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[150px]">מתאמן</th>
+              <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[100px]">שעה</th>
+              <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[120px]">סטטוס</th>
+              <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[180px]">פעולות</th>
             </tr>
           </thead>
           <tbody>
@@ -848,7 +848,7 @@ export default function TodayTraineesSection({
         <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/20 to-primary-dark/10 flex items-center justify-center">
           <Calendar className="w-8 h-8 text-primary" />
         </div>
-        <h3 className="text-xl font-bold text-foreground mb-3">אין אימונים מתוזמנים להיום ומחר</h3>
+        <h3 className="text-xl font-bold text-gray-900 mb-3">אין אימונים מתוזמנים להיום ומחר</h3>
         <p className="text-secondary mb-6 max-w-md mx-auto">
           אין מתאמנים עם אימון מתוזמן להיום או למחר. תוכל להוסיף אימון חדש מהרשימה הכללית.
         </p>
@@ -911,10 +911,10 @@ export default function TodayTraineesSection({
                 <table className="w-full min-w-[600px] md:min-w-0">
                   <thead className="bg-surface/50">
                     <tr className="border-b-2 border-primary/20">
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[150px]">מתאמן</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[100px]">שעה</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[120px]">סטטוס</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[180px]">פעולות</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[150px]">מתאמן</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[100px]">שעה</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[120px]">סטטוס</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[180px]">פעולות</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -944,7 +944,7 @@ export default function TodayTraineesSection({
                   <Calendar className="w-10 h-10 text-primary" />
                 </div>
               </div>
-              <h3 className="text-lg md:text-xl font-bold text-foreground mb-2">אין אימונים מתוזמנים להיום</h3>
+              <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">אין אימונים מתוזמנים להיום</h3>
               <p className="text-sm md:text-base text-secondary/80 max-w-md mx-auto">
                 תוכל להוסיף אימון חדש מהרשימה הכללית או לתזמן אימונים מראש
               </p>
@@ -1006,10 +1006,10 @@ export default function TodayTraineesSection({
                 <table className="w-full min-w-[600px] md:min-w-0">
                   <thead className="bg-surface/50">
                     <tr className="border-b-2 border-warning/20">
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[150px]">מתאמן</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[100px]">שעה</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[120px]">סטטוס</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-foreground min-w-[180px]">פעולות</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[150px]">מתאמן</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[100px]">שעה</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[120px]">סטטוס</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[180px]">פעולות</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1106,8 +1106,8 @@ function TraineeTableRow({
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div 
-              className={`font-bold text-sm md:text-base text-foreground truncate ${onTraineeClick ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+            <div
+              className={`font-bold text-sm md:text-base text-gray-900 truncate ${onTraineeClick ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
               onClick={onTraineeClick ? () => onTraineeClick(trainee) : undefined}
               onKeyDown={onTraineeClick ? (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -1148,7 +1148,7 @@ function TraineeTableRow({
         {workout.workout_time ? (
           <div className="flex items-center gap-1.5 md:gap-2">
             <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary flex-shrink-0" />
-            <span className="font-semibold text-sm md:text-base text-foreground whitespace-nowrap">{workout.workout_time}</span>
+            <span className="font-semibold text-sm md:text-base text-gray-900 whitespace-nowrap">{workout.workout_time}</span>
           </div>
         ) : (
           <span className="text-secondary text-xs md:text-sm">-</span>
@@ -1374,7 +1374,7 @@ function TraineeCardToday({
 
             {/* Name & Info */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-2 
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2 
                            group-hover:text-primary transition-colors duration-300 truncate">
                 {trainee.full_name}
               </h3>
@@ -1404,7 +1404,7 @@ function TraineeCardToday({
                                 group-hover:bg-surface group-hover:border-primary/30
                                 transition-all duration-200">
                     <Clock className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-xs sm:text-sm font-semibold text-foreground">
+                    <span className="text-xs sm:text-sm font-semibold text-gray-900">
                       {workout.workout_time}
                     </span>
                   </div>
@@ -1532,7 +1532,7 @@ function TraineeCardToday({
                           translate-x-[-100%] group-hover/btn:translate-x-[100%] 
                           transition-transform duration-700" />
             <ClipboardList className="w-5 h-5 sm:w-6 sm:h-6 text-primary relative z-10" aria-hidden="true" />
-            <span className="text-xs sm:text-sm font-bold text-foreground relative z-10">תוכנית</span>
+            <span className="text-xs sm:text-sm font-bold text-gray-900 relative z-10">תוכנית</span>
           </button>
 
           {/* תפריט */}
@@ -1556,7 +1556,7 @@ function TraineeCardToday({
                           translate-x-[-100%] group-hover/btn:translate-x-[100%] 
                           transition-transform duration-700" />
             <UtensilsCrossed className="w-5 h-5 sm:w-6 sm:h-6 text-primary relative z-10" aria-hidden="true" />
-            <span className="text-xs sm:text-sm font-bold text-foreground relative z-10">תפריט</span>
+            <span className="text-xs sm:text-sm font-bold text-gray-900 relative z-10">תפריט</span>
           </button>
 
           {/* כרטיס לקוח */}
@@ -1581,7 +1581,7 @@ function TraineeCardToday({
                             translate-x-[-100%] group-hover/btn:translate-x-[100%] 
                             transition-transform duration-700" />
               <User className="w-5 h-5 sm:w-6 sm:h-6 text-primary relative z-10" aria-hidden="true" />
-              <span className="text-xs sm:text-sm font-bold text-foreground relative z-10">כרטיס</span>
+              <span className="text-xs sm:text-sm font-bold text-gray-900 relative z-10">כרטיס</span>
             </button>
           )}
         </div>
