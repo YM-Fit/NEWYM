@@ -28,7 +28,7 @@ export default function WorkoutDayCard({
   if (isMinimized) {
     return (
       <div
-        className="h-full flex items-center justify-between px-4 lg:px-6 cursor-pointer hover:bg-emerald-100/50 transition-all duration-300"
+        className="h-full flex items-center justify-between px-4 lg:px-6 cursor-pointer hover:bg-emerald-50 transition-all duration-300"
         onClick={() => {
           onSelect(day);
           onToggleMinimize(day.tempId);
@@ -36,8 +36,8 @@ export default function WorkoutDayCard({
         style={{ height: '88px' }}
       >
         <div className="flex items-center space-x-3 rtl:space-x-reverse">
-          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
-            <span className="text-xl text-foreground font-bold">{day.day_number}</span>
+          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-md">
+            <span className="text-xl text-white font-bold">{day.day_number}</span>
           </div>
           <div>
             <h3 className="text-lg font-bold text-muted900">
@@ -66,7 +66,7 @@ export default function WorkoutDayCard({
 
   return (
     <div className="p-4 lg:p-6">
-      <div className={`bg-gradient-to-br ${color.bg} rounded-2xl p-5 text-foreground mb-4 shadow-lg transition-all duration-300`}>
+      <div className={`bg-gradient-to-br ${color.bg} rounded-2xl p-5 text-white mb-4 shadow-lg transition-all duration-300`}>
         <div className="flex items-start justify-between">
           <div>
             <p className="text-sm opacity-80 font-medium">יום {day.day_number}</p>
@@ -115,7 +115,7 @@ export default function WorkoutDayCard({
               <div className="flex items-center justify-between">
                 <div className="flex-1 flex items-center gap-3">
                   <div className={`w-8 h-8 bg-gradient-to-br ${color.bg} rounded-lg flex items-center justify-center shadow-md`}>
-                    <span className="text-sm text-foreground font-bold">{index + 1}</span>
+                    <span className="text-sm text-white font-bold">{index + 1}</span>
                   </div>
                   <div>
                     <h4 className={`font-bold ${color.text}`}>{exercise.exercise.name}</h4>
@@ -143,7 +143,7 @@ export default function WorkoutDayCard({
         {day.exercises.length > 0 && (
           <button
             onClick={() => onComplete(day.tempId)}
-            className="px-5 py-4 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl"
+            className="px-5 py-4 bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl"
           >
             סיים יום
           </button>

@@ -174,7 +174,7 @@ export function PlanEditorView({
         <button
           onClick={onSave}
           disabled={saving}
-          className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 text-foreground px-10 py-4 rounded-2xl flex items-center gap-3 font-semibold transition-all duration-300 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/30 hover:scale-[1.02]"
+          className="bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 disabled:opacity-50 text-white px-10 py-4 rounded-2xl flex items-center gap-3 font-semibold transition-all duration-300 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/30 hover:scale-[1.02]"
         >
           {saving ? (
             <>
@@ -220,7 +220,7 @@ function PlanSettingsCard({
         <div className="flex gap-3">
           <button
             onClick={onLoadTemplate}
-            className="flex items-center gap-2 px-4 py-2.5 bg-cyan-500/20 text-cyan-400 rounded-xl text-sm font-semibold hover:bg-cyan-500/30 transition-all duration-300 hover:scale-105"
+            className="flex items-center gap-2 px-4 py-2.5 bg-blue-500/20 text-blue-400 rounded-xl text-sm font-semibold hover:bg-blue-500/30 transition-all duration-300 hover:scale-105"
           >
             <Download className="h-4 w-4" />
             טען תבנית
@@ -284,7 +284,7 @@ function PlanSettingsCard({
         </div>
         <div>
           <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
-            <Wheat className="h-4 w-4 inline ml-1 text-amber-500" />
+            <Wheat className="h-4 w-4 inline ml-1 text-blue-400" />
             פחמימות (גרם)
           </label>
           <input
@@ -296,7 +296,7 @@ function PlanSettingsCard({
         </div>
         <div>
           <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
-            <Droplet className="h-4 w-4 inline ml-1 text-yellow-400" />
+            <Droplet className="h-4 w-4 inline ml-1 text-amber-400" />
             שומן (גרם)
           </label>
           <input
@@ -455,14 +455,14 @@ function MealsSection({
       )}
 
       {meals.length > 0 && totals.calories > 0 && (
-        <div className="premium-card-static p-5 bg-gradient-to-r from-emerald-500/10 to-teal-500/10">
+        <div className="premium-card-static p-5 bg-gradient-to-r from-emerald-500/10 to-emerald-600/10">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-[var(--color-text-primary)]">סיכום יומי כולל:</span>
             <div className="flex gap-6 text-sm">
-              <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.calories}</span> <span className="text-[var(--color-text-muted)]">קלוריות</span></span>
-              <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.protein}ג</span> <span className="text-[var(--color-text-muted)]">חלבון</span></span>
-              <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.carbs}ג</span> <span className="text-[var(--color-text-muted)]">פחמימות</span></span>
-              <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.fat}ג</span> <span className="text-[var(--color-text-muted)]">שומן</span></span>
+              <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-500 font-semibold">{totals.calories}</span> <span className="text-[var(--color-text-muted)]">קלוריות</span></span>
+              <span className="text-[var(--color-text-secondary)]"><span className="text-red-500 font-semibold">{totals.protein}ג</span> <span className="text-[var(--color-text-muted)]">חלבון</span></span>
+              <span className="text-[var(--color-text-secondary)]"><span className="text-blue-500 font-semibold">{totals.carbs}ג</span> <span className="text-[var(--color-text-muted)]">פחמימות</span></span>
+              <span className="text-[var(--color-text-secondary)]"><span className="text-amber-600 font-semibold">{totals.fat}ג</span> <span className="text-[var(--color-text-muted)]">שומן</span></span>
             </div>
           </div>
         </div>
@@ -496,7 +496,7 @@ function MealTypeHeader({
   };
 
   return (
-    <div className="p-6 border-b border-[var(--color-border)] bg-gradient-to-r from-emerald-500/10 to-teal-500/10">
+    <div className="p-6 border-b border-[var(--color-border)] bg-gradient-to-r from-emerald-500/10 to-emerald-600/10">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-3xl">{mealType.icon}</span>
@@ -509,11 +509,11 @@ function MealTypeHeader({
           {mealTotals.calories > 0 && (
             <div className="flex gap-2 text-sm">
               <span className="text-[var(--color-text-secondary)] bg-[var(--color-bg-surface)] px-3 py-1.5 rounded-lg border border-[var(--color-border)]">
-                <span className="text-emerald-400 font-semibold">{mealTotals.calories}</span> <span className="text-[var(--color-text-muted)]">קל'</span>
+                <span className="text-emerald-500 font-semibold">{mealTotals.calories}</span> <span className="text-[var(--color-text-muted)]">קל'</span>
               </span>
               {mealTotals.protein > 0 && (
                 <span className="text-[var(--color-text-secondary)] bg-[var(--color-bg-surface)] px-3 py-1.5 rounded-lg border border-[var(--color-border)]">
-                  <span className="text-emerald-400 font-semibold">{mealTotals.protein}ג</span> <span className="text-[var(--color-text-muted)]">חלבון</span>
+                  <span className="text-red-500 font-semibold">{mealTotals.protein}ג</span> <span className="text-[var(--color-text-muted)]">חלבון</span>
                 </span>
               )}
             </div>

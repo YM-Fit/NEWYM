@@ -118,7 +118,7 @@ export default function FoodCatalogSelector({ onSelect, onClose }: FoodCatalogSe
               onClick={() => setProteinEnrichedOnly(!proteinEnrichedOnly)}
               className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
                 proteinEnrichedOnly
-                  ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                   : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-bg-elevated)]'
               }`}
             >

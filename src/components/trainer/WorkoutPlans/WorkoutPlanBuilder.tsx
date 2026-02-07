@@ -715,8 +715,8 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
               <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7 text-muted600" />
             </button>
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105">
-                <Dumbbell className="w-7 h-7 lg:w-8 lg:h-8 text-foreground" />
+              <div className="w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl flex items-center justify-center shadow-glow transition-all duration-300 hover:scale-105">
+                <Dumbbell className="w-7 h-7 lg:w-8 lg:h-8 text-white" />
               </div>
               <div>
                 <h1 className="text-xl lg:text-3xl font-bold text-muted900">{activePlanId ? 'ערוך תוכנית אימון' : 'תוכנית אימון חדשה'}</h1>
@@ -750,7 +750,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           <button
             onClick={handleSave}
             disabled={saving || days.length === 0 || !planName.trim()}
-              className={`bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${hasUnsavedChanges ? 'ring-2 ring-amber-500 ring-offset-2' : ''}`}
+              className={`bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${hasUnsavedChanges ? 'ring-2 ring-amber-500 ring-offset-2' : ''}`}
               aria-label={saving ? 'שומר תוכנית' : activePlanId ? 'עדכן תוכנית' : 'שמור תוכנית'}
               aria-disabled={saving || days.length === 0 || !planName.trim()}
           >
@@ -943,7 +943,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
               <button
                 type="button"
                 onClick={() => setShowSaveTemplateModal(true)}
-                  className="py-4 px-4 bg-gradient-to-br from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 text-emerald-700 font-bold rounded-xl transition-all duration-300 border-2 border-emerald-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                  className="py-4 px-4 bg-gradient-to-br from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 text-emerald-700 font-bold rounded-xl transition-all duration-300 border-2 border-emerald-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                   aria-label="שמור כתבנית"
               >
                 שמור כתבנית
@@ -987,7 +987,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             <div
               key={day.tempId}
               className={`premium-card-static transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] ${
-              minimizedDays.has(day.tempId) ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-r-4 border-emerald-500' : ''
+              minimizedDays.has(day.tempId) ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-r-4 border-emerald-500' : ''
               }`}
               style={{
               height: minimizedDays.has(day.tempId) ? '88px' : 'auto',
@@ -1012,7 +1012,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
       <button
         onClick={addDay}
-        className="w-full mt-4 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+        className="w-full mt-4 bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
         aria-label={days.length === 0 ? 'הוסף יום אימון ראשון' : 'הוסף יום אימון נוסף'}
       >
         <Plus className="h-6 w-6 lg:h-7 lg:w-7" />

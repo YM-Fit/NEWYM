@@ -132,13 +132,13 @@ const muscleGroupIcons: Record<string, typeof Dumbbell> = {
 // Removed unused muscleGroupColors - colors are now handled by muscleGroupIcons
 
 const dayGradients = [
-  'from-emerald-500 to-teal-600',
-  'from-cyan-500 to-blue-600',
+  'from-emerald-500 to-emerald-700',
+  'from-blue-500 to-blue-700',
   'from-amber-500 to-orange-600',
-  'from-rose-500 to-pink-600',
-  'from-purple-500 to-indigo-600',
-  'from-teal-500 to-emerald-600',
-  'from-blue-500 to-cyan-600',
+  'from-rose-500 to-rose-700',
+  'from-slate-500 to-slate-700',
+  'from-emerald-600 to-emerald-800',
+  'from-blue-600 to-blue-800',
 ];
 
 export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
@@ -626,7 +626,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
-          <Dumbbell className="w-8 h-8 text-foreground" />
+          <Dumbbell className="w-8 h-8 text-white" />
         </div>
       </div>
     );
@@ -635,8 +635,8 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   if (!plan) {
     return (
       <div className="text-center py-12">
-        <div className="w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg border border-emerald-500/20">
-          <ClipboardList className="w-10 h-10 text-emerald-400" />
+        <div className="w-20 h-20 bg-emerald-500/15 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg border border-emerald-500/20">
+          <ClipboardList className="w-10 h-10 text-emerald-500" />
         </div>
         <h3 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)] mb-2">אין תוכנית אימונים פעילה</h3>
         <p className="text-sm text-[var(--color-text-muted)]">המאמן שלך עדיין לא יצר לך תוכנית אימונים</p>
@@ -649,16 +649,16 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
       {/* Header Card - Premium Design */}
       <div className="relative premium-card-static overflow-hidden animate-fade-in">
         {/* Background Gradient Glow */}
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-teal-500/15 to-cyan-500/10 opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-emerald-600/15 to-emerald-700/10 opacity-60" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
         
         <div className="relative p-5 md:p-7 lg:p-8">
           <div className="flex items-start justify-between mb-5">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-[0_0_25px_rgba(16,185,129,0.4)]">
-                  <ClipboardList className="w-6 h-6 md:w-7 md:h-7 text-foreground" />
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow">
+                  <ClipboardList className="w-6 h-6 md:w-7 md:h-7 text-white" />
                 </div>
                 <div>
                   <p className="text-xs md:text-sm font-semibold text-emerald-400 uppercase tracking-wider mb-1">תוכנית אימון</p>
@@ -700,10 +700,10 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
             <button
               onClick={() => setShowExecutionHistory(true)}
-              className="flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 px-4 py-2 rounded-xl backdrop-blur-sm hover:bg-purple-500/20 transition-all"
+              className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-4 py-2 rounded-xl backdrop-blur-sm hover:bg-amber-500/20 transition-all"
             >
-              <History className="w-4 h-4 text-purple-400" />
-              <span className="font-semibold text-sm text-purple-400">היסטוריית ביצועים</span>
+              <History className="w-4 h-4 text-amber-500" />
+              <span className="font-semibold text-sm text-amber-500">היסטוריית ביצועים</span>
             </button>
           </div>
         </div>
@@ -735,7 +735,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                 <div key={item.id} className="flex items-start gap-3 text-sm bg-[var(--color-bg-surface)] p-4 rounded-xl transition-all duration-300 hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border)]">
                   <div
                     className={`w-3 h-3 rounded-full mt-1.5 shadow-sm ${
-                      item.changed_by_type === 'trainer' ? 'bg-cyan-500' : 'bg-emerald-500'
+                      item.changed_by_type === 'trainer' ? 'bg-blue-500' : 'bg-emerald-500'
                     }`}
                   />
                   <div className="flex-1">
@@ -802,7 +802,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
               {/* Accordion Header - Always Visible */}
               <div
                 onClick={() => toggleDay(day.id)}
-                className={`relative bg-gradient-to-br ${gradient} p-5 md:p-6 lg:p-7 text-foreground cursor-pointer transition-all duration-300 hover:shadow-xl overflow-hidden`}
+                className={`relative bg-gradient-to-br ${gradient} p-5 md:p-6 lg:p-7 text-white cursor-pointer transition-all duration-300 hover:shadow-xl overflow-hidden`}
               >
                 {/* Subtle Pattern Overlay */}
                 <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,.1)_50%,transparent_75%,transparent_100%)] bg-[length:20px_20px]" />
@@ -815,7 +815,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                           <Icon className="w-5 h-5 md:w-6 md:h-6" />
                         </div>
                         {completedCount === exercises.length && exercises.length > 0 && (
-                          <span className="bg-white/30 text-foreground text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold backdrop-blur-md shadow-lg animate-scale-in border border-white/20">
+                          <span className="bg-white/30 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold backdrop-blur-md shadow-lg animate-scale-in border border-white/20">
                             <Check className="w-3.5 h-3.5" />
                             הושלם
                           </span>
@@ -833,7 +833,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                       )}
                     </div>
 
-                    <button className="text-foreground/90 hover:text-foreground transition-all duration-300 hover:scale-110 bg-white/10 hover:bg-white/20 rounded-xl p-2 backdrop-blur-sm">
+                    <button className="text-white/90 hover:text-white transition-all duration-300 hover:scale-110 bg-white/10 hover:bg-white/20 rounded-xl p-2 backdrop-blur-sm">
                       {isExpanded ? (
                         <ChevronUp className="w-5 h-5 md:w-6 md:h-6" />
                       ) : (
@@ -869,7 +869,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                       {muscleGroups.map((group, idx) => (
                         <span
                           key={idx}
-                          className="bg-white/25 text-foreground text-xs px-3 py-1 rounded-full font-bold backdrop-blur-md shadow-md border border-white/20"
+                          className="bg-white/25 text-white text-xs px-3 py-1 rounded-full font-bold backdrop-blur-md shadow-md border border-white/20"
                         >
                           {group}
                         </span>
@@ -924,7 +924,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                               onClick={() => toggleExerciseComplete(exercise.id)}
                               className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg ${
                                 isCompleted
-                                  ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground scale-105'
+                                  ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white scale-105'
                                   : 'bg-[var(--color-bg-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border)]'
                               }`}
                             >
@@ -1020,7 +1020,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                                 {exercise.target_weight && (
                                   <div className="flex items-center gap-2 text-sm">
                                     <span className="text-[var(--color-text-muted)] font-medium">משקל יעד (מאמן):</span>
-                                    <span className="font-bold text-teal-400">{exercise.target_weight} ק״ג</span>
+                                    <span className="font-bold text-emerald-400">{exercise.target_weight} ק״ג</span>
                                   </div>
                                 )}
 
@@ -1150,7 +1150,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
                   {/* Completion Message */}
                   {exercises.length > 0 && completedCount === exercises.length && (
-                    <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl p-6 text-foreground text-center shadow-[0_8px_30px_rgba(16,185,129,0.3)] animate-scale-in overflow-hidden">
+                    <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 rounded-2xl p-6 text-white text-center shadow-glow-lg animate-scale-in overflow-hidden">
                       <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,.1)_50%,transparent_75%,transparent_100%)] bg-[length:30px_30px] opacity-20" />
                       <div className="relative">
                         <div className="w-16 h-16 bg-white/25 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-[0_0_25px_rgba(255,255,255,0.3)] backdrop-blur-md border border-white/20">
