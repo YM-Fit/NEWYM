@@ -59,10 +59,11 @@
     --color-bg-input: 26 46 22;
     --color-bg-overlay: 0 0 0;
 
-    --color-text-primary: 0 0 0;
-    --color-text-secondary: 0 0 0;
-    --color-text-muted: 0 0 0;
-    --color-text-inverse: 0 0 0;
+    /* Dark theme text - light colors for readability on dark backgrounds */
+    --color-text-primary: 232 240 224;    /* #e8f0e0 - light green-white */
+    --color-text-secondary: 163 179 143;  /* #a3b38f - muted green */
+    --color-text-muted: 112 128 96;       /* #708060 - dimmed green */
+    --color-text-inverse: 26 46 22;       /* #1a2e16 - dark for inverse use */
 
     --color-border: 74 107 42;
     --color-border-hover: 107 142 74;
@@ -86,10 +87,11 @@
     --color-bg-input: 255 255 255;
     --color-bg-overlay: 26 46 22;
 
-    --color-text-primary: 0 0 0;    /* black */
-    --color-text-secondary: 0 0 0;  /* black */
-    --color-text-muted: 0 0 0;   /* black */
-    --color-text-inverse: 0 0 0;
+    /* Light theme text - dark colors for readability on light backgrounds */
+    --color-text-primary: 26 46 22;       /* #1a2e16 - deep dark green */
+    --color-text-secondary: 74 92 60;     /* #4a5c3c - medium olive */
+    --color-text-muted: 112 128 96;       /* #708060 - soft muted green */
+    --color-text-inverse: 232 240 224;    /* #e8f0e0 - light for inverse use */
 
     --color-border: 74 107 42;         /* #4a6b2a - olive green */
     --color-border-hover: 107 142 74;  /* #6b8e4a - soft green */

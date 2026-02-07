@@ -5,13 +5,6 @@
 
 @layer base {
   /* ============================================
-     Global Text Color Override - All text is black everywhere
-     ============================================ */
-  * {
-    color: #000000 !important;
-  }
-  
-  /* ============================================
      Accessibility - Focus Indicators
      ============================================ */
   *:focus-visible {
@@ -24,92 +17,87 @@
 
   /* ============================================
      Light Mode Global Overrides
-     These automatically fix Tailwind classes
+     Remap dark-themed text classes to dark equivalents in light mode
      ============================================ */
 
-  /* Text colors - override all text to black */
+  /* Light mode: remap light text classes to dark equivalents */
   .light .text-white,
-  .dark .text-white,
-  :root .text-white {
-    color: #000000 !important;
-  }
-
-  /* Override text-white on all backgrounds to black */
-  .light .bg-zinc-800 .text-white,
-  .light .bg-zinc-800\/50 .text-white,
-  .light .bg-zinc-800\/80 .text-white,
-  .light .bg-zinc-700 .text-white,
-  .light .bg-zinc-900 .text-white,
-  .light .bg-zinc-900\/90 .text-white,
-  .light .bg-zinc-900\/80 .text-white,
-  .light .bg-gray-800 .text-white,
-  .light .bg-gray-700 .text-white,
-  .light .bg-gray-900 .text-white,
-  .light .bg-white .text-white,
-  .light .bg-\[\#ffffff\] .text-white,
-  .light .bg-\[\#f8faf9\] .text-white,
-  .light .bg-\[\#ecf0ed\] .text-white,
-  .dark .bg-zinc-800 .text-white,
-  .dark .bg-zinc-800\/50 .text-white,
-  .dark .bg-zinc-800\/80 .text-white,
-  .dark .bg-zinc-700 .text-white,
-  .dark .bg-zinc-900 .text-white,
-  .dark .bg-zinc-900\/90 .text-white,
-  .dark .bg-zinc-900\/80 .text-white,
-  .dark .bg-gray-800 .text-white,
-  .dark .bg-gray-700 .text-white,
-  .dark .bg-gray-900 .text-white,
-  :root .bg-zinc-800 .text-white,
-  :root .bg-zinc-800\/50 .text-white,
-  :root .bg-zinc-800\/80 .text-white,
-  :root .bg-zinc-700 .text-white,
-  :root .bg-zinc-900 .text-white,
-  :root .bg-zinc-900\/90 .text-white,
-  :root .bg-zinc-900\/80 .text-white,
-  :root .bg-gray-800 .text-white,
-  :root .bg-gray-700 .text-white,
-  :root .bg-gray-900 .text-white {
-    color: #000000 !important;
-  }
-
   .light .text-zinc-100,
   .light .text-zinc-200,
-  .dark .text-zinc-100,
-  .dark .text-zinc-200,
-  :root .text-zinc-100,
-  :root .text-zinc-200 {
-    color: #000000 !important;
-  }
-
   .light .text-zinc-300,
-  .dark .text-zinc-300,
-  :root .text-zinc-300 {
-    color: #000000 !important;
+  .light .text-gray-100,
+  .light .text-gray-200,
+  .light .text-gray-300 {
+    color: rgb(var(--color-text-primary)) !important;
   }
 
   .light .text-zinc-400,
-  .dark .text-zinc-400,
-  :root .text-zinc-400 {
-    color: #000000 !important;
-  }
-
   .light .text-zinc-500,
-  .dark .text-zinc-500,
-  :root .text-zinc-500 {
-    color: #000000 !important;
-  }
-
   .light .text-gray-400,
-  .dark .text-gray-400,
-  :root .text-gray-400 {
-    color: #000000 !important;
+  .light .text-gray-500 {
+    color: rgb(var(--color-text-secondary)) !important;
   }
 
-  .light .text-gray-500,
-  .dark .text-gray-500,
-  :root .text-gray-500 {
-    color: #000000 !important;
+  .light .text-white\/80,
+  .light .text-white\/70,
+  .light .text-white\/60,
+  .light .text-white\/50,
+  .light .text-white\/40,
+  .light .text-white\/30 {
+    color: rgb(var(--color-text-secondary)) !important;
   }
+
+  .light .text-zinc-100\/80,
+  .light .text-zinc-100\/90,
+  .light .text-zinc-200\/80,
+  .light .text-zinc-200\/90,
+  .light .text-zinc-300\/50,
+  .light .text-zinc-400\/50,
+  .light .text-zinc-400\/60,
+  .light .text-zinc-500\/60 {
+    color: rgb(var(--color-text-muted)) !important;
+  }
+
+  /* Light mode hover text remapping */
+  .light .hover\:text-white:hover,
+  .light .hover\:text-zinc-100:hover,
+  .light .hover\:text-zinc-200:hover,
+  .light .hover\:text-zinc-300:hover,
+  .light .hover\:text-gray-100:hover,
+  .light .hover\:text-gray-200:hover,
+  .light .hover\:text-gray-300:hover {
+    color: rgb(var(--color-text-primary)) !important;
+  }
+
+  .light .group:hover .group-hover\:text-white {
+    color: rgb(var(--color-text-primary)) !important;
+  }
+
+  /* Light mode: preserve white text on colored backgrounds */
+  .light .bg-emerald-500,
+  .light .bg-emerald-600,
+  .light .bg-emerald-700,
+  .light .bg-green-500,
+  .light .bg-green-600 {
+    color: #ffffff !important;
+  }
+
+  .light .bg-emerald-500 *,
+  .light .bg-emerald-600 *,
+  .light .bg-emerald-700 *,
+  .light [class*="from-emerald"][class*="to-emerald"] * {
+    color: inherit !important;
+  }
+
+  /* Light mode: darker text classes stay dark */
+  .light .text-zinc-600 { color: rgb(var(--color-text-secondary)) !important; }
+  .light .text-zinc-700,
+  .light .text-zinc-800,
+  .light .text-zinc-900 { color: rgb(var(--color-text-primary)) !important; }
+
+  .light .text-gray-600 { color: #6b7f72 !important; }
+  .light .text-gray-500 { color: #6b7f72 !important; }
+  .light .text-gray-400 { color: #3d5347 !important; }
 
   /* Background colors */
   .light .bg-zinc-950 {
@@ -179,34 +167,6 @@
     color: #6b7f72 !important;
   }
 
-  /* Hover states */
-  .light .hover\:text-white:hover,
-  .dark .hover\:text-white:hover,
-  :root .hover\:text-white:hover {
-    color: #000000 !important;
-  }
-
-  /* Fix hover states for buttons on light backgrounds */
-  .light button:hover.text-white:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]):not(.btn-primary):not(.btn-lime):not(.btn-danger):not(.action-btn-emerald):not(.action-btn-cyan):not(.action-btn-amber):not(.action-btn-teal):not(.action-btn-rose):not(.action-btn-slate),
-  .light a:hover.text-white:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) {
-    color: #1a2e22 !important;
-  }
-
-  .light .hover\:text-zinc-100:hover,
-  .light .hover\:text-zinc-200:hover,
-  .light .hover\:text-gray-100:hover,
-  .light .hover\:text-gray-200:hover,
-  .dark .hover\:text-zinc-100:hover,
-  .dark .hover\:text-zinc-200:hover,
-  .dark .hover\:text-gray-100:hover,
-  .dark .hover\:text-gray-200:hover,
-  :root .hover\:text-zinc-100:hover,
-  :root .hover\:text-zinc-200:hover,
-  :root .hover\:text-gray-100:hover,
-  :root .hover\:text-gray-200:hover {
-    color: #000000 !important;
-  }
-
   .light .hover\:bg-zinc-800:hover {
     background-color: #ecf0ed !important;
   }
@@ -238,16 +198,6 @@
     box-shadow: 0 10px 40px -10px rgba(74, 107, 42, 0.12) !important;
   }
 
-  /* Additional text colors */
-  .light .text-e4e4e7,
-  .light [class*="text-\[#e4e4e7\]"],
-  .dark .text-e4e4e7,
-  .dark [class*="text-\[#e4e4e7\]"],
-  :root .text-e4e4e7,
-  :root [class*="text-\[#e4e4e7\]"] {
-    color: #000000 !important;
-  }
-
   /* Divide colors */
   .light .divide-zinc-800 > :not([hidden]) ~ :not([hidden]) {
     border-color: rgba(74, 107, 42, 0.12) !important;
@@ -273,66 +223,6 @@
     background-color: rgba(248, 250, 249, 0.9) !important;
   }
 
-  /* Fix zinc text with opacity */
-  .light .text-zinc-400\/60,
-  .light .text-zinc-500\/60,
-  .dark .text-zinc-400\/60,
-  .dark .text-zinc-500\/60,
-  :root .text-zinc-400\/60,
-  :root .text-zinc-500\/60 {
-    color: #000000 !important;
-  }
-
-  /* Fix white with opacity */
-  .light .text-white\/80,
-  .light .text-white\/70,
-  .light .text-white\/60,
-  .light .text-white\/50,
-  .light .text-white\/40,
-  .light .text-white\/30,
-  .dark .text-white\/80,
-  .dark .text-white\/70,
-  .dark .text-white\/60,
-  .dark .text-white\/50,
-  .dark .text-white\/40,
-  .dark .text-white\/30,
-  :root .text-white\/80,
-  :root .text-white\/70,
-  :root .text-white\/60,
-  :root .text-white\/50,
-  :root .text-white\/40,
-  :root .text-white\/30 {
-    color: #000000 !important;
-  }
-
-  /* Fix white text with opacity - all black */
-  .light .bg-zinc-800 .text-white\/80,
-  .light .bg-zinc-800\/50 .text-white\/80,
-  .light .bg-zinc-800\/80 .text-white\/80,
-  .light .bg-zinc-700 .text-white\/80,
-  .light .bg-zinc-900 .text-white\/80,
-  .light .bg-gray-800 .text-white\/80,
-  .light .bg-gray-700 .text-white\/80,
-  .light .bg-gray-900 .text-white\/80,
-  .dark .bg-zinc-800 .text-white\/80,
-  .dark .bg-zinc-800\/50 .text-white\/80,
-  .dark .bg-zinc-800\/80 .text-white\/80,
-  .dark .bg-zinc-700 .text-white\/80,
-  .dark .bg-zinc-900 .text-white\/80,
-  .dark .bg-gray-800 .text-white\/80,
-  .dark .bg-gray-700 .text-white\/80,
-  .dark .bg-gray-900 .text-white\/80,
-  :root .bg-zinc-800 .text-white\/80,
-  :root .bg-zinc-800\/50 .text-white\/80,
-  :root .bg-zinc-800\/80 .text-white\/80,
-  :root .bg-zinc-700 .text-white\/80,
-  :root .bg-zinc-900 .text-white\/80,
-  :root .bg-gray-800 .text-white\/80,
-  :root .bg-gray-700 .text-white\/80,
-  :root .bg-gray-900 .text-white\/80 {
-    color: #000000 !important;
-  }
-
   /* Fix bg with white opacity */
   .light .bg-white\/5,
   .light .bg-white\/10 {
@@ -356,108 +246,29 @@
     stroke: #6b7f72 !important;
   }
 
-  /* All text is black, even on colored backgrounds */
-  .light .bg-gradient-to-br .text-white,
-  .light .bg-gradient-to-r .text-white,
-  .light .bg-emerald-500 .text-white,
-  .light .bg-emerald-600 .text-white,
-  .light .bg-emerald-700 .text-white,
-  .light .bg-emerald-400 .text-white,
-  .light .bg-green-500 .text-white,
-  .light .bg-green-600 .text-white,
-  .light .bg-cyan-500 .text-white,
-  .light .bg-cyan-600 .text-white,
-  .light .bg-amber-500 .text-white,
-  .light .bg-amber-600 .text-white,
-  .light .bg-teal-500 .text-white,
-  .light .bg-teal-600 .text-white,
-  .light .bg-rose-500 .text-white,
-  .light .bg-rose-600 .text-white,
-  .light .bg-red-500 .text-white,
-  .light .bg-red-600 .text-white,
-  .light .bg-slate-500 .text-white,
-  .light .bg-slate-600 .text-white,
-  .light .bg-lime-500 .text-white,
-  .light .bg-lime-600 .text-white,
-  .light .btn-primary .text-white,
-  .light .action-btn-emerald .text-white,
-  .light .action-btn-cyan .text-white,
-  .light .action-btn-amber .text-white,
-  .light .action-btn-rose .text-white,
-  .light [class*="from-emerald"] .text-white,
-  .light [class*="bg-gradient"] .text-white,
-  .light [class*="\[\.light_\&\]\:text-white"],
-  .dark .bg-gradient-to-br .text-white,
-  .dark .bg-gradient-to-r .text-white,
-  .dark .bg-emerald-500 .text-white,
-  .dark .bg-emerald-600 .text-white,
-  .dark .bg-emerald-700 .text-white,
-  .dark .bg-emerald-400 .text-white,
-  .dark .bg-green-500 .text-white,
-  .dark .bg-green-600 .text-white,
-  .dark .bg-cyan-500 .text-white,
-  .dark .bg-cyan-600 .text-white,
-  .dark .bg-amber-500 .text-white,
-  .dark .bg-amber-600 .text-white,
-  .dark .bg-teal-500 .text-white,
-  .dark .bg-teal-600 .text-white,
-  .dark .bg-rose-500 .text-white,
-  .dark .bg-rose-600 .text-white,
-  .dark .bg-red-500 .text-white,
-  .dark .bg-red-600 .text-white,
-  .dark .bg-slate-500 .text-white,
-  .dark .bg-slate-600 .text-white,
-  .dark .bg-lime-500 .text-white,
-  .dark .bg-lime-600 .text-white,
-  .dark .btn-primary .text-white,
-  .dark .action-btn-emerald .text-white,
-  .dark .action-btn-cyan .text-white,
-  .dark .action-btn-amber .text-white,
-  .dark .action-btn-rose .text-white,
-  .dark [class*="from-emerald"] .text-white,
-  .dark [class*="bg-gradient"] .text-white,
-  :root .bg-gradient-to-br .text-white,
-  :root .bg-gradient-to-r .text-white,
-  :root .bg-emerald-500 .text-white,
-  :root .bg-emerald-600 .text-white,
-  :root .bg-emerald-700 .text-white,
-  :root .bg-emerald-400 .text-white,
-  :root .bg-green-500 .text-white,
-  :root .bg-green-600 .text-white,
-  :root .bg-cyan-500 .text-white,
-  :root .bg-cyan-600 .text-white,
-  :root .bg-amber-500 .text-white,
-  :root .bg-amber-600 .text-white,
-  :root .bg-teal-500 .text-white,
-  :root .bg-teal-600 .text-white,
-  :root .bg-rose-500 .text-white,
-  :root .bg-rose-600 .text-white,
-  :root .bg-red-500 .text-white,
-  :root .bg-red-600 .text-white,
-  :root .bg-slate-500 .text-white,
-  :root .bg-slate-600 .text-white,
-  :root .bg-lime-500 .text-white,
-  :root .bg-lime-600 .text-white,
-  :root .btn-primary .text-white,
-  :root .action-btn-emerald .text-white,
-  :root .action-btn-cyan .text-white,
-  :root .action-btn-amber .text-white,
-  :root .action-btn-rose .text-white,
-  :root [class*="from-emerald"] .text-white,
-  :root [class*="bg-gradient"] .text-white {
-    color: #000000 !important;
+  /* Light mode: preserve white text inside colored buttons */
+  .light .btn-primary,
+  .light .btn-primary *,
+  .light .btn-lime,
+  .light .btn-lime *,
+  .light .btn-danger,
+  .light .btn-danger *,
+  .light .action-btn-emerald,
+  .light .action-btn-emerald *,
+  .light .action-btn-cyan,
+  .light .action-btn-cyan *,
+  .light .action-btn-amber,
+  .light .action-btn-amber *,
+  .light .action-btn-teal,
+  .light .action-btn-teal *,
+  .light .action-btn-rose,
+  .light .action-btn-rose *,
+  .light .action-btn-slate,
+  .light .action-btn-slate * {
+    color: #ffffff !important;
   }
 
-  /* All buttons have black text */
-  .light .btn-primary,
-  .light .btn-lime,
-  .light .btn-danger,
-  .light .action-btn-emerald,
-  .light .action-btn-cyan,
-  .light .action-btn-amber,
-  .light .action-btn-teal,
-  .light .action-btn-rose,
-  .light .action-btn-slate,
+  /* Light mode: colored background buttons keep white text */
   .light button[class*="bg-emerald"],
   .light button[class*="bg-cyan"],
   .light button[class*="bg-amber"],
@@ -466,72 +277,8 @@
   .light button[class*="bg-red"],
   .light button[class*="bg-green"],
   .light button[class*="bg-lime"],
-  .light button[class*="bg-slate"],
-  .dark .btn-primary,
-  .dark .btn-lime,
-  .dark .btn-danger,
-  .dark .action-btn-emerald,
-  .dark .action-btn-cyan,
-  .dark .action-btn-amber,
-  .dark .action-btn-teal,
-  .dark .action-btn-rose,
-  .dark .action-btn-slate,
-  .dark button[class*="bg-emerald"],
-  .dark button[class*="bg-cyan"],
-  .dark button[class*="bg-amber"],
-  .dark button[class*="bg-teal"],
-  .dark button[class*="bg-rose"],
-  .dark button[class*="bg-red"],
-  .dark button[class*="bg-green"],
-  .dark button[class*="bg-lime"],
-  .dark button[class*="bg-slate"],
-  :root .btn-primary,
-  :root .btn-lime,
-  :root .btn-danger,
-  :root .action-btn-emerald,
-  :root .action-btn-cyan,
-  :root .action-btn-amber,
-  :root .action-btn-teal,
-  :root .action-btn-rose,
-  :root .action-btn-slate,
-  :root button[class*="bg-emerald"],
-  :root button[class*="bg-cyan"],
-  :root button[class*="bg-amber"],
-  :root button[class*="bg-teal"],
-  :root button[class*="bg-rose"],
-  :root button[class*="bg-red"],
-  :root button[class*="bg-green"],
-  :root button[class*="bg-lime"],
-  :root button[class*="bg-slate"] {
-    color: #000000 !important;
-  }
-
-  /* Fix buttons with light backgrounds - ensure dark text */
-  .light button.bg-zinc-800,
-  .light button.bg-zinc-800\/50,
-  .light button.bg-zinc-800\/80,
-  .light button.bg-zinc-700,
-  .light button.bg-zinc-900,
-  .light button.bg-gray-800,
-  .light button.bg-gray-700,
-  .light button.bg-gray-900,
-  .light button[class*="bg-zinc-8"],
-  .light button[class*="bg-zinc-9"],
-  .light button[class*="bg-gray-8"],
-  .light button[class*="bg-gray-9"] {
-    color: #1a2e22 !important;
-  }
-
-  /* Fix text-white on light backgrounds (not on colored buttons) */
-  .light button:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]):not(.btn-primary):not(.btn-lime):not(.btn-danger):not(.action-btn-emerald):not(.action-btn-cyan):not(.action-btn-amber):not(.action-btn-teal):not(.action-btn-rose):not(.action-btn-slate).text-white {
-    color: #1a2e22 !important;
-  }
-
-  /* All badges have black text */
-  .light .calendar-day.has-workout,
-  .dark .calendar-day.has-workout,
-  :root .calendar-day.has-workout {
-    color: #000000 !important;
+  .light button[class*="bg-slate"] {
+    color: #ffffff !important;
   }
 
   /* ============================================
@@ -573,100 +320,6 @@
     background-color: #ecf0ed !important;
   }
 
-  /* Text color overrides for zinc-600 and below - all black */
-  .light .text-zinc-600,
-  .dark .text-zinc-600,
-  :root .text-zinc-600 {
-    color: #000000 !important;
-  }
-
-  .light .text-zinc-700,
-  .dark .text-zinc-700,
-  :root .text-zinc-700 {
-    color: #000000 !important;
-  }
-
-  .light .text-zinc-800,
-  .dark .text-zinc-800,
-  :root .text-zinc-800 {
-    color: #000000 !important;
-  }
-
-  .light .text-zinc-900,
-  .dark .text-zinc-900,
-  :root .text-zinc-900 {
-    color: #000000 !important;
-  }
-
-  .light .text-gray-300,
-  .dark .text-gray-300,
-  :root .text-gray-300 {
-    color: #000000 !important;
-  }
-
-  .light .text-gray-200,
-  .dark .text-gray-200,
-  :root .text-gray-200 {
-    color: #000000 !important;
-  }
-
-  .light .text-gray-100,
-  .dark .text-gray-100,
-  :root .text-gray-100 {
-    color: #000000 !important;
-  }
-
-  .light .text-gray-600,
-  .dark .text-gray-600,
-  :root .text-gray-600 {
-    color: #000000 !important;
-  }
-
-  .light .text-zinc-200 {
-    color: #2d4a38 !important;
-  }
-
-  /* Additional text color fixes - all black */
-  .light .text-zinc-100\/80,
-  .light .text-zinc-100\/90,
-  .light .text-zinc-200\/80,
-  .light .text-zinc-200\/90,
-  .dark .text-zinc-100\/80,
-  .dark .text-zinc-100\/90,
-  .dark .text-zinc-200\/80,
-  .dark .text-zinc-200\/90,
-  :root .text-zinc-100\/80,
-  :root .text-zinc-100\/90,
-  :root .text-zinc-200\/80,
-  :root .text-zinc-200\/90 {
-    color: #000000 !important;
-  }
-
-  /* Fix text-gray-100 and text-gray-200 - all black */
-  .light .text-gray-100,
-  .light .text-gray-200,
-  .dark .text-gray-100,
-  .dark .text-gray-200,
-  :root .text-gray-100,
-  :root .text-gray-200 {
-    color: #000000 !important;
-  }
-
-  .light .text-gray-100\/80,
-  .light .text-gray-100\/90,
-  .light .text-gray-200\/80,
-  .light .text-gray-200\/90,
-  .dark .text-gray-100\/80,
-  .dark .text-gray-100\/90,
-  .dark .text-gray-200\/80,
-  .dark .text-gray-200\/90,
-  :root .text-gray-100\/80,
-  :root .text-gray-100\/90,
-  :root .text-gray-200\/80,
-  :root .text-gray-200\/90 {
-    color: #000000 !important;
-  }
-
   /* Border color extensions */
   .light .border-zinc-600 {
     border-color: rgba(74, 107, 42, 0.2) !important;
@@ -697,18 +350,6 @@
 
   .light .hover\:bg-zinc-900\/50:hover {
     background-color: rgba(236, 240, 237, 0.7) !important;
-  }
-
-  .light .hover\:text-zinc-100:hover,
-  .light .hover\:text-zinc-200:hover,
-  .light .hover\:text-zinc-300:hover,
-  .dark .hover\:text-zinc-100:hover,
-  .dark .hover\:text-zinc-200:hover,
-  .dark .hover\:text-zinc-300:hover,
-  :root .hover\:text-zinc-100:hover,
-  :root .hover\:text-zinc-200:hover,
-  :root .hover\:text-zinc-300:hover {
-    color: #000000 !important;
   }
 
   .light .hover\:border-zinc-700:hover {
@@ -742,29 +383,8 @@
     background-color: rgba(236, 240, 237, 0.8) !important;
   }
 
-  .light .group:hover .group-hover\:text-white,
-  .dark .group:hover .group-hover\:text-white,
-  :root .group:hover .group-hover\:text-white {
-    color: #000000 !important;
-  }
-
   .light .group:hover .group-hover\:bg-zinc-800 {
     background-color: #ecf0ed !important;
-  }
-
-  /* Preserve white text on emerald/green backgrounds */
-  .light .bg-emerald-500,
-  .light .bg-emerald-600,
-  .light .bg-emerald-700,
-  .light .bg-green-500,
-  .light .bg-green-600 {
-    color: #ffffff !important;
-  }
-
-  .light .bg-emerald-500 *,
-  .light .bg-emerald-600 *,
-  .light [class*="from-emerald"][class*="to-emerald"] * {
-    color: inherit !important;
   }
 
   /* Preserve colors on icon backgrounds with opacity */
@@ -810,18 +430,12 @@
     border-color: rgba(16, 185, 129, 0.15) !important;
   }
 
-  /* Input and form fields - all black text */
+  /* Light mode input and form fields */
   .light input,
   .light textarea,
-  .light select,
-  .dark input,
-  .dark textarea,
-  .dark select,
-  :root input,
-  :root textarea,
-  :root select {
+  .light select {
     background-color: rgba(255, 255, 255, 0.95) !important;
-    color: #000000 !important;
+    color: rgb(var(--color-text-primary)) !important;
     border-color: rgba(74, 107, 42, 0.2) !important;
   }
 
@@ -837,12 +451,9 @@
     background-color: #ffffff !important;
   }
 
-  /* Table styles - all black text */
-  .light th,
-  .dark th,
-  :root th {
+  /* Light mode table styles */
+  .light th {
     background-color: rgba(232, 240, 224, 0.8) !important;
-    color: #000000 !important;
   }
 
   .light td {
@@ -907,29 +518,12 @@
     background-color: rgba(248, 250, 249, 0.9) !important;
   }
 
-  /* Opacity text variations */
-  .light .text-zinc-300\/50,
-  .light .text-zinc-400\/50 {
-    color: rgba(61, 83, 71, 0.6) !important;
-  }
-
-  .light .text-zinc-100\/80,
-  .light .text-zinc-100\/90 {
-    color: rgba(26, 46, 34, 0.9) !important;
-  }
-
-  /* Ensure emerald text is black */
-  .light .text-emerald-400,
-  .dark .text-emerald-400,
-  :root .text-emerald-400 {
-    color: #000000 !important;
-  }
-
-  .light .text-emerald-300,
-  .dark .text-emerald-300,
-  :root .text-emerald-300 {
-    color: #000000 !important;
-  }
+  /* Light mode: accent text colors with proper contrast */
+  .light .text-emerald-400 { color: #4a6b2a !important; }
+  .light .text-emerald-300 { color: #3d5a1f !important; }
+  .light .text-lime-500,
+  .light .text-lime-400 { color: #4a6b2a !important; }
+  .light .text-teal-400 { color: #0d9488 !important; }
 
   /* Dropdown and menu backgrounds */
   .light [data-radix-popper-content-wrapper],
@@ -1004,7 +598,7 @@
   }
 
   .light .hover\:text-gray-300:hover {
-    color: #1a2e22 !important;
+    color: rgb(var(--color-text-primary)) !important;
   }
 
   /* Fix border-white with opacity */
@@ -1023,90 +617,6 @@
   .light .hover\:bg-white\/5:hover,
   .light .hover\:bg-white\/10:hover {
     background-color: rgba(74, 107, 42, 0.1) !important;
-  }
-
-  /* Fix lime/emerald text - all black */
-  .light .text-lime-500,
-  .light .text-lime-400,
-  .dark .text-lime-500,
-  .dark .text-lime-400,
-  :root .text-lime-500,
-  :root .text-lime-400 {
-    color: #000000 !important;
-  }
-
-  /* Fix dark text classes - all black */
-  .light .text-dark-500,
-  .dark .text-dark-500,
-  :root .text-dark-500 {
-    color: #000000 !important;
-  }
-
-  /* Fix teal colors - all black */
-  .light .text-teal-400,
-  .dark .text-teal-400,
-  :root .text-teal-400 {
-    color: #000000 !important;
-  }
-
-  /* ============================================
-     Comprehensive Button Text Color Fixes
-     Ensure buttons with light backgrounds have dark text
-     ============================================ */
-
-  /* Buttons with light backgrounds should have dark text */
-  .light button.bg-zinc-800.text-white,
-  .light button.bg-zinc-800\/50.text-white,
-  .light button.bg-zinc-800\/80.text-white,
-  .light button.bg-zinc-700.text-white,
-  .light button.bg-zinc-900.text-white,
-  .light button.bg-gray-800.text-white,
-  .light button.bg-gray-700.text-white,
-  .light button.bg-gray-900.text-white,
-  .light a.bg-zinc-800.text-white,
-  .light a.bg-zinc-800\/50.text-white,
-  .light a.bg-zinc-800\/80.text-white,
-  .light a.bg-zinc-700.text-white,
-  .light a.bg-zinc-900.text-white,
-  .light a.bg-gray-800.text-white,
-  .light a.bg-gray-700.text-white,
-  .light a.bg-gray-900.text-white {
-    color: #1a2e22 !important;
-  }
-
-  /* Fix text-white in buttons/links on light card backgrounds */
-  .light .premium-card button.text-white:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]),
-  .light .glass-card button.text-white:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]),
-  .light .stat-card button.text-white:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) {
-    color: #1a2e22 !important;
-  }
-
-  /* Fix text-white in divs/spans on light backgrounds */
-  .light div.bg-zinc-800 .text-white,
-  .light div.bg-zinc-800\/50 .text-white,
-  .light div.bg-zinc-800\/80 .text-white,
-  .light div.bg-zinc-700 .text-white,
-  .light div.bg-zinc-900 .text-white,
-  .light div.bg-gray-800 .text-white,
-  .light div.bg-gray-700 .text-white,
-  .light div.bg-gray-900 .text-white,
-  .light span.bg-zinc-800 .text-white,
-  .light span.bg-zinc-800\/50 .text-white,
-  .light span.bg-zinc-800\/80 .text-white,
-  .light span.bg-zinc-700 .text-white,
-  .light span.bg-zinc-900 .text-white,
-  .light span.bg-gray-800 .text-white,
-  .light span.bg-gray-700 .text-white,
-  .light span.bg-gray-900 .text-white {
-    color: #1a2e22 !important;
-  }
-
-  /* Ensure text-white on elements with light background colors gets dark text */
-  .light [class*="bg-zinc-8"]:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) .text-white,
-  .light [class*="bg-zinc-9"]:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) .text-white,
-  .light [class*="bg-gray-8"]:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) .text-white,
-  .light [class*="bg-gray-9"]:not([class*="bg-emerald"]):not([class*="bg-cyan"]):not([class*="bg-amber"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-lime"]):not([class*="bg-slate"]) .text-white {
-    color: #1a2e22 !important;
   }
 
   /* ============================================
@@ -1139,7 +649,7 @@
     -moz-osx-font-smoothing: grayscale;
     background: rgb(var(--color-bg-base));
     min-height: 100vh;
-    color: #000000 !important;
+    color: rgb(var(--color-text-primary));
     font-feature-settings: 'cv11', 'ss01';
     letter-spacing: -0.01em;
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -1151,7 +661,7 @@
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1.2;
-    color: #000000 !important;
+    color: rgb(var(--color-text-primary));
   }
 
   h1 {
@@ -1193,7 +703,6 @@
   p {
     line-height: 1.6;
     margin-bottom: 1rem;    /* 16px */
-    color: #000000 !important;
   }
 
   /* Standardized spacing for common elements */
@@ -1260,26 +769,7 @@
     touch-action: manipulation;
   }
 
-  /* All buttons have black text */
-  button {
-    color: #000000 !important;
-  }
-
-  button:hover {
-    color: #000000 !important;
-  }
-
-  button:active {
-    color: #000000 !important;
-  }
-
-  button:focus {
-    color: #000000 !important;
-  }
-
-  button:disabled {
-    color: #000000 !important;
-  }
+  /* Buttons inherit text color from theme */
 
   ::-webkit-scrollbar {
     width: 8px;
@@ -1457,7 +947,7 @@
 
   .btn-primary {
     background: linear-gradient(135deg, #4a6b2a 0%, #3d5a1f 100%);
-    color: #000000 !important;
+    color: #ffffff !important;
     font-weight: 600;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 16px rgba(74, 107, 42, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
@@ -1521,7 +1011,7 @@
 
   .btn-lime {
     background: linear-gradient(135deg, #4a6b2a 0%, #3d5a1f 100%);
-    color: #000000 !important;
+    color: #ffffff !important;
     font-weight: 600;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 16px rgba(74, 107, 42, 0.2);
@@ -1549,7 +1039,7 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #000000 !important;
+    color: rgb(var(--color-text-primary));
     font-weight: 500;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 12px;
@@ -1558,20 +1048,17 @@
   .btn-secondary:hover {
     background: rgba(63, 63, 70, 0.8);
     border-color: rgba(74, 107, 42, 0.3);
-    color: #000000 !important;
   }
 
   /* Light mode secondary button */
   .light .btn-secondary {
     background: rgba(240, 245, 237, 0.9);
     border: 1px solid rgba(74, 107, 42, 0.15);
-    color: #000000 !important;
   }
 
   .light .btn-secondary:hover {
     background: rgba(232, 240, 224, 0.95);
     border-color: rgba(74, 107, 42, 0.3);
-    color: #000000 !important;
   }
 
   .btn-glass {
@@ -1579,7 +1066,7 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #000000 !important;
+    color: rgb(var(--color-text-primary));
     transition: all 0.25s ease;
     border-radius: 12px;
   }
@@ -1587,26 +1074,23 @@
   .btn-glass:hover {
     background: rgba(63, 63, 70, 0.6);
     border-color: rgba(74, 107, 42, 0.3);
-    color: #000000 !important;
   }
 
   /* Light mode glass button */
   .light .btn-glass {
     background: rgba(255, 255, 255, 0.7);
     border: 1px solid rgba(74, 107, 42, 0.12);
-    color: #000000 !important;
   }
 
   .light .btn-glass:hover {
     background: rgba(255, 255, 255, 0.9);
     border-color: rgba(74, 107, 42, 0.25);
-    color: #000000 !important;
   }
 
   .btn-ghost {
     background: transparent;
     border: 1px solid transparent;
-    color: #000000 !important;
+    color: rgb(var(--color-text-secondary));
     font-weight: 500;
     transition: all 0.25s ease;
     border-radius: 12px;
@@ -1614,22 +1098,17 @@
 
   .btn-ghost:hover {
     background: rgba(255, 255, 255, 0.05);
-    color: #000000 !important;
+    color: rgb(var(--color-text-primary));
   }
 
   /* Light mode ghost button */
-  .light .btn-ghost {
-    color: #000000 !important;
-  }
-
   .light .btn-ghost:hover {
     background: rgba(74, 107, 42, 0.08);
-    color: #000000 !important;
   }
 
   .btn-danger {
     background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-    color: #000000 !important;
+    color: #ffffff !important;
     font-weight: 600;
     transition: all 0.25s ease;
     box-shadow: 0 4px 16px rgba(220, 38, 38, 0.25);
@@ -1735,7 +1214,7 @@
 
   .calendar-day.has-workout {
     background: linear-gradient(135deg, #4a6b2a 0%, #3d5a1f 100%);
-    color: #000000 !important;
+    color: #ffffff !important;
     box-shadow: 0 4px 16px rgba(74, 107, 42, 0.25);
   }
 
@@ -1878,7 +1357,7 @@
     padding: 1rem 1.5rem;
     border-radius: 14px;
     font-weight: 600;
-    color: #000000 !important;
+    color: rgb(var(--color-text-primary));
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     min-height: 52px;
   }
@@ -1895,7 +1374,7 @@
 
   .action-btn-emerald {
     background: linear-gradient(135deg, #4a6b2a 0%, #3d5a1f 100%);
-    color: #000000 !important;
+    color: #ffffff !important;
     box-shadow: 0 4px 16px rgba(74, 107, 42, 0.2);
   }
 
@@ -1905,7 +1384,7 @@
 
   .action-btn-cyan {
     background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-    color: #000000 !important;
+    color: #ffffff !important;
     box-shadow: 0 4px 16px rgba(6, 182, 212, 0.25);
   }
 
@@ -1915,7 +1394,7 @@
 
   .action-btn-amber {
     background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: #000000 !important;
+    color: #ffffff !important;
     box-shadow: 0 4px 16px rgba(245, 158, 11, 0.25);
   }
 
@@ -1925,7 +1404,7 @@
 
   .action-btn-teal {
     background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
-    color: #000000 !important;
+    color: #ffffff !important;
     box-shadow: 0 4px 16px rgba(20, 184, 166, 0.25);
   }
 
@@ -1935,7 +1414,7 @@
 
   .action-btn-slate {
     background: linear-gradient(135deg, #475569 0%, #334155 100%);
-    color: #000000 !important;
+    color: #ffffff !important;
     box-shadow: 0 4px 16px rgba(71, 85, 105, 0.25);
   }
 
@@ -1945,7 +1424,7 @@
 
   .action-btn-rose {
     background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
-    color: #000000 !important;
+    color: #ffffff !important;
     box-shadow: 0 4px 16px rgba(244, 63, 94, 0.25);
   }
 
