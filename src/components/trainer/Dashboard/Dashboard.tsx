@@ -141,8 +141,7 @@ export default memo(function Dashboard({
                 <span className="text-xs md:text-sm font-bold text-primary uppercase tracking-widest">
                   {getGreeting()}
                 </span>
-                <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tight mt-1
-                             bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text text-transparent">
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight mt-1">
                   {trainerName ? `שלום, ${trainerName}` : 'שלום'}
                 </h1>
               </div>

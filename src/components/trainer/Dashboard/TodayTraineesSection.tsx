@@ -885,8 +885,7 @@ export default function TodayTraineesSection({
                   </div>
                 </div>
                 <div>
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight mb-1
-                              bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-1">
                     מתאמנים של היום
                   </h2>
                   <p className="text-xs sm:text-sm md:text-base text-secondary/80 font-medium">
@@ -982,8 +981,7 @@ export default function TodayTraineesSection({
                     </div>
                   </div>
                   <div>
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight mb-1
-                                bg-gradient-to-r from-foreground to-warning bg-clip-text text-transparent">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-1">
                       מתאמנים של מחר
                     </h2>
                     <p className="text-xs sm:text-sm md:text-base text-secondary/80 font-medium">
