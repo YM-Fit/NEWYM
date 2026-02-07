@@ -36,7 +36,7 @@ export default function RecentActivity() {
       default:
         return {
           bg: 'bg-muted/15',
-          text: 'text-muted',
+          text: 'text-gray-500',
           border: 'border-border/20',
         };
     }
@@ -85,9 +85,9 @@ export default function RecentActivity() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900">{activity.trainee}</p>
-                    <p className="text-sm text-secondary mt-0.5">{activity.description}</p>
+                    <p className="text-sm text-gray-600 mt-0.5">{activity.description}</p>
                   </div>
-                  <span className="text-xs text-muted whitespace-nowrap">{activity.time}</span>
+                  <span className="text-xs text-gray-500 whitespace-nowrap">{activity.time}</span>
                 </div>
               );
             })}

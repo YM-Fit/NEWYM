@@ -346,7 +346,7 @@ export default function RecentScaleReadings({
     if (score >= 90) return 'text-emerald-400 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20';
     if (score >= 70) return 'text-emerald-400 bg-gradient-to-r from-emerald-600/20 to-blue-500/20';
     if (score >= 50) return 'text-amber-400 bg-gradient-to-r from-amber-500/20 to-orange-500/20';
-    return 'text-muted bg-surface';
+    return 'text-gray-500 bg-surface';
   };
 
   const getConfidenceIcon = (score: number) => {
@@ -365,7 +365,7 @@ export default function RecentScaleReadings({
           <div>
             <h3 className="font-bold text-lg text-[var(--color-text-primary)]">שקילויות אחרונות</h3>
             <div className="flex items-center gap-2 text-sm mt-1">
-              <span className={`inline-flex items-center gap-1.5 ${isListening ? 'text-emerald-400' : 'text-muted'}`}>
+              <span className={`inline-flex items-center gap-1.5 ${isListening ? 'text-emerald-400' : 'text-gray-500'}`}>
                 <span className={`h-2.5 w-2.5 rounded-full ${isListening ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50' : 'bg-muted'}`}></span>
                 {isListening ? 'מוקשר' : 'לא מחובר'}
               </span>
@@ -374,10 +374,10 @@ export default function RecentScaleReadings({
         </div>
         <div className="text-center py-12">
           <div className="p-4 bg-surface/50 rounded-2xl inline-block mb-4">
-            <Scale className="h-14 w-14 mx-auto text-muted opacity-20" />
+            <Scale className="h-14 w-14 mx-auto text-gray-500 opacity-20" />
           </div>
-          <p className="text-muted font-medium">אין קריאות אחרונות</p>
-          <p className="text-sm text-muted opacity-60 mt-2">קריאות חדשות יופיעו כאן באופן אוטומטי</p>
+          <p className="text-gray-500 font-medium">אין קריאות אחרונות</p>
+          <p className="text-sm text-gray-500 opacity-60 mt-2">קריאות חדשות יופיעו כאן באופן אוטומטי</p>
         </div>
       </div>
     );
@@ -401,18 +401,18 @@ export default function RecentScaleReadings({
               setSelectedDate('');
               setNotesInput('');
             }}
-            className="p-2 text-muted hover:text-gray-900 hover:bg-surface rounded-xl transition-all duration-300"
+            className="p-2 text-gray-500 hover:text-gray-900 hover:bg-surface rounded-xl transition-all duration-300"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {editingDateTraineeName && (
-          <p className="text-sm text-muted mb-6">שמירה עבור מתאמן: <span className="font-semibold text-gray-900">{editingDateTraineeName}</span></p>
+          <p className="text-sm text-gray-500 mb-6">שמירה עבור מתאמן: <span className="font-semibold text-gray-900">{editingDateTraineeName}</span></p>
         )}
 
         <div className="mb-8">
-          <label className="block text-sm font-semibold text-secondary mb-3">תאריך המדידה</label>
+          <label className="block text-sm font-semibold text-gray-600 mb-3">תאריך המדידה</label>
           <input
             type="date"
             value={selectedDate}
@@ -422,7 +422,7 @@ export default function RecentScaleReadings({
         </div>
 
         <div className="mb-8">
-          <label className="block text-sm font-semibold text-secondary mb-3">הערות (אופציונלי)</label>
+          <label className="block text-sm font-semibold text-gray-600 mb-3">הערות (אופציונלי)</label>
           <textarea
             value={notesInput}
             onChange={(e) => setNotesInput(e.target.value)}
@@ -441,7 +441,7 @@ export default function RecentScaleReadings({
               setSelectedDate('');
               setNotesInput('');
             }}
-            className="flex-1 px-4 py-3 rounded-xl font-semibold bg-surface hover:bg-elevated text-secondary transition-all duration-300"
+            className="flex-1 px-4 py-3 rounded-xl font-semibold bg-surface hover:bg-elevated text-gray-600 transition-all duration-300"
           >
             ביטול
           </button>
@@ -479,14 +479,14 @@ export default function RecentScaleReadings({
             <div>
               <h3 className="font-bold text-lg text-gray-900">שקילויות והערות</h3>
               <div className="flex items-center gap-2 text-sm mt-1">
-                <span className={`inline-flex items-center gap-1.5 ${isListening ? 'text-emerald-400' : 'text-muted'}`}>
+                <span className={`inline-flex items-center gap-1.5 ${isListening ? 'text-emerald-400' : 'text-gray-500'}`}>
                   <span className={`h-2.5 w-2.5 rounded-full ${isListening ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50' : 'bg-muted'}`}></span>
                   {isListening ? 'מוקשר' : 'לא מחובר'}
                 </span>
               </div>
             </div>
           </div>
-          <span className="text-sm text-muted bg-surface px-3 py-1.5 rounded-xl font-medium">
+          <span className="text-sm text-gray-500 bg-surface px-3 py-1.5 rounded-xl font-medium">
             {activeTab === 'readings' ? `${readings.length} קריאות` : `${savedNotes.length} הערות`}
           </span>
         </div>
@@ -497,7 +497,7 @@ export default function RecentScaleReadings({
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
               activeTab === 'readings'
                 ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-inverse shadow-lg'
-                : 'text-muted hover:text-gray-900 hover:bg-elevated'
+                : 'text-gray-500 hover:text-gray-900 hover:bg-elevated'
             }`}
           >
             <Scale className="h-4 w-4" />
@@ -508,7 +508,7 @@ export default function RecentScaleReadings({
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
               activeTab === 'notes'
                 ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-inverse shadow-lg'
-                : 'text-muted hover:text-gray-900 hover:bg-elevated'
+                : 'text-gray-500 hover:text-gray-900 hover:bg-elevated'
             }`}
           >
             <FileText className="h-4 w-4" />
@@ -522,7 +522,7 @@ export default function RecentScaleReadings({
             <div className="flex flex-wrap gap-3">
               <div className="flex-1 min-w-[200px]">
                 <div className="relative">
-                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted" />
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                   <input
                     type="text"
                     placeholder="חיפוש לפי שם, משקל או הערות..."
@@ -538,7 +538,7 @@ export default function RecentScaleReadings({
                 className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
                   showFilters
                     ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-600/30'
-                    : 'bg-surface text-muted border border-border hover:bg-elevated'
+                    : 'bg-surface text-gray-500 border border-border hover:bg-elevated'
                 }`}
               >
                 <Filter className="h-4 w-4" />
@@ -638,7 +638,7 @@ export default function RecentScaleReadings({
               <div className="flex items-center justify-between pb-2 border-b border-border">
                 <button
                   onClick={handleSelectAll}
-                  className="flex items-center gap-2 text-sm text-muted hover:text-gray-900 transition-colors"
+                  className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
                 >
                   {selectedReadings.size === filteredReadings.length ? (
                     <CheckSquare className="h-4 w-4 text-emerald-400" />
@@ -647,7 +647,7 @@ export default function RecentScaleReadings({
                   )}
                   בחר הכל ({filteredReadings.length})
                 </button>
-                <span className="text-sm text-muted">
+                <span className="text-sm text-gray-500">
                   מוצג {filteredReadings.length} מתוך {readings.length}
                 </span>
               </div>
@@ -678,7 +678,7 @@ export default function RecentScaleReadings({
                     {isSelected ? (
                     <CheckSquare className="h-5 w-5 text-emerald-400" />
                   ) : (
-                    <Square className="h-5 w-5 text-muted" />
+                    <Square className="h-5 w-5 text-gray-500" />
                   )}
                 </button>
                 <div className="flex items-center gap-4">
@@ -686,18 +686,18 @@ export default function RecentScaleReadings({
                     {item.bestMatch ? (
                       <User className="h-5 w-5 text-emerald-400" />
                     ) : (
-                      <HelpCircle className="h-5 w-5 text-muted" />
+                      <HelpCircle className="h-5 w-5 text-gray-500" />
                     )}
                   </div>
                   <div>
                     {item.bestMatch ? (
                       <>
                         <p className="font-semibold text-gray-900 text-lg">{item.bestMatch.traineeName}</p>
-                        <div className="flex items-center gap-3 text-sm text-muted mt-1">
+                        <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
                           <span className="font-medium">{item.reading.weight_kg?.toFixed(1)} ק״ג</span>
                           {item.reading.body_fat_percent && (
                             <>
-                              <span className="text-muted opacity-30">|</span>
+                              <span className="text-gray-500 opacity-30">|</span>
                               <span>{item.reading.body_fat_percent?.toFixed(1)}% שומן</span>
                             </>
                           )}
@@ -705,12 +705,12 @@ export default function RecentScaleReadings({
                       </>
                     ) : (
                       <>
-                        <p className="font-semibold text-secondary">לא זוהה</p>
-                        <div className="flex items-center gap-3 text-sm text-muted mt-1">
+                        <p className="font-semibold text-gray-600">לא זוהה</p>
+                        <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
                           <span className="font-medium">{item.reading.weight_kg?.toFixed(1)} ק״ג</span>
                           {item.reading.body_fat_percent && (
                             <>
-                              <span className="text-muted opacity-30">|</span>
+                              <span className="text-gray-500 opacity-30">|</span>
                               <span>{item.reading.body_fat_percent?.toFixed(1)}% שומן</span>
                             </>
                           )}
@@ -722,8 +722,8 @@ export default function RecentScaleReadings({
 
                 <div className="flex items-center gap-3">
                   <div className="text-left">
-                    <p className="text-sm text-muted font-medium">{formatDate(item.timestamp)}</p>
-                    <p className="text-xs text-muted opacity-60">{formatTime(item.timestamp)}</p>
+                    <p className="text-sm text-gray-500 font-medium">{formatDate(item.timestamp)}</p>
+                    <p className="text-xs text-gray-500 opacity-60">{formatTime(item.timestamp)}</p>
                   </div>
                   {item.bestMatch && (
                     <>
@@ -733,7 +733,7 @@ export default function RecentScaleReadings({
                       </span>
                       {onSaveMeasurement && renderSaveButton(item.reading, item.bestMatch)}
                       {onTraineeClick && (
-                        <ChevronLeft className="h-5 w-5 text-muted" />
+                        <ChevronLeft className="h-5 w-5 text-gray-500" />
                       )}
                     </>
                   )}
@@ -742,7 +742,7 @@ export default function RecentScaleReadings({
 
               {item.matches.length > 1 && (
                 <div className="mt-4 pt-4 border-t border-border">
-                  <p className="text-xs text-muted mb-3 font-medium">התאמות נוספות:</p>
+                  <p className="text-xs text-gray-500 mb-3 font-medium">התאמות נוספות:</p>
                   <div className="flex flex-wrap gap-2">
                     {item.matches.slice(1, 4).map((match) => (
                       <div key={match.traineeId} className="inline-flex items-center gap-2">
@@ -754,8 +754,8 @@ export default function RecentScaleReadings({
                           }}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface hover:bg-elevated rounded-xl text-xs transition-all duration-300 hover:scale-105"
                         >
-                          <span className="text-secondary font-medium">{match.traineeName}</span>
-                          <span className="text-muted opacity-60">({match.confidenceScore}%)</span>
+                          <span className="text-gray-600 font-medium">{match.traineeName}</span>
+                          <span className="text-gray-500 opacity-60">({match.confidenceScore}%)</span>
                         </button>
                         {onSaveMeasurement && renderSaveButton(item.reading, match)}
                       </div>
@@ -768,15 +768,15 @@ export default function RecentScaleReadings({
             })}
             {filteredReadings.length === 0 && readings.length > 0 && (
               <div className="text-center py-12">
-                <Filter className="h-12 w-12 mx-auto text-muted opacity-20 mb-4" />
-                <p className="text-muted font-medium">אין תוצאות לפי הסינון שנבחר</p>
+                <Filter className="h-12 w-12 mx-auto text-gray-500 opacity-20 mb-4" />
+                <p className="text-gray-500 font-medium">אין תוצאות לפי הסינון שנבחר</p>
                 <button
                   onClick={() => {
                     setSearchQuery('');
                     setFilterSource('all');
                     setDateRange({ start: '', end: '' });
                   }}
-                  className="mt-4 px-4 py-2 rounded-xl bg-surface text-secondary hover:text-gray-900 transition-colors text-sm"
+                  className="mt-4 px-4 py-2 rounded-xl bg-surface text-gray-600 hover:text-gray-900 transition-colors text-sm"
                 >
                   נקה סינון
                 </button>
@@ -788,15 +788,15 @@ export default function RecentScaleReadings({
             {loadingNotes ? (
               <div className="text-center py-12">
                 <Loader2 className="h-12 w-12 mx-auto text-emerald-400 animate-spin mb-4" />
-                <p className="text-muted font-medium">טוען הערות...</p>
+                <p className="text-gray-500 font-medium">טוען הערות...</p>
               </div>
             ) : savedNotes.length === 0 ? (
               <div className="text-center py-12">
                 <div className="p-4 bg-surface rounded-2xl inline-block mb-4">
-                  <FileText className="h-14 w-14 mx-auto text-muted opacity-20" />
+                  <FileText className="h-14 w-14 mx-auto text-gray-500 opacity-20" />
                 </div>
-                <p className="text-muted font-medium">אין הערות שמורות</p>
-                <p className="text-sm text-muted opacity-60 mt-2">הערות ששמרת על שקילות יופיעו כאן</p>
+                <p className="text-gray-500 font-medium">אין הערות שמורות</p>
+                <p className="text-sm text-gray-500 opacity-60 mt-2">הערות ששמרת על שקילות יופיעו כאן</p>
               </div>
             ) : (
               savedNotes.map((note) => (
@@ -812,11 +812,11 @@ export default function RecentScaleReadings({
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900 text-lg">{note.trainee_name}</p>
-                        <div className="flex items-center gap-3 text-sm text-muted mt-1">
+                        <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
                           <span className="font-medium">{note.weight_kg?.toFixed(1)} ק״ג</span>
                           {note.body_fat_percent && (
                             <>
-                              <span className="text-muted opacity-30">|</span>
+                              <span className="text-gray-500 opacity-30">|</span>
                               <span>{note.body_fat_percent?.toFixed(1)}% שומן</span>
                             </>
                           )}
@@ -824,7 +824,7 @@ export default function RecentScaleReadings({
                       </div>
                     </div>
                     <div className="text-left">
-                      <p className="text-sm text-muted font-medium">
+                      <p className="text-sm text-gray-500 font-medium">
                         {new Date(note.date).toLocaleDateString('he-IL', {
                           day: 'numeric',
                           month: 'short',
@@ -836,7 +836,7 @@ export default function RecentScaleReadings({
                   <div className="mt-3 pt-3 border-t border-border">
                     <div className="flex items-start gap-2">
                       <FileText className="h-4 w-4 text-emerald-400 mt-1 flex-shrink-0" />
-                      <p className="text-secondary text-sm leading-relaxed whitespace-pre-wrap">{note.notes}</p>
+                      <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">{note.notes}</p>
                     </div>
                   </div>
                 </div>

@@ -87,14 +87,14 @@ export default memo(function Dashboard({
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 tracking-tight">
                 {trainerName ? `שלום, ${trainerName}` : 'שלום'}
               </h1>
-              <p className="text-secondary">
+              <p className="text-gray-600">
                 התחל לנהל את הסטודיו שלך
               </p>
             </div>
 
             <div className="flex items-center gap-2 px-4 py-2 bg-surface/50 rounded-xl border border-border/10">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-sm text-secondary">
+              <span className="text-sm text-gray-600">
                 {new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}
               </span>
             </div>
@@ -106,7 +106,7 @@ export default memo(function Dashboard({
             <Users className="w-8 h-8 text-primary" />
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-3">התחל עכשיו!</h3>
-          <p className="text-secondary mb-6 max-w-md mx-auto">
+          <p className="text-gray-600 mb-6 max-w-md mx-auto">
             הוסף את המתאמן הראשון שלך כדי להתחיל לעבוד עם המערכת
           </p>
           <button
@@ -202,7 +202,7 @@ export default memo(function Dashboard({
             <Users className="w-8 h-8 text-primary" />
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-3">מתאמנים של היום</h3>
-          <p className="text-secondary mb-6 max-w-md mx-auto">
+          <p className="text-gray-600 mb-6 max-w-md mx-auto">
             אין אימונים מתוזמנים להיום
           </p>
         </div>
@@ -237,11 +237,11 @@ export default memo(function Dashboard({
           </h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-2 rounded-lg bg-surface/50">
-              <span className="text-xs text-secondary">מדידות (7 ימים)</span>
+              <span className="text-xs text-gray-600">מדידות (7 ימים)</span>
               <span className="text-sm font-bold text-gray-900">{recentMeasurements}</span>
             </div>
             <div className="flex items-center justify-between p-2 rounded-lg bg-surface/50">
-              <span className="text-xs text-secondary">קריאות מאזניים</span>
+              <span className="text-xs text-gray-600">קריאות מאזניים</span>
               <span className="text-sm font-bold text-gray-900">{scaleReadings.length}</span>
             </div>
           </div>

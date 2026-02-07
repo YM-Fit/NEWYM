@@ -53,7 +53,7 @@ export default function QuickActions({ onAction }: QuickActionsProps) {
               <div className="text-right flex-1">
                 <span className="block text-sm font-semibold">{action.label}</span>
                 <span className={`block text-xs mt-0.5 ${
-                  action.primary ? 'text-inverse/70' : 'text-secondary'
+                  action.primary ? 'text-inverse/70' : 'text-gray-600'
                 }`}>
                   {action.description}
                 </span>

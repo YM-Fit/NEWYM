@@ -849,7 +849,7 @@ export default function TodayTraineesSection({
           <Calendar className="w-8 h-8 text-primary" />
         </div>
         <h3 className="text-xl font-bold text-gray-900 mb-3">אין אימונים מתוזמנים להיום ומחר</h3>
-        <p className="text-secondary mb-6 max-w-md mx-auto">
+        <p className="text-gray-700 mb-6 max-w-md mx-auto">
           אין מתאמנים עם אימון מתוזמן להיום או למחר. תוכל להוסיף אימון חדש מהרשימה הכללית.
         </p>
       </div>
@@ -888,7 +888,7 @@ export default function TodayTraineesSection({
                   <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-1">
                     מתאמנים של היום
                   </h2>
-                  <p className="text-xs sm:text-sm md:text-base text-secondary/80 font-medium">
+                  <p className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">
                     כל המתאמנים עם אימון מתוזמן להיום
                   </p>
                 </div>
@@ -899,7 +899,7 @@ export default function TodayTraineesSection({
                             border-2 border-primary/30 shadow-lg shadow-primary/10
                             hover:scale-105 transition-transform duration-300">
                 <span className="text-2xl md:text-3xl font-extrabold text-primary">{todayTrainees.length}</span>
-                <span className="text-sm md:text-base text-secondary/80 font-semibold mr-2">מתאמנים</span>
+                <span className="text-sm md:text-base text-gray-600 font-semibold mr-2">מתאמנים</span>
               </div>
             </div>
           </div>
@@ -945,7 +945,7 @@ export default function TodayTraineesSection({
                 </div>
               </div>
               <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">אין אימונים מתוזמנים להיום</h3>
-              <p className="text-sm md:text-base text-secondary/80 max-w-md mx-auto">
+              <p className="text-sm md:text-base text-gray-600 max-w-md mx-auto">
                 תוכל להוסיף אימון חדש מהרשימה הכללית או לתזמן אימונים מראש
               </p>
             </div>
@@ -984,7 +984,7 @@ export default function TodayTraineesSection({
                     <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-1">
                       מתאמנים של מחר
                     </h2>
-                    <p className="text-xs sm:text-sm md:text-base text-secondary/80 font-medium">
+                    <p className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">
                       כל המתאמנים עם אימון מתוזמן למחר
                     </p>
                   </div>
@@ -995,7 +995,7 @@ export default function TodayTraineesSection({
                               border-2 border-warning/30 shadow-lg shadow-warning/10
                               hover:scale-105 transition-transform duration-300">
                   <span className="text-2xl md:text-3xl font-extrabold text-warning">{tomorrowTrainees.length}</span>
-                  <span className="text-sm md:text-base text-secondary/80 font-semibold mr-2">מתאמנים</span>
+                  <span className="text-sm md:text-base text-gray-600 font-semibold mr-2">מתאמנים</span>
                 </div>
               </div>
             </div>
@@ -1151,7 +1151,7 @@ function TraineeTableRow({
             <span className="font-semibold text-sm md:text-base text-gray-900 whitespace-nowrap">{workout.workout_time}</span>
           </div>
         ) : (
-          <span className="text-secondary text-xs md:text-sm">-</span>
+          <span className="text-gray-700 text-xs md:text-sm">-</span>
         )}
       </td>
 
@@ -1163,7 +1163,7 @@ function TraineeTableRow({
           </span>
           {/* Show "אימון חדש נוסף" only if there's a completed workout AND the scheduled time has passed */}
           {workout.hasCompletedWorkout && workout.isTimePassed && (
-            <span className="px-1.5 md:px-2 py-0.5 rounded-lg text-[10px] md:text-xs font-semibold text-secondary bg-surface/60 border border-border/30 whitespace-nowrap">
+            <span className="px-1.5 md:px-2 py-0.5 rounded-lg text-[10px] md:text-xs font-semibold text-gray-700 bg-surface/60 border border-border/30 whitespace-nowrap">
               אימון חדש נוסף
             </span>
           )}
