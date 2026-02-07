@@ -1,34 +1,31 @@
 @layer base {
   :root {
-    /* Design Tokens - Spacing Scale */
-    --spacing-xs: 0.5rem;      /* 8px */
-    --spacing-sm: 0.75rem;     /* 12px */
-    --spacing-md: 1rem;        /* 16px */
-    --spacing-lg: 1.25rem;     /* 20px */
-    --spacing-xl: 1.5rem;      /* 24px */
-    --spacing-2xl: 2rem;       /* 32px */
-    --spacing-3xl: 2.5rem;     /* 40px */
-    --spacing-4xl: 3rem;       /* 48px */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 0.75rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.25rem;
+    --spacing-xl: 1.5rem;
+    --spacing-2xl: 2rem;
+    --spacing-3xl: 2.5rem;
+    --spacing-4xl: 3rem;
 
-    /* Design Tokens - Border Radius Scale */
-    --radius-xs: 0.5rem;       /* 8px */
-    --radius-sm: 0.75rem;      /* 12px */
-    --radius-md: 1rem;         /* 16px */
-    --radius-lg: 1.25rem;      /* 20px */
-    --radius-xl: 1.5rem;       /* 24px */
-    --radius-2xl: 1.75rem;     /* 28px */
-    --radius-3xl: 2rem;        /* 32px */
+    --radius-xs: 0.5rem;
+    --radius-sm: 0.75rem;
+    --radius-md: 1rem;
+    --radius-lg: 1.25rem;
+    --radius-xl: 1.5rem;
+    --radius-2xl: 1.75rem;
+    --radius-3xl: 2rem;
 
-    /* Design Tokens - Typography Scale */
-    --font-size-xs: 0.75rem;      /* 12px */
-    --font-size-sm: 0.875rem;     /* 14px */
-    --font-size-base: 1rem;       /* 16px */
-    --font-size-lg: 1.125rem;     /* 18px */
-    --font-size-xl: 1.25rem;      /* 20px */
-    --font-size-2xl: 1.5rem;      /* 24px */
-    --font-size-3xl: 1.875rem;    /* 30px */
-    --font-size-4xl: 2.25rem;     /* 36px */
-    --font-size-5xl: 3rem;        /* 48px */
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 1.875rem;
+    --font-size-4xl: 2.25rem;
+    --font-size-5xl: 3rem;
 
     --line-height-tight: 1.25;
     --line-height-normal: 1.5;
@@ -40,10 +37,9 @@
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
 
-    /* Brand - Nature-inspired colors */
-    --color-primary: 74 107 42;        /* #4a6b2a - olive green */
-    --color-primary-light: 107 142 74; /* #6b8e4a - soft green */
-    --color-primary-dark: 61 90 31;    /* #3d5a1f - dark olive */
+    --color-primary: 74 107 42;
+    --color-primary-light: 107 142 74;
+    --color-primary-dark: 61 90 31;
     --color-on-primary: 255 255 255;
     --color-primary-foreground: 255 255 255;
     --color-success: 74 107 42;
@@ -51,18 +47,17 @@
     --color-danger: 220 38 38;
     --color-info: 107 142 74;
 
-    /* Dark theme (default) - Nature-inspired dark greens */
-    --color-bg-base: 26 46 22;         /* #1a2e16 - deep dark green */
-    --color-bg-elevated: 36 50 28;    /* #24321c - medium dark green */
-    --color-bg-surface: 45 58 36;      /* #2d3a24 - lighter dark green */
+    --color-bg-base: 26 46 22;
+    --color-bg-elevated: 36 50 28;
+    --color-bg-surface: 45 58 36;
     --color-bg-card: 36 50 28;
     --color-bg-input: 26 46 22;
     --color-bg-overlay: 0 0 0;
 
-    --color-text-primary: 0 0 0;
-    --color-text-secondary: 0 0 0;
-    --color-text-muted: 0 0 0;
-    --color-text-inverse: 0 0 0;
+    --color-text-primary: 228 228 231;
+    --color-text-secondary: 161 161 170;
+    --color-text-muted: 113 113 122;
+    --color-text-inverse: 24 24 27;
 
     --color-border: 74 107 42;
     --color-border-hover: 107 142 74;
@@ -75,25 +70,49 @@
     --color-shadow-strong: 0 0 0;
     --shadow-soft: rgba(26, 46, 22, 0.4);
     --shadow-strong: rgba(26, 46, 22, 0.6);
+
+    --color-muted-300: 212 212 216;
+    --color-muted-400: 161 161 170;
+    --color-muted-500: 113 113 122;
+    --color-muted-600: 82 82 91;
+    --color-muted-700: 63 63 70;
+    --color-muted-900: 39 39 42;
+
+    --color-surface-0: 14 14 16;
+    --color-surface-50: 18 18 20;
+    --color-surface-100: 24 24 27;
+    --color-surface-200: 31 31 35;
+    --color-surface-300: 39 39 42;
+    --color-surface-500: 50 50 54;
+    --color-surface-700: 63 63 70;
+    --color-surface-800: 82 82 91;
+
+    --color-border-num-30: 63 63 70;
+    --color-border-num-50: 63 63 70;
+    --color-border-num-100: 71 71 80;
+    --color-border-num-200: 82 82 91;
+    --color-border-num-300: 100 100 110;
+    --color-border-num-500: 113 113 122;
+    --color-border-num-600: 130 130 140;
+    --color-border-num-700: 161 161 170;
   }
 
   .light {
-    /* Light theme - Nature-inspired soft greens */
-    --color-bg-base: 240 245 237;      /* #f0f5ed - soft light green */
-    --color-bg-elevated: 255 255 255;  /* #ffffff - white */
-    --color-bg-surface: 232 240 224;  /* #e8f0e0 - light green */
+    --color-bg-base: 240 245 237;
+    --color-bg-elevated: 255 255 255;
+    --color-bg-surface: 232 240 224;
     --color-bg-card: 255 255 255;
     --color-bg-input: 255 255 255;
     --color-bg-overlay: 26 46 22;
 
-    --color-text-primary: 0 0 0;    /* black */
-    --color-text-secondary: 0 0 0;  /* black */
-    --color-text-muted: 0 0 0;   /* black */
-    --color-text-inverse: 0 0 0;
+    --color-text-primary: 24 24 27;
+    --color-text-secondary: 63 63 70;
+    --color-text-muted: 113 113 122;
+    --color-text-inverse: 244 244 245;
 
-    --color-border: 74 107 42;         /* #4a6b2a - olive green */
-    --color-border-hover: 107 142 74;  /* #6b8e4a - soft green */
-    --color-border-strong: 61 90 31;    /* #3d5a1f - dark olive */
+    --color-border: 74 107 42;
+    --color-border-hover: 107 142 74;
+    --color-border-strong: 61 90 31;
 
     --color-accent-bg: 74 107 42;
     --color-accent-bg-hover: 107 142 74;
@@ -102,5 +121,30 @@
     --color-shadow-strong: 61 90 31;
     --shadow-soft: rgba(74, 107, 42, 0.1);
     --shadow-strong: rgba(74, 107, 42, 0.2);
+
+    --color-muted-300: 148 163 184;
+    --color-muted-400: 100 116 139;
+    --color-muted-500: 71 85 105;
+    --color-muted-600: 51 65 85;
+    --color-muted-700: 30 41 59;
+    --color-muted-900: 15 23 42;
+
+    --color-surface-0: 255 255 255;
+    --color-surface-50: 248 250 252;
+    --color-surface-100: 241 245 249;
+    --color-surface-200: 226 232 240;
+    --color-surface-300: 203 213 225;
+    --color-surface-500: 148 163 184;
+    --color-surface-700: 51 65 85;
+    --color-surface-800: 30 41 59;
+
+    --color-border-num-30: 203 213 225;
+    --color-border-num-50: 203 213 225;
+    --color-border-num-100: 180 190 205;
+    --color-border-num-200: 148 163 184;
+    --color-border-num-300: 120 135 160;
+    --color-border-num-500: 100 116 139;
+    --color-border-num-600: 71 85 105;
+    --color-border-num-700: 51 65 85;
   }
 }
