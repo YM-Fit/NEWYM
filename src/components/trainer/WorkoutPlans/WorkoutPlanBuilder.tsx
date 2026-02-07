@@ -431,20 +431,20 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
               rest_seconds: exercise.rest_seconds,
               notes: exercise.notes || null,
               order_index: i,
-              target_weight: firstSet?.weight || null,
+              target_weight: firstSet?.weight ?? null,
               target_rpe: firstSet?.rpe && firstSet.rpe >= 1 && firstSet.rpe <= 10 ? firstSet.rpe : null,
-              equipment_id: firstSet?.equipment_id || null,
+              equipment_id: firstSet?.equipment_id ?? null,
               set_type: firstSet?.set_type || 'regular',
-              failure: firstSet?.failure || false,
-              superset_exercise_id: firstSet?.superset_exercise_id || null,
-              superset_weight: firstSet?.superset_weight || null,
-              superset_reps: firstSet?.superset_reps || null,
+              failure: firstSet?.failure ?? false,
+              superset_exercise_id: firstSet?.superset_exercise_id ?? null,
+              superset_weight: firstSet?.superset_weight ?? null,
+              superset_reps: firstSet?.superset_reps ?? null,
               superset_rpe: firstSet?.superset_rpe && firstSet.superset_rpe >= 1 && firstSet.superset_rpe <= 10 ? firstSet.superset_rpe : null,
-              superset_equipment_id: firstSet?.superset_equipment_id || null,
-              superset_dropset_weight: firstSet?.superset_dropset_weight || null,
-              superset_dropset_reps: firstSet?.superset_dropset_reps || null,
-              dropset_weight: firstSet?.dropset_weight || null,
-              dropset_reps: firstSet?.dropset_reps || null,
+              superset_equipment_id: firstSet?.superset_equipment_id ?? null,
+              superset_dropset_weight: firstSet?.superset_dropset_weight ?? null,
+              superset_dropset_reps: firstSet?.superset_dropset_reps ?? null,
+              dropset_weight: firstSet?.dropset_weight ?? null,
+              dropset_reps: firstSet?.dropset_reps ?? null,
             };
 
             if (exercise.exerciseId && existingExerciseIds.has(exercise.exerciseId)) {
@@ -593,20 +593,20 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                 rest_seconds: exercise.rest_seconds,
                 notes: exercise.notes || null,
                 order_index: i,
-                target_weight: firstSet?.weight || null,
+                target_weight: firstSet?.weight ?? null,
                 target_rpe: firstSet?.rpe && firstSet.rpe >= 1 && firstSet.rpe <= 10 ? firstSet.rpe : null,
-                equipment_id: firstSet?.equipment_id || null,
+                equipment_id: firstSet?.equipment_id ?? null,
                 set_type: firstSet?.set_type || 'regular',
-                failure: firstSet?.failure || false,
-                superset_exercise_id: firstSet?.superset_exercise_id || null,
-                superset_weight: firstSet?.superset_weight || null,
-                superset_reps: firstSet?.superset_reps || null,
+                failure: firstSet?.failure ?? false,
+                superset_exercise_id: firstSet?.superset_exercise_id ?? null,
+                superset_weight: firstSet?.superset_weight ?? null,
+                superset_reps: firstSet?.superset_reps ?? null,
                 superset_rpe: firstSet?.superset_rpe && firstSet.superset_rpe >= 1 && firstSet.superset_rpe <= 10 ? firstSet.superset_rpe : null,
-                superset_equipment_id: firstSet?.superset_equipment_id || null,
-                superset_dropset_weight: firstSet?.superset_dropset_weight || null,
-                superset_dropset_reps: firstSet?.superset_dropset_reps || null,
-                dropset_weight: firstSet?.dropset_weight || null,
-                dropset_reps: firstSet?.dropset_reps || null,
+                superset_equipment_id: firstSet?.superset_equipment_id ?? null,
+                superset_dropset_weight: firstSet?.superset_dropset_weight ?? null,
+                superset_dropset_reps: firstSet?.superset_dropset_reps ?? null,
+                dropset_weight: firstSet?.dropset_weight ?? null,
+                dropset_reps: firstSet?.dropset_reps ?? null,
               } as any);
 
             if (exerciseError) {
@@ -1027,17 +1027,47 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             currentDays={days}
             onBack={() => setShowBlockBuilder(false)}
             onSelectBlock={(block) => {
-              // Add block days to current plan
               if (block.days && Array.isArray(block.days) && block.days.length > 0) {
-                // Calculate the next day number based on existing days
-                const maxDayNumber = days.length > 0 
+                const maxDayNumber = days.length > 0
                   ? Math.max(...days.map(d => d.day_number))
                   : 0;
                 const newDays = block.days.map((day: any, index: number) => ({
-                  ...day,
                   tempId: Date.now().toString() + Math.random() + index,
                   day_number: maxDayNumber + index + 1,
-                  exercises: day.exercises || [],
+                  day_name: day.day_name || '',
+                  focus: day.focus || '',
+                  notes: day.notes || '',
+                  times_per_week: day.times_per_week ?? 1,
+                  exercises: (day.exercises || []).map((ex: any) => ({
+                    tempId: Date.now().toString() + Math.random(),
+                    exercise: ex.exercise || {
+                      id: ex.exercise_id || '',
+                      name: ex.exercise_name || 'תרגיל',
+                      muscle_group_id: '',
+                    },
+                    sets: (ex.sets || []).map((set: any, si: number) => ({
+                      id: Date.now().toString() + Math.random() + si,
+                      set_number: set.set_number || si + 1,
+                      weight: set.weight ?? 0,
+                      reps: set.reps ?? 0,
+                      rpe: set.rpe ?? null,
+                      set_type: set.set_type || 'regular',
+                      failure: set.failure ?? false,
+                      equipment_id: set.equipment_id ?? null,
+                      equipment: set.equipment ?? null,
+                      superset_exercise_id: set.superset_exercise_id ?? null,
+                      superset_weight: set.superset_weight ?? null,
+                      superset_reps: set.superset_reps ?? null,
+                      superset_rpe: set.superset_rpe ?? null,
+                      superset_equipment_id: set.superset_equipment_id ?? null,
+                      superset_dropset_weight: set.superset_dropset_weight ?? null,
+                      superset_dropset_reps: set.superset_dropset_reps ?? null,
+                      dropset_weight: set.dropset_weight ?? null,
+                      dropset_reps: set.dropset_reps ?? null,
+                    })),
+                    rest_seconds: ex.rest_seconds ?? 90,
+                    notes: ex.notes || '',
+                  })),
                 }));
                 setDays([...days, ...newDays]);
                 toast.success(`בלוק "${block.name}" נוסף לתוכנית`);

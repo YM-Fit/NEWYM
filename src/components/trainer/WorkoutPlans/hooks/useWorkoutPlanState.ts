@@ -79,7 +79,8 @@ export function useWorkoutPlanState(traineeId: string) {
           )
         `)
         .in('day_id', dayIds)
-        .order('day_id, order_index', { ascending: true });
+        .order('day_id', { ascending: true })
+        .order('order_index', { ascending: true });
 
       if (exercisesError) {
         logger.error('Error loading exercises', exercisesError, 'WorkoutPlanBuilder');
@@ -123,7 +124,7 @@ export function useWorkoutPlanState(traineeId: string) {
           const sets: SetData[] = Array.from({ length: setsCount }, (_, i) => ({
             id: `${day.id}-${ex.id}-${i}`,
             set_number: i + 1,
-            weight: ex.target_weight || 0,
+            weight: ex.target_weight ?? 0,
             reps: reps,
             rpe: ex.target_rpe || null,
             set_type: (ex.set_type || 'regular') as 'regular' | 'superset' | 'dropset',
@@ -241,18 +242,19 @@ export function useWorkoutPlanState(traineeId: string) {
   }, [days, selectedDay]);
 
   const duplicateDay = useCallback((day: WorkoutDay) => {
-    // Calculate the next day number based on existing days
-    const maxDayNumber = days.length > 0 
+    const maxDayNumber = days.length > 0
       ? Math.max(...days.map(d => d.day_number))
       : 0;
     const newDay: WorkoutDay = {
       ...day,
       tempId: Date.now().toString() + Math.random(),
+      dayId: undefined,
       day_number: maxDayNumber + 1,
       day_name: day.day_name ? `${day.day_name} (עותק)` : '',
       exercises: day.exercises.map(ex => ({
         ...ex,
         tempId: Date.now().toString() + Math.random(),
+        exerciseId: undefined,
         sets: ex.sets.map(set => ({ ...set, id: Date.now().toString() + Math.random() })),
       })),
     };

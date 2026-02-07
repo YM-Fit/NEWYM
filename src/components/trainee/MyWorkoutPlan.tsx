@@ -1,8 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../utils/logger';
-import { useWorkoutPlanWeeklyExecutions } from '../../hooks/useWorkoutPlanWeeklyExecutions';
 import { getRequiredFrequency, getWeekStartDate } from '../../utils/workoutPlanUtils';
 import {
   Calendar,
@@ -147,8 +146,6 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   const [days, setDays] = useState<WorkoutDay[]>([]);
   const [dayExercises, setDayExercises] = useState<Record<string, DayExercise[]>>({});
   const [loading, setLoading] = useState(true);
-  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set()); // Kept for legacy code
-  // Removed completedExercises - now using weekly executions per day
   const [dayCompletions, setDayCompletions] = useState<Record<string, { count: number; required: number }>>({});
   const [editingExercise, setEditingExercise] = useState<string | null>(null);
   const [editData, setEditData] = useState<{ trainee_notes: string; trainee_target_weight: number | null }>({
@@ -383,18 +380,6 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
     setSaving(false);
   };
-
-  // Create hooks for each day to track weekly executions
-  const dayExecutionHooks = useMemo(() => {
-    const hooks: Record<string, ReturnType<typeof useWorkoutPlanWeeklyExecutions>> = {};
-    if (plan) {
-      days.forEach(day => {
-        // We'll create hooks dynamically, but for now we'll use a simpler approach
-        // with a single state that tracks all days
-      });
-    }
-    return hooks;
-  }, [plan, days]);
 
   // Toggle day complete - marks the entire day as completed
   const toggleDayComplete = async (dayId: string) => {

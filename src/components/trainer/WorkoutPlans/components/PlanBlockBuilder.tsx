@@ -22,7 +22,7 @@ interface PlanBlockBuilderProps {
   currentDays?: WorkoutDay[]; // Optional: current days from plan to create block from
 }
 
-export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock }: PlanBlockBuilderProps) {
+export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, currentDays = [] }: PlanBlockBuilderProps) {
   const [blocks, setBlocks] = useState<PlanBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -299,14 +299,48 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock }: P
                 <p className="text-sm font-semibold text-[var(--color-text-primary)] mb-2">
                   ימים נבחרים: {selectedDays.length}
                 </p>
-                <p className="text-xs text-[var(--color-text-muted)] mb-3">
-                  הערה: יש לבחור ימים מתוכנית קיימת או ליצור ימים חדשים
-                </p>
-                <div className="bg-amber-500/15 border border-amber-500/30 rounded-xl p-4">
-                  <p className="text-sm text-amber-400 font-medium">
-                    💡 טיפ: כדי ליצור בלוק, בחר ימים מתוכנית קיימת או צור ימים חדשים בתוכנית הנוכחית ואז שמור אותם כבלוק.
-                  </p>
-                </div>
+                {currentDays.length > 0 ? (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {currentDays.map((day) => {
+                      const isSelected = selectedDays.some(d => d.tempId === day.tempId);
+                      return (
+                        <button
+                          key={day.tempId}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedDays(selectedDays.filter(d => d.tempId !== day.tempId));
+                            } else {
+                              setSelectedDays([...selectedDays, day]);
+                            }
+                          }}
+                          className={`w-full text-right p-3 rounded-xl border-2 transition-all ${
+                            isSelected
+                              ? 'border-emerald-500 bg-emerald-50'
+                              : 'border-[var(--color-border)] hover:border-emerald-300'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className={`text-sm font-bold ${isSelected ? 'text-emerald-700' : 'text-[var(--color-text-primary)]'}`}>
+                              יום {day.day_number}{day.day_name ? ` - ${day.day_name}` : ''}
+                            </span>
+                            <span className="text-xs text-[var(--color-text-muted)]">
+                              {day.exercises.length} תרגילים
+                            </span>
+                          </div>
+                          {day.focus && (
+                            <p className="text-xs text-[var(--color-text-muted)] mt-1">{day.focus}</p>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <p className="text-sm text-amber-700 font-medium">
+                      כדי ליצור בלוק, יש להוסיף ימים לתוכנית הנוכחית קודם.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -22,6 +22,7 @@ interface DayEditViewProps {
   onCompleteExercise: (exerciseIndex: number) => void;
   onShowInstructions: (name: string, instructions: string | null | undefined) => void;
   onUpdateExercise: (exerciseIndex: number, field: keyof PlanExercise, value: any) => void;
+  onUpdateAllExercises: (exercises: PlanExercise[]) => void;
   onAddSet: (exerciseIndex: number) => void;
   onRemoveSet: (exerciseIndex: number, setIndex: number) => void;
   onUpdateSet: (exerciseIndex: number, setIndex: number, field: string, value: any) => void;

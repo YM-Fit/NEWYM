@@ -78,22 +78,27 @@ export default function WorkoutPlanProgress({
     return days.map(day => {
       const exercises = dayExercises[day.id] || [];
       const completion = dayCompletions[day.id] || { count: 0, required: 1 };
-      const completedCount = completion.count;
-      const progress = exercises.length > 0 ? (completedCount / exercises.length) * 100 : 0;
+      const progress = completion.required > 0 ? (completion.count / completion.required) * 100 : 0;
       const volume = calculateDayVolume(day.id);
 
       return {
         day: `יום ${day.day_number}`,
-        progress: Math.round(progress),
+        progress: Math.min(100, Math.round(progress)),
         volume,
         exercises: exercises.length,
-        completed: completedCount,
+        completed: completion.count >= completion.required,
       };
     });
-  }, [days, dayExercises, getCompletedCount, calculateDayVolume]);
+  }, [days, dayExercises, dayCompletions, calculateDayVolume]);
 
   const exerciseProgressData = useMemo(() => {
-    const exerciseMap = new Map<string, { name: string; volume: number }>();
+    const exerciseMap = new Map<string, { name: string; volume: number; completed: boolean }>();
+    const completedDayIds = new Set(
+      days.filter(day => {
+        const completion = dayCompletions[day.id];
+        return completion && completion.count >= completion.required;
+      }).map(day => day.id)
+    );
 
     days.forEach(day => {
       const exercises = dayExercises[day.id] || [];
@@ -108,16 +113,18 @@ export default function WorkoutPlanProgress({
         const existing = exerciseMap.get(exerciseName);
         if (existing) {
           existing.volume += volume;
+          if (completedDayIds.has(day.id)) existing.completed = true;
         } else {
           exerciseMap.set(exerciseName, {
             name: exerciseName,
             volume,
+            completed: completedDayIds.has(day.id),
           });
         }
       });
     });
 
-    return Array.from(exerciseMap.values()).slice(0, 10); // Top 10 exercises
+    return Array.from(exerciseMap.values()).slice(0, 10);
   }, [days, dayExercises, dayCompletions]);
 
   return (
@@ -194,30 +201,30 @@ export default function WorkoutPlanProgress({
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={dayProgressData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(63, 63, 70, 0.3)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 0, 0, 0.1)" vertical={false} />
               <XAxis
                 dataKey="day"
-                stroke="#71717a"
+                stroke="#6b6b6b"
                 style={{ fontSize: '12px' }}
                 tickLine={false}
-                axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
-                tick={{ fill: '#a1a1aa' }}
+                axisLine={{ stroke: '#d4d4d4', strokeOpacity: 0.8 }}
+                tick={{ fill: '#4a4a4a' }}
               />
               <YAxis
-                stroke="#71717a"
+                stroke="#6b6b6b"
                 style={{ fontSize: '12px' }}
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: '#a1a1aa' }}
+                tick={{ fill: '#4a4a4a' }}
                 domain={[0, 100]}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'rgba(24, 24, 27, 0.95)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
                   backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(63, 63, 70, 0.5)',
+                  border: '1px solid rgba(0, 0, 0, 0.1)',
                   borderRadius: '12px',
-                  color: '#fff',
+                  color: '#000',
                   padding: '12px'
                 }}
                 cursor={{ fill: 'rgba(16, 185, 129, 0.1)' }}
@@ -238,29 +245,29 @@ export default function WorkoutPlanProgress({
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={dayProgressData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(63, 63, 70, 0.3)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 0, 0, 0.1)" vertical={false} />
               <XAxis
                 dataKey="day"
-                stroke="#71717a"
+                stroke="#6b6b6b"
                 style={{ fontSize: '12px' }}
                 tickLine={false}
-                axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
-                tick={{ fill: '#a1a1aa' }}
+                axisLine={{ stroke: '#d4d4d4', strokeOpacity: 0.8 }}
+                tick={{ fill: '#4a4a4a' }}
               />
               <YAxis
-                stroke="#71717a"
+                stroke="#6b6b6b"
                 style={{ fontSize: '12px' }}
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: '#a1a1aa' }}
+                tick={{ fill: '#4a4a4a' }}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'rgba(24, 24, 27, 0.95)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
                   backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(63, 63, 70, 0.5)',
+                  border: '1px solid rgba(0, 0, 0, 0.1)',
                   borderRadius: '12px',
-                  color: '#fff',
+                  color: '#000',
                   padding: '12px'
                 }}
                 cursor={{ fill: 'rgba(6, 182, 212, 0.1)' }}
