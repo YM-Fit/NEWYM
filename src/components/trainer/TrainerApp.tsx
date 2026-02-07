@@ -372,6 +372,21 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
     return selectedTrainee ? convertTraineeToDisplayFormat(selectedTrainee) : null;
   }, [selectedTrainee]);
 
+  const handleDashboardTraineeClick = useCallback((traineeId: string) => {
+    const trainee = trainees.find((t: Trainee) => t.id === traineeId);
+    if (trainee) handleTraineeClick(trainee);
+  }, [trainees, handleTraineeClick]);
+
+  const handleViewWorkoutPlan = useCallback((trainee: Trainee) => {
+    selectTrainee(trainee.id);
+    setActiveView('workout-plans');
+  }, [selectTrainee]);
+
+  const handleViewMealPlan = useCallback((trainee: Trainee) => {
+    selectTrainee(trainee.id);
+    setActiveView('meal-plans');
+  }, [selectTrainee]);
+
   const renderMainContent = () => {
     if (loading) {
       return (
@@ -398,15 +413,12 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
               onToggleHeader={() => setHeaderCollapsed(!headerCollapsed)}
               scaleReadings={recentReadings}
               isScaleListening={isScaleListening}
-              onTraineeClick={(traineeId: string) => {
-                const trainee = trainees.find((t: Trainee) => t.id === traineeId);
-                if (trainee) handleTraineeClick(trainee);
-              }}
+              onTraineeClick={handleDashboardTraineeClick}
               onSaveMeasurement={handleSaveScaleMeasurement}
               onNewWorkout={handleNewWorkout}
               onNewPreparedWorkout={handleNewPreparedWorkout}
-              onViewWorkoutPlan={(trainee: Trainee) => { selectTrainee(trainee.id); setActiveView('workout-plans'); }}
-              onViewMealPlan={(trainee: Trainee) => { selectTrainee(trainee.id); setActiveView('meal-plans'); }}
+              onViewWorkoutPlan={handleViewWorkoutPlan}
+              onViewMealPlan={handleViewMealPlan}
             />
           </Suspense>
         );

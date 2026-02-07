@@ -7,7 +7,6 @@
  * interactions, and reports. Supports CSV, JSON, and Excel formats.
  */
 
-import * as XLSX from 'xlsx';
 import { logger } from '../utils/logger';
 import type { ApiResponse } from '../api/types';
 import { supabase } from '../lib/supabase';
@@ -218,7 +217,7 @@ export class DataExportService {
     }
 
     try {
-      // Convert data to worksheet format
+      const XLSX = await import('xlsx');
       const worksheet = XLSX.utils.json_to_sheet(data);
 
       // Auto-size columns (basic implementation)

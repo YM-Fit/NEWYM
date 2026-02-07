@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useMemo } from 'react';
 import { Dumbbell, Scale, Flame, TrendingUp, Sparkles, Lightbulb, ClipboardList, CheckCircle2, Activity, CalendarCheck2 } from 'lucide-react';
 import { Recommendation } from '../../utils/smartRecommendations';
 import { useTraineeDashboardQuery } from '../../hooks/queries/useTraineeDashboardQueries';
@@ -24,14 +24,39 @@ const MOTIVATIONAL_QUOTES = [
   'השקעה בעצמך היא ההשקעה הטובה ביותר',
   'תן לתוצאות לדבר בשבילך',
   'המאמץ של היום הוא הכוח של מחר',
-];
+] as const;
+
+const HEBREW_DAYS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'] as const;
+
+const COLOR_CONFIGS = {
+  emerald: {
+    bg: 'bg-emerald-500/15',
+    text: 'text-emerald-400',
+    glow: 'shadow-[0_0_15px_rgba(16,185,129,0.15)]',
+  },
+  cyan: {
+    bg: 'bg-cyan-500/15',
+    text: 'text-cyan-400',
+    glow: 'shadow-[0_0_15px_rgba(6,182,212,0.15)]',
+  },
+  amber: {
+    bg: 'bg-amber-500/15',
+    text: 'text-amber-400',
+    glow: 'shadow-[0_0_15px_rgba(245,158,11,0.15)]',
+  },
+  teal: {
+    bg: 'bg-teal-500/15',
+    text: 'text-teal-400',
+    glow: 'shadow-[0_0_15px_rgba(20,184,166,0.15)]',
+  },
+} as const;
 
 interface TraineeDashboardProps {
   traineeId: string | null;
   traineeName: string;
 }
 
-export default function TraineeDashboard({ traineeId, traineeName }: TraineeDashboardProps) {
+export default memo(function TraineeDashboard({ traineeId, traineeName }: TraineeDashboardProps) {
   const { data: dashboardData, isLoading: loading } = useTraineeDashboardQuery(traineeId);
   const stats = dashboardData?.stats ?? { workoutsThisMonth: 0, lastWeight: null, consecutiveDays: 0, personalGoal: null };
   const weekDays = dashboardData?.weekDays ?? [];
@@ -61,24 +86,16 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
     return () => clearInterval(interval);
   }, []);
 
-  const getHebrewDate = () => {
-    const options: Intl.DateTimeFormatOptions = {
+  const hebrewDate = useMemo(() => {
+    return new Date().toLocaleDateString('he-IL', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-    };
-    return new Date().toLocaleDateString('he-IL', options);
-  };
+    });
+  }, []);
 
-  const getHebrewDayName = (date: Date) => {
-    const days = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
-    return days[date.getDay()];
-  };
-
-  const getFirstName = (fullName: string) => {
-    return fullName.split(' ')[0];
-  };
+  const firstName = useMemo(() => traineeName.split(' ')[0], [traineeName]);
 
   if (loading) {
     return (
@@ -92,7 +109,6 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
 
   return (
     <div className="space-y-5 md:space-y-6 pb-4 animate-fade-in">
-      {/* Greeting + date */}
       <div className="premium-card-static p-5 md:p-6 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
@@ -102,16 +118,15 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
             <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">דשבורד</span>
           </div>
           <h1 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)] mb-1">
-            שלום, {getFirstName(traineeName)}!
+            שלום, {firstName}!
           </h1>
           <p className="text-[var(--color-text-secondary)] text-xs md:text-sm flex items-center gap-2">
             <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-glow-sm" />
-            {getHebrewDate()}
+            {hebrewDate}
           </p>
         </div>
       </div>
 
-      {/* Today's checklist - what to do today */}
       <div className="premium-card-static p-4 md:p-5">
         <div className="flex items-center gap-2 mb-3">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -147,7 +162,6 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
         </div>
       </div>
 
-      {/* Motivational quote */}
       <div
         className={`premium-card-static p-4 md:p-5 border-r-2 border-emerald-500 transition-opacity duration-500 ${
           quoteVisible ? 'opacity-100' : 'opacity-0'
@@ -163,7 +177,6 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
         </div>
       </div>
 
-      {/* Quick stats section */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <StatCard
           icon={<Dumbbell className="w-5 h-5" />}
@@ -199,7 +212,7 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
           {weekDays.map((day, index) => (
             <div key={index} className="flex flex-col items-center">
               <span className="text-xs text-[var(--color-text-muted)] mb-2 font-medium">
-                {getHebrewDayName(day.date)}
+                {HEBREW_DAYS[day.date.getDay()]}
               </span>
               <div
                 className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-semibold transition-all ${
@@ -265,7 +278,7 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
       </div>
     </div>
   );
-}
+});
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -275,31 +288,8 @@ interface StatCardProps {
   isSmallText?: boolean;
 }
 
-function StatCard({ icon, label, value, color, isSmallText }: StatCardProps) {
-  const colorConfig = {
-    emerald: {
-      bg: 'bg-emerald-500/15',
-      text: 'text-emerald-400',
-      glow: 'shadow-[0_0_15px_rgba(16,185,129,0.15)]',
-    },
-    cyan: {
-      bg: 'bg-cyan-500/15',
-      text: 'text-cyan-400',
-      glow: 'shadow-[0_0_15px_rgba(6,182,212,0.15)]',
-    },
-    amber: {
-      bg: 'bg-amber-500/15',
-      text: 'text-amber-400',
-      glow: 'shadow-[0_0_15px_rgba(245,158,11,0.15)]',
-    },
-    teal: {
-      bg: 'bg-teal-500/15',
-      text: 'text-teal-400',
-      glow: 'shadow-[0_0_15px_rgba(20,184,166,0.15)]',
-    },
-  };
-
-  const config = colorConfig[color];
+const StatCard = memo(function StatCard({ icon, label, value, color, isSmallText }: StatCardProps) {
+  const config = COLOR_CONFIGS[color];
 
   return (
     <div className={`stat-card p-4 md:p-4.5 ${config.glow}`}>
@@ -318,12 +308,7 @@ function StatCard({ icon, label, value, color, isSmallText }: StatCardProps) {
       </p>
     </div>
   );
-}
-
-function truncateGoal(goal: string): string {
-  if (goal.length <= 20) return goal;
-  return goal.substring(0, 18) + '...';
-}
+});
 
 interface TodayTileProps {
   icon: React.ReactNode;
@@ -332,11 +317,11 @@ interface TodayTileProps {
   type: 'workout' | 'weigh' | 'food' | 'habit';
 }
 
-function TodayTile({ icon, label, status, type }: TodayTileProps) {
-  const getStatusLabel = () => {
+const TodayTile = memo(function TodayTile({ icon, label, status, type }: TodayTileProps) {
+  const statusLabel = (() => {
     switch (status) {
       case 'completed':
-        return '✅ הושלם';
+        return 'הושלם';
       case 'in_progress':
         return 'בתהליך';
       case 'planned':
@@ -346,20 +331,16 @@ function TodayTile({ icon, label, status, type }: TodayTileProps) {
       default:
         return 'לא בוצע';
     }
-  };
+  })();
 
-  const getStatusClass = () => {
-    if (status === 'completed') {
-      return 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400';
-    }
-    if (status === 'partial' || status === 'planned') {
-      return 'border-amber-500/30 bg-amber-500/5 text-amber-400';
-    }
-    return 'border-[var(--color-border)] bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)]';
-  };
+  const statusClass = status === 'completed'
+    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
+    : (status === 'partial' || status === 'planned')
+      ? 'border-amber-500/30 bg-amber-500/5 text-amber-400'
+      : 'border-[var(--color-border)] bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)]';
 
   return (
-    <div className={`stat-card p-3.5 md:p-4 flex flex-col gap-2 border ${getStatusClass()}`}>
+    <div className={`stat-card p-3.5 md:p-4 flex flex-col gap-2 border ${statusClass}`}>
       <div className="flex items-center gap-2">
         <div className="w-9 h-9 rounded-xl bg-[var(--color-bg-elevated)] flex items-center justify-center">
           {icon}
@@ -369,10 +350,10 @@ function TodayTile({ icon, label, status, type }: TodayTileProps) {
             {label}
           </span>
           <span className="text-[10px] text-[var(--color-text-muted)]">
-            {getStatusLabel()}
+            {statusLabel}
           </span>
         </div>
       </div>
     </div>
   );
-}
+});

@@ -7,7 +7,7 @@ import TodayTraineesSection from './TodayTraineesSection';
 import { IdentifiedReading } from '../../../hooks/useGlobalScaleListener';
 import { ScaleReading } from '../../../hooks/useScaleListener';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useMemo } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import { useDashboardStatsQuery } from '../../../hooks/queries/useDashboardQueries';
 import { Trainee } from '../../../types';
 
@@ -27,7 +27,7 @@ interface DashboardProps {
   onViewMealPlan?: (trainee: Trainee) => void;
 }
 
-export default function Dashboard({
+export default memo(function Dashboard({
   onViewChange,
   trainees,
   trainerName,
@@ -46,7 +46,7 @@ export default function Dashboard({
   const todayWorkouts = stats?.todayWorkouts ?? 0;
   const recentMeasurements = stats?.recentMeasurements ?? 0;
 
-  const handleQuickAction = (action: string) => {
+  const handleQuickAction = useCallback((action: string) => {
     switch (action) {
       case 'add-trainee':
         onViewChange('add-trainee');
@@ -55,7 +55,11 @@ export default function Dashboard({
         onViewChange('trainees');
         break;
     }
-  };
+  }, [onViewChange]);
+
+  const handleTraineeClickAdapter = useCallback((trainee: Trainee) => {
+    onTraineeClick?.(trainee.id);
+  }, [onTraineeClick]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -191,9 +195,7 @@ export default function Dashboard({
           onNewPreparedWorkout={onNewPreparedWorkout}
           onViewWorkoutPlan={onViewWorkoutPlan}
           onViewMealPlan={onViewMealPlan}
-          onTraineeClick={onTraineeClick ? (trainee: Trainee) => {
-            onTraineeClick(trainee.id);
-          } : undefined}
+          onTraineeClick={onTraineeClick ? handleTraineeClickAdapter : undefined}
         />
       ) : (
         <div className="premium-card-static p-8 md:p-10 text-center border border-primary/20">
@@ -259,4 +261,4 @@ export default function Dashboard({
 
     </div>
   );
-}
+});

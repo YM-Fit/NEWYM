@@ -1,44 +1,22 @@
-import { useState, Suspense } from 'react';
+import { useState, Suspense, lazy } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTraineeQuery } from '../../hooks/queries/useTraineeQueries';
 import { Home, Dumbbell, Scale, LogOut, ClipboardList, Calendar, Brain, Utensils, Activity, Plus, Sun, Moon } from 'lucide-react';
-import TraineeDashboard from './TraineeDashboard';
-import MyMeasurements from './MyMeasurements';
-import WorkoutHistory from './WorkoutHistory';
-import MyMealPlan from './MyMealPlan';
-import MyMentalTools from './MyMentalTools';
-import FoodDiary from './FoodDiary';
-import SelfWorkoutSession from './SelfWorkoutSession';
-import MyCardio from './MyCardio';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import Logo from '../common/Logo';
 import { lazyWithRetry } from '../../utils/lazyWithRetry';
 
-// Lazy load MyWorkoutPlan with retry to handle module loading issues
-// Using a more robust import with error handling
-const MyWorkoutPlan = lazyWithRetry(
-  () => import('./MyWorkoutPlan').catch((error) => {
-    console.error('[TraineeApp] Failed to load MyWorkoutPlan:', error);
-    // Return a fallback component if import fails
-    return {
-      default: ({ traineeId }: { traineeId: string | null }) => (
-        <div className="p-6 text-center">
-          <p className="text-red-400 mb-4">שגיאה בטעינת תוכנית האימון</p>
-          <p className="text-sm text-gray-400 mb-4">אנא נסה לרענן את הדף</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
-          >
-            רענן דף
-          </button>
-        </div>
-      )
-    };
-  }),
-  3
-);
+const TraineeDashboard = lazy(() => import('./TraineeDashboard'));
+const MyMeasurements = lazy(() => import('./MyMeasurements'));
+const WorkoutHistory = lazy(() => import('./WorkoutHistory'));
+const MyMealPlan = lazy(() => import('./MyMealPlan'));
+const MyMentalTools = lazy(() => import('./MyMentalTools'));
+const FoodDiary = lazy(() => import('./FoodDiary'));
+const SelfWorkoutSession = lazy(() => import('./SelfWorkoutSession'));
+const MyCardio = lazy(() => import('./MyCardio'));
+const MyWorkoutPlan = lazyWithRetry(() => import('./MyWorkoutPlan'), 3);
 
 export default function TraineeApp() {
   const { signOut, traineeId } = useAuth();
@@ -228,14 +206,9 @@ export default function TraineeApp() {
         aria-label="תוכן ראשי"
       >
         <div className="mx-auto max-w-5xl space-y-4 md:space-y-6">
+        <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
         {activeTab === 'dashboard' && <TraineeDashboard traineeId={traineeId} traineeName={trainee?.full_name || ''} />}
-        {activeTab === 'workout-plan' && (
-          <Suspense 
-            fallback={<LoadingSpinner size="lg" text="טוען תוכנית אימון..." />}
-          >
-            <MyWorkoutPlan traineeId={traineeId} />
-          </Suspense>
-        )}
+        {activeTab === 'workout-plan' && <MyWorkoutPlan traineeId={traineeId} />}
         {activeTab === 'workouts' && <WorkoutHistory traineeId={traineeId} traineeName={trainee?.full_name} trainerId={trainee?.trainer_id} />}
         {activeTab === 'measurements' && <MyMeasurements traineeId={traineeId} trainerId={trainee?.trainer_id} traineeName={trainee?.full_name} />}
         {activeTab === 'menu' && <MyMealPlan traineeId={traineeId} />}
@@ -251,6 +224,7 @@ export default function TraineeApp() {
             onSave={() => setActiveTab('workouts')}
           />
         )}
+        </Suspense>
         </div>
       </main>
     </div>
