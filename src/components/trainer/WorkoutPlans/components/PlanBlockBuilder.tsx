@@ -194,7 +194,7 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+            className="bg-gradient-to-br from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-800 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
             aria-label="צור בלוק חדש"
           >
             <Plus className="h-5 w-5 lg:h-6 lg:w-6" />
@@ -230,7 +230,7 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
             </div>
             <button
               onClick={() => onSelectBlock(block)}
-              className="w-full py-3 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="w-full py-3 bg-gradient-to-br from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-800 text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               השתמש בבלוק
             </button>
@@ -348,7 +348,7 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
               <button
                 onClick={handleCreateBlock}
                 disabled={!newBlockName.trim() || selectedDays.length === 0}
-                className="flex-1 py-3 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-gradient-to-br from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-800 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 title={selectedDays.length === 0 ? 'יש לבחור ימים לבלוק' : 'שמור בלוק'}
               >
                 <Save className="w-5 h-5" />

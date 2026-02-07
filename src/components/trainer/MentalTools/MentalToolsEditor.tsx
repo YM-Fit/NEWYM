@@ -62,11 +62,11 @@ const getCategoryStyle = (category: string) => {
     case 'motivation':
       return { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', badge: 'bg-rose-100', gradient: 'from-rose-500 to-pink-600' };
     case 'discipline':
-      return { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', badge: 'bg-blue-100', gradient: 'from-blue-500 to-cyan-600' };
+      return { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', badge: 'bg-blue-100', gradient: 'from-blue-500 to-blue-600' };
     case 'patience':
       return { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', badge: 'bg-amber-100', gradient: 'from-amber-500 to-orange-600' };
     case 'focus':
-      return { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', badge: 'bg-emerald-100', gradient: 'from-emerald-500 to-teal-600' };
+      return { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', badge: 'bg-emerald-100', gradient: 'from-emerald-500 to-emerald-700' };
     default:
       return { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700', badge: 'bg-slate-100', gradient: 'from-slate-500 to-gray-600' };
   }
@@ -214,21 +214,21 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
 
   return (
     <div className="space-y-6 pb-6">
-      <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 rounded-2xl p-6 shadow-xl">
+      <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-blue-700 rounded-2xl p-6 shadow-xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={onBack}
               className="p-2 bg-white/20 hover:bg-white/30 rounded-xl transition-all duration-300 hover:scale-105"
             >
-              <ArrowRight className="h-5 w-5 text-foreground" />
+              <ArrowRight className="h-5 w-5 text-white" />
             </button>
             <div className="flex items-center gap-3">
               <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                <Brain className="h-7 w-7 text-foreground" />
+                <Brain className="h-7 w-7 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">כלים מנטליים</h1>
+                <h1 className="text-2xl font-bold text-white">כלים מנטליים</h1>
                 <p className="text-emerald-100">{traineeName}</p>
               </div>
             </div>
@@ -251,7 +251,7 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
           onClick={() => setFilterCategory('all')}
           className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
             filterCategory === 'all'
-              ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-foreground shadow-lg'
+              ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg'
               : 'bg-white text-muted700 hover:bg-surface50 shadow-md hover:shadow-lg border border-border200'
           }`}
         >
@@ -282,8 +282,8 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
         <div className="bg-white rounded-2xl border border-border200 p-6 shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-foreground" />
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
               </div>
               <h3 className="text-lg font-bold text-muted900">
                 {editingTool ? 'עריכת כלי מנטלי' : 'הוספת כלי מנטלי חדש'}
@@ -370,7 +370,7 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
               </button>
               <button
                 onClick={handleSave}
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-foreground px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105"
+                className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105"
               >
                 <Check className="w-5 h-5" />
                 {editingTool ? 'עדכן' : 'הוסף'}
@@ -515,7 +515,7 @@ function ToolCard({ tool, openMenuId, setOpenMenuId, onEdit, onDelete, onToggleC
           onClick={() => onToggleComplete(tool)}
           className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 ${
             tool.is_completed
-              ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground shadow-lg'
+              ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg'
               : 'bg-white border-2 border-border300 hover:border-emerald-500 hover:shadow-md'
           }`}
         >

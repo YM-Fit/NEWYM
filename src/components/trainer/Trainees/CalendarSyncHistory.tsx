@@ -130,26 +130,26 @@ export default function CalendarSyncHistory({ traineeId, trainerId }: CalendarSy
     return (
       <div className="premium-card-static p-6 mt-6">
         <div className="flex items-center gap-3 mb-4">
-          <CalendarDays className="h-5 w-5 text-purple-400" />
+          <CalendarDays className="h-5 w-5 text-amber-400" />
           <h3 className="text-lg font-semibold text-foreground">סנכרון אימונים (היסטוריית אימונים)</h3>
         </div>
         <div className="flex items-center justify-center py-8">
-          <RefreshCw className="h-6 w-6 text-purple-400 animate-spin" />
+          <RefreshCw className="h-6 w-6 text-amber-400 animate-spin" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="premium-card-static mt-6 overflow-hidden border border-purple-500/20">
+    <div className="premium-card-static mt-6 overflow-hidden border border-amber-500/20">
       {/* Header */}
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-between p-6 hover:bg-surface800/30 transition-all"
       >
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-500/20 rounded-lg">
-            <CalendarDays className="h-5 w-5 text-purple-400" />
+          <div className="p-2 bg-amber-500/20 rounded-lg">
+            <CalendarDays className="h-5 w-5 text-amber-400" />
           </div>
           <div className="text-right">
             <h3 className="text-lg font-semibold text-foreground">סנכרון אימונים (היסטוריית אימונים)</h3>
@@ -179,9 +179,9 @@ export default function CalendarSyncHistory({ traineeId, trainerId }: CalendarSy
             <>
               {/* Stats */}
               <div className="grid grid-cols-3 gap-3 mb-4">
-                <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 text-center">
-                  <div className="text-xl font-bold text-purple-400">{stats.total}</div>
-                  <div className="text-xs text-purple-300">סה״כ</div>
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-center">
+                  <div className="text-xl font-bold text-amber-400">{stats.total}</div>
+                  <div className="text-xs text-amber-300">סה״כ</div>
                 </div>
                 <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 text-center">
                   <div className="text-xl font-bold text-emerald-400">{stats.upcoming}</div>
@@ -199,7 +199,7 @@ export default function CalendarSyncHistory({ traineeId, trainerId }: CalendarSy
                   onClick={() => setSelectedMonth('all')}
                   className={`px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
                     selectedMonth === 'all'
-                      ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                       : 'bg-surface800/50 text-muted400 hover:bg-surface800 border border-border700/30'
                   }`}
                 >
@@ -211,7 +211,7 @@ export default function CalendarSyncHistory({ traineeId, trainerId }: CalendarSy
                     onClick={() => setSelectedMonth(month)}
                     className={`px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
                       selectedMonth === month
-                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                         : 'bg-surface800/50 text-muted400 hover:bg-surface800 border border-border700/30'
                     }`}
                   >
@@ -231,16 +231,16 @@ export default function CalendarSyncHistory({ traineeId, trainerId }: CalendarSy
                       className={`flex items-center justify-between p-3 rounded-xl transition-all animate-fade-in ${
                         isPast
                           ? 'bg-surface800/30 border border-border700/30'
-                          : 'bg-purple-500/10 border border-purple-500/20'
+                          : 'bg-amber-500/10 border border-amber-500/20'
                       }`}
                       style={{ animationDelay: `${index * 30}ms` }}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg ${
-                          isPast ? 'bg-surface700/50' : 'bg-purple-500/20'
+                          isPast ? 'bg-surface700/50' : 'bg-amber-500/20'
                         }`}>
                           <Calendar className={`h-4 w-4 ${
-                            isPast ? 'text-muted500' : 'text-purple-400'
+                            isPast ? 'text-muted500' : 'text-amber-400'
                           }`} />
                         </div>
                         <div>

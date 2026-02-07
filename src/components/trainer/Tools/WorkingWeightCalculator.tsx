@@ -39,7 +39,7 @@ const FORMULAS: Record<Formula, { name: string; description: string; calculate: 
 
 const GOALS = {
   strength: { label: 'כוח', range: '1-5', percent: '85-100%', color: 'red' },
-  hypertrophy: { label: 'היפרטרופיה', range: '6-12', percent: '67-85%', color: 'cyan' },
+  hypertrophy: { label: 'היפרטרופיה', range: '6-12', percent: '67-85%', color: 'blue' },
   endurance: { label: 'סיבולת', range: '15-20+', percent: '50-67%', color: 'emerald' },
 };
 
@@ -98,27 +98,27 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
     if (percentage >= 90) return 'bg-red-500/10 hover:bg-red-500/15';
     if (percentage >= 80) return 'bg-amber-500/10 hover:bg-amber-500/15';
     if (percentage >= 70) return 'bg-emerald-500/10 hover:bg-emerald-500/15';
-    return 'bg-cyan-500/10 hover:bg-cyan-500/15';
+    return 'bg-blue-500/10 hover:bg-blue-500/15';
   };
 
   const getPercentageStyle = (percentage: number) => {
     if (percentage >= 90) return 'text-red-400 bg-red-500/20';
     if (percentage >= 80) return 'text-amber-400 bg-amber-500/20';
     if (percentage >= 70) return 'text-emerald-400 bg-emerald-500/20';
-    return 'text-cyan-400 bg-cyan-500/20';
+    return 'text-blue-400 bg-blue-500/20';
   };
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-cyan-500 p-6 rounded-t-2xl flex items-center justify-between">
+        <div className="sticky top-0 bg-blue-500 p-6 rounded-t-2xl flex items-center justify-between">
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
             <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
               <Dumbbell className="h-7 w-7 text-foreground" />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-foreground">מחשבון משקל עבודה</h2>
-              <p className="text-sm text-cyan-100">חישוב 1RM וטבלת אחוזים</p>
+              <p className="text-sm text-blue-100">חישוב 1RM וטבלת אחוזים</p>
             </div>
           </div>
           <button
@@ -134,7 +134,7 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
             <button
               onClick={() => setMode('calculate')}
               className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
-                mode === 'calculate' ? 'bg-cyan-500 text-foreground' : 'text-muted hover:text-foreground'
+                mode === 'calculate' ? 'bg-blue-500 text-foreground' : 'text-muted hover:text-foreground'
               }`}
             >
               <Calculator className="w-4 h-4" />
@@ -143,7 +143,7 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
             <button
               onClick={() => setMode('reverse')}
               className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
-                mode === 'reverse' ? 'bg-cyan-500 text-foreground' : 'text-muted hover:text-foreground'
+                mode === 'reverse' ? 'bg-blue-500 text-foreground' : 'text-muted hover:text-foreground'
               }`}
             >
               <ArrowLeftRight className="w-4 h-4" />
@@ -152,7 +152,7 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
             <button
               onClick={() => setMode('history')}
               className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
-                mode === 'history' ? 'bg-cyan-500 text-foreground' : 'text-muted hover:text-foreground'
+                mode === 'history' ? 'bg-blue-500 text-foreground' : 'text-muted hover:text-foreground'
               }`}
             >
               <History className="w-4 h-4" />
@@ -162,16 +162,16 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
 
           {mode !== 'history' && (
             <>
-              <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-2xl p-6">
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 bg-cyan-500 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
                     <Target className="w-5 h-5 text-foreground" />
                   </div>
-                  <h3 className="text-lg font-bold text-cyan-400">הזן את המידע</h3>
+                  <h3 className="text-lg font-bold text-blue-400">הזן את המידע</h3>
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-semibold text-cyan-400 mb-2">נוסחה</label>
+                  <label className="block text-sm font-semibold text-blue-400 mb-2">נוסחה</label>
                   <div className="flex gap-2">
                     {(Object.keys(FORMULAS) as Formula[]).map((f) => (
                       <button
@@ -179,7 +179,7 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
                         onClick={() => setFormula(f)}
                         className={`flex-1 py-2.5 px-3 rounded-xl font-semibold transition-all text-sm ${
                           formula === f
-                            ? 'bg-cyan-500 text-foreground'
+                            ? 'bg-blue-500 text-foreground'
                             : 'bg-surface border border-border text-foreground hover:bg-surface'
                         }`}
                       >
@@ -187,32 +187,32 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-cyan-400/70 mt-2">{FORMULAS[formula].description}</p>
+                  <p className="text-xs text-blue-400/70 mt-2">{FORMULAS[formula].description}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-cyan-400 mb-2">
+                    <label className="block text-sm font-semibold text-blue-400 mb-2">
                       משקל (ק״ג)
                     </label>
                     <input
                       type="number"
                       value={weight}
                       onChange={(e) => setWeight(Number(e.target.value))}
-                      className="w-full px-4 py-4 text-xl font-bold text-center bg-surface border border-border text-foreground rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-4 text-xl font-bold text-center bg-surface border border-border text-foreground rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       min="0"
                       step="0.5"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-cyan-400 mb-2">
+                    <label className="block text-sm font-semibold text-blue-400 mb-2">
                       חזרות
                     </label>
                     <input
                       type="number"
                       value={reps}
                       onChange={(e) => setReps(Number(e.target.value))}
-                      className="w-full px-4 py-4 text-xl font-bold text-center bg-surface border border-border text-foreground rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-4 text-xl font-bold text-center bg-surface border border-border text-foreground rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       min="1"
                       max="30"
                     />
@@ -221,7 +221,7 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
 
                 <button
                   onClick={saveToHistory}
-                  className="mt-4 w-full py-2.5 px-4 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+                  className="mt-4 w-full py-2.5 px-4 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
                 >
                   <History className="w-4 h-4" />
                   שמור להיסטוריה
@@ -281,10 +281,10 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
                     const maxPercent = key === 'strength' ? 100 : key === 'hypertrophy' ? 85 : 67;
                     const minWeight = (oneRM * minPercent / 100).toFixed(1);
                     const maxWeight = (oneRM * maxPercent / 100).toFixed(1);
-                    const colorClass = goal.color === 'red' ? 'text-red-400 border-red-500/30' : goal.color === 'cyan' ? 'text-cyan-400 border-cyan-500/30' : 'text-emerald-400 border-emerald-500/30';
+                    const colorClass = goal.color === 'red' ? 'text-red-400 border-red-500/30' : goal.color === 'blue' ? 'text-blue-400 border-blue-500/30' : 'text-emerald-400 border-emerald-500/30';
                     return (
                       <div key={key} className={`bg-surface rounded-xl p-4 border ${colorClass}`}>
-                        <p className={`font-bold mb-1 ${goal.color === 'red' ? 'text-red-400' : goal.color === 'cyan' ? 'text-cyan-400' : 'text-emerald-400'}`}>{goal.label}</p>
+                        <p className={`font-bold mb-1 ${goal.color === 'red' ? 'text-red-400' : goal.color === 'blue' ? 'text-blue-400' : 'text-emerald-400'}`}>{goal.label}</p>
                         <p className="text-xs text-muted mb-2">{goal.range} חזרות</p>
                         <p className="text-sm font-semibold text-foreground">
                           {minWeight}-{maxWeight} ק״ג
@@ -298,7 +298,7 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
 
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                     <Target className="w-4 h-4 text-foreground" />
                   </div>
                   <h3 className="text-lg font-bold text-foreground">טבלת אחוזים למשקל עבודה</h3>
@@ -358,7 +358,7 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                     <History className="w-4 h-4 text-foreground" />
                   </div>
                   <h3 className="text-lg font-bold text-foreground">היסטוריית חישובים</h3>
@@ -393,12 +393,12 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
                     </thead>
                     <tbody className="divide-y divide-zinc-700/30">
                       {history.map((entry) => (
-                        <tr key={entry.id} className="hover:bg-cyan-500/10 transition-all">
+                        <tr key={entry.id} className="hover:bg-blue-500/10 transition-all">
                           <td className="px-4 py-3 text-sm text-muted">{entry.date}</td>
                           <td className="px-4 py-3 text-center font-semibold text-foreground">{entry.weight} ק״ג</td>
                           <td className="px-4 py-3 text-center font-semibold text-foreground">{entry.reps}</td>
                           <td className="px-4 py-3 text-center">
-                            <span className="font-bold text-cyan-400 bg-cyan-500/20 px-2 py-1 rounded-lg">
+                            <span className="font-bold text-blue-400 bg-blue-500/20 px-2 py-1 rounded-lg">
                               {entry.oneRM} ק״ג
                             </span>
                           </td>
@@ -434,7 +434,7 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
         <div className="sticky bottom-0 bg-surface border-t border-border/30 p-6 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-foreground px-6 py-4 rounded-xl font-bold text-lg transition-all"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-foreground px-6 py-4 rounded-xl font-bold text-lg transition-all"
           >
             סגור
           </button>

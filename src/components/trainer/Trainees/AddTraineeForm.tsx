@@ -268,7 +268,7 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
 
           <div className="space-y-8">
             <div className="pb-6 border-b border-border">
-              <h4 className="text-base font-semibold text-cyan-400 mb-4">מתאמן/ת ראשון/ה</h4>
+              <h4 className="text-base font-semibold text-blue-400 mb-4">מתאמן/ת ראשון/ה</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className={labelClass}>שם מלא *</label>

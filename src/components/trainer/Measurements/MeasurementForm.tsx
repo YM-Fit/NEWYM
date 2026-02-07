@@ -376,7 +376,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
   return (
     <div className="space-y-6 animate-fade-in">
       {isStabilizing && !showScaleDataToast && (
-        <div className="fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-80 bg-cyan-500/90 backdrop-blur-sm text-foreground px-6 py-4 rounded-xl shadow-2xl z-50 animate-pulse border border-cyan-400/50">
+        <div className="fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-80 bg-blue-500/90 backdrop-blur-sm text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-pulse border border-blue-400/50">
           <div className="flex items-center gap-3">
             <Loader2 className="h-6 w-6 animate-spin" />
             <div>
@@ -390,7 +390,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       {showScaleDataToast && pendingScaleData && (
         <div className={`fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-96 ${
           showValidationWarning ? 'bg-amber-500/90' : 'bg-emerald-500/90'
-        } backdrop-blur-sm text-foreground px-6 py-4 rounded-xl shadow-2xl z-50 animate-slide-in-top border ${
+        } backdrop-blur-sm text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-slide-in-top border ${
           showValidationWarning ? 'border-amber-400/50' : 'border-emerald-400/50'
         }`}>
           <div className="flex items-start gap-3 mb-3">
@@ -529,9 +529,9 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                   </div>
 
                   {waitingForScale && !hasReceivedDataRef.current && formData.weight === 0 && (
-                    <div className="bg-cyan-500/15 border border-cyan-500/30 rounded-lg px-3 py-2 flex items-center gap-2">
-                      <Scale className="h-4 w-4 text-cyan-400 animate-bounce" />
-                      <span className="text-sm text-cyan-400">
+                    <div className="bg-blue-500/15 border border-blue-500/30 rounded-lg px-3 py-2 flex items-center gap-2">
+                      <Scale className="h-4 w-4 text-blue-400 animate-bounce" />
+                      <span className="text-sm text-blue-400">
                         ממתין לשקילה... ({formatWaitingTime(elapsedWaitingTime)})
                       </span>
                     </div>
@@ -579,15 +579,15 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               onClick={() => setSelectedMember('member_1')}
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'member_1'
-                  ? 'border-cyan-500/50 bg-cyan-500/10'
+                  ? 'border-blue-500/50 bg-blue-500/10'
                   : 'border-border bg-surface/30 hover:border-border-hover'
               }`}
             >
               <User className={`h-8 w-8 mx-auto mb-2 ${
-                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-muted'
+                selectedMember === 'member_1' ? 'text-blue-400' : 'text-muted'
               }`} />
               <p className={`font-semibold text-sm ${
-                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-muted'
+                selectedMember === 'member_1' ? 'text-blue-400' : 'text-muted'
               }`}>{trainee.pairName1}</p>
             </button>
             <button
@@ -727,7 +727,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               BMR (קלוריות בסיסיות)
               <span className="text-xs text-muted mr-2">(מחושב אוטומטית)</span>
             </label>
-            <div className="w-full p-4 text-xl bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400 font-semibold">
+            <div className="w-full p-4 text-xl bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-400 font-semibold">
               {(() => {
                 const height = trainee.isPair
                   ? (selectedMember === 'member_1' ? trainee.pairHeight1 : selectedMember === 'member_2' ? trainee.pairHeight2 : trainee.pairHeight1)
@@ -778,7 +778,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
                 const statusColors = {
                   excellent: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
-                  good: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400',
+                  good: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
                   'needs-improvement': 'bg-amber-500/10 border-amber-500/30 text-amber-400'
                 };
 
@@ -796,7 +796,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                     </div>
                     <p className={`mt-2 text-sm font-medium ${
                       message.status === 'excellent' ? 'text-emerald-400' :
-                      message.status === 'good' ? 'text-cyan-400' :
+                      message.status === 'good' ? 'text-blue-400' :
                       'text-amber-400'
                     }`}>
                       {message.text}

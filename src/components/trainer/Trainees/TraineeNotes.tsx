@@ -20,7 +20,7 @@ const CATEGORIES = {
   general: { label: 'כללי', bg: 'bg-muted/15', text: 'text-muted', border: 'border-border/30' },
   health: { label: 'בריאות', bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30' },
   nutrition: { label: 'תזונה', bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' },
-  training: { label: 'אימון', bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/30' },
+  training: { label: 'אימון', bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/30' },
   personal: { label: 'אישי', bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' },
 };
 
@@ -215,7 +215,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                       </button>
                       <button
                         onClick={() => handleEdit(note)}
-                        className="p-2 text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-all"
+                        className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>

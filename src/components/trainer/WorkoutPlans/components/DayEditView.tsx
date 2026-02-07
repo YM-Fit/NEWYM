@@ -229,7 +229,7 @@ export default function DayEditView({
             )}
             <button
               onClick={() => onComplete(day.tempId)}
-              className="bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground px-5 py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="bg-gradient-to-br from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-800 text-white px-5 py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
             >
               סיים יום
             </button>
@@ -303,7 +303,7 @@ export default function DayEditView({
             <div
               key={exercise.tempId}
               className={`premium-card-static transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] ${
-                !isMinimized ? '' : 'bg-gradient-to-br from-emerald-50 to-teal-50 border-r-4 border-emerald-500'
+                !isMinimized ? '' : 'bg-gradient-to-br from-emerald-100 to-emerald-100 border-r-4 border-emerald-500'
               }`}
               style={{
                 height: isMinimized ? '72px' : 'auto',
@@ -347,7 +347,7 @@ export default function DayEditView({
         )}
         <button
           onClick={() => onSetShowExerciseSelector(true)}
-          className={`${day.exercises.length > 0 ? 'flex-1' : 'w-full'} bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]`}
+          className={`${day.exercises.length > 0 ? 'flex-1' : 'w-full'} bg-gradient-to-br from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-800 text-white py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]`}
         >
           <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
           <span className="font-bold text-lg lg:text-xl">הוסף תרגיל</span>

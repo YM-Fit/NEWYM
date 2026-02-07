@@ -198,9 +198,9 @@ export default function ClientPortal() {
               <div className="text-sm text-muted mb-1">מסמכים</div>
               <div className="text-2xl font-bold text-blue-400">{documents.length}</div>
             </div>
-            <div className="bg-purple-500/10 rounded-lg p-4 border border-purple-500/20">
+            <div className="bg-slate-500/10 rounded-lg p-4 border border-slate-500/20">
               <div className="text-sm text-muted mb-1">הודעות</div>
-              <div className="text-2xl font-bold text-purple-400">{messages.length}</div>
+              <div className="text-2xl font-bold text-slate-400">{messages.length}</div>
             </div>
           </div>
         </div>

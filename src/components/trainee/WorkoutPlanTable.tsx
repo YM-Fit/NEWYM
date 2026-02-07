@@ -177,7 +177,7 @@ export default function WorkoutPlanTable({
       <div className="hidden lg:block premium-card-static overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border-b-2 border-emerald-500/30">
+            <thead className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 border-b-2 border-emerald-500/30">
               <tr>
                 <th className="text-right py-4 px-4 font-bold text-sm text-[var(--color-text-primary)]">יום</th>
                 <th className="text-right py-4 px-4 font-bold text-sm text-[var(--color-text-primary)]">שם יום</th>
@@ -206,7 +206,7 @@ export default function WorkoutPlanTable({
                     >
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-foreground font-bold">
+                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center text-white font-bold">
                             {day.day_number}
                           </div>
                         </div>
@@ -242,7 +242,7 @@ export default function WorkoutPlanTable({
                       <td className="py-4 px-4">
                         {volume > 0 ? (
                           <div className="flex items-center gap-2">
-                            <TrendingUp className="w-4 h-4 text-cyan-400" />
+                            <TrendingUp className="w-4 h-4 text-blue-400" />
                             <span className="font-semibold">{volume.toLocaleString()} ק״ג</span>
                           </div>
                         ) : (
@@ -258,7 +258,7 @@ export default function WorkoutPlanTable({
                         <div className="flex items-center gap-2">
                           <div className="flex-1 h-2 bg-[var(--color-bg-surface)] rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-emerald-500 to-teal-600 transition-all duration-500"
+                              className="h-full bg-gradient-to-r from-emerald-500 to-emerald-700 transition-all duration-500"
                               style={{ width: `${progressPercent}%` }}
                             />
                           </div>
@@ -294,8 +294,8 @@ export default function WorkoutPlanTable({
                                 }}
                                 className={`px-6 py-3 rounded-xl font-bold transition-all ${
                                   completion.count >= completion.required
-                                    ? 'bg-gray-500 hover:bg-gray-600 text-foreground'
-                                    : 'bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground'
+                                    ? 'bg-gray-500 hover:bg-gray-600 text-white'
+                                    : 'bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white'
                                 }`}
                               >
                                 {completion.count >= completion.required ? 'ביטול ביצוע' : 'סמן יום כהושלם'}
@@ -341,7 +341,7 @@ export default function WorkoutPlanTable({
                                                   e.stopPropagation();
                                                   onShowInstructions(exerciseName, exercise.exercise?.instructions);
                                                 }}
-                                                className="p-2 text-cyan-400 hover:bg-cyan-500/15 rounded-lg transition-all"
+                                                className="p-2 text-blue-400 hover:bg-blue-500/15 rounded-lg transition-all"
                                                 title="הצג הוראות"
                                               >
                                                 <BookOpen className="w-4 h-4" />
@@ -352,7 +352,7 @@ export default function WorkoutPlanTable({
                                                 e.stopPropagation();
                                                 onStartEditing(exercise);
                                               }}
-                                              className="p-2 text-[var(--color-text-muted)] hover:text-cyan-400 hover:bg-cyan-500/15 rounded-lg transition-all"
+                                              className="p-2 text-[var(--color-text-muted)] hover:text-blue-400 hover:bg-blue-500/15 rounded-lg transition-all"
                                               title="ערוך"
                                             >
                                               <Edit3 className="w-4 h-4" />
@@ -365,7 +365,7 @@ export default function WorkoutPlanTable({
                                           <Repeat className="w-3 h-3" />
                                           {exercise.sets_count} סטים
                                         </span>
-                                        <span className="px-2 py-1 bg-cyan-500/12 text-cyan-400 rounded-lg text-xs font-bold flex items-center gap-1">
+                                        <span className="px-2 py-1 bg-blue-500/12 text-blue-400 rounded-lg text-xs font-bold flex items-center gap-1">
                                           <Target className="w-3 h-3" />
                                           {exercise.reps_range} חזרות
                                         </span>
@@ -374,7 +374,7 @@ export default function WorkoutPlanTable({
                                           {formatRestTime(exercise.rest_seconds)}
                                         </span>
                                         {exercise.target_weight && (
-                                          <span className="px-2 py-1 bg-teal-500/12 text-teal-400 rounded-lg text-xs font-bold">
+                                          <span className="px-2 py-1 bg-emerald-600/12 text-emerald-400 rounded-lg text-xs font-bold">
                                             {exercise.target_weight} ק״ג
                                           </span>
                                         )}
@@ -427,7 +427,7 @@ export default function WorkoutPlanTable({
               <div className="p-4 border-b border-[var(--color-border)]">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-foreground font-bold">
+                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center text-white font-bold">
                       {day.day_number}
                     </div>
                     <div>
@@ -455,14 +455,14 @@ export default function WorkoutPlanTable({
                   </div>
                   {volume > 0 && (
                     <div className="flex items-center gap-1">
-                      <TrendingUp className="w-4 h-4 text-cyan-400" />
+                      <TrendingUp className="w-4 h-4 text-blue-400" />
                       <span>{volume.toLocaleString()} ק״ג</span>
                     </div>
                   )}
                 </div>
                 <div className="mt-3 h-2 bg-[var(--color-bg-surface)] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-600 transition-all duration-500"
+                    className="h-full bg-gradient-to-r from-emerald-500 to-emerald-700 transition-all duration-500"
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
@@ -488,8 +488,8 @@ export default function WorkoutPlanTable({
                       }}
                       className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                         completion.count >= completion.required
-                          ? 'bg-gray-500 hover:bg-gray-600 text-foreground'
-                          : 'bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground'
+                          ? 'bg-gray-500 hover:bg-gray-600 text-white'
+                          : 'bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white'
                       }`}
                     >
                       {completion.count >= completion.required ? 'ביטול' : 'סמן יום'}
@@ -519,7 +519,7 @@ export default function WorkoutPlanTable({
                                   {exercise.exercise?.instructions && (
                                     <button
                                       onClick={() => onShowInstructions(exerciseName, exercise.exercise?.instructions)}
-                                      className="p-1.5 text-cyan-400"
+                                      className="p-1.5 text-blue-400"
                                     >
                                       <BookOpen className="w-3.5 h-3.5" />
                                     </button>
@@ -535,7 +535,7 @@ export default function WorkoutPlanTable({
                             </div>
                             <div className="flex flex-wrap gap-1.5 text-xs">
                               <span className="px-2 py-0.5 bg-emerald-500/12 text-emerald-400 rounded">{exercise.sets_count} סטים</span>
-                              <span className="px-2 py-0.5 bg-cyan-500/12 text-cyan-400 rounded">{exercise.reps_range}</span>
+                              <span className="px-2 py-0.5 bg-blue-500/12 text-blue-400 rounded">{exercise.reps_range}</span>
                               <span className="px-2 py-0.5 bg-amber-500/12 text-amber-400 rounded">{formatRestTime(exercise.rest_seconds)}</span>
                             </div>
                           </div>

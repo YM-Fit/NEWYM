@@ -164,7 +164,7 @@ export default function BulkEditModal({
           </button>
           <button
             onClick={handleApply}
-            className="flex-1 py-3 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-gradient-to-br from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-800 text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
           >
             <Save className="w-5 h-5" />
             החל על כל התרגילים

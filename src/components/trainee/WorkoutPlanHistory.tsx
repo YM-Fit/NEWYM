@@ -165,7 +165,7 @@ export default function WorkoutPlanHistory({ planId, onClose }: WorkoutPlanHisto
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-foreground">
+                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center text-white">
                             <Calendar className="w-5 h-5" />
                           </div>
                           <div>

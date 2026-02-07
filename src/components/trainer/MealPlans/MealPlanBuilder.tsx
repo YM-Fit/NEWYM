@@ -262,7 +262,7 @@ export default function MealPlanBuilder({
               <ArrowRight className="h-5 w-5" />
             </button>
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-emerald-500/30 to-teal-500/30 rounded-2xl shadow-lg">
+              <div className="p-3 bg-gradient-to-br from-emerald-500/30 to-emerald-600/30 rounded-2xl shadow-lg">
                 <UtensilsCrossed className="h-6 w-6 text-emerald-400" />
               </div>
               <div>
@@ -277,7 +277,7 @@ export default function MealPlanBuilder({
               onClick={() => setView('list')}
               className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
                 view === 'list'
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-foreground shadow-lg shadow-emerald-500/25'
+                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-500/25'
                   : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
               }`}
             >
@@ -289,7 +289,7 @@ export default function MealPlanBuilder({
                   onClick={() => setView('editor')}
                   className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
                     view === 'editor'
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-foreground shadow-lg shadow-emerald-500/25'
+                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-500/25'
                       : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
                   }`}
                 >
@@ -302,7 +302,7 @@ export default function MealPlanBuilder({
                   }}
                   className={`p-2.5 rounded-xl font-semibold transition-all duration-300 ${
                     view === 'history'
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-foreground shadow-lg shadow-emerald-500/25'
+                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-500/25'
                       : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
                   }`}
                 >

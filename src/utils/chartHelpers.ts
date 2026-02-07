@@ -38,7 +38,7 @@ export function getStatusColor(status: string): string {
     churned: 'red',
     inactive: 'yellow',
     lead: 'blue',
-    qualified: 'purple',
+    qualified: 'blue',
   };
 
   return colors[status] || 'gray';

@@ -102,7 +102,7 @@ export default function HealthCheckView() {
         <button
           onClick={checkHealth}
           disabled={loading}
-          className="px-4 py-2 bg-emerald-600 text-foreground rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
           רענן
@@ -161,7 +161,7 @@ export default function HealthCheckView() {
             {/* Supabase */}
             <div className="premium-card p-6">
               <div className="flex items-center gap-3 mb-4">
-                <Server className="h-6 w-6 text-purple-400" />
+                <Server className="h-6 w-6 text-slate-400" />
                 <h3 className="text-lg font-semibold text-foreground">Supabase</h3>
               </div>
               <div className="flex items-center gap-2 mb-2">

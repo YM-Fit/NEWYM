@@ -52,8 +52,8 @@ export default function WorkoutExerciseCard({
         style={{ height: '72px' }}
       >
         <div className="flex items-center space-x-3 rtl:space-x-reverse">
-          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
-            <span className="text-lg text-foreground font-bold">{exerciseIndex + 1}</span>
+          <div className="w-10 h-10 bg-gradient-to-br from-emerald-700 to-emerald-800 rounded-xl flex items-center justify-center shadow-md">
+            <span className="text-lg text-white font-bold">{exerciseIndex + 1}</span>
           </div>
           <div>
             <h3 className="text-lg font-bold text-muted900">{exercise.exercise.name}</h3>
@@ -66,7 +66,7 @@ export default function WorkoutExerciseCard({
               e.stopPropagation();
               onShowInstructions(exercise.exercise.name, exercise.exercise.instructions);
             }}
-            className="p-2 hover:bg-cyan-50 text-cyan-600 rounded-xl transition-all duration-300"
+            className="p-2 hover:bg-blue-50 text-blue-600 rounded-xl transition-all duration-300"
             aria-label="איך לבצע"
             title="איך לבצע"
           >
@@ -91,8 +91,8 @@ export default function WorkoutExerciseCard({
     <div className="p-4 lg:p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-            <span className="text-xl text-foreground font-bold">{exerciseIndex + 1}</span>
+          <div className="w-12 h-12 bg-gradient-to-br from-emerald-700 to-emerald-800 rounded-xl flex items-center justify-center shadow-lg">
+            <span className="text-xl text-white font-bold">{exerciseIndex + 1}</span>
           </div>
           <div>
             <h3 className="text-lg lg:text-2xl font-bold text-muted900">{exercise.exercise.name}</h3>
@@ -104,7 +104,7 @@ export default function WorkoutExerciseCard({
         <div className="flex items-center space-x-2 rtl:space-x-reverse">
           <button
             onClick={() => onShowInstructions(exercise.exercise.name, exercise.exercise.instructions)}
-            className="p-3 hover:bg-cyan-50 text-cyan-600 rounded-xl transition-all duration-300"
+            className="p-3 hover:bg-blue-50 text-blue-600 rounded-xl transition-all duration-300"
             aria-label="איך לבצע"
             title="איך לבצע"
           >
@@ -112,7 +112,7 @@ export default function WorkoutExerciseCard({
           </button>
           <button
             onClick={() => onComplete(exerciseIndex)}
-            className="px-4 py-2 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground rounded-xl transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105"
+            className="px-4 py-2 bg-gradient-to-br from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-800 text-white rounded-xl transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105"
           >
             סיים תרגיל
           </button>

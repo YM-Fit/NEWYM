@@ -87,7 +87,7 @@ export const WorkoutHeader = memo(({
               {trainee.is_pair && selectedMember && workoutType === 'personal' && (
                 <p className={`text-[10px] font-semibold mt-0.5 px-1.5 py-0.5 rounded-lg inline-block ${
                   selectedMember === 'member_1' 
-                    ? 'text-cyan-400 bg-cyan-500/15 border border-cyan-500/30'
+                    ? 'text-blue-400 bg-blue-500/15 border border-blue-500/30'
                     : 'text-amber-400 bg-amber-500/15 border border-amber-500/30'
                 }`}>
                   {selectedMember === 'member_1' ? trainee.pairName1 : trainee.pairName2}
@@ -112,7 +112,7 @@ export const WorkoutHeader = memo(({
                 e.stopPropagation();
                 onLoadPrevious();
               }}
-              className="bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-400 px-2 lg:px-3 py-2 lg:py-2.5 rounded-lg flex items-center gap-1.5 transition-all touch-manipulation cursor-pointer min-h-[40px] active:scale-95"
+              className="bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-400 px-2 lg:px-3 py-2 lg:py-2.5 rounded-lg flex items-center gap-1.5 transition-all touch-manipulation cursor-pointer min-h-[40px] active:scale-95"
             >
               <Copy className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
               <span className="font-medium text-xs lg:text-sm hidden sm:inline">טען אחרון</span>

@@ -23,7 +23,7 @@ export function NoteTemplateModal({ templates, onSelect, onCreateNew, onClose }:
             <button
               key={template.id}
               onClick={() => onSelect(template)}
-              className="w-full text-right p-5 border-2 border-border700/50 rounded-2xl hover:border-emerald-500/30 hover:bg-gradient-to-br hover:from-emerald-500/5 hover:to-teal-500/5 transition-all duration-300 group"
+              className="w-full text-right p-5 border-2 border-border700/50 rounded-2xl hover:border-emerald-500/30 hover:bg-gradient-to-br hover:from-emerald-500/5 hover:to-emerald-600/5 transition-all duration-300 group"
             >
               <p className="font-semibold text-foreground group-hover:text-emerald-300 transition-colors">{template.title}</p>
               <p className="text-sm text-muted500 mt-2">{template.content}</p>

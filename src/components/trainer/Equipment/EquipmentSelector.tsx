@@ -205,7 +205,7 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
                 {Object.entries(groupedEquipment).map(([category, items]) => (
                   <div key={category}>
                     <div className="flex items-center gap-2 mb-3 px-1">
-                      <span className="w-1.5 h-6 rounded-full bg-gradient-to-b from-emerald-500 to-teal-500" />
+                      <span className="w-1.5 h-6 rounded-full bg-gradient-to-b from-emerald-500 to-emerald-600" />
                       <h3 className="text-sm font-semibold text-foreground">
                         {getCategoryLabel(category)}
                       </h3>

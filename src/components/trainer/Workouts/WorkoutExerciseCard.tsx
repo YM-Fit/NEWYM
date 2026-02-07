@@ -150,8 +150,8 @@ export const WorkoutExerciseCard = memo(({
           <div className="flex items-center gap-3 lg:gap-4 flex-1 min-w-0">
             {/* Success indicator with progress */}
             <div className="relative flex-shrink-0">
-              <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
-                <Check className="h-6 w-6 lg:h-7 lg:w-7 text-foreground" />
+              <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Check className="h-6 w-6 lg:h-7 lg:w-7 text-white" />
               </div>
               {/* Progress ring */}
               <svg className="absolute -top-1 -right-1 w-5 h-5 transform -rotate-90">
@@ -206,7 +206,7 @@ export const WorkoutExerciseCard = memo(({
                 e.stopPropagation();
                 setShowInstructions(true);
               }}
-              className="p-2 hover:bg-cyan-500/15 text-cyan-400 rounded-xl transition-all cursor-pointer"
+              className="p-2 hover:bg-blue-500/15 text-blue-400 rounded-xl transition-all cursor-pointer"
               aria-label="איך לבצע"
               title="איך לבצע"
             >
@@ -253,7 +253,7 @@ export const WorkoutExerciseCard = memo(({
                   e.stopPropagation();
                   setShowInstructions(true);
                 }}
-                className="p-2 hover:bg-cyan-500/15 text-cyan-400 rounded-lg transition-all cursor-pointer shadow-sm hover:shadow-md"
+                className="p-2 hover:bg-blue-500/15 text-blue-400 rounded-lg transition-all cursor-pointer shadow-sm hover:shadow-md"
                 aria-label="איך לבצע"
                 title="איך לבצע"
               >
@@ -326,7 +326,7 @@ export const WorkoutExerciseCard = memo(({
                 e.stopPropagation();
                 onComplete();
               }}
-              className="px-5 py-2.5 lg:px-6 lg:py-3 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-xl transition-all text-sm lg:text-base font-bold cursor-pointer btn-press-feedback shadow-md hover:shadow-lg"
+              className="px-5 py-2.5 lg:px-6 lg:py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all text-sm lg:text-base font-bold cursor-pointer btn-press-feedback shadow-md hover:shadow-lg"
             >
               סיים תרגיל
             </button>

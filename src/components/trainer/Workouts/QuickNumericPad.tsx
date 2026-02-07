@@ -277,18 +277,18 @@ export default function QuickNumericPad({
         { label: '+0.5', value: 0.5, isAbsolute: false, color: 'emerald' },
         { label: '+1', value: 1, isAbsolute: false, color: 'emerald' },
         { label: '+2.5', value: 2.5, isAbsolute: false, color: 'emerald' },
-        { label: '+5', value: 5, isAbsolute: false, color: 'cyan' },
-        { label: '+10', value: 10, isAbsolute: false, color: 'cyan' },
-        { label: '+20', value: 20, isAbsolute: false, color: 'cyan' },
+        { label: '+5', value: 5, isAbsolute: false, color: 'blue' },
+        { label: '+10', value: 10, isAbsolute: false, color: 'blue' },
+        { label: '+20', value: 20, isAbsolute: false, color: 'blue' },
       ];
     }
     return [
       { label: '+1', value: 1, isAbsolute: false, color: 'emerald' },
       { label: '+2', value: 2, isAbsolute: false, color: 'emerald' },
       { label: '+3', value: 3, isAbsolute: false, color: 'emerald' },
-      { label: '+5', value: 5, isAbsolute: false, color: 'cyan' },
-      { label: '+10', value: 10, isAbsolute: false, color: 'cyan' },
-      { label: '+15', value: 15, isAbsolute: false, color: 'cyan' },
+      { label: '+5', value: 5, isAbsolute: false, color: 'blue' },
+      { label: '+10', value: 10, isAbsolute: false, color: 'blue' },
+      { label: '+15', value: 15, isAbsolute: false, color: 'blue' },
     ];
   }, [isRpeMode, allowDecimal]);
 
@@ -369,7 +369,7 @@ export default function QuickNumericPad({
         <div className={compact ? 'mb-4' : isTabletMode ? 'mb-6' : 'mb-5'}>
           <div 
             ref={displayRef}
-            className={`relative bg-gradient-to-br from-zinc-800/80 to-zinc-800/50 border-4 ${swipeIndicator ? 'border-cyan-500/80' : 'border-emerald-500/60'} rounded-2xl ${displayPadding} text-center shadow-inner transition-colors`}
+            className={`relative bg-gradient-to-br from-zinc-800/80 to-zinc-800/50 border-4 ${swipeIndicator ? 'border-blue-500/80' : 'border-emerald-500/60'} rounded-2xl ${displayPadding} text-center shadow-inner transition-colors`}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -378,9 +378,9 @@ export default function QuickNumericPad({
             {swipeIndicator && (
               <div className="absolute inset-x-0 top-2 flex justify-center animate-pulse">
                 {swipeIndicator === 'up' ? (
-                  <ChevronUp className="h-6 w-6 text-cyan-400" />
+                  <ChevronUp className="h-6 w-6 text-blue-400" />
                 ) : (
-                  <ChevronDown className="h-6 w-6 text-cyan-400" />
+                  <ChevronDown className="h-6 w-6 text-blue-400" />
                 )}
               </div>
             )}
@@ -412,7 +412,7 @@ export default function QuickNumericPad({
                 <button
                   type="button"
                   onClick={() => handleAdd(previousValue, true)}
-                  className="text-cyan-400 text-sm font-medium hover:underline"
+                  className="text-blue-400 text-sm font-medium hover:underline"
                 >
                   {previousValue}
                 </button>
@@ -447,8 +447,8 @@ export default function QuickNumericPad({
                     }}
                     className={`py-4 px-2 rounded-xl font-bold text-xl transition-all active:scale-[0.95] touch-manipulation ${
                       btn.color === 'emerald' 
-                        ? 'bg-emerald-500/15 border-2 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25' 
-                        : 'bg-cyan-500/15 border-2 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/25'
+                        ? 'bg-emerald-500/15 border-2 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25'
+                        : 'bg-blue-500/15 border-2 border-blue-500/30 text-blue-400 hover:bg-blue-500/25'
                     }`}
                     style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                   >
@@ -493,7 +493,7 @@ export default function QuickNumericPad({
                   <button
                     type="button"
                     onClick={() => handleAdd(previousValue, true)}
-                    className="py-4 px-3 rounded-xl font-bold text-lg transition-all active:scale-[0.95] touch-manipulation bg-purple-500/15 border-2 border-purple-500/30 text-purple-400 hover:bg-purple-500/25"
+                    className="py-4 px-3 rounded-xl font-bold text-lg transition-all active:scale-[0.95] touch-manipulation bg-slate-500/15 border-2 border-slate-500/30 text-slate-400 hover:bg-slate-500/25"
                     style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                   >
                     קודם ({previousValue})
@@ -553,7 +553,7 @@ export default function QuickNumericPad({
                   className={`${
                     isRpeMode && currentValue === btn.value
                       ? 'bg-emerald-500 ring-4 ring-emerald-500/40 shadow-lg shadow-emerald-500/30 text-foreground'
-                      : 'bg-cyan-500/15 border-2 border-cyan-500/30 hover:bg-cyan-500/25 hover:border-cyan-500/50 text-cyan-400'
+                      : 'bg-blue-500/15 border-2 border-blue-500/30 hover:bg-blue-500/25 hover:border-blue-500/50 text-blue-400'
                   } ${buttonSize} px-3 md:px-4 rounded-xl font-bold transition-all active:scale-[0.95] touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-500/50 select-none`}
                   style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                 >
@@ -613,7 +613,7 @@ export default function QuickNumericPad({
             onTouchStart={(e) => e.stopPropagation()}
             onTouchEnd={(e) => e.stopPropagation()}
             aria-label={`אישור ערך${allowDecimal ? ' בקילוגרמים' : isRpeMode ? ' RPE' : ' בחזרות'}`}
-            className={`bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-foreground shadow-lg shadow-emerald-500/30 ${compact ? 'py-3 px-4 rounded-xl text-lg' : isTabletMode ? 'py-5 md:py-6 px-4 rounded-xl text-xl md:text-2xl' : 'py-4 lg:py-5 px-4 rounded-xl text-xl lg:text-2xl'} font-bold transition-all active:scale-[0.95] touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-500/50 select-none flex items-center justify-center gap-2`}
+            className={`bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/30 ${compact ? 'py-3 px-4 rounded-xl text-lg' : isTabletMode ? 'py-5 md:py-6 px-4 rounded-xl text-xl md:text-2xl' : 'py-4 lg:py-5 px-4 rounded-xl text-xl lg:text-2xl'} font-bold transition-all active:scale-[0.95] touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-500/50 select-none flex items-center justify-center gap-2`}
             style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
           >
             <Check className={`${compact ? 'h-5 w-5' : 'h-6 w-6'}`} />

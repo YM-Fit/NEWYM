@@ -1099,7 +1099,7 @@ function TraineeTableRow({
             </div>
             {unseenWeightsCount && unseenWeightsCount > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5
-                             bg-gradient-to-br from-info to-cyan-500 rounded-full 
+                             bg-gradient-to-br from-info to-blue-500 rounded-full 
                              flex items-center justify-center 
                              text-xs font-bold text-inverse border-2 border-elevated 
                              animate-pulse shadow-lg shadow-info/50">
@@ -1196,11 +1196,11 @@ function TraineeTableRow({
                 const scheduledWorkoutId = !workout.is_completed ? workout.id : undefined;
                 onNewPreparedWorkout(trainee, scheduledWorkoutId);
               }}
-              className="bg-cyan-500/20 hover:bg-cyan-500/30 border-2 border-cyan-500/30
-                         hover:border-cyan-500/50 min-w-[36px] min-h-[36px] p-2 md:p-2.5 rounded-lg flex items-center gap-1 md:gap-1.5
+              className="bg-blue-500/20 hover:bg-blue-500/30 border-2 border-blue-500/30
+                         hover:border-blue-500/50 min-w-[36px] min-h-[36px] p-2 md:p-2.5 rounded-lg flex items-center gap-1 md:gap-1.5
                          transition-all duration-300 active:scale-95
-                         text-cyan-600
-                         focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                         text-blue-500
+                         focus:outline-none focus:ring-2 focus:ring-blue-500/50"
               aria-label={`הוסף אימון שהוכן מראש ל${trainee.full_name}`}
               title="אימון שהוכן מראש"
             >
@@ -1365,7 +1365,7 @@ function TraineeCardToday({
               </div>
               {unseenWeightsCount && unseenWeightsCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-6 h-6 sm:w-7 sm:h-7
-                               bg-gradient-to-br from-info to-cyan-500 rounded-full 
+                               bg-gradient-to-br from-info to-blue-500 rounded-full 
                                flex items-center justify-center 
                                text-xs font-bold text-inverse border-2 border-elevated 
                                animate-pulse shadow-lg shadow-info/50">
@@ -1471,12 +1471,12 @@ function TraineeCardToday({
                   onNewPreparedWorkout(trainee, scheduledWorkoutId);
                 }
               }}
-              className="bg-cyan-500/20 hover:bg-cyan-500/30 border-2 border-cyan-500/30 
-                         hover:border-cyan-500/50 p-4 sm:p-5 rounded-xl flex flex-col items-center gap-2
+              className="bg-blue-500/20 hover:bg-blue-500/30 border-2 border-blue-500/30
+                         hover:border-blue-500/50 p-4 sm:p-5 rounded-xl flex flex-col items-center gap-2
                          transition-all duration-300 hover:scale-110 active:scale-95
-                         shadow-lg shadow-cyan-500/30 hover:shadow-2xl hover:shadow-cyan-500/50
-                         focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:ring-offset-2
-                         group/btn relative overflow-hidden text-cyan-600"
+                         shadow-lg shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/50
+                         focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2
+                         group/btn relative overflow-hidden text-blue-500"
               aria-label={`הוסף אימון שהוכן מראש ל${trainee.full_name}`}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 

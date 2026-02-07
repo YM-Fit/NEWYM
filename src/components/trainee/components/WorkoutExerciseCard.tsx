@@ -70,7 +70,7 @@ export default function WorkoutExerciseCard({
         >
           <div className="flex items-center space-x-2 rtl:space-x-reverse flex-1 min-w-0">
             <div className="w-8 h-8 md:w-9 md:h-9 bg-emerald-500 rounded-lg md:rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
-              <span className="text-foreground text-sm md:text-base font-bold">✓</span>
+              <span className="text-white text-sm md:text-base font-bold">✓</span>
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-sm md:text-base font-bold text-[var(--color-text-primary)] truncate">{workoutExercise.exercise.name}</h3>
@@ -96,7 +96,7 @@ export default function WorkoutExerciseCard({
               <button
                 type="button"
                 onClick={onShowInstructions}
-                className="p-1.5 md:p-2 hover:bg-cyan-500/10 text-cyan-400 rounded-lg transition-all"
+                className="p-1.5 md:p-2 hover:bg-blue-500/10 text-blue-400 rounded-lg transition-all"
                 aria-label="איך לבצע"
                 title="איך לבצע"
               >

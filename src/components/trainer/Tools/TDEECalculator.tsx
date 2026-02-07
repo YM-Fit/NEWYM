@@ -63,10 +63,10 @@ export default function TDEECalculator({
         <div className="sticky top-0 bg-emerald-500 p-6 rounded-t-2xl flex items-center justify-between">
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
             <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <Calculator className="h-7 w-7 text-foreground" />
+              <Calculator className="h-7 w-7 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-foreground">מחשבון TDEE</h2>
+              <h2 className="text-2xl font-bold text-white">מחשבון TDEE</h2>
               <p className="text-sm text-emerald-100">צריכה קלורית יומית ומקרו-נוטריינטים</p>
             </div>
           </div>
@@ -74,7 +74,7 @@ export default function TDEECalculator({
             onClick={onClose}
             className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all"
           >
-            <X className="h-6 w-6 text-foreground" />
+            <X className="h-6 w-6 text-white" />
           </button>
         </div>
 
@@ -82,7 +82,7 @@ export default function TDEECalculator({
           <div className="bg-surface rounded-2xl p-6 border border-border">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
-                <Scale className="w-5 h-5 text-foreground" />
+                <Scale className="w-5 h-5 text-white" />
               </div>
               <h3 className="text-lg font-bold text-foreground">פרטים אישיים</h3>
             </div>
@@ -161,12 +161,12 @@ export default function TDEECalculator({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-2xl p-6">
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-cyan-500 rounded-xl flex items-center justify-center">
-                  <Activity className="w-5 h-5 text-foreground" />
+                <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
+                  <Activity className="w-5 h-5 text-white" />
                 </div>
-                <p className="text-sm font-bold text-cyan-400">BMR - קצב מטבולי בסיסי</p>
+                <p className="text-sm font-bold text-blue-400">BMR - קצב מטבולי בסיסי</p>
               </div>
               <p className="text-5xl font-bold text-foreground">{Math.round(bmr)}</p>
               <p className="text-sm text-muted mt-2 font-medium">קלוריות ליום במנוחה</p>
@@ -175,7 +175,7 @@ export default function TDEECalculator({
             <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-foreground" />
+                  <TrendingUp className="w-5 h-5 text-white" />
                 </div>
                 <p className="text-sm font-bold text-emerald-400">TDEE - צריכה יומית</p>
               </div>
@@ -187,7 +187,7 @@ export default function TDEECalculator({
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
-                <Target className="w-4 h-4 text-foreground" />
+                <Target className="w-4 h-4 text-white" />
               </div>
               <h3 className="text-lg font-bold text-foreground">יעדים קלוריים</h3>
             </div>
@@ -197,8 +197,8 @@ export default function TDEECalculator({
                 <p className="text-4xl font-bold text-foreground">{goals.cutting}</p>
                 <p className="text-xs text-muted mt-2 font-medium">קלוריות ליום</p>
               </div>
-              <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-2xl p-5">
-                <p className="text-sm font-bold text-cyan-400 mb-2">שמירה על משקל</p>
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-5">
+                <p className="text-sm font-bold text-blue-400 mb-2">שמירה על משקל</p>
                 <p className="text-4xl font-bold text-foreground">{goals.maintenance}</p>
                 <p className="text-xs text-muted mt-2 font-medium">קלוריות ליום</p>
               </div>
@@ -213,7 +213,7 @@ export default function TDEECalculator({
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-                <Flame className="w-4 h-4 text-foreground" />
+                <Flame className="w-4 h-4 text-white" />
               </div>
               <h3 className="text-lg font-bold text-foreground">חלוקת מקרו-נוטריינטים (לשמירה)</h3>
             </div>
@@ -244,10 +244,10 @@ export default function TDEECalculator({
                     <td className="px-5 py-4 text-center text-sm text-muted font-medium">{fatCalories} kcal</td>
                     <td className="px-5 py-4 text-left text-sm text-muted font-medium">{Math.round((fatCalories / tdee) * 100)}%</td>
                   </tr>
-                  <tr className="hover:bg-cyan-500/5 transition-all">
+                  <tr className="hover:bg-blue-500/5 transition-all">
                     <td className="px-5 py-4 text-sm font-bold text-foreground">פחמימות</td>
                     <td className="px-5 py-4 text-center">
-                      <span className="text-lg font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-lg">{carbsGrams}g</span>
+                      <span className="text-lg font-bold text-blue-400 bg-blue-500/10 px-3 py-1 rounded-lg">{carbsGrams}g</span>
                     </td>
                     <td className="px-5 py-4 text-center text-sm text-muted font-medium">{carbsCalories} kcal</td>
                     <td className="px-5 py-4 text-left text-sm text-muted font-medium">{Math.round((carbsCalories / tdee) * 100)}%</td>
@@ -269,7 +269,7 @@ export default function TDEECalculator({
         <div className="sticky bottom-0 bg-card border-t border-border p-6 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-foreground px-6 py-4 rounded-xl font-bold text-lg transition-all"
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all"
           >
             סגור
           </button>

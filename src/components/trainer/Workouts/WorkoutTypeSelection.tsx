@@ -53,8 +53,8 @@ export default function WorkoutTypeSelection({
 
           <div className="premium-card-static p-6">
             <div className="flex items-center justify-center mb-4">
-              <div className="w-16 h-16 bg-cyan-500/15 rounded-2xl flex items-center justify-center">
-                <User className="h-8 w-8 text-cyan-400" />
+              <div className="w-16 h-16 bg-blue-500/15 rounded-2xl flex items-center justify-center">
+                <User className="h-8 w-8 text-blue-400" />
               </div>
             </div>
             <h3 className="text-xl font-bold text-foreground text-center mb-4">אימון אישי</h3>
@@ -63,13 +63,13 @@ export default function WorkoutTypeSelection({
             <div className="space-y-3">
               <button
                 onClick={() => onSelectPersonal(1)}
-                className="w-full bg-surface hover:bg-cyan-500/15 border border-border hover:border-cyan-500/30 text-foreground p-4 rounded-xl transition-all font-medium group"
+                className="w-full bg-surface hover:bg-blue-500/15 border border-border hover:border-blue-500/30 text-foreground p-4 rounded-xl transition-all font-medium group"
               >
                 <div className="flex items-center justify-center gap-3">
-                  <div className="w-8 h-8 bg-cyan-500/20 group-hover:bg-cyan-500/30 rounded-lg flex items-center justify-center transition-all">
-                    <span className="text-cyan-400 font-bold text-sm">1</span>
+                  <div className="w-8 h-8 bg-blue-500/20 group-hover:bg-blue-500/30 rounded-lg flex items-center justify-center transition-all">
+                    <span className="text-blue-400 font-bold text-sm">1</span>
                   </div>
-                  <span className="text-lg group-hover:text-cyan-400 transition-all">{trainee.pairName1 || ''} (1)</span>
+                  <span className="text-lg group-hover:text-blue-400 transition-all">{trainee.pairName1 || ''} (1)</span>
                 </div>
               </button>
               <button

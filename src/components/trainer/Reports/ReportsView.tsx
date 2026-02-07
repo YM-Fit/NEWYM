@@ -184,8 +184,8 @@ export default function ReportsView() {
 
                 <div className="premium-card-static p-6 group hover:border-border-hover transition-all">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="p-3 rounded-xl bg-cyan-500/15 border border-cyan-500/30">
-                      <Users className="w-6 h-6 text-cyan-400" />
+                    <div className="p-3 rounded-xl bg-blue-500/15 border border-blue-500/30">
+                      <Users className="w-6 h-6 text-blue-400" />
                     </div>
                     <div>
                       <p className="text-sm text-muted font-medium">מתאמנים פעילים</p>

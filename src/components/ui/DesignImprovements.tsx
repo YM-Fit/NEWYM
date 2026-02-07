@@ -75,7 +75,7 @@ export function AnimatedStatCard({
   label: string;
   icon: any;
   trend?: number;
-  color?: 'emerald' | 'cyan' | 'amber' | 'rose';
+  color?: 'emerald' | 'blue' | 'amber' | 'rose';
 }) {
   const [displayValue, setDisplayValue] = useState(0);
 
@@ -102,7 +102,7 @@ export function AnimatedStatCard({
 
   const colorClasses = {
     emerald: 'from-primary/20 to-primary/5 text-primary',
-    cyan: 'from-info/20 to-info/5 text-info',
+    blue: 'from-info/20 to-info/5 text-info',
     amber: 'from-warning/20 to-warning/5 text-warning',
     rose: 'from-danger/20 to-danger/5 text-danger',
   };
@@ -254,7 +254,7 @@ export function AnimatedProgressBar({
   value: number;
   max?: number;
   label?: string;
-  color?: 'emerald' | 'cyan' | 'amber' | 'rose';
+  color?: 'emerald' | 'blue' | 'amber' | 'rose';
 }) {
   const percentage = Math.min((value / max) * 100, 100);
   const [animatedValue, setAnimatedValue] = useState(0);
@@ -280,7 +280,7 @@ export function AnimatedProgressBar({
 
   const colorClasses = {
     emerald: 'from-primary to-primary/80',
-    cyan: 'from-info to-info/80',
+    blue: 'from-info to-info/80',
     amber: 'from-warning to-warning/80',
     rose: 'from-danger to-danger/80',
   };
@@ -376,12 +376,12 @@ export function GradientText({
 }: {
   children: React.ReactNode;
   className?: string;
-  gradient?: 'primary' | 'emerald' | 'cyan' | 'amber';
+  gradient?: 'primary' | 'emerald' | 'blue' | 'amber';
 }) {
   const gradientClasses = {
     primary: 'text-gradient-primary',
     emerald: 'bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent',
-    cyan: 'bg-gradient-to-r from-info to-info/80 bg-clip-text text-transparent',
+    blue: 'bg-gradient-to-r from-info to-info/80 bg-clip-text text-transparent',
     amber: 'bg-gradient-to-r from-warning to-warning/80 bg-clip-text text-transparent',
   };
 
@@ -428,7 +428,7 @@ export function DesignImprovementsDemo() {
               label="יעדים הושגו"
               icon={Target}
               trend={5}
-              color="cyan"
+              color="blue"
             />
             <AnimatedStatCard
               value={42}

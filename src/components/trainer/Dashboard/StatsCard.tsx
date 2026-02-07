@@ -6,7 +6,7 @@ interface StatsCardProps {
   change?: string;
   trend?: 'up' | 'down' | 'neutral';
   icon: LucideIcon;
-  color: 'emerald' | 'cyan' | 'amber' | 'teal' | 'rose';
+  color: 'emerald' | 'blue' | 'amber' | 'rose';
 }
 
 export default function StatsCard({ title, value, change, icon: Icon, color }: StatsCardProps) {
@@ -17,23 +17,17 @@ export default function StatsCard({ title, value, change, icon: Icon, color }: S
       value: 'text-emerald-400',
       glow: 'shadow-[0_0_20px_rgba(16,185,129,0.15)]',
     },
-    cyan: {
-      bg: 'from-cyan-500/20 to-cyan-500/5',
-      icon: 'bg-cyan-500/20 text-cyan-400',
-      value: 'text-cyan-400',
-      glow: 'shadow-[0_0_20px_rgba(6,182,212,0.15)]',
+    blue: {
+      bg: 'from-blue-500/20 to-blue-500/5',
+      icon: 'bg-blue-500/20 text-blue-400',
+      value: 'text-blue-400',
+      glow: 'shadow-[0_0_20px_rgba(59,130,246,0.15)]',
     },
     amber: {
       bg: 'from-amber-500/20 to-amber-500/5',
       icon: 'bg-amber-500/20 text-amber-400',
       value: 'text-amber-400',
       glow: 'shadow-[0_0_20px_rgba(245,158,11,0.15)]',
-    },
-    teal: {
-      bg: 'from-teal-500/20 to-teal-500/5',
-      icon: 'bg-teal-500/20 text-teal-400',
-      value: 'text-teal-400',
-      glow: 'shadow-[0_0_20px_rgba(20,184,166,0.15)]',
     },
     rose: {
       bg: 'from-rose-500/20 to-rose-500/5',

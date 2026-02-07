@@ -23,9 +23,9 @@ export default function RecentActivity() {
     switch (type) {
       case 'workout':
         return {
-          bg: 'bg-cyan-500/15',
-          text: 'text-cyan-400',
-          border: 'border-cyan-500/20',
+          bg: 'bg-blue-500/15',
+          text: 'text-blue-400',
+          border: 'border-blue-500/20',
         };
       case 'measurement':
         return {

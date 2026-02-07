@@ -212,11 +212,11 @@ export const WorkoutTableRow = memo(({
               w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold transition-all
               ${isCompleted ? 'text-sm' : 'text-base'}
               ${hasData && set.reps > 0 
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' 
-                : 'bg-surface/50 text-muted border border-border hover:border-cyan-500/30'
+                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50' 
+                : 'bg-surface/50 text-muted border border-border hover:border-blue-500/30'
               }
               hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
-              focus:outline-none focus:ring-1 focus:ring-cyan-500
+              focus:outline-none focus:ring-1 focus:ring-blue-500
             `}
             tabIndex={isActive ? 0 : -1}
           >
@@ -227,7 +227,7 @@ export const WorkoutTableRow = memo(({
             w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold
             ${isCompleted ? 'text-sm' : 'text-base'}
             ${hasData && set.reps > 0 
-              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' 
+              ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50' 
               : 'bg-surface/50 text-muted border border-border'
             }
           `}>
@@ -290,8 +290,8 @@ export const WorkoutTableRow = memo(({
               w-full px-2 ${isCompleted ? 'py-0.5' : 'py-1'} rounded-lg transition-all
               ${isCompleted ? 'text-[10px]' : 'text-xs'}
               ${set.equipment 
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' 
-                : 'bg-surface/50 text-muted border border-border hover:border-cyan-500/30'
+                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50' 
+                : 'bg-surface/50 text-muted border border-border hover:border-blue-500/30'
               }
               hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
             `}
@@ -302,7 +302,7 @@ export const WorkoutTableRow = memo(({
         ) : (
           <div className={`flex items-center justify-center gap-0.5 ${isCompleted ? 'text-[10px]' : 'text-xs'}`}>
             {set.equipment?.emoji && <span>{set.equipment.emoji}</span>}
-            <span className="text-cyan-400">{set.equipment?.name || '-'}</span>
+            <span className="text-blue-400">{set.equipment?.name || '-'}</span>
           </div>
         )}
       </td>
@@ -322,8 +322,8 @@ export const WorkoutTableRow = memo(({
                 className={`
                   px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all touch-manipulation active:scale-95
                   ${isCompleted ? 'text-[10px]' : 'text-xs'}
-                  ${set.set_type === 'regular' 
-                    ? 'bg-emerald-500 text-foreground' 
+                  ${set.set_type === 'regular'
+                    ? 'bg-emerald-500 text-white'
                     : 'bg-surface/50 text-muted hover:bg-emerald-500/20'
                   }
                 `}
@@ -350,8 +350,8 @@ export const WorkoutTableRow = memo(({
                   px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all touch-manipulation active:scale-95
                   ${isCompleted ? 'text-[10px]' : 'text-xs'}
                   ${set.set_type === 'superset' 
-                    ? 'bg-cyan-500 text-foreground' 
-                    : 'bg-surface/50 text-muted hover:bg-cyan-500/20'
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-surface/50 text-muted hover:bg-blue-500/20'
                   }
                 `}
               >
@@ -367,8 +367,8 @@ export const WorkoutTableRow = memo(({
                 className={`
                   px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all touch-manipulation active:scale-95
                   ${isCompleted ? 'text-[10px]' : 'text-xs'}
-                  ${set.set_type === 'dropset' 
-                    ? 'bg-amber-500 text-foreground' 
+                  ${set.set_type === 'dropset'
+                    ? 'bg-amber-500 text-white'
                     : 'bg-surface/50 text-muted hover:bg-amber-500/20'
                   }
                 `}
@@ -380,7 +380,7 @@ export const WorkoutTableRow = memo(({
             <div className="flex items-center justify-center">
               <span className={`${isCompleted ? 'text-[10px]' : 'text-xs'} font-medium ${
                 set.set_type === 'regular' ? 'text-emerald-400' :
-                set.set_type === 'superset' ? 'text-cyan-400' :
+                set.set_type === 'superset' ? 'text-blue-400' :
                 'text-amber-400'
               }`}>
                 {set.set_type === 'regular' ? 'רגיל' :
@@ -400,7 +400,7 @@ export const WorkoutTableRow = memo(({
                     e.stopPropagation();
                     onOpenSupersetSelector(exerciseIndex, setIndex);
                   }}
-                  className={`px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 ${isTvMode ? 'text-xs' : 'text-[10px]'} touch-manipulation active:scale-95 transition-all`}
+                  className={`px-1 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 ${isTvMode ? 'text-xs' : 'text-[10px]'} touch-manipulation active:scale-95 transition-all`}
                 >
                   בחר תרגיל
                 </button>
@@ -408,9 +408,9 @@ export const WorkoutTableRow = memo(({
               {set.superset_exercise_id && (
                 <div className="flex flex-col gap-1">
                   {/* Exercise name and set number */}
-                  <div className={`text-cyan-400 font-semibold ${isTvMode ? 'text-xs' : 'text-[10px]'} text-center px-1 py-0.5 bg-cyan-500/10 rounded`}>
+                  <div className={`text-blue-400 font-semibold ${isTvMode ? 'text-xs' : 'text-[10px]'} text-center px-1 py-0.5 bg-blue-500/10 rounded`}>
                     {set.superset_exercise_name || 'תרגיל סופר'}
-                    <span className="text-cyan-300 ml-1">(סט {set.set_number})</span>
+                    <span className="text-blue-300 ml-1">(סט {set.set_number})</span>
                   </div>
                   
                   {/* Superset weight, reps, RPE */}
@@ -425,7 +425,7 @@ export const WorkoutTableRow = memo(({
                               e.stopPropagation();
                               onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_weight', 'משקל סופר');
                             }}
-                            className="px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 touch-manipulation active:scale-95 transition-all"
+                            className="px-1 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 touch-manipulation active:scale-95 transition-all"
                           >
                             {set.superset_weight || '0'} ק״ג
                           </button>
@@ -436,7 +436,7 @@ export const WorkoutTableRow = memo(({
                               e.stopPropagation();
                               onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_reps', 'חזרות סופר');
                             }}
-                            className="px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 touch-manipulation active:scale-95 transition-all"
+                            className="px-1 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 touch-manipulation active:scale-95 transition-all"
                           >
                             {set.superset_reps || '0'} חזרות
                           </button>
@@ -447,10 +447,10 @@ export const WorkoutTableRow = memo(({
                               e.stopPropagation();
                               onOpenSupersetNumericPad(exerciseIndex, setIndex, 'superset_rpe', 'RPE סופר');
                             }}
-                            className={`px-1 py-0.5 rounded border border-cyan-500/30 hover:bg-cyan-500/30 touch-manipulation active:scale-95 transition-all ${
+                            className={`px-1 py-0.5 rounded border border-blue-500/30 hover:bg-blue-500/30 touch-manipulation active:scale-95 transition-all ${
                               set.superset_rpe !== null && set.superset_rpe !== undefined
-                                ? 'bg-cyan-500/20 text-cyan-400'
-                                : 'bg-surface/50 text-muted hover:border-cyan-500/50'
+                                ? 'bg-blue-500/20 text-blue-400'
+                                : 'bg-surface/50 text-muted hover:border-blue-500/50'
                             }`}
                           >
                             RPE {set.superset_rpe || '-'}
@@ -458,7 +458,7 @@ export const WorkoutTableRow = memo(({
                         </>
                       )}
                       {isTvMode && (
-                        <div className="text-cyan-400">
+                        <div className="text-blue-400">
                           {set.superset_weight || '0'} ק״ג × {set.superset_reps || '0'}
                           {set.superset_rpe && ` (RPE ${set.superset_rpe})`}
                         </div>
@@ -475,7 +475,7 @@ export const WorkoutTableRow = memo(({
                         e.stopPropagation();
                         onOpenSupersetEquipmentSelector?.(exerciseIndex, setIndex);
                       }}
-                      className={`px-1 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 text-[10px] flex items-center justify-center gap-0.5 touch-manipulation active:scale-95 transition-all`}
+                      className={`px-1 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 text-[10px] flex items-center justify-center gap-0.5 touch-manipulation active:scale-95 transition-all`}
                     >
                       {set.superset_equipment ? (
                         <>
@@ -490,7 +490,7 @@ export const WorkoutTableRow = memo(({
                   {isTvMode && set.superset_equipment && (
                     <div className={`flex items-center justify-center gap-0.5 text-xs`}>
                       {set.superset_equipment.emoji && <span>{set.superset_equipment.emoji}</span>}
-                      <span className="text-cyan-400">{set.superset_equipment.name}</span>
+                      <span className="text-blue-400">{set.superset_equipment.name}</span>
                     </div>
                   )}
                   
@@ -655,7 +655,7 @@ export const WorkoutTableRow = memo(({
                 e.stopPropagation();
                 onDuplicateSet(exerciseIndex, setIndex);
               }}
-              className={`${isCompleted ? 'p-1' : 'p-1.5'} hover:bg-cyan-500/20 text-cyan-400 rounded-lg transition-all cursor-pointer`}
+              className={`${isCompleted ? 'p-1' : 'p-1.5'} hover:bg-blue-500/20 text-blue-400 rounded-lg transition-all cursor-pointer`}
               title="שכפל סט"
             >
               <Copy className={`${isCompleted ? 'h-3 w-3' : 'h-4 w-4'}`} />

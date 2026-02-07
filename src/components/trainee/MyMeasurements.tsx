@@ -307,7 +307,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
                   label="BMI"
                   value={latestMeasurement.bmi}
                   unit=""
-                  color="cyan"
+                  color="blue"
                 />
               </div>
             </div>
@@ -369,7 +369,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
                     onClick={() => setChartPeriod(period)}
                     className={`px-3 py-1 text-xs rounded-lg transition-colors ${
                       chartPeriod === period
-                        ? 'bg-emerald-500 text-foreground'
+                        ? 'bg-emerald-500 text-white'
                         : 'bg-[var(--color-bg-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border)]'
                     }`}
                   >
@@ -669,7 +669,6 @@ function StatCard({ icon: Icon, label, value, unit, color, trend }: StatCardProp
     blue: { bg: 'bg-blue-500/15', text: 'text-blue-400', icon: 'text-blue-400' },
     rose: { bg: 'bg-rose-500/15', text: 'text-rose-400', icon: 'text-rose-400' },
     amber: { bg: 'bg-amber-500/15', text: 'text-amber-400', icon: 'text-amber-400' },
-    cyan: { bg: 'bg-cyan-500/15', text: 'text-cyan-400', icon: 'text-cyan-400' },
   };
 
   const colors = colorClasses[color] || colorClasses.green;

@@ -120,12 +120,12 @@ export default function ClientDashboard() {
             <div className="text-2xl font-bold text-blue-400">{stats.totalWorkouts}</div>
           </div>
 
-          <div className="bg-purple-500/10 rounded-lg p-4 border border-purple-500/20">
+          <div className="bg-amber-500/10 rounded-lg p-4 border border-amber-500/20">
             <div className="flex items-center gap-2 mb-2">
-              <Target className="h-5 w-5 text-purple-400" />
+              <Target className="h-5 w-5 text-amber-400" />
               <div className="text-sm text-muted">ירידה במשקל</div>
             </div>
-            <div className="text-2xl font-bold text-purple-400">{stats.weightLoss} ק"ג</div>
+            <div className="text-2xl font-bold text-amber-400">{stats.weightLoss} ק"ג</div>
           </div>
 
           <div className="bg-yellow-500/10 rounded-lg p-4 border border-yellow-500/20">

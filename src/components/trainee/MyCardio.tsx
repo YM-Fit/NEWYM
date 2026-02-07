@@ -74,7 +74,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-glow animate-pulse">
-          <Activity className="w-8 h-8 text-foreground" />
+          <Activity className="w-8 h-8 text-white" />
         </div>
       </div>
     );
@@ -84,7 +84,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-glow">
-          <Activity className="h-6 w-6 text-foreground" />
+          <Activity className="h-6 w-6 text-white" />
         </div>
         <div>
           <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">האירובי שלי</h2>
@@ -178,7 +178,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
                 )}
                 {latestActivity.distance > 0 && (
                   <div className="text-center p-3 bg-[var(--color-bg-surface)] rounded-xl border border-[var(--color-border)]">
-                    <TrendingUp className="h-5 w-5 text-cyan-400 mx-auto mb-2" />
+                    <TrendingUp className="h-5 w-5 text-blue-400 mx-auto mb-2" />
                     <p className="text-xs text-[var(--color-text-muted)] mb-1">מרחק</p>
                     <p className="text-lg font-bold text-[var(--color-text-primary)]">{latestActivity.distance} ק"מ</p>
                   </div>
@@ -244,14 +244,14 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
               )}
 
               {stats.longestStreak > 0 && stats.longestStreak !== stats.currentStreak && (
-                <div className="stat-card p-5 bg-gradient-to-br from-purple-500/20 to-purple-500/5">
+                <div className="stat-card p-5 bg-gradient-to-br from-amber-500/20 to-amber-500/5">
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">שיא אישי</p>
-                      <p className="text-2xl font-bold text-purple-400">{stats.longestStreak}</p>
+                      <p className="text-2xl font-bold text-amber-400">{stats.longestStreak}</p>
                     </div>
-                    <div className="p-2.5 rounded-lg bg-purple-500/20">
-                      <Target className="h-5 w-5 text-purple-400" />
+                    <div className="p-2.5 rounded-lg bg-amber-500/20">
+                      <Target className="h-5 w-5 text-amber-400" />
                     </div>
                   </div>
                   <p className="text-xs text-[var(--color-text-muted)]">שבועות רצופים</p>

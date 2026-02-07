@@ -13,7 +13,7 @@ export function CreatePlanModal({ data, saving, onChange, onSave, onClose }: Cre
     <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center p-4 z-50">
       <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl border border-white/10 max-w-lg w-full max-h-[90vh] overflow-y-auto animate-fade-in">
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-foreground">תפריט חדש</h2>
+          <h2 className="text-xl font-bold text-white">תפריט חדש</h2>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-all duration-300">
             <X className="h-5 w-5 text-muted400" />
           </button>
@@ -101,7 +101,7 @@ export function CreatePlanModal({ data, saving, onChange, onSave, onClose }: Cre
           <button
             onClick={onSave}
             disabled={saving}
-            className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 text-foreground py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-emerald-500/25"
+            className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 disabled:opacity-50 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-emerald-500/25"
           >
             {saving ? 'יוצר...' : 'צור תפריט'}
           </button>

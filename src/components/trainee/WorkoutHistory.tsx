@@ -458,7 +458,7 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
       </button>
 
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-foreground">
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-white">
           <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mb-2">
             <Calendar className="w-5 h-5" />
           </div>
@@ -466,15 +466,15 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
           <p className="text-xs text-emerald-100">אימונים החודש</p>
         </div>
 
-        <div className="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl p-4 text-foreground">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white">
           <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mb-2">
             <Activity className="w-5 h-5" />
           </div>
           <p className="text-2xl font-bold">{stats.avgVolume.toLocaleString()}</p>
-          <p className="text-xs text-cyan-100">נפח ממוצע</p>
+          <p className="text-xs text-blue-100">נפח ממוצע</p>
         </div>
 
-        <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-4 text-foreground">
+        <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-4 text-white">
           <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mb-2">
             <Trophy className="w-5 h-5" />
           </div>
@@ -829,7 +829,7 @@ function WorkoutDetail({
         <span>חזרה לרשימה</span>
       </button>
 
-      <div className="bg-gradient-to-l from-emerald-600 to-emerald-500 rounded-xl p-4 text-foreground shadow-lg">
+      <div className="bg-gradient-to-l from-emerald-600 to-emerald-500 rounded-xl p-4 text-white shadow-lg">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-lg font-bold">
@@ -955,20 +955,20 @@ function WorkoutDetail({
                             </div>
 
                             {set.superset_weight && set.superset_reps && (
-                              <div className="bg-cyan-500/15 border border-cyan-500/30 rounded-lg p-3 mr-4">
+                              <div className="bg-blue-500/15 border border-blue-500/30 rounded-lg p-3 mr-4">
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center gap-3">
-                                    <span className="text-xs text-cyan-400 font-medium">סופרסט</span>
-                                    <span className="font-medium text-cyan-300">
+                                    <span className="text-xs text-blue-400 font-medium">סופרסט</span>
+                                    <span className="font-medium text-blue-300">
                                       {set.superset_weight} ק״ג × {set.superset_reps}
                                     </span>
                                   </div>
                                   {set.superset_rpe && (
-                                    <span className="text-sm text-cyan-400">RPE {set.superset_rpe}</span>
+                                    <span className="text-sm text-blue-400">RPE {set.superset_rpe}</span>
                                   )}
                                 </div>
                                 {set.superset_equipment && (
-                                  <div className="flex items-center gap-2 text-sm text-cyan-400">
+                                  <div className="flex items-center gap-2 text-sm text-blue-400">
                                     {set.superset_equipment.emoji && <span>{set.superset_equipment.emoji}</span>}
                                     <span>{set.superset_equipment.name}</span>
                                   </div>

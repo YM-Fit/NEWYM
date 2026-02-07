@@ -153,7 +153,7 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
                         <p className="text-sm text-muted mb-2">{template.description}</p>
                       )}
                       <div className="flex items-center gap-3 text-sm flex-wrap">
-                        <span className="flex items-center bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded-lg">
+                        <span className="flex items-center bg-blue-500/10 text-blue-400 px-2 py-1 rounded-lg">
                           <Copy className="h-4 w-4 ml-1" />
                           {template.exercises.length} תרגילים
                         </span>
@@ -199,7 +199,7 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
                     </button>
                     <button
                       onClick={() => handleEditTemplate(template)}
-                      className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 p-3 rounded-xl transition-all"
+                      className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 p-3 rounded-xl transition-all"
                     >
                       <Edit className="h-5 w-5" />
                     </button>
@@ -230,8 +230,8 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
         <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-[60] p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 rounded-xl bg-cyan-500/15">
-                <Edit className="h-6 w-6 text-cyan-400" />
+              <div className="p-3 rounded-xl bg-blue-500/15">
+                <Edit className="h-6 w-6 text-blue-400" />
               </div>
               <h3 className="text-xl font-bold text-foreground">ערוך תבנית</h3>
             </div>
@@ -245,7 +245,7 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="למשל: אימון רגליים מלא"
                 />
               </div>
@@ -257,7 +257,7 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
                 <textarea
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
-                  className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="הוסף תיאור..."
                   rows={3}
                 />
@@ -268,7 +268,7 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
               <button
                 onClick={handleSaveEdit}
                 disabled={!editName.trim()}
-                className="flex-1 bg-cyan-500 hover:bg-cyan-600 disabled:bg-elevated disabled:text-muted text-foreground px-6 py-3 rounded-xl font-semibold transition-all disabled:cursor-not-allowed"
+                className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-elevated disabled:text-muted text-white px-6 py-3 rounded-xl font-semibold transition-all disabled:cursor-not-allowed"
               >
                 שמור
               </button>

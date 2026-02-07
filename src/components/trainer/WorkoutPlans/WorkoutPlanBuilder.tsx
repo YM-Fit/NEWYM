@@ -952,7 +952,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
               <button
                 type="button"
                 onClick={() => setShowBlockBuilder(true)}
-                className="py-4 px-4 bg-gradient-to-br from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 text-purple-700 font-bold rounded-xl transition-all duration-300 border-2 border-purple-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                className="py-4 px-4 bg-gradient-to-br from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-200 text-amber-700 font-bold rounded-xl transition-all duration-300 border-2 border-amber-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
                 aria-label="בלוקי תוכנית"
               >
                 בלוקים

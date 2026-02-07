@@ -179,7 +179,7 @@ export default function TraineeProfile({
             <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={onEdit}
-                className="px-4 py-2.5 rounded-xl bg-cyan-500/15 text-cyan-400 hover:bg-cyan-500/25 border border-cyan-500/30 flex items-center gap-2 transition-all font-medium"
+                className="px-4 py-2.5 rounded-xl bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 border border-blue-500/30 flex items-center gap-2 transition-all font-medium"
               >
                 <Edit className="h-4 w-4" />
                 <span>ערוך</span>
@@ -200,8 +200,8 @@ export default function TraineeProfile({
           {!trainee.is_pair ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <div className="flex items-center gap-3 p-4 rounded-xl bg-elevated/30 border border-border/30 hover:border-border transition-all">
-                <div className="p-2.5 rounded-xl bg-cyan-500/15">
-                  <User className="h-5 w-5 text-cyan-400" />
+                <div className="p-2.5 rounded-xl bg-blue-500/15">
+                  <User className="h-5 w-5 text-blue-400" />
                 </div>
                 <div>
                   <p className="text-xs text-muted">גיל</p>
@@ -230,8 +230,8 @@ export default function TraineeProfile({
               </div>
 
               <div className="flex items-center gap-3 p-4 rounded-xl bg-elevated/30 border border-border/30 hover:border-border transition-all">
-                <div className="p-2.5 rounded-xl bg-teal-500/15">
-                  <Calendar className="h-5 w-5 text-teal-400" />
+                <div className="p-2.5 rounded-xl bg-emerald-600/15">
+                  <Calendar className="h-5 w-5 text-emerald-400" />
                 </div>
                 <div>
                   <p className="text-xs text-muted">התחיל</p>
@@ -242,12 +242,12 @@ export default function TraineeProfile({
           ) : (
             <div className="space-y-4 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="premium-card-static p-5 border-cyan-500/30">
+                <div className="premium-card-static p-5 border-blue-500/30">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2.5 rounded-xl bg-cyan-500/15">
-                      <User className="h-5 w-5 text-cyan-400" />
+                    <div className="p-2.5 rounded-xl bg-blue-500/15">
+                      <User className="h-5 w-5 text-blue-400" />
                     </div>
-                    <h3 className="text-lg font-semibold text-cyan-400">{trainee.pairName1}</h3>
+                    <h3 className="text-lg font-semibold text-blue-400">{trainee.pairName1}</h3>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -297,8 +297,8 @@ export default function TraineeProfile({
                 </div>
               </div>
               <div className="flex items-center gap-3 p-4 rounded-xl bg-elevated/30 border border-border/30">
-                <div className="p-2.5 rounded-xl bg-teal-500/15">
-                  <Calendar className="h-5 w-5 text-teal-400" />
+                <div className="p-2.5 rounded-xl bg-emerald-600/15">
+                  <Calendar className="h-5 w-5 text-emerald-400" />
                 </div>
                 <div>
                   <p className="text-xs text-muted">התחיל</p>
@@ -337,19 +337,19 @@ export default function TraineeProfile({
           {/* Stats Cards */}
           {latestMeasurement && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="stat-card p-6 bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+              <div className="stat-card p-6 bg-gradient-to-br from-blue-500/20 to-blue-500/5 shadow-[0_0_20px_rgba(59,130,246,0.15)]">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-medium text-secondary mb-2">משקל נוכחי</p>
-                    <p className="text-3xl font-bold text-cyan-400 tracking-tight">{latestMeasurement.weight} ק״ג</p>
+                    <p className="text-3xl font-bold text-blue-400 tracking-tight">{latestMeasurement.weight} ק״ג</p>
                     {weightChange !== 0 && (
                       <p className={`text-sm mt-2 font-medium ${weightChange > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
                         {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} ק״ג
                       </p>
                     )}
                   </div>
-                  <div className="p-3.5 rounded-xl bg-cyan-500/20">
-                    <Scale className="h-6 w-6 text-cyan-400" />
+                  <div className="p-3.5 rounded-xl bg-blue-500/20">
+                    <Scale className="h-6 w-6 text-blue-400" />
                   </div>
                 </div>
               </div>
@@ -391,8 +391,8 @@ export default function TraineeProfile({
             </div>
             <div className="premium-card-static p-4">
               <div className="flex items-center justify-between mb-2">
-                <TrendingUp className="h-5 w-5 text-cyan-400" />
-                <span className="text-2xl font-bold text-cyan-400">{totalVolume.toLocaleString()}</span>
+                <TrendingUp className="h-5 w-5 text-blue-400" />
+                <span className="text-2xl font-bold text-blue-400">{totalVolume.toLocaleString()}</span>
               </div>
               <p className="text-xs text-muted">ק״ג נפח כולל</p>
             </div>
@@ -433,7 +433,7 @@ export default function TraineeProfile({
             onClick={onNewMeasurement}
             className="action-btn group"
           >
-            <div className="p-3 rounded-xl bg-cyan-500/15 text-cyan-400 mb-2 group-hover:bg-cyan-500/25 transition-all">
+            <div className="p-3 rounded-xl bg-blue-500/15 text-blue-400 mb-2 group-hover:bg-blue-500/25 transition-all">
               <Scale className="h-5 w-5" />
             </div>
             <span className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors">שקילה חדשה</span>
@@ -454,7 +454,7 @@ export default function TraineeProfile({
               onClick={onViewProgress}
               className="action-btn group"
             >
-              <div className="p-3 rounded-xl bg-teal-500/15 text-teal-400 mb-2 group-hover:bg-teal-500/25 transition-all">
+              <div className="p-3 rounded-xl bg-emerald-600/15 text-emerald-400 mb-2 group-hover:bg-emerald-600/25 transition-all">
                 <TrendingUp className="h-5 w-5" />
               </div>
               <span className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors">גרף אימונים</span>
@@ -673,13 +673,13 @@ export default function TraineeProfile({
             <div className="premium-card-static h-full">
               <div className="p-5 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Scale className="h-4 w-4 text-cyan-400" />
+                  <Scale className="h-4 w-4 text-blue-400" />
                   <h3 className="text-base font-semibold text-foreground">מדידות אחרונות</h3>
                 </div>
                 {onViewMeasurements && measurements.length > 0 && (
                   <button
                     onClick={onViewMeasurements}
-                    className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+                    className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
                   >
                     כל המדידות
                   </button>
@@ -699,7 +699,7 @@ export default function TraineeProfile({
                       <p className="text-sm text-muted">{measurement.source === 'tanita' ? 'Tanita' : 'ידני'}</p>
                     </div>
                     <div className="text-left">
-                      <p className="text-lg font-bold text-cyan-400">{measurement.weight} ק״ג</p>
+                      <p className="text-lg font-bold text-blue-400">{measurement.weight} ק״ג</p>
                       {measurement.bodyFat && (
                         <p className="text-xs text-muted">{measurement.bodyFat.toFixed(1)}% שומן</p>
                       )}
@@ -715,7 +715,7 @@ export default function TraineeProfile({
                     <p className="text-muted mb-3">אין מדידות עדיין</p>
                     <button
                       onClick={onNewMeasurement}
-                      className="px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition-all text-sm"
+                      className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all text-sm"
                     >
                       הוסף מדידה ראשונה
                     </button>
@@ -730,8 +730,8 @@ export default function TraineeProfile({
             <div className="premium-card-static">
               <div className="p-5 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-cyan-500/15">
-                    <Home className="h-5 w-5 text-cyan-400" />
+                  <div className="p-2.5 rounded-xl bg-blue-500/15">
+                    <Home className="h-5 w-5 text-blue-400" />
                   </div>
                   <div>
                     <h3 className="text-base font-semibold text-foreground">שקילות מהבית</h3>
@@ -741,7 +741,7 @@ export default function TraineeProfile({
                 {selfWeights.some(sw => !sw.is_seen_by_trainer) && onMarkSelfWeightsSeen && (
                   <button
                     onClick={onMarkSelfWeightsSeen}
-                    className="flex items-center gap-2 px-4 py-2 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 rounded-xl text-sm font-medium transition-all border border-cyan-500/30"
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 rounded-xl text-sm font-medium transition-all border border-blue-500/30"
                   >
                     <CheckCircle className="h-4 w-4" />
                     סמן כנראה
@@ -756,13 +756,13 @@ export default function TraineeProfile({
                       className={`flex items-center justify-between p-4 rounded-xl transition-all animate-fade-in ${
                         sw.is_seen_by_trainer
                           ? 'bg-elevated/30 border border-border/30'
-                          : 'bg-cyan-500/10 border border-cyan-500/30'
+                          : 'bg-blue-500/10 border border-blue-500/30'
                       }`}
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
                       <div className="flex items-center gap-3">
                         {!sw.is_seen_by_trainer && (
-                          <span className="w-2.5 h-2.5 bg-cyan-400 rounded-full animate-pulse"></span>
+                          <span className="w-2.5 h-2.5 bg-blue-400 rounded-full animate-pulse"></span>
                         )}
                         <div>
                           <p className="font-medium text-foreground">
@@ -774,7 +774,7 @@ export default function TraineeProfile({
                         </div>
                       </div>
                       <div className="text-left">
-                        <p className="text-xl font-bold text-cyan-400">{sw.weight_kg} ק״ג</p>
+                        <p className="text-xl font-bold text-blue-400">{sw.weight_kg} ק״ג</p>
                       </div>
                     </div>
                   ))}
@@ -940,7 +940,7 @@ export default function TraineeProfile({
                                                   e.stopPropagation();
                                                   onDuplicateWorkout(workout);
                                                 }}
-                                                className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 transition-all"
+                                                className="p-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-all"
                                                 title="שכפל אימון"
                                               >
                                                 <Copy className="h-4 w-4" />
@@ -989,7 +989,7 @@ export default function TraineeProfile({
           <div className="premium-card-static p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Scale className="h-5 w-5 text-cyan-400" />
+                <Scale className="h-5 w-5 text-blue-400" />
                 מדידות
               </h3>
               <div className="flex items-center gap-2">
@@ -1002,7 +1002,7 @@ export default function TraineeProfile({
                 </button>
                 <button
                   onClick={onNewMeasurement}
-                  className="px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-xl hover:bg-cyan-500/30 transition-all text-sm font-medium flex items-center gap-2"
+                  className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-xl hover:bg-blue-500/30 transition-all text-sm font-medium flex items-center gap-2"
                 >
                   <Scale className="h-4 w-4" />
                   מדידה חדשה
@@ -1021,7 +1021,7 @@ export default function TraineeProfile({
                       <p className="text-sm text-muted">{measurement.source === 'tanita' ? 'Tanita' : 'ידני'}</p>
                     </div>
                     <div className="text-left">
-                      <p className="text-lg font-bold text-cyan-400">{measurement.weight} ק״ג</p>
+                      <p className="text-lg font-bold text-blue-400">{measurement.weight} ק״ג</p>
                       {measurement.bodyFat && (
                         <p className="text-xs text-muted">{measurement.bodyFat.toFixed(1)}% שומן</p>
                       )}
@@ -1037,7 +1037,7 @@ export default function TraineeProfile({
                 <p className="text-muted mb-4">אין מדידות עדיין</p>
                 <button
                   onClick={onNewMeasurement}
-                  className="px-6 py-3 bg-cyan-500/20 text-cyan-400 rounded-xl hover:bg-cyan-500/30 transition-all font-medium"
+                  className="px-6 py-3 bg-blue-500/20 text-blue-400 rounded-xl hover:bg-blue-500/30 transition-all font-medium"
                 >
                   הוסף מדידה ראשונה
                 </button>
@@ -1048,8 +1048,8 @@ export default function TraineeProfile({
             <div className="premium-card-static">
               <div className="p-5 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-cyan-500/15">
-                    <Home className="h-5 w-5 text-cyan-400" />
+                  <div className="p-2.5 rounded-xl bg-blue-500/15">
+                    <Home className="h-5 w-5 text-blue-400" />
                   </div>
                   <div>
                     <h3 className="text-base font-semibold text-foreground">שקילות מהבית</h3>
@@ -1059,7 +1059,7 @@ export default function TraineeProfile({
                 {selfWeights.some(sw => !sw.is_seen_by_trainer) && onMarkSelfWeightsSeen && (
                   <button
                     onClick={onMarkSelfWeightsSeen}
-                    className="flex items-center gap-2 px-4 py-2 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 rounded-xl text-sm font-medium transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 rounded-xl text-sm font-medium transition-all"
                   >
                     <CheckCircle className="h-4 w-4" />
                     סמן כנראה
@@ -1074,12 +1074,12 @@ export default function TraineeProfile({
                       className={`flex items-center justify-between p-4 rounded-xl transition-all ${
                         sw.is_seen_by_trainer
                           ? 'bg-elevated/30 border border-border/30'
-                          : 'bg-cyan-500/10 border border-cyan-500/30'
+                          : 'bg-blue-500/10 border border-blue-500/30'
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         {!sw.is_seen_by_trainer && (
-                          <span className="w-2.5 h-2.5 bg-cyan-400 rounded-full animate-pulse"></span>
+                          <span className="w-2.5 h-2.5 bg-blue-400 rounded-full animate-pulse"></span>
                         )}
                         <div>
                           <p className="font-medium text-foreground">
@@ -1091,7 +1091,7 @@ export default function TraineeProfile({
                         </div>
                       </div>
                       <div className="text-left">
-                        <p className="text-xl font-bold text-cyan-400">{sw.weight_kg} ק״ג</p>
+                        <p className="text-xl font-bold text-blue-400">{sw.weight_kg} ק״ג</p>
                       </div>
                     </div>
                   ))}

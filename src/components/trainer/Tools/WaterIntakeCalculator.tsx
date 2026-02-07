@@ -46,14 +46,14 @@ export default function WaterIntakeCalculator({
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-cyan-500 p-6 rounded-t-2xl flex items-center justify-between">
+        <div className="sticky top-0 bg-blue-500 p-6 rounded-t-2xl flex items-center justify-between">
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
             <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
               <Droplets className="h-7 w-7 text-foreground" />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-foreground">מחשבון צריכת מים</h2>
-              <p className="text-sm text-cyan-100">כמה מים לשתות ביום?</p>
+              <p className="text-sm text-blue-100">כמה מים לשתות ביום?</p>
             </div>
           </div>
           <button
@@ -67,7 +67,7 @@ export default function WaterIntakeCalculator({
         <div className="p-6 space-y-6">
           <div className="bg-surface rounded-2xl p-6 border border-border">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 bg-cyan-500 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
                 <Activity className="w-5 h-5 text-foreground" />
               </div>
               <h3 className="text-lg font-bold text-foreground">הפרטים שלך</h3>
@@ -80,7 +80,7 @@ export default function WaterIntakeCalculator({
                   type="number"
                   value={weight}
                   onChange={(e) => setWeight(Number(e.target.value))}
-                  className="w-full px-4 py-3 text-lg font-bold text-center border border-border rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all bg-surface text-foreground"
+                  className="w-full px-4 py-3 text-lg font-bold text-center border border-border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-surface text-foreground"
                   min="30"
                   max="200"
                   step="0.5"
@@ -92,7 +92,7 @@ export default function WaterIntakeCalculator({
                 <select
                   value={activityLevel}
                   onChange={(e) => setActivityLevel(e.target.value as any)}
-                  className="w-full px-4 py-3 text-lg font-bold border border-border rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all bg-surface text-foreground"
+                  className="w-full px-4 py-3 text-lg font-bold border border-border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-surface text-foreground"
                 >
                   {Object.entries(activityMultipliers).map(([key, { label, description }]) => (
                     <option key={key} value={key}>
@@ -111,7 +111,7 @@ export default function WaterIntakeCalculator({
                       onClick={() => setClimate(key as any)}
                       className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
                         climate === key
-                          ? 'bg-cyan-500 text-foreground'
+                          ? 'bg-blue-500 text-foreground'
                           : 'bg-surface border border-border text-foreground hover:bg-elevated'
                       }`}
                     >
@@ -125,7 +125,7 @@ export default function WaterIntakeCalculator({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-cyan-500 rounded-2xl p-6 text-center">
+            <div className="bg-blue-500 rounded-2xl p-6 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
                   <Droplets className="w-4 h-4 text-foreground" />
@@ -161,12 +161,12 @@ export default function WaterIntakeCalculator({
                 </thead>
                 <tbody className="divide-y divide-zinc-700/50">
                   {schedule.map((item, index) => (
-                    <tr key={index} className="hover:bg-cyan-500/5 transition-all">
+                    <tr key={index} className="hover:bg-blue-500/5 transition-all">
                       <td className="px-5 py-3">
                         <span className="font-semibold text-foreground">{item.time}</span>
                       </td>
                       <td className="px-5 py-3 text-center">
-                        <span className="font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-lg">
+                        <span className="font-bold text-blue-400 bg-blue-500/10 px-3 py-1 rounded-lg">
                           {item.amount} מ"ל
                         </span>
                       </td>
@@ -201,7 +201,7 @@ export default function WaterIntakeCalculator({
         <div className="sticky bottom-0 bg-card border-t border-border p-6 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-foreground px-6 py-4 rounded-xl font-bold text-lg transition-all"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-foreground px-6 py-4 rounded-xl font-bold text-lg transition-all"
           >
             סגור
           </button>

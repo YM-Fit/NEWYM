@@ -34,20 +34,20 @@ const COLOR_CONFIGS = {
     text: 'text-emerald-400',
     glow: 'shadow-[0_0_15px_rgba(16,185,129,0.15)]',
   },
-  cyan: {
-    bg: 'bg-cyan-500/15',
-    text: 'text-cyan-400',
-    glow: 'shadow-[0_0_15px_rgba(6,182,212,0.15)]',
+  blue: {
+    bg: 'bg-blue-500/15',
+    text: 'text-blue-400',
+    glow: 'shadow-[0_0_15px_rgba(59,130,246,0.15)]',
   },
   amber: {
     bg: 'bg-amber-500/15',
     text: 'text-amber-400',
     glow: 'shadow-[0_0_15px_rgba(245,158,11,0.15)]',
   },
-  teal: {
-    bg: 'bg-teal-500/15',
-    text: 'text-teal-400',
-    glow: 'shadow-[0_0_15px_rgba(20,184,166,0.15)]',
+  slate: {
+    bg: 'bg-emerald-600/15',
+    text: 'text-emerald-400',
+    glow: 'shadow-[0_0_15px_rgba(5,150,105,0.15)]',
   },
 } as const;
 
@@ -101,7 +101,7 @@ export default memo(function TraineeDashboard({ traineeId, traineeName }: Traine
     return (
       <div className="flex justify-center items-center py-12">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
-          <Dumbbell className="w-8 h-8 text-foreground" />
+          <Dumbbell className="w-8 h-8 text-white" />
         </div>
       </div>
     );
@@ -188,7 +188,7 @@ export default memo(function TraineeDashboard({ traineeId, traineeName }: Traine
           icon={<Scale className="w-5 h-5" />}
           label="משקל אחרון"
           value={stats.lastWeight ? `${stats.lastWeight} ק"ג` : '-'}
-          color="cyan"
+          color="blue"
         />
         <StatCard
           icon={<Flame className="w-5 h-5" />}
@@ -284,7 +284,7 @@ interface StatCardProps {
   icon: React.ReactNode;
   label: string;
   value: string;
-  color: 'emerald' | 'cyan' | 'amber' | 'teal';
+  color: 'emerald' | 'blue' | 'amber' | 'slate';
   isSmallText?: boolean;
 }
 

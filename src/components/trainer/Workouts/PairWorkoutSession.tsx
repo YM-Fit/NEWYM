@@ -458,17 +458,17 @@ export default function PairWorkoutSession({
     const collapsedSets = member === 'member_1' ? collapsedSets1 : collapsedSets2;
     
     return (
-    <div className={`bg-card rounded-2xl border ${isBlue ? 'border-cyan-500/30' : 'border-emerald-500/30'} overflow-hidden`}>
-      <div className={`${isBlue ? 'bg-cyan-500' : 'bg-emerald-500'} p-5`}>
-        <h2 className="text-xl font-bold text-foreground text-center tracking-wide">
+    <div className={`bg-card rounded-2xl border ${isBlue ? 'border-blue-500/30' : 'border-emerald-500/30'} overflow-hidden`}>
+      <div className={`${isBlue ? 'bg-blue-500' : 'bg-emerald-500'} p-5`}>
+        <h2 className="text-xl font-bold text-white text-center tracking-wide">
           {name}
         </h2>
         <div className="flex items-center justify-center gap-4 mt-2">
-          <p className="text-center text-foreground/80 text-sm">
+          <p className="text-center text-white/80 text-sm">
             {exercises.length} {exercises.length === 1 ? 'תרגיל' : 'תרגילים'}
           </p>
           {totalVolume > 0 && (
-            <p className="text-center text-foreground/90 text-sm font-semibold">
+            <p className="text-center text-white/90 text-sm font-semibold">
               {totalVolume.toLocaleString()} ק״ג
             </p>
           )}
@@ -488,7 +488,7 @@ export default function PairWorkoutSession({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => copyExerciseToOtherMember(exIdx, member)}
-                    className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 p-2 rounded-xl transition-all"
+                    className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 p-2 rounded-xl transition-all"
                     title="העתק לבן הזוג השני"
                   >
                     <ArrowLeftRight className="h-5 w-5" />
@@ -517,7 +517,7 @@ export default function PairWorkoutSession({
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <span className={`font-bold text-sm ${isBlue ? 'text-cyan-400 bg-cyan-500/10' : 'text-emerald-400 bg-emerald-500/10'} px-3 py-1.5 rounded-lg`}>
+                            <span className={`font-bold text-sm ${isBlue ? 'text-blue-400 bg-blue-500/10' : 'text-emerald-400 bg-emerald-500/10'} px-3 py-1.5 rounded-lg`}>
                               סט #{setIdx + 1}
                             </span>
                             <span className="text-foreground font-medium">{set.weight} ק״ג</span>
@@ -526,7 +526,7 @@ export default function PairWorkoutSession({
                             {set.rpe && <span className="text-amber-400 text-sm">RPE {set.rpe}</span>}
                             {set.set_type !== 'regular' && (
                               <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                set.set_type === 'superset' ? 'bg-cyan-500/15 text-cyan-400' : 'bg-amber-500/15 text-amber-400'
+                                set.set_type === 'superset' ? 'bg-blue-500/15 text-blue-400' : 'bg-amber-500/15 text-amber-400'
                               }`}>
                                 {set.set_type === 'superset' ? 'סופר-סט' : 'דרופ-סט'}
                               </span>
@@ -543,14 +543,14 @@ export default function PairWorkoutSession({
                     <div className="flex items-center justify-between">
                       <span 
                         onClick={() => toggleCollapseSet(setId, member)}
-                        className={`text-sm font-bold ${isBlue ? 'text-cyan-400 bg-cyan-500/10' : 'text-emerald-400 bg-emerald-500/10'} px-3 py-1.5 rounded-lg cursor-pointer hover:opacity-80 transition-all`}
+                        className={`text-sm font-bold ${isBlue ? 'text-blue-400 bg-blue-500/10' : 'text-emerald-400 bg-emerald-500/10'} px-3 py-1.5 rounded-lg cursor-pointer hover:opacity-80 transition-all`}
                       >
                         סט #{setIdx + 1}
                       </span>
                       <div className="flex gap-2">
                         <button
                           onClick={() => duplicateSet(exIdx, setIdx, member)}
-                          className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 p-2 rounded-xl transition-all"
+                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 p-2 rounded-xl transition-all"
                           title="שכפל סט"
                         >
                           <Copy className="h-4 w-4" />
@@ -583,7 +583,7 @@ export default function PairWorkoutSession({
                         <button
                           type="button"
                           onClick={() => openNumericPad(exIdx, setIdx, 'reps', member)}
-                          className="w-full p-3 border border-cyan-500/30 rounded-xl text-center font-bold text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 transition-all cursor-pointer"
+                          className="w-full p-3 border border-blue-500/30 rounded-xl text-center font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-all cursor-pointer"
                         >
                           {set.reps || '0'}
                         </button>
@@ -608,8 +608,8 @@ export default function PairWorkoutSession({
                         onClick={() => setEquipmentSelector({ exerciseIndex: exIdx, setIndex: setIdx, member })}
                         className={`py-2 px-3 rounded-xl border text-sm transition-all ${
                           set.equipment
-                            ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400'
-                            : 'border-border hover:border-cyan-500/30 bg-surface/30 hover:bg-cyan-500/10 text-muted'
+                            ? 'border-blue-500/50 bg-blue-500/10 text-blue-400'
+                            : 'border-border hover:border-blue-500/30 bg-surface/30 hover:bg-blue-500/10 text-muted'
                         }`}
                       >
                         {set.equipment?.emoji || '🎒'} {set.equipment?.name || 'ציוד'}
@@ -642,8 +642,8 @@ export default function PairWorkoutSession({
                         }}
                         className={`py-2 px-3 rounded-xl border text-sm transition-all ${
                           set.set_type === 'superset'
-                            ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400'
-                            : 'border-border hover:border-cyan-500/30 bg-surface/30 hover:bg-cyan-500/10 text-muted'
+                            ? 'border-blue-500/50 bg-blue-500/10 text-blue-400'
+                            : 'border-border hover:border-blue-500/30 bg-surface/30 hover:bg-blue-500/10 text-muted'
                         }`}
                       >
                         {set.set_type === 'superset' ? `✓ סופר-סט${set.superset_exercise_name ? `: ${set.superset_exercise_name}` : ''}` : 'סופר-סט'}
@@ -671,14 +671,14 @@ export default function PairWorkoutSession({
                     </div>
 
                     {set.set_type === 'superset' && (
-                      <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-3 space-y-2">
-                        <div className="text-xs font-semibold text-cyan-400 mb-2">סופר-סט: {set.superset_exercise_name || 'לא נבחר'}</div>
+                      <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-3 space-y-2">
+                        <div className="text-xs font-semibold text-blue-400 mb-2">סופר-סט: {set.superset_exercise_name || 'לא נבחר'}</div>
                         <div className="grid grid-cols-3 gap-2">
                           <div>
                             <button
                               type="button"
                               onClick={() => openSupersetNumericPad(exIdx, setIdx, 'superset_weight', member)}
-                              className="w-full p-2 border border-cyan-500/30 rounded-lg text-center text-sm font-bold text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 transition-all cursor-pointer"
+                              className="w-full p-2 border border-blue-500/30 rounded-lg text-center text-sm font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-all cursor-pointer"
                             >
                               {set.superset_weight || '0'}
                             </button>
@@ -688,7 +688,7 @@ export default function PairWorkoutSession({
                             <button
                               type="button"
                               onClick={() => openSupersetNumericPad(exIdx, setIdx, 'superset_reps', member)}
-                              className="w-full p-2 border border-cyan-500/30 rounded-lg text-center text-sm font-bold text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 transition-all cursor-pointer"
+                              className="w-full p-2 border border-blue-500/30 rounded-lg text-center text-sm font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-all cursor-pointer"
                             >
                               {set.superset_reps || '0'}
                             </button>
@@ -698,7 +698,7 @@ export default function PairWorkoutSession({
                             <button
                               type="button"
                               onClick={() => openSupersetNumericPad(exIdx, setIdx, 'superset_rpe', member)}
-                              className="w-full p-2 border border-cyan-500/30 rounded-lg text-center text-sm font-bold text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 transition-all cursor-pointer"
+                              className="w-full p-2 border border-blue-500/30 rounded-lg text-center text-sm font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-all cursor-pointer"
                             >
                               {set.superset_rpe || '-'}
                             </button>
@@ -710,14 +710,14 @@ export default function PairWorkoutSession({
                           onClick={() => setSupersetEquipmentSelector({ exerciseIndex: exIdx, setIndex: setIdx, member })}
                           className={`w-full py-2 px-3 rounded-lg border text-sm transition-all ${
                             set.superset_equipment
-                              ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400'
-                              : 'border-border hover:border-cyan-500/30 bg-surface/30 hover:bg-cyan-500/10 text-muted'
+                              ? 'border-blue-500/50 bg-blue-500/10 text-blue-400'
+                              : 'border-border hover:border-blue-500/30 bg-surface/30 hover:bg-blue-500/10 text-muted'
                           }`}
                         >
                           {set.superset_equipment?.emoji || '🎒'} {set.superset_equipment?.name || 'ציוד סופר-סט'}
                         </button>
                         {(set.superset_dropset_weight || set.superset_dropset_reps) ? (
-                          <div className="mt-2 pt-2 border-t border-cyan-500/20">
+                          <div className="mt-2 pt-2 border-t border-blue-500/20">
                             <div className="flex items-center justify-between mb-2">
                               <div className="text-xs font-semibold text-amber-400">דרופ-סט סופר-סט</div>
                               <button
@@ -815,7 +815,7 @@ export default function PairWorkoutSession({
 
               <button
                 onClick={() => addSet(exIdx, member)}
-                className={`mt-4 w-full text-sm ${isBlue ? 'text-cyan-400 hover:text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/10' : 'text-emerald-400 hover:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/10'} py-3 border-2 border-dashed rounded-xl transition-all font-medium`}
+                className={`mt-4 w-full text-sm ${isBlue ? 'text-blue-400 hover:text-blue-300 border-blue-500/30 hover:bg-blue-500/10' : 'text-emerald-400 hover:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/10'} py-3 border-2 border-dashed rounded-xl transition-all font-medium`}
               >
                 + הוסף סט
               </button>
@@ -825,7 +825,7 @@ export default function PairWorkoutSession({
 
         <button
           onClick={() => setShowExerciseSelector(member)}
-          className={`w-full ${isBlue ? 'bg-cyan-500 hover:bg-cyan-600' : 'bg-emerald-500 hover:bg-emerald-600'} text-foreground py-4 px-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold`}
+          className={`w-full ${isBlue ? 'bg-blue-500 hover:bg-blue-600' : 'bg-emerald-500 hover:bg-emerald-600'} text-white py-4 px-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold`}
         >
           <Plus className="h-5 w-5" />
           <span>הוסף תרגיל</span>

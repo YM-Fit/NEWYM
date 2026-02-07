@@ -891,11 +891,11 @@ export default function SmartReportView() {
     <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="premium-card-static p-8 mb-8 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-0 left-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-4 rounded-2xl bg-purple-500/15 border border-purple-500/30">
-              <FileSpreadsheet className="w-8 h-8 text-purple-400" />
+            <div className="p-4 rounded-2xl bg-amber-500/15 border border-amber-500/30">
+              <FileSpreadsheet className="w-8 h-8 text-amber-400" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-1">דוח חכם</h1>
@@ -940,7 +940,7 @@ export default function SmartReportView() {
               <ChevronRight className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2 px-4 py-2 bg-surface rounded-xl border border-border">
-              <Calendar className="w-5 h-5 text-purple-400" />
+              <Calendar className="w-5 h-5 text-amber-400" />
               <span className="font-semibold text-[var(--color-text-primary)]">{formatMonth(selectedMonth)}</span>
             </div>
             <button
@@ -961,7 +961,7 @@ export default function SmartReportView() {
                 placeholder="חיפוש מתאמן..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10 pl-4 py-2 bg-surface border border-border rounded-xl text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:border-purple-500/50 focus:outline-none w-48"
+                className="pr-10 pl-4 py-2 bg-surface border border-border rounded-xl text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:border-amber-500/50 focus:outline-none w-48"
               />
             </div>
             
@@ -1027,7 +1027,7 @@ export default function SmartReportView() {
           </div>
           <div className="premium-card-static p-5">
             <div className="text-sm text-[var(--color-text-muted)] mb-1">סה"כ אימונים החודש</div>
-            <div className="text-2xl font-bold text-purple-400">{monthlyReport.total_workouts}</div>
+            <div className="text-2xl font-bold text-amber-400">{monthlyReport.total_workouts}</div>
           </div>
           <div className="premium-card-static p-5">
             <div className="text-sm text-[var(--color-text-muted)] mb-1 flex items-center gap-2">
@@ -1069,7 +1069,7 @@ export default function SmartReportView() {
       {/* Income Goal Setting */}
       <div className="premium-card-static p-4 mb-6">
         <div className="flex items-center gap-4">
-          <Target className="w-5 h-5 text-purple-400" />
+          <Target className="w-5 h-5 text-amber-400" />
           <label className="text-sm text-[var(--color-text-muted)]">מטרת הכנסה חודשית:</label>
           <div className="flex items-center gap-2">
             <span className="text-[var(--color-text-muted)]">₪</span>
@@ -1109,7 +1109,7 @@ export default function SmartReportView() {
                   }
                 }
               }}
-              className="px-3 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg text-sm"
+              className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg text-sm"
             >
               עדכן מטרה
             </button>
@@ -1144,7 +1144,7 @@ export default function SmartReportView() {
                       className="flex items-center justify-between p-3 bg-surface rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-sm">
+                        <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 font-bold text-sm">
                           {workoutNumber}
                         </div>
                         <div>
@@ -1171,7 +1171,7 @@ export default function SmartReportView() {
         </div>
         <div className="premium-card-static p-5">
           <div className="text-sm text-muted mb-1">סה"כ אימונים החודש</div>
-          <div className="text-2xl font-bold text-purple-400">
+          <div className="text-2xl font-bold text-amber-400">
             {filteredData.reduce((sum, row) => sum + row.workouts_this_month, 0)}
           </div>
         </div>
@@ -1187,7 +1187,7 @@ export default function SmartReportView() {
       <div className="premium-card-static overflow-hidden">
         {loading || traineesLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+            <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
           </div>
         ) : filteredData.length === 0 ? (
           <div className="text-center py-20 text-muted">
@@ -1220,7 +1220,7 @@ export default function SmartReportView() {
                       <td className="p-4">
                         <button
                           onClick={() => setSelectedTrainee(row.id)}
-                          className="font-medium text-[var(--color-text-primary)] hover:text-purple-400 transition-colors flex items-center gap-2"
+                          className="font-medium text-[var(--color-text-primary)] hover:text-amber-400 transition-colors flex items-center gap-2"
                         >
                           {row.full_name}
                           <Eye className="w-4 h-4" />
@@ -1311,7 +1311,7 @@ export default function SmartReportView() {
 
                       {/* Workouts */}
                       <td className="p-4">
-                        <span className={`font-semibold ${row.workouts_this_month > 0 ? 'text-purple-400' : 'text-[var(--color-text-muted)]'}`}>
+                        <span className={`font-semibold ${row.workouts_this_month > 0 ? 'text-amber-400' : 'text-[var(--color-text-muted)]'}`}>
                           {row.workouts_this_month}
                         </span>
                       </td>

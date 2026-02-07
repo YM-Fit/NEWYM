@@ -31,7 +31,7 @@ export const WorkoutProgressBar = memo(({
       {/* Progress bar */}
       <div className="relative h-3 bg-surface rounded-full overflow-hidden mb-3 shadow-inner">
         <div 
-          className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-full transition-all duration-500 shadow-lg"
+          className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-600 via-emerald-500 to-blue-500 rounded-full transition-all duration-500 shadow-lg"
           style={{ width: `${progressPercent}%` }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" style={{
@@ -54,10 +54,10 @@ export const WorkoutProgressBar = memo(({
         </div>
         
         {/* Sets progress */}
-        <div className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-lg border border-cyan-500/30">
-          <Target className="h-4 w-4 text-cyan-400" />
+        <div className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-lg border border-blue-500/30">
+          <Target className="h-4 w-4 text-blue-400" />
           <span className="text-sm lg:text-base">
-            <span className="font-semibold text-cyan-400">{completedSets}</span>
+            <span className="font-semibold text-blue-400">{completedSets}</span>
             <span className="text-muted">/{totalSets}</span>
             <span className="text-muted mr-1">סטים</span>
           </span>
@@ -71,17 +71,17 @@ export const WorkoutProgressBar = memo(({
         </div>
         
         {/* Exercises progress */}
-        <div className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-lg border border-purple-500/30">
-          <Zap className="h-4 w-4 text-purple-400" />
+        <div className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-lg border border-slate-500/30">
+          <Zap className="h-4 w-4 text-slate-400" />
           <span className="text-sm lg:text-base">
-            <span className="font-semibold text-purple-400">{completedExercises}</span>
+            <span className="font-semibold text-slate-400">{completedExercises}</span>
             <span className="text-muted">/{totalExercises}</span>
             <span className="text-muted mr-1">תרגילים</span>
           </span>
         </div>
         
         {/* Progress percentage */}
-        <div className="flex items-center gap-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 px-4 py-1.5 rounded-lg border border-emerald-500/30">
+        <div className="flex items-center gap-1 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 px-4 py-1.5 rounded-lg border border-emerald-500/30">
           <span className="text-lg lg:text-xl font-bold text-foreground">{progressPercent}%</span>
           <span className="text-xs text-muted">הושלמו</span>
         </div>

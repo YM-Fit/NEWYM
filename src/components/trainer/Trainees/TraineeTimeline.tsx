@@ -174,7 +174,7 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
   const getItemStyles = (type: string) => {
     switch (type) {
       case 'workout': return { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' };
-      case 'measurement': return { bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/30' };
+      case 'measurement': return { bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/30' };
       case 'self_weight': return { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' };
       case 'goal_achieved': return { bg: 'bg-yellow-500/15', text: 'text-yellow-400', border: 'border-yellow-500/30' };
       case 'note': return { bg: 'bg-muted/15', text: 'text-muted', border: 'border-border/30' };
@@ -323,10 +323,10 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
                               {item.type === 'measurement' && (
                                 <div className="space-y-3">
                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                    <div className="bg-cyan-500/10 rounded-xl p-3 text-center border border-cyan-500/20">
-                                      <Scale className="w-4 h-4 text-cyan-400 mx-auto mb-1" />
-                                      <p className="text-xs text-cyan-400 mb-0.5">משקל</p>
-                                      <p className="font-bold text-cyan-400">{item.metadata.weight} ק"ג</p>
+                                    <div className="bg-blue-500/10 rounded-xl p-3 text-center border border-blue-500/20">
+                                      <Scale className="w-4 h-4 text-blue-400 mx-auto mb-1" />
+                                      <p className="text-xs text-blue-400 mb-0.5">משקל</p>
+                                      <p className="font-bold text-blue-400">{item.metadata.weight} ק"ג</p>
                                     </div>
                                     {item.metadata.bodyFat && (
                                       <div className="bg-amber-500/10 rounded-xl p-3 text-center border border-amber-500/20">
@@ -379,9 +379,9 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
                                       <p className="text-xs text-emerald-400 mb-0.5">תרגילים</p>
                                       <p className="font-bold text-emerald-400">{item.metadata.exerciseCount}</p>
                                     </div>
-                                    <div className="bg-cyan-500/10 rounded-xl p-3 text-center border border-cyan-500/20">
-                                      <p className="text-xs text-cyan-400 mb-0.5">נפח כולל</p>
-                                      <p className="font-bold text-cyan-400">{(item.metadata.totalVolume as number).toLocaleString()} ק"ג</p>
+                                    <div className="bg-blue-500/10 rounded-xl p-3 text-center border border-blue-500/20">
+                                      <p className="text-xs text-blue-400 mb-0.5">נפח כולל</p>
+                                      <p className="font-bold text-blue-400">{(item.metadata.totalVolume as number).toLocaleString()} ק"ג</p>
                                     </div>
                                   </div>
                                   {(item.metadata.exercises as string[])?.length > 0 && (
@@ -452,7 +452,7 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
                         </td>
                         <td className="py-3 px-3 text-center">
                           {item.metadata?.weight ? (
-                            <span className="font-semibold text-cyan-400">{item.metadata.weight}</span>
+                            <span className="font-semibold text-blue-400">{item.metadata.weight}</span>
                           ) : (
                             <span className="text-muted">-</span>
                           )}

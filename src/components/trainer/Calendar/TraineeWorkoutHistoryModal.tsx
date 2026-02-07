@@ -550,7 +550,7 @@ export default function TraineeWorkoutHistoryModal({
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-border border-border30">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl border border-emerald-500/30">
+            <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-xl border border-emerald-500/30">
               <Calendar className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
@@ -584,15 +584,15 @@ export default function TraineeWorkoutHistoryModal({
         <div className="flex-1 overflow-y-auto p-5">
           {searchingTrainee ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30 mb-3">
-                <Search className="h-8 w-8 text-foreground" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30 mb-3">
+                <Search className="h-8 w-8 text-white" />
               </div>
               <p className="text-muted text-muted">מחפש מתאמן...</p>
             </div>
           ) : loading ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30 mb-3">
-                <Loader2 className="h-8 w-8 text-foreground animate-spin" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30 mb-3">
+                <Loader2 className="h-8 w-8 text-white animate-spin" />
               </div>
               <p className="text-muted text-muted">טוען אימונים...</p>
             </div>
@@ -619,7 +619,7 @@ export default function TraineeWorkoutHistoryModal({
                   className="flex items-center justify-between p-4 bg-white bg-elevated rounded-xl border border-border border-border30 hover:bg-surface50 transition-all duration-300 shadow-sm"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-foreground font-bold shadow-md">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-bold shadow-md">
                       {workout.workoutNumber}
                     </div>
                     <div>
@@ -648,7 +648,7 @@ export default function TraineeWorkoutHistoryModal({
                     <button
                       onClick={() => startReplace(workout)}
                       disabled={!!actionLoading}
-                      className="p-2 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 text-purple-600 rounded-lg transition-all duration-300 disabled:opacity-50 border border-purple-200"
+                      className="p-2 bg-gradient-to-br from-slate-50 to-slate-100 hover:from-slate-100 hover:to-slate-200 text-slate-600 rounded-lg transition-all duration-300 disabled:opacity-50 border border-slate-200"
                       title="החלפת מתאמן"
                     >
                       <Users className="h-4 w-4" />
@@ -703,7 +703,7 @@ export default function TraineeWorkoutHistoryModal({
                 <button
                   onClick={handleRescheduleWorkout}
                   disabled={!!actionLoading}
-                  className="flex-1 py-3 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 rounded-xl text-foreground font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
+                  className="flex-1 py-3 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 rounded-xl text-white font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
                 >
                   {actionLoading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -725,8 +725,8 @@ export default function TraineeWorkoutHistoryModal({
             </div>
           ) : actionMode === 'replace' && selectedWorkout ? (
             <div className="space-y-4">
-              <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl">
-                <h3 className="font-medium text-purple-700 mb-2">החלפת מתאמן</h3>
+              <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-xl">
+                <h3 className="font-medium text-slate-700 mb-2">החלפת מתאמן</h3>
                 <p className="text-sm text-muted text-muted">
                   אימון בתאריך: {new Date(selectedWorkout.workoutDate).toLocaleDateString('he-IL')} בשעה {selectedWorkout.startTime}
                 </p>
@@ -737,7 +737,7 @@ export default function TraineeWorkoutHistoryModal({
                 <select
                   value={replaceTraineeId}
                   onChange={(e) => setReplaceTraineeId(e.target.value)}
-                  className="w-full p-3 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
+                  className="w-full p-3 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-slate-500/50 focus:outline-none focus:ring-2 focus:ring-slate-500/20 transition-all duration-300"
                 >
                   <option value="">-- בחר מתאמן --</option>
                   {trainees
@@ -755,7 +755,7 @@ export default function TraineeWorkoutHistoryModal({
                 <button
                   onClick={handleReplaceTrainee}
                   disabled={!!actionLoading || !replaceTraineeId}
-                  className="flex-1 py-3 bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 rounded-xl text-foreground font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
+                  className="flex-1 py-3 bg-gradient-to-br from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 disabled:opacity-50 rounded-xl text-white font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
                 >
                   {actionLoading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />

@@ -143,7 +143,7 @@ export default function WorkoutPlanProgress({
           </div>
           <div className="h-2 bg-[var(--color-bg-surface)] rounded-full overflow-hidden mt-3">
             <div
-              className="h-full bg-gradient-to-r from-emerald-500 to-teal-600 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-emerald-500 to-emerald-700 transition-all duration-500"
               style={{ width: `${stats.overallProgress}%` }}
             />
           </div>
@@ -153,12 +153,12 @@ export default function WorkoutPlanProgress({
           <div className="flex items-center justify-between mb-2">
             <div>
               <p className="text-xs text-[var(--color-text-muted)] mb-1">ימים שהושלמו</p>
-              <p className="text-2xl font-bold text-cyan-400">
+              <p className="text-2xl font-bold text-blue-400">
                 {stats.completedDays}/{stats.totalDays}
               </p>
             </div>
-            <div className="p-3 bg-cyan-500/15 rounded-xl">
-              <Calendar className="w-6 h-6 text-cyan-400" />
+            <div className="p-3 bg-blue-500/15 rounded-xl">
+              <Calendar className="w-6 h-6 text-blue-400" />
             </div>
           </div>
         </div>
@@ -181,12 +181,12 @@ export default function WorkoutPlanProgress({
           <div className="flex items-center justify-between mb-2">
             <div>
               <p className="text-xs text-[var(--color-text-muted)] mb-1">נפח ממוצע</p>
-              <p className="text-2xl font-bold text-purple-400">
+              <p className="text-2xl font-bold text-amber-400">
                 {Math.round(stats.avgVolume).toLocaleString()} ק״ג
               </p>
             </div>
-            <div className="p-3 bg-purple-500/15 rounded-xl">
-              <TrendingUp className="w-6 h-6 text-purple-400" />
+            <div className="p-3 bg-slate-500/15 rounded-xl">
+              <TrendingUp className="w-6 h-6 text-amber-400" />
             </div>
           </div>
         </div>
@@ -239,7 +239,7 @@ export default function WorkoutPlanProgress({
       {/* Volume Chart by Day */}
       <div className="premium-card-static p-6">
         <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-cyan-400" />
+          <TrendingUp className="w-5 h-5 text-blue-400" />
           נפח אימון לפי יום
         </h3>
         <div className="h-80">
@@ -270,15 +270,15 @@ export default function WorkoutPlanProgress({
                   color: '#000',
                   padding: '12px'
                 }}
-                cursor={{ fill: 'rgba(6, 182, 212, 0.1)' }}
+                cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
               />
               <Legend />
               <Line
                 type="monotone"
                 dataKey="volume"
-                stroke="#06b6d4"
+                stroke="#3b82f6"
                 strokeWidth={3}
-                dot={{ fill: '#06b6d4', r: 5 }}
+                dot={{ fill: '#3b82f6', r: 5 }}
                 activeDot={{ r: 8 }}
                 name="נפח (ק״ג)"
               />
@@ -309,7 +309,7 @@ export default function WorkoutPlanProgress({
                   className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg-surface)] transition-colors"
                 >
                   <td className="py-3 px-4 font-semibold text-[var(--color-text-primary)]">{exercise.name}</td>
-                  <td className="py-3 px-4 text-cyan-400 font-bold">{Math.round(exercise.volume).toLocaleString()} ק״ג</td>
+                  <td className="py-3 px-4 text-blue-400 font-bold">{Math.round(exercise.volume).toLocaleString()} ק״ג</td>
                   <td className="py-3 px-4">
                     <span
                       className={`px-3 py-1.5 rounded-full text-xs font-bold ${

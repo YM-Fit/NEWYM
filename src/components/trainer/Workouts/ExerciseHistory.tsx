@@ -145,14 +145,14 @@ export default function ExerciseHistory({
       {/* Side Panel - Minimized */}
       <div className="fixed right-0 top-0 bottom-0 w-full max-w-sm z-50 flex flex-col shadow-2xl bg-card border-r border-border animate-slide-in-right exercise-history-panel">
         {/* Header - Minimized */}
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-3 flex-shrink-0">
+        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-3 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 rtl:space-x-reverse flex-1 min-w-0">
               <div className="p-1.5 bg-white/20 backdrop-blur-sm rounded-lg flex-shrink-0">
-                <Dumbbell className="h-4 w-4 text-foreground" />
+                <Dumbbell className="h-4 w-4 text-white" />
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-sm font-bold text-foreground truncate">{exerciseName}</h2>
+                <h2 className="text-sm font-bold text-white truncate">{exerciseName}</h2>
                 <p className="text-xs text-emerald-100 truncate">{traineeName}</p>
               </div>
             </div>
@@ -162,7 +162,7 @@ export default function ExerciseHistory({
               className="p-1.5 hover:bg-white/20 rounded-lg transition-all flex-shrink-0 mr-2"
               aria-label="סגור"
             >
-              <X className="h-4 w-4 text-foreground" />
+              <X className="h-4 w-4 text-white" />
             </button>
           </div>
         </div>
@@ -175,7 +175,7 @@ export default function ExerciseHistory({
                 <div className="text-base font-bold text-foreground">{personalRecords.maxWeight}</div>
                 <div className="text-[10px] text-muted">מקס ק״ג</div>
               </div>
-              <div className="bg-surface rounded-lg p-2 border border-cyan-500/20 text-center">
+              <div className="bg-surface rounded-lg p-2 border border-blue-500/20 text-center">
                 <div className="text-base font-bold text-foreground">{personalRecords.maxReps}</div>
                 <div className="text-[10px] text-muted">מקס חזרות</div>
               </div>
@@ -239,15 +239,15 @@ export default function ExerciseHistory({
                               onLoadData(workout.sets);
                               onClose();
                             }}
-                            className="flex items-center gap-1 px-2 py-1 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 rounded-lg text-purple-400 transition-all text-[10px] font-medium"
+                            className="flex items-center gap-1 px-2 py-1 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 rounded-lg text-amber-400 transition-all text-[10px] font-medium"
                             title="טען"
                           >
                             <Copy className="h-3 w-3" />
                           </button>
                         )}
-                        <div className="flex items-center space-x-1 rtl:space-x-reverse bg-cyan-500/10 px-2 py-1 rounded-lg border border-cyan-500/30">
-                          <TrendingUp className="h-3 w-3 text-cyan-400" />
-                          <span className="font-semibold text-cyan-400 text-xs">{totalVolume.toLocaleString()}</span>
+                        <div className="flex items-center space-x-1 rtl:space-x-reverse bg-blue-500/10 px-2 py-1 rounded-lg border border-blue-500/30">
+                          <TrendingUp className="h-3 w-3 text-blue-400" />
+                          <span className="font-semibold text-blue-400 text-xs">{totalVolume.toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
@@ -272,7 +272,7 @@ export default function ExerciseHistory({
                                 {set.set_number}
                               </span>
                               {set.set_type !== 'regular' && (
-                                <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1 py-0.5 rounded border border-cyan-500/30">
+                                <span className="text-[10px] bg-blue-500/20 text-blue-400 px-1 py-0.5 rounded border border-blue-500/30">
                                   {set.set_type === 'superset' ? 'ס' : 'ד'}
                                 </span>
                               )}

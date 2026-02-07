@@ -174,7 +174,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
   const getMetricColor = () => {
     switch (metricType) {
       case 'weight': return '#10b981';
-      case 'reps': return '#06b6d4';
+      case 'reps': return '#3b82f6';
       case 'volume': return '#f59e0b';
     }
   };
@@ -310,7 +310,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
           <div className="grid grid-cols-3 gap-3">
             {[
               { id: 'all', label: `${trainee.pair_name_1} + ${trainee.pair_name_2}`, color: 'emerald' },
-              { id: 'member_1', label: trainee.pair_name_1, color: 'cyan' },
+              { id: 'member_1', label: trainee.pair_name_1, color: 'blue' },
               { id: 'member_2', label: trainee.pair_name_2, color: 'amber' },
             ].map((member) => (
               <button
@@ -338,10 +338,10 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
             activeColor: 'text-emerald-400', inactiveColor: 'text-muted',
             activeBorder: 'border-emerald-500/30' },
           { id: 'reps', label: 'חזרות', sublabel: 'סה"כ', icon: Repeat,
-            activeBg: 'bg-cyan-500/15', inactiveBg: 'bg-surface/30',
-            activeIconBg: 'bg-cyan-500/20', inactiveIconBg: 'bg-elevated/50',
-            activeColor: 'text-cyan-400', inactiveColor: 'text-muted',
-            activeBorder: 'border-cyan-500/30' },
+            activeBg: 'bg-blue-500/15', inactiveBg: 'bg-surface/30',
+            activeIconBg: 'bg-blue-500/20', inactiveIconBg: 'bg-elevated/50',
+            activeColor: 'text-blue-400', inactiveColor: 'text-muted',
+            activeBorder: 'border-blue-500/30' },
           { id: 'volume', label: 'נפח', sublabel: 'כולל', icon: Target,
             activeBg: 'bg-amber-500/15', inactiveBg: 'bg-surface/30',
             activeIconBg: 'bg-amber-500/20', inactiveIconBg: 'bg-elevated/50',
@@ -436,7 +436,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
               </div>
               <p className={`text-xl font-bold ${
                 metricType === 'weight' ? 'text-emerald-400' : 
-                metricType === 'reps' ? 'text-cyan-400' : 
+                metricType === 'reps' ? 'text-blue-400' : 
                 'text-amber-400'
               }`}>
                 {metricType === 'volume' ? getMetricValue(bestWorkout!).toLocaleString() : getMetricValue(bestWorkout!)}
@@ -550,7 +550,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                       className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                         isBest ? 'bg-amber-500/20' : 
                         metricType === 'weight' ? 'bg-emerald-500/20' : 
-                        metricType === 'reps' ? 'bg-cyan-500/20' : 
+                        metricType === 'reps' ? 'bg-blue-500/20' : 
                         'bg-amber-500/20'
                       }`}
                     >
@@ -559,7 +559,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                       ) : (
                         <span className={`text-sm font-bold ${
                           metricType === 'weight' ? 'text-emerald-400' : 
-                          metricType === 'reps' ? 'text-cyan-400' : 
+                          metricType === 'reps' ? 'text-blue-400' : 
                           'text-amber-400'
                         }`}>
                           {arr.length - index}
@@ -599,7 +599,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                     <div
                       className={`px-4 py-2 rounded-xl font-bold text-lg ${
                         metricType === 'weight' ? 'bg-emerald-500/15 text-emerald-400' : 
-                        metricType === 'reps' ? 'bg-cyan-500/15 text-cyan-400' : 
+                        metricType === 'reps' ? 'bg-blue-500/15 text-blue-400' : 
                         'bg-amber-500/15 text-amber-400'
                       }`}
                     >
@@ -657,7 +657,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                         <span className="text-foreground">{data.totalSets}</span>
                       </td>
                       <td className="py-3 px-3 text-center">
-                        <span className="text-cyan-400 font-semibold">{data.totalReps}</span>
+                        <span className="text-blue-400 font-semibold">{data.totalReps}</span>
                       </td>
                       <td className="py-3 px-3 text-center">
                         <span className="text-emerald-400 font-semibold">{data.maxWeight}</span>

@@ -17,7 +17,7 @@ export default function ToolsView() {
       name: 'מחשבון TDEE',
       description: 'חישוב צריכה קלורית יומית ומקרו-נוטריינטים',
       icon: Calculator,
-      gradient: 'from-emerald-500 via-teal-500 to-cyan-600',
+      gradient: 'from-emerald-500 via-emerald-600 to-blue-600',
       shadowColor: 'shadow-emerald-500/30',
       hoverShadow: 'hover:shadow-emerald-500/40',
     },
@@ -35,9 +35,9 @@ export default function ToolsView() {
       name: 'מחשבון צריכת מים',
       description: 'כמה מים לשתות ביום לפי משקל ופעילות',
       icon: Droplets,
-      gradient: 'from-cyan-500 via-blue-500 to-cyan-600',
-      shadowColor: 'shadow-cyan-500/30',
-      hoverShadow: 'hover:shadow-cyan-500/40',
+      gradient: 'from-blue-500 via-blue-500 to-blue-600',
+      shadowColor: 'shadow-blue-500/30',
+      hoverShadow: 'hover:shadow-blue-500/40',
     },
     {
       id: 'protein',
@@ -53,22 +53,22 @@ export default function ToolsView() {
       name: 'מחשבון זמן התאוששות',
       description: 'כמה מנוחה צריך בין אימונים לכל שריר',
       icon: Clock,
-      gradient: 'from-teal-500 via-emerald-500 to-teal-600',
-      shadowColor: 'shadow-teal-500/30',
-      hoverShadow: 'hover:shadow-teal-500/40',
+      gradient: 'from-emerald-600 via-emerald-500 to-emerald-700',
+      shadowColor: 'shadow-emerald-600/30',
+      hoverShadow: 'hover:shadow-emerald-600/40',
     },
   ];
 
   return (
     <div className="max-w-7xl mx-auto">
       {/* Premium Page Header */}
-      <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 rounded-2xl p-8 mb-8 shadow-xl">
+      <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-blue-700 rounded-2xl p-8 mb-8 shadow-xl">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-            <Wrench className="w-8 h-8 text-foreground" />
+            <Wrench className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-1">כלים</h1>
+            <h1 className="text-3xl font-bold text-white mb-1">כלים</h1>
             <p className="text-emerald-100 text-lg">מחשבונים ועוזרים לאימון</p>
           </div>
         </div>
@@ -85,7 +85,7 @@ export default function ToolsView() {
               className={`bg-white rounded-2xl shadow-xl ${tool.shadowColor} hover:shadow-2xl ${tool.hoverShadow} transition-all duration-300 p-8 text-right group hover:scale-[1.03] border border-border100`}
             >
               <div className={`w-20 h-20 bg-gradient-to-br ${tool.gradient} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg`}>
-                <Icon className="w-10 h-10 text-foreground" />
+                <Icon className="w-10 h-10 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-muted900 mb-3 group-hover:text-emerald-700 transition-colors duration-300">{tool.name}</h3>
               <p className="text-muted600 text-base leading-relaxed">{tool.description}</p>

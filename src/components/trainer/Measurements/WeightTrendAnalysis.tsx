@@ -161,7 +161,7 @@ export default function WeightTrendAnalysis({
     return (
       <div className="premium-card-static p-8">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 text-teal-400 animate-spin" />
+          <Loader2 className="h-8 w-8 text-emerald-400 animate-spin" />
         </div>
       </div>
     );
@@ -218,8 +218,8 @@ export default function WeightTrendAnalysis({
     <div className="premium-card-static p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500/30 to-blue-500/30">
-            <BarChart3 className="h-6 w-6 text-cyan-400" />
+          <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/30 to-blue-500/30">
+            <BarChart3 className="h-6 w-6 text-blue-400" />
           </div>
           <div>
             <h3 className="text-lg font-bold text-theme-primary">ניתוח מגמות</h3>
@@ -229,7 +229,7 @@ export default function WeightTrendAnalysis({
         <select
           value={selectedPeriod}
           onChange={(e) => setSelectedPeriod(e.target.value as any)}
-          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-foreground text-sm focus:ring-2 focus:ring-teal-500/50"
+          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-foreground text-sm focus:ring-2 focus:ring-emerald-600/50"
         >
           <option value="1m">חודש אחרון</option>
           <option value="3m">3 חודשים</option>
@@ -278,7 +278,7 @@ export default function WeightTrendAnalysis({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="p-4 rounded-xl bg-surface800/50 border border-border700/50">
           <div className="flex items-center gap-2 mb-2">
-            <Target className="h-4 w-4 text-cyan-400" />
+            <Target className="h-4 w-4 text-blue-400" />
             <p className="text-xs text-muted400">ממוצע</p>
           </div>
           <p className="text-xl font-bold text-foreground">{analysis.averageWeight.toFixed(1)} ק״ג</p>
@@ -313,7 +313,7 @@ export default function WeightTrendAnalysis({
 
       {/* Projections */}
       {(analysis.projectedWeight30Days || analysis.projectedWeight90Days) && (
-        <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30">
+        <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-500/10 border border-blue-500/30">
           <div className="flex items-center gap-2 mb-4">
             <Calendar className="h-5 w-5 text-blue-400" />
             <h4 className="font-bold text-foreground">תחזיות</h4>

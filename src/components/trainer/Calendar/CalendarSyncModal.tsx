@@ -551,7 +551,7 @@ export default function CalendarSyncModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border border-border30">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl border border-emerald-500/30">
+            <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-xl border border-emerald-500/30">
               <Users className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
@@ -573,8 +573,8 @@ export default function CalendarSyncModal({
         <div className="flex-1 overflow-y-auto p-6">
           {step === 'loading' && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
-                <RefreshCw className="h-8 w-8 text-foreground animate-spin" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
+                <RefreshCw className="h-8 w-8 text-white animate-spin" />
               </div>
               <p className="text-muted text-muted font-medium">טוען אירועים ומתאים שמות...</p>
             </div>
@@ -597,7 +597,7 @@ export default function CalendarSyncModal({
 
           {step === 'review' && !error && matchedEvents.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center shadow-lg border-2 border-emerald-300">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-100 flex items-center justify-center shadow-lg border-2 border-emerald-300">
                 <Check className="h-8 w-8 text-emerald-600" />
               </div>
               <p className="text-foreground text-foreground font-medium">כל האירועים כבר מסונכרנים!</p>
@@ -609,7 +609,7 @@ export default function CalendarSyncModal({
             <div className="space-y-6">
               {/* Stats */}
               <div className="grid grid-cols-4 gap-3">
-                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-50 border border-emerald-200 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
                   <div className="text-2xl font-bold text-emerald-600">{stats.matched}</div>
                   <div className="text-xs text-emerald-700 font-medium">התאמות מדויקות</div>
                 </div>
@@ -617,7 +617,7 @@ export default function CalendarSyncModal({
                   <div className="text-2xl font-bold text-amber-600">{stats.pending}</div>
                   <div className="text-xs text-amber-700 font-medium">ממתינים לאישור</div>
                 </div>
-                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-50 border border-blue-200 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
                   <div className="text-2xl font-bold text-blue-600">{stats.newNames}</div>
                   <div className="text-xs text-blue-700 font-medium">שמות חדשים</div>
                 </div>
@@ -732,7 +732,7 @@ export default function CalendarSyncModal({
                                   }}
                                   className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-300 ${
                                     decision?.traineeId === match.trainee.id
-                                      ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200'
+                                      ? 'bg-gradient-to-br from-emerald-50 to-emerald-50 border border-emerald-200'
                                       : 'bg-white bg-elevated hover:bg-surface border border-border border-border30'
                                   }`}
                                 >
@@ -803,8 +803,8 @@ export default function CalendarSyncModal({
                                 disabled={quickCreatingFor === (firstEvent.event.extractedName || firstEvent.event.summary)}
                                 className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 ${
                                   decision?.action === 'link' && decision.traineeId
-                                    ? 'bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-200'
-                                    : 'bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground shadow-lg'
+                                    ? 'bg-gradient-to-br from-emerald-50 to-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : 'bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white shadow-lg'
                                 } disabled:opacity-50 disabled:cursor-wait`}
                               >
                                 {quickCreatingFor === (firstEvent.event.extractedName || firstEvent.event.summary) ? (
@@ -835,7 +835,7 @@ export default function CalendarSyncModal({
                                   }}
                                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-sm ${
                                     decision?.action === 'create'
-                                      ? 'bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-700 border border-blue-200'
+                                      ? 'bg-gradient-to-br from-blue-50 to-blue-50 text-blue-700 border border-blue-200'
                                       : 'bg-surface bg-surface hover:bg-elevated text-foreground text-foreground border border-border border-border30'
                                   }`}
                                 >
@@ -873,8 +873,8 @@ export default function CalendarSyncModal({
 
           {step === 'saving' && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
-                <RefreshCw className="h-8 w-8 text-foreground animate-spin" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
+                <RefreshCw className="h-8 w-8 text-white animate-spin" />
               </div>
               <p className="text-muted text-muted font-medium">שומר קישורים...</p>
             </div>
@@ -882,7 +882,7 @@ export default function CalendarSyncModal({
 
           {step === 'done' && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <div className="p-4 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full shadow-lg border-2 border-emerald-300">
+              <div className="p-4 bg-gradient-to-br from-emerald-100 to-emerald-100 rounded-full shadow-lg border-2 border-emerald-300">
                 <Check className="h-10 w-10 text-emerald-600" />
               </div>
               <p className="text-xl font-bold text-foreground text-foreground">הסנכרון הושלם!</p>
@@ -906,7 +906,7 @@ export default function CalendarSyncModal({
               <button
                 onClick={handleSave}
                 disabled={decisions.size === 0 || saving}
-                className="px-6 py-2 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
+                className="px-6 py-2 bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
               >
                 <Link2 className="h-4 w-4" />
                 שמור קישורים

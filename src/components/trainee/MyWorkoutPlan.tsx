@@ -954,7 +954,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                                           name: exerciseName,
                                           instructions: exercise.exercise?.instructions
                                         })}
-                                        className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-cyan-500/30 group"
+                                        className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-blue-500/30 group"
                                         title="הצג הוראות ביצוע"
                                         aria-label="הצג הוראות ביצוע"
                                       >
@@ -963,7 +963,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                                     )}
                                     <button
                                       onClick={() => startEditing(exercise)}
-                                      className="p-2 text-[var(--color-text-muted)] hover:text-cyan-400 hover:bg-cyan-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-cyan-500/30 group"
+                                      className="p-2 text-[var(--color-text-muted)] hover:text-blue-400 hover:bg-blue-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-blue-500/30 group"
                                       title="ערוך תרגיל"
                                       aria-label="ערוך תרגיל"
                                     >
@@ -980,9 +980,9 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                                   <span className="text-xs md:text-sm font-bold text-emerald-400">{exercise.sets_count} סטים</span>
                                 </div>
 
-                                <div className="bg-cyan-500/12 border border-cyan-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
-                                  <Target className="w-3.5 h-3.5 text-cyan-400" />
-                                  <span className="text-xs md:text-sm font-bold text-cyan-400">{exercise.reps_range} חזרות</span>
+                                <div className="bg-blue-500/12 border border-blue-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
+                                  <Target className="w-3.5 h-3.5 text-blue-400" />
+                                  <span className="text-xs md:text-sm font-bold text-blue-400">{exercise.reps_range} חזרות</span>
                                 </div>
 
                                 <div className="bg-amber-500/12 border border-amber-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
@@ -998,9 +998,9 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                                 )}
 
                                 {exercise.target_rpe && (
-                                  <div className="bg-purple-500/12 border border-purple-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
-                                    <Award className="w-3.5 h-3.5 text-purple-400" />
-                                    <span className="text-xs md:text-sm font-bold text-purple-400">RPE {exercise.target_rpe}</span>
+                                  <div className="bg-amber-500/12 border border-amber-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
+                                    <Award className="w-3.5 h-3.5 text-amber-400" />
+                                    <span className="text-xs md:text-sm font-bold text-amber-400">RPE {exercise.target_rpe}</span>
                                   </div>
                                 )}
                               </div>
@@ -1034,13 +1034,13 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
                               {/* Superset Info */}
                               {exercise.set_type === 'superset' && exercise.superset_exercise && (
-                                <div className="mt-3 bg-cyan-500/15 border border-cyan-500/30 rounded-xl p-3 shadow-sm">
+                                <div className="mt-3 bg-blue-500/15 border border-blue-500/30 rounded-xl p-3 shadow-sm">
                                   <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-xs font-bold text-cyan-400 bg-cyan-500/20 px-2 py-1 rounded-full">סופרסט</span>
-                                    <span className="font-bold text-cyan-300 text-sm">{exercise.superset_exercise.name}</span>
+                                    <span className="text-xs font-bold text-blue-400 bg-blue-500/20 px-2 py-1 rounded-full">סופרסט</span>
+                                    <span className="font-bold text-blue-300 text-sm">{exercise.superset_exercise.name}</span>
                                   </div>
                                   {exercise.superset_weight && exercise.superset_reps && (
-                                    <div className="text-xs text-cyan-400">
+                                    <div className="text-xs text-blue-400">
                                       <span className="font-medium">משקל וחזרות:</span> <span className="font-bold">{exercise.superset_weight} ק״ג × {exercise.superset_reps}</span>
                                     </div>
                                   )}
@@ -1085,11 +1085,11 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
                               {/* Edit Mode */}
                               {isEditing && (
-                                <div className="mt-4 p-4 bg-cyan-500/15 rounded-2xl border border-cyan-500/30 space-y-4 shadow-md animate-fade-in">
-                                  <h5 className="font-bold text-cyan-300">עריכה אישית</h5>
+                                <div className="mt-4 p-4 bg-blue-500/15 rounded-2xl border border-blue-500/30 space-y-4 shadow-md animate-fade-in">
+                                  <h5 className="font-bold text-blue-300">עריכה אישית</h5>
 
                                   <div>
-                                    <label className="block text-sm font-bold text-cyan-400 mb-2">
+                                    <label className="block text-sm font-bold text-blue-400 mb-2">
                                       משקל יעד שלי (ק״ג)
                                     </label>
                                     <input
@@ -1104,7 +1104,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                                   </div>
 
                                   <div>
-                                    <label className="block text-sm font-bold text-cyan-400 mb-2">
+                                    <label className="block text-sm font-bold text-blue-400 mb-2">
                                       הערות שלי
                                     </label>
                                     <textarea

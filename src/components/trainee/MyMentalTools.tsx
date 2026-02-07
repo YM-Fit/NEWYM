@@ -123,7 +123,7 @@ export default function MyMentalTools({ traineeId }: MyMentalToolsProps) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
-          <Brain className="w-8 h-8 text-foreground" />
+          <Brain className="w-8 h-8 text-white" />
         </div>
       </div>
     );
@@ -143,12 +143,12 @@ export default function MyMentalTools({ traineeId }: MyMentalToolsProps) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 shadow-xl">
+      <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl p-6 shadow-xl">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center shadow-lg">
-            <Sparkles className="w-7 h-7 text-foreground" />
+            <Sparkles className="w-7 h-7 text-white" />
           </div>
-          <div className="text-foreground">
+          <div className="text-white">
             <h2 className="text-2xl font-bold">כלים מנטליים</h2>
             <p className="text-emerald-100">המשימות שלי להצלחה</p>
           </div>
@@ -156,7 +156,7 @@ export default function MyMentalTools({ traineeId }: MyMentalToolsProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="stat-card p-4 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 hover:shadow-card-hover transition-all duration-300">
+        <div className="stat-card p-4 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 hover:shadow-card-hover transition-all duration-300">
           <div className="text-3xl font-bold text-emerald-400">{activeTools.length}</div>
           <div className="text-sm text-[var(--color-text-secondary)] font-medium">פעילים</div>
         </div>
@@ -217,7 +217,7 @@ function ToolCard({ tool }: ToolCardProps) {
           {tool.is_completed ? (
             <CheckCircle className="w-7 h-7 text-[var(--color-text-muted)]" />
           ) : (
-            <Icon className="w-7 h-7 text-foreground" />
+            <Icon className="w-7 h-7 text-white" />
           )}
         </div>
 

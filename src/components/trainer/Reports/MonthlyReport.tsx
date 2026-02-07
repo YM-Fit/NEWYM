@@ -217,8 +217,8 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
       <div className="premium-card-static overflow-hidden">
         <div className="p-5 border-b border-border/50">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30">
-              <Users className="w-5 h-5 text-cyan-400" />
+            <div className="p-2.5 rounded-xl bg-blue-500/15 border border-blue-500/30">
+              <Users className="w-5 h-5 text-blue-400" />
             </div>
             <h2 className="text-xl font-bold text-foreground">מתאמנים מובילים החודש</h2>
           </div>

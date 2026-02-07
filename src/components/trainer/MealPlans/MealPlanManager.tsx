@@ -276,7 +276,7 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
                 <div className="flex gap-1">
                   <button
                     onClick={() => onEditPlan(plan.id)}
-                    className="p-2 text-cyan-400 hover:bg-cyan-500/15 rounded-lg transition-all"
+                    className="p-2 text-blue-400 hover:bg-blue-500/15 rounded-lg transition-all"
                     title="ערוך תפריט"
                   >
                     <Edit2 className="w-4 w-4" />

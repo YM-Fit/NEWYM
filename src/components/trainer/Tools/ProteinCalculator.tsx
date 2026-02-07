@@ -16,7 +16,7 @@ export default function ProteinCalculator({
   const [mealsPerDay, setMealsPerDay] = useState<number>(4);
 
   const goalMultipliers = {
-    maintain: { value: 1.6, label: 'שמירה על מסה', color: 'cyan' },
+    maintain: { value: 1.6, label: 'שמירה על מסה', color: 'blue' },
     build: { value: 2.2, label: 'בניית שריר', color: 'emerald' },
     lose: { value: 2.0, label: 'הרזיה (שמירת שריר)', color: 'amber' },
   };
@@ -55,10 +55,10 @@ export default function ProteinCalculator({
         <div className="sticky top-0 bg-amber-500 p-6 rounded-t-2xl flex items-center justify-between">
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
             <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <Beef className="h-7 w-7 text-foreground" />
+              <Beef className="h-7 w-7 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-foreground">מחשבון חלבון יומי</h2>
+              <h2 className="text-2xl font-bold text-white">מחשבון חלבון יומי</h2>
               <p className="text-sm text-amber-100">כמה חלבון אתה צריך?</p>
             </div>
           </div>
@@ -66,7 +66,7 @@ export default function ProteinCalculator({
             onClick={onClose}
             className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all"
           >
-            <X className="h-6 w-6 text-foreground" />
+            <X className="h-6 w-6 text-white" />
           </button>
         </div>
 
@@ -74,7 +74,7 @@ export default function ProteinCalculator({
           <div className="bg-surface rounded-2xl p-6 border border-border">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
-                <Target className="w-5 h-5 text-foreground" />
+                <Target className="w-5 h-5 text-white" />
               </div>
               <h3 className="text-lg font-bold text-foreground">הפרטים שלך</h3>
             </div>
@@ -102,7 +102,7 @@ export default function ProteinCalculator({
                       onClick={() => setGoal(key as any)}
                       className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all text-sm ${
                         goal === key
-                          ? 'bg-amber-500 text-foreground'
+                          ? 'bg-amber-500 text-white'
                           : 'bg-surface border border-border text-foreground hover:bg-elevated'
                       }`}
                     >
@@ -136,7 +136,7 @@ export default function ProteinCalculator({
                       onClick={() => setMealsPerDay(num)}
                       className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
                         mealsPerDay === num
-                          ? 'bg-amber-500 text-foreground'
+                          ? 'bg-amber-500 text-white'
                           : 'bg-surface border border-border text-foreground hover:bg-elevated'
                       }`}
                     >
@@ -152,30 +152,30 @@ export default function ProteinCalculator({
             <div className="bg-amber-500 rounded-2xl p-6 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Beef className="w-4 h-4 text-foreground" />
+                  <Beef className="w-4 h-4 text-white" />
                 </div>
-                <p className="text-sm font-bold text-foreground/90">חלבון יומי</p>
+                <p className="text-sm font-bold text-white/90">חלבון יומי</p>
               </div>
-              <p className="text-5xl font-bold text-foreground">{totalProtein}</p>
-              <p className="text-lg text-foreground/80 mt-2 font-medium">גרם</p>
+              <p className="text-5xl font-bold text-white">{totalProtein}</p>
+              <p className="text-lg text-white/80 mt-2 font-medium">גרם</p>
             </div>
 
             <div className="bg-emerald-500 rounded-2xl p-6 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Clock className="w-4 h-4 text-foreground" />
+                  <Clock className="w-4 h-4 text-white" />
                 </div>
-                <p className="text-sm font-bold text-foreground/90">לארוחה</p>
+                <p className="text-sm font-bold text-white/90">לארוחה</p>
               </div>
-              <p className="text-5xl font-bold text-foreground">{proteinPerMeal}</p>
-              <p className="text-lg text-foreground/80 mt-2 font-medium">גרם</p>
+              <p className="text-5xl font-bold text-white">{proteinPerMeal}</p>
+              <p className="text-lg text-white/80 mt-2 font-medium">גרם</p>
             </div>
           </div>
 
           <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-                <Activity className="w-4 h-4 text-foreground" />
+                <Activity className="w-4 h-4 text-white" />
               </div>
               <h3 className="font-bold text-emerald-400">חלוקה לארוחות</h3>
             </div>
@@ -225,13 +225,13 @@ export default function ProteinCalculator({
             </div>
           </div>
 
-          <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-2xl p-5">
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-5">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Info className="w-5 h-5 text-foreground" />
+              <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Info className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="font-bold text-cyan-400 mb-1">טיפים לצריכת חלבון</p>
+                <p className="font-bold text-blue-400 mb-1">טיפים לצריכת חלבון</p>
                 <ul className="text-sm text-muted leading-relaxed space-y-1">
                   <li>פרוס את החלבון לאורך היום - 20-40 גרם לארוחה</li>
                   <li>צרוך חלבון תוך שעתיים אחרי האימון</li>
@@ -246,7 +246,7 @@ export default function ProteinCalculator({
         <div className="sticky bottom-0 bg-card border-t border-border p-6 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="w-full bg-amber-500 hover:bg-amber-600 text-foreground px-6 py-4 rounded-xl font-bold text-lg transition-all"
+            className="w-full bg-amber-500 hover:bg-amber-600 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all"
           >
             סגור
           </button>

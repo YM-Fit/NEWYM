@@ -69,19 +69,19 @@ export function DailySummaryCard({
         </div>
       </div>
       {mealPlan && (
-        <div className="bg-cyan-500/15 border border-cyan-500/30 rounded-lg p-3">
+        <div className="bg-blue-500/15 border border-blue-500/30 rounded-lg p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Droplets className="w-5 h-5 text-cyan-500" />
-              <span className="font-medium text-cyan-600">מים</span>
+              <Droplets className="w-5 h-5 text-blue-500" />
+              <span className="font-medium text-blue-600">מים</span>
             </div>
-            <span className="text-lg font-bold text-cyan-600">
+            <span className="text-lg font-bold text-blue-600">
               {waterAmount} / {waterGoal} מ"ל
             </span>
           </div>
-          <div className="h-2 bg-cyan-500/20 rounded-full overflow-hidden mt-2">
+          <div className="h-2 bg-blue-500/20 rounded-full overflow-hidden mt-2">
             <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500"
               style={{ width: `${Math.min((waterAmount / waterGoal) * 100, 100)}%` }}
             />
           </div>

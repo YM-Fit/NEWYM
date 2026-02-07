@@ -211,7 +211,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
     return (
       <div className="premium-card-static p-8">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 text-teal-400 animate-spin" />
+          <Loader2 className="h-8 w-8 text-emerald-400 animate-spin" />
         </div>
       </div>
     );
@@ -221,7 +221,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
     <div className="premium-card-static p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/30 to-cyan-500/30">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/30 to-blue-500/30">
             <FileText className="h-6 w-6 text-blue-400" />
           </div>
           <div>
@@ -231,7 +231,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
         </div>
         <button
           onClick={exportToCSV}
-          className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-foreground font-semibold flex items-center gap-2 transition-all hover:scale-105"
+          className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold flex items-center gap-2 transition-all hover:scale-105"
         >
           <Download className="h-4 w-4" />
           ייצא ל-CSV
@@ -243,7 +243,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
         <select
           value={selectedPeriod}
           onChange={(e) => setSelectedPeriod(e.target.value as any)}
-          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-foreground text-sm focus:ring-2 focus:ring-teal-500/50"
+          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-foreground text-sm focus:ring-2 focus:ring-emerald-600/50"
         >
           <option value="week">שבוע</option>
           <option value="month">חודש</option>
@@ -254,7 +254,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
           type="date"
           value={selectedDate.toISOString().split('T')[0]}
           onChange={(e) => setSelectedDate(new Date(e.target.value))}
-          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-foreground text-sm focus:ring-2 focus:ring-teal-500/50"
+          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-foreground text-sm focus:ring-2 focus:ring-emerald-600/50"
         />
       </div>
 
@@ -270,7 +270,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
               key={report.trainee_id}
               className={`p-5 rounded-2xl border transition-all ${
                 report.trend === 'down'
-                  ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-teal-500/5'
+                  ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-emerald-500/5'
                   : report.trend === 'up'
                   ? 'border-red-500/30 bg-gradient-to-br from-red-500/5 to-orange-500/5'
                   : 'border-border500/30 bg-surface800/30'

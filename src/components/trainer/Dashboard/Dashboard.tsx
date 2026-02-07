@@ -167,7 +167,7 @@ export default memo(function Dashboard({
                 <Users className="w-4 h-4 text-primary" />
                 <span className="text-base font-extrabold text-foreground">{trainees.length}</span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-info/15 to-cyan-500/10 
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-info/15 to-blue-500/10
                             border border-info/20 hover:border-info/30 transition-all duration-300 hover:scale-105
                             shadow-sm">
                 <Activity className="w-4 h-4 text-info" />

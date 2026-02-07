@@ -40,7 +40,7 @@ export const WorkoutQuickActions = memo(({
         <button
           type="button"
           onClick={onSave}
-          className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback disabled:opacity-60"
+          className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback disabled:opacity-60"
           title="סיים אימון"
           disabled={saving || exercisesCount === 0}
         >
@@ -52,7 +52,7 @@ export const WorkoutQuickActions = memo(({
           <button
             type="button"
             onClick={onShowHistory}
-            className="w-14 h-14 bg-cyan-500 hover:bg-cyan-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            className="w-14 h-14 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
             title="היסטוריית אימונים לתרגילים"
           >
             <History className="h-6 w-6" />
@@ -63,7 +63,7 @@ export const WorkoutQuickActions = memo(({
         <button
           type="button"
           onClick={onAddExercise}
-          className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+          className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
           title="הוסף תרגיל (קיצור: Ctrl+N)"
         >
           <BookMarked className="h-6 w-6" />
@@ -82,7 +82,7 @@ export const WorkoutQuickActions = memo(({
                 onAddSet();
               }
             }}
-            className="w-16 h-16 bg-cyan-500 hover:bg-cyan-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            className="w-16 h-16 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
             title="הוסף סט (+)"
           >
             <Plus className="h-6 w-6" />
@@ -124,7 +124,7 @@ export const WorkoutQuickActions = memo(({
                 onOpenRpePad();
               }
             }}
-            className="w-16 h-16 bg-purple-500 hover:bg-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+            className="w-16 h-16 bg-slate-500 hover:bg-slate-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
             title="RPE (E)"
           >
             <span className="text-xs font-bold leading-tight text-center">RPE</span>

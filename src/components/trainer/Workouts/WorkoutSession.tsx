@@ -1785,7 +1785,7 @@ export default function WorkoutSession({
               e.stopPropagation();
               setShowTemplateModal(true);
             }}
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-foreground py-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold mb-3 cursor-pointer"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold mb-3 cursor-pointer"
           >
             <BookMarked className="h-5 w-5" />
             <span>טען תבנית קיימת</span>

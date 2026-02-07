@@ -31,8 +31,8 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
     switch (metric) {
       case 'weight': return '#10b981';        // emerald-500
       case 'bodyFat': return '#f59e0b';       // amber-500
-      case 'muscleMass': return '#06b6d4';    // cyan-500
-      case 'waterPercentage': return '#06b6d4'; // cyan-500 (במקום blue)
+      case 'muscleMass': return '#3b82f6';    // blue-500
+      case 'waterPercentage': return '#3b82f6'; // blue-500
       case 'metabolicAge': return '#ef4444';  // red-500
       default: return '#71717a';              // zinc-500
     }
@@ -89,7 +89,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
               {payload.map((entry: any, index: number) => {
                 if (entry.value === null || entry.value === undefined) return null;
                 const memberName = index === 0 ? (trainee?.pairName1 || 'בן זוג 1') : (trainee?.pairName2 || 'בן זוג 2');
-                const color = index === 0 ? '#06b6d4' : '#f59e0b';
+                const color = index === 0 ? '#3b82f6' : '#f59e0b';
                 return (
                   <div key={index} className="flex items-baseline gap-2">
                     <p className="text-xs text-muted light:text-muted font-medium">{memberName}:</p>
@@ -219,7 +219,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
               <Tooltip 
                 content={<CustomTooltip />} 
                 cursor={{ 
-                  stroke: isPairWithBothMembers ? '#06b6d4' : getMetricColor(metric), 
+                  stroke: isPairWithBothMembers ? '#3b82f6' : getMetricColor(metric), 
                   strokeWidth: 1, 
                   strokeDasharray: '5 5', 
                   strokeOpacity: 0.3 
@@ -230,10 +230,10 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                   <Line
                     type="monotone"
                     dataKey="value1"
-                    stroke="#06b6d4"
+                    stroke="#3b82f6"
                     strokeWidth={3}
                     dot={{ 
-                      fill: '#06b6d4', 
+                      fill: '#3b82f6', 
                       strokeWidth: 3, 
                       r: 5, 
                       stroke: '#09090b',
@@ -241,10 +241,10 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                     }}
                     activeDot={{ 
                       r: 8, 
-                      stroke: '#06b6d4', 
+                      stroke: '#3b82f6', 
                       strokeWidth: 3, 
                       fill: '#09090b',
-                      filter: 'drop-shadow(0 0 8px #06b6d4)'
+                      filter: 'drop-shadow(0 0 8px #3b82f6)'
                     }}
                     name={trainee?.pairName1 || 'בן זוג 1'}
                     connectNulls={false}

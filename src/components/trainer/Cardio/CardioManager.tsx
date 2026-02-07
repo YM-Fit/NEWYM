@@ -259,7 +259,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 bg-card/50 rounded-xl border border-border">
               <div className="flex items-center gap-2 mb-2">
-                <Activity className="h-4 w-4 text-cyan-400" />
+                <Activity className="h-4 w-4 text-blue-400" />
                 <span className="text-xs text-muted">סוג אירובי</span>
               </div>
               <p className="text-lg font-bold text-foreground">{latestActivity.cardio_type?.name || 'לא זמין'}</p>
@@ -283,7 +283,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
 
             <div className="p-4 bg-card/50 rounded-xl border border-border">
               <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="h-4 w-4 text-cyan-400" />
+                <BarChart3 className="h-4 w-4 text-blue-400" />
                 <span className="text-xs text-muted">אחוז עמידה ביעד</span>
               </div>
               <p className={`text-lg font-bold ${
@@ -375,17 +375,17 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
             </div>
           </div>
 
-          <div className="stat-card p-5 bg-gradient-to-br from-cyan-500/20 to-cyan-500/5">
+          <div className="stat-card p-5 bg-gradient-to-br from-blue-500/20 to-blue-500/5">
             <div className="flex items-start justify-between mb-2">
               <div>
                 <p className="text-xs font-medium text-muted mb-1">רצף נוכחי</p>
-                <p className="text-2xl font-bold text-cyan-400 flex items-center gap-1">
+                <p className="text-2xl font-bold text-blue-400 flex items-center gap-1">
                   {stats.currentStreak}
                   {stats.currentStreak > 0 && <Flame className="h-5 w-5 text-orange-400" />}
                 </p>
               </div>
-              <div className="p-2 rounded-lg bg-cyan-500/20">
-                <Calendar className="h-4 w-4 text-cyan-400" />
+              <div className="p-2 rounded-lg bg-blue-500/20">
+                <Calendar className="h-4 w-4 text-blue-400" />
               </div>
             </div>
             {stats.longestStreak > stats.currentStreak && (
@@ -455,7 +455,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
                   animationEasing="ease-in-out"
                 >
                   {getChartData().map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.achieved ? '#06b6d4' : '#f59e0b'} />
+                    <Cell key={`cell-${index}`} fill={entry.achieved ? '#3b82f6' : '#f59e0b'} />
                   ))}
                 </Bar>
               </BarChart>

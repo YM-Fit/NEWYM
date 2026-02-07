@@ -41,10 +41,10 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-50 to-blue-100 flex items-center justify-center p-4">
       <div className="bg-card rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 w-full max-w-md overflow-hidden">
         {/* Premium gradient header */}
-        <div className="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 p-8 text-center">
+        <div className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-blue-500 p-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl mb-4 shadow-lg">
             <UserPlus className="w-8 h-8 text-primary-foreground" />
           </div>
@@ -120,7 +120,7 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-inverse font-semibold py-3.5 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:shadow-md mt-2"
+              className="w-full bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-inverse font-semibold py-3.5 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:shadow-md mt-2"
             >
               {loading ? 'יוצר חשבון...' : 'הרשם'}
             </button>
@@ -129,7 +129,7 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
           <div className="mt-6 text-center">
             <button
               onClick={onToggleMode}
-              className="text-emerald-600 hover:text-teal-700 font-semibold transition-all duration-300 hover:underline"
+              className="text-emerald-600 hover:text-emerald-800 font-semibold transition-all duration-300 hover:underline"
             >
               כבר יש לך חשבון? התחבר כאן
             </button>

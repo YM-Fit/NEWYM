@@ -113,7 +113,7 @@ export const WorkoutSetCard = memo(({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 lg:gap-3 flex-wrap">
-            <span className={`set-number-badge font-bold text-sm lg:text-base text-foreground px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-sm ${hasData ? 'completed bg-gradient-to-r from-emerald-500 to-teal-500' : 'bg-emerald-500'}`}>
+            <span className={`set-number-badge font-bold text-sm lg:text-base text-foreground px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-sm ${hasData ? 'completed bg-gradient-to-r from-emerald-500 to-emerald-600' : 'bg-emerald-500'}`}>
               סט {set.set_number}
             </span>
             <div className="flex items-center gap-2">
@@ -130,7 +130,7 @@ export const WorkoutSetCard = memo(({
             )}
             {set.set_type !== 'regular' && (
               <span className={`text-xs px-2 py-1 rounded-lg font-medium ${
-                set.set_type === 'superset' ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30' : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                set.set_type === 'superset' ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30' : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
               }`}>
                 {set.set_type === 'superset' ? 'סופר-סט' : 'דרופ-סט'}
               </span>
@@ -165,7 +165,7 @@ export const WorkoutSetCard = memo(({
       {/* Header with set number and actions */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <span className="set-number-badge font-bold text-base lg:text-xl text-foreground bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 lg:px-5 lg:py-2.5 rounded-xl shadow-lg">
+          <span className="set-number-badge font-bold text-base lg:text-xl text-foreground bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 lg:px-5 lg:py-2.5 rounded-xl shadow-lg">
             סט {set.set_number}
           </span>
           {hasData && (
@@ -192,11 +192,11 @@ export const WorkoutSetCard = memo(({
               e.stopPropagation();
               onDuplicate();
             }}
-            className="p-2 lg:p-3 hover:bg-cyan-500/15 rounded-xl transition-all touch-manipulation cursor-pointer btn-press-feedback"
+            className="p-2 lg:p-3 hover:bg-blue-500/15 rounded-xl transition-all touch-manipulation cursor-pointer btn-press-feedback"
             title="שכפל סט"
             aria-label="שכפל סט"
           >
-            <Copy className="h-4 w-4 lg:h-5 lg:w-5 text-cyan-400" />
+            <Copy className="h-4 w-4 lg:h-5 lg:w-5 text-blue-400" />
           </button>
           {canDelete && (
             <button
@@ -241,7 +241,7 @@ export const WorkoutSetCard = memo(({
               e.stopPropagation();
               onOpenNumericPad('reps');
             }}
-            className="workout-input-btn w-full px-3 py-4 lg:py-6 text-2xl lg:text-4xl font-bold border-2 border-cyan-500/50 bg-cyan-500/10 text-cyan-400 rounded-xl hover:bg-cyan-500/20 active:bg-cyan-500/30 active:scale-[0.98] transition-all touch-manipulation cursor-pointer btn-press-feedback shadow-sm"
+            className="workout-input-btn w-full px-3 py-4 lg:py-6 text-2xl lg:text-4xl font-bold border-2 border-blue-500/50 bg-blue-500/10 text-blue-400 rounded-xl hover:bg-blue-500/20 active:bg-blue-500/30 active:scale-[0.98] transition-all touch-manipulation cursor-pointer btn-press-feedback shadow-sm"
           >
             {set.reps || '0'}
           </button>
@@ -273,8 +273,8 @@ export const WorkoutSetCard = memo(({
           }}
           className={`py-3 lg:py-4 px-3 rounded-xl border transition-all text-right cursor-pointer ${
             set.equipment
-              ? 'border-cyan-500/50 bg-cyan-500/10'
-              : 'border-border hover:border-cyan-500/30 bg-surface/30 hover:bg-cyan-500/10'
+              ? 'border-blue-500/50 bg-blue-500/10'
+              : 'border-border hover:border-blue-500/30 bg-surface/30 hover:bg-blue-500/10'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -356,8 +356,8 @@ export const WorkoutSetCard = memo(({
           }}
           className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all cursor-pointer ${
             set.set_type === 'superset'
-              ? 'bg-cyan-500 text-foreground'
-              : 'bg-surface border border-border text-muted hover:bg-surface hover:border-cyan-500/30 hover:text-foreground'
+              ? 'bg-blue-500 text-foreground'
+              : 'bg-surface border border-border text-muted hover:bg-surface hover:border-blue-500/30 hover:text-foreground'
           }`}
         >
           סופר-סט
@@ -382,12 +382,12 @@ export const WorkoutSetCard = memo(({
       {set.set_type === 'superset' && (
         <div className="mt-3 pt-3 border-t border-border">
           <div className="mb-3">
-            <label className="block text-sm font-medium text-cyan-400 mb-2">
+            <label className="block text-sm font-medium text-blue-400 mb-2">
               תרגיל סופר-סט
             </label>
             {set.superset_exercise_id ? (
-              <div className="flex items-center justify-between bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-3">
-                <span className="font-medium text-cyan-300">{set.superset_exercise_name}</span>
+              <div className="flex items-center justify-between bg-blue-500/10 border border-blue-500/30 rounded-xl p-3">
+                <span className="font-medium text-blue-300">{set.superset_exercise_name}</span>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -412,7 +412,7 @@ export const WorkoutSetCard = memo(({
                   e.stopPropagation();
                   onOpenSupersetSelector();
                 }}
-                className="w-full py-3 px-4 border-2 border-dashed border-cyan-500/30 rounded-xl hover:border-cyan-500/50 hover:bg-cyan-500/10 text-cyan-400 font-medium transition-all cursor-pointer"
+                className="w-full py-3 px-4 border-2 border-dashed border-blue-500/30 rounded-xl hover:border-blue-500/50 hover:bg-blue-500/10 text-blue-400 font-medium transition-all cursor-pointer"
               >
                 + בחר תרגיל לסופר-סט
               </button>
@@ -422,7 +422,7 @@ export const WorkoutSetCard = memo(({
             <div className="space-y-3">
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-cyan-400 mb-1">
+                  <label className="block text-sm font-medium text-blue-400 mb-1">
                     משקל (ק״ג)
                   </label>
                   <button
@@ -432,13 +432,13 @@ export const WorkoutSetCard = memo(({
                       e.stopPropagation();
                       onOpenSupersetNumericPad('superset_weight');
                     }}
-                    className="w-full px-3 py-3 text-xl font-bold border-2 border-cyan-500/50 bg-cyan-500/10 text-cyan-400 rounded-xl hover:bg-cyan-500/20 transition-all cursor-pointer"
+                    className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500/50 bg-blue-500/10 text-blue-400 rounded-xl hover:bg-blue-500/20 transition-all cursor-pointer"
                   >
                     {set.superset_weight || '0'}
                   </button>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-cyan-400 mb-1">
+                  <label className="block text-sm font-medium text-blue-400 mb-1">
                     חזרות
                   </label>
                   <button
@@ -448,13 +448,13 @@ export const WorkoutSetCard = memo(({
                       e.stopPropagation();
                       onOpenSupersetNumericPad('superset_reps');
                     }}
-                    className="w-full px-3 py-3 text-xl font-bold border-2 border-cyan-500/50 bg-cyan-500/10 text-cyan-400 rounded-xl hover:bg-cyan-500/20 transition-all cursor-pointer"
+                    className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500/50 bg-blue-500/10 text-blue-400 rounded-xl hover:bg-blue-500/20 transition-all cursor-pointer"
                   >
                     {set.superset_reps || '0'}
                   </button>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-cyan-400 mb-1">
+                  <label className="block text-sm font-medium text-blue-400 mb-1">
                     RPE
                   </label>
                   <button
@@ -464,7 +464,7 @@ export const WorkoutSetCard = memo(({
                       e.stopPropagation();
                       onOpenSupersetNumericPad('superset_rpe');
                     }}
-                    className="w-full px-3 py-3 text-xl font-bold border-2 border-cyan-500/50 bg-cyan-500/10 text-cyan-400 rounded-xl hover:bg-cyan-500/20 transition-all cursor-pointer"
+                    className="w-full px-3 py-3 text-xl font-bold border-2 border-blue-500/50 bg-blue-500/10 text-blue-400 rounded-xl hover:bg-blue-500/20 transition-all cursor-pointer"
                   >
                     {set.superset_rpe || '-'}
                   </button>
@@ -481,8 +481,8 @@ export const WorkoutSetCard = memo(({
                   }}
                   className={`w-full py-3 px-4 rounded-xl border transition-all text-right cursor-pointer ${
                     set.superset_equipment
-                      ? 'border-cyan-500/50 bg-cyan-500/10'
-                      : 'border-border hover:border-cyan-500/30 bg-surface/30'
+                      ? 'border-blue-500/50 bg-blue-500/10'
+                      : 'border-border hover:border-blue-500/30 bg-surface/30'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -559,7 +559,7 @@ export const WorkoutSetCard = memo(({
         type="button"
         onClick={handleCompleteSet}
         disabled={isCompleting}
-        className={`w-full mt-5 py-5 lg:py-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground font-bold text-lg lg:text-xl rounded-xl flex items-center justify-center gap-3 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] touch-manipulation cursor-pointer btn-press-feedback ${
+        className={`w-full mt-5 py-5 lg:py-6 bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-lg lg:text-xl rounded-xl flex items-center justify-center gap-3 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] touch-manipulation cursor-pointer btn-press-feedback ${
           isCompleting ? 'animate-set-complete opacity-90' : ''
         }`}
       >

@@ -219,7 +219,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
             </button>
           </div>
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105">
+            <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105">
               <Shield className="w-8 h-8 text-inverse" />
             </div>
             <div>
@@ -244,7 +244,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
             {!showCreateForm ? (
               <button
                 onClick={() => setShowCreateForm(true)}
-                className="w-full bg-gradient-to-br from-emerald-500 to-teal-600 text-inverse px-6 py-4 rounded-2xl hover:from-emerald-600 hover:to-teal-700 flex items-center justify-center gap-3 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] font-semibold text-lg"
+                className="w-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-inverse px-6 py-4 rounded-2xl hover:from-emerald-600 hover:to-emerald-800 flex items-center justify-center gap-3 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] font-semibold text-lg"
               >
                 <Key className="w-6 h-6" />
                 צור גישה חדשה
@@ -279,7 +279,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
                   <button
                     onClick={handleCreateAccess}
                     disabled={saving}
-                    className="flex-1 bg-gradient-to-br from-emerald-500 to-teal-600 text-inverse py-4 rounded-xl hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl"
+                    className="flex-1 bg-gradient-to-br from-emerald-500 to-emerald-700 text-inverse py-4 rounded-xl hover:from-emerald-600 hover:to-emerald-800 disabled:opacity-50 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl"
                   >
                     {saving ? 'שומר...' : 'צור גישה'}
                   </button>
@@ -310,7 +310,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
                   <div className="flex items-center gap-3 p-3 bg-surface50 rounded-xl transition-all duration-300 hover:bg-surface100">
                     <span className="font-semibold text-foreground600 min-w-[100px]">סטטוס:</span>
                     {access.is_active ? (
-                      <span className="bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-700 px-4 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2">
+                      <span className="bg-gradient-to-br from-emerald-100 to-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2">
                         <CheckCircle className="w-4 h-4" />
                         פעיל
                       </span>
@@ -333,7 +333,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
                   </div>
                 </div>
               </div>
-              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105">
                 <Key className="w-8 h-8 text-inverse" />
               </div>
             </div>
@@ -344,7 +344,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
                 className={`w-full px-6 py-4 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] ${
                   access.is_active
                     ? 'bg-gradient-to-br from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-inverse'
-                    : 'bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-inverse'
+                    : 'bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-inverse'
                 }`}
               >
                 {access.is_active ? (
@@ -387,7 +387,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
                 </div>
               </div>
               {access.auth_user_id && (
-                <div className="p-5 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 transition-all duration-300 hover:shadow-md">
+                <div className="p-5 bg-gradient-to-br from-emerald-50 to-emerald-50 rounded-2xl border border-emerald-200 transition-all duration-300 hover:shadow-md">
                   <div className="flex items-start gap-3">
                     <CheckCircle className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
                     <p className="text-emerald-800">

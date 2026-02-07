@@ -322,8 +322,8 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
       <div className="premium-card-static bg-white rounded-2xl shadow-xl p-6 transition-all duration-300">
         <div className="flex items-center justify-center py-8">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
-              <RefreshCw className="h-8 w-8 text-foreground animate-spin" />
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
+              <RefreshCw className="h-8 w-8 text-white animate-spin" />
             </div>
             <span className="text-sm font-medium text-muted600">טוען הגדרות...</span>
           </div>
@@ -336,7 +336,7 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
     <div className="premium-card-static bg-white rounded-2xl shadow-xl p-6 space-y-6 transition-all duration-300">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl border border-emerald-500/30">
+          <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-xl border border-emerald-500/30">
             <Calendar className="h-5 w-5 text-emerald-600" />
           </div>
           <div>
@@ -376,7 +376,7 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
           <button
             onClick={handleConnect}
             disabled={loading}
-            className="btn-primary flex items-center gap-2 mx-auto bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground shadow-lg"
+            className="btn-primary flex items-center gap-2 mx-auto bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white shadow-lg"
           >
             <Calendar className="h-4 w-4" />
             חבר Google Calendar
@@ -385,7 +385,7 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
       ) : (
         <div className="space-y-4">
           {/* Connection Status */}
-          <div className="flex items-center justify-between p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 transition-all duration-300">
+          <div className="flex items-center justify-between p-4 bg-gradient-to-br from-emerald-50 to-emerald-50 rounded-xl border border-emerald-200 transition-all duration-300">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
               <div>
@@ -534,7 +534,7 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
           </button>
 
           {/* Info */}
-          <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-200 transition-all duration-300">
+          <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-blue-50 to-blue-50 rounded-xl border border-blue-200 transition-all duration-300">
             <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-muted700">
               <p className="font-semibold mb-1">מידע חשוב:</p>

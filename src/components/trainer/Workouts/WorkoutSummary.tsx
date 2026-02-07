@@ -46,13 +46,13 @@ interface WorkoutSummaryProps {
 
 const MUSCLE_GROUP_COLORS: Record<string, string> = {
   'chest': '#ef4444',      // red-500
-  'back': '#06b6d4',       // cyan-500 (מותאם לפלטת המערכת)
+  'back': '#3b82f6',       // blue-500 (מותאם לפלטת המערכת)
   'shoulders': '#f59e0b',  // amber-500 (מותאם לפלטת המערכת)
   'biceps': '#10b981',     // emerald-500 (צבע ראשי במערכת)
-  'triceps': '#8b5cf6',    // violet-500
+  'triceps': '#3b82f6',    // blue-500
   'legs': '#ec4899',       // pink-500
   'glutes': '#f97316',     // orange-500
-  'core': '#14b8a6',       // teal-500 (מותאם לפלטת המערכת)
+  'core': '#10b981',       // emerald-500 (מותאם לפלטת המערכת)
   'default': '#71717a',    // zinc-500 (מותאם לפלטת המערכת)
 };
 
@@ -175,7 +175,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
               <div
                 className="w-3 h-3 rounded-sm"
                 style={{
-                  backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#06b6d4', '#8b5cf6'][Math.floor(Math.random() * 5)],
+                  backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#64748b'][Math.floor(Math.random() * 5)],
                   transform: `rotate(${Math.random() * 360}deg)`,
                 }}
               />
@@ -189,10 +189,10 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 rtl:space-x-reverse">
               <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                <CheckCircle className="h-7 w-7 text-foreground" />
+                <CheckCircle className="h-7 w-7 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-foreground">אימון הושלם!</h2>
+                <h2 className="text-2xl font-bold text-white">אימון הושלם!</h2>
                 <p className="text-sm text-emerald-100">{traineeName}</p>
               </div>
             </div>
@@ -201,13 +201,13 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 onClick={handleShare}
                 className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all"
               >
-                <Share2 className="h-5 w-5 text-foreground" />
+                <Share2 className="h-5 w-5 text-white" />
               </button>
               <button
                 onClick={onClose}
                 className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all"
               >
-                <X className="h-6 w-6 text-foreground" />
+                <X className="h-6 w-6 text-white" />
               </button>
             </div>
           </div>
@@ -218,7 +218,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 animate-pulse-slow">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center">
-                  <Trophy className="w-6 h-6 text-foreground" />
+                  <Trophy className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-amber-400">שיאים חדשים!</h3>
@@ -265,13 +265,13 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
               )}
             </div>
 
-            <div className={`bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-4 transition-all duration-500 delay-100 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div className={`bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 transition-all duration-500 delay-100 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <div className="flex items-center gap-2 mb-2">
-                <Target className="w-5 h-5 text-cyan-400" />
-                <span className="text-sm font-semibold text-cyan-400">תרגילים</span>
+                <Target className="w-5 h-5 text-blue-400" />
+                <span className="text-sm font-semibold text-blue-400">תרגילים</span>
               </div>
               <p className="text-2xl font-bold text-foreground">{exercises.length}</p>
-              <p className="text-xs text-cyan-400/70">{totalSets} סטים</p>
+              <p className="text-xs text-blue-400/70">{totalSets} סטים</p>
             </div>
 
             <div className={`bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 transition-all duration-500 delay-200 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -377,7 +377,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
         <div className="sticky bottom-0 bg-surface border-t border-border p-6 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-foreground px-6 py-4 rounded-xl font-bold text-lg transition-all"
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all"
           >
             סגור
           </button>

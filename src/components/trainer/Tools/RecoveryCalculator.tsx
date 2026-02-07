@@ -25,7 +25,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
 
   const intensityMultipliers = {
     low: { value: 0.7, label: 'נמוכה', description: 'אימון קל, הרגשה טובה בסוף', color: 'emerald' },
-    moderate: { value: 1.0, label: 'בינונית', description: 'אימון סטנדרטי, עייפות סבירה', color: 'cyan' },
+    moderate: { value: 1.0, label: 'בינונית', description: 'אימון סטנדרטי, עייפות סבירה', color: 'blue' },
     high: { value: 1.3, label: 'גבוהה', description: 'אימון אינטנסיבי, עייפות משמעותית', color: 'amber' },
     extreme: { value: 1.5, label: 'קיצונית', description: 'אימון עד כשל, תשישות', color: 'red' },
   };
@@ -85,10 +85,10 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
         <div className="sticky top-0 bg-emerald-500 p-6 rounded-t-2xl flex items-center justify-between">
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
             <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <Clock className="h-7 w-7 text-foreground" />
+              <Clock className="h-7 w-7 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-foreground">מחשבון זמן התאוששות</h2>
+              <h2 className="text-2xl font-bold text-white">מחשבון זמן התאוששות</h2>
               <p className="text-sm text-emerald-100">כמה מנוחה צריך בין אימונים?</p>
             </div>
           </div>
@@ -96,7 +96,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
             onClick={onClose}
             className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all"
           >
-            <X className="h-6 w-6 text-foreground" />
+            <X className="h-6 w-6 text-white" />
           </button>
         </div>
 
@@ -104,7 +104,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
           <div className="bg-surface rounded-2xl p-6 border border-border">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
-                <Activity className="w-5 h-5 text-foreground" />
+                <Activity className="w-5 h-5 text-white" />
               </div>
               <h3 className="text-lg font-bold text-foreground">פרטי האימון</h3>
             </div>
@@ -201,7 +201,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
               <p className="text-lg text-foreground/80 mt-2 font-medium">ימים</p>
             </div>
 
-            <div className="bg-cyan-500 rounded-2xl p-6 text-center">
+            <div className="bg-blue-500 rounded-2xl p-6 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
                   <Calendar className="w-4 h-4 text-foreground" />
@@ -274,13 +274,13 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
             </div>
           )}
 
-          <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-2xl p-5">
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-5">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Info className="w-5 h-5 text-foreground" />
               </div>
               <div>
-                <p className="font-bold text-cyan-400 mb-1">מה משפיע על התאוששות?</p>
+                <p className="font-bold text-blue-400 mb-1">מה משפיע על התאוששות?</p>
                 <ul className="text-sm text-muted leading-relaxed space-y-1">
                   <li>שינה איכותית - הגורם המשמעותי ביותר</li>
                   <li>תזונה נכונה - חלבון ופחמימות אחרי אימון</li>

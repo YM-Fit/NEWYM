@@ -26,7 +26,7 @@ export function LoadTemplateModal({ templates, onLoad, onClose }: LoadTemplateMo
                 <button
                   key={template.id}
                   onClick={() => onLoad(template)}
-                  className="w-full text-right p-5 border-2 border-border700/50 rounded-2xl hover:border-emerald-500/30 hover:bg-gradient-to-br hover:from-emerald-500/5 hover:to-teal-500/5 transition-all duration-300 group"
+                  className="w-full text-right p-5 border-2 border-border700/50 rounded-2xl hover:border-emerald-500/30 hover:bg-gradient-to-br hover:from-emerald-500/5 hover:to-emerald-600/5 transition-all duration-300 group"
                 >
                   <div className="flex items-center justify-between">
                     <div>

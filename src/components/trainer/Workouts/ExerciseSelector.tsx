@@ -510,7 +510,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                       <span className="font-bold text-emerald-400">{recent.lastWeight}</span>
                       <span className="text-muted">ק״ג</span>
                       <span className="text-muted">×</span>
-                      <span className="font-bold text-cyan-400">{recent.lastReps}</span>
+                      <span className="font-bold text-blue-400">{recent.lastReps}</span>
                     </div>
                     <div className="text-[10px] lg:text-xs text-muted bg-surface/50 px-2 py-0.5 rounded-md inline-block">
                       {formatRelativeDate(recent.lastDate)}
@@ -537,7 +537,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                     onClick={() => setSelectedGroup(group.id)}
                     className={`w-full text-right px-4 lg:px-5 py-3.5 lg:py-4 rounded-xl transition-all font-medium ${
                       selectedGroup === group.id
-                        ? 'bg-emerald-500 text-foreground shadow-md border-2 border-emerald-600'
+                        ? 'bg-emerald-500 text-white shadow-md border-2 border-emerald-600'
                         : 'bg-surface hover:bg-surface/80 text-foreground border border-border hover:border-emerald-500/30 hover:shadow-sm'
                     }`}
                   >
@@ -562,7 +562,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                       <h3 className="font-semibold text-muted">תרגילים</h3>
                       <button
                         onClick={() => setShowAddForm(!showAddForm)}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-xl transition-all text-sm font-medium"
+                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all text-sm font-medium"
                       >
                         <PlusCircle className="h-4 w-4" />
                         <span>תרגיל חדש</span>
@@ -687,10 +687,10 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                             {traineeId && (
                               <button
                                 onClick={() => setHistoryExercise(exercise)}
-                                className="p-3 lg:p-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-xl transition-all btn-press-feedback shadow-sm hover:shadow-md"
+                                className="p-3 lg:p-4 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl transition-all btn-press-feedback shadow-sm hover:shadow-md"
                                 title="היסטוריה"
                               >
-                                <Clock className="h-5 w-5 lg:h-6 lg:w-6 text-cyan-400" />
+                                <Clock className="h-5 w-5 lg:h-6 lg:w-6 text-blue-400" />
                               </button>
                             )}
 
@@ -700,10 +700,10 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                                 e.stopPropagation();
                                 setViewingInstructions(exercise);
                               }}
-                              className="p-3 lg:p-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-xl transition-all btn-press-feedback shadow-sm hover:shadow-md"
+                              className="p-3 lg:p-4 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl transition-all btn-press-feedback shadow-sm hover:shadow-md"
                               title="הצג הסבר"
                             >
-                              <Info className="h-5 w-5 lg:h-6 lg:w-6 text-cyan-400" />
+                              <Info className="h-5 w-5 lg:h-6 lg:w-6 text-blue-400" />
                             </button>
 
                             {/* Edit button */}
@@ -745,7 +745,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                                         <span className="font-bold text-emerald-400">{lastData.weight}</span>
                                         <span className="text-muted text-[10px]">ק״ג</span>
                                         <span className="text-muted">×</span>
-                                        <span className="font-bold text-cyan-400">{lastData.reps}</span>
+                                        <span className="font-bold text-blue-400">{lastData.reps}</span>
                                       </div>
                                       <span className="text-muted text-[10px]">({formatRelativeDate(lastData.date)})</span>
                                     </div>
@@ -856,7 +856,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                   <div className="text-xs text-muted mt-1">ק״ג</div>
                 </div>
                 <div className="bg-surface rounded-lg p-3 border border-border text-center">
-                  <div className="text-2xl font-bold text-cyan-400">{confirmationExercise.lastData.reps}</div>
+                  <div className="text-2xl font-bold text-blue-400">{confirmationExercise.lastData.reps}</div>
                   <div className="text-xs text-muted mt-1">חזרות</div>
                 </div>
                 <div className="bg-surface rounded-lg p-3 border border-border text-center">

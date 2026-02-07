@@ -16,8 +16,8 @@ interface TraineesProgressChartProps {
 }
 
 const COLORS = [
-  '#10b981', '#06b6d4', '#f59e0b', '#ef4444', '#8b5cf6',
-  '#ec4899', '#14b8a6', '#84cc16', '#f97316', '#6366f1',
+  '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#f59e0b',
+  '#ec4899', '#10b981', '#84cc16', '#f97316', '#f59e0b',
 ];
 
 export default function TraineesProgressChart({ selectedMonth }: TraineesProgressChartProps) {
@@ -212,8 +212,8 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
       <div className="p-5 border-b border-border/50">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30">
-              <TrendingUp className="w-5 h-5 text-cyan-400" />
+            <div className="p-2.5 rounded-xl bg-blue-500/15 border border-blue-500/30">
+              <TrendingUp className="w-5 h-5 text-blue-400" />
             </div>
             <h2 className="text-xl font-bold text-foreground">התקדמות מתאמנים</h2>
           </div>

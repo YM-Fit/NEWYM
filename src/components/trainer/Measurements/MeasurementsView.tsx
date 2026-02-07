@@ -70,7 +70,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
   const metrics = [
     { key: 'weight' as const, label: 'משקל', unit: 'ק״ג', icon: Scale, color: 'emerald' },
     { key: 'bodyFat' as const, label: 'אחוז שומן', unit: '%', icon: TrendingDown, color: 'amber' },
-    { key: 'muscleMass' as const, label: 'מסת שריר', unit: 'ק״ג', icon: TrendingUp, color: 'cyan' },
+    { key: 'muscleMass' as const, label: 'מסת שריר', unit: 'ק״ג', icon: TrendingUp, color: 'blue' },
     { key: 'waterPercentage' as const, label: 'אחוז מים', unit: '%', icon: BarChart3, color: 'blue' },
     { key: 'metabolicAge' as const, label: 'גיל מטבולי', unit: 'שנים', icon: Activity, color: 'red' },
   ];
@@ -78,7 +78,6 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
   const colorConfig = {
     emerald: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' },
     amber: { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' },
-    cyan: { bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/30' },
     blue: { bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/30' },
     red: { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30' },
   };
@@ -185,7 +184,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
       {statistics && (
         <div className="premium-card-static p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Calculator className="h-5 w-5 text-cyan-400" />
+            <Calculator className="h-5 w-5 text-blue-400" />
             <h3 className="text-lg font-semibold text-foreground">סטטיסטיקות</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -306,15 +305,15 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
               onClick={() => setSelectedMember('member_1')}
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'member_1'
-                  ? 'border-cyan-500/50 bg-cyan-500/10'
+                  ? 'border-blue-500/50 bg-blue-500/10'
                   : 'border-border bg-surface/30 hover:border-border-hover'
               }`}
             >
               <User className={`h-6 w-6 mx-auto mb-2 ${
-                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-muted'
+                selectedMember === 'member_1' ? 'text-blue-400' : 'text-muted'
               }`} />
               <p className={`text-sm font-semibold text-center ${
-                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-muted'
+                selectedMember === 'member_1' ? 'text-blue-400' : 'text-muted'
               }`}>{trainee.pairName1}</p>
             </button>
             <button
@@ -453,7 +452,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                             {trainee.isPair && measurement.pairMember && (
                               <span className={`text-xs px-2 py-0.5 rounded-full ${
                                 measurement.pairMember === 'member_1'
-                                  ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
+                                  ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
                                   : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
                               }`}>
                                 {measurement.pairMember === 'member_1' ? trainee.pairName1 : trainee.pairName2}
@@ -469,7 +468,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                         {onEditMeasurement && (
                           <button
                             onClick={() => onEditMeasurement(measurement)}
-                            className="p-2 text-cyan-400 hover:bg-cyan-500/15 rounded-lg transition-all"
+                            className="p-2 text-blue-400 hover:bg-blue-500/15 rounded-lg transition-all"
                             title="ערוך מדידה"
                           >
                             <Edit className="h-4 w-4" />
@@ -571,7 +570,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                               {trainee.isPair && measurement.pairMember && (
                                 <span className={`text-xs px-1.5 py-0.5 rounded ${
                                   measurement.pairMember === 'member_1'
-                                    ? 'bg-cyan-500/15 text-cyan-400'
+                                    ? 'bg-blue-500/15 text-blue-400'
                                     : 'bg-amber-500/15 text-amber-400'
                                 }`}>
                                   {measurement.pairMember === 'member_1' ? trainee.pairName1?.charAt(0) : trainee.pairName2?.charAt(0)}
@@ -616,7 +615,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                               {onEditMeasurement && (
                                 <button
                                   onClick={() => onEditMeasurement(measurement)}
-                                  className="p-1.5 text-cyan-400 hover:bg-cyan-500/15 rounded-lg transition-all"
+                                  className="p-1.5 text-blue-400 hover:bg-blue-500/15 rounded-lg transition-all"
                                 >
                                   <Edit className="h-4 w-4" />
                                 </button>

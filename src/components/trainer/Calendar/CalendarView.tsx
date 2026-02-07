@@ -1477,7 +1477,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         </div>
         <button
           onClick={() => setShowSettings(true)}
-          className="btn-primary mx-auto bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground shadow-lg"
+          className="btn-primary mx-auto bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white shadow-lg"
         >
           הגדר Google Calendar
         </button>
@@ -1506,7 +1506,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         <div className="flex gap-3 justify-center">
           <button
             onClick={() => setShowSettings(true)}
-            className="btn-primary bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground shadow-lg"
+            className="btn-primary bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white shadow-lg"
           >
             חבר מחדש
           </button>
@@ -1825,7 +1825,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                 onClick={() => setViewMode('month')}
                 className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${
                   viewMode === 'month'
-                    ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground shadow-lg'
+                    ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg'
                     : 'text-foreground hover:bg-elevated'
                 }`}
                 title="תצוגת חודש"
@@ -1837,7 +1837,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                 onClick={() => setViewMode('week')}
                 className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${
                   viewMode === 'week'
-                    ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground shadow-lg'
+                    ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg'
                     : 'text-foreground hover:bg-elevated'
                 }`}
                 title="תצוגת שבוע"
@@ -1849,7 +1849,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                 onClick={() => setViewMode('day')}
                 className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${
                   viewMode === 'day'
-                    ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground shadow-lg'
+                    ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg'
                     : 'text-foreground hover:bg-elevated'
                 }`}
                 title="תצוגת יום"
@@ -1863,7 +1863,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
             <div className="grid grid-cols-2 sm:flex sm:flex-wrap md:flex-nowrap items-center gap-2">
               <button
                 onClick={() => setShowRecurringModal(true)}
-                className="px-2.5 sm:px-3 md:px-4 py-2 text-xs sm:text-sm bg-gradient-to-br from-purple-500/20 to-purple-600/20 hover:from-purple-500/30 hover:to-purple-600/30 text-purple-700 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 border border-purple-500/30 shadow-sm"
+                className="px-2.5 sm:px-3 md:px-4 py-2 text-xs sm:text-sm bg-gradient-to-br from-amber-500/20 to-amber-600/20 hover:from-amber-500/30 hover:to-amber-600/30 text-amber-700 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 border border-amber-500/30 shadow-sm"
                 title="קביעת אימונים חוזרים"
               >
                 <Repeat className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -1872,7 +1872,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
               </button>
               <button
                 onClick={() => setShowSyncModal(true)}
-                className="px-2.5 sm:px-3 md:px-4 py-2 text-xs sm:text-sm bg-gradient-to-br from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 text-emerald-700 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 border border-emerald-500/30 shadow-sm"
+                className="px-2.5 sm:px-3 md:px-4 py-2 text-xs sm:text-sm bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 hover:from-emerald-500/30 hover:to-emerald-600/30 text-emerald-700 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 border border-emerald-500/30 shadow-sm"
                 title="סנכרון מתאמנים מהיומן"
               >
                 <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -1897,7 +1897,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
               {onCreateWorkout && (
                 <button
                   onClick={onCreateWorkout}
-                  className="col-span-2 sm:col-span-1 btn-primary flex items-center justify-center gap-2 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground shadow-lg text-xs sm:text-sm py-2.5 md:py-2"
+                  className="col-span-2 sm:col-span-1 btn-primary flex items-center justify-center gap-2 bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white shadow-lg text-xs sm:text-sm py-2.5 md:py-2"
                 >
                   <Plus className="h-4 w-4" />
                   אימון חדש

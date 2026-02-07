@@ -119,9 +119,9 @@ export default function WorkoutsList({
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className={`p-2.5 rounded-xl ${workout.isSelfRecorded ? 'bg-cyan-500/15 border border-cyan-500/30' : 'bg-emerald-500/15 border border-emerald-500/30'}`}>
+                      <div className={`p-2.5 rounded-xl ${workout.isSelfRecorded ? 'bg-blue-500/15 border border-blue-500/30' : 'bg-emerald-500/15 border border-emerald-500/30'}`}>
                         {workout.isSelfRecorded ? (
-                          <User className="h-5 w-5 text-cyan-400" />
+                          <User className="h-5 w-5 text-blue-400" />
                         ) : (
                           <Dumbbell className="h-5 w-5 text-emerald-400" />
                         )}
@@ -137,7 +137,7 @@ export default function WorkoutsList({
                             })}
                           </h3>
                           {workout.isSelfRecorded && (
-                            <span className="text-xs bg-cyan-500/15 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-500/30">
+                            <span className="text-xs bg-blue-500/15 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">
                               אימון עצמאי
                             </span>
                           )}
@@ -180,7 +180,7 @@ export default function WorkoutsList({
                         e.stopPropagation();
                         onDuplicateWorkout(workout);
                       }}
-                      className="p-2 text-cyan-400 hover:bg-cyan-500/15 rounded-lg transition-all"
+                      className="p-2 text-blue-400 hover:bg-blue-500/15 rounded-lg transition-all"
                       title="שכפל אימון"
                     >
                       <Copy className="h-4 w-4" />
@@ -233,9 +233,9 @@ export default function WorkoutsList({
                       >
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${workout.isSelfRecorded ? 'bg-cyan-500/15' : 'bg-emerald-500/15'}`}>
+                            <div className={`p-2 rounded-lg ${workout.isSelfRecorded ? 'bg-blue-500/15' : 'bg-emerald-500/15'}`}>
                               {workout.isSelfRecorded ? (
-                                <User className="h-4 w-4 text-cyan-400" />
+                                <User className="h-4 w-4 text-blue-400" />
                               ) : (
                                 <Dumbbell className="h-4 w-4 text-emerald-400" />
                               )}
@@ -253,7 +253,7 @@ export default function WorkoutsList({
                         <td className="py-4 px-4 text-center">
                           <span className={`text-xs px-2 py-1 rounded-lg ${
                             workout.isSelfRecorded
-                              ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
+                              ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
                               : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                           }`}>
                             {workout.isSelfRecorded ? 'עצמאי' : 'מאמן'}
@@ -300,7 +300,7 @@ export default function WorkoutsList({
                                 e.stopPropagation();
                                 onDuplicateWorkout(workout);
                               }}
-                              className="p-1.5 text-cyan-400 hover:bg-cyan-500/15 rounded-lg transition-all"
+                              className="p-1.5 text-blue-400 hover:bg-blue-500/15 rounded-lg transition-all"
                               title="שכפל"
                             >
                               <Copy className="h-4 w-4" />
