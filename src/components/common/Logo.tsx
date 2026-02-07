@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useState } from 'react';
 
 export type LogoSize = 'sm' | 'md' | 'lg' | 'xl';
 export type LogoVariant = 'default' | 'minimal';
@@ -35,25 +34,11 @@ export default function Logo({
   animated = true,
   onClick,
 }: LogoProps) {
-  const { theme, isDark } = useTheme();
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // Determine which logo to use based on theme
-  // Always use dark bg in dark mode, white bg in light mode
-  const logoSrc = isDark 
-    ? '/logo-dark-bg.png' 
-    : '/logo-white-bg.jpg';
-
-  // Fallback - use opposite if current fails
-  const fallbackSrc = isDark 
-    ? '/logo-white-bg.jpg' 
-    : '/logo-dark-bg.png';
-
-  useEffect(() => {
-    setImageError(false);
-    setImageLoaded(false);
-  }, [logoSrc]);
+  const logoSrc = '/logo-white-bg.jpg';
+  const fallbackSrc = '/logo-dark-bg.png';
 
   const handleImageError = () => {
     if (logoSrc !== fallbackSrc) {
@@ -122,9 +107,8 @@ export default function Logo({
       <div 
         className="relative w-full h-full"
         style={{
-          backgroundColor: isDark ? 'rgba(26, 46, 22, 0.95)' : 'transparent',
+          backgroundColor: 'transparent',
           borderRadius: '8px',
-          padding: isDark && logoSrc.includes('white') ? '2px' : '0',
         }}
       >
         <img

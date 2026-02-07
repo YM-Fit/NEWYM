@@ -427,13 +427,13 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Droplets className="w-5 h-5 text-cyan-500" />
-                  <span className="font-medium text-cyan-600 dark:text-cyan-400">יעד מים יומי</span>
+                  <span className="font-medium text-cyan-600">יעד מים יומי</span>
                 </div>
-                <span className="text-lg font-bold text-cyan-600 dark:text-cyan-400">
+                <span className="text-lg font-bold text-cyan-600">
                   {(mealPlan.daily_water_ml / 1000).toFixed(1)} ליטר
                 </span>
               </div>
-              <p className="text-xs text-cyan-600 dark:text-cyan-400 mt-1">
+              <p className="text-xs text-cyan-600 mt-1">
                 ({mealPlan.daily_water_ml.toLocaleString()} מ״ל = כ-{Math.round(mealPlan.daily_water_ml / 250)} כוסות)
               </p>
             </div>

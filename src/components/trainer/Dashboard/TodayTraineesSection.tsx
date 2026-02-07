@@ -1199,7 +1199,7 @@ function TraineeTableRow({
               className="bg-cyan-500/20 hover:bg-cyan-500/30 border-2 border-cyan-500/30
                          hover:border-cyan-500/50 min-w-[36px] min-h-[36px] p-2 md:p-2.5 rounded-lg flex items-center gap-1 md:gap-1.5
                          transition-all duration-300 active:scale-95
-                         text-cyan-600 dark:text-cyan-400
+                         text-cyan-600
                          focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
               aria-label={`הוסף אימון שהוכן מראש ל${trainee.full_name}`}
               title="אימון שהוכן מראש"
@@ -1476,7 +1476,7 @@ function TraineeCardToday({
                          transition-all duration-300 hover:scale-110 active:scale-95
                          shadow-lg shadow-cyan-500/30 hover:shadow-2xl hover:shadow-cyan-500/50
                          focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:ring-offset-2
-                         group/btn relative overflow-hidden text-cyan-600 dark:text-cyan-400"
+                         group/btn relative overflow-hidden text-cyan-600"
               aria-label={`הוסף אימון שהוכן מראש ל${trainee.full_name}`}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 

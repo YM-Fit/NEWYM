@@ -319,13 +319,13 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
 
   if (loading && !connected) {
     return (
-      <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl p-6 transition-all duration-300">
+      <div className="premium-card-static bg-white rounded-2xl shadow-xl p-6 transition-all duration-300">
         <div className="flex items-center justify-center py-8">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
               <RefreshCw className="h-8 w-8 text-foreground animate-spin" />
             </div>
-            <span className="text-sm font-medium text-muted600 dark:text-[var(--color-text-muted)]">טוען הגדרות...</span>
+            <span className="text-sm font-medium text-muted600">טוען הגדרות...</span>
           </div>
         </div>
       </div>
@@ -333,21 +333,21 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
   }
 
   return (
-    <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl p-6 space-y-6 transition-all duration-300">
+    <div className="premium-card-static bg-white rounded-2xl shadow-xl p-6 space-y-6 transition-all duration-300">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-xl border border-emerald-500/30 dark:border-emerald-500/30">
-            <Calendar className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+          <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl border border-emerald-500/30">
+            <Calendar className="h-5 w-5 text-emerald-600" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-muted900 dark:text-[var(--color-text-primary)]">הגדרות Google Calendar</h2>
-            <p className="text-sm text-muted600 dark:text-[var(--color-text-muted)]">סנכרון אימונים עם Google Calendar</p>
+            <h2 className="text-xl font-bold text-muted900">הגדרות Google Calendar</h2>
+            <p className="text-sm text-muted600">סנכרון אימונים עם Google Calendar</p>
           </div>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="p-2 text-muted600 dark:text-[var(--color-text-muted)] hover:text-muted900 dark:hover:text-[var(--color-text-primary)] hover:bg-surface100 dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300"
+            className="p-2 text-muted600 hover:text-muted900 hover:bg-surface100 rounded-xl transition-all duration-300"
           >
             <XCircle className="h-5 w-5" />
           </button>
@@ -356,21 +356,21 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
 
       {!connected ? (
         <div className="text-center py-8 space-y-4">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[var(--color-bg-surface)] dark:to-[var(--color-bg-elevated)] rounded-2xl flex items-center justify-center shadow-lg border-2 border-border300 dark:border-[var(--color-border)]/30">
-            <Calendar className="h-8 w-8 text-muted500 dark:text-[var(--color-text-muted)]" />
+          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center shadow-lg border-2 border-border300">
+            <Calendar className="h-8 w-8 text-muted500" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-muted900 dark:text-[var(--color-text-primary)] mb-2">
+            <h3 className="text-lg font-semibold text-muted900 mb-2">
               Google Calendar לא מחובר
             </h3>
-            <p className="text-sm text-muted600 dark:text-[var(--color-text-muted)] mb-6">
+            <p className="text-sm text-muted600 mb-6">
               חבר את Google Calendar כדי לסנכרן אימונים אוטומטית
             </p>
           </div>
           {/* Debug: Show trainer ID (remove in production) */}
           {user && (
-            <div className="text-xs text-muted500 dark:text-[var(--color-text-muted)] mb-4 px-4 py-2 bg-surface100 dark:bg-[var(--color-bg-surface)] rounded-lg border border-border200 dark:border-[var(--color-border)]/30">
-              Trainer ID: <code className="text-muted700 dark:text-[var(--color-text-primary)]">{user.id}</code>
+            <div className="text-xs text-muted500 mb-4 px-4 py-2 bg-surface100 rounded-lg border border-border200">
+              Trainer ID: <code className="text-muted700">{user.id}</code>
             </div>
           )}
           <button
@@ -385,27 +385,27 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
       ) : (
         <div className="space-y-4">
           {/* Connection Status */}
-          <div className="flex items-center justify-between p-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 rounded-xl border border-emerald-200 dark:border-emerald-500/20 transition-all duration-300">
+          <div className="flex items-center justify-between p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 transition-all duration-300">
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
               <div>
-                <span className="text-emerald-600 dark:text-emerald-400 font-semibold block">מחובר</span>
-                <span className="text-xs text-muted600 dark:text-[var(--color-text-muted)]">Google Calendar פעיל</span>
+                <span className="text-emerald-600 font-semibold block">מחובר</span>
+                <span className="text-xs text-muted600">Google Calendar פעיל</span>
               </div>
             </div>
             <button
               onClick={handleDisconnect}
               disabled={loading}
-              className="px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-500/10 rounded-xl transition-all duration-300 border border-red-200 dark:border-red-500/20"
+              className="px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-100 rounded-xl transition-all duration-300 border border-red-200"
             >
               ניתוק
             </button>
           </div>
 
           {/* Sync Settings */}
-          <div className="p-4 bg-surface50 dark:bg-[var(--color-bg-surface)] rounded-xl space-y-4 border border-border200 dark:border-[var(--color-border)]/30 transition-all duration-300">
+          <div className="p-4 bg-surface50 rounded-xl space-y-4 border border-border200 transition-all duration-300">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-muted900 dark:text-[var(--color-text-primary)]">הגדרות סנכרון</span>
+              <span className="text-sm font-semibold text-muted900">הגדרות סנכרון</span>
             </div>
             
             <Checkbox
@@ -499,7 +499,7 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
           <button
             onClick={handleSync}
             disabled={syncing || loading}
-            className="w-full btn-secondary flex items-center justify-center gap-2 bg-surface100 dark:bg-[var(--color-bg-surface)] hover:bg-surface200 dark:hover:bg-[var(--color-bg-elevated)] text-muted700 dark:text-[var(--color-text-primary)] border border-border200 dark:border-[var(--color-border)]/30"
+            className="w-full btn-secondary flex items-center justify-center gap-2 bg-surface100 hover:bg-surface200 text-muted700 border border-border200"
           >
             {syncing ? (
               <>
@@ -534,11 +534,11 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
           </button>
 
           {/* Info */}
-          <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-500/10 dark:to-cyan-500/10 rounded-xl border border-blue-200 dark:border-blue-500/20 transition-all duration-300">
-            <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-muted700 dark:text-[var(--color-text-primary)]">
+          <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-200 transition-all duration-300">
+            <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-muted700">
               <p className="font-semibold mb-1">מידע חשוב:</p>
-              <ul className="list-disc list-inside space-y-1 text-muted600 dark:text-[var(--color-text-muted)]">
+              <ul className="list-disc list-inside space-y-1 text-muted600">
                 <li>אימונים חדשים יתווספו אוטומטית ל-Google Calendar</li>
                 <li>שינויים ב-Google Calendar יסונכרנו למערכת</li>
                 <li>אימונים שהושלמו לא יימחקו מה-Calendar</li>

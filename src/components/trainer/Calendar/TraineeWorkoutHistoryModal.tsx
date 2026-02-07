@@ -545,27 +545,27 @@ export default function TraineeWorkoutHistoryModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
       <div className="premium-card-static bg-white bg-elevated rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-border border-border30 shadow-2xl animate-scale-in">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-border border-border30">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-xl border border-emerald-500/30 dark:border-emerald-500/30">
-              <Calendar className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl border border-emerald-500/30">
+              <Calendar className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-foreground text-foreground">היסטוריית אימונים - {traineeName}</h2>
               <div className="flex items-center gap-2 mt-1">
                 <button
                   onClick={() => navigateMonth('prev')}
-                  className="p-1 hover:bg-surface dark:hover:bg-[var(--color-bg-surface)] rounded-lg transition-all duration-300"
+                  className="p-1 hover:bg-surface rounded-lg transition-all duration-300"
                 >
                   <ChevronRight className="h-4 w-4 text-muted text-muted" />
                 </button>
                 <span className="text-sm text-muted text-muted">{formatMonth(selectedMonth)}</span>
                 <button
                   onClick={() => navigateMonth('next')}
-                  className="p-1 hover:bg-surface dark:hover:bg-[var(--color-bg-surface)] rounded-lg transition-all duration-300"
+                  className="p-1 hover:bg-surface rounded-lg transition-all duration-300"
                 >
                   <ChevronLeft className="h-4 w-4 text-muted text-muted" />
                 </button>
@@ -574,7 +574,7 @@ export default function TraineeWorkoutHistoryModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-surface dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300"
+            className="p-2 hover:bg-surface rounded-xl transition-all duration-300"
           >
             <X className="h-5 w-5 text-muted text-muted" />
           </button>
@@ -598,15 +598,15 @@ export default function TraineeWorkoutHistoryModal({
             </div>
           ) : !resolvedTraineeId ? (
             <div className="text-center py-12">
-              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-500/20 dark:to-orange-500/20 rounded-full flex items-center justify-center mb-4 border border-amber-200 dark:border-amber-500/30">
-                <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-500" />
+              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center mb-4 border border-amber-200">
+                <AlertCircle className="h-8 w-8 text-amber-600" />
               </div>
               <p className="text-foreground text-foreground font-medium">לא נמצא מתאמן בשם "{traineeName}"</p>
               <p className="text-muted text-muted text-sm mt-2">ייתכן ששם המתאמן ביומן לא תואם לשם במערכת</p>
             </div>
           ) : workouts.length === 0 ? (
             <div className="text-center py-12">
-              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-[var(--color-bg-surface)] dark:to-[var(--color-bg-elevated)] rounded-full flex items-center justify-center mb-4 border border-border border-border30">
+              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4 border border-border border-border30">
                 <Calendar className="h-8 w-8 text-muted400 text-muted" />
               </div>
               <p className="text-muted text-muted">אין אימונים בחודש זה</p>
@@ -616,7 +616,7 @@ export default function TraineeWorkoutHistoryModal({
               {workouts.map((workout) => (
                 <div
                   key={workout.id}
-                  className="flex items-center justify-between p-4 bg-white bg-elevated rounded-xl border border-border border-border30 hover:bg-surface50 dark:hover:bg-[var(--color-bg-surface)] transition-all duration-300 shadow-sm"
+                  className="flex items-center justify-between p-4 bg-white bg-elevated rounded-xl border border-border border-border30 hover:bg-surface50 transition-all duration-300 shadow-sm"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-foreground font-bold shadow-md">
@@ -640,7 +640,7 @@ export default function TraineeWorkoutHistoryModal({
                     <button
                       onClick={() => startReschedule(workout)}
                       disabled={!!actionLoading}
-                      className="p-2 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-500/20 dark:to-blue-600/20 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-500/30 dark:hover:to-blue-600/30 text-blue-600 dark:text-blue-400 rounded-lg transition-all duration-300 disabled:opacity-50 border border-blue-200 dark:border-blue-500/30"
+                      className="p-2 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-blue-600 rounded-lg transition-all duration-300 disabled:opacity-50 border border-blue-200"
                       title="שינוי תאריך"
                     >
                       <Edit2 className="h-4 w-4" />
@@ -648,7 +648,7 @@ export default function TraineeWorkoutHistoryModal({
                     <button
                       onClick={() => startReplace(workout)}
                       disabled={!!actionLoading}
-                      className="p-2 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-500/20 dark:to-purple-600/20 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-500/30 dark:hover:to-purple-600/30 text-purple-600 dark:text-purple-400 rounded-lg transition-all duration-300 disabled:opacity-50 border border-purple-200 dark:border-purple-500/30"
+                      className="p-2 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 text-purple-600 rounded-lg transition-all duration-300 disabled:opacity-50 border border-purple-200"
                       title="החלפת מתאמן"
                     >
                       <Users className="h-4 w-4" />
@@ -656,7 +656,7 @@ export default function TraineeWorkoutHistoryModal({
                     <button
                       onClick={() => handleDeleteWorkout(workout)}
                       disabled={!!actionLoading}
-                      className="p-2 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-500/20 dark:to-rose-500/20 hover:from-red-100 hover:to-rose-100 dark:hover:from-red-500/30 dark:hover:to-rose-500/30 text-red-600 dark:text-red-400 rounded-lg transition-all duration-300 disabled:opacity-50 border border-red-200 dark:border-red-500/30"
+                      className="p-2 bg-gradient-to-br from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 text-red-600 rounded-lg transition-all duration-300 disabled:opacity-50 border border-red-200"
                       title="ביטול אימון"
                     >
                       {actionLoading === workout.id ? (
@@ -671,8 +671,8 @@ export default function TraineeWorkoutHistoryModal({
             </div>
           ) : actionMode === 'reschedule' && selectedWorkout ? (
             <div className="space-y-4">
-              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-500/10 dark:to-blue-600/10 border border-blue-200 dark:border-blue-500/30 rounded-xl">
-                <h3 className="font-medium text-blue-700 dark:text-blue-400 mb-2">שינוי תאריך אימון</h3>
+              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl">
+                <h3 className="font-medium text-blue-700 mb-2">שינוי תאריך אימון</h3>
                 <p className="text-sm text-muted text-muted">
                   אימון מקורי: {new Date(selectedWorkout.workoutDate).toLocaleDateString('he-IL')} בשעה {selectedWorkout.startTime}
                 </p>
@@ -717,7 +717,7 @@ export default function TraineeWorkoutHistoryModal({
                 <button
                   onClick={cancelAction}
                   disabled={!!actionLoading}
-                  className="px-6 py-3 bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] rounded-xl text-foreground text-foreground transition-all duration-300 border border-border border-border30"
+                  className="px-6 py-3 bg-surface bg-surface hover:bg-elevated rounded-xl text-foreground text-foreground transition-all duration-300 border border-border border-border30"
                 >
                   ביטול
                 </button>
@@ -725,8 +725,8 @@ export default function TraineeWorkoutHistoryModal({
             </div>
           ) : actionMode === 'replace' && selectedWorkout ? (
             <div className="space-y-4">
-              <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-500/10 dark:to-purple-600/10 border border-purple-200 dark:border-purple-500/30 rounded-xl">
-                <h3 className="font-medium text-purple-700 dark:text-purple-400 mb-2">החלפת מתאמן</h3>
+              <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl">
+                <h3 className="font-medium text-purple-700 mb-2">החלפת מתאמן</h3>
                 <p className="text-sm text-muted text-muted">
                   אימון בתאריך: {new Date(selectedWorkout.workoutDate).toLocaleDateString('he-IL')} בשעה {selectedWorkout.startTime}
                 </p>
@@ -769,7 +769,7 @@ export default function TraineeWorkoutHistoryModal({
                 <button
                   onClick={cancelAction}
                   disabled={!!actionLoading}
-                  className="px-6 py-3 bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] rounded-xl text-foreground text-foreground transition-all duration-300 border border-border border-border30"
+                  className="px-6 py-3 bg-surface bg-surface hover:bg-elevated rounded-xl text-foreground text-foreground transition-all duration-300 border border-border border-border30"
                 >
                   ביטול
                 </button>
@@ -786,7 +786,7 @@ export default function TraineeWorkoutHistoryModal({
             </div>
             <button
               onClick={onClose}
-              className="px-5 py-2.5 bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] text-foreground text-foreground rounded-xl transition-all duration-300 border border-border border-border30"
+              className="px-5 py-2.5 bg-surface bg-surface hover:bg-elevated text-foreground text-foreground rounded-xl transition-all duration-300 border border-border border-border30"
             >
               סגור
             </button>

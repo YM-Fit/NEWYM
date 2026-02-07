@@ -1,6 +1,5 @@
-import { User, LogOut, Menu, Sun, Moon } from 'lucide-react';
+import { User, LogOut, Menu } from 'lucide-react';
 import NotificationBell from '../trainer/Notifications/NotificationBell';
-import { useTheme } from '../../contexts/ThemeContext';
 import Logo from '../common/Logo';
 
 interface HeaderProps {
@@ -12,10 +11,8 @@ interface HeaderProps {
 }
 
 export default function Header({ onLogout, trainerName, onNavigateToTrainee, onToggleSidebar }: HeaderProps) {
-  const { theme, toggleTheme } = useTheme();
-
   return (
-    <header 
+    <header
       role="banner"
       className="sticky top-0 z-30 glass-card rounded-none border-x-0 border-t-0 px-4 py-3 sm:px-6 sm:py-4 backdrop-blur-xl animate-slide-in-top"
     >
@@ -33,9 +30,9 @@ export default function Header({ onLogout, trainerName, onNavigateToTrainee, onT
           <div className="flex items-center gap-3">
             <div className="relative group">
               <div className="rounded-xl transition-all duration-300 group-hover:scale-105">
-                <Logo 
-                  size="md" 
-                  className="drop-shadow-[0_2px_8px_rgba(74,107,42,0.2)] group-hover:drop-shadow-[0_4px_16px_rgba(74,107,42,0.4)] transition-all duration-300" 
+                <Logo
+                  size="md"
+                  className="drop-shadow-[0_2px_8px_rgba(74,107,42,0.2)] group-hover:drop-shadow-[0_4px_16px_rgba(74,107,42,0.4)] transition-all duration-300"
                   animated={true}
                 />
               </div>
@@ -53,21 +50,6 @@ export default function Header({ onLogout, trainerName, onNavigateToTrainee, onT
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            onClick={toggleTheme}
-            className="p-2.5 rounded-xl text-muted hover:text-amber-400 dark:hover:text-amber-400 hover:bg-amber-500/10 transition-all duration-300 border border-transparent hover:border-amber-500/20 active:scale-95 group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-            title={theme === 'dark' ? 'מצב בהיר' : 'מצב כהה'}
-            aria-label={theme === 'dark' ? 'עבור למצב בהיר' : 'עבור למצב כהה'}
-            aria-pressed={theme === 'dark'}
-          >
-            <div className="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-            {theme === 'dark' ? (
-              <Sun className="h-5 w-5 relative z-10 transition-transform group-hover:rotate-180 group-hover:scale-110" />
-            ) : (
-              <Moon className="h-5 w-5 relative z-10 transition-transform group-hover:-rotate-12 group-hover:scale-110" />
-            )}
-          </button>
-
           <NotificationBell onNavigateToTrainee={onNavigateToTrainee} />
 
           <div className="hidden sm:flex items-center gap-3 px-4 py-2.5 bg-surface rounded-xl border border-border hover:border-border-hover transition-all duration-300 hover:bg-elevated group cursor-pointer">

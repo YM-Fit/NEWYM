@@ -82,8 +82,8 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-card/95 dark:bg-card/95 light:bg-white/95 backdrop-blur-sm border border-border dark:border-border light:border-border rounded-xl p-4 shadow-2xl">
-          <p className="text-muted dark:text-muted light:text-muted text-xs mb-3 font-medium">{label}</p>
+        <div className="bg-card/95 light:bg-white/95 backdrop-blur-sm border border-border light:border-border rounded-xl p-4 shadow-2xl">
+          <p className="text-muted light:text-muted text-xs mb-3 font-medium">{label}</p>
           {isPairWithBothMembers && payload.length > 1 ? (
             <div className="space-y-2">
               {payload.map((entry: any, index: number) => {
@@ -92,11 +92,11 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                 const color = index === 0 ? '#06b6d4' : '#f59e0b';
                 return (
                   <div key={index} className="flex items-baseline gap-2">
-                    <p className="text-xs text-muted dark:text-muted light:text-muted font-medium">{memberName}:</p>
+                    <p className="text-xs text-muted light:text-muted font-medium">{memberName}:</p>
                     <p className="font-bold text-xl" style={{ color }}>
                       {entry.value}
                     </p>
-                    <p className="text-xs text-muted dark:text-muted light:text-muted font-medium">
+                    <p className="text-xs text-muted light:text-muted font-medium">
                       {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
                     </p>
                   </div>
@@ -108,13 +108,13 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
               <p className="font-bold text-2xl" style={{ color: getMetricColor(metric) }}>
                 {payload[0].value}
               </p>
-              <p className="text-sm text-muted dark:text-muted light:text-muted font-medium">
+              <p className="text-sm text-muted light:text-muted font-medium">
                 {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
               </p>
             </div>
           )}
-          <div className="mt-2 pt-2 border-t border-border dark:border-border light:border-border">
-            <p className="text-xs text-muted dark:text-muted light:text-muted">{getMetricLabel(metric)}</p>
+          <div className="mt-2 pt-2 border-t border-border light:border-border">
+            <p className="text-xs text-muted light:text-muted">{getMetricLabel(metric)}</p>
           </div>
         </div>
       );

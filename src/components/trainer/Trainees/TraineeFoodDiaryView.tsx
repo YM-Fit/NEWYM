@@ -256,12 +256,12 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
         <div
           className={`px-5 py-4 rounded-t-2xl transition-all duration-300 ${
             !isSeen && isCompleted
-              ? 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-500/10 dark:to-rose-500/10 border-b border-red-200 dark:border-red-500/20'
+              ? 'bg-gradient-to-br from-red-50 to-rose-100 border-b border-red-200'
               : isToday(date)
-              ? 'bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700 text-inverse shadow-lg'
+              ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-inverse shadow-lg'
               : isCompleted
-              ? 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 border-b border-emerald-200 dark:border-emerald-500/20'
-              : 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-surface dark:to-elevated border-b border-border dark:border-border/20'
+              ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-b border-emerald-200'
+              : 'bg-gradient-to-br from-gray-50 to-gray-100 border-b border-border'
           }`}
         >
           <div className="flex justify-between items-center">
@@ -271,8 +271,8 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
                   isToday(date) 
                     ? 'bg-white/20' 
                     : !isSeen 
-                    ? 'bg-gradient-to-br from-red-500 to-rose-600 dark:from-red-600 dark:to-rose-700'
-                    : 'bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700'
+                    ? 'bg-gradient-to-br from-red-500 to-rose-600'
+                    : 'bg-gradient-to-br from-emerald-500 to-teal-600'
                 }`}>
                   <Check className="w-4 h-4 text-inverse" />
                 </div>
@@ -282,8 +282,8 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
                   isToday(date) 
                     ? 'text-inverse' 
                     : !isSeen && isCompleted 
-                    ? 'text-foreground dark:text-foreground' 
-                    : 'text-foreground dark:text-foreground'
+                    ? 'text-foreground' 
+                    : 'text-foreground'
                 }`}>
                   יום {getHebrewDayName(date)}
                 </span>
@@ -291,8 +291,8 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
                   isToday(date) 
                     ? 'text-inverse/90' 
                     : !isSeen && isCompleted 
-                    ? 'text-secondary dark:text-muted' 
-                    : 'text-muted dark:text-muted'
+                    ? 'text-secondary' 
+                    : 'text-muted'
                 }`}>
                   {formatDate(date)}
                 </span>
@@ -304,10 +304,10 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
                 {isCompleted && (
                   <span className={`text-xs px-3 py-1 rounded-full mr-2 font-semibold transition-all duration-300 ${
                     !isSeen
-                      ? 'bg-gradient-to-br from-red-500 to-rose-600 dark:from-red-600 dark:to-rose-700 text-inverse shadow-md'
+                      ? 'bg-gradient-to-br from-red-500 to-rose-600 text-inverse shadow-md'
                       : isToday(date)
                       ? 'bg-white/20 text-inverse'
-                      : 'bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700 text-inverse shadow-md'
+                      : 'bg-gradient-to-br from-emerald-500 to-teal-600 text-inverse shadow-md'
                   }`}>
                     {isSeen ? 'נצפה' : 'חדש'}
                   </span>
@@ -331,19 +331,19 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
         </div>
 
         {/* Water Tracking */}
-        <div className="p-4 border-b border-border dark:border-border/30 bg-gradient-to-br from-blue-50/80 to-cyan-50/80 dark:from-blue-500/10 dark:to-cyan-500/10 transition-all duration-300">
+        <div className="p-4 border-b border-border bg-gradient-to-br from-blue-50/80 to-cyan-50/80 transition-all duration-300">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-sky-500 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
               <Droplets className="w-5 h-5 text-inverse" />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="text-sm font-semibold text-foreground dark:text-foreground block">מעקב מים</span>
-              <span className="text-sm text-muted dark:text-muted font-medium">
+              <span className="text-sm font-semibold text-foreground block">מעקב מים</span>
+              <span className="text-sm text-muted font-medium">
                 {waterAmount} / {WATER_GOAL} מ"ל
               </span>
             </div>
           </div>
-          <div className="h-3 bg-surface dark:bg-surface rounded-full overflow-hidden shadow-inner border border-border dark:border-border/30">
+          <div className="h-3 bg-surface rounded-full overflow-hidden shadow-inner border border-border">
             <div
               className="h-full bg-gradient-to-r from-blue-400 to-sky-500 transition-all duration-500 rounded-full shadow-sm"
               style={{ width: `${waterProgress}%` }}
@@ -352,13 +352,13 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
         </div>
 
         {/* Meals */}
-        <div className="p-4 bg-white dark:bg-base">
+        <div className="p-4 bg-white">
           {dayMeals.length === 0 ? (
             <div className="text-center py-8">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-surface dark:bg-surface flex items-center justify-center">
-                <Utensils className="w-8 h-8 text-muted dark:text-muted" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-surface flex items-center justify-center">
+                <Utensils className="w-8 h-8 text-muted" />
               </div>
-              <p className="text-muted dark:text-muted text-sm">
+              <p className="text-muted text-sm">
                 לא נרשמו ארוחות
               </p>
             </div>
@@ -384,13 +384,13 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
                             {typeInfo.label}
                           </span>
                           {meal.meal_time && (
-                            <span className="text-xs text-muted dark:text-muted flex items-center gap-1 bg-white/70 dark:bg-white/10 px-2 py-1 rounded-lg">
+                            <span className="text-xs text-muted flex items-center gap-1 bg-white/70 px-2 py-1 rounded-lg">
                               <Clock className="w-3 h-3" />
                               {meal.meal_time.slice(0, 5)}
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-foreground dark:text-muted whitespace-pre-wrap leading-relaxed">
+                        <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                           {description}
                         </p>
                       </div>
@@ -407,12 +407,12 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[var(--color-bg-base)] dark:to-[var(--color-bg-elevated)]">
+      <div className="flex justify-center items-center py-12 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="flex flex-col items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
             <BookOpen className="w-8 h-8 text-inverse" />
           </div>
-          <span className="text-secondary dark:text-muted font-medium">טוען יומן אכילה...</span>
+          <span className="text-secondary font-medium">טוען יומן אכילה...</span>
         </div>
       </div>
     );
@@ -424,24 +424,24 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
   ).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[var(--color-bg-base)] dark:to-[var(--color-bg-elevated)] p-4 lg:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 lg:p-6">
       {/* Premium Header */}
-      <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10 transition-all duration-300">
+      <div className="premium-card-static bg-white rounded-2xl shadow-xl p-4 lg:p-6 mb-4 lg:mb-6 sticky top-0 z-10 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
             <button
               onClick={onBack}
-              className="p-3 lg:p-4 hover:bg-surface dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300"
+              className="p-3 lg:p-4 hover:bg-surface rounded-xl transition-all duration-300"
             >
-              <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7 text-secondary dark:text-foreground" />
+              <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7 text-secondary" />
             </button>
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105">
                 <BookOpen className="w-7 h-7 lg:w-8 lg:h-8 text-inverse" />
               </div>
               <div>
-                <h1 className="text-xl lg:text-3xl font-bold text-foreground dark:text-foreground">יומן אכילה</h1>
-                <p className="text-base lg:text-lg text-secondary dark:text-[var(--color-text-secondary)]">{traineeName}</p>
+                <h1 className="text-xl lg:text-3xl font-bold text-foreground">יומן אכילה</h1>
+                <p className="text-base lg:text-lg text-secondary">{traineeName}</p>
               </div>
             </div>
           </div>
@@ -453,19 +453,19 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
         </div>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between mb-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-surface dark:to-elevated rounded-xl p-3 transition-all duration-300 border border-border dark:border-border/20">
+        <div className="flex items-center justify-between mb-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 transition-all duration-300 border border-border">
           <button
             onClick={() => {
               if (viewMode === 'day') navigateDay('next');
               else if (viewMode === 'week') navigateWeek('next');
               else navigateMonth('next');
             }}
-            className="p-3 hover:bg-white dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
+            className="p-3 hover:bg-white rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
           >
-            <ChevronRight className="w-5 h-5 text-secondary dark:text-foreground" />
+            <ChevronRight className="w-5 h-5 text-secondary" />
           </button>
           <div className="text-center">
-            <p className="text-sm font-semibold text-foreground dark:text-foreground">{getViewTitle()}</p>
+            <p className="text-sm font-semibold text-foreground">{getViewTitle()}</p>
           </div>
           <button
             onClick={() => {
@@ -473,9 +473,9 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
               else if (viewMode === 'week') navigateWeek('prev');
               else navigateMonth('prev');
             }}
-            className="p-3 hover:bg-white dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
+            className="p-3 hover:bg-white rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
           >
-            <ChevronLeft className="w-5 h-5 text-secondary dark:text-foreground" />
+            <ChevronLeft className="w-5 h-5 text-secondary" />
           </button>
         </div>
 
@@ -486,7 +486,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
               viewMode === 'day'
                 ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-inverse shadow-lg'
-                : 'bg-surface dark:bg-surface text-secondary dark:text-foreground hover:bg-surface dark:hover:bg-[var(--color-bg-elevated)]'
+                : 'bg-surface text-secondary hover:bg-surface'
             }`}
           >
             <Calendar className="w-4 h-4" />
@@ -497,7 +497,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
               viewMode === 'week'
                 ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-inverse shadow-lg'
-                : 'bg-surface dark:bg-surface text-secondary dark:text-foreground hover:bg-surface dark:hover:bg-[var(--color-bg-elevated)]'
+                : 'bg-surface text-secondary hover:bg-surface'
             }`}
           >
             <CalendarRange className="w-4 h-4" />
@@ -508,7 +508,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
               viewMode === 'month'
                 ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-inverse shadow-lg'
-                : 'bg-surface dark:bg-surface text-secondary dark:text-foreground hover:bg-surface dark:hover:bg-[var(--color-bg-elevated)]'
+                : 'bg-surface text-secondary hover:bg-surface'
             }`}
           >
             <CalendarDays className="w-4 h-4" />
@@ -523,7 +523,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 ${
               filter === 'all'
                 ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-inverse shadow-lg'
-                : 'bg-surface dark:bg-surface text-secondary dark:text-foreground hover:bg-surface dark:hover:bg-[var(--color-bg-elevated)]'
+                : 'bg-surface text-secondary hover:bg-surface'
             }`}
           >
             הכל
@@ -533,7 +533,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 ${
               filter === 'completed'
                 ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-inverse shadow-lg'
-                : 'bg-surface dark:bg-surface text-secondary dark:text-foreground hover:bg-surface dark:hover:bg-[var(--color-bg-elevated)]'
+                : 'bg-surface text-secondary hover:bg-surface'
             }`}
           >
             הושלמו
@@ -543,7 +543,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 relative ${
               filter === 'unseen'
                 ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-inverse shadow-lg'
-                : 'bg-surface dark:bg-surface text-secondary dark:text-foreground hover:bg-surface dark:hover:bg-[var(--color-bg-elevated)]'
+                : 'bg-surface text-secondary hover:bg-surface'
             }`}
           >
             לא נצפו
@@ -563,11 +563,11 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             const dateStr = currentDate.toISOString().split('T')[0];
             if (!shouldShowDay(dateStr)) {
               return (
-                <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl p-10 text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-surface dark:bg-surface flex items-center justify-center">
-                    <BookOpen className="w-8 h-8 text-muted dark:text-muted" />
+                <div className="premium-card-static bg-white rounded-2xl shadow-xl p-10 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-surface flex items-center justify-center">
+                    <BookOpen className="w-8 h-8 text-muted" />
                   </div>
-                  <p className="text-muted dark:text-muted text-lg font-medium">אין נתונים ליום זה</p>
+                  <p className="text-muted text-lg font-medium">אין נתונים ליום זה</p>
                 </div>
               );
             }
@@ -583,7 +583,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             return (
               <div
                 key={dateStr}
-                className={`premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl ${
+                className={`premium-card-static bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl ${
                   isToday(currentDate) ? 'ring-2 ring-emerald-500' : ''
                 } ${!isSeen && isCompleted ? 'ring-2 ring-red-400' : ''}`}
               >
@@ -611,7 +611,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             return (
               <div
                 key={dateStr}
-                className={`premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl ${
+                className={`premium-card-static bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl ${
                   isToday(date) ? 'ring-2 ring-emerald-500' : ''
                 } ${!isSeen && isCompleted ? 'ring-2 ring-red-400' : ''}`}
               >
@@ -623,13 +623,13 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
       )}
 
       {viewMode === 'month' && (
-        <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl p-4">
+        <div className="premium-card-static bg-white rounded-2xl shadow-xl p-4">
           <div className="grid grid-cols-7 gap-2">
             {/* Week days header */}
             {['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'].map((day, index) => (
               <div
                 key={index}
-                className="text-center text-sm font-semibold text-muted dark:text-muted py-2"
+                className="text-center text-sm font-semibold text-muted py-2"
               >
                 {day}
               </div>
@@ -653,29 +653,29 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
                 <div
                   key={index}
                   onClick={() => handleDateClick(date)}
-                  className={`min-h-[80px] p-2 border border-border dark:border-border/30 rounded-lg cursor-pointer transition-all hover:border-emerald-500/50 dark:hover:border-emerald-500/50 ${
+                  className={`min-h-[80px] p-2 border border-border rounded-lg cursor-pointer transition-all hover:border-emerald-500/50 ${
                     isCurrentDay
-                      ? 'bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 dark:border-emerald-500/40'
+                      ? 'bg-emerald-500/10 border-emerald-500/30'
                       : hasMeals
-                      ? 'bg-surface dark:bg-surface'
+                      ? 'bg-surface'
                       : 'bg-transparent'
                   } ${!isSeen && isCompleted ? 'ring-2 ring-red-400' : ''}`}
                 >
                   <div
                     className={`text-sm font-semibold mb-1 ${
-                      isCurrentDay ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground dark:text-foreground'
+                      isCurrentDay ? 'text-emerald-600' : 'text-foreground'
                     }`}
                   >
                     {date.getDate()}
                   </div>
                   {hasMeals && (
                     <div className="space-y-1">
-                      <div className="text-xs bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded truncate">
+                      <div className="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded truncate">
                         {dayMeals.length} ארוחות
                       </div>
                       {isCompleted && (
                         <div className={`text-xs px-1.5 py-0.5 rounded ${
-                          isSeen ? 'bg-emerald-500 dark:bg-emerald-600 text-inverse' : 'bg-red-500 dark:bg-red-600 text-inverse'
+                          isSeen ? 'bg-emerald-500 text-inverse' : 'bg-red-500 text-inverse'
                         }`}>
                           {isSeen ? '✓' : 'חדש'}
                         </div>
@@ -691,11 +691,11 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
 
       {/* Empty state for week view */}
       {viewMode === 'week' && weekDates.filter((date) => shouldShowDay(date.toISOString().split('T')[0])).length === 0 && (
-        <div className="premium-card-static bg-white dark:bg-[var(--color-bg-elevated)] rounded-2xl shadow-xl p-10 text-center transition-all duration-300">
-          <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-surface dark:to-elevated rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <div className="premium-card-static bg-white rounded-2xl shadow-xl p-10 text-center transition-all duration-300">
+          <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <BookOpen className="w-10 h-10 text-muted" />
           </div>
-          <p className="text-muted dark:text-muted text-lg font-medium">אין ימים להצגה בפילטר הנוכחי</p>
+          <p className="text-muted text-lg font-medium">אין ימים להצגה בפילטר הנוכחי</p>
         </div>
       )}
     </div>

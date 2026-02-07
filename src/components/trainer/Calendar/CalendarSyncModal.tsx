@@ -546,13 +546,13 @@ export default function CalendarSyncModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
       <div className="premium-card-static bg-white bg-elevated rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col border border-border border-border30 shadow-2xl animate-scale-in">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border border-border30">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-xl border border-emerald-500/30 dark:border-emerald-500/30">
-              <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl border border-emerald-500/30">
+              <Users className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-foreground text-foreground">סנכרון מתאמנים</h2>
@@ -563,7 +563,7 @@ export default function CalendarSyncModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-surface dark:hover:bg-[var(--color-bg-surface)] rounded-xl transition-all duration-300"
+            className="p-2 hover:bg-surface rounded-xl transition-all duration-300"
           >
             <X className="h-5 w-5 text-muted text-muted" />
           </button>
@@ -582,13 +582,13 @@ export default function CalendarSyncModal({
 
           {step === 'review' && error && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-500/20 dark:to-rose-500/20 flex items-center justify-center shadow-lg border-2 border-red-300 dark:border-red-500/30">
-                <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-100 to-rose-100 flex items-center justify-center shadow-lg border-2 border-red-300">
+                <AlertCircle className="h-8 w-8 text-red-600" />
               </div>
               <p className="text-foreground text-foreground font-medium">{error}</p>
               <button
                 onClick={loadAndMatchEvents}
-                className="px-4 py-2 bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] text-foreground text-foreground rounded-xl transition-all duration-300 border border-border border-border30"
+                className="px-4 py-2 bg-surface bg-surface hover:bg-elevated text-foreground text-foreground rounded-xl transition-all duration-300 border border-border border-border30"
               >
                 נסה שוב
               </button>
@@ -597,8 +597,8 @@ export default function CalendarSyncModal({
 
           {step === 'review' && !error && matchedEvents.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-500/20 dark:to-teal-500/20 flex items-center justify-center shadow-lg border-2 border-emerald-300 dark:border-emerald-500/30">
-                <Check className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center shadow-lg border-2 border-emerald-300">
+                <Check className="h-8 w-8 text-emerald-600" />
               </div>
               <p className="text-foreground text-foreground font-medium">כל האירועים כבר מסונכרנים!</p>
               <p className="text-muted text-muted text-sm">אין אירועים חדשים לקשר</p>
@@ -609,19 +609,19 @@ export default function CalendarSyncModal({
             <div className="space-y-6">
               {/* Stats */}
               <div className="grid grid-cols-4 gap-3">
-                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
-                  <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.matched}</div>
-                  <div className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">התאמות מדויקות</div>
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
+                  <div className="text-2xl font-bold text-emerald-600">{stats.matched}</div>
+                  <div className="text-xs text-emerald-700 font-medium">התאמות מדויקות</div>
                 </div>
-                <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
-                  <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.pending}</div>
-                  <div className="text-xs text-amber-700 dark:text-amber-300 font-medium">ממתינים לאישור</div>
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
+                  <div className="text-2xl font-bold text-amber-600">{stats.pending}</div>
+                  <div className="text-xs text-amber-700 font-medium">ממתינים לאישור</div>
                 </div>
-                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-500/10 dark:to-cyan-500/10 border border-blue-200 dark:border-blue-500/30 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.newNames}</div>
-                  <div className="text-xs text-blue-700 dark:text-blue-300 font-medium">שמות חדשים</div>
+                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
+                  <div className="text-2xl font-bold text-blue-600">{stats.newNames}</div>
+                  <div className="text-xs text-blue-700 font-medium">שמות חדשים</div>
                 </div>
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[var(--color-bg-surface)] dark:to-[var(--color-bg-elevated)] border border-border border-border30 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 border border-border border-border30 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
                   <div className="text-2xl font-bold text-muted text-foreground">{stats.unmatched}</div>
                   <div className="text-xs text-foreground text-muted font-medium">לא זוהו</div>
                 </div>
@@ -643,7 +643,7 @@ export default function CalendarSyncModal({
                       {/* Group Header */}
                       <button
                         onClick={() => toggleGroup(groupName)}
-                        className="w-full flex items-center justify-between p-4 hover:bg-surface dark:hover:bg-[var(--color-bg-elevated)] transition-all duration-300"
+                        className="w-full flex items-center justify-between p-4 hover:bg-surface transition-all duration-300"
                       >
                         <div className="flex items-center gap-3">
                           <div className={`p-2 rounded-lg ${
@@ -667,7 +667,7 @@ export default function CalendarSyncModal({
                             <div className="text-xs text-muted text-muted">
                               {events.length} אירועים
                               {hasDecision && (
-                                <span className="mr-2 text-emerald-600 dark:text-emerald-400 font-semibold">
+                                <span className="mr-2 text-emerald-600 font-semibold">
                                   • {decision.action === 'link' ? 'יקושר' : 
                                      decision.action === 'create' ? 'ייוצר מתאמן' : 'ידולג'}
                                 </span>
@@ -732,8 +732,8 @@ export default function CalendarSyncModal({
                                   }}
                                   className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-300 ${
                                     decision?.traineeId === match.trainee.id
-                                      ? 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/20 dark:to-teal-500/20 border border-emerald-200 dark:border-emerald-500/50'
-                                      : 'bg-white bg-elevated hover:bg-surface dark:hover:bg-[var(--color-bg-surface)] border border-border border-border30'
+                                      ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200'
+                                      : 'bg-white bg-elevated hover:bg-surface border border-border border-border30'
                                   }`}
                                 >
                                   <div className="flex items-center gap-3">
@@ -750,8 +750,8 @@ export default function CalendarSyncModal({
                                     </div>
                                   </div>
                                   <div className={`text-xs px-2 py-1 rounded-lg ${
-                                    match.matchType === 'exact' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' :
-                                    match.matchType === 'close' ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400' :
+                                    match.matchType === 'exact' ? 'bg-emerald-100 text-emerald-700' :
+                                    match.matchType === 'close' ? 'bg-amber-100 text-amber-700' :
                                     'bg-surface bg-surface text-muted text-muted'
                                   }`}>
                                     {match.score}%
@@ -803,7 +803,7 @@ export default function CalendarSyncModal({
                                 disabled={quickCreatingFor === (firstEvent.event.extractedName || firstEvent.event.summary)}
                                 className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 ${
                                   decision?.action === 'link' && decision.traineeId
-                                    ? 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/20 dark:to-teal-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/50'
+                                    ? 'bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-200'
                                     : 'bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-foreground shadow-lg'
                                 } disabled:opacity-50 disabled:cursor-wait`}
                               >
@@ -835,8 +835,8 @@ export default function CalendarSyncModal({
                                   }}
                                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-sm ${
                                     decision?.action === 'create'
-                                      ? 'bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-500/20 dark:to-cyan-500/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/50'
-                                      : 'bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] text-foreground text-foreground border border-border border-border30'
+                                      ? 'bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-700 border border-blue-200'
+                                      : 'bg-surface bg-surface hover:bg-elevated text-foreground text-foreground border border-border border-border30'
                                   }`}
                                 >
                                   <UserPlus className="h-4 w-4" />
@@ -855,7 +855,7 @@ export default function CalendarSyncModal({
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-sm ${
                                   decision?.action === 'skip'
                                     ? 'bg-elevated bg-elevated text-foreground text-foreground border border-border border-border50'
-                                    : 'bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] text-muted text-muted border border-border border-border30'
+                                    : 'bg-surface bg-surface hover:bg-elevated text-muted text-muted border border-border border-border30'
                                 }`}
                               >
                                 דלג
@@ -882,8 +882,8 @@ export default function CalendarSyncModal({
 
           {step === 'done' && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <div className="p-4 bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-full shadow-lg border-2 border-emerald-300 dark:border-emerald-500/30">
-                <Check className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
+              <div className="p-4 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full shadow-lg border-2 border-emerald-300">
+                <Check className="h-10 w-10 text-emerald-600" />
               </div>
               <p className="text-xl font-bold text-foreground text-foreground">הסנכרון הושלם!</p>
             </div>
@@ -899,7 +899,7 @@ export default function CalendarSyncModal({
             <div className="flex gap-3">
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-surface bg-surface hover:bg-elevated dark:hover:bg-[var(--color-bg-elevated)] text-foreground text-foreground rounded-xl transition-all duration-300 border border-border border-border30"
+                className="px-4 py-2 bg-surface bg-surface hover:bg-elevated text-foreground text-foreground rounded-xl transition-all duration-300 border border-border border-border30"
               >
                 ביטול
               </button>

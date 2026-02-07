@@ -73,9 +73,9 @@ export function DailySummaryCard({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Droplets className="w-5 h-5 text-cyan-500" />
-              <span className="font-medium text-cyan-600 dark:text-cyan-400">מים</span>
+              <span className="font-medium text-cyan-600">מים</span>
             </div>
-            <span className="text-lg font-bold text-cyan-600 dark:text-cyan-400">
+            <span className="text-lg font-bold text-cyan-600">
               {waterAmount} / {waterGoal} מ"ל
             </span>
           </div>
