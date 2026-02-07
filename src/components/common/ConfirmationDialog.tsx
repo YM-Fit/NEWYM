@@ -28,15 +28,15 @@ export function ConfirmationDialog({
   const messageId = useId();
   const variantStyles = {
     danger: {
-      button: 'bg-danger/15 hover:bg-danger/25 text-danger border-danger/30',
+      button: 'bg-danger/15 hover:bg-danger/25 text-danger-text border-danger/30',
       icon: 'text-danger',
     },
     warning: {
-      button: 'bg-warning/15 hover:bg-warning/25 text-warning border-warning/30',
+      button: 'bg-warning/15 hover:bg-warning/25 text-warning-text border-warning/30',
       icon: 'text-warning',
     },
     info: {
-      button: 'bg-info/15 hover:bg-info/25 text-info border-info/30',
+      button: 'bg-info/15 hover:bg-info/25 text-info-text border-info/30',
       icon: 'text-info',
     },
   };

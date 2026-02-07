@@ -111,8 +111,8 @@ function TraineeCard({ trainee, onClick, onQuickEdit, unseenWeightsCount = 0, vi
                   {daysSinceLastWorkout !== null && (
                     <div className={`flex items-center justify-end text-xs px-2 py-1 rounded-lg ${
                       isActive
-                        ? 'bg-success/15 text-success'
-                        : 'bg-danger/15 text-danger'
+                        ? 'bg-success/15 text-success-text'
+                        : 'bg-danger/15 text-danger-text'
                     }`}>
                       {daysSinceLastWorkout} ימים
                     </div>
@@ -287,7 +287,7 @@ function TraineeCard({ trainee, onClick, onQuickEdit, unseenWeightsCount = 0, vi
       {/* Footer */}
       <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/10">
         {unseenWeightsCount > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-info/15 text-info rounded-lg text-xs font-semibold border border-info/30">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-info/15 text-info-text rounded-lg text-xs font-semibold border border-info/30">
             <Scale className="h-3 w-3" />
             <span>{unseenWeightsCount} שקילות חדשות</span>
           </div>

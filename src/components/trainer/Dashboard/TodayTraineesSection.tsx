@@ -1132,8 +1132,8 @@ function TraineeTableRow({
               {daysSinceLastWorkout !== null && (
                 <div className={`px-1.5 md:px-2 py-0.5 rounded-lg text-[10px] md:text-xs font-semibold border ${
                   isActive
-                    ? 'bg-success/15 text-success border-success/30'
-                    : 'bg-danger/15 text-danger border-danger/30'
+                    ? 'bg-success/15 text-success-text border-success/30'
+                    : 'bg-danger/15 text-danger-text border-danger/30'
                 }`}>
                   {daysSinceLastWorkout} ימים
                 </div>
@@ -1414,8 +1414,8 @@ function TraineeCardToday({
                                 border shadow-sm transition-all duration-200
                                 group-hover:scale-105 ${
                     isActive
-                      ? 'bg-success/15 text-success border-success/30'
-                      : 'bg-danger/15 text-danger border-danger/30'
+                      ? 'bg-success/15 text-success-text border-success/30'
+                      : 'bg-danger/15 text-danger-text border-danger/30'
                   }`}>
                     {daysSinceLastWorkout} ימים
                   </div>
