@@ -114,14 +114,20 @@ export function useRecentActivityQuery(trainerId: string | null) {
 
       const { data: measurements } = await supabase
         .from('measurements')
-        .select('id, measurement_date, created_at, weight, trainees ( full_name )')
-        .eq('trainer_id', trainerId!)
+        .select(`
+          id,
+          measurement_date,
+          created_at,
+          weight,
+          trainee:trainees!trainee_id ( full_name, trainer_id )
+        `)
+        .eq('trainee.trainer_id', trainerId!)
         .order('created_at', { ascending: false })
         .limit(5);
 
       if (measurements) {
         measurements.forEach((m: any) => {
-          const trainee = m.trainees?.full_name || 'מתאמן';
+          const trainee = m.trainee?.full_name || 'מתאמן';
           activities.push({
             id: m.id,
             type: 'measurement',
