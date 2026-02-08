@@ -206,6 +206,7 @@ export function PlanEditorView({
       />
 
       <MealsSection
+        plan={plan}
         meals={meals}
         expandedMeals={expandedMeals}
         onAddMeal={onAddMeal}
@@ -476,6 +477,7 @@ function PlanSettingsCard({
 }
 
 function MealsSection({
+  plan,
   meals,
   expandedMeals,
   onAddMeal,
@@ -491,6 +493,7 @@ function MealsSection({
   handleSwapFood,
   totals,
 }: {
+  plan: MealPlan;
   meals: Meal[];
   expandedMeals: Set<number>;
   onAddMeal: () => void;

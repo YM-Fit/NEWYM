@@ -183,8 +183,7 @@ export default function TodayTraineesSection({
             .from('workout_trainees')
             .select('trainee_id, workouts!inner(workout_date, is_completed)')
             .in('trainee_id', allTraineeIds)
-            .eq('workouts.is_completed', true)
-            .order('workouts.workout_date', { ascending: false });
+            .eq('workouts.is_completed', true);
           
           if (lastWorkoutsData) {
             // Group by trainee_id and get the most recent
