@@ -1106,7 +1106,7 @@ function TraineeTableRow({
           </div>
           <div className="flex-1 min-w-0">
             <div
-              className={`font-bold text-sm md:text-base text-gray-900 truncate ${onTraineeClick ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+              className={`font-bold text-sm md:text-base !text-black truncate ${onTraineeClick ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
               onClick={onTraineeClick ? () => onTraineeClick(trainee) : undefined}
               onKeyDown={onTraineeClick ? (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -1147,7 +1147,7 @@ function TraineeTableRow({
         {workout.workout_time ? (
           <div className="flex items-center gap-1.5 md:gap-2">
             <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary flex-shrink-0" />
-            <span className="font-semibold text-sm md:text-base text-gray-900 whitespace-nowrap">{workout.workout_time}</span>
+            <span className="font-semibold text-sm md:text-base !text-black whitespace-nowrap">{workout.workout_time}</span>
           </div>
         ) : (
           <span className="text-gray-700 text-xs md:text-sm">-</span>
