@@ -106,6 +106,7 @@ export default defineConfig({
       '@dnd-kit/core',
       '@dnd-kit/sortable',
       '@dnd-kit/utilities',
+      '@tanstack/react-query',
     ],
     // Pre-bundle heavy dependencies - use ES2015 for TV compatibility
     esbuildOptions: {

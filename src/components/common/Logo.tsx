@@ -37,7 +37,7 @@ export default function Logo({
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  const logoSrc = '/logo-white-bg.jpg';
+  const logoSrc = '/logo-white-bg.png';
   const fallbackSrc = '/logo-dark-bg.png';
 
   const handleImageError = () => {

@@ -7,7 +7,6 @@ interface SkipLink {
 }
 
 const skipLinks: SkipLink[] = [
-  { id: 'skip-main', label: 'דלג לתוכן הראשי', targetId: 'main-content' },
   { id: 'skip-nav', label: 'דלג לניווט', targetId: 'main-navigation' },
 ];
 
