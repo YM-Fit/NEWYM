@@ -11,6 +11,12 @@ interface PlanBlock {
   name: string;
   description: string | null;
   days: WorkoutDay[];
+  start_week?: number | null;
+  end_week?: number | null;
+  start_month?: number | null;
+  end_month?: number | null;
+  volume_multiplier?: number;
+  exercise_volume_overrides?: Record<string, any>;
   created_at: string;
   updated_at: string;
 }
@@ -29,6 +35,12 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
   const [newBlockName, setNewBlockName] = useState('');
   const [newBlockDescription, setNewBlockDescription] = useState('');
   const [selectedDays, setSelectedDays] = useState<WorkoutDay[]>([]);
+  const [startWeek, setStartWeek] = useState<number | null>(null);
+  const [endWeek, setEndWeek] = useState<number | null>(null);
+  const [startMonth, setStartMonth] = useState<number | null>(null);
+  const [endMonth, setEndMonth] = useState<number | null>(null);
+  const [volumeMultiplier, setVolumeMultiplier] = useState<number>(1.0);
+  const [timeRangeType, setTimeRangeType] = useState<'weeks' | 'months' | 'none'>('none');
 
   useEffect(() => {
     loadBlocks();
@@ -120,15 +132,28 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
         })),
       }));
 
+      // Prepare block data
+      const blockData: any = {
+        trainer_id: user.id,
+        name: newBlockName,
+        description: newBlockDescription || null,
+        days: cleanedDays,
+        volume_multiplier: volumeMultiplier,
+      };
+
+      // Add time range based on type
+      if (timeRangeType === 'weeks') {
+        blockData.start_week = startWeek;
+        blockData.end_week = endWeek;
+      } else if (timeRangeType === 'months') {
+        blockData.start_month = startMonth;
+        blockData.end_month = endMonth;
+      }
+
       // trainers.id equals auth.uid(), so we can use user.id directly
       const { error } = await supabase
         .from('workout_plan_blocks')
-        .insert({
-          trainer_id: user.id,
-          name: newBlockName,
-          description: newBlockDescription || null,
-          days: cleanedDays,
-        } as any);
+        .insert(blockData);
 
       if (error) throw error;
 
@@ -137,6 +162,12 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
       setNewBlockName('');
       setNewBlockDescription('');
       setSelectedDays([]);
+      setStartWeek(null);
+      setEndWeek(null);
+      setStartMonth(null);
+      setEndMonth(null);
+      setVolumeMultiplier(1.0);
+      setTimeRangeType('none');
       await loadBlocks();
     } catch (error) {
       logger.error('Error creating block', error, 'PlanBlockBuilder');
@@ -293,6 +324,116 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
                   rows={3}
                   placeholder="תיאור קצר של הבלוק..."
                 />
+              </div>
+
+              {/* Time Range */}
+              <div>
+                <label className="block text-sm font-semibold text-[var(--color-text-primary)] mb-2">
+                  טווח זמן (אופציונלי)
+                </label>
+                <select
+                  value={timeRangeType}
+                  onChange={(e) => {
+                    setTimeRangeType(e.target.value as 'weeks' | 'months' | 'none');
+                    if (e.target.value === 'none') {
+                      setStartWeek(null);
+                      setEndWeek(null);
+                      setStartMonth(null);
+                      setEndMonth(null);
+                    }
+                  }}
+                  className="w-full px-4 py-3 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all mb-3"
+                >
+                  <option value="none">ללא טווח זמן</option>
+                  <option value="weeks">שבועות</option>
+                  <option value="months">חודשים</option>
+                </select>
+
+                {timeRangeType === 'weeks' && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-[var(--color-text-muted)] mb-1">שבוע התחלה</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={startWeek || ''}
+                        onChange={(e) => setStartWeek(e.target.value ? parseInt(e.target.value) : null)}
+                        className="w-full px-3 py-2 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                        placeholder="1"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-[var(--color-text-muted)] mb-1">שבוע סיום</label>
+                      <input
+                        type="number"
+                        min={startWeek || 1}
+                        value={endWeek || ''}
+                        onChange={(e) => setEndWeek(e.target.value ? parseInt(e.target.value) : null)}
+                        className="w-full px-3 py-2 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                        placeholder="4"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {timeRangeType === 'months' && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-[var(--color-text-muted)] mb-1">חודש התחלה</label>
+                      <select
+                        value={startMonth || ''}
+                        onChange={(e) => setStartMonth(e.target.value ? parseInt(e.target.value) : null)}
+                        className="w-full px-3 py-2 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                      >
+                        <option value="">בחר חודש</option>
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
+                          <option key={m} value={m}>חודש {m}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-[var(--color-text-muted)] mb-1">חודש סיום</label>
+                      <select
+                        value={endMonth || ''}
+                        onChange={(e) => setEndMonth(e.target.value ? parseInt(e.target.value) : null)}
+                        className="w-full px-3 py-2 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                      >
+                        <option value="">בחר חודש</option>
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
+                          <option key={m} value={m} disabled={startMonth && m < startMonth}>חודש {m}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Volume Multiplier */}
+              <div>
+                <label className="block text-sm font-semibold text-[var(--color-text-primary)] mb-2">
+                  מכפיל נפח (ברירת מחדל: 1.0)
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2.0"
+                    step="0.1"
+                    value={volumeMultiplier}
+                    onChange={(e) => setVolumeMultiplier(parseFloat(e.target.value))}
+                    className="flex-1"
+                  />
+                  <span className="text-lg font-bold text-[var(--color-text-primary)] min-w-[60px] text-center">
+                    {volumeMultiplier.toFixed(1)}x
+                  </span>
+                </div>
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                  {volumeMultiplier > 1 
+                    ? `נפח מוגבר ב-${((volumeMultiplier - 1) * 100).toFixed(0)}%`
+                    : volumeMultiplier < 1
+                    ? `נפח מופחת ב-${((1 - volumeMultiplier) * 100).toFixed(0)}%`
+                    : 'נפח רגיל'}
+                </p>
               </div>
 
               <div>

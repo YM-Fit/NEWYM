@@ -15,6 +15,7 @@ import DayEditView from './components/DayEditView';
 import LoadTemplateModal from './components/LoadTemplateModal';
 import SaveTemplateModal from './components/SaveTemplateModal';
 import PlanBlockBuilder from './components/PlanBlockBuilder';
+import NotesManager from './components/NotesManager';
 
 // Validation function
 function validatePlan(planName: string, days: WorkoutDay[]): { valid: boolean; error?: string } {
@@ -80,6 +81,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [snapshotBeforeChanges, setSnapshotBeforeChanges] = useState<any>(null);
   const [instructionsExercise, setInstructionsExercise] = useState<{
     name: string;
     instructions: string | null | undefined;
@@ -88,6 +90,10 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
   const [loadingCardioTypes, setLoadingCardioTypes] = useState(false);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [showBlockBuilder, setShowBlockBuilder] = useState(false);
+  const [showNotesManager, setShowNotesManager] = useState(false);
+  const [notesManagerLevel, setNotesManagerLevel] = useState<'plan' | 'day' | 'exercise'>('plan');
+  const [notesManagerDayId, setNotesManagerDayId] = useState<string | null>(null);
+  const [notesManagerExerciseId, setNotesManagerExerciseId] = useState<string | null>(null);
 
   // Use hooks for state management
   const {
@@ -99,6 +105,9 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
     cardioTypeId,
     cardioFrequency,
     cardioWeeklyGoalSteps,
+    startDate,
+    endDate,
+    durationWeeks,
     days,
     selectedDay,
     activePlanId,
@@ -112,6 +121,9 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
     setCardioTypeId,
     setCardioFrequency,
     setCardioWeeklyGoalSteps,
+    setStartDate,
+    setEndDate,
+    setDurationWeeks,
     setDays,
     setSelectedDay,
     setActivePlanId,
@@ -219,21 +231,58 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
   // Track changes to mark as unsaved (only after initial load)
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [autoSaveTimer, setAutoSaveTimer] = useState<NodeJS.Timeout | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   
   useEffect(() => {
     if (loading) {
       setIsInitialLoad(true);
       setHasUnsavedChanges(false);
+      setSnapshotBeforeChanges(null);
     } else if (!loading && isInitialLoad) {
       setIsInitialLoad(false);
+      // Save snapshot after initial load
+      if (activePlanId) {
+        setSnapshotBeforeChanges({
+          planName,
+          planDescription,
+          daysPerWeek,
+          restDaysBetween,
+          includeCardio,
+          cardioTypeId,
+          cardioFrequency,
+          cardioWeeklyGoalSteps,
+          startDate,
+          endDate,
+          durationWeeks,
+          days: JSON.parse(JSON.stringify(days)), // Deep copy
+        });
+      }
     }
-  }, [loading, isInitialLoad]);
+  }, [loading, isInitialLoad, activePlanId, planName, planDescription, daysPerWeek, restDaysBetween, includeCardio, cardioTypeId, cardioFrequency, cardioWeeklyGoalSteps, startDate, endDate, durationWeeks, days]);
 
   useEffect(() => {
     if (activePlanId && !loading && !isInitialLoad) {
       setHasUnsavedChanges(true);
     }
-  }, [planName, planDescription, daysPerWeek, restDaysBetween, includeCardio, cardioTypeId, cardioFrequency, cardioWeeklyGoalSteps, days, activePlanId, loading, isInitialLoad]);
+  }, [planName, planDescription, daysPerWeek, restDaysBetween, includeCardio, cardioTypeId, cardioFrequency, cardioWeeklyGoalSteps, startDate, endDate, durationWeeks, days, activePlanId, loading, isInitialLoad]);
+
+  // Calculate duration_weeks from start_date and end_date
+  useEffect(() => {
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end > start) {
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const weeks = Math.ceil(diffDays / 7);
+        setDurationWeeks(weeks);
+      }
+    } else if (!startDate || !endDate) {
+      setDurationWeeks(null);
+    }
+  }, [startDate, endDate, setDurationWeeks]);
+
 
   const handleLoadTemplate = async (template: WorkoutPlanTemplate) => {
     await loadTemplate(template, setDays, setPlanName, setPlanDescription, setDaysPerWeek);
@@ -243,11 +292,13 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
     await saveTemplate(templateName, planDescription, days, isGeneral ? null : traineeId);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (isAutoSave = false) => {
     // Validate plan before saving
     const validation = validatePlan(planName, days);
     if (!validation.valid) {
-      toast.error(validation.error || 'שגיאה באימות התוכנית');
+      if (!isAutoSave) {
+        toast.error(validation.error || 'שגיאה באימות התוכנית');
+      }
       return;
     }
 
@@ -268,6 +319,9 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           days_per_week: daysPerWeek,
           rest_days_between: restDaysBetween,
           include_cardio: includeCardio,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          duration_weeks: durationWeeks || null,
           updated_at: new Date().toISOString(),
         };
 
@@ -500,6 +554,9 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           days_per_week: daysPerWeek,
           rest_days_between: restDaysBetween,
           include_cardio: includeCardio,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          duration_weeks: durationWeeks || null,
           is_active: true,
         };
 
@@ -617,23 +674,79 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
         }
       }
 
-      toast.success(activePlanId ? 'תוכנית עודכנה בהצלחה!' : 'תוכנית נשמרה בהצלחה!');
+      if (!isAutoSave) {
+        toast.success(activePlanId ? 'תוכנית עודכנה בהצלחה!' : 'תוכנית נשמרה בהצלחה!');
+      } else {
+        // Silent auto-save - just update timestamp
+        setLastSavedAt(new Date());
+      }
+      
+      // Update snapshot after successful save
+      setSnapshotBeforeChanges({
+        planName,
+        planDescription,
+        daysPerWeek,
+        restDaysBetween,
+        includeCardio,
+        cardioTypeId,
+        cardioFrequency,
+        cardioWeeklyGoalSteps,
+        startDate,
+        endDate,
+        durationWeeks,
+        days: JSON.parse(JSON.stringify(days)), // Deep copy
+      });
       
       // Clear unsaved changes flag
       setHasUnsavedChanges(false);
       
-      // Reload the plan to ensure state is synced
-      await loadActivePlan();
+      // Reload the plan to ensure state is synced (only for manual saves to avoid flicker)
+      if (!isAutoSave) {
+        await loadActivePlan();
+      }
       
       // Don't navigate back automatically - let user continue editing
       // onBack();
     } catch (error) {
       logger.error('Error saving plan', error, 'WorkoutPlanBuilder');
-      toast.error('שגיאה בשמירת התוכנית');
+      if (!isAutoSave) {
+        toast.error('שגיאה בשמירת התוכנית');
+      }
     } finally {
       setSaving(false);
     }
   };
+
+  // Auto-save functionality (every 30 seconds if there are unsaved changes)
+  useEffect(() => {
+    if (activePlanId && hasUnsavedChanges && !saving && !isInitialLoad && planName.trim() && days.length > 0) {
+      // Clear existing timer
+      if (autoSaveTimer) {
+        clearTimeout(autoSaveTimer);
+      }
+
+      // Set new timer for 30 seconds
+      const timer = setTimeout(() => {
+        if (hasUnsavedChanges && !saving && planName.trim() && days.length > 0) {
+          const validation = validatePlan(planName, days);
+          if (validation.valid) {
+            handleSave(true).catch(err => {
+              logger.error('Auto-save failed', err, 'WorkoutPlanBuilder');
+            });
+          }
+        }
+      }, 30000); // 30 seconds
+
+      setAutoSaveTimer(timer);
+
+      return () => {
+        if (timer) {
+          clearTimeout(timer);
+        }
+      };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasUnsavedChanges, activePlanId, saving, isInitialLoad, planName, days.length]);
 
   if (loading) {
     return (
@@ -726,18 +839,36 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           </div>
 
           <div className="flex items-center gap-3">
-            {activePlanId && (
+            {activePlanId && hasUnsavedChanges && (
               <button
                 onClick={async () => {
-                  // Reload plan to discard changes
-                  setLoading(true);
-                  try {
-                    await loadActivePlan();
+                  if (snapshotBeforeChanges) {
+                    // Restore from snapshot
+                    setPlanName(snapshotBeforeChanges.planName);
+                    setPlanDescription(snapshotBeforeChanges.planDescription);
+                    setDaysPerWeek(snapshotBeforeChanges.daysPerWeek);
+                    setRestDaysBetween(snapshotBeforeChanges.restDaysBetween);
+                    setIncludeCardio(snapshotBeforeChanges.includeCardio);
+                    setCardioTypeId(snapshotBeforeChanges.cardioTypeId);
+                    setCardioFrequency(snapshotBeforeChanges.cardioFrequency);
+                    setCardioWeeklyGoalSteps(snapshotBeforeChanges.cardioWeeklyGoalSteps);
+                    setStartDate(snapshotBeforeChanges.startDate);
+                    setEndDate(snapshotBeforeChanges.endDate);
+                    setDurationWeeks(snapshotBeforeChanges.durationWeeks);
+                    setDays(JSON.parse(JSON.stringify(snapshotBeforeChanges.days))); // Deep copy
+                    setHasUnsavedChanges(false);
                     toast.success('שינויים בוטלו');
-                  } catch (error) {
-                    toast.error('שגיאה בטעינת התוכנית');
-                  } finally {
-                    setLoading(false);
+                  } else {
+                    // Fallback: reload from server
+                    setLoading(true);
+                    try {
+                      await loadActivePlan();
+                      toast.success('שינויים בוטלו');
+                    } catch (error) {
+                      toast.error('שגיאה בטעינת התוכנית');
+                    } finally {
+                      setLoading(false);
+                    }
                   }
                 }}
                 className="px-4 lg:px-6 py-3 lg:py-4 bg-surface200 hover:bg-surface300 text-muted700 font-bold rounded-xl transition-all duration-300 flex items-center space-x-2 rtl:space-x-reverse shadow-md hover:shadow-lg"
@@ -757,7 +888,12 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             <Save className="h-5 w-5 lg:h-6 lg:w-6" />
               <span className="font-bold text-base lg:text-lg">
                 {saving ? 'שומר...' : activePlanId ? 'עדכן תוכנית' : 'שמור תוכנית'}
-                {hasUnsavedChanges && !saving && <span className="ml-2 text-amber-300">●</span>}
+                {hasUnsavedChanges && !saving && <span className="ml-2 text-amber-300" title="יש שינויים לא שמורים">●</span>}
+                {lastSavedAt && !hasUnsavedChanges && (
+                  <span className="ml-2 text-xs text-muted600" title={`נשמר לאחרונה: ${lastSavedAt.toLocaleTimeString('he-IL')}`}>
+                    ✓
+                  </span>
+                )}
               </span>
           </button>
           </div>
@@ -792,20 +928,67 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-muted700 mb-2">ימי אימון בשבוע</label>
-            <select
-              value={daysPerWeek}
-              onChange={(e) => {
-                setDaysPerWeek(parseInt(e.target.value));
-                setHasUnsavedChanges(true);
-              }}
-              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
-            >
-              {[1, 2, 3, 4, 5, 6, 7].map(n => (
-                <option key={n} value={n}>{n} ימים</option>
-              ))}
-            </select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-muted700 mb-2">ימי אימון בשבוע</label>
+              <select
+                value={daysPerWeek}
+                onChange={(e) => {
+                  setDaysPerWeek(parseInt(e.target.value));
+                  setHasUnsavedChanges(true);
+                }}
+                className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              >
+                {[1, 2, 3, 4, 5, 6, 7].map(n => (
+                  <option key={n} value={n}>{n} ימים</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-muted700 mb-2">משך התוכנית (שבועות)</label>
+              <input
+                type="number"
+                min="1"
+                value={durationWeeks || ''}
+                onChange={(e) => {
+                  const weeks = e.target.value ? parseInt(e.target.value) : null;
+                  setDurationWeeks(weeks);
+                  setHasUnsavedChanges(true);
+                }}
+                className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+                placeholder="אופציונלי"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-muted700 mb-2">תאריך התחלה</label>
+              <input
+                type="date"
+                value={startDate || ''}
+                onChange={(e) => {
+                  setStartDate(e.target.value || null);
+                  setHasUnsavedChanges(true);
+                }}
+                className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-muted700 mb-2">תאריך סיום</label>
+              <input
+                type="date"
+                value={endDate || ''}
+                onChange={(e) => {
+                  setEndDate(e.target.value || null);
+                  setHasUnsavedChanges(true);
+                }}
+                min={startDate || undefined}
+                className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              />
+            </div>
           </div>
 
           {/* Advanced Settings Section */}
@@ -927,7 +1110,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           </div>
 
           <div className="flex gap-3 pt-2">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <button
               type="button"
               onClick={() => {
@@ -956,6 +1139,19 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                 aria-label="בלוקי תוכנית"
               >
                 בלוקים
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setNotesManagerLevel('plan');
+                  setNotesManagerDayId(null);
+                  setNotesManagerExerciseId(null);
+                  setShowNotesManager(true);
+                }}
+                className="py-4 px-4 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 text-purple-700 font-bold rounded-xl transition-all duration-300 border-2 border-purple-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                aria-label="הערות"
+              >
+                הערות
               </button>
             </div>
           </div>
@@ -1078,6 +1274,17 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             }}
           />
         </div>
+      )}
+
+      {/* Notes Manager Modal */}
+      {showNotesManager && (
+        <NotesManager
+          planId={activePlanId}
+          dayId={notesManagerDayId}
+          exerciseId={notesManagerExerciseId}
+          level={notesManagerLevel}
+          onClose={() => setShowNotesManager(false)}
+        />
       )}
     </div>
   );

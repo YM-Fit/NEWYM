@@ -70,23 +70,56 @@ export default function FoodAlternativesPanel({
     };
 
     // חשב ערכים per_100g מהערכים הנוכחיים (אם יש כמות וערכים נוכחיים)
-    let effectiveCaloriesPer100g = caloriesPer100g;
+    // עדיפות: ערכים נוכחיים (אחרי שינוי כמות) > ערכים per_100g מקוריים
+    let effectiveCaloriesPer100g: number | null = null;
     let effectiveProteinPer100g: number | null = null;
     let effectiveCarbsPer100g: number | null = null;
     let effectiveFatPer100g: number | null = null;
 
-    if (quantity && quantity > 0 && (currentCalories !== null || currentProtein !== null || currentCarbs !== null || currentFat !== null)) {
-      // חשב מה הערכים per_100g בהתבסס על הכמות הנוכחית
-      const ratio = 100 / quantity;
-      effectiveCaloriesPer100g = currentCalories !== null ? Math.round(currentCalories * ratio) : caloriesPer100g;
-      effectiveProteinPer100g = currentProtein !== null ? Math.round(currentProtein * ratio) : null;
-      effectiveCarbsPer100g = currentCarbs !== null ? Math.round(currentCarbs * ratio) : null;
-      effectiveFatPer100g = currentFat !== null ? Math.round(currentFat * ratio) : null;
+    // אם יש ערכים נוכחיים וכמות, חשב מה הערכים per_100g
+    // זה חשוב כי הערכים הנוכחיים משקפים את הכמות החדשה
+    if (quantity && quantity > 0) {
+      if (currentCalories !== null && currentCalories !== undefined && currentCalories > 0) {
+        const ratio = 100 / quantity;
+        effectiveCaloriesPer100g = Math.round(currentCalories * ratio);
+      }
+      if (currentProtein !== null && currentProtein !== undefined && currentProtein > 0) {
+        const ratio = 100 / quantity;
+        effectiveProteinPer100g = Math.round(currentProtein * ratio);
+      }
+      if (currentCarbs !== null && currentCarbs !== undefined && currentCarbs > 0) {
+        const ratio = 100 / quantity;
+        effectiveCarbsPer100g = Math.round(currentCarbs * ratio);
+      }
+      if (currentFat !== null && currentFat !== undefined && currentFat > 0) {
+        const ratio = 100 / quantity;
+        effectiveFatPer100g = Math.round(currentFat * ratio);
+      }
+    }
+    
+    // אם אין ערכים מחושבים מהנוכחיים, נסה להשתמש ב-per_100g המקוריים
+    if (effectiveCaloriesPer100g === null || effectiveCaloriesPer100g === undefined || effectiveCaloriesPer100g === 0) {
+      effectiveCaloriesPer100g = caloriesPer100g || null;
+    }
+    if (effectiveProteinPer100g === null || effectiveProteinPer100g === undefined) {
+      // אין per_100g מקורי לחלבון, אז נשאיר null
+    }
+    if (effectiveCarbsPer100g === null || effectiveCarbsPer100g === undefined) {
+      // אין per_100g מקורי לפחמימות, אז נשאיר null
+    }
+    if (effectiveFatPer100g === null || effectiveFatPer100g === undefined) {
+      // אין per_100g מקורי לשומן, אז נשאיר null
     }
 
     // אם אין ערכים תזונתיים כלל, מצא חלופות לפי קטגוריה בלבד
-    if ((effectiveCaloriesPer100g === null || effectiveCaloriesPer100g === undefined) && 
-        (currentCalories === null || currentCalories === undefined)) {
+    const hasValidCalories = (effectiveCaloriesPer100g !== null && 
+                              effectiveCaloriesPer100g !== undefined && 
+                              effectiveCaloriesPer100g > 0) ||
+                             (currentCalories !== null && 
+                              currentCalories !== undefined && 
+                              currentCalories > 0);
+    
+    if (!hasValidCalories) {
       return FOOD_CATALOG
         .filter(item => item.category === category && item.name !== foodName)
         .map(item => ({
@@ -100,7 +133,9 @@ export default function FoodAlternativesPanel({
 
     // השתמש בערכים המחושבים (אם יש) או בערכים המקוריים
     const targetCalories = effectiveCaloriesPer100g || 0;
-    const tolerance = targetCalories * 0.35;
+    // הגדל את הטולרנס אם יש ערכים נוכחיים (כי הם כבר מחושבים לכמות מסוימת)
+    // אבל וודא שיש מינימום של 20 קלוריות טולרנס
+    const tolerance = targetCalories > 0 ? Math.max(targetCalories * 0.35, 20) : 50;
 
     return FOOD_CATALOG
       .filter(item => {

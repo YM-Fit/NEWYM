@@ -12,6 +12,9 @@ export interface PlanSettings {
   cardioTypeId: string | null;
   cardioFrequency: number; // 0-7
   cardioWeeklyGoalSteps: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  durationWeeks: number | null;
 }
 
 export function useWorkoutPlanState(traineeId: string) {
@@ -23,6 +26,9 @@ export function useWorkoutPlanState(traineeId: string) {
   const [cardioTypeId, setCardioTypeId] = useState<string | null>(null);
   const [cardioFrequency, setCardioFrequency] = useState(0);
   const [cardioWeeklyGoalSteps, setCardioWeeklyGoalSteps] = useState<number | null>(null);
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
+  const [durationWeeks, setDurationWeeks] = useState<number | null>(null);
   const [days, setDays] = useState<WorkoutDay[]>([]);
   const [selectedDay, setSelectedDay] = useState<WorkoutDay | null>(null);
   const [activePlanId, setActivePlanId] = useState<string | null>(null);
@@ -201,6 +207,9 @@ export function useWorkoutPlanState(traineeId: string) {
         setCardioTypeId(planData.cardio_type_id || null);
         setCardioFrequency(planData.cardio_frequency ?? 0);
         setCardioWeeklyGoalSteps(planData.cardio_weekly_goal_steps || null);
+        setStartDate(planData.start_date || null);
+        setEndDate(planData.end_date || null);
+        setDurationWeeks(planData.duration_weeks || null);
         await loadPlanDays(planData.id);
       } else {
         // No active plan found - reset state
@@ -213,6 +222,9 @@ export function useWorkoutPlanState(traineeId: string) {
         setCardioTypeId(null);
         setCardioFrequency(0);
         setCardioWeeklyGoalSteps(null);
+        setStartDate(null);
+        setEndDate(null);
+        setDurationWeeks(null);
         setDays([]);
       }
     } catch (error) {
@@ -288,6 +300,9 @@ export function useWorkoutPlanState(traineeId: string) {
     cardioTypeId,
     cardioFrequency,
     cardioWeeklyGoalSteps,
+    startDate,
+    endDate,
+    durationWeeks,
     days,
     selectedDay,
     activePlanId,
@@ -301,6 +316,9 @@ export function useWorkoutPlanState(traineeId: string) {
     setCardioTypeId,
     setCardioFrequency,
     setCardioWeeklyGoalSteps,
+    setStartDate,
+    setEndDate,
+    setDurationWeeks,
     setDays,
     setSelectedDay,
     setActivePlanId,

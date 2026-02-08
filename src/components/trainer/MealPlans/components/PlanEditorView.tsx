@@ -117,8 +117,13 @@ export function PlanEditorView({
     displayIndex: number,
     itemIndex: number
   ) => {
+    // בדיקה שהכמות החדשה תקינה
+    if (newQuantity <= 0 || isNaN(newQuantity)) {
+      return;
+    }
+
     // אם יש ערכים per_100g ויחידה היא גרם, חשב לפי 100ג
-    if (item.calories_per_100g && item.unit === 'g') {
+    if (item.calories_per_100g !== null && item.calories_per_100g !== undefined && item.unit === 'g') {
       const recalc = recalculateFromPer100g(
         item.calories_per_100g,
         item.protein_per_100g,
@@ -134,6 +139,24 @@ export function PlanEditorView({
         fat: recalc.fat,
       }, displayIndex, itemIndex);
     } 
+    // אם יש ערכים per_100g אבל יחידה אחרת, חשב פרופורציונלית מהערכים הקיימים
+    // (כי per_100g מיועד לגרמים בלבד)
+    else if (item.calories_per_100g !== null && item.calories_per_100g !== undefined && item.unit !== 'g') {
+      // חשב פרופורציונלית מהערכים הקיימים
+      if (item.quantity > 0) {
+        const ratio = newQuantity / item.quantity;
+        debouncedUpdateFoodItem(item.id, {
+          quantity: newQuantity,
+          calories: item.calories !== null ? Math.round(item.calories * ratio) : null,
+          protein: item.protein !== null ? Math.round(item.protein * ratio) : null,
+          carbs: item.carbs !== null ? Math.round(item.carbs * ratio) : null,
+          fat: item.fat !== null ? Math.round(item.fat * ratio) : null,
+        }, displayIndex, itemIndex);
+      } else {
+        // אם אין כמות קיימת, עדכן רק את הכמות
+        debouncedUpdateFoodItem(item.id, { quantity: newQuantity }, displayIndex, itemIndex);
+      }
+    }
     // אם אין per_100g אבל יש ערכים תזונתיים קיימים וכמות קיימת, חשב פרופורציונלית
     else if (item.quantity > 0 && (item.calories !== null || item.protein !== null || item.carbs !== null || item.fat !== null)) {
       const ratio = newQuantity / item.quantity;
@@ -1223,6 +1246,7 @@ function FoodItemRow({
 
       {showAlternatives && item.category && (
         <FoodAlternativesPanel
+          key={`${item.id}-${item.quantity}-${item.calories}-${item.protein}`}
           foodName={item.food_name}
           category={item.category}
           caloriesPer100g={item.calories_per_100g}

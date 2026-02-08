@@ -41,10 +41,24 @@ export default function FoodCatalogSelector({ onSelect, onClose }: FoodCatalogSe
       items = items.filter(item => {
         const nameLower = item.name.toLowerCase();
         const brandLower = item.brand.toLowerCase();
-        return nameLower.startsWith(query) || 
-               nameLower.includes(query) ||
-               brandLower.startsWith(query) ||
-               brandLower.includes(query);
+        
+        // חיפוש לפי תחילית - עדיפות גבוהה
+        if (nameLower.startsWith(query) || brandLower.startsWith(query)) {
+          return true;
+        }
+        
+        // חיפוש לפי כל מילה בשם
+        const nameWords = nameLower.split(/\s+/);
+        if (nameWords.some(word => word.startsWith(query))) {
+          return true;
+        }
+        
+        // חיפוש כללי - כולל
+        if (nameLower.includes(query) || brandLower.includes(query)) {
+          return true;
+        }
+        
+        return false;
       });
     }
 
