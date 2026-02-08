@@ -14,6 +14,9 @@ import {
   ChevronUp,
   ArrowLeftRight,
   Info,
+  Search,
+  Filter,
+  X,
 } from 'lucide-react';
 import { getActiveMealPlanWithMeals } from '../../api';
 import type { MealPlan, MealPlanMeal, NutritionFoodItem } from '../../types/nutritionTypes';
@@ -27,7 +30,7 @@ const MEAL_CONFIG: Record<string, { label: string; color: string; bgColor: strin
   breakfast: { label: 'ארוחת בוקר', color: 'text-amber-700', bgColor: 'bg-amber-50 border-amber-200', icon: '🌅' },
   morning_snack: { label: 'ביניים בוקר', color: 'text-orange-600', bgColor: 'bg-orange-50 border-orange-200', icon: '🍎' },
   lunch: { label: 'ארוחת צהריים', color: 'text-green-700', bgColor: 'bg-green-50 border-green-200', icon: '🌞' },
-  afternoon_snack: { label: 'ביניים אחה"צ', color: 'text-emerald-600', bgColor: 'bg-emerald-50 border-emerald-200', icon: '🥤' },
+  afternoon_snack: { label: 'ביניים אחה"צ', color: 'text-primary-600', bgColor: 'bg-primary-50 border-primary-200', icon: '🥤' },
   dinner: { label: 'ארוחת ערב', color: 'text-blue-700', bgColor: 'bg-blue-50 border-blue-200', icon: '🌙' },
   evening_snack: { label: 'ביניים ערב', color: 'text-slate-600', bgColor: 'bg-slate-50 border-slate-200', icon: '🍵' },
 };
@@ -45,6 +48,8 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
   const [expandedMeals, setExpandedMeals] = useState<Set<string>>(new Set());
   const [showNotes, setShowNotes] = useState(true);
   const [showAlternatives, setShowAlternatives] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [mealFilter, setMealFilter] = useState<string>('all');
 
   useEffect(() => {
     loadMealPlan();
@@ -57,14 +62,19 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
     }
 
     setLoading(true);
+    try {
+      const { plan, meals } = await getActiveMealPlanWithMeals(traineeId);
 
-    const { plan, meals } = await getActiveMealPlanWithMeals(traineeId);
-
-    setMealPlan(plan);
-    setMeals(meals);
-    setExpandedMeals(new Set(meals.map((m) => m.id)));
-
-    setLoading(false);
+      setMealPlan(plan);
+      setMeals(meals || []);
+      setExpandedMeals(new Set((meals || []).map((m) => m.id)));
+    } catch (error) {
+      console.error('Error loading meal plan:', error);
+      setMealPlan(null);
+      setMeals([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleMeal = (mealId: string) => {
@@ -91,7 +101,11 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
     return MEAL_CONFIG[mealName] || { label: mealName, color: 'text-slate-700', bgColor: 'bg-slate-50 border-slate-200', icon: '🍽️' };
   };
 
-  const calculateTotals = () => {
+  const totals = useMemo(() => {
+    if (!meals || meals.length === 0) {
+      return { calories: 0, protein: 0, carbs: 0, fat: 0 };
+    }
+    
     return meals.reduce(
       (acc, meal) => ({
         calories: acc.calories + (meal.total_calories || 0),
@@ -101,7 +115,7 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
       }),
       { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
-  };
+  }, [meals]);
 
   const formatTime = (time: string) => {
     if (!time) return '';
@@ -130,10 +144,54 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
     }
   };
 
+  // Filter meals based on search and filter
+  const filteredMeals = useMemo(() => {
+    if (!meals || meals.length === 0) return [];
+    
+    let filtered = meals;
+
+    // Filter by meal type
+    if (mealFilter !== 'all') {
+      filtered = filtered.filter(meal => meal.meal_name === mealFilter);
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(meal => {
+        // Search in meal name
+        const mealConfig = getMealConfig(meal.meal_name);
+        if (mealConfig.label.toLowerCase().includes(query)) return true;
+
+        // Search in food items
+        if (meal.food_items && meal.food_items.length > 0) {
+          return meal.food_items.some(item => 
+            item.food_name?.toLowerCase().includes(query)
+          );
+        }
+
+        // Search in description
+        if (meal.description && meal.description.toLowerCase().includes(query)) {
+          return true;
+        }
+
+        return false;
+      });
+    }
+
+    return filtered;
+  }, [meals, mealFilter, searchQuery]);
+
+  // Get unique meal types for filter
+  const mealTypes = useMemo(() => {
+    const types = new Set(meals.map(m => m.meal_name));
+    return Array.from(types);
+  }, [meals]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-16">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-400 via-primary-500 to-primary-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
           <UtensilsCrossed className="w-8 h-8 text-white" />
         </div>
       </div>
@@ -143,17 +201,16 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
   if (!mealPlan) {
     return (
       <div className="text-center py-16">
-        <div className="w-20 h-20 bg-emerald-500/15 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
-          <UtensilsCrossed className="w-10 h-10 text-emerald-400" />
+        <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary-300">
+          <UtensilsCrossed className="w-10 h-10 text-primary-600" />
         </div>
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">אין תפריט פעיל</h3>
-        <p className="text-[var(--color-text-muted)]">המאמן עדיין לא הגדיר תפריט תזונה</p>
+        <h3 className="text-lg font-semibold text-foreground mb-2">אין תפריט פעיל</h3>
+        <p className="text-muted">המאמן עדיין לא הגדיר תפריט תזונה</p>
       </div>
     );
   }
 
-  const totals = calculateTotals();
-  const hasMacroTargets = mealPlan.protein_grams || mealPlan.carbs_grams || mealPlan.fat_grams;
+  const hasMacroTargets = mealPlan?.protein_grams || mealPlan?.carbs_grams || mealPlan?.fat_grams;
 
   return (
     <div className="space-y-4 pb-4">
@@ -169,20 +226,98 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
       )}
 
       <div className="space-y-3">
-        <h3 className="font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-          <UtensilsCrossed className="w-5 h-5 text-emerald-500" />
-          ארוחות יומיות ({meals.length})
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-foreground flex items-center gap-2">
+            <UtensilsCrossed className="w-5 h-5 text-primary-600" />
+            ארוחות יומיות ({filteredMeals.length}{meals.length !== filteredMeals.length && ` מתוך ${meals.length}`})
+          </h3>
+        </div>
+
+        {/* Search and Filter */}
+        {(meals.length > 0 || searchQuery || mealFilter !== 'all') && (
+          <div className="premium-card p-3 space-y-3">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted" />
+              <input
+                type="text"
+                placeholder="חפש בארוחות ובפריטי מזון..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pr-10 pl-4 py-2 border border-border-light rounded-lg bg-elevated text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-surface rounded-full transition-colors"
+                  aria-label="נקה חיפוש"
+                >
+                  <X className="w-4 h-4 text-muted" />
+                </button>
+              )}
+            </div>
+
+            {/* Filter */}
+            {mealTypes.length > 1 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <Filter className="w-4 h-4 text-muted" />
+                <button
+                  onClick={() => setMealFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    mealFilter === 'all'
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-surface-light text-secondary hover:bg-surface border border-border-light'
+                  }`}
+                >
+                  הכל
+                </button>
+                {mealTypes.map((type) => {
+                  const config = getMealConfig(type);
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => setMealFilter(type)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
+                        mealFilter === type
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-surface-light text-secondary hover:bg-surface border border-border-light'
+                      }`}
+                    >
+                      <span>{config.icon}</span>
+                      {config.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {meals.length === 0 ? (
-          <div className="premium-card-static p-8 text-center">
-            <div className="w-16 h-16 bg-amber-500/15 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
-              <AlertCircle className="w-8 h-8 text-amber-400" />
+          <div className="premium-card p-8 text-center">
+            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-300">
+              <AlertCircle className="w-8 h-8 text-amber-500" />
             </div>
-            <p className="text-[var(--color-text-secondary)]">אין ארוחות בתפריט</p>
+            <p className="text-secondary">אין ארוחות בתפריט</p>
+          </div>
+        ) : filteredMeals.length === 0 ? (
+          <div className="premium-card p-8 text-center">
+            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary-300">
+              <Search className="w-8 h-8 text-primary-600" />
+            </div>
+            <p className="text-secondary mb-2">לא נמצאו ארוחות התואמות לחיפוש</p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setMealFilter('all');
+              }}
+              className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+            >
+              נקה חיפוש
+            </button>
           </div>
         ) : (
-          meals.map((meal) => (
+          filteredMeals.map((meal) => (
             <MealSection
               key={meal.id}
               meal={meal}
@@ -217,65 +352,74 @@ function PlanHeader({
   formatDate: (d: string | null) => string;
 }) {
   return (
-    <div className="bg-gradient-to-l from-emerald-600 to-emerald-500 rounded-2xl p-5 text-white shadow-lg">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xl font-bold">{mealPlan.name}</h2>
-        <button
-          onClick={onRefresh}
-          className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-        </button>
+    <div className="bg-gradient-to-br from-primary-700 via-primary-600 to-primary-800 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
+      {/* Decorative background pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full blur-2xl"></div>
       </div>
-      {mealPlan.description && (
-        <p className="text-white/70 text-sm mb-4">{mealPlan.description}</p>
-      )}
-
-      <div className="grid grid-cols-2 gap-3">
-        {mealPlan.daily_calories && (
-          <div className="bg-white/15 rounded-xl p-3 text-center">
-            <Flame className="w-5 h-5 mx-auto mb-1" />
-            <p className="text-lg font-bold">{mealPlan.daily_calories.toLocaleString()}</p>
-            <p className="text-xs text-white/60">קלוריות יומי</p>
-          </div>
+      
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xl font-bold drop-shadow-sm">{mealPlan.name}</h2>
+          <button
+            onClick={onRefresh}
+            className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-all hover:scale-110 active:scale-95"
+            aria-label="רענון"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
+        {mealPlan.description && (
+          <p className="text-white/80 text-sm mb-4 leading-relaxed">{mealPlan.description}</p>
         )}
-        {mealPlan.daily_water_ml && (
-          <div className="bg-white/15 rounded-xl p-3 text-center">
-            <Droplets className="w-5 h-5 mx-auto mb-1" />
-            <p className="text-lg font-bold">{(mealPlan.daily_water_ml / 1000).toFixed(1)} ליטר</p>
-            <p className="text-xs text-white/60">מים יומי</p>
-          </div>
-        )}
-      </div>
 
-      {hasMacroTargets && (
-        <div className="grid grid-cols-3 gap-2 mt-3">
-          {mealPlan.protein_grams && (
-            <div className="bg-white/10 rounded-lg p-2 text-center">
-              <p className="text-sm font-bold">{mealPlan.protein_grams} גרם</p>
-              <p className="text-xs text-white/60">חלבון</p>
+        <div className="grid grid-cols-2 gap-3">
+          {mealPlan.daily_calories && (
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center border border-white/10 hover:bg-white/25 transition-all">
+              <Flame className="w-5 h-5 mx-auto mb-1 drop-shadow-sm" />
+              <p className="text-lg font-bold">{mealPlan.daily_calories.toLocaleString()}</p>
+              <p className="text-xs text-white/70">קלוריות יומי</p>
             </div>
           )}
-          {mealPlan.carbs_grams && (
-            <div className="bg-white/10 rounded-lg p-2 text-center">
-              <p className="text-sm font-bold">{mealPlan.carbs_grams} גרם</p>
-              <p className="text-xs text-white/60">פחמימות</p>
-            </div>
-          )}
-          {mealPlan.fat_grams && (
-            <div className="bg-white/10 rounded-lg p-2 text-center">
-              <p className="text-sm font-bold">{mealPlan.fat_grams} גרם</p>
-              <p className="text-xs text-white/60">שומן</p>
+          {mealPlan.daily_water_ml && (
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center border border-white/10 hover:bg-white/25 transition-all">
+              <Droplets className="w-5 h-5 mx-auto mb-1 drop-shadow-sm" />
+              <p className="text-lg font-bold">{(mealPlan.daily_water_ml / 1000).toFixed(1)} ליטר</p>
+              <p className="text-xs text-white/70">מים יומי</p>
             </div>
           )}
         </div>
-      )}
 
-      {mealPlan.updated_at && (
-        <p className="text-xs text-white/60 mt-3 text-center">
-          עודכן: {formatDate(mealPlan.updated_at)}
-        </p>
-      )}
+        {hasMacroTargets && (
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            {mealPlan.protein_grams && (
+              <div className="bg-white/15 backdrop-blur-sm rounded-lg p-2 text-center border border-white/10">
+                <p className="text-sm font-bold">{mealPlan.protein_grams} גרם</p>
+                <p className="text-xs text-white/70">חלבון</p>
+              </div>
+            )}
+            {mealPlan.carbs_grams && (
+              <div className="bg-white/15 backdrop-blur-sm rounded-lg p-2 text-center border border-white/10">
+                <p className="text-sm font-bold">{mealPlan.carbs_grams} גרם</p>
+                <p className="text-xs text-white/70">פחמימות</p>
+              </div>
+            )}
+            {mealPlan.fat_grams && (
+              <div className="bg-white/15 backdrop-blur-sm rounded-lg p-2 text-center border border-white/10">
+                <p className="text-sm font-bold">{mealPlan.fat_grams} גרם</p>
+                <p className="text-xs text-white/70">שומן</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {mealPlan.updated_at && (
+          <p className="text-xs text-white/60 mt-3 text-center">
+            עודכן: {formatDate(mealPlan.updated_at)}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -290,23 +434,24 @@ function NotesSection({
   onToggle: () => void;
 }) {
   return (
-    <div className="premium-card-static overflow-hidden">
-      <button onClick={onToggle} className="w-full p-4 flex items-center justify-between">
+    <div className="premium-card overflow-hidden">
+      <button 
+        onClick={onToggle} 
+        className="w-full p-4 flex items-center justify-between hover:bg-surface-light/50 transition-colors"
+      >
         <div className="flex items-center gap-3">
-          <div className="bg-amber-500/15 border border-amber-500/30 p-2 rounded-lg">
-            <MessageSquare className="w-5 h-5 text-amber-500" />
+          <div className="bg-amber-100 border border-amber-300 p-2.5 rounded-lg">
+            <MessageSquare className="w-5 h-5 text-amber-600" />
           </div>
-          <span className="font-semibold text-[var(--color-text-primary)]">הערות המאמן</span>
+          <span className="font-semibold text-foreground">הערות המאמן</span>
         </div>
-        {showNotes ? (
-          <ChevronUp className="w-5 h-5 text-[var(--color-text-muted)]" />
-        ) : (
-          <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
-        )}
+        <div className={`transition-transform duration-300 ${showNotes ? 'rotate-180' : ''}`}>
+          <ChevronDown className="w-5 h-5 text-muted" />
+        </div>
       </button>
       {showNotes && (
-        <div className="px-4 pb-4">
-          <div className="bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-lg p-3 text-[var(--color-text-secondary)] whitespace-pre-wrap text-sm leading-relaxed">
+        <div className="px-4 pb-4 animate-fade-in">
+          <div className="bg-surface-light border border-border-light rounded-lg p-4 text-secondary whitespace-pre-wrap text-sm leading-relaxed">
             {notes}
           </div>
         </div>
@@ -337,37 +482,45 @@ function MealSection({
   const config = getMealConfig(meal.meal_name);
 
   return (
-    <div className="premium-card-static overflow-hidden">
-      <button onClick={onToggle} className="w-full p-4 flex items-center justify-between">
+    <div className="premium-card overflow-hidden transition-all duration-300">
+      <button 
+        onClick={onToggle} 
+        className="w-full p-4 flex items-center justify-between hover:bg-surface-light/50 transition-colors"
+        aria-expanded={isExpanded}
+        aria-controls={`meal-section-${meal.id}`}
+        aria-label={`${config.label} - ${isExpanded ? 'סגור' : 'פתח'}`}
+      >
         <div className="flex items-center gap-3">
-          <span className="text-2xl">{config.icon}</span>
+          <div className="text-3xl filter drop-shadow-sm">{config.icon}</div>
           <div className="text-right">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-[var(--color-text-primary)]">{config.label}</span>
-              <span className="text-[var(--color-text-secondary)] text-sm flex items-center gap-1">
-                <Clock className="w-3 h-3" />
+              <span className="font-bold text-foreground">{config.label}</span>
+              <span className="text-secondary text-sm flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" />
                 {formatTime(meal.meal_time)}
               </span>
             </div>
             {meal.total_calories && (
-              <span className="text-xs text-[var(--color-text-muted)]">
+              <span className="text-xs text-muted flex items-center gap-1 mt-0.5">
+                <Flame className="w-3 h-3 text-primary-500" />
                 {meal.total_calories} קלוריות
               </span>
             )}
           </div>
         </div>
-        {isExpanded ? (
-          <ChevronUp className="w-5 h-5 text-[var(--color-text-muted)]" />
-        ) : (
-          <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
-        )}
+        <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+          <ChevronDown className="w-5 h-5 text-muted" />
+        </div>
       </button>
 
       {isExpanded && (
-        <div className="px-4 pb-4 space-y-3 border-t border-[var(--color-border)] pt-3">
+        <div id={`meal-section-${meal.id}`} className="px-4 pb-4 space-y-3 border-t border-border-subtle pt-4 animate-fade-in" role="region" aria-labelledby={`meal-header-${meal.id}`}>
           {meal.food_items && meal.food_items.length > 0 ? (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">פריטי מזון:</p>
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-secondary mb-2 flex items-center gap-2">
+                <UtensilsCrossed className="w-4 h-4 text-primary-500" />
+                פריטי מזון:
+              </p>
               {meal.food_items.map((item) => (
                 <FoodItemCard
                   key={item.id}
@@ -383,28 +536,31 @@ function MealSection({
               )}
             </div>
           ) : meal.description ? (
-            <div className="bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-lg p-3">
-              <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-1">מה לאכול:</p>
-              <p className="text-[var(--color-text-primary)] whitespace-pre-wrap">{meal.description}</p>
+            <div className="bg-surface-light border border-border-light rounded-lg p-3 animate-fade-in">
+              <p className="text-sm font-semibold text-secondary mb-2">מה לאכול:</p>
+              <p className="text-foreground whitespace-pre-wrap leading-relaxed">{meal.description}</p>
             </div>
           ) : null}
 
           {meal.alternatives && (
-            <div className="bg-[var(--color-bg-surface)] rounded-lg p-3 border border-dashed border-[var(--color-border)]">
-              <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-1">חלופות:</p>
-              <p className="text-[var(--color-text-secondary)] text-sm whitespace-pre-wrap">{meal.alternatives}</p>
+            <div className="bg-surface-light rounded-lg p-3 border border-dashed border-primary-300 animate-fade-in">
+              <p className="text-sm font-semibold text-secondary mb-2 flex items-center gap-2">
+                <ArrowLeftRight className="w-4 h-4 text-primary-500" />
+                חלופות:
+              </p>
+              <p className="text-secondary text-sm whitespace-pre-wrap leading-relaxed">{meal.alternatives}</p>
             </div>
           )}
 
           {meal.description && meal.food_items && meal.food_items.length > 0 && (
-            <div className="bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-lg p-3">
-              <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-1">הערות:</p>
-              <p className="text-[var(--color-text-secondary)] text-sm whitespace-pre-wrap">{meal.description}</p>
+            <div className="bg-surface-light border border-border-light rounded-lg p-3 animate-fade-in">
+              <p className="text-sm font-semibold text-secondary mb-2">הערות:</p>
+              <p className="text-secondary text-sm whitespace-pre-wrap leading-relaxed">{meal.description}</p>
             </div>
           )}
 
           {meal.notes && (
-            <p className="text-xs text-[var(--color-text-muted)] italic">{meal.notes}</p>
+            <p className="text-xs text-muted italic animate-fade-in">{meal.notes}</p>
           )}
         </div>
       )}
@@ -427,22 +583,22 @@ function FoodItemCard({
   const catColors = item.category ? CATEGORY_COLORS[item.category] : null;
 
   return (
-    <div className="bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-xl p-3">
+    <div className="bg-surface-light border border-border-light rounded-xl p-3 hover:border-border-medium transition-all duration-200">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-semibold text-[var(--color-text-primary)]">{item.food_name}</p>
+            <p className="font-semibold text-foreground">{item.food_name}</p>
             {catColors && (
-              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${catColors.bg} ${catColors.text} border ${catColors.border}`}>
+              <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${catColors.bg} ${catColors.text} border ${catColors.border}`}>
                 {catColors.label}
               </span>
             )}
           </div>
-          <p className="text-sm text-[var(--color-text-secondary)] mt-0.5">
+          <p className="text-sm text-secondary mt-1">
             {item.quantity} {formatUnit(item.unit)}
           </p>
           {hasCatalogData && item.unit === 'g' && (
-            <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5 flex items-center gap-1">
+            <p className="text-[10px] text-muted mt-1 flex items-center gap-1">
               <Info className="w-2.5 h-2.5" />
               חישוב אוטומטי ל-{item.quantity} גרם (בסיס: {item.calories_per_100g} קל' ל-100 גרם)
             </p>
@@ -451,12 +607,13 @@ function FoodItemCard({
         {hasCatalogData && (
           <button
             onClick={onToggleAlts}
-            className={`p-1.5 rounded-lg transition-all flex-shrink-0 ${
+            className={`p-2 rounded-lg transition-all flex-shrink-0 hover:scale-110 active:scale-95 ${
               showAlts
-                ? 'bg-emerald-500/20 text-emerald-400'
-                : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)]'
+                ? 'bg-primary-500/20 text-primary-600 border border-primary-300'
+                : 'text-muted hover:bg-elevated border border-transparent'
             }`}
             title="הצג חלופות"
+            aria-label="הצג חלופות"
           >
             <ArrowLeftRight className="w-4 h-4" />
           </button>
@@ -464,27 +621,27 @@ function FoodItemCard({
       </div>
 
       {(item.calories || item.protein || item.carbs || item.fat) && (
-        <div className="flex gap-2 flex-wrap mt-2">
+        <div className="flex gap-2 flex-wrap mt-3">
           {item.calories != null && item.calories > 0 && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/15 border border-emerald-500/30 rounded-full text-xs text-emerald-500">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-100 border border-primary-300 rounded-full text-xs font-semibold text-primary-700">
               <Flame className="w-3 h-3" />
               {item.calories} קל'
             </span>
           )}
           {item.protein != null && item.protein > 0 && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-500/15 border border-red-500/30 rounded-full text-xs text-red-500">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-100 border border-red-300 rounded-full text-xs font-semibold text-red-600">
               <Beef className="w-3 h-3" />
               {item.protein}ג
             </span>
           )}
           {item.carbs != null && item.carbs > 0 && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-500/15 border border-blue-500/30 rounded-full text-xs text-blue-500">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 border border-blue-300 rounded-full text-xs font-semibold text-blue-600">
               <Wheat className="w-3 h-3" />
               {item.carbs}ג
             </span>
           )}
           {item.fat != null && item.fat > 0 && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-500/15 border border-amber-500/30 rounded-full text-xs text-amber-600">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-100 border border-amber-300 rounded-full text-xs font-semibold text-amber-600">
               <Droplet className="w-3 h-3" />
               {item.fat}ג
             </span>
@@ -536,8 +693,8 @@ function TraineeAlternativesPanel({
 
   if (alternatives.length === 0) {
     return (
-      <div className="mt-2 p-3 bg-[var(--color-bg-elevated)] rounded-lg border border-dashed border-[var(--color-border)]">
-        <p className="text-xs text-[var(--color-text-muted)] text-center">אין חלופות דומות בקטגוריה זו</p>
+      <div className="mt-2 p-3 bg-elevated rounded-lg border border-dashed border-border-light">
+        <p className="text-xs text-muted text-center">אין חלופות דומות בקטגוריה זו</p>
       </div>
     );
   }
@@ -547,48 +704,48 @@ function TraineeAlternativesPanel({
   const ratio = isGrams ? quantity / 100 : 1;
 
   return (
-    <div className="mt-2 p-3 bg-[var(--color-bg-elevated)] rounded-xl border border-dashed border-emerald-500/30">
+    <div className="mt-2 p-3 bg-elevated rounded-xl border border-dashed border-primary-300">
       <div className="flex items-center gap-2 mb-2">
-        <ArrowLeftRight className="w-3.5 h-3.5 text-emerald-400" />
-        <span className="text-xs font-semibold text-emerald-400">
+        <ArrowLeftRight className="w-3.5 h-3.5 text-primary-500" />
+        <span className="text-xs font-semibold text-primary-600">
           חלופות ({categoryLabel})
         </span>
         {isGrams && (
-          <span className="text-[10px] text-[var(--color-text-muted)] mr-auto">
+          <span className="text-[10px] text-muted mr-auto">
             ערכים ל-{quantity} גרם
           </span>
         )}
       </div>
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-transparent">
         {alternatives.map((alt) => (
           <div
             key={alt.id}
-            className="flex-shrink-0 text-right p-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] min-w-[150px] max-w-[180px]"
+            className="flex-shrink-0 text-right p-2.5 rounded-lg border border-border-light bg-surface-light hover:border-primary-400 transition-all min-w-[150px] max-w-[180px]"
           >
-            <p className="font-semibold text-[var(--color-text-primary)] text-xs mb-1.5 truncate">{alt.name}</p>
+            <p className="font-semibold text-foreground text-xs mb-1.5 truncate">{alt.name}</p>
             {alt.brand && (
-              <p className="text-[10px] text-[var(--color-text-muted)] mb-1 truncate">{alt.brand}</p>
+              <p className="text-[10px] text-muted mb-1 truncate">{alt.brand}</p>
             )}
             <div className="grid grid-cols-2 gap-1 text-[10px]">
-              <span className="flex items-center gap-0.5 text-emerald-500">
+              <span className="flex items-center gap-0.5 text-primary-600 font-semibold">
                 <Flame className="w-2.5 h-2.5" />
                 {isGrams ? Math.round(alt.calories_per_100g * ratio) : alt.calories_per_100g}
               </span>
-              <span className="flex items-center gap-0.5 text-red-500">
+              <span className="flex items-center gap-0.5 text-red-600 font-semibold">
                 <Beef className="w-2.5 h-2.5" />
                 {isGrams ? Math.round(alt.protein_per_100g * ratio) : alt.protein_per_100g}ג
               </span>
-              <span className="flex items-center gap-0.5 text-blue-500">
+              <span className="flex items-center gap-0.5 text-blue-600 font-semibold">
                 <Wheat className="w-2.5 h-2.5" />
                 {isGrams ? Math.round(alt.carbs_per_100g * ratio) : alt.carbs_per_100g}ג
               </span>
-              <span className="flex items-center gap-0.5 text-amber-600">
+              <span className="flex items-center gap-0.5 text-amber-600 font-semibold">
                 <Droplet className="w-2.5 h-2.5" />
                 {isGrams ? Math.round(alt.fat_per_100g * ratio) : alt.fat_per_100g}ג
               </span>
             </div>
             {!isGrams && (
-              <p className="text-[9px] text-[var(--color-text-muted)] mt-1">ל-100 גרם</p>
+              <p className="text-[9px] text-muted mt-1">ל-100 גרם</p>
             )}
           </div>
         ))}
@@ -599,26 +756,33 @@ function TraineeAlternativesPanel({
 
 function MealTotals({ meal }: { meal: MealPlanMeal }) {
   return (
-    <div className="bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-lg p-3 mt-3">
-      <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">סיכום הארוחה:</p>
+    <div className="bg-surface-light border border-border-light rounded-xl p-4 mt-3">
+      <p className="text-sm font-semibold text-secondary mb-3 flex items-center gap-2">
+        <UtensilsCrossed className="w-4 h-4 text-primary-500" />
+        סיכום הארוחה:
+      </p>
       <div className="flex gap-3 flex-wrap">
         {meal.total_calories != null && meal.total_calories > 0 && (
-          <span className="text-sm text-emerald-500">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 border border-primary-200 rounded-lg text-sm font-semibold text-primary-700">
+            <Flame className="w-4 h-4" />
             <span className="font-bold">{meal.total_calories}</span> קלוריות
           </span>
         )}
         {meal.total_protein != null && meal.total_protein > 0 && (
-          <span className="text-sm text-red-500">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg text-sm font-semibold text-red-600">
+            <Beef className="w-4 h-4" />
             <span className="font-bold">{meal.total_protein}ג</span> חלבון
           </span>
         )}
         {meal.total_carbs != null && meal.total_carbs > 0 && (
-          <span className="text-sm text-blue-500">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-sm font-semibold text-blue-600">
+            <Wheat className="w-4 h-4" />
             <span className="font-bold">{meal.total_carbs}ג</span> פחמימות
           </span>
         )}
         {meal.total_fat != null && meal.total_fat > 0 && (
-          <span className="text-sm text-amber-600">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-sm font-semibold text-amber-600">
+            <Droplet className="w-4 h-4" />
             <span className="font-bold">{meal.total_fat}ג</span> שומן
           </span>
         )}
@@ -628,63 +792,116 @@ function MealTotals({ meal }: { meal: MealPlanMeal }) {
 }
 
 function DailySummary({ totals, mealPlan }: { totals: { calories: number; protein: number; carbs: number; fat: number }; mealPlan: MealPlan }) {
+  const caloriesProgress = mealPlan?.daily_calories && mealPlan.daily_calories > 0 
+    ? Math.min((totals.calories / mealPlan.daily_calories) * 100, 100) 
+    : 0;
+  const proteinProgress = mealPlan?.protein_grams && mealPlan.protein_grams > 0
+    ? Math.min((totals.protein / mealPlan.protein_grams) * 100, 100) 
+    : 0;
+  const carbsProgress = mealPlan?.carbs_grams && mealPlan.carbs_grams > 0
+    ? Math.min((totals.carbs / mealPlan.carbs_grams) * 100, 100) 
+    : 0;
+  const fatProgress = mealPlan?.fat_grams && mealPlan.fat_grams > 0
+    ? Math.min((totals.fat / mealPlan.fat_grams) * 100, 100) 
+    : 0;
+
   return (
-    <div className="premium-card-static p-4">
-      <h3 className="font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
-        <DailySummaryIcon className="w-5 h-5 text-emerald-500" />
+    <div className="premium-card p-5">
+      <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
+        <DailySummaryIcon className="w-5 h-5 text-primary-600" />
         סיכום יומי (מהארוחות)
       </h3>
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-emerald-500/15 border border-emerald-500/30 rounded-lg p-3 text-center">
-          <Flame className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
-          <p className="text-xl font-bold text-[var(--color-text-primary)]">{totals.calories.toLocaleString()}</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">קלוריות</p>
+        <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-full h-1 bg-primary-100">
+            <div 
+              className={`h-full transition-all duration-500 ${caloriesProgress >= 100 ? 'bg-red-400' : caloriesProgress >= 80 ? 'bg-primary-400' : 'bg-primary-300'}`}
+              style={{ width: `${Math.max(0, Math.min(100, caloriesProgress))}%` }}
+              role="progressbar"
+              aria-valuenow={Math.round(caloriesProgress)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            />
+          </div>
+          <Flame className="w-5 h-5 text-primary-600 mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{totals.calories.toLocaleString()}</p>
+          <p className="text-xs text-secondary mt-1">קלוריות</p>
           {mealPlan.daily_calories && (
-            <p className={`text-xs mt-1 ${totals.calories <= mealPlan.daily_calories ? 'text-emerald-500' : 'text-red-500'}`}>
-              מתוך {mealPlan.daily_calories.toLocaleString()}
+            <p className={`text-xs mt-2 font-semibold ${totals.calories <= mealPlan.daily_calories ? 'text-primary-600' : 'text-red-500'}`}>
+              מתוך {mealPlan.daily_calories.toLocaleString()} ({Math.round(caloriesProgress)}%)
             </p>
           )}
         </div>
-        <div className="bg-red-500/15 border border-red-500/30 rounded-lg p-3 text-center">
-          <Beef className="w-5 h-5 text-red-500 mx-auto mb-1" />
-          <p className="text-xl font-bold text-[var(--color-text-primary)]">{totals.protein} גרם</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">חלבון</p>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-full h-1 bg-red-100">
+            <div 
+              className={`h-full transition-all duration-500 ${proteinProgress >= 100 ? 'bg-primary-400' : proteinProgress >= 80 ? 'bg-red-400' : 'bg-red-300'}`}
+              style={{ width: `${Math.max(0, Math.min(100, proteinProgress))}%` }}
+              role="progressbar"
+              aria-valuenow={Math.round(proteinProgress)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            />
+          </div>
+          <Beef className="w-5 h-5 text-red-600 mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{totals.protein} גרם</p>
+          <p className="text-xs text-secondary mt-1">חלבון</p>
           {mealPlan.protein_grams && (
-            <p className={`text-xs mt-1 ${totals.protein >= mealPlan.protein_grams ? 'text-emerald-500' : 'text-orange-500'}`}>
-              מתוך {mealPlan.protein_grams} גרם
+            <p className={`text-xs mt-2 font-semibold ${totals.protein >= mealPlan.protein_grams ? 'text-primary-600' : 'text-orange-500'}`}>
+              מתוך {mealPlan.protein_grams} גרם ({Math.round(proteinProgress)}%)
             </p>
           )}
         </div>
-        <div className="bg-blue-500/15 border border-blue-500/30 rounded-lg p-3 text-center">
-          <Wheat className="w-5 h-5 text-blue-500 mx-auto mb-1" />
-          <p className="text-xl font-bold text-[var(--color-text-primary)]">{totals.carbs} גרם</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">פחמימות</p>
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-full h-1 bg-blue-100">
+            <div 
+              className="h-full bg-blue-300 transition-all duration-500"
+              style={{ width: `${Math.max(0, Math.min(100, carbsProgress))}%` }}
+              role="progressbar"
+              aria-valuenow={Math.round(carbsProgress)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            />
+          </div>
+          <Wheat className="w-5 h-5 text-blue-600 mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{totals.carbs} גרם</p>
+          <p className="text-xs text-secondary mt-1">פחמימות</p>
           {mealPlan.carbs_grams && (
-            <p className="text-xs text-[var(--color-text-muted)] mt-1">מתוך {mealPlan.carbs_grams} גרם</p>
+            <p className="text-xs text-muted mt-2">מתוך {mealPlan.carbs_grams} גרם ({Math.round(carbsProgress)}%)</p>
           )}
         </div>
-        <div className="bg-amber-500/15 border border-amber-500/30 rounded-lg p-3 text-center">
-          <Droplet className="w-5 h-5 text-amber-600 mx-auto mb-1" />
-          <p className="text-xl font-bold text-[var(--color-text-primary)]">{totals.fat} גרם</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">שומן</p>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-full h-1 bg-amber-100">
+            <div 
+              className="h-full bg-amber-300 transition-all duration-500"
+              style={{ width: `${Math.max(0, Math.min(100, fatProgress))}%` }}
+              role="progressbar"
+              aria-valuenow={Math.round(fatProgress)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            />
+          </div>
+          <Droplet className="w-5 h-5 text-amber-600 mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{totals.fat} גרם</p>
+          <p className="text-xs text-secondary mt-1">שומן</p>
           {mealPlan.fat_grams && (
-            <p className="text-xs text-[var(--color-text-muted)] mt-1">מתוך {mealPlan.fat_grams} גרם</p>
+            <p className="text-xs text-muted mt-2">מתוך {mealPlan.fat_grams} גרם ({Math.round(fatProgress)}%)</p>
           )}
         </div>
       </div>
 
-      {mealPlan.daily_water_ml && (
-        <div className="mt-3 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-          <div className="flex items-center justify-between">
+      {mealPlan?.daily_water_ml && mealPlan.daily_water_ml > 0 && (
+        <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Droplets className="w-5 h-5 text-blue-500" />
-              <span className="font-medium text-blue-600">יעד מים יומי</span>
+              <Droplets className="w-5 h-5 text-blue-600" />
+              <span className="font-semibold text-blue-700">יעד מים יומי</span>
             </div>
-            <span className="text-lg font-bold text-blue-600">
+            <span className="text-xl font-bold text-blue-700">
               {(mealPlan.daily_water_ml / 1000).toFixed(1)} ליטר
             </span>
           </div>
-          <p className="text-xs text-blue-500 mt-1">
+          <p className="text-xs text-blue-600">
             ({mealPlan.daily_water_ml.toLocaleString()} מ"ל = כ-{Math.round(mealPlan.daily_water_ml / 250)} כוסות)
           </p>
         </div>

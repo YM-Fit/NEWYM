@@ -4,6 +4,9 @@ import {
   calculateTDEE,
   calculateCaloriesByGoal,
   calculateFullCalorieData,
+  calculateMacros,
+  estimateWeightChange,
+  calculateWaterIntake,
   type ActivityLevel,
   type Goal,
 } from './calorieCalculations';
@@ -137,6 +140,167 @@ describe('calorieCalculations', () => {
       expect(data.recommendations.maintenance.calories).toBeLessThan(
         data.recommendations.bulking.calories
       );
+    });
+  });
+
+  describe('calculateMacros', () => {
+    it('should calculate macros for cutting goal', () => {
+      const result = calculateMacros(2000, 80, 'cutting');
+      expect(result.protein.grams).toBe(176); // 80 * 2.2
+      expect(result.protein.percentage).toBeGreaterThan(30);
+      expect(result.fat.percentage).toBe(25);
+    });
+
+    it('should calculate macros for maintenance goal', () => {
+      const result = calculateMacros(2000, 80, 'maintenance');
+      expect(result.protein.grams).toBe(160); // 80 * 2.0
+      expect(result.fat.percentage).toBe(25);
+    });
+
+    it('should calculate macros for bulking goal', () => {
+      const result = calculateMacros(2000, 80, 'bulking');
+      expect(result.protein.grams).toBe(160); // 80 * 2.0
+      expect(result.fat.percentage).toBe(25);
+    });
+
+    it('should throw error for zero calories', () => {
+      expect(() => calculateMacros(0, 80, 'cutting')).toThrow('totalCalories חייב להיות גדול מ-0');
+    });
+
+    it('should throw error for negative weight', () => {
+      expect(() => calculateMacros(2000, -10, 'cutting')).toThrow('weight חייב להיות גדול מ-0');
+    });
+
+    it('should throw error for zero weight', () => {
+      expect(() => calculateMacros(2000, 0, 'cutting')).toThrow('weight חייב להיות גדול מ-0');
+    });
+
+    it('should throw error for weight over 500kg', () => {
+      expect(() => calculateMacros(2000, 501, 'cutting')).toThrow('weight לא יכול להיות גדול מ-500 ק"ג');
+    });
+
+    it('should throw error for calories over 20000', () => {
+      expect(() => calculateMacros(20001, 80, 'cutting')).toThrow('totalCalories לא יכול להיות גדול מ-20000');
+    });
+
+    it('should have percentages sum to ~100%', () => {
+      const result = calculateMacros(2000, 80, 'maintenance');
+      const sum = result.protein.percentage + 
+                  result.carbs.percentage + 
+                  result.fat.percentage;
+      expect(Math.abs(sum - 100)).toBeLessThan(2);
+    });
+
+    it('should handle edge cases - low weight', () => {
+      const result = calculateMacros(1000, 40, 'cutting');
+      expect(result.protein.grams).toBeGreaterThan(0);
+      expect(result.protein.grams).toBe(88); // 40 * 2.2
+    });
+
+    it('should handle edge cases - high calories', () => {
+      const result = calculateMacros(5000, 100, 'bulking');
+      expect(result.carbs.grams).toBeGreaterThan(0);
+      expect(result.protein.grams).toBe(200); // 100 * 2.0
+    });
+  });
+
+  describe('estimateWeightChange', () => {
+    it('should calculate weight loss correctly', () => {
+      const result = estimateWeightChange(1500, 2000);
+      expect(result.weeklyChange).toBeLessThan(0);
+      expect(result.description).toContain('ירידה');
+    });
+
+    it('should calculate weight gain correctly', () => {
+      const result = estimateWeightChange(2500, 2000);
+      expect(result.weeklyChange).toBeGreaterThan(0);
+      expect(result.description).toContain('עלייה');
+    });
+
+    it('should calculate maintenance correctly', () => {
+      const result = estimateWeightChange(2000, 2000);
+      expect(Math.abs(result.weeklyChange)).toBeLessThan(0.1);
+      expect(result.description).toContain('שמירה');
+    });
+
+    it('should handle TDEE = 0', () => {
+      const result = estimateWeightChange(1500, 0);
+      expect(result.weeklyChange).toBe(0);
+      expect(result.description).toContain('לא ניתן לחשב');
+    });
+
+    it('should handle negative TDEE', () => {
+      const result = estimateWeightChange(1500, -100);
+      expect(result.weeklyChange).toBe(0);
+      expect(result.description).toContain('לא ניתן לחשב');
+    });
+
+    it('should handle negative current calories', () => {
+      const result = estimateWeightChange(-100, 2000);
+      expect(result.weeklyChange).toBeLessThan(0);
+    });
+
+    it('should calculate correct weekly change', () => {
+      // 500 קלוריות גירעון ביום = 3500 בשבוע = 0.45 ק"ג
+      const result = estimateWeightChange(1500, 2000);
+      expect(result.weeklyChange).toBeCloseTo(-0.45, 1);
+    });
+  });
+
+  describe('calculateWaterIntake', () => {
+    it('should calculate water for sedentary', () => {
+      const result = calculateWaterIntake(70, 'sedentary');
+      expect(result).toBeGreaterThan(2000); // 70 * 33 = 2310
+      expect(result).toBeLessThan(2500);
+      expect(result).toBe(2310);
+    });
+
+    it('should calculate water for light activity', () => {
+      const result = calculateWaterIntake(70, 'light');
+      expect(result).toBe(2560); // 70 * 33 + 250
+    });
+
+    it('should calculate water for moderate activity', () => {
+      const result = calculateWaterIntake(70, 'moderate');
+      expect(result).toBe(2810); // 70 * 33 + 500
+    });
+
+    it('should calculate water for active', () => {
+      const result = calculateWaterIntake(70, 'active');
+      expect(result).toBe(3060); // 70 * 33 + 750
+    });
+
+    it('should calculate water for very active', () => {
+      const result = calculateWaterIntake(70, 'very_active');
+      expect(result).toBe(3310); // 70 * 33 + 1000
+    });
+
+    it('should add activity bonus', () => {
+      const sedentary = calculateWaterIntake(70, 'sedentary');
+      const veryActive = calculateWaterIntake(70, 'very_active');
+      expect(veryActive).toBeGreaterThan(sedentary + 900);
+    });
+
+    it('should throw error for zero weight', () => {
+      expect(() => calculateWaterIntake(0, 'moderate')).toThrow('weight חייב להיות גדול מ-0');
+    });
+
+    it('should throw error for negative weight', () => {
+      expect(() => calculateWaterIntake(-10, 'moderate')).toThrow('weight חייב להיות גדול מ-0');
+    });
+
+    it('should throw error for weight over 500kg', () => {
+      expect(() => calculateWaterIntake(501, 'moderate')).toThrow('weight לא יכול להיות גדול מ-500 ק"ג');
+    });
+
+    it('should enforce minimum water intake', () => {
+      const result = calculateWaterIntake(1, 'sedentary');
+      expect(result).toBeGreaterThanOrEqual(500);
+    });
+
+    it('should enforce maximum water intake', () => {
+      const result = calculateWaterIntake(500, 'very_active');
+      expect(result).toBeLessThanOrEqual(10000);
     });
   });
 });

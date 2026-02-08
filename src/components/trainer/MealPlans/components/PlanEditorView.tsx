@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Save, Trash2, Clock, ChevronDown, ChevronUp, Download, Upload, FileText, AlertCircle, Flame, Beef, Wheat, Droplet, Droplets, Search, ArrowLeftRight } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Save, Trash2, Clock, ChevronDown, ChevronUp, Download, Upload, FileText, AlertCircle, Flame, Beef, Wheat, Droplet, Droplets, Search, ArrowLeftRight, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { createFoodItem, deleteFoodItem } from '../../../../api/nutritionApi';
 import type { NutritionFoodItem } from '../../../../types/nutritionTypes';
@@ -7,6 +7,7 @@ import type { Meal, MealPlan } from '../types/mealPlanTypes';
 import type { FoodCatalogItem } from '../../../../data/foodCatalog';
 import { MEAL_NAMES } from '../constants/mealPlanConstants';
 import { calculateNutrition, recalculateFromPer100g } from '../utils/nutritionCalculator';
+import { validateCalories, validateMacro, validateWater } from '../../../../utils/nutritionValidation';
 import FoodCatalogSelector from './FoodCatalogSelector';
 import FoodAlternativesPanel from './FoodAlternativesPanel';
 
@@ -55,9 +56,27 @@ export function PlanEditorView({
   setMeals,
   debouncedUpdateFoodItem,
 }: PlanEditorViewProps) {
-  const totals = calculateTotalMacros();
+  const totals = useMemo(() => calculateTotalMacros(), [calculateTotalMacros, meals]);
   const [catalogForMeal, setCatalogForMeal] = useState<{ mealId: string; displayIndex: number } | null>(null);
   const [showAlternatives, setShowAlternatives] = useState<Record<string, boolean>>({});
+
+  // חישוב אזהרות
+  const warnings = useMemo(() => {
+    return {
+      exceedsDailyGoal: 
+        plan.daily_calories && totals.calories > plan.daily_calories * 1.1,
+      inconsistentValues:
+        plan.daily_calories && 
+        Math.abs(totals.calories - plan.daily_calories) > plan.daily_calories * 0.2,
+      missingData: totals.calories === 0 && meals.length > 0,
+      exceedsProtein: 
+        plan.protein_grams && totals.protein > plan.protein_grams * 1.1,
+      exceedsCarbs: 
+        plan.carbs_grams && totals.carbs > plan.carbs_grams * 1.1,
+      exceedsFat: 
+        plan.fat_grams && totals.fat > plan.fat_grams * 1.1,
+    };
+  }, [totals, plan, meals]);
 
   const handleCatalogSelect = async (item: FoodCatalogItem) => {
     if (!catalogForMeal) return;
@@ -145,6 +164,39 @@ export function PlanEditorView({
 
   return (
     <div className="space-y-8">
+      {/* אזהרות */}
+      {(warnings.exceedsDailyGoal || warnings.inconsistentValues || warnings.missingData || 
+        warnings.exceedsProtein || warnings.exceedsCarbs || warnings.exceedsFat) && (
+        <div className="premium-card-static p-4 bg-yellow-500/10 border border-yellow-500/30">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 space-y-2">
+              <h4 className="font-semibold text-yellow-400">אזהרות</h4>
+              <ul className="space-y-1 text-sm text-yellow-300">
+                {warnings.exceedsDailyGoal && (
+                  <li>• סיכום הקלוריות חורג מיעד יומי ב-{Math.round(((totals.calories / (plan.daily_calories || 1)) - 1) * 100)}%</li>
+                )}
+                {warnings.inconsistentValues && (
+                  <li>• יש חוסר עקביות בין ערכי התפריט לערכי הארוחות</li>
+                )}
+                {warnings.missingData && (
+                  <li>• יש ארוחות ללא נתונים תזונתיים</li>
+                )}
+                {warnings.exceedsProtein && (
+                  <li>• סיכום החלבון חורג מיעד יומי</li>
+                )}
+                {warnings.exceedsCarbs && (
+                  <li>• סיכום הפחמימות חורג מיעד יומי</li>
+                )}
+                {warnings.exceedsFat && (
+                  <li>• סיכום השומן חורג מיעד יומי</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
       <PlanSettingsCard
         plan={plan}
         onUpdatePlan={onUpdatePlan}
@@ -266,8 +318,24 @@ function PlanSettingsCard({
           <input
             type="number"
             value={plan.daily_calories || ''}
-            onChange={(e) => onUpdatePlan({ daily_calories: e.target.value ? parseInt(e.target.value) : null })}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === '') {
+                onUpdatePlan({ daily_calories: null });
+                return;
+              }
+              const num = parseInt(value);
+              if (isNaN(num)) return;
+              const validation = validateCalories(num);
+              if (validation.isValid) {
+                onUpdatePlan({ daily_calories: num });
+              } else {
+                toast.error(validation.error || 'ערך לא תקין');
+              }
+            }}
             className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
+            min="0"
+            max="20000"
           />
         </div>
         <div>
@@ -278,8 +346,24 @@ function PlanSettingsCard({
           <input
             type="number"
             value={plan.protein_grams || ''}
-            onChange={(e) => onUpdatePlan({ protein_grams: e.target.value ? parseInt(e.target.value) : null })}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === '') {
+                onUpdatePlan({ protein_grams: null });
+                return;
+              }
+              const num = parseInt(value);
+              if (isNaN(num)) return;
+              const validation = validateMacro(num, 'חלבון');
+              if (validation.isValid) {
+                onUpdatePlan({ protein_grams: num });
+              } else {
+                toast.error(validation.error || 'ערך לא תקין');
+              }
+            }}
             className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
+            min="0"
+            max="2000"
           />
         </div>
         <div>
@@ -290,8 +374,24 @@ function PlanSettingsCard({
           <input
             type="number"
             value={plan.carbs_grams || ''}
-            onChange={(e) => onUpdatePlan({ carbs_grams: e.target.value ? parseInt(e.target.value) : null })}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === '') {
+                onUpdatePlan({ carbs_grams: null });
+                return;
+              }
+              const num = parseInt(value);
+              if (isNaN(num)) return;
+              const validation = validateMacro(num, 'פחמימות');
+              if (validation.isValid) {
+                onUpdatePlan({ carbs_grams: num });
+              } else {
+                toast.error(validation.error || 'ערך לא תקין');
+              }
+            }}
             className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
+            min="0"
+            max="2000"
           />
         </div>
         <div>
@@ -302,8 +402,24 @@ function PlanSettingsCard({
           <input
             type="number"
             value={plan.fat_grams || ''}
-            onChange={(e) => onUpdatePlan({ fat_grams: e.target.value ? parseInt(e.target.value) : null })}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === '') {
+                onUpdatePlan({ fat_grams: null });
+                return;
+              }
+              const num = parseInt(value);
+              if (isNaN(num)) return;
+              const validation = validateMacro(num, 'שומן');
+              if (validation.isValid) {
+                onUpdatePlan({ fat_grams: num });
+              } else {
+                toast.error(validation.error || 'ערך לא תקין');
+              }
+            }}
             className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
+            min="0"
+            max="2000"
           />
         </div>
         <div>
@@ -314,8 +430,24 @@ function PlanSettingsCard({
           <input
             type="number"
             value={plan.daily_water_ml || ''}
-            onChange={(e) => onUpdatePlan({ daily_water_ml: e.target.value ? parseInt(e.target.value) : null })}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === '') {
+                onUpdatePlan({ daily_water_ml: null });
+                return;
+              }
+              const num = parseInt(value);
+              if (isNaN(num)) return;
+              const validation = validateWater(num);
+              if (validation.isValid) {
+                onUpdatePlan({ daily_water_ml: num });
+              } else {
+                toast.error(validation.error || 'ערך לא תקין');
+              }
+            }}
             className="glass-input w-full px-4 py-3 text-[var(--color-text-primary)]"
+            min="0"
+            max="10000"
           />
         </div>
       </div>
@@ -456,7 +588,7 @@ function MealsSection({
 
       {meals.length > 0 && totals.calories > 0 && (
         <div className="premium-card-static p-5 bg-gradient-to-r from-emerald-500/10 to-emerald-600/10">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <span className="font-semibold text-[var(--color-text-primary)]">סיכום יומי כולל:</span>
             <div className="flex gap-6 text-sm">
               <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-500 font-semibold">{totals.calories}</span> <span className="text-[var(--color-text-muted)]">קלוריות</span></span>
@@ -465,6 +597,101 @@ function MealsSection({
               <span className="text-[var(--color-text-secondary)]"><span className="text-amber-600 font-semibold">{totals.fat}ג</span> <span className="text-[var(--color-text-muted)]">שומן</span></span>
             </div>
           </div>
+          
+          {/* Progress Indicators */}
+          {plan.daily_calories && (
+            <div className="space-y-3">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-[var(--color-text-muted)]">קלוריות</span>
+                  <span className="text-xs font-semibold text-[var(--color-text-primary)]">
+                    {totals.calories} / {plan.daily_calories}
+                  </span>
+                </div>
+                <div className="w-full bg-[var(--color-bg-surface)] rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all ${
+                      totals.calories > plan.daily_calories * 1.1
+                        ? 'bg-red-500'
+                        : totals.calories > plan.daily_calories
+                        ? 'bg-yellow-500'
+                        : 'bg-emerald-500'
+                    }`}
+                    style={{ width: `${Math.min((totals.calories / plan.daily_calories) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+              
+              {plan.protein_grams && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-[var(--color-text-muted)]">חלבון</span>
+                    <span className="text-xs font-semibold text-[var(--color-text-primary)]">
+                      {totals.protein}ג / {plan.protein_grams}ג
+                    </span>
+                  </div>
+                  <div className="w-full bg-[var(--color-bg-surface)] rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all ${
+                        totals.protein > plan.protein_grams * 1.1
+                          ? 'bg-red-500'
+                          : totals.protein > plan.protein_grams
+                          ? 'bg-yellow-500'
+                          : 'bg-red-400'
+                      }`}
+                      style={{ width: `${Math.min((totals.protein / plan.protein_grams) * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {plan.carbs_grams && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-[var(--color-text-muted)]">פחמימות</span>
+                    <span className="text-xs font-semibold text-[var(--color-text-primary)]">
+                      {totals.carbs}ג / {plan.carbs_grams}ג
+                    </span>
+                  </div>
+                  <div className="w-full bg-[var(--color-bg-surface)] rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all ${
+                        totals.carbs > plan.carbs_grams * 1.1
+                          ? 'bg-red-500'
+                          : totals.carbs > plan.carbs_grams
+                          ? 'bg-yellow-500'
+                          : 'bg-blue-400'
+                      }`}
+                      style={{ width: `${Math.min((totals.carbs / plan.carbs_grams) * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {plan.fat_grams && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-[var(--color-text-muted)]">שומן</span>
+                    <span className="text-xs font-semibold text-[var(--color-text-primary)]">
+                      {totals.fat}ג / {plan.fat_grams}ג
+                    </span>
+                  </div>
+                  <div className="w-full bg-[var(--color-bg-surface)] rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all ${
+                        totals.fat > plan.fat_grams * 1.1
+                          ? 'bg-red-500'
+                          : totals.fat > plan.fat_grams
+                          ? 'bg-yellow-500'
+                          : 'bg-amber-500'
+                      }`}
+                      style={{ width: `${Math.min((totals.fat / plan.fat_grams) * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
