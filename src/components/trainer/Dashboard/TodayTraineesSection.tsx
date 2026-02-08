@@ -885,7 +885,7 @@ export default function TodayTraineesSection({
                   </div>
                 </div>
                 <div>
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-1">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-black tracking-tight mb-1">
                     מתאמנים של היום
                   </h2>
                   <p className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">
@@ -911,10 +911,10 @@ export default function TodayTraineesSection({
                 <table className="w-full min-w-[600px] md:min-w-0">
                   <thead className="bg-surface/50">
                     <tr className="border-b-2 border-primary/20">
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[150px]">מתאמן</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[100px]">שעה</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[120px]">סטטוס</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[180px]">פעולות</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[150px]">מתאמן</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[100px]">שעה</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[120px]">סטטוס</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[180px]">פעולות</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -981,7 +981,7 @@ export default function TodayTraineesSection({
                     </div>
                   </div>
                   <div>
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-1">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-black tracking-tight mb-1">
                       מתאמנים של מחר
                     </h2>
                     <p className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">
@@ -1006,10 +1006,10 @@ export default function TodayTraineesSection({
                 <table className="w-full min-w-[600px] md:min-w-0">
                   <thead className="bg-surface/50">
                     <tr className="border-b-2 border-warning/20">
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[150px]">מתאמן</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[100px]">שעה</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[120px]">סטטוס</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-gray-900 min-w-[180px]">פעולות</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[150px]">מתאמן</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[100px]">שעה</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[120px]">סטטוס</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[180px]">פעולות</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1107,7 +1107,7 @@ function TraineeTableRow({
           </div>
           <div className="flex-1 min-w-0">
             <div
-              className={`font-bold text-sm md:text-base text-gray-900 truncate ${onTraineeClick ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+              className={`font-bold text-sm md:text-base text-black truncate ${onTraineeClick ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
               onClick={onTraineeClick ? () => onTraineeClick(trainee) : undefined}
               onKeyDown={onTraineeClick ? (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -1148,7 +1148,7 @@ function TraineeTableRow({
         {workout.workout_time ? (
           <div className="flex items-center gap-1.5 md:gap-2">
             <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary flex-shrink-0" />
-            <span className="font-semibold text-sm md:text-base text-gray-900 whitespace-nowrap">{workout.workout_time}</span>
+            <span className="font-semibold text-sm md:text-base text-black whitespace-nowrap">{workout.workout_time}</span>
           </div>
         ) : (
           <span className="text-gray-700 text-xs md:text-sm">-</span>
@@ -1374,7 +1374,7 @@ function TraineeCardToday({
 
             {/* Name & Info */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2 
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-black mb-2
                            group-hover:text-primary transition-colors duration-300 truncate">
                 {trainee.full_name}
               </h3>
@@ -1399,12 +1399,12 @@ function TraineeCardToday({
                   </div>
                 )}
                 {workout.workout_time && (
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg 
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg
                                 bg-surface/60 border border-border/20
                                 group-hover:bg-surface group-hover:border-primary/30
                                 transition-all duration-200">
                     <Clock className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-xs sm:text-sm font-semibold text-gray-900">
+                    <span className="text-xs sm:text-sm font-semibold text-black">
                       {workout.workout_time}
                     </span>
                   </div>
