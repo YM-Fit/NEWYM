@@ -887,7 +887,7 @@ export default function TodayTraineesSection({
                   <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-black tracking-tight mb-1">
                     מתאמנים של היום
                   </h2>
-                  <p className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">
+                  <p className="text-xs sm:text-sm md:text-base !text-black font-medium">
                     כל המתאמנים עם אימון מתוזמן להיום
                   </p>
                 </div>
@@ -898,7 +898,7 @@ export default function TodayTraineesSection({
                             border-2 border-primary/30 shadow-lg shadow-primary/10
                             hover:scale-105 transition-transform duration-300">
                 <span className="text-2xl md:text-3xl font-extrabold text-primary">{todayTrainees.length}</span>
-                <span className="text-sm md:text-base text-gray-600 font-semibold mr-2">מתאמנים</span>
+                <span className="text-sm md:text-base !text-black font-semibold mr-2">מתאמנים</span>
               </div>
             </div>
           </div>
@@ -983,7 +983,7 @@ export default function TodayTraineesSection({
                     <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-black tracking-tight mb-1">
                       מתאמנים של מחר
                     </h2>
-                    <p className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">
+                    <p className="text-xs sm:text-sm md:text-base !text-black font-medium">
                       כל המתאמנים עם אימון מתוזמן למחר
                     </p>
                   </div>
@@ -994,7 +994,7 @@ export default function TodayTraineesSection({
                               border-2 border-warning/30 shadow-lg shadow-warning/10
                               hover:scale-105 transition-transform duration-300">
                   <span className="text-2xl md:text-3xl font-extrabold text-warning">{tomorrowTrainees.length}</span>
-                  <span className="text-sm md:text-base text-gray-600 font-semibold mr-2">מתאמנים</span>
+                  <span className="text-sm md:text-base !text-black font-semibold mr-2">מתאמנים</span>
                 </div>
               </div>
             </div>

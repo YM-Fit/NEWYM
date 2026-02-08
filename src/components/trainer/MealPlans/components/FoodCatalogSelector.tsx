@@ -38,10 +38,14 @@ export default function FoodCatalogSelector({ onSelect, onClose }: FoodCatalogSe
 
     if (search.trim()) {
       const query = search.trim().toLowerCase();
-      items = items.filter(item =>
-        item.name.toLowerCase().includes(query) ||
-        item.brand.toLowerCase().includes(query)
-      );
+      items = items.filter(item => {
+        const nameLower = item.name.toLowerCase();
+        const brandLower = item.brand.toLowerCase();
+        return nameLower.startsWith(query) || 
+               nameLower.includes(query) ||
+               brandLower.startsWith(query) ||
+               brandLower.includes(query);
+      });
     }
 
     return items;

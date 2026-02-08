@@ -7,6 +7,11 @@ interface FoodAlternativesPanelProps {
   foodName: string;
   category: string | null | undefined;
   caloriesPer100g: number | null | undefined;
+  quantity?: number;
+  currentCalories?: number | null;
+  currentProtein?: number | null;
+  currentCarbs?: number | null;
+  currentFat?: number | null;
   onSwap: (item: FoodCatalogItem) => void;
 }
 
@@ -14,6 +19,11 @@ export default function FoodAlternativesPanel({
   foodName,
   category,
   caloriesPer100g,
+  quantity,
+  currentCalories,
+  currentProtein,
+  currentCarbs,
+  currentFat,
   onSwap,
 }: FoodAlternativesPanelProps) {
   const alternatives = useMemo(() => {
@@ -59,8 +69,24 @@ export default function FoodAlternativesPanel({
       return score;
     };
 
-    // אם אין caloriesPer100g, מצא חלופות לפי קטגוריה בלבד
-    if (caloriesPer100g === null || caloriesPer100g === undefined) {
+    // חשב ערכים per_100g מהערכים הנוכחיים (אם יש כמות וערכים נוכחיים)
+    let effectiveCaloriesPer100g = caloriesPer100g;
+    let effectiveProteinPer100g: number | null = null;
+    let effectiveCarbsPer100g: number | null = null;
+    let effectiveFatPer100g: number | null = null;
+
+    if (quantity && quantity > 0 && (currentCalories !== null || currentProtein !== null || currentCarbs !== null || currentFat !== null)) {
+      // חשב מה הערכים per_100g בהתבסס על הכמות הנוכחית
+      const ratio = 100 / quantity;
+      effectiveCaloriesPer100g = currentCalories !== null ? Math.round(currentCalories * ratio) : caloriesPer100g;
+      effectiveProteinPer100g = currentProtein !== null ? Math.round(currentProtein * ratio) : null;
+      effectiveCarbsPer100g = currentCarbs !== null ? Math.round(currentCarbs * ratio) : null;
+      effectiveFatPer100g = currentFat !== null ? Math.round(currentFat * ratio) : null;
+    }
+
+    // אם אין ערכים תזונתיים כלל, מצא חלופות לפי קטגוריה בלבד
+    if ((effectiveCaloriesPer100g === null || effectiveCaloriesPer100g === undefined) && 
+        (currentCalories === null || currentCalories === undefined)) {
       return FOOD_CATALOG
         .filter(item => item.category === category && item.name !== foodName)
         .map(item => ({
@@ -72,7 +98,8 @@ export default function FoodAlternativesPanel({
         .slice(0, 6);
     }
 
-    const targetCalories = caloriesPer100g;
+    // השתמש בערכים המחושבים (אם יש) או בערכים המקוריים
+    const targetCalories = effectiveCaloriesPer100g || 0;
     const tolerance = targetCalories * 0.35;
 
     return FOOD_CATALOG
@@ -84,9 +111,15 @@ export default function FoodAlternativesPanel({
       })
       .map(item => ({
         item,
-        macroScore: macroSimilarity(item, targetCalories),
+        macroScore: macroSimilarity(
+          item, 
+          targetCalories, 
+          effectiveProteinPer100g, 
+          effectiveCarbsPer100g, 
+          effectiveFatPer100g
+        ),
         nameScore: nameSimilarity(foodName, item.name) * 0.2, // 20% משקל לדמיון בשם
-        caloriesScore: 1 - Math.abs(item.calories_per_100g - targetCalories) / (targetCalories * 0.5),
+        caloriesScore: 1 - Math.abs(item.calories_per_100g - targetCalories) / (targetCalories * 0.5 || 1),
       }))
       .sort((a, b) => {
         // מיון לפי סכום כל הציונים
@@ -96,7 +129,7 @@ export default function FoodAlternativesPanel({
       })
       .map(({ item }) => item)
       .slice(0, 6);
-  }, [foodName, category, caloriesPer100g]);
+  }, [foodName, category, caloriesPer100g, quantity, currentCalories, currentProtein, currentCarbs, currentFat]);
 
   if (alternatives.length === 0) {
     return (
