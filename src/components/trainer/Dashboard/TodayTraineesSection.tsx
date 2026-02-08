@@ -1064,19 +1064,19 @@ function TraineeTableRow({
   // Determine status display based on time passed and completed workout
   let statusDisplay: string;
   let statusColor: string;
-  
+
   if (workout.isTimePassed) {
     // If the scheduled time has passed, show "בוצע" with green checkmark
     statusDisplay = '✓ בוצע';
-    statusColor = 'text-success bg-success/20 border-success/30';
+    statusColor = 'text-green-800 bg-success/20 border-success/30';
   } else {
     // Default status based on the workout status
     statusDisplay = status === 'completed' ? '✓ הושלם' :
                      status === 'scheduled' ? '📅 מתוזמן' :
                      '⏰ מתקרב';
-    statusColor = status === 'completed' ? 'text-success bg-success/20 border-success/30' :
-                  status === 'scheduled' ? 'text-primary bg-primary/20 border-primary/30' :
-                  'text-warning bg-warning/20 border-warning/30';
+    statusColor = status === 'completed' ? 'text-green-800 bg-success/20 border-success/30' :
+                  status === 'scheduled' ? 'text-blue-800 bg-primary/20 border-primary/30' :
+                  'text-amber-800 bg-warning/20 border-warning/30';
   }
 
   return (
@@ -1123,17 +1123,17 @@ function TraineeTableRow({
             </div>
             <div className="flex items-center gap-1.5 md:gap-2 mt-1 flex-wrap">
               {workout.isFromGoogle && (
-                <div className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 rounded-lg 
+                <div className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 rounded-lg
                               bg-info/15 border border-info/30">
-                  <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3 text-info" />
-                  <span className="text-[10px] md:text-xs font-semibold text-info">גוגל</span>
+                  <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3 text-blue-700" />
+                  <span className="text-[10px] md:text-xs font-semibold text-blue-700">גוגל</span>
                 </div>
               )}
               {daysSinceLastWorkout !== null && (
                 <div className={`px-1.5 md:px-2 py-0.5 rounded-lg text-[10px] md:text-xs font-semibold border ${
                   isActive
-                    ? 'bg-success/15 text-success-text border-success/30'
-                    : 'bg-danger/15 text-danger-text border-danger/30'
+                    ? 'bg-success/15 text-green-800 border-success/30'
+                    : 'bg-danger/15 text-red-800 border-danger/30'
                 }`}>
                   {daysSinceLastWorkout} ימים
                 </div>
@@ -1290,19 +1290,19 @@ function TraineeCardToday({
   const statusConfig = {
     completed: {
       bar: 'bg-gradient-to-r from-success to-emerald-700',
-      badge: 'bg-success/20 text-success border-success/30 shadow-success/20',
+      badge: 'bg-success/20 text-green-800 border-success/30 shadow-success/20',
       gradient: 'from-success/15 via-success/5 to-transparent',
       glow: 'shadow-success/10'
     },
     scheduled: {
       bar: 'bg-gradient-to-r from-primary to-emerald-700',
-      badge: 'bg-primary/20 text-primary border-primary/30 shadow-primary/20',
+      badge: 'bg-primary/20 text-blue-800 border-primary/30 shadow-primary/20',
       gradient: 'from-primary/15 via-primary/5 to-transparent',
       glow: 'shadow-primary/10'
     },
     upcoming: {
       bar: 'bg-gradient-to-r from-warning to-amber-500',
-      badge: 'bg-warning/20 text-warning border-warning/30 shadow-warning/20',
+      badge: 'bg-warning/20 text-amber-800 border-warning/30 shadow-warning/20',
       gradient: 'from-warning/15 via-warning/5 to-transparent',
       glow: 'shadow-warning/10'
     }
@@ -1387,13 +1387,13 @@ function TraineeCardToday({
                    '⏰ מתקרב'}
                 </span>
                 {workout.isFromGoogle && (
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg 
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg
                                 bg-info/15 border border-info/30
                                 group-hover:bg-info/20 group-hover:border-info/40
                                 transition-all duration-200"
                        title="מסונכרן מיומן גוגל">
-                    <CalendarCheck className="w-3.5 h-3.5 text-info" />
-                    <span className="text-xs sm:text-sm font-semibold text-info">
+                    <CalendarCheck className="w-3.5 h-3.5 text-blue-700" />
+                    <span className="text-xs sm:text-sm font-semibold text-blue-700">
                       גוגל
                     </span>
                   </div>
@@ -1414,8 +1414,8 @@ function TraineeCardToday({
                                 border shadow-sm transition-all duration-200
                                 group-hover:scale-105 ${
                     isActive
-                      ? 'bg-success/15 text-success-text border-success/30'
-                      : 'bg-danger/15 text-danger-text border-danger/30'
+                      ? 'bg-success/15 text-green-800 border-success/30'
+                      : 'bg-danger/15 text-red-800 border-danger/30'
                   }`}>
                     {daysSinceLastWorkout} ימים
                   </div>
