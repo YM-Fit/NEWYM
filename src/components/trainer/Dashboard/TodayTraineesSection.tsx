@@ -910,10 +910,10 @@ export default function TodayTraineesSection({
                 <table className="w-full min-w-[600px] md:min-w-0">
                   <thead className="bg-surface/50">
                     <tr className="border-b-2 border-primary/20">
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[150px]">מתאמן</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[100px]">שעה</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[120px]">סטטוס</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[180px]">פעולות</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base !text-black min-w-[150px]">מתאמן</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base !text-black min-w-[100px]">שעה</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base !text-black min-w-[120px]">סטטוס</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base !text-black min-w-[180px]">פעולות</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1005,10 +1005,10 @@ export default function TodayTraineesSection({
                 <table className="w-full min-w-[600px] md:min-w-0">
                   <thead className="bg-surface/50">
                     <tr className="border-b-2 border-warning/20">
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[150px]">מתאמן</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[100px]">שעה</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[120px]">סטטוס</th>
-                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base text-black min-w-[180px]">פעולות</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base !text-black min-w-[150px]">מתאמן</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base !text-black min-w-[100px]">שעה</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base !text-black min-w-[120px]">סטטוס</th>
+                      <th className="text-right py-3 px-3 md:py-4 md:px-4 font-bold text-sm md:text-base !text-black min-w-[180px]">פעולות</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1150,7 +1150,7 @@ function TraineeTableRow({
             <span className="font-semibold text-sm md:text-base !text-black whitespace-nowrap">{workout.workout_time}</span>
           </div>
         ) : (
-          <span className="text-gray-700 text-xs md:text-sm">-</span>
+          <span className="!text-black text-xs md:text-sm">-</span>
         )}
       </td>
 
@@ -1162,7 +1162,7 @@ function TraineeTableRow({
           </span>
           {/* Show "אימון חדש נוסף" only if there's a completed workout AND the scheduled time has passed */}
           {workout.hasCompletedWorkout && workout.isTimePassed && (
-            <span className="px-1.5 md:px-2 py-0.5 rounded-lg text-[10px] md:text-xs font-semibold text-gray-700 bg-surface/60 border border-border/30 whitespace-nowrap">
+            <span className="px-1.5 md:px-2 py-0.5 rounded-lg text-[10px] md:text-xs font-semibold !text-black bg-surface/60 border border-border/30 whitespace-nowrap">
               אימון חדש נוסף
             </span>
           )}
