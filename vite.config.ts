@@ -95,6 +95,10 @@ export default defineConfig({
     minifySyntax: true,
     minifyWhitespace: true,
   },
+  // Resolve configuration
+  resolve: {
+    conditions: ['@tanstack/custom-condition', 'import', 'module', 'default'],
+  },
   // Optimize dependencies
   optimizeDeps: {
     exclude: ['lucide-react'],
@@ -108,9 +112,12 @@ export default defineConfig({
       '@dnd-kit/utilities',
       '@tanstack/react-query',
     ],
+    // Force re-optimization
+    force: true,
     // Pre-bundle heavy dependencies - use ES2015 for TV compatibility
     esbuildOptions: {
       target: 'es2015',
+      conditions: ['@tanstack/custom-condition', 'import', 'module', 'default'],
     },
   },
 });
