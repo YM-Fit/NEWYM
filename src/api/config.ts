@@ -9,7 +9,7 @@ export const API_CONFIG = {
 } as const;
 
 if (!API_CONFIG.SUPABASE_URL || !API_CONFIG.SUPABASE_ANON_KEY) {
-  throw new Error('Missing Supabase environment variables');
+  console.error('[API Config] Missing Supabase environment variables. Create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
 }
 
 /**

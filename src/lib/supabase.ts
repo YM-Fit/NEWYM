@@ -7,17 +7,18 @@ import { initializeCSRF } from '../utils/csrf';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  const error = new Error('Missing Supabase environment variables');
+/** Flag indicating whether Supabase is properly configured */
+export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey);
+
+if (!isSupabaseConfigured) {
   logger.error(
-    'Supabase initialization failed',
+    'Supabase initialization failed - Missing environment variables. Create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
     {
       hasUrl: !!supabaseUrl,
       hasKey: !!supabaseAnonKey,
     },
     'SupabaseClient'
   );
-  throw error;
 }
 
 /**
@@ -282,7 +283,7 @@ const csrfToken = initializeCSRF();
 
 // Create Supabase client with enhanced configuration
 // Disable Realtime in WebContainer environments where WebSockets don't work
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder-key', {
   global: {
     headers: {
       'x-client-info': 'newym-app',

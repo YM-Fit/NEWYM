@@ -13,6 +13,7 @@ import SkipLinks from './components/common/SkipLinks';
 import { useIsTablet } from './hooks/useIsTablet';
 import { trackWebVitals, trackBundlePerformance } from './utils/performance';
 import { initIndexedDB } from './utils/indexedDb';
+import { isSupabaseConfigured } from './lib/supabase';
 
 import './utils/supabaseDebug';
 
@@ -327,6 +328,68 @@ export default function App() {
 
   if (isTvTest) {
     return <TvTestPage />;
+  }
+
+  if (!isSupabaseConfigured) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(to bottom right, #f0f5ed, #ffffff, #e8f0e0)',
+        direction: 'rtl',
+        fontFamily: 'Arial, sans-serif',
+        padding: '2rem',
+      }}>
+        <div style={{
+          maxWidth: '500px',
+          textAlign: 'center',
+          background: '#ffffff',
+          borderRadius: '16px',
+          padding: '2rem',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.1)',
+        }}>
+          <h1 style={{ fontSize: '1.5rem', color: '#b91c1c', marginBottom: '1rem' }}>
+            שגיאת הגדרות
+          </h1>
+          <p style={{ fontSize: '1.1rem', color: '#374151', marginBottom: '1rem' }}>
+            חסרים משתני סביבה של Supabase.
+          </p>
+          <p style={{ fontSize: '0.95rem', color: '#6b7280', marginBottom: '1.5rem' }}>
+            יש ליצור קובץ <code style={{ background: '#f3f4f6', padding: '2px 6px', borderRadius: '4px' }}>.env</code> בתיקיית הפרויקט עם המשתנים הבאים:
+          </p>
+          <pre style={{
+            background: '#1f2937',
+            color: '#e5e7eb',
+            padding: '1rem',
+            borderRadius: '8px',
+            textAlign: 'left',
+            direction: 'ltr',
+            fontSize: '0.85rem',
+            overflow: 'auto',
+          }}>
+{`VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key`}
+          </pre>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              marginTop: '1.5rem',
+              padding: '0.75rem 1.5rem',
+              background: '#4a6b2a',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '1rem',
+              cursor: 'pointer',
+            }}
+          >
+            רענן דף
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
