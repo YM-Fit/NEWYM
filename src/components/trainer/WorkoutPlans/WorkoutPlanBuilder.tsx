@@ -306,7 +306,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
     }
   }, [templateName, planDescription, days, traineeId, saveTemplate]);
 
-  const handleSave = async (isAutoSave = false) => {
+  const handleSave = useCallback(async (isAutoSave = false) => {
     // Validate plan before saving
     const validation = validatePlan(planName, days);
     if (!validation.valid) {
