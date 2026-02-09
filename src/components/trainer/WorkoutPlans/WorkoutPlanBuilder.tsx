@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { ArrowRight, Plus, Save, Dumbbell, Activity, Settings } from 'lucide-react';
@@ -194,40 +194,44 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
     saveTemplate,
   } = useWorkoutPlanTemplates();
 
-  const addExerciseToDay = (exercise: Exercise) => {
+  const addExerciseToDay = useCallback((exercise: Exercise) => {
     addExercise(exercise);
     setShowExerciseSelector(false);
-  };
+  }, [addExercise]);
 
-  const completeExercise = (exerciseIndex: number) => {
+  const completeExercise = useCallback((exerciseIndex: number) => {
     setSelectedExerciseIndex(exerciseIndex === selectedExerciseIndex ? null : exerciseIndex);
-  };
+  }, [selectedExerciseIndex]);
 
-  const completeDay = (dayId: string) => {
+  const completeDay = useCallback((dayId: string) => {
     toggleMinimizeDay(dayId);
     setSelectedDay(null);
-  };
+  }, [toggleMinimizeDay]);
 
-  const loadCardioTypes = async () => {
+  const loadCardioTypes = useCallback(async () => {
     try {
       setLoadingCardioTypes(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setLoadingCardioTypes(false);
+        return;
+      }
       
       const types = await cardioApi.getCardioTypes(user.id);
       setCardioTypes(types);
     } catch (error) {
       logger.error('Error loading cardio types', error, 'WorkoutPlanBuilder');
+      toast.error('שגיאה בטעינת סוגי קרדיו');
     } finally {
       setLoadingCardioTypes(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadActivePlan();
     loadTemplates(traineeId);
     loadCardioTypes();
-  }, [traineeId, loadActivePlan, loadTemplates]);
+  }, [traineeId, loadActivePlan, loadTemplates, loadCardioTypes]);
 
   // Track changes to mark as unsaved (only after initial load)
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -284,13 +288,23 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
   }, [startDate, endDate, setDurationWeeks]);
 
 
-  const handleLoadTemplate = async (template: WorkoutPlanTemplate) => {
+  const handleLoadTemplate = useCallback(async (template: WorkoutPlanTemplate) => {
     await loadTemplate(template, setDays, setPlanName, setPlanDescription, setDaysPerWeek);
-  };
+  }, [setDays, setPlanName, setPlanDescription, setDaysPerWeek, loadTemplate]);
 
-  const handleSaveAsTemplate = async (isGeneral: boolean) => {
-    await saveTemplate(templateName, planDescription, days, isGeneral ? null : traineeId);
-  };
+  const handleSaveAsTemplate = useCallback(async (isGeneral: boolean) => {
+    if (!templateName.trim()) {
+      toast.error('נא להזין שם לתבנית');
+      return;
+    }
+    try {
+      await saveTemplate(templateName, planDescription, days, isGeneral ? null : traineeId);
+      toast.success('התבנית נשמרה בהצלחה');
+    } catch (error) {
+      logger.error('Error saving template', error, 'WorkoutPlanBuilder');
+      toast.error('שגיאה בשמירת התבנית');
+    }
+  }, [templateName, planDescription, days, traineeId, saveTemplate]);
 
   const handleSave = async (isAutoSave = false) => {
     // Validate plan before saving
@@ -715,7 +729,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
     } finally {
       setSaving(false);
     }
-  };
+  }, [planName, days, activePlanId, planDescription, daysPerWeek, restDaysBetween, includeCardio, cardioTypeId, cardioFrequency, cardioWeeklyGoalSteps, startDate, endDate, durationWeeks, traineeId, loadActivePlan, saving]);
 
   // Auto-save functionality (every 30 seconds if there are unsaved changes)
   useEffect(() => {

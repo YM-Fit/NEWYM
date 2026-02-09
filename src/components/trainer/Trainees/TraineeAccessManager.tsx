@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Key, Lock, Unlock, Eye, EyeOff, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
@@ -27,11 +27,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    loadAccess();
-  }, [traineeId]);
-
-  const loadAccess = async () => {
+  const loadAccess = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -41,7 +37,10 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
         .eq('trainee_id', traineeId)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Error loading access', error, 'TraineeAccessManager');
+        throw error;
+      }
       setAccess(data);
     } catch (error) {
       logger.error('Error loading access', error, 'TraineeAccessManager');
@@ -49,9 +48,13 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
     } finally {
       setLoading(false);
     }
-  };
+  }, [traineeId]);
 
-  const handleCreateAccess = async () => {
+  useEffect(() => {
+    loadAccess();
+  }, [loadAccess]);
+
+  const handleCreateAccess = useCallback(async () => {
     if (!password || password.length < 6) {
       toast.error('הסיסמה חייבת להיות לפחות 6 תווים');
       return;
@@ -102,10 +105,10 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
     } finally {
       setSaving(false);
     }
-  };
+  }, [password, traineeId, loadAccess, saving]);
 
-  const handleToggleActive = async () => {
-    if (!access) return;
+  const handleToggleActive = useCallback(async () => {
+    if (!access || saving) return;
 
     try {
       const { error } = await supabase
@@ -113,25 +116,31 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
         .update({ is_active: !access.is_active })
         .eq('id', access.id);
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Error toggling access', error, 'TraineeAccessManager');
+        throw error;
+      }
 
       toast.success(access.is_active ? 'גישה הושבתה' : 'גישה הופעלה');
-      setAccess({ ...access, is_active: !access.is_active });
+      setAccess(prev => prev ? { ...prev, is_active: !prev.is_active } : null);
     } catch (error) {
       logger.error('Error toggling access', error, 'TraineeAccessManager');
       toast.error('שגיאה בשינוי סטטוס גישה');
     }
-  };
+  }, [access, saving]);
 
-  const handleResetPassword = async () => {
+  const handleResetPassword = useCallback(async () => {
     if (!access || !access.auth_user_id) {
       toast.error('לא ניתן לאפס סיסמה - אין משתמש auth');
       return;
     }
 
-    const newPassword = prompt('הזן סיסמה חדשה (לפחות 6 תווים):');
+    // Use a more user-friendly approach - could be enhanced with a modal
+    const newPassword = window.prompt('הזן סיסמה חדשה (לפחות 6 תווים):');
     if (!newPassword || newPassword.length < 6) {
-      toast.error('הסיסמה חייבת להיות לפחות 6 תווים');
+      if (newPassword !== null) {
+        toast.error('הסיסמה חייבת להיות לפחות 6 תווים');
+      }
       return;
     }
 
@@ -169,12 +178,12 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
       logger.error('Error resetting password', error, 'TraineeAccessManager');
       toast.error('שגיאה באיפוס סיסמה');
     }
-  };
+  }, [access]);
 
-  const handleDeleteAccess = async () => {
+  const handleDeleteAccess = useCallback(async () => {
     if (!access) return;
 
-    if (!confirm('האם למחוק את הגישה? המתאמן לא יוכל להתחבר לאפליקציה.')) {
+    if (!window.confirm('האם למחוק את הגישה? המתאמן לא יוכל להתחבר לאפליקציה.')) {
       return;
     }
 

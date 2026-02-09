@@ -1,6 +1,7 @@
 import { ArrowRight, Save, User, Users, Sparkles } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { validateTraineeForm } from '../../../utils/validation';
+import toast from 'react-hot-toast';
 
 interface AddTraineeFormProps {
   onBack: () => void;
@@ -33,17 +34,25 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const { errors, isValid } = validateTraineeForm(formData, isPair, true);
     setErrors(errors);
     return isValid;
-  };
+  }, [formData, isPair]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    if (isSubmitting) return;
+
+    if (!validateForm()) {
+      toast.error('יש לתקן את השגיאות בטופס');
+      return;
+    }
+
+    setIsSubmitting(true);
 
     if (isPair) {
       const newTrainee = {
@@ -68,7 +77,14 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
         pair_height_1: formData.pair_height_1 ? Number(formData.pair_height_1) : null,
         pair_height_2: formData.pair_height_2 ? Number(formData.pair_height_2) : null,
       };
-      onSave(newTrainee);
+      try {
+        onSave(newTrainee);
+        toast.success('המתאמן נוסף בהצלחה');
+      } catch (error) {
+        toast.error('שגיאה בהוספת המתאמן');
+      } finally {
+        setIsSubmitting(false);
+      }
     } else {
       const newTrainee = {
         full_name: formData.full_name.trim(),
@@ -80,18 +96,25 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
         notes: formData.notes.trim(),
         is_pair: false,
       };
-      onSave(newTrainee);
+      try {
+        onSave(newTrainee);
+        toast.success('המתאמן נוסף בהצלחה');
+      } catch (error) {
+        toast.error('שגיאה בהוספת המתאמן');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
-  };
+  }, [formData, isPair, validateForm, onSave, isSubmitting]);
 
-  const inputClass = (hasError: boolean) =>
+  const inputClass = useCallback((hasError: boolean) =>
     `w-full p-4 text-base bg-input border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 transition-all ${
       hasError
         ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
         : 'border-border focus:border-emerald-500/50 focus:ring-emerald-500/20'
-    }`;
+    }`, []);
 
-  const labelClass = "block text-sm font-medium text-muted mb-2";
+  const labelClass = useMemo(() => "block text-sm font-medium text-muted mb-2", []);
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-base)] transition-colors duration-300 p-4 md:p-6 animate-fade-in">

@@ -568,7 +568,7 @@ export default function SmartReportView() {
         message: errorMessage,
         stack: err instanceof Error ? err.stack : undefined 
       }, 'SmartReportView');
-      console.error('SmartReportView error details:', err);
+      logger.error('SmartReportView error details', err, 'SmartReportView');
       toast.error('שגיאה בטעינת הנתונים');
     } finally {
       setLoading(false);
@@ -781,7 +781,7 @@ export default function SmartReportView() {
         updateData.card_sessions_used = 0;
       }
 
-      console.log('Saving trainee data:', { traineeId: editing.traineeId, updateData });
+      logger.info('Saving trainee data', { traineeId: editing.traineeId, updateData }, 'SmartReportView');
       
       const { data: updatedData, error } = await supabase
         .from('trainees')
@@ -791,11 +791,11 @@ export default function SmartReportView() {
         .single();
 
       if (error) {
-        console.error('Supabase update error:', error);
+        logger.error('Supabase update error', error, 'SmartReportView');
         throw error;
       }
 
-      console.log('Update successful:', updatedData);
+      logger.info('Update successful', updatedData, 'SmartReportView');
       toast.success('הנתונים עודכנו בהצלחה');
       
       // Update local state immediately for better UX

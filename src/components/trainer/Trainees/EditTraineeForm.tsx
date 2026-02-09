@@ -1,8 +1,10 @@
 import { ArrowRight, Save, Sparkles, User, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { validateTraineeForm } from '../../../utils/validation';
 import { useAuth } from '../../../contexts/AuthContext';
+import { logger } from '../../../utils/logger';
+import toast from 'react-hot-toast';
 
 interface EditTraineeFormProps {
   trainee: any;
@@ -42,16 +44,21 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const { errors, isValid } = validateTraineeForm(formData, isPair, false);
     setErrors(errors);
     return isValid;
-  };
+  }, [formData, isPair]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    if (saving) return;
+
+    if (!validateForm()) {
+      toast.error('יש לתקן את השגיאות בטופס');
+      return;
+    }
 
     setSaving(true);
 
@@ -83,7 +90,10 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
           })
           .eq('id', trainee.id);
 
-        if (error) throw error;
+        if (error) {
+          logger.error('Error updating pair trainee', error, 'EditTraineeForm');
+          throw error;
+        }
       } else {
         const { error } = await supabase
           .from('trainees')
@@ -126,29 +136,31 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
           syncTraineeEventsToCalendar(trainee.id, user.id, 'current_month_and_future')
             .then(result => {
               if (result.data && result.data.updated > 0) {
-                console.log(`Calendar sync: updated ${result.data.updated} events`);
+                logger.info(`Calendar sync: updated ${result.data.updated} events`, 'EditTraineeForm');
               }
             })
-            .catch(err => console.error('Calendar sync failed:', err));
-        }).catch(err => console.error('Failed to load calendar sync service:', err));
+            .catch(err => logger.error('Calendar sync failed', err, 'EditTraineeForm'));
+        }).catch(err => logger.error('Failed to load calendar sync service', err, 'EditTraineeForm'));
       }
 
+      toast.success('המתאמן עודכן בהצלחה');
       onSave();
     } catch (error: any) {
-      alert('שגיאה בשמירת הפרטים: ' + (error.message || 'שגיאה לא ידועה'));
+      logger.error('Error updating trainee', error, 'EditTraineeForm');
+      toast.error('שגיאה בעדכון המתאמן: ' + (error.message || 'שגיאה לא ידועה'));
     } finally {
       setSaving(false);
     }
-  };
+  }, [formData, isPair, trainee.id, originalName, user, validateForm, onSave, saving]);
 
-  const inputClass = (hasError: boolean) =>
+  const inputClass = useCallback((hasError: boolean) =>
     `w-full p-4 text-base bg-input border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 transition-all ${
       hasError
         ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
         : 'border-border focus:border-emerald-500/50 focus:ring-emerald-500/20'
-    }`;
+    }`, []);
 
-  const labelClass = "block text-sm font-medium text-muted mb-2";
+  const labelClass = useMemo(() => "block text-sm font-medium text-muted mb-2", []);
 
   return (
     <div className="space-y-6 animate-fade-in">

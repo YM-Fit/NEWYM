@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { BarChart3, Calendar, Users, TrendingUp, ChevronLeft, ChevronRight, Dumbbell, Scale, Trophy, Sparkles } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
+import { logger } from '../../../utils/logger';
+import toast from 'react-hot-toast';
 import MonthlyReport from './MonthlyReport';
 import TraineesProgressChart from './TraineesProgressChart';
 
@@ -21,75 +23,100 @@ export default function ReportsView() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'progress'>('overview');
 
-  useEffect(() => {
-    if (user) loadStats();
-  }, [user, selectedMonth]);
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     if (!user) return;
     setLoading(true);
 
-    const startOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
-    const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0, 23, 59, 59);
+    try {
+      const startOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+      const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0, 23, 59, 59);
 
-    const { data: workouts } = await supabase
-      .from('workouts')
-      .select('id, workout_date, workout_exercises(exercise_sets(weight, reps))')
-      .eq('trainer_id', user.id)
-      .eq('is_completed', true)
-      .gte('workout_date', startOfMonth.toISOString())
-      .lte('workout_date', endOfMonth.toISOString());
+      const { data: workouts, error: workoutsError } = await supabase
+        .from('workouts')
+        .select('id, workout_date, workout_exercises(exercise_sets(weight, reps))')
+        .eq('trainer_id', user.id)
+        .eq('is_completed', true)
+        .gte('workout_date', startOfMonth.toISOString())
+        .lte('workout_date', endOfMonth.toISOString());
 
-    const { data: trainees } = await supabase
-      .from('trainees')
-      .select('id, status, created_at')
-      .eq('trainer_id', user.id);
+      if (workoutsError) {
+        logger.error('Error loading workouts', workoutsError, 'ReportsView');
+        toast.error('שגיאה בטעינת אימונים');
+        setLoading(false);
+        return;
+      }
 
-    const { data: prs } = await supabase
-      .from('personal_records')
-      .select('id')
-      .gte('achieved_at', startOfMonth.toISOString())
-      .lte('achieved_at', endOfMonth.toISOString());
+      const { data: trainees, error: traineesError } = await supabase
+        .from('trainees')
+        .select('id, status, created_at')
+        .eq('trainer_id', user.id);
 
-    const newTrainees = trainees?.filter(t => {
-      const createdAt = new Date(t.created_at);
-      return createdAt >= startOfMonth && createdAt <= endOfMonth;
-    }).length || 0;
+      if (traineesError) {
+        logger.error('Error loading trainees', traineesError, 'ReportsView');
+        toast.error('שגיאה בטעינת מתאמנים');
+        setLoading(false);
+        return;
+      }
 
-    const totalTrainees = trainees?.length || 0;
+      const { data: prs, error: prsError } = await supabase
+        .from('personal_records')
+        .select('id')
+        .gte('achieved_at', startOfMonth.toISOString())
+        .lte('achieved_at', endOfMonth.toISOString());
 
-    let totalVolume = 0;
-    workouts?.forEach(w => {
-      w.workout_exercises?.forEach((we: any) => {
-        we.exercise_sets?.forEach((es: any) => {
-          totalVolume += (es.weight || 0) * (es.reps || 0);
+      if (prsError) {
+        logger.error('Error loading personal records', prsError, 'ReportsView');
+      }
+
+      const newTrainees = trainees?.filter(t => {
+        const createdAt = new Date(t.created_at);
+        return createdAt >= startOfMonth && createdAt <= endOfMonth;
+      }).length || 0;
+
+      const totalTrainees = trainees?.length || 0;
+
+      let totalVolume = 0;
+      workouts?.forEach(w => {
+        w.workout_exercises?.forEach((we: any) => {
+          we.exercise_sets?.forEach((es: any) => {
+            totalVolume += (es.weight || 0) * (es.reps || 0);
+          });
         });
       });
-    });
 
-    setStats({
-      totalWorkouts: workouts?.length || 0,
-      activeTrainees: totalTrainees,
-      newTrainees,
-      averageWorkoutsPerTrainee: totalTrainees > 0 ? Math.round((workouts?.length || 0) / totalTrainees * 10) / 10 : 0,
-      totalVolume: Math.round(totalVolume),
-      personalRecords: prs?.length || 0,
-    });
+      setStats({
+        totalWorkouts: workouts?.length || 0,
+        activeTrainees: totalTrainees,
+        newTrainees,
+        averageWorkoutsPerTrainee: totalTrainees > 0 ? Math.round((workouts?.length || 0) / totalTrainees * 10) / 10 : 0,
+        totalVolume: Math.round(totalVolume),
+        personalRecords: prs?.length || 0,
+      });
+    } catch (error) {
+      logger.error('Error loading stats', error, 'ReportsView');
+      toast.error('שגיאה בטעינת נתונים');
+    } finally {
+      setLoading(false);
+    }
+  }, [user, selectedMonth]);
 
-    setLoading(false);
-  };
+  useEffect(() => {
+    if (user) loadStats();
+  }, [user, loadStats]);
 
-  const navigateMonth = (direction: 'prev' | 'next') => {
+  const navigateMonth = useCallback((direction: 'prev' | 'next') => {
     setSelectedMonth(prev => {
       const newDate = new Date(prev);
       newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
       return newDate;
     });
-  };
+  }, []);
 
-  const formatMonth = (date: Date) => {
+  const formatMonth = useCallback((date: Date) => {
     return date.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
-  };
+  }, []);
+
+  const formattedMonth = useMemo(() => formatMonth(selectedMonth), [selectedMonth, formatMonth]);
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -144,7 +171,7 @@ export default function ReportsView() {
             </button>
             <div className="flex items-center gap-2 px-4 py-2 bg-surface rounded-xl border border-border">
               <Calendar className="w-5 h-5 text-emerald-400" />
-              <span className="font-semibold text-foreground">{formatMonth(selectedMonth)}</span>
+              <span className="font-semibold text-foreground">{formattedMonth}</span>
             </div>
             <button
               onClick={() => navigateMonth('next')}

@@ -1,5 +1,5 @@
 import { ArrowRight, Save, Scale, User, CheckCircle, TrendingDown, TrendingUp, Minus, RefreshCw, AlertTriangle, X, Check, Volume2, VolumeX, Wifi, WifiOff, Loader2, Server, Sparkles } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Trainee, BodyMeasurement } from '../../../types';
 import { supabase } from '../../../lib/supabase';
 import { useScaleListener } from '../../../hooks/useScaleListener';
@@ -9,6 +9,7 @@ import AutoSaveIndicator from '../../common/AutoSaveIndicator';
 import DraftModal from '../../common/DraftModal';
 import { calculateMetabolicAge, getMetabolicAgeMessage } from '../../../utils/metabolicAge';
 import { logger } from '../../../utils/logger';
+import toast from 'react-hot-toast';
 
 interface MeasurementFormProps {
   trainee: Trainee;
@@ -82,7 +83,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
     }
   }, []);
 
-  const handleRestoreDraft = () => {
+  const handleRestoreDraft = useCallback(() => {
     if (draftData) {
       setFormData(draftData.formData);
       if (draftData.selectedMember) {
@@ -94,13 +95,13 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       setShowDraftModal(false);
       setDraftData(null);
     }
-  };
+  }, [draftData]);
 
-  const handleDiscardDraft = () => {
+  const handleDiscardDraft = useCallback(() => {
     clearSaved();
     setShowDraftModal(false);
     setDraftData(null);
-  };
+  }, [clearSaved]);
 
   useEffect(() => {
     if (isEditing) return;
@@ -166,7 +167,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
     }
   }, [latestReading, isEditing, playDataReceived, playWarning]);
 
-  const acceptScaleData = () => {
+  const acceptScaleData = useCallback(() => {
     if (pendingScaleData) {
       const fieldsToHighlight: string[] = [];
       if (pendingScaleData.weight) fieldsToHighlight.push('weight');
@@ -187,70 +188,70 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       setShowScaleDataToast(false);
       setShowValidationWarning(false);
     }
-  };
+  }, [pendingScaleData]);
 
-  const toggleSound = () => {
+  const toggleSound = useCallback(() => {
     const newValue = !soundEnabled;
     setSoundEnabled(newValue);
     setSoundEnabledHook(newValue);
-  };
+  }, [soundEnabled, setSoundEnabledHook]);
 
-  const formatWaitingTime = (seconds: number): string => {
+  const formatWaitingTime = useCallback((seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     if (mins > 0) {
       return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
     return `${secs} שניות`;
-  };
+  }, []);
 
-  const getWeightChangeDisplay = (current: number, previous?: number): { text: string; color: string } | null => {
+  const getWeightChangeDisplay = useCallback((current: number, previous?: number): { text: string; color: string } | null => {
     if (!previous || !current) return null;
     const change = current - previous;
     if (Math.abs(change) < 0.1) return null;
     const text = `${change > 0 ? '+' : ''}${change.toFixed(1)} ק"ג`;
     const color = change > 0 ? 'text-red-300' : 'text-emerald-300';
     return { text, color };
-  };
+  }, []);
 
-  const getBodyFatChangeDisplay = (current: number, previous?: number): { text: string; color: string } | null => {
+  const getBodyFatChangeDisplay = useCallback((current: number, previous?: number): { text: string; color: string } | null => {
     if (!previous || !current) return null;
     const change = current - previous;
     if (Math.abs(change) < 0.1) return null;
     const text = `${change > 0 ? '+' : ''}${change.toFixed(1)}%`;
     const color = change > 0 ? 'text-red-300' : 'text-emerald-300';
     return { text, color };
-  };
+  }, []);
 
-  const rejectScaleData = () => {
+  const rejectScaleData = useCallback(() => {
     setPendingScaleData(null);
     setShowScaleDataToast(false);
     setShowValidationWarning(false);
-  };
+  }, []);
 
-  const calculateBMI = (weight: number, height: number) => {
+  const calculateBMI = useCallback((weight: number, height: number) => {
     if (weight && height) {
       return Number((weight / Math.pow(height / 100, 2)).toFixed(1));
     }
     return 0;
-  };
+  }, []);
 
-  const calculateBMR = (weight: number, height: number, age: number, gender: 'male' | 'female') => {
+  const calculateBMR = useCallback((weight: number, height: number, age: number, gender: 'male' | 'female') => {
     if (!weight || !height || !age) return 0;
     const baseBMR = (10 * weight) + (6.25 * height) - (5 * age);
     const bmr = gender === 'male' ? baseBMR + 5 : baseBMR - 161;
     return Number(bmr.toFixed(1));
-  };
+  }, []);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     // ולידציה למתאמנים זוגיים
     if (trainee.isPair) {
       if (!selectedMember || selectedMember === 'both') {
-        alert('יש לבחור בן זוג ספציפי למדידה (member_1 או member_2)');
+        toast.error('יש לבחור בן זוג ספציפי למדידה (member_1 או member_2)');
         return;
       }
       if (selectedMember !== 'member_1' && selectedMember !== 'member_2') {
-        alert('יש לבחור בן זוג תקין למדידה');
+        toast.error('יש לבחור בן זוג תקין למדידה');
         return;
       }
     }
@@ -317,7 +318,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
     if (error) {
       logger.error('Error saving measurement', error, 'MeasurementForm');
-      alert('שגיאה בשמירת המדידה');
+      toast.error('שגיאה בשמירת המדידה');
       return;
     }
 
@@ -348,11 +349,12 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       };
 
       clearSaved();
+      toast.success(isEditing ? 'המדידה עודכנה בהצלחה' : 'המדידה נשמרה בהצלחה');
       onSave(measurement);
     }
-  };
+  }, [trainee, selectedMember, measurementDate, formData, isEditing, editingMeasurement, calculateBMI, calculateBMR, clearSaved, onSave]);
 
-  const getChangeIndicator = (current: number, previous?: number) => {
+  const getChangeIndicator = useCallback((current: number, previous?: number) => {
     if (!previous || !current) return null;
     const change = current - previous;
     if (Math.abs(change) < 0.1) return null;
@@ -362,16 +364,16 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
         ({change > 0 ? '+' : ''}{change.toFixed(1)})
       </span>
     );
-  };
+  }, []);
 
-  const inputClass = (hasHighlight: boolean) =>
+  const inputClass = useCallback((hasHighlight: boolean) =>
     `w-full p-4 text-xl bg-surface border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 transition-all ${
       hasHighlight
         ? 'border-emerald-500/50 bg-emerald-500/10 ring-2 ring-emerald-500/30'
         : 'border-border focus:border-emerald-500/50 focus:ring-emerald-500/20'
-    }`;
+    }`, []);
 
-  const labelClass = "block text-sm font-medium text-muted mb-2";
+  const labelClass = useMemo(() => "block text-sm font-medium text-muted mb-2", []);
 
   return (
     <div className="space-y-6 animate-fade-in">

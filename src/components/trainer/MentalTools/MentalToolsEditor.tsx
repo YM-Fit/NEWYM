@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import {
   ArrowRight,
@@ -19,6 +19,7 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { logger } from '../../../utils/logger';
 import { MentalTool } from '../../../api/mentalToolsApi';
 import {
   useMentalToolsQuery,
@@ -103,7 +104,17 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
     priority: 3,
   });
 
-  const handleSave = async () => {
+  const resetForm = useCallback(() => {
+    setFormData({
+      title: '',
+      description: '',
+      category: 'other',
+      priority: 3,
+    });
+    setEditingTool(null);
+  }, []);
+
+  const handleSave = useCallback(async () => {
     if (!user || !formData.title.trim()) {
       toast.error('יש להזין כותרת');
       return;
@@ -135,31 +146,34 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
       }
       setShowAddForm(false);
       resetForm();
-    } catch {
+    } catch (error) {
+      logger.error('Error saving mental tool', error, 'MentalToolsEditor');
       toast.error(editingTool ? 'שגיאה בעדכון הכלי' : 'שגיאה בהוספת הכלי');
     }
-  };
+  }, [user, formData, editingTool, traineeId, createMutation, updateMutation, resetForm]);
 
-  const handleDelete = async (toolId: string) => {
-    if (!confirm('האם אתה בטוח שברצונך למחוק כלי זה?')) return;
+  const handleDelete = useCallback(async (toolId: string) => {
+    if (!window.confirm('האם אתה בטוח שברצונך למחוק כלי זה?')) return;
     try {
       await deleteMutation.mutateAsync(toolId);
       toast.success('הכלי נמחק');
       setOpenMenuId(null);
-    } catch {
+    } catch (error) {
+      logger.error('Error deleting mental tool', error, 'MentalToolsEditor');
       toast.error('שגיאה במחיקת הכלי');
     }
-  };
+  }, [deleteMutation]);
 
-  const handleToggleComplete = async (tool: MentalTool) => {
+  const handleToggleComplete = useCallback(async (tool: MentalTool) => {
     try {
       await toggleCompleteMutation.mutateAsync({ toolId: tool.id, isCompleted: !tool.is_completed });
-    } catch {
+    } catch (error) {
+      logger.error('Error toggling mental tool complete', error, 'MentalToolsEditor');
       toast.error('שגיאה בעדכון הסטטוס');
     }
-  };
+  }, [toggleCompleteMutation]);
 
-  const handleAddFromTemplate = async (template: typeof templates[0]) => {
+  const handleAddFromTemplate = useCallback(async (template: typeof templates[0]) => {
     if (!user) return;
     try {
       await createMutation.mutateAsync({
@@ -170,12 +184,13 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
         priority: template.priority,
       });
       toast.success('הכלי נוסף בהצלחה');
-    } catch {
+    } catch (error) {
+      logger.error('Error adding mental tool from template', error, 'MentalToolsEditor');
       toast.error('שגיאה בהוספת הכלי');
     }
-  };
+  }, [user, traineeId, createMutation]);
 
-  const handleEdit = (tool: MentalTool) => {
+  const handleEdit = useCallback((tool: MentalTool) => {
     setEditingTool(tool);
     setFormData({
       title: tool.title,
@@ -185,24 +200,16 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
     });
     setShowAddForm(true);
     setOpenMenuId(null);
-  };
+  }, []);
 
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      description: '',
-      category: 'other',
-      priority: 3,
-    });
-    setEditingTool(null);
-  };
+  const filteredTools = useMemo(() => {
+    return filterCategory === 'all'
+      ? tools
+      : tools.filter(t => t.category === filterCategory);
+  }, [tools, filterCategory]);
 
-  const filteredTools = filterCategory === 'all'
-    ? tools
-    : tools.filter(t => t.category === filterCategory);
-
-  const activeTools = filteredTools.filter(t => !t.is_completed);
-  const completedTools = filteredTools.filter(t => t.is_completed);
+  const activeTools = useMemo(() => filteredTools.filter(t => !t.is_completed), [filteredTools]);
+  const completedTools = useMemo(() => filteredTools.filter(t => t.is_completed), [filteredTools]);
 
   if (loading) {
     return (

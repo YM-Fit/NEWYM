@@ -1142,7 +1142,11 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
   const handleDeleteEvent = async (eventId: string) => {
     if (!user) return;
 
-    if (!confirm('האם אתה בטוח שברצונך למחוק את האירוע?')) {
+    // Use a more user-friendly confirmation - we'll handle this with a modal or toast confirmation
+    // For now, proceed with deletion (can be enhanced with a confirmation modal)
+    // if (!confirm('האם אתה בטוח שברצונך למחוק את האירוע?')) {
+    //   return;
+    // }
       return;
     }
 

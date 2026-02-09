@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ArrowRight, TrendingUp, TrendingDown, Dumbbell, User, BarChart3, Target, Repeat, List, Table2, Minus, Trophy, Calendar, Flame } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../../../lib/supabase';
+import { logger } from '../../../utils/logger';
+import toast from 'react-hot-toast';
 
 interface WorkoutProgressProps {
   trainee: any;
@@ -25,61 +27,80 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
   const [exercises, setExercises] = useState<ExerciseData[]>([]);
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [metricType, setMetricType] = useState<'weight' | 'reps' | 'volume'>('weight');
   const [selectedMember, setSelectedMember] = useState<'member_1' | 'member_2' | 'all'>('all');
   const [viewMode, setViewMode] = useState<'chart' | 'list' | 'table'>('chart');
 
-  useEffect(() => {
-    loadProgressData();
-  }, [trainee.id, selectedMember]);
+  const loadProgressData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-  const loadProgressData = async () => {
-    const { data: workoutTrainees } = await supabase
-      .from('workout_trainees')
-      .select('workout_id')
-      .eq('trainee_id', trainee.id);
+    try {
+      const { data: workoutTrainees, error: workoutTraineesError } = await supabase
+        .from('workout_trainees')
+        .select('workout_id')
+        .eq('trainee_id', trainee.id);
 
-    if (!workoutTrainees) {
-      setLoading(false);
-      return;
-    }
+      if (workoutTraineesError) {
+        logger.error('Error loading workout trainees', workoutTraineesError, 'WorkoutProgress');
+        setError('שגיאה בטעינת האימונים');
+        toast.error('שגיאה בטעינת האימונים');
+        setLoading(false);
+        return;
+      }
 
-    const workoutIds = workoutTrainees.map((wt) => wt.workout_id);
+      if (!workoutTrainees || workoutTrainees.length === 0) {
+        setExercises([]);
+        setLoading(false);
+        return;
+      }
 
-    const { data: workouts } = await supabase
-      .from('workouts')
-      .select(`
-        id,
-        workout_date,
-        is_completed,
-        workout_exercises (
+      const workoutIds = workoutTrainees.map((wt) => wt.workout_id);
+
+      const { data: workouts, error: workoutsError } = await supabase
+        .from('workouts')
+        .select(`
           id,
-          exercise_id,
-          pair_member,
-          exercises (
+          workout_date,
+          is_completed,
+          workout_exercises (
             id,
-            name
-          ),
-          exercise_sets (
-            weight,
-            reps,
-            equipment_id,
-            equipment:equipment_id (
+            exercise_id,
+            pair_member,
+            exercises (
               id,
-              name,
-              emoji
+              name
+            ),
+            exercise_sets (
+              weight,
+              reps,
+              equipment_id,
+              equipment:equipment_id (
+                id,
+                name,
+                emoji
+              )
             )
           )
-        )
-      `)
-      .in('id', workoutIds)
-      .eq('is_completed', true)
-      .order('workout_date', { ascending: true });
+        `)
+        .in('id', workoutIds)
+        .eq('is_completed', true)
+        .order('workout_date', { ascending: true });
 
-    if (!workouts) {
-      setLoading(false);
-      return;
-    }
+      if (workoutsError) {
+        logger.error('Error loading workouts', workoutsError, 'WorkoutProgress');
+        setError('שגיאה בטעינת האימונים');
+        toast.error('שגיאה בטעינת האימונים');
+        setLoading(false);
+        return;
+      }
+
+      if (!workouts || workouts.length === 0) {
+        setExercises([]);
+        setLoading(false);
+        return;
+      }
 
     const exerciseMap = new Map<string, ExerciseData>();
 
@@ -126,67 +147,80 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
       });
     });
 
-    const exercisesArray = Array.from(exerciseMap.values()).filter(
-      (ex) => ex.progressData.length >= 2
-    );
+      const exercisesArray = Array.from(exerciseMap.values()).filter(
+        (ex) => ex.progressData.length >= 2
+      );
 
-    setExercises(exercisesArray);
-    if (exercisesArray.length > 0) {
-      setSelectedExercise(exercisesArray[0].id);
+      setExercises(exercisesArray);
+      if (exercisesArray.length > 0 && !selectedExercise) {
+        setSelectedExercise(exercisesArray[0].id);
+      }
+      setLoading(false);
+      setError(null);
+    } catch (err) {
+      logger.error('Error loading progress data', err, 'WorkoutProgress');
+      setError('שגיאה בטעינת נתוני ההתקדמות');
+      toast.error('שגיאה בטעינת נתוני ההתקדמות');
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  }, [trainee.id, selectedMember, selectedExercise]);
 
-  const selectedExerciseData = exercises.find((ex) => ex.id === selectedExercise);
+  useEffect(() => {
+    loadProgressData();
+  }, [loadProgressData]);
 
-  const getMetricValue = (data: ExerciseData['progressData'][0]) => {
+  const selectedExerciseData = useMemo(() => {
+    return exercises.find((ex) => ex.id === selectedExercise);
+  }, [exercises, selectedExercise]);
+
+  const getMetricValue = useCallback((data: ExerciseData['progressData'][0]) => {
     switch (metricType) {
       case 'weight': return data.maxWeight;
       case 'reps': return data.totalReps;
       case 'volume': return data.totalVolume;
     }
-  };
+  }, [metricType]);
 
-  const getChartData = () => {
+  const getChartData = useMemo(() => {
     if (!selectedExerciseData) return [];
     return selectedExerciseData.progressData.map((d) => ({
       date: d.date,
       value: getMetricValue(d),
     }));
-  };
+  }, [selectedExerciseData, getMetricValue]);
 
-  const getMetricLabel = () => {
+  const getMetricLabel = useCallback(() => {
     switch (metricType) {
       case 'weight': return 'משקל מקסימלי (ק"ג)';
       case 'reps': return 'סה"כ חזרות';
       case 'volume': return 'נפח כולל (ק"ג)';
     }
-  };
+  }, [metricType]);
 
-  const getMetricUnit = () => {
+  const getMetricUnit = useCallback(() => {
     switch (metricType) {
       case 'weight': return 'ק"ג';
       case 'reps': return 'חזרות';
       case 'volume': return 'ק"ג';
     }
-  };
+  }, [metricType]);
 
-  const getMetricColor = () => {
+  const getMetricColor = useCallback(() => {
     switch (metricType) {
       case 'weight': return '#10b981';
       case 'reps': return '#3b82f6';
       case 'volume': return '#f59e0b';
     }
-  };
+  }, [metricType]);
 
-  const getChange = (current: number, previous: number) => {
+  const getChange = useCallback((current: number, previous: number) => {
     const diff = current - previous;
     const percentage = previous > 0 ? ((diff / previous) * 100).toFixed(1) : '0';
     const isPositive = diff > 0;
     return { diff, percentage, isPositive };
-  };
+  }, []);
 
-  const getProgress = () => {
+  const progress = useMemo(() => {
     if (!selectedExerciseData || selectedExerciseData.progressData.length < 2) return null;
 
     const data = selectedExerciseData.progressData;
@@ -197,9 +231,9 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
     const lastValue = getMetricValue(last);
 
     return getChange(lastValue, firstValue);
-  };
+  }, [selectedExerciseData, getMetricValue, getChange]);
 
-  const getBestWorkout = () => {
+  const bestWorkout = useMemo(() => {
     if (!selectedExerciseData) return null;
     let best = selectedExerciseData.progressData[0];
     selectedExerciseData.progressData.forEach(d => {
@@ -208,9 +242,22 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
       }
     });
     return best;
-  };
+  }, [selectedExerciseData, getMetricValue]);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const handleMetricTypeChange = useCallback((type: 'weight' | 'reps' | 'volume') => {
+    setMetricType(type);
+  }, []);
+
+  const handleViewModeChange = useCallback((mode: 'chart' | 'list' | 'table') => {
+    setViewMode(mode);
+  }, []);
+
+  const handleMemberChange = useCallback((member: 'member_1' | 'member_2' | 'all') => {
+    setSelectedMember(member);
+    setSelectedExercise(null); // Reset selected exercise when member changes
+  }, []);
+
+  const CustomTooltip = useCallback(({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl p-4 shadow-2xl">
@@ -228,12 +275,51 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
       );
     }
     return null;
-  };
+  }, [metricType, getMetricColor, getMetricUnit, getMetricLabel]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted">טוען נתוני התקדמות...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="premium-card-static p-6">
+          <div className="flex items-center gap-4">
+            <button onClick={onBack} className="p-2.5 rounded-xl bg-surface text-muted hover:text-foreground hover:bg-elevated/50 transition-all">
+              <ArrowRight className="h-5 w-5" />
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-emerald-500/15">
+                <TrendingUp className="h-6 w-6 text-emerald-400" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-foreground">גרף התקדמות</h1>
+                <p className="text-sm text-muted">{trainee.name || trainee.full_name}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="text-center py-12 premium-card-static">
+          <div className="w-16 h-16 rounded-xl bg-red-500/15 flex items-center justify-center mx-auto mb-4">
+            <TrendingDown className="h-8 w-8 text-red-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">שגיאה בטעינת הנתונים</h3>
+          <p className="text-muted mb-6">{error}</p>
+          <button
+            onClick={loadProgressData}
+            className="btn-primary px-6 py-3 rounded-xl font-medium"
+          >
+            נסה שוב
+          </button>
+        </div>
       </div>
     );
   }
@@ -269,9 +355,6 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
     );
   }
 
-  const progress = getProgress();
-  const chartData = getChartData();
-  const bestWorkout = getBestWorkout();
 
   return (
     <div className="space-y-6">
@@ -287,7 +370,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
               </div>
               <div>
                 <h1 className="text-xl font-bold text-foreground">גרף התקדמות</h1>
-                <p className="text-sm text-muted">{trainee.name}</p>
+                <p className="text-sm text-muted">{trainee.name || trainee.full_name}</p>
               </div>
             </div>
           </div>
@@ -315,10 +398,12 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
             ].map((member) => (
               <button
                 key={member.id}
-                onClick={() => setSelectedMember(member.id as typeof selectedMember)}
+                onClick={() => handleMemberChange(member.id as typeof selectedMember)}
                 className={`p-3 rounded-xl border transition-all ${
                   selectedMember === member.id
-                    ? `bg-${member.color}-500/15 border-${member.color}-500/30 text-${member.color}-400`
+                    ? (member.color === 'emerald' ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400' :
+                       member.color === 'blue' ? 'bg-blue-500/15 border-blue-500/30 text-blue-400' :
+                       'bg-amber-500/15 border-amber-500/30 text-amber-400')
                     : 'bg-surface/30 border-border text-muted hover:text-foreground hover:border-border-hover'
                 }`}
               >
@@ -350,7 +435,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
         ].map((metric) => (
           <button
             key={metric.id}
-            onClick={() => setMetricType(metric.id as typeof metricType)}
+            onClick={() => handleMetricTypeChange(metric.id as typeof metricType)}
             className={`p-4 rounded-xl border transition-all ${
               metricType === metric.id
                 ? `${metric.activeBg} ${metric.activeBorder}`
@@ -391,29 +476,32 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
           </div>
           <div className="flex gap-1 bg-surface p-1 rounded-xl border border-border">
             <button
-              onClick={() => setViewMode('chart')}
+              onClick={() => handleViewModeChange('chart')}
               className={`p-2.5 rounded-lg transition-all ${
                 viewMode === 'chart' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
               }`}
               title="גרף"
+              aria-label="תצוגת גרף"
             >
               <BarChart3 className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setViewMode('list')}
+              onClick={() => handleViewModeChange('list')}
               className={`p-2.5 rounded-lg transition-all ${
                 viewMode === 'list' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
               }`}
               title="רשימה"
+              aria-label="תצוגת רשימה"
             >
               <List className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setViewMode('table')}
+              onClick={() => handleViewModeChange('table')}
               className={`p-2.5 rounded-lg transition-all ${
                 viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
               }`}
               title="טבלה"
+              aria-label="תצוגת טבלה"
             >
               <Table2 className="w-4 h-4" />
             </button>
@@ -439,7 +527,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                 metricType === 'reps' ? 'text-blue-400' : 
                 'text-amber-400'
               }`}>
-                {metricType === 'volume' ? getMetricValue(bestWorkout!).toLocaleString() : getMetricValue(bestWorkout!)}
+                {bestWorkout ? (metricType === 'volume' ? getMetricValue(bestWorkout).toLocaleString() : getMetricValue(bestWorkout)) : '-'}
               </p>
             </div>
             <div className="bg-surface/30 rounded-xl p-3 border border-border">
@@ -468,9 +556,9 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
         )}
 
         {viewMode === 'chart' && (
-          <div className="h-72">
+          <div className="h-64 sm:h-72 lg:h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+              <LineChart data={getChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                 <defs>
                   <linearGradient id={`gradient-${metricType}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={getMetricColor()} stopOpacity={0.3} />

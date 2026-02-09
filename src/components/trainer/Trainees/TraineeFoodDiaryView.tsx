@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   ArrowRight,
   ChevronLeft,
@@ -59,11 +59,17 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'completed' | 'unseen'>('all');
 
-  useEffect(() => {
-    loadData();
-  }, [currentDate, currentWeekStart, viewMode]);
+  const getWeekDates = useCallback((): Date[] => {
+    const dates: Date[] = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(currentWeekStart);
+      date.setDate(currentWeekStart.getDate() + i);
+      dates.push(date);
+    }
+    return dates;
+  }, [currentWeekStart]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
 
     let startDate: string;
@@ -113,38 +119,38 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
     setWaterLogs(waterMap);
     setDiaryEntries(diaryMap);
     setLoading(false);
-  };
+  }, [traineeId, currentDate, currentWeekStart, viewMode, getWeekDates]);
 
-  const getWeekDates = (): Date[] => {
-    const dates: Date[] = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(currentWeekStart);
-      date.setDate(currentWeekStart.getDate() + i);
-      dates.push(date);
-    }
-    return dates;
-  };
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
-  const navigateWeek = (direction: 'prev' | 'next') => {
-    const newStart = new Date(currentWeekStart);
-    newStart.setDate(currentWeekStart.getDate() + (direction === 'next' ? 7 : -7));
-    setCurrentWeekStart(newStart);
-    setCurrentDate(newStart);
-  };
+  const navigateWeek = useCallback((direction: 'prev' | 'next') => {
+    setCurrentWeekStart(prev => {
+      const newStart = new Date(prev);
+      newStart.setDate(prev.getDate() + (direction === 'next' ? 7 : -7));
+      setCurrentDate(newStart);
+      return newStart;
+    });
+  }, []);
 
-  const navigateDay = (direction: 'prev' | 'next') => {
-    const newDate = new Date(currentDate);
-    newDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
-    setCurrentDate(newDate);
-  };
+  const navigateDay = useCallback((direction: 'prev' | 'next') => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      newDate.setDate(prev.getDate() + (direction === 'next' ? 1 : -1));
+      return newDate;
+    });
+  }, []);
 
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    const newDate = new Date(currentDate);
-    newDate.setMonth(currentDate.getMonth() + (direction === 'next' ? 1 : -1));
-    setCurrentDate(newDate);
-  };
+  const navigateMonth = useCallback((direction: 'prev' | 'next') => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      newDate.setMonth(prev.getMonth() + (direction === 'next' ? 1 : -1));
+      return newDate;
+    });
+  }, []);
 
-  const getMonthDates = (): (Date | null)[] => {
+  const getMonthDates = useMemo((): (Date | null)[] => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const firstDay = new Date(year, month, 1);
@@ -162,42 +168,43 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
       dates.push(new Date(year, month, day));
     }
     return dates;
-  };
+  }, [currentDate]);
 
-  const getHebrewDayName = (date: Date): string => {
+  const getHebrewDayName = useCallback((date: Date): string => {
     const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
     return days[date.getDay()];
-  };
+  }, []);
 
-  const formatDate = (date: Date): string => {
+  const formatDate = useCallback((date: Date): string => {
     return `${date.getDate()}/${date.getMonth() + 1}`;
-  };
+  }, []);
 
-  const isToday = (date: Date): boolean => {
+  const isToday = useCallback((date: Date): boolean => {
     const today = new Date();
     return date.toDateString() === today.toDateString();
-  };
+  }, []);
 
-  const getMealTypeInfo = (type: string) => {
+  const getMealTypeInfo = useCallback((type: string) => {
     return MEAL_TYPES.find((mt) => mt.value === type) || MEAL_TYPES[0];
-  };
+  }, []);
 
-  const getWeekRangeText = (): string => {
-    const weekDates = getWeekDates();
+  const weekDates = useMemo(() => getWeekDates(), [getWeekDates]);
+
+  const getWeekRangeText = useMemo((): string => {
     const start = weekDates[0];
     const end = weekDates[6];
     return `${formatDate(start)} - ${formatDate(end)}`;
-  };
+  }, [weekDates, formatDate]);
 
-  const getViewTitle = (): string => {
+  const getViewTitle = useMemo((): string => {
     if (viewMode === 'day') {
       return currentDate.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' });
     } else if (viewMode === 'week') {
-      return getWeekRangeText();
+      return getWeekRangeText;
     } else {
       return currentDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
     }
-  };
+  }, [viewMode, currentDate, getWeekRangeText]);
 
   const handleDateClick = (date: Date) => {
     setCurrentDate(date);
@@ -465,7 +472,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             <ChevronRight className="w-5 h-5 text-secondary" />
           </button>
           <div className="text-center">
-            <p className="text-sm font-semibold text-foreground">{getViewTitle()}</p>
+            <p className="text-sm font-semibold text-foreground">{getViewTitle}</p>
           </div>
           <button
             onClick={() => {

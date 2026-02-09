@@ -3,7 +3,7 @@
  * הגדרות דיווח שגיאות
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AlertTriangle, CheckCircle, XCircle, Info } from 'lucide-react';
 import { errorTracking, ErrorSeverity } from '../../utils/errorTracking';
 import { logger } from '../../utils/logger';
@@ -16,19 +16,23 @@ export default function ErrorReportingSettings() {
   } | null>(null);
   const [recentErrors, setRecentErrors] = useState<any[]>([]);
 
-  useEffect(() => {
-    loadErrorStats();
+  const loadErrorStats = useCallback(() => {
+    try {
+      const errorStats = errorTracking.getStatistics();
+      const recent = errorTracking.getRecentErrors(10);
+      
+      setStats(errorStats);
+      setRecentErrors(recent);
+    } catch (error) {
+      logger.error('Error loading error stats', error, 'ErrorReportingSettings');
+    }
   }, []);
 
-  const loadErrorStats = () => {
-    const errorStats = errorTracking.getStatistics();
-    const recent = errorTracking.getRecentErrors(10);
-    
-    setStats(errorStats);
-    setRecentErrors(recent);
-  };
+  useEffect(() => {
+    loadErrorStats();
+  }, [loadErrorStats]);
 
-  const getSeverityColor = (severity: ErrorSeverity) => {
+  const getSeverityColor = useCallback((severity: ErrorSeverity) => {
     switch (severity) {
       case ErrorSeverity.LOW:
         return 'text-yellow-400';
@@ -41,9 +45,9 @@ export default function ErrorReportingSettings() {
       default:
         return 'text-muted';
     }
-  };
+  }, []);
 
-  const getSeverityLabel = (severity: ErrorSeverity) => {
+  const getSeverityLabel = useCallback((severity: ErrorSeverity) => {
     switch (severity) {
       case ErrorSeverity.LOW:
         return 'נמוך';
@@ -56,7 +60,12 @@ export default function ErrorReportingSettings() {
       default:
         return severity;
     }
-  };
+  }, []);
+
+  const highCriticalCount = useMemo(() => {
+    if (!stats) return 0;
+    return stats.bySeverity[ErrorSeverity.HIGH] + stats.bySeverity[ErrorSeverity.CRITICAL];
+  }, [stats]);
 
   return (
     <div className="space-y-6">
@@ -90,7 +99,7 @@ export default function ErrorReportingSettings() {
             </div>
             <div className="text-center p-4 bg-red-500/20 rounded-lg">
               <div className="text-2xl font-bold text-red-400">
-                {stats.bySeverity[ErrorSeverity.HIGH] + stats.bySeverity[ErrorSeverity.CRITICAL]}
+                {highCriticalCount}
               </div>
               <div className="text-muted text-sm">גבוה/קריטי</div>
             </div>

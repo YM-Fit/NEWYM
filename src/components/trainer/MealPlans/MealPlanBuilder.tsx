@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { ArrowRight, History, UtensilsCrossed } from 'lucide-react';
 import type { MealPlanBuilderProps } from './types/mealPlanTypes';
@@ -91,7 +91,7 @@ export default function MealPlanBuilder({
     loadData();
   }, [traineeId, loadPlans, loadTemplates, loadNoteTemplates, setLoading]);
 
-  const handleCreatePlan = async () => {
+  const handleCreatePlan = useCallback(async () => {
     if (!newPlanData.name.trim()) {
       toast.error('נא להזין שם לתפריט');
       return;
@@ -123,9 +123,9 @@ export default function MealPlanBuilder({
       });
       setView('editor');
     }
-  };
+  }, [newPlanData, createPlan]);
 
-  const handleSaveMeals = async () => {
+  const handleSaveMeals = useCallback(async () => {
     if (!activePlan) return;
 
     const saved = await saveMeals(activePlan.id, async (description: string) => {
@@ -137,91 +137,111 @@ export default function MealPlanBuilder({
     });
 
     if (saved) {
-      // Meals already saved and reloaded in saveMeals
+      toast.success('התפריט נשמר בהצלחה');
     }
-  };
+  }, [activePlan, meals, saveMeals, saveToHistory]);
 
-  const handleSaveAsTemplate = async () => {
+  const handleSaveAsTemplate = useCallback(async () => {
     if (!activePlan) return;
+    
+    if (!templateName.trim()) {
+      toast.error('נא להזין שם לתבנית');
+      return;
+    }
 
     const saved = await saveTemplate(templateName, activePlan, meals);
     if (saved) {
       setShowTemplateModal(false);
       setTemplateName('');
+      toast.success('התבנית נשמרה בהצלחה');
     }
-  };
+  }, [activePlan, templateName, meals, saveTemplate]);
 
-  const handleLoadFromTemplate = async (template: MealPlanTemplate) => {
+  const handleLoadFromTemplate = useCallback(async (template: MealPlanTemplate) => {
     if (!activePlan) return;
 
-    await updatePlan(activePlan.id, {
-      daily_calories: template.daily_calories,
-      daily_water_ml: template.daily_water_ml,
-      protein_grams: template.protein_grams,
-      carbs_grams: template.carbs_grams,
-      fat_grams: template.fat_grams,
-    });
+    try {
+      await updatePlan(activePlan.id, {
+        daily_calories: template.daily_calories,
+        daily_water_ml: template.daily_water_ml,
+        protein_grams: template.protein_grams,
+        carbs_grams: template.carbs_grams,
+        fat_grams: template.fat_grams,
+      });
 
-    const loadedMeals = (template.meals || []).map((m, i) => ({
-      ...m,
-      id: undefined,
-      plan_id: activePlan.id,
-      order_index: i,
-    }));
+      const loadedMeals = (template.meals || []).map((m, i) => ({
+        ...m,
+        id: undefined,
+        plan_id: activePlan.id,
+        order_index: i,
+      }));
 
-    setMeals(loadedMeals);
-    setShowLoadTemplateModal(false);
-    toast.success('Template loaded successfully');
-  };
+      setMeals(loadedMeals);
+      setShowLoadTemplateModal(false);
+      toast.success('התבנית נטענה בהצלחה');
+    } catch (error) {
+      toast.error('שגיאה בטעינת התבנית');
+    }
+  }, [activePlan, updatePlan, setMeals]);
 
-  const handleAddNoteFromTemplate = (template: NoteTemplate) => {
+  const handleAddNoteFromTemplate = useCallback((template: NoteTemplate) => {
     if (!activePlan) return;
 
     const currentNotes = activePlan.notes || '';
     const newNotes = currentNotes ? `${currentNotes}\n${template.content}` : template.content;
     updatePlan(activePlan.id, { notes: newNotes });
     setShowNoteTemplateModal(false);
-    toast.success('Note added');
-  };
+    toast.success('הערה נוספה בהצלחה');
+  }, [activePlan, updatePlan]);
 
-  const handleCreateNoteTemplate = async () => {
+  const handleCreateNoteTemplate = useCallback(async () => {
+    if (!newNoteTemplate.title.trim() || !newNoteTemplate.content.trim()) {
+      toast.error('נא למלא את כל השדות');
+      return;
+    }
+    
     const created = await createNoteTemplate(newNoteTemplate.title, newNoteTemplate.content);
     if (created) {
       setShowNewNoteTemplateModal(false);
       setNewNoteTemplate({ title: '', content: '' });
+      toast.success('תבנית הערה נוצרה בהצלחה');
     }
-  };
+  }, [newNoteTemplate, createNoteTemplate]);
 
-  const toggleMealExpanded = (index: number) => {
-    const newExpanded = new Set(expandedMeals);
-    if (newExpanded.has(index)) {
-      newExpanded.delete(index);
-    } else {
-      newExpanded.add(index);
-    }
-    setExpandedMeals(newExpanded);
-  };
+  const toggleMealExpanded = useCallback((index: number) => {
+    setExpandedMeals(prev => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(index)) {
+        newExpanded.delete(index);
+      } else {
+        newExpanded.add(index);
+      }
+      return newExpanded;
+    });
+  }, []);
 
-  const handleDragStart = (index: number) => {
+  const handleDragStart = useCallback((index: number) => {
     setDraggedMealIndex(index);
-  };
+  }, []);
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
     e.preventDefault();
     if (draggedMealIndex === null || draggedMealIndex === index) return;
 
-    const updated = [...meals];
-    const dragged = updated[draggedMealIndex];
-    updated.splice(draggedMealIndex, 1);
-    updated.splice(index, 0, dragged);
-    updated.forEach((meal, i) => (meal.order_index = i));
-    setMeals(updated);
+    setMeals(prev => {
+      const updated = [...prev];
+      const dragged = updated[draggedMealIndex];
+      updated.splice(draggedMealIndex, 1);
+      updated.splice(index, 0, dragged);
+      updated.forEach((meal, i) => (meal.order_index = i));
+      return updated;
+    });
     setDraggedMealIndex(index);
-  };
+  }, [draggedMealIndex, setMeals]);
 
-  const handleDragEnd = () => {
+  const handleDragEnd = useCallback(() => {
     setDraggedMealIndex(null);
-  };
+  }, []);
 
   const handleActivatePlan = async (planId: string) => {
     await activatePlan(planId);

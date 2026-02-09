@@ -91,7 +91,7 @@ function StudioTvView({ pollIntervalMs }: StudioTvViewProps) {
           setLastWorkout(workoutTrainees[0].workouts);
         }
       } catch (err) {
-        console.error('Error loading last workout:', err);
+        logger.error('Error loading last workout', err, 'StudioTvView');
       }
     };
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Calculator, Wrench, Percent, Droplets, Beef, Clock } from 'lucide-react';
 import TDEECalculator from './TDEECalculator';
 import BodyFatCalculator from './BodyFatCalculator';
@@ -11,7 +11,7 @@ type CalculatorType = 'tdee' | 'body-fat' | 'water' | 'protein' | 'recovery' | n
 export default function ToolsView() {
   const [activeCalculator, setActiveCalculator] = useState<CalculatorType>(null);
 
-  const tools = [
+  const tools = useMemo(() => [
     {
       id: 'tdee',
       name: 'מחשבון TDEE',

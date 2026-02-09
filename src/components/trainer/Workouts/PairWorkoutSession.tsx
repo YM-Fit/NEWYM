@@ -1,8 +1,9 @@
 import { ArrowRight, Check, X, Plus, Copy, Trash2, Users, ArrowLeftRight } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { logger } from '../../../utils/logger';
+import toast from 'react-hot-toast';
 import ExerciseSelector from './ExerciseSelector';
 import QuickNumericPad from './QuickNumericPad';
 import EquipmentSelector from '../Equipment/EquipmentSelector';
@@ -116,7 +117,7 @@ export default function PairWorkoutSession({
   const [collapsedSets1, setCollapsedSets1] = useState<string[]>([]);
   const [collapsedSets2, setCollapsedSets2] = useState<string[]>([]);
 
-  const addExercise = (exercise: Exercise, member: 'member_1' | 'member_2') => {
+  const addExercise = useCallback((exercise: Exercise, member: 'member_1' | 'member_2') => {
     const newExercise: WorkoutExercise = {
       tempId: Date.now().toString(),
       exercise,
@@ -124,135 +125,170 @@ export default function PairWorkoutSession({
     };
 
     if (member === 'member_1') {
-      setMember1Exercises([...member1Exercises, newExercise]);
+      setMember1Exercises(prev => [...prev, newExercise]);
     } else {
-      setMember2Exercises([...member2Exercises, newExercise]);
+      setMember2Exercises(prev => [...prev, newExercise]);
     }
     setShowExerciseSelector(null);
-  };
+  }, []);
 
-  const addSet = (exerciseIndex: number, member: 'member_1' | 'member_2') => {
+  const addSet = useCallback((exerciseIndex: number, member: 'member_1' | 'member_2') => {
     if (member === 'member_1') {
-      const updated = [...member1Exercises];
-      const exercise = updated[exerciseIndex];
-      // Collapse all existing sets
-      const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
-      setCollapsedSets1(prev => [...prev, ...existingSetIds.filter(id => !prev.includes(id))]);
-      
-      const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
-      exercise.sets.push({ id: newSetId, weight: 0, reps: 0, rpe: null, set_type: 'regular', failure: false });
-      setMember1Exercises(updated);
+      setMember1Exercises(prev => {
+        const updated = [...prev];
+        const exercise = updated[exerciseIndex];
+        // Collapse all existing sets
+        const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
+        setCollapsedSets1(collapsed => [...collapsed, ...existingSetIds.filter(id => !collapsed.includes(id))]);
+        
+        const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
+        exercise.sets.push({ id: newSetId, weight: 0, reps: 0, rpe: null, set_type: 'regular', failure: false });
+        return updated;
+      });
     } else {
-      const updated = [...member2Exercises];
-      const exercise = updated[exerciseIndex];
-      // Collapse all existing sets
-      const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
-      setCollapsedSets2(prev => [...prev, ...existingSetIds.filter(id => !prev.includes(id))]);
-      
-      const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
-      exercise.sets.push({ id: newSetId, weight: 0, reps: 0, rpe: null, set_type: 'regular', failure: false });
-      setMember2Exercises(updated);
+      setMember2Exercises(prev => {
+        const updated = [...prev];
+        const exercise = updated[exerciseIndex];
+        // Collapse all existing sets
+        const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
+        setCollapsedSets2(collapsed => [...collapsed, ...existingSetIds.filter(id => !collapsed.includes(id))]);
+        
+        const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
+        exercise.sets.push({ id: newSetId, weight: 0, reps: 0, rpe: null, set_type: 'regular', failure: false });
+        return updated;
+      });
     }
-  };
+  }, []);
 
-  const duplicateSet = (exerciseIndex: number, setIndex: number, member: 'member_1' | 'member_2') => {
+  const duplicateSet = useCallback((exerciseIndex: number, setIndex: number, member: 'member_1' | 'member_2') => {
     if (member === 'member_1') {
-      const updated = [...member1Exercises];
-      const exercise = updated[exerciseIndex];
-      const setToCopy = { ...exercise.sets[setIndex] };
-      // Collapse all existing sets
-      const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
-      setCollapsedSets1(prev => [...prev, ...existingSetIds.filter(id => !prev.includes(id))]);
-      
-      const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
-      setToCopy.id = newSetId;
-      exercise.sets.push(setToCopy);
-      setMember1Exercises(updated);
+      setMember1Exercises(prev => {
+        const updated = [...prev];
+        const exercise = updated[exerciseIndex];
+        const setToCopy = { ...exercise.sets[setIndex] };
+        // Collapse all existing sets
+        const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
+        setCollapsedSets1(collapsed => [...collapsed, ...existingSetIds.filter(id => !collapsed.includes(id))]);
+        
+        const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
+        setToCopy.id = newSetId;
+        exercise.sets.push(setToCopy);
+        return updated;
+      });
     } else {
-      const updated = [...member2Exercises];
-      const exercise = updated[exerciseIndex];
-      const setToCopy = { ...exercise.sets[setIndex] };
-      // Collapse all existing sets
-      const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
-      setCollapsedSets2(prev => [...prev, ...existingSetIds.filter(id => !prev.includes(id))]);
-      
-      const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
-      setToCopy.id = newSetId;
-      exercise.sets.push(setToCopy);
-      setMember2Exercises(updated);
+      setMember2Exercises(prev => {
+        const updated = [...prev];
+        const exercise = updated[exerciseIndex];
+        const setToCopy = { ...exercise.sets[setIndex] };
+        // Collapse all existing sets
+        const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
+        setCollapsedSets2(collapsed => [...collapsed, ...existingSetIds.filter(id => !collapsed.includes(id))]);
+        
+        const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
+        setToCopy.id = newSetId;
+        exercise.sets.push(setToCopy);
+        return updated;
+      });
     }
-  };
+  }, []);
 
-  const updateSet = (exerciseIndex: number, setIndex: number, field: keyof SetData, value: any, member: 'member_1' | 'member_2') => {
+  const updateSet = useCallback((exerciseIndex: number, setIndex: number, field: keyof SetData, value: any, member: 'member_1' | 'member_2') => {
     if (member === 'member_1') {
-      const updated = [...member1Exercises];
-      updated[exerciseIndex].sets[setIndex] = {
-        ...updated[exerciseIndex].sets[setIndex],
-        [field]: value,
-      };
-      setMember1Exercises(updated);
+      setMember1Exercises(prev => {
+        const updated = [...prev];
+        updated[exerciseIndex].sets[setIndex] = {
+          ...updated[exerciseIndex].sets[setIndex],
+          [field]: value,
+        };
+        return updated;
+      });
     } else {
-      const updated = [...member2Exercises];
-      updated[exerciseIndex].sets[setIndex] = {
-        ...updated[exerciseIndex].sets[setIndex],
-        [field]: value,
-      };
-      setMember2Exercises(updated);
+      setMember2Exercises(prev => {
+        const updated = [...prev];
+        updated[exerciseIndex].sets[setIndex] = {
+          ...updated[exerciseIndex].sets[setIndex],
+          [field]: value,
+        };
+        return updated;
+      });
     }
-  };
+  }, []);
 
-  const removeSet = (exerciseIndex: number, setIndex: number, member: 'member_1' | 'member_2') => {
+  const removeSet = useCallback((exerciseIndex: number, setIndex: number, member: 'member_1' | 'member_2') => {
     if (member === 'member_1') {
-      const updated = [...member1Exercises];
-      updated[exerciseIndex].sets.splice(setIndex, 1);
-      setMember1Exercises(updated);
+      setMember1Exercises(prev => {
+        const updated = [...prev];
+        updated[exerciseIndex].sets.splice(setIndex, 1);
+        return updated;
+      });
     } else {
-      const updated = [...member2Exercises];
-      updated[exerciseIndex].sets.splice(setIndex, 1);
-      setMember2Exercises(updated);
+      setMember2Exercises(prev => {
+        const updated = [...prev];
+        updated[exerciseIndex].sets.splice(setIndex, 1);
+        return updated;
+      });
     }
-  };
+  }, []);
 
-  const removeExercise = (exerciseIndex: number, member: 'member_1' | 'member_2') => {
+  const removeExercise = useCallback((exerciseIndex: number, member: 'member_1' | 'member_2') => {
     if (member === 'member_1') {
-      const updated = [...member1Exercises];
-      updated.splice(exerciseIndex, 1);
-      setMember1Exercises(updated);
+      setMember1Exercises(prev => {
+        const updated = [...prev];
+        updated.splice(exerciseIndex, 1);
+        return updated;
+      });
     } else {
-      const updated = [...member2Exercises];
-      updated.splice(exerciseIndex, 1);
-      setMember2Exercises(updated);
+      setMember2Exercises(prev => {
+        const updated = [...prev];
+        updated.splice(exerciseIndex, 1);
+        return updated;
+      });
     }
-  };
+  }, []);
 
-  const copyExerciseToOtherMember = (exerciseIndex: number, fromMember: 'member_1' | 'member_2') => {
-    const sourceExercises = fromMember === 'member_1' ? member1Exercises : member2Exercises;
-    const targetExercises = fromMember === 'member_1' ? member2Exercises : member1Exercises;
-    
-    const exerciseToCopy = {
-      ...sourceExercises[exerciseIndex],
-      tempId: Date.now().toString() + Math.random(),
-      sets: sourceExercises[exerciseIndex].sets.map((set, idx) => ({
-        ...set,
-        id: `temp-${Date.now()}-${idx + 1}`,
-      })),
-    };
-
+  const copyExerciseToOtherMember = useCallback((exerciseIndex: number, fromMember: 'member_1' | 'member_2') => {
     if (fromMember === 'member_1') {
-      setMember2Exercises([...targetExercises, exerciseToCopy]);
+      setMember2Exercises(prev => {
+        const sourceExercise = member1Exercises[exerciseIndex];
+        if (!sourceExercise) return prev;
+        
+        const exerciseToCopy = {
+          ...sourceExercise,
+          tempId: Date.now().toString() + Math.random(),
+          sets: sourceExercise.sets.map((set, idx) => ({
+            ...set,
+            id: `temp-${Date.now()}-${idx + 1}`,
+          })),
+        };
+        return [...prev, exerciseToCopy];
+      });
     } else {
-      setMember1Exercises([...targetExercises, exerciseToCopy]);
+      setMember1Exercises(prev => {
+        const sourceExercise = member2Exercises[exerciseIndex];
+        if (!sourceExercise) return prev;
+        
+        const exerciseToCopy = {
+          ...sourceExercise,
+          tempId: Date.now().toString() + Math.random(),
+          sets: sourceExercise.sets.map((set, idx) => ({
+            ...set,
+            id: `temp-${Date.now()}-${idx + 1}`,
+          })),
+        };
+        return [...prev, exerciseToCopy];
+      });
     }
-  };
+  }, [member1Exercises, member2Exercises]);
 
-  const openNumericPad = (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe', member: 'member_1' | 'member_2') => {
+  const openNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe', member: 'member_1' | 'member_2') => {
     const exercises = member === 'member_1' ? member1Exercises : member2Exercises;
+    if (!exercises[exerciseIndex] || !exercises[exerciseIndex].sets[setIndex]) return;
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     const label = field === 'weight' ? 'משקל (ק״ג)' : field === 'reps' ? 'חזרות' : 'RPE (1-10)';
     setNumericPad({ exerciseIndex, setIndex, field, member, value: currentValue as number, label });
-  };
+  }, [member1Exercises, member2Exercises]);
 
-  const handleNumericPadConfirm = (value: number) => {
+  const handleNumericPadConfirm = useCallback((value: number) => {
     if (numericPad) {
       updateSet(numericPad.exerciseIndex, numericPad.setIndex, numericPad.field, value, numericPad.member);
       
@@ -263,84 +299,89 @@ export default function PairWorkoutSession({
       // מצא תרגיל תואם (אותו שם תרגיל) אצל בן הזוג השני
       const currentExercises = numericPad.member === 'member_1' ? member1Exercises : member2Exercises;
       const currentExercise = currentExercises[numericPad.exerciseIndex];
-      const matchingExerciseIndex = otherExercises.findIndex(ex => ex.exercise.id === currentExercise.exercise.id);
-      
-      if (matchingExerciseIndex !== -1 && otherExercises[matchingExerciseIndex].sets.length > numericPad.setIndex) {
-        updateSet(matchingExerciseIndex, numericPad.setIndex, numericPad.field, value, otherMember);
+      if (currentExercise) {
+        const matchingExerciseIndex = otherExercises.findIndex(ex => ex.exercise.id === currentExercise.exercise.id);
+        
+        if (matchingExerciseIndex !== -1 && otherExercises[matchingExerciseIndex].sets.length > numericPad.setIndex) {
+          updateSet(matchingExerciseIndex, numericPad.setIndex, numericPad.field, value, otherMember);
+        }
       }
       
       setNumericPad(null);
     }
-  };
+  }, [numericPad, member1Exercises, member2Exercises, updateSet]);
 
-  const handleEquipmentSelect = (equipment: Equipment | null) => {
+  const handleEquipmentSelect = useCallback((equipment: Equipment | null) => {
     if (equipmentSelector) {
       updateSet(equipmentSelector.exerciseIndex, equipmentSelector.setIndex, 'equipment_id', equipment?.id || null, equipmentSelector.member);
       updateSet(equipmentSelector.exerciseIndex, equipmentSelector.setIndex, 'equipment', equipment || null, equipmentSelector.member);
       setEquipmentSelector(null);
     }
-  };
+  }, [equipmentSelector, updateSet]);
 
-  const handleSupersetExerciseSelect = (exercise: Exercise) => {
+  const handleSupersetExerciseSelect = useCallback((exercise: Exercise) => {
     if (supersetSelector) {
       updateSet(supersetSelector.exerciseIndex, supersetSelector.setIndex, 'set_type', 'superset', supersetSelector.member);
       updateSet(supersetSelector.exerciseIndex, supersetSelector.setIndex, 'superset_exercise_id', exercise.id, supersetSelector.member);
       updateSet(supersetSelector.exerciseIndex, supersetSelector.setIndex, 'superset_exercise_name', exercise.name, supersetSelector.member);
       setSupersetSelector(null);
     }
-  };
+  }, [supersetSelector, updateSet]);
 
-  const openSupersetNumericPad = (exerciseIndex: number, setIndex: number, field: 'superset_weight' | 'superset_reps' | 'superset_rpe', member: 'member_1' | 'member_2') => {
+  const openSupersetNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'superset_weight' | 'superset_reps' | 'superset_rpe', member: 'member_1' | 'member_2') => {
     const exercises = member === 'member_1' ? member1Exercises : member2Exercises;
+    if (!exercises[exerciseIndex] || !exercises[exerciseIndex].sets[setIndex]) return;
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     const label = field === 'superset_weight' ? 'משקל סופר-סט (ק״ג)' : field === 'superset_reps' ? 'חזרות סופר-סט' : 'RPE סופר-סט (1-10)';
     setSupersetNumericPad({ exerciseIndex, setIndex, field, member, value: currentValue as number, label });
-  };
+  }, [member1Exercises, member2Exercises]);
 
-  const handleSupersetNumericPadConfirm = (value: number) => {
+  const handleSupersetNumericPadConfirm = useCallback((value: number) => {
     if (supersetNumericPad) {
       updateSet(supersetNumericPad.exerciseIndex, supersetNumericPad.setIndex, supersetNumericPad.field, value, supersetNumericPad.member);
       setSupersetNumericPad(null);
     }
-  };
+  }, [supersetNumericPad, updateSet]);
 
-  const handleSupersetEquipmentSelect = (equipment: Equipment | null) => {
+  const handleSupersetEquipmentSelect = useCallback((equipment: Equipment | null) => {
     if (supersetEquipmentSelector) {
       updateSet(supersetEquipmentSelector.exerciseIndex, supersetEquipmentSelector.setIndex, 'superset_equipment_id', equipment?.id || null, supersetEquipmentSelector.member);
       updateSet(supersetEquipmentSelector.exerciseIndex, supersetEquipmentSelector.setIndex, 'superset_equipment', equipment || null, supersetEquipmentSelector.member);
       setSupersetEquipmentSelector(null);
     }
-  };
+  }, [supersetEquipmentSelector, updateSet]);
 
-  const openDropsetNumericPad = (exerciseIndex: number, setIndex: number, field: 'dropset_weight' | 'dropset_reps', member: 'member_1' | 'member_2') => {
+  const openDropsetNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'dropset_weight' | 'dropset_reps', member: 'member_1' | 'member_2') => {
     const exercises = member === 'member_1' ? member1Exercises : member2Exercises;
+    if (!exercises[exerciseIndex] || !exercises[exerciseIndex].sets[setIndex]) return;
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     const label = field === 'dropset_weight' ? 'משקל דרופ-סט (ק״ג)' : 'חזרות דרופ-סט';
     setDropsetNumericPad({ exerciseIndex, setIndex, field, member, value: currentValue as number, label });
-  };
+  }, [member1Exercises, member2Exercises]);
 
-  const handleDropsetNumericPadConfirm = (value: number) => {
+  const handleDropsetNumericPadConfirm = useCallback((value: number) => {
     if (dropsetNumericPad) {
       updateSet(dropsetNumericPad.exerciseIndex, dropsetNumericPad.setIndex, dropsetNumericPad.field, value, dropsetNumericPad.member);
       setDropsetNumericPad(null);
     }
-  };
+  }, [dropsetNumericPad, updateSet]);
 
-  const openSupersetDropsetNumericPad = (exerciseIndex: number, setIndex: number, field: 'superset_dropset_weight' | 'superset_dropset_reps', member: 'member_1' | 'member_2') => {
+  const openSupersetDropsetNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'superset_dropset_weight' | 'superset_dropset_reps', member: 'member_1' | 'member_2') => {
     const exercises = member === 'member_1' ? member1Exercises : member2Exercises;
+    if (!exercises[exerciseIndex] || !exercises[exerciseIndex].sets[setIndex]) return;
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     const label = field === 'superset_dropset_weight' ? 'משקל דרופ-סט סופר-סט (ק״ג)' : 'חזרות דרופ-סט סופר-סט';
     setSupersetDropsetNumericPad({ exerciseIndex, setIndex, field, member, value: currentValue as number, label });
-  };
+  }, [member1Exercises, member2Exercises]);
 
-  const handleSupersetDropsetNumericPadConfirm = (value: number) => {
+  const handleSupersetDropsetNumericPadConfirm = useCallback((value: number) => {
     if (supersetDropsetNumericPad) {
       updateSet(supersetDropsetNumericPad.exerciseIndex, supersetDropsetNumericPad.setIndex, supersetDropsetNumericPad.field, value, supersetDropsetNumericPad.member);
       setSupersetDropsetNumericPad(null);
     }
-  };
+  }, [supersetDropsetNumericPad, updateSet]);
 
-  const toggleCollapseSet = (setId: string, member: 'member_1' | 'member_2') => {
+  const toggleCollapseSet = useCallback((setId: string, member: 'member_1' | 'member_2') => {
     if (member === 'member_1') {
       setCollapsedSets1(prev => {
         if (prev.includes(setId)) {
@@ -358,7 +399,7 @@ export default function PairWorkoutSession({
         }
       });
     }
-  };
+  }, []);
 
   const handleSave = async () => {
     if (!user) return;
@@ -442,19 +483,30 @@ export default function PairWorkoutSession({
         }
       }
 
+      toast.success('האימון נשמר בהצלחה');
       setSaving(false);
       onComplete({ member1: member1Exercises, member2: member2Exercises });
     } catch (error) {
       logger.error('Error saving workout:', error, 'PairWorkoutSession');
-      alert('שגיאה בשמירת האימון');
+      toast.error('שגיאה בשמירת האימון');
       setSaving(false);
     }
-  };
+  }, [member1Exercises, member2Exercises, user?.id, saving, onComplete]);
 
-  const renderExerciseColumn = (exercises: WorkoutExercise[], member: 'member_1' | 'member_2', name: string, isBlue: boolean) => {
-    const totalVolume = exercises.reduce((sum, ex) => 
+  const totalVolume1 = useMemo(() => 
+    member1Exercises.reduce((sum, ex) => 
       sum + ex.sets.reduce((setSum, set) => setSum + (set.weight * set.reps), 0), 0
-    );
+    ), [member1Exercises]
+  );
+
+  const totalVolume2 = useMemo(() => 
+    member2Exercises.reduce((sum, ex) => 
+      sum + ex.sets.reduce((setSum, set) => setSum + (set.weight * set.reps), 0), 0
+    ), [member2Exercises]
+  );
+
+  const renderExerciseColumn = useCallback((exercises: WorkoutExercise[], member: 'member_1' | 'member_2', name: string, isBlue: boolean) => {
+    const totalVolume = member === 'member_1' ? totalVolume1 : totalVolume2;
     const collapsedSets = member === 'member_1' ? collapsedSets1 : collapsedSets2;
     
     return (
@@ -833,7 +885,7 @@ export default function PairWorkoutSession({
       </div>
     </div>
     );
-  };
+  }, [totalVolume1, totalVolume2, collapsedSets1, collapsedSets2, addSet, removeExercise, copyExerciseToOtherMember, toggleCollapseSet, duplicateSet, removeSet, openNumericPad, openSupersetNumericPad, openDropsetNumericPad, openSupersetDropsetNumericPad, setShowExerciseSelector]);
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-base)] transition-colors duration-300">

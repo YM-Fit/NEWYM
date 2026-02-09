@@ -3,7 +3,7 @@
  * תצוגת בדיקת בריאות המערכת
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Activity, 
   CheckCircle, 
