@@ -1,8 +1,10 @@
 import { Plus, TrendingDown, TrendingUp, Scale, BarChart3, Trash2, Edit, User, Activity, ArrowRight, Sparkles, List, Table2, Calculator, Target, TrendingDown as TrendingDownIcon, Minus } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Trainee, BodyMeasurement } from '../../../types';
 import MeasurementsChart from './MeasurementsChart';
 import { supabase } from '../../../lib/supabase';
+import toast from 'react-hot-toast';
+import { logger } from '../../../utils/logger';
 
 interface MeasurementsViewProps {
   trainee: Trainee;
@@ -21,7 +23,9 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
 
   // Refresh data on mount to ensure we have the latest measurements
   useEffect(() => {
-    onRefresh?.();
+    if (onRefresh) {
+      onRefresh();
+    }
   }, [onRefresh]);
 
   const filteredMeasurements = useMemo(() => {
@@ -37,43 +41,52 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
     return measurements.filter(m => m.pairMember === selectedMember);
   }, [measurements, trainee.isPair, selectedMember]);
 
-  const handleDeleteMeasurement = async (measurementId: string) => {
-    if (!confirm('האם אתה בטוח שברצונך למחוק מדידה זו?')) {
+  const handleDeleteMeasurement = useCallback(async (measurementId: string) => {
+    // Use a better confirmation approach
+    const confirmed = window.confirm('האם אתה בטוח שברצונך למחוק מדידה זו?');
+    if (!confirmed) {
       return;
     }
 
-    const { error } = await supabase
-      .from('measurements')
-      .delete()
-      .eq('id', measurementId);
+    try {
+      const { error } = await supabase
+        .from('measurements')
+        .delete()
+        .eq('id', measurementId);
 
-    if (!error) {
-      onMeasurementDeleted?.();
-    } else {
-      alert('שגיאה במחיקת המדידה');
+      if (error) {
+        logger.error('Error deleting measurement:', error, 'MeasurementsView');
+        toast.error('שגיאה במחיקת המדידה');
+      } else {
+        toast.success('המדידה נמחקה בהצלחה');
+        onMeasurementDeleted?.();
+      }
+    } catch (error) {
+      logger.error('Unexpected error deleting measurement:', error, 'MeasurementsView');
+      toast.error('שגיאה בלתי צפויה במחיקת המדידה');
     }
-  };
+  }, [onMeasurementDeleted]);
 
-  const latestMeasurement = filteredMeasurements[0];
-  const previousMeasurement = filteredMeasurements[1];
+  const latestMeasurement = useMemo(() => filteredMeasurements[0], [filteredMeasurements]);
+  const previousMeasurement = useMemo(() => filteredMeasurements[1], [filteredMeasurements]);
 
-  const getChange = (current?: number, previous?: number) => {
+  const getChange = useCallback((current?: number, previous?: number) => {
     if (!current || !previous) return null;
     return current - previous;
-  };
+  }, []);
 
-  const getChangePercentage = (current?: number, previous?: number) => {
+  const getChangePercentage = useCallback((current?: number, previous?: number) => {
     if (!current || !previous) return null;
     return ((current - previous) / previous) * 100;
-  };
+  }, []);
 
-  const metrics = [
+  const metrics = useMemo(() => [
     { key: 'weight' as const, label: 'משקל', unit: 'ק״ג', icon: Scale, color: 'emerald' },
     { key: 'bodyFat' as const, label: 'אחוז שומן', unit: '%', icon: TrendingDown, color: 'amber' },
     { key: 'muscleMass' as const, label: 'מסת שריר', unit: 'ק״ג', icon: TrendingUp, color: 'blue' },
     { key: 'waterPercentage' as const, label: 'אחוז מים', unit: '%', icon: BarChart3, color: 'blue' },
     { key: 'metabolicAge' as const, label: 'גיל מטבולי', unit: 'שנים', icon: Activity, color: 'red' },
-  ];
+  ], []);
 
   const colorConfig = {
     emerald: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' },
@@ -83,7 +96,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
   };
 
 
-  const getChangeIndicator = (current: number, previous: number | undefined, isReversed: boolean = false) => {
+  const getChangeIndicator = useCallback((current: number, previous: number | undefined, isReversed: boolean = false) => {
     if (!previous) return null;
     const change = current - previous;
     if (change === 0) return null;
@@ -93,7 +106,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
         {change > 0 ? '+' : ''}{change.toFixed(1)}
       </span>
     );
-  };
+  }, []);
 
   // Advanced statistics
   const statistics = useMemo(() => {
