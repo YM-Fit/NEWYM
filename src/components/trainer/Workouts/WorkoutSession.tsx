@@ -686,27 +686,62 @@ export default function WorkoutSession({
         }
       }
       // W key to open weight pad for active exercise and set
+      // Supports regular sets, supersets, and dropsets
       else if (e.key.toLowerCase() === 'w' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
         e.preventDefault();
         const active = findActiveExerciseAndSet();
         if (active) {
-          openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+          const set = exercises[active.exerciseIndex].sets[active.setIndex];
+          // Check if this is a superset (has superset_exercise_id) - prioritize superset over dropset
+          if (set.set_type === 'superset' || set.superset_exercise_id) {
+            openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_weight', 'משקל סופר-סט (ק״ג)');
+          }
+          // Check if this is a dropset (has dropset_weight) - only if not superset
+          else if (set.set_type === 'dropset' || (set.dropset_weight !== null && set.dropset_weight !== undefined)) {
+            openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_weight', 'משקל דרופ-סט (ק״ג)');
+          }
+          // Regular set
+          else {
+            openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+          }
         }
       }
       // R key to open reps pad for active exercise and set
+      // Supports regular sets, supersets, and dropsets
       else if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
         e.preventDefault();
         const active = findActiveExerciseAndSet();
         if (active) {
-          openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+          const set = exercises[active.exerciseIndex].sets[active.setIndex];
+          // Check if this is a superset (has superset_exercise_id) - prioritize superset over dropset
+          if (set.set_type === 'superset' || set.superset_exercise_id) {
+            openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_reps', 'חזרות סופר-סט');
+          }
+          // Check if this is a dropset (has dropset_reps) - only if not superset
+          else if (set.set_type === 'dropset' || (set.dropset_reps !== null && set.dropset_reps !== undefined)) {
+            openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_reps', 'חזרות דרופ-סט');
+          }
+          // Regular set
+          else {
+            openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+          }
         }
       }
       // E key to open RPE pad for active exercise and set
+      // Supports regular sets and supersets (dropsets don't have RPE)
       else if (e.key.toLowerCase() === 'e' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
         e.preventDefault();
         const active = findActiveExerciseAndSet();
         if (active) {
-          openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
+          const set = exercises[active.exerciseIndex].sets[active.setIndex];
+          // Check if this is a superset (has superset_exercise_id)
+          if (set.set_type === 'superset' || set.superset_exercise_id) {
+            openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_rpe', 'RPE סופר-סט (1-10)');
+          }
+          // Regular set
+          else {
+            openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
+          }
         }
       }
       // Escape to go back (with confirmation if dirty)
