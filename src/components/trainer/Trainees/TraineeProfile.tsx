@@ -1,6 +1,6 @@
 import { ArrowRight, CreditCard as Edit, Calendar, Scale, BarChart3, User, Phone, Mail, Trash2, TrendingUp, ClipboardList, UtensilsCrossed, Key, Home, CheckCircle, Brain, BookOpen, Calculator, Sparkles, Users, Activity, History, FileText, CalendarDays, Bell, TrendingDown, Copy, ChevronDown, ChevronUp } from 'lucide-react';
 import { Trainee, BodyMeasurement, Workout } from '../../../types';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import TDEECalculator from '../Tools/TDEECalculator';
 import TraineeTimeline from './TraineeTimeline';
 import TraineeNotes from './TraineeNotes';
@@ -71,74 +71,105 @@ export default function TraineeProfile({
   const [showNotes, setShowNotes] = useState(false);
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
 
-  // Expand first month by default when workouts tab is active
-  useEffect(() => {
-    if (activeTab === 'workouts' && workouts.length > 0 && expandedMonths.size === 0) {
-      const workoutsByMonth = workouts.reduce((acc, workout) => {
-        const date = new Date(workout.date);
-        const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
-        if (!acc[monthKey]) {
-          acc[monthKey] = [];
-        }
-        acc[monthKey].push(workout);
-        return acc;
-      }, {} as Record<string, Workout[]>);
-
-      const sortedMonths = Object.entries(workoutsByMonth).sort((a, b) => {
-        return b[0].localeCompare(a[0]);
-      });
-
-      if (sortedMonths.length > 0) {
-        setExpandedMonths(new Set([sortedMonths[0][0]]));
+  // Optimized: Expand first month by default when workouts tab is active
+  const workoutsByMonth = useMemo(() => {
+    return workouts.reduce((acc, workout) => {
+      const date = new Date(workout.date);
+      const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+      if (!acc[monthKey]) {
+        acc[monthKey] = [];
       }
+      acc[monthKey].push(workout);
+      return acc;
+    }, {} as Record<string, Workout[]>);
+  }, [workouts]);
+
+  const sortedMonths = useMemo(() => {
+    return Object.entries(workoutsByMonth).sort((a, b) => {
+      return b[0].localeCompare(a[0]);
+    });
+  }, [workoutsByMonth]);
+
+  useEffect(() => {
+    if (activeTab === 'workouts' && workouts.length > 0 && expandedMonths.size === 0 && sortedMonths.length > 0) {
+      setExpandedMonths(new Set([sortedMonths[0][0]]));
     }
-  }, [activeTab, workouts, expandedMonths.size]);
+  }, [activeTab, workouts.length, expandedMonths.size, sortedMonths]);
 
-  const latestMeasurement = measurements[0];
-  const previousMeasurement = measurements[1];
+  // Optimized calculations with useMemo
+  const now = useMemo(() => new Date(), []);
 
-  const weightChange = latestMeasurement && previousMeasurement
-    ? latestMeasurement.weight - previousMeasurement.weight
-    : 0;
+  const latestMeasurement = useMemo(() => measurements[0], [measurements]);
+  const previousMeasurement = useMemo(() => measurements[1], [measurements]);
 
-  const now = new Date();
+  const weightChange = useMemo(() => {
+    return latestMeasurement && previousMeasurement
+      ? latestMeasurement.weight - previousMeasurement.weight
+      : 0;
+  }, [latestMeasurement, previousMeasurement]);
 
-  const totalWorkouts = workouts.length;
-  const totalVolume = workouts.reduce((sum, w) => sum + (w.totalVolume || 0), 0);
+  const totalWorkouts = useMemo(() => workouts.length, [workouts.length]);
+  const totalVolume = useMemo(() => {
+    return workouts.reduce((sum, w) => sum + (w.totalVolume || 0), 0);
+  }, [workouts]);
 
-  const currentMonthWorkouts = workouts.filter((w) => {
-    const date = new Date(w.date);
-    return (
-      date.getFullYear() === now.getFullYear() &&
-      date.getMonth() === now.getMonth() &&
-      date.getTime() <= now.getTime()
-    );
-  });
+  const currentMonthWorkouts = useMemo(() => {
+    return workouts.filter((w) => {
+      const date = new Date(w.date);
+      return (
+        date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth() &&
+        date.getTime() <= now.getTime()
+      );
+    });
+  }, [workouts, now]);
 
-  const plannedWorkouts = workouts.filter((w) => {
-    const date = new Date(w.date);
-    return date.getTime() > now.getTime();
-  });
+  const plannedWorkouts = useMemo(() => {
+    return workouts.filter((w) => {
+      const date = new Date(w.date);
+      return date.getTime() > now.getTime();
+    });
+  }, [workouts, now]);
 
-  const recentWorkouts = currentMonthWorkouts
-    .slice()
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
+  const recentWorkouts = useMemo(() => {
+    return currentMonthWorkouts
+      .slice()
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+  }, [currentMonthWorkouts]);
 
-  const recentMeasurements = measurements.slice(0, 5);
+  const recentMeasurements = useMemo(() => measurements.slice(0, 5), [measurements]);
 
-  const currentMonthLabel = new Intl.DateTimeFormat('he-IL', {
-    month: 'long',
-    year: 'numeric',
-  }).format(now);
+  const currentMonthLabel = useMemo(() => {
+    return new Intl.DateTimeFormat('he-IL', {
+      month: 'long',
+      year: 'numeric',
+    }).format(now);
+  }, [now]);
 
-  const tabs: { id: TabType; label: string; icon: React.ComponentType<{ className?: string; size?: number }> }[] = [
+  const tabs: { id: TabType; label: string; icon: React.ComponentType<{ className?: string; size?: number }> }[] = useMemo(() => [
     { id: 'overview', label: 'סקירה', icon: Sparkles },
     { id: 'workouts', label: 'אימונים', icon: Calendar },
     { id: 'measurements', label: 'מדידות', icon: Scale },
     { id: 'plans', label: 'תוכניות', icon: ClipboardList },
     { id: 'tools', label: 'כלים', icon: Brain },
-  ];
+  ], []);
+
+  const handleTabChange = useCallback((tabId: TabType) => {
+    setActiveTab(tabId);
+  }, []);
+
+  const toggleMonthExpansion = useCallback((monthKey: string) => {
+    setExpandedMonths(prev => {
+      const next = new Set(prev);
+      if (next.has(monthKey)) {
+        next.delete(monthKey);
+      } else {
+        next.add(monthKey);
+      }
+      return next;
+    });
+  }, []);
 
   return (
     <div className="space-y-6 pb-20 lg:pb-6 animate-fade-in">
@@ -315,10 +346,10 @@ export default function TraineeProfile({
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all whitespace-nowrap ${
                     activeTab === tab.id
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-sm'
                       : 'bg-elevated/30 text-muted hover:bg-elevated/50 border border-border/30'
                   }`}
                 >
@@ -815,31 +846,26 @@ export default function TraineeProfile({
             {workouts.length > 0 ? (
               <div className="space-y-3">
                 {(() => {
-                  // Group workouts by month
-                  const workoutsByMonth = workouts.reduce((acc, workout) => {
-                    const date = new Date(workout.date);
-                    const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+                  // Use the already computed workoutsByMonth and add labels
+                  const workoutsByMonthWithLabels = Object.entries(workoutsByMonth).reduce((acc, [monthKey, workouts]) => {
+                    const firstWorkout = workouts[0];
+                    const date = new Date(firstWorkout.date);
                     const monthLabel = new Intl.DateTimeFormat('he-IL', {
                       month: 'long',
                       year: 'numeric',
                     }).format(date);
                     
-                    if (!acc[monthKey]) {
-                      acc[monthKey] = {
-                        label: monthLabel,
-                        workouts: [],
-                      };
-                    }
-                    acc[monthKey].workouts.push(workout);
+                    acc[monthKey] = {
+                      label: monthLabel,
+                      workouts,
+                    };
                     return acc;
                   }, {} as Record<string, { label: string; workouts: Workout[] }>);
 
-                  // Sort months by date (newest first)
-                  const sortedMonths = Object.entries(workoutsByMonth).sort((a, b) => {
-                    return b[0].localeCompare(a[0]);
-                  });
+                  // Use already computed sortedMonths
 
-                  return sortedMonths.map(([monthKey, { label, workouts: monthWorkouts }]) => {
+                  return sortedMonths.map(([monthKey]) => {
+                    const { label, workouts: monthWorkouts } = workoutsByMonthWithLabels[monthKey];
                     const isExpanded = expandedMonths.has(monthKey);
                     const totalVolume = monthWorkouts.reduce((sum, w) => sum + (w.totalVolume || 0), 0);
                     const totalExercises = monthWorkouts.reduce((sum, w) => sum + w.exercises.length, 0);
@@ -850,15 +876,7 @@ export default function TraineeProfile({
                         className="border border-border/30 rounded-xl overflow-hidden bg-elevated/20"
                       >
                         <button
-                          onClick={() => {
-                            const newExpanded = new Set(expandedMonths);
-                            if (isExpanded) {
-                              newExpanded.delete(monthKey);
-                            } else {
-                              newExpanded.add(monthKey);
-                            }
-                            setExpandedMonths(newExpanded);
-                          }}
+                          onClick={() => toggleMonthExpansion(monthKey)}
                           className="w-full p-4 flex items-center justify-between hover:bg-elevated/40 transition-all"
                         >
                           <div className="flex items-center gap-3 flex-1 text-right">
