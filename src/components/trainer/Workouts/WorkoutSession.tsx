@@ -634,26 +634,33 @@ export default function WorkoutSession({
   }, [exercises, minimizedExercises, collapsedSets]);
 
   // Clear focusedSetPart when active set changes (but not on every exercise update)
+  // Only clear if we moved to a completely different exercise or set
+  // IMPORTANT: Don't clear focusedSetPart on every render - only when we actually move to a different set
   const prevActiveSetRef = useRef<{ exerciseIndex: number; setIndex: number } | null>(null);
   useEffect(() => {
     const active = findActiveExerciseAndSet();
     if (active) {
-      // Only clear focusedSetPart if we actually moved to a different set
+      // Only clear focusedSetPart if we actually moved to a different exercise OR different set
       if (prevActiveSetRef.current &&
           (prevActiveSetRef.current.exerciseIndex !== active.exerciseIndex || 
            prevActiveSetRef.current.setIndex !== active.setIndex)) {
-        // We moved to a different set, clear the focused part
-        if (focusedSetPart && 
-            (focusedSetPart.exerciseIndex !== active.exerciseIndex || 
-             focusedSetPart.setIndex !== active.setIndex)) {
-          setFocusedSetPart(null);
-        }
+        // We moved to a different set, clear the focused part only if it's for a different set
+        // Use functional update to access current value without causing dependency issues
+        setFocusedSetPart(prev => {
+          if (prev && 
+              (prev.exerciseIndex !== active.exerciseIndex || 
+               prev.setIndex !== active.setIndex)) {
+            return null;
+          }
+          return prev;
+        });
       }
       prevActiveSetRef.current = active;
     } else {
       prevActiveSetRef.current = null;
     }
-  }, [exercises.length, minimizedExercises.length, collapsedSets.length, findActiveExerciseAndSet, focusedSetPart]);
+    // Don't include focusedSetPart in dependencies to avoid clearing it on every change
+  }, [exercises.length, minimizedExercises.length, collapsedSets.length, findActiveExerciseAndSet]);
 
   // Auto-save workout in realtime when exercises change (with debounce)
   // IMPORTANT: Don't skip on empty exercises - we need to save deletions too!
@@ -733,6 +740,9 @@ export default function WorkoutSession({
         const active = findActiveExerciseAndSet();
         if (active) {
           // Check if we have a focused set part (user clicked on superset/dropset button)
+          // IMPORTANT: Use focusedSetPart if it exists for this exercise and set
+          // This allows shortcuts to work on the last clicked superset/dropset button
+          // Debug: Log to check if focusedSetPart is being used
           if (focusedSetPart && 
               focusedSetPart.exerciseIndex === active.exerciseIndex && 
               focusedSetPart.setIndex === active.setIndex) {
@@ -1268,10 +1278,11 @@ export default function WorkoutSession({
     }
   };
 
-  const openSupersetDropsetNumericPad = (exerciseIndex: number, setIndex: number, field: 'superset_dropset_weight' | 'superset_dropset_reps', label: string) => {
+  const openSupersetDropsetNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'superset_dropset_weight' | 'superset_dropset_reps', label: string) => {
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     setSupersetDropsetNumericPad({ exerciseIndex, setIndex, field, value: currentValue as number, label });
-  };
+    setFocusedSetPart({ exerciseIndex, setIndex, part: 'superset_dropset' });
+  }, [exercises]);
 
   const handleSupersetDropsetNumericPadConfirm = (value: number) => {
     if (supersetDropsetNumericPad) {
@@ -2230,19 +2241,81 @@ export default function WorkoutSession({
           onOpenWeightPad={() => {
                   const active = findActiveExerciseAndSet();
                   if (active) {
-                    openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+                    // Check if we have a focused set part (user clicked on superset/dropset button)
+                    if (focusedSetPart && 
+                        focusedSetPart.exerciseIndex === active.exerciseIndex && 
+                        focusedSetPart.setIndex === active.setIndex) {
+                      // Use the focused part
+                      if (focusedSetPart.part === 'superset') {
+                        openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_weight', 'משקל סופר-סט (ק״ג)');
+                      } else if (focusedSetPart.part === 'superset_dropset') {
+                        openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_dropset_weight', 'משקל דרופ-סט סופר-סט (ק״ג)');
+                      } else if (focusedSetPart.part === 'dropset') {
+                        openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_weight', 'משקל דרופ-סט (ק״ג)');
+                      } else {
+                        openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+                      }
+                    } else {
+                      // No focused part, determine from set type
+                      const set = exercises[active.exerciseIndex].sets[active.setIndex];
+                      if (set.set_type === 'superset' || set.superset_exercise_id) {
+                        openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_weight', 'משקל סופר-סט (ק״ג)');
+                      } else if (set.set_type === 'dropset' || (set.dropset_weight !== null && set.dropset_weight !== undefined)) {
+                        openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_weight', 'משקל דרופ-סט (ק״ג)');
+                      } else {
+                        openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+                      }
+                    }
                   }
                 }}
           onOpenRepsPad={() => {
                   const active = findActiveExerciseAndSet();
                   if (active) {
-                    openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+                    // Check if we have a focused set part (user clicked on superset/dropset button)
+                    if (focusedSetPart && 
+                        focusedSetPart.exerciseIndex === active.exerciseIndex && 
+                        focusedSetPart.setIndex === active.setIndex) {
+                      // Use the focused part
+                      if (focusedSetPart.part === 'superset') {
+                        openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_reps', 'חזרות סופר-סט');
+                      } else if (focusedSetPart.part === 'superset_dropset') {
+                        openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_dropset_reps', 'חזרות דרופ-סט סופר-סט');
+                      } else if (focusedSetPart.part === 'dropset') {
+                        openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_reps', 'חזרות דרופ-סט');
+                      } else {
+                        openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+                      }
+                    } else {
+                      // No focused part, determine from set type
+                      const set = exercises[active.exerciseIndex].sets[active.setIndex];
+                      if (set.set_type === 'superset' || set.superset_exercise_id) {
+                        openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_reps', 'חזרות סופר-סט');
+                      } else if (set.set_type === 'dropset' || (set.dropset_reps !== null && set.dropset_reps !== undefined)) {
+                        openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_reps', 'חזרות דרופ-סט');
+                      } else {
+                        openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+                      }
+                    }
                   }
                 }}
           onOpenRpePad={() => {
                   const active = findActiveExerciseAndSet();
                   if (active) {
-                    openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
+                    // Check if we have a focused set part (user clicked on superset button)
+                    if (focusedSetPart && 
+                        focusedSetPart.exerciseIndex === active.exerciseIndex && 
+                        focusedSetPart.setIndex === active.setIndex &&
+                        focusedSetPart.part === 'superset') {
+                      openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_rpe', 'RPE סופר-סט (1-10)');
+                    } else {
+                      // No focused part or not superset, determine from set type
+                      const set = exercises[active.exerciseIndex].sets[active.setIndex];
+                      if (set.set_type === 'superset' || set.superset_exercise_id) {
+                        openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_rpe', 'RPE סופר-סט (1-10)');
+                      } else {
+                        openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
+                      }
+                    }
                   }
                 }}
         />
