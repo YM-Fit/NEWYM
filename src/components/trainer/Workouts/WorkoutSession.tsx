@@ -220,7 +220,7 @@ export default function WorkoutSession({
     }
   }, []);
 
-  const handleRestoreDraft = () => {
+  const handleRestoreDraft = useCallback(() => {
     if (draftData) {
       setExercises(draftData.exercises);
       setNotes(draftData.notes || '');
@@ -229,13 +229,13 @@ export default function WorkoutSession({
       setShowDraftModal(false);
       setDraftData(null);
     }
-  };
+  }, [draftData, setExercises]);
 
-  const handleDiscardDraft = () => {
+  const handleDiscardDraft = useCallback(() => {
     clearSaved();
     setShowDraftModal(false);
     setDraftData(null);
-  };
+  }, [clearSaved]);
 
   // Create initial workout when first exercise is added
   const createInitialWorkout = useCallback(async (): Promise<string | null> => {
@@ -1074,10 +1074,10 @@ export default function WorkoutSession({
     }
   };
 
-  const openNumericPad = (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe', label: string) => {
+  const openNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe', label: string) => {
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     setNumericPad({ exerciseIndex, setIndex, field, value: currentValue as number, label });
-  };
+  }, [exercises]);
 
   const handleNumericPadConfirm = (value: number) => {
     if (numericPad) {
@@ -1103,7 +1103,7 @@ export default function WorkoutSession({
     }
   };
 
-  const openSupersetNumericPad = (exerciseIndex: number, setIndex: number, field: 'superset_weight' | 'superset_reps' | 'superset_rpe' | 'superset_dropset_weight' | 'superset_dropset_reps', label: string) => {
+  const openSupersetNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'superset_weight' | 'superset_reps' | 'superset_rpe' | 'superset_dropset_weight' | 'superset_dropset_reps', label: string) => {
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     // For superset dropset fields, use the supersetDropsetNumericPad state
     if (field === 'superset_dropset_weight' || field === 'superset_dropset_reps') {
@@ -1111,7 +1111,7 @@ export default function WorkoutSession({
     } else {
       setSupersetNumericPad({ exerciseIndex, setIndex, field: field as 'superset_weight' | 'superset_reps' | 'superset_rpe', value: currentValue as number, label });
     }
-  };
+  }, [exercises]);
 
   const handleSupersetEquipmentSelect = (equipment: Equipment | null) => {
     if (supersetEquipmentSelector) {
@@ -1128,10 +1128,10 @@ export default function WorkoutSession({
     }
   };
 
-  const openDropsetNumericPad = (exerciseIndex: number, setIndex: number, field: 'dropset_weight' | 'dropset_reps', label: string) => {
+  const openDropsetNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'dropset_weight' | 'dropset_reps', label: string) => {
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     setDropsetNumericPad({ exerciseIndex, setIndex, field, value: currentValue as number, label });
-  };
+  }, [exercises]);
 
   const handleDropsetNumericPadConfirm = (value: number) => {
     if (dropsetNumericPad) {
@@ -1636,7 +1636,7 @@ export default function WorkoutSession({
     }
   };
 
-  const totalVolume = useMemo(() => calculateTotalVolume(), [exercises]);
+  const totalVolume = useMemo(() => calculateTotalVolume(), [exercises, calculateTotalVolume]);
 
   // Calculate workout progress stats
   const workoutProgress = useMemo(() => {
@@ -1662,6 +1662,22 @@ export default function WorkoutSession({
       completedExercises: minimizedExercises.length,
     };
   }, [exercises, minimizedExercises]);
+
+  // Calculate workout stats (average weight and reps) - memoized for performance
+  const workoutStats = useMemo(() => {
+    if (exercises.length === 0) {
+      return { avgWeight: 0, avgReps: 0 };
+    }
+    const allSets = exercises.flatMap(ex => ex.sets);
+    const setsWithData = allSets.filter(s => s.weight > 0 && s.reps > 0);
+    const avgWeight = setsWithData.length > 0
+      ? setsWithData.reduce((sum, s) => sum + s.weight, 0) / setsWithData.length
+      : 0;
+    const avgReps = setsWithData.length > 0
+      ? setsWithData.reduce((sum, s) => sum + s.reps, 0) / setsWithData.length
+      : 0;
+    return { avgWeight, avgReps };
+  }, [exercises]);
 
   // Workout timer display
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -1720,29 +1736,17 @@ export default function WorkoutSession({
       )}
 
       {/* Workout Stats - Only show when workout has exercises */}
-      {exercises.length > 0 && (() => {
-        // Calculate average weight and reps
-        const allSets = exercises.flatMap(ex => ex.sets);
-        const setsWithData = allSets.filter(s => s.weight > 0 && s.reps > 0);
-        const avgWeight = setsWithData.length > 0
-          ? setsWithData.reduce((sum, s) => sum + s.weight, 0) / setsWithData.length
-          : 0;
-        const avgReps = setsWithData.length > 0
-          ? setsWithData.reduce((sum, s) => sum + s.reps, 0) / setsWithData.length
-          : 0;
-
-        return (
-          <WorkoutStats
-            totalVolume={totalVolume}
-            averageWeight={avgWeight}
-            averageReps={avgReps}
-            totalSets={workoutProgress.totalSets}
-            totalExercises={workoutProgress.totalExercises}
-            elapsedTime={elapsedTime}
-            isTablet={isTablet}
-          />
-        );
-      })()}
+      {exercises.length > 0 && (
+        <WorkoutStats
+          totalVolume={totalVolume}
+          averageWeight={workoutStats.avgWeight}
+          averageReps={workoutStats.avgReps}
+          totalSets={workoutProgress.totalSets}
+          totalExercises={workoutProgress.totalExercises}
+          elapsedTime={elapsedTime}
+          isTablet={isTablet}
+        />
+      )}
 
       {/* Workout Table - Always show table view instead of cards */}
       <WorkoutTable
