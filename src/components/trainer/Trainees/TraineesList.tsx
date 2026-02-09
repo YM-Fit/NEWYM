@@ -26,6 +26,20 @@ function TraineesList({ trainees, onTraineeClick, onAddTrainee, onQuickEdit, uns
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
+  const handleTraineeClick = useCallback((trainee: Trainee) => {
+    onTraineeClick(trainee);
+  }, [onTraineeClick]);
+
+  const handleClearFilters = useCallback(() => {
+    setFilterBy('all');
+    setSortBy('name');
+    setSearchQuery('');
+  }, []);
+
+  const handleViewModeChange = useCallback((mode: 'grid' | 'list') => {
+    setViewMode(mode);
+  }, []);
+
   // Calculate statistics
   const stats = useMemo(() => {
     const total = trainees.length;
@@ -195,36 +209,38 @@ function TraineesList({ trainees, onTraineeClick, onAddTrainee, onQuickEdit, uns
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`px-4 py-2.5 rounded-xl flex items-center gap-2 font-medium transition-all duration-250 ${
-                showFilters || filterBy !== 'all' || sortBy !== 'name'
-                  ? 'bg-primary/20 text-primary border border-primary/30'
+                showFilters || filterBy !== 'all' || sortBy !== 'name' || searchQuery
+                  ? 'bg-primary/20 text-primary border border-primary/30 shadow-sm'
                   : 'bg-surface/50 text-secondary border border-border/10 hover:bg-surface'
               }`}
             >
               <Filter className="h-4 w-4" />
               <span>סינון</span>
-              {(filterBy !== 'all' || sortBy !== 'name') && (
-                <span className="w-2 h-2 bg-primary rounded-full"></span>
+              {(filterBy !== 'all' || sortBy !== 'name' || searchQuery) && (
+                <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
               )}
             </button>
 
             <div className="flex items-center gap-1 bg-surface/50 rounded-xl p-1 border border-border/10">
               <button
-                onClick={() => setViewMode('grid')}
+                onClick={() => handleViewModeChange('grid')}
                 className={`p-2 rounded-lg transition-all duration-250 ${
                   viewMode === 'grid'
-                    ? 'bg-primary/20 text-primary'
+                    ? 'bg-primary/20 text-primary shadow-sm'
                     : 'text-secondary hover:text-foreground'
                 }`}
+                title="תצוגת רשת"
               >
                 <Grid3x3 className="h-4 w-4" />
               </button>
               <button
-                onClick={() => setViewMode('list')}
+                onClick={() => handleViewModeChange('list')}
                 className={`p-2 rounded-lg transition-all duration-250 ${
                   viewMode === 'list'
-                    ? 'bg-primary/20 text-primary'
+                    ? 'bg-primary/20 text-primary shadow-sm'
                     : 'text-secondary hover:text-foreground'
                 }`}
+                title="תצוגת רשימה"
               >
                 <List className="h-4 w-4" />
               </button>
@@ -265,13 +281,10 @@ function TraineesList({ trainees, onTraineeClick, onAddTrainee, onQuickEdit, uns
                 </select>
               </div>
 
-              {(filterBy !== 'all' || sortBy !== 'name') && (
+              {(filterBy !== 'all' || sortBy !== 'name' || searchQuery) && (
                 <button
-                  onClick={() => {
-                    setFilterBy('all');
-                    setSortBy('name');
-                  }}
-                  className="px-3 py-2 text-sm text-secondary hover:text-foreground flex items-center gap-1 transition-colors duration-250"
+                  onClick={handleClearFilters}
+                  className="px-3 py-2 text-sm text-secondary hover:text-foreground flex items-center gap-1 transition-colors duration-250 hover:bg-surface/50 rounded-lg"
                 >
                   <X className="h-4 w-4" />
                   <span>נקה סינון</span>
@@ -293,7 +306,7 @@ function TraineesList({ trainees, onTraineeClick, onAddTrainee, onQuickEdit, uns
               >
                 <TraineeCard
                   trainee={trainee}
-                  onClick={() => onTraineeClick(trainee)}
+                  onClick={() => handleTraineeClick(trainee)}
                   onQuickEdit={onQuickEdit}
                   unseenWeightsCount={unseenWeightsCounts?.get(trainee.id) || 0}
                   viewMode={viewMode}
