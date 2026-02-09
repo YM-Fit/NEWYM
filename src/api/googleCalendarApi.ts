@@ -649,22 +649,27 @@ export async function getGoogleCalendarEvents(
                       .lte('event_start_time', dateRange.end.toISOString()) as { data: { id: string; google_event_id: string; workout_id: string | null; sync_direction: string }[] | null };
 
                     if (allSyncRecords) {
+                      const deletedWorkoutIds: string[] = [];
                       for (const syncRecord of allSyncRecords) {
                         if (!existingEventIds.has(syncRecord.google_event_id)) {
-                          // Delete workout if exists and sync direction allows it
                           if (syncRecord.workout_id && syncRecord.sync_direction !== 'to_google') {
                             await supabase
                               .from('workouts')
                               .delete()
                               .eq('id', syncRecord.workout_id)
                               .eq('trainer_id', trainerId);
+                            deletedWorkoutIds.push(syncRecord.workout_id);
                           }
 
-                          // Delete sync record
                           await supabase
                             .from('google_calendar_sync')
                             .delete()
                             .eq('id', syncRecord.id);
+                        }
+                      }
+                      if (deletedWorkoutIds.length > 0 && typeof window !== 'undefined') {
+                        for (const workoutId of deletedWorkoutIds) {
+                          window.dispatchEvent(new CustomEvent('workout-deleted', { detail: { workoutId } }));
                         }
                       }
                     }

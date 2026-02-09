@@ -125,10 +125,11 @@ async function syncTrainerCalendar(
 
   const calendarId = credentials.default_calendar_id || "primary";
   const eventsResponse = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?` +
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?` +
     `timeMin=${timeMin.toISOString()}&` +
     `timeMax=${timeMax.toISOString()}&` +
     `singleEvents=true&` +
+    `showDeleted=true&` +
     `orderBy=startTime`,
     {
       headers: {

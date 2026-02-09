@@ -72,11 +72,18 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      // Find trainer by calendar ID
+      let extractedCalendarId = "";
+      if (resourceUri) {
+        const match = resourceUri.match(/\/calendars\/([^/]+)/);
+        if (match) {
+          extractedCalendarId = decodeURIComponent(match[1]);
+        }
+      }
+
       const { data: credentials, error: credError } = await supabase
         .from("trainer_google_credentials")
         .select("trainer_id, default_calendar_id")
-        .eq("default_calendar_id", resourceUri?.split("/")?.pop() || "")
+        .eq("default_calendar_id", extractedCalendarId)
         .maybeSingle();
 
       if (credError || !credentials) {
@@ -162,10 +169,11 @@ Deno.serve(async (req: Request) => {
         timeMax.setDate(timeMax.getDate() + 7);
 
         const eventsResponse = await fetch(
-          `https://www.googleapis.com/calendar/v3/calendars/${creds.default_calendar_id}/events?` +
+          `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(creds.default_calendar_id)}/events?` +
           `timeMin=${timeMin.toISOString()}&` +
           `timeMax=${timeMax.toISOString()}&` +
           `singleEvents=true&` +
+          `showDeleted=true&` +
           `orderBy=startTime`,
           {
             headers: {

@@ -605,6 +605,14 @@ export default function TodayTraineesSection({
                   dateRange: `${today.toISOString()} - ${dayAfterTomorrow.toISOString()}`,
                 }, 'TodayTraineesSection');
               }
+            } else if (payload.eventType === 'DELETE') {
+              logger.info('🔄 Realtime: Workout deleted (no date in payload), refreshing dashboard', {
+                workoutId: payload.old?.id,
+                event: payload.eventType,
+              }, 'TodayTraineesSection');
+              if (!isLoadingRef.current && loadTodayTraineesRef.current) {
+                loadTodayTraineesRef.current(true);
+              }
             } else {
               logger.debug('⏭️ Skipping refresh - no workout date in payload', {
                 payloadKeys: Object.keys(payload.new || payload.old || {}),
@@ -682,6 +690,14 @@ export default function TodayTraineesSection({
                   eventStartTime,
                   dateRange: `${today.toISOString()} - ${dayAfterTomorrow.toISOString()}`,
                 }, 'TodayTraineesSection');
+              }
+            } else if (payload.eventType === 'DELETE') {
+              logger.info('🔄 Realtime: Calendar sync deleted (no date in payload), refreshing dashboard', {
+                syncId: payload.old?.id,
+                event: payload.eventType,
+              }, 'TodayTraineesSection');
+              if (!isLoadingRef.current && loadTodayTraineesRef.current) {
+                loadTodayTraineesRef.current(true);
               }
             } else {
               logger.debug('⏭️ Skipping refresh - no event_start_time in payload', {
