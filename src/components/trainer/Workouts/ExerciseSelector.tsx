@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, X, Plus, Clock, PlusCircle, Trash2, Info, Edit2, TrendingUp, Star, Zap, Pencil, History } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Search, X, Plus, Clock, PlusCircle, Trash2, Info, Edit2, TrendingUp, Star, Zap, Pencil, History, Heart, Shield, Flame, Dumbbell, Target, Filter, SortAsc, SortDesc, Calendar } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
@@ -9,6 +9,7 @@ import { useIsTouchDevice } from '../../../hooks/useIsTouchDevice';
 import ExerciseInstructionsModal from '../../common/ExerciseInstructionsModal';
 import EditExerciseInstructionsModal from './EditExerciseInstructionsModal';
 import { Modal } from '../../ui/Modal';
+import { usePagination } from '../../../hooks/usePagination';
 
 interface Exercise {
   id: string;
@@ -30,7 +31,40 @@ interface RecentExercise {
   lastReps: number;
   lastDate: string;
   muscleGroupId: string;
+  volume?: number;
+  frequency?: number; // How many times this exercise was done recently
 }
+
+// Muscle group icons and colors mapping
+const muscleGroupIcons: Record<string, typeof Dumbbell> = {
+  'חזה': Heart,
+  'גב': Shield,
+  'כתפיים': Zap,
+  'רגליים': Flame,
+  'זרועות': Dumbbell,
+  'בטן': Target,
+  'ישבן': Flame,
+  'default': Dumbbell,
+};
+
+const muscleGroupColors: Record<string, { bg: string; text: string; border: string }> = {
+  'חזה': { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30' },
+  'גב': { bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/30' },
+  'כתפיים': { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' },
+  'רגליים': { bg: 'bg-pink-500/15', text: 'text-pink-400', border: 'border-pink-500/30' },
+  'זרועות': { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' },
+  'בטן': { bg: 'bg-green-500/15', text: 'text-green-400', border: 'border-green-500/30' },
+  'ישבן': { bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/30' },
+  'default': { bg: 'bg-slate-500/15', text: 'text-slate-400', border: 'border-slate-500/30' },
+};
+
+const getMuscleGroupIcon = (groupName: string) => {
+  return muscleGroupIcons[groupName] || muscleGroupIcons['default'];
+};
+
+const getMuscleGroupColor = (groupName: string) => {
+  return muscleGroupColors[groupName] || muscleGroupColors['default'];
+};
 
 interface ExerciseSelectorProps {
   traineeId?: string;
@@ -57,6 +91,12 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
   const [exerciseLastData, setExerciseLastData] = useState<Map<string, { weight: number; reps: number; date: string }>>(new Map());
   const [showRecentSection, setShowRecentSection] = useState(true);
   const [confirmationExercise, setConfirmationExercise] = useState<{ exercise: Exercise; lastData: { weight: number; reps: number; date: string } } | null>(null);
+  
+  // Advanced search and filtering
+  const [searchFilter, setSearchFilter] = useState<'all' | 'name' | 'muscleGroup'>('all');
+  const [sortBy, setSortBy] = useState<'name' | 'lastDate' | 'frequency'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('expanded');
 
   // Enable on-screen keyboard for specific fields on tablet/touch devices
   const [nameKeyboardEnabled, setNameKeyboardEnabled] = useState(false);
@@ -75,10 +115,10 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
     if (traineeId) {
       loadRecentExercises();
     }
-  }, [traineeId]);
+  }, [traineeId, loadRecentExercises]);
 
-  // Load recent exercises for this trainee
-  const loadRecentExercises = async () => {
+  // Load recent exercises for this trainee with frequency calculation
+  const loadRecentExercises = useCallback(async () => {
     if (!traineeId) return;
 
     try {
@@ -93,7 +133,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
         .eq('trainee_id', traineeId)
         .eq('workouts.is_completed', true)
         .order('workouts(workout_date)', { ascending: false })
-        .limit(50);
+        .limit(100); // Increased limit to calculate frequency better
 
       if (error) {
         logger.error('Error loading recent exercises:', error, 'ExerciseSelector');
@@ -101,19 +141,26 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
       }
 
       if (data) {
-        // Group by exercise and get latest data
+        // Group by exercise and get latest data with frequency
         const exerciseMap = new Map<string, RecentExercise>();
         const lastDataMap = new Map<string, { weight: number; reps: number; date: string }>();
+        const frequencyMap = new Map<string, number>();
 
         data.forEach((item: any) => {
           if (!item.exercises || !item.exercise_sets?.length) return;
           
           const exerciseId = item.exercises.id;
+          
+          // Count frequency
+          frequencyMap.set(exerciseId, (frequencyMap.get(exerciseId) || 0) + 1);
+          
           const bestSet = item.exercise_sets.reduce((best: any, set: any) => {
             const volume = (set.weight || 0) * (set.reps || 0);
             const bestVolume = (best?.weight || 0) * (best?.reps || 0);
             return volume > bestVolume ? set : best;
           }, item.exercise_sets[0]);
+
+          const volume = (bestSet?.weight || 0) * (bestSet?.reps || 0);
 
           if (!exerciseMap.has(exerciseId)) {
             exerciseMap.set(exerciseId, {
@@ -122,8 +169,30 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
               lastWeight: bestSet?.weight || 0,
               lastReps: bestSet?.reps || 0,
               lastDate: item.workouts.workout_date,
-              muscleGroupId: item.exercises.muscle_group_id
+              muscleGroupId: item.exercises.muscle_group_id,
+              volume,
+              frequency: frequencyMap.get(exerciseId) || 1
             });
+          } else {
+            // Update if this is a more recent workout
+            const existing = exerciseMap.get(exerciseId)!;
+            const existingDate = new Date(existing.lastDate);
+            const newDate = new Date(item.workouts.workout_date);
+            if (newDate > existingDate) {
+              exerciseMap.set(exerciseId, {
+                ...existing,
+                lastWeight: bestSet?.weight || 0,
+                lastReps: bestSet?.reps || 0,
+                lastDate: item.workouts.workout_date,
+                volume,
+                frequency: frequencyMap.get(exerciseId) || 1
+              });
+            } else {
+              exerciseMap.set(exerciseId, {
+                ...existing,
+                frequency: frequencyMap.get(exerciseId) || 1
+              });
+            }
           }
 
           if (!lastDataMap.has(exerciseId)) {
@@ -135,15 +204,24 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
           }
         });
 
-        // Get the 8 most recent unique exercises
-        const recent = Array.from(exerciseMap.values()).slice(0, 8);
+        // Sort by frequency and recency, then get top exercises
+        const recent = Array.from(exerciseMap.values())
+          .sort((a, b) => {
+            // Sort by frequency first, then by date
+            if (b.frequency! !== a.frequency!) {
+              return b.frequency! - a.frequency!;
+            }
+            return new Date(b.lastDate).getTime() - new Date(a.lastDate).getTime();
+          })
+          .slice(0, 12); // Increased to 12 for better selection
+        
         setRecentExercises(recent);
         setExerciseLastData(lastDataMap);
       }
     } catch (error) {
       logger.error('Error loading recent exercises:', error, 'ExerciseSelector');
     }
-  };
+  }, [traineeId]);
 
   const loadMuscleGroupsAndExercises = async () => {
     const { data: groups, error: groupsError } = await supabase
@@ -360,12 +438,52 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
     }
   };
 
-  const filteredGroups = muscleGroups.map((group) => ({
-    ...group,
-    exercises: group.exercises.filter((ex) =>
-      ex.name.toLowerCase().includes(searchTerm.toLowerCase())
-    ),
-  })).filter((group) => group.exercises.length > 0 || !searchTerm);
+  // Enhanced filtering and sorting
+  const filteredGroups = useMemo(() => {
+    let filtered = muscleGroups.map((group) => {
+      let exercises = group.exercises.filter((ex) => {
+        if (!searchTerm) return true;
+        
+        const searchLower = searchTerm.toLowerCase();
+        switch (searchFilter) {
+          case 'name':
+            return ex.name.toLowerCase().includes(searchLower);
+          case 'muscleGroup':
+            return group.name.toLowerCase().includes(searchLower);
+          default:
+            return ex.name.toLowerCase().includes(searchLower) || 
+                   group.name.toLowerCase().includes(searchLower);
+        }
+      });
+
+      // Sort exercises
+      exercises = [...exercises].sort((a, b) => {
+        let comparison = 0;
+        
+        switch (sortBy) {
+          case 'name':
+            comparison = a.name.localeCompare(b.name, 'he');
+            break;
+          case 'lastDate':
+            const aDate = exerciseLastData.get(a.id)?.date || '';
+            const bDate = exerciseLastData.get(b.id)?.date || '';
+            comparison = bDate.localeCompare(aDate);
+            break;
+          case 'frequency':
+            const aFreq = recentExercises.find(r => r.exerciseId === a.id)?.frequency || 0;
+            const bFreq = recentExercises.find(r => r.exerciseId === b.id)?.frequency || 0;
+            comparison = bFreq - aFreq;
+            break;
+        }
+        
+        return sortOrder === 'asc' ? comparison : -comparison;
+      });
+
+      return { ...group, exercises };
+    }).filter((group) => group.exercises.length > 0 || !searchTerm);
+
+    return filtered;
+  }, [muscleGroups, searchTerm, searchFilter, sortBy, sortOrder, exerciseLastData, recentExercises]);
 
   // Get exercise object from recent exercise data
   const getExerciseFromRecent = (recent: RecentExercise): Exercise | undefined => {
@@ -439,8 +557,8 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
           </button>
         </div>
 
-        {/* Search */}
-        <div className="p-4 lg:p-6 border-b border-border">
+        {/* Search with Advanced Filters */}
+        <div className="p-4 lg:p-6 border-b border-border space-y-3">
           <div className="relative">
             <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted" />
             {preventKeyboard ? (
@@ -470,6 +588,47 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
               />
             )}
           </div>
+          
+          {/* Advanced Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 bg-surface/50 rounded-lg p-2 border border-border">
+              <Filter className="h-4 w-4 text-muted" />
+              <select
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value as 'all' | 'name' | 'muscleGroup')}
+                className="bg-transparent border-none text-sm text-foreground focus:outline-none cursor-pointer"
+              >
+                <option value="all">הכל</option>
+                <option value="name">שם תרגיל</option>
+                <option value="muscleGroup">קבוצת שריר</option>
+              </select>
+            </div>
+            
+            <div className="flex items-center gap-2 bg-surface/50 rounded-lg p-2 border border-border">
+              <Calendar className="h-4 w-4 text-muted" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'name' | 'lastDate' | 'frequency')}
+                className="bg-transparent border-none text-sm text-foreground focus:outline-none cursor-pointer"
+              >
+                <option value="name">שם</option>
+                <option value="lastDate">תאריך אחרון</option>
+                <option value="frequency">תדירות</option>
+              </select>
+            </div>
+            
+            <button
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="p-2 bg-surface/50 hover:bg-surface border border-border rounded-lg transition-all"
+              title={sortOrder === 'asc' ? 'עולה' : 'יורד'}
+            >
+              {sortOrder === 'asc' ? (
+                <SortAsc className="h-4 w-4 text-muted" />
+              ) : (
+                <SortDesc className="h-4 w-4 text-muted" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Recent Exercises Section */}
@@ -494,6 +653,18 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                 const exercise = getExerciseFromRecent(recent);
                 if (!exercise) return null;
                 
+                const muscleGroup = muscleGroups.find(g => g.id === recent.muscleGroupId);
+                const groupName = muscleGroup?.name || '';
+                const colors = getMuscleGroupColor(groupName);
+                const Icon = getMuscleGroupIcon(groupName);
+                
+                // Calculate strength indicator (based on volume and frequency)
+                const volume = recent.volume || (recent.lastWeight * recent.lastReps);
+                const frequency = recent.frequency || 1;
+                const strengthScore = volume * (1 + frequency * 0.1);
+                const isStrong = strengthScore > 1000; // Threshold for "strong" exercise
+                const isWeak = strengthScore < 300; // Threshold for "weak" exercise
+                
                 return (
                   <button
                     key={recent.exerciseId}
@@ -501,8 +672,29 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                       handleExerciseSelect(exercise);
                     }}
                     disabled={loadingExerciseId === exercise.id}
-                    className="p-4 lg:p-5 bg-surface hover:bg-emerald-500/10 border border-border hover:border-emerald-500/40 rounded-xl transition-all text-right group btn-press-feedback shadow-sm hover:shadow-md"
+                    className={`p-4 lg:p-5 bg-surface hover:bg-emerald-500/10 border rounded-xl transition-all text-right group btn-press-feedback shadow-sm hover:shadow-md relative overflow-hidden ${
+                      isStrong ? 'border-emerald-500/40 hover:border-emerald-500/60' :
+                      isWeak ? 'border-amber-500/30 hover:border-amber-500/50' :
+                      'border-border hover:border-emerald-500/40'
+                    }`}
                   >
+                    {/* Strength indicator badge */}
+                    {isStrong && (
+                      <div className="absolute top-2 left-2 bg-emerald-500/20 border border-emerald-500/40 rounded-full p-1">
+                        <Star className="h-3 w-3 text-emerald-400" />
+                      </div>
+                    )}
+                    {isWeak && (
+                      <div className="absolute top-2 left-2 bg-amber-500/20 border border-amber-500/40 rounded-full p-1">
+                        <TrendingUp className="h-3 w-3 text-amber-400" />
+                      </div>
+                    )}
+                    
+                    {/* Muscle group icon */}
+                    <div className={`${colors.bg} ${colors.border} border rounded-lg p-2 mb-2 w-fit`}>
+                      <Icon className={`h-4 w-4 ${colors.text}`} />
+                    </div>
+                    
                     <div className="font-semibold text-foreground group-hover:text-emerald-400 text-sm lg:text-base truncate mb-2">
                       {recent.exerciseName}
                     </div>
@@ -512,8 +704,15 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                       <span className="text-muted">×</span>
                       <span className="font-bold text-blue-400">{recent.lastReps}</span>
                     </div>
-                    <div className="text-[10px] lg:text-xs text-muted bg-surface/50 px-2 py-0.5 rounded-md inline-block">
-                      {formatRelativeDate(recent.lastDate)}
+                    <div className="flex items-center justify-between text-[10px] lg:text-xs">
+                      <div className="text-muted bg-surface/50 px-2 py-0.5 rounded-md">
+                        {formatRelativeDate(recent.lastDate)}
+                      </div>
+                      {frequency && frequency > 1 && (
+                        <div className={`${colors.bg} ${colors.text} px-2 py-0.5 rounded-md`}>
+                          {frequency}x
+                        </div>
+                      )}
                     </div>
                   </button>
                 );
@@ -530,29 +729,55 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
           <div className="flex-1 overflow-y-auto p-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1 space-y-2.5">
-                <h3 className="font-bold text-foreground mb-4 text-base lg:text-lg">קבוצות שרירים</h3>
-                {filteredGroups.map((group) => (
-                  <button
-                    key={group.id}
-                    onClick={() => setSelectedGroup(group.id)}
-                    className={`w-full text-right px-4 lg:px-5 py-3.5 lg:py-4 rounded-xl transition-all font-medium ${
-                      selectedGroup === group.id
-                        ? 'bg-emerald-500 text-white shadow-md border-2 border-emerald-600'
-                        : 'bg-surface hover:bg-surface/80 text-foreground border border-border hover:border-emerald-500/30 hover:shadow-sm'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span>{group.name}</span>
-                      <span className={`text-sm px-2 py-0.5 rounded-lg ${
-                        selectedGroup === group.id 
-                          ? 'bg-emerald-600/30 text-emerald-100' 
-                          : 'bg-elevated/50 text-muted'
-                      }`}>
-                        {group.exercises.length}
-                      </span>
-                    </div>
-                  </button>
-                ))}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-foreground text-base lg:text-lg">קבוצות שרירים</h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setViewMode(viewMode === 'compact' ? 'expanded' : 'compact')}
+                      className="p-2 hover:bg-surface/50 rounded-lg transition-all"
+                      title={viewMode === 'compact' ? 'תצוגה מורחבת' : 'תצוגה קומפקטית'}
+                    >
+                      {viewMode === 'compact' ? <Plus className="h-4 w-4 text-muted" /> : <X className="h-4 w-4 text-muted" />}
+                    </button>
+                  </div>
+                </div>
+                {filteredGroups.map((group) => {
+                  const Icon = getMuscleGroupIcon(group.name);
+                  const colors = getMuscleGroupColor(group.name);
+                  const isSelected = selectedGroup === group.id;
+                  
+                  return (
+                    <button
+                      key={group.id}
+                      onClick={() => setSelectedGroup(group.id)}
+                      className={`w-full text-right px-4 lg:px-5 py-3.5 lg:py-4 rounded-xl transition-all font-medium ${
+                        isSelected
+                          ? 'bg-emerald-500 text-white shadow-md border-2 border-emerald-600'
+                          : `${colors.bg} ${colors.border} border hover:shadow-sm`
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <div className={`p-1.5 rounded-lg flex-shrink-0 ${
+                            isSelected ? 'bg-emerald-600/30' : colors.bg
+                          }`}>
+                            <Icon className={`h-4 w-4 ${isSelected ? 'text-white' : colors.text}`} />
+                          </div>
+                          <span className={`truncate ${isSelected ? 'text-white' : colors.text}`}>
+                            {group.name}
+                          </span>
+                        </div>
+                        <span className={`text-sm px-2 py-0.5 rounded-lg flex-shrink-0 ${
+                          isSelected 
+                            ? 'bg-emerald-600/30 text-emerald-100' 
+                            : `${colors.bg} ${colors.text}`
+                        }`}>
+                          {group.exercises.length}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="lg:col-span-2">

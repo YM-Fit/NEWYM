@@ -300,37 +300,27 @@ export default function DayEditView({
           const isMinimized = selectedExerciseIndex !== exerciseIndex;
 
           return (
-            <div
+            <WorkoutExerciseCard
               key={exercise.tempId}
-              className={`premium-card-static transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] ${
-                !isMinimized ? '' : 'bg-gradient-to-br from-emerald-100 to-emerald-100 border-r-4 border-emerald-500'
-              }`}
-              style={{
-                height: isMinimized ? '72px' : 'auto',
-                overflow: isMinimized ? 'hidden' : 'visible',
-              }}
-            >
-              <WorkoutExerciseCard
-                exercise={exercise}
-                exerciseIndex={exerciseIndex}
-                isMinimized={isMinimized}
-                onComplete={onCompleteExercise}
-                onRemove={onRemoveExercise}
-                onShowInstructions={onShowInstructions}
-                onUpdateExercise={onUpdateExercise}
-                onAddSet={onAddSet}
-                onRemoveSet={onRemoveSet}
-                onUpdateSet={onUpdateSet}
-                onDuplicateSet={onDuplicateSet}
-                onOpenNumericPad={onOpenNumericPad}
-                onOpenEquipmentSelector={onOpenEquipmentSelector}
-                onOpenSupersetSelector={onOpenSupersetSelector}
-                onOpenSupersetNumericPad={onOpenSupersetNumericPad}
-                onOpenSupersetEquipmentSelector={onOpenSupersetEquipmentSelector}
-                onOpenDropsetNumericPad={onOpenDropsetNumericPad}
-                onOpenSupersetDropsetNumericPad={onOpenSupersetDropsetNumericPad}
-              />
-            </div>
+              exercise={exercise}
+              exerciseIndex={exerciseIndex}
+              isMinimized={isMinimized}
+              onComplete={onCompleteExercise}
+              onRemove={onRemoveExercise}
+              onShowInstructions={onShowInstructions}
+              onUpdateExercise={onUpdateExercise}
+              onAddSet={onAddSet}
+              onRemoveSet={onRemoveSet}
+              onUpdateSet={onUpdateSet}
+              onDuplicateSet={onDuplicateSet}
+              onOpenNumericPad={onOpenNumericPad}
+              onOpenEquipmentSelector={onOpenEquipmentSelector}
+              onOpenSupersetSelector={onOpenSupersetSelector}
+              onOpenSupersetNumericPad={onOpenSupersetNumericPad}
+              onOpenSupersetEquipmentSelector={onOpenSupersetEquipmentSelector}
+              onOpenDropsetNumericPad={onOpenDropsetNumericPad}
+              onOpenSupersetDropsetNumericPad={onOpenSupersetDropsetNumericPad}
+            />
           );
         })}
       </div>
