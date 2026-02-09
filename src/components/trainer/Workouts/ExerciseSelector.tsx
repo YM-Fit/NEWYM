@@ -643,7 +643,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                 <div className="p-1.5 bg-amber-500/20 rounded-lg">
                   <Zap className="h-4 w-4 lg:h-5 lg:w-5 text-amber-400" />
                 </div>
-                <h3 className="font-bold text-foreground text-sm lg:text-base">תרגילים אחרונים ({recentExercises.length})</h3>
+                <h3 className="font-bold !text-black text-sm lg:text-base">תרגילים אחרונים ({recentExercises.length})</h3>
               </div>
               <ChevronDown className="h-4 w-4 text-muted" />
             </button>
@@ -657,7 +657,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                 <div className="p-1.5 bg-amber-500/20 rounded-lg">
                   <Zap className="h-4 w-4 lg:h-5 lg:w-5 text-amber-400" />
                 </div>
-                <h3 className="font-bold text-foreground text-base lg:text-lg">תרגילים אחרונים</h3>
+                <h3 className="font-bold !text-black text-base lg:text-lg">תרגילים אחרונים</h3>
               </div>
               <button
                 onClick={() => setShowRecentSection(false)}
