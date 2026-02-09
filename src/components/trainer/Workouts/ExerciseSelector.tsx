@@ -713,21 +713,21 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
                       <Icon className={`h-4 w-4 ${colors.text}`} />
                     </div>
                     
-                    <div className="font-semibold text-foreground group-hover:text-emerald-400 text-sm lg:text-base truncate mb-2">
+                    <div className="font-semibold !text-black group-hover:text-emerald-400 text-sm lg:text-base truncate mb-2">
                       {recent.exerciseName}
                     </div>
                     <div className="flex items-center gap-2 text-xs lg:text-sm mb-2">
                       <span className="font-bold text-emerald-400">{recent.lastWeight}</span>
-                      <span className="text-muted">ק״ג</span>
-                      <span className="text-muted">×</span>
+                      <span className="!text-black">ק״ג</span>
+                      <span className="!text-black">×</span>
                       <span className="font-bold text-blue-400">{recent.lastReps}</span>
                     </div>
                     <div className="flex items-center justify-between text-[10px] lg:text-xs">
-                      <div className="text-muted bg-surface/50 px-2 py-0.5 rounded-md">
+                      <div className="!text-black bg-surface/50 px-2 py-0.5 rounded-md">
                         {formatRelativeDate(recent.lastDate)}
                       </div>
                       {frequency && frequency > 1 && (
-                        <div className={`${colors.bg} ${colors.text} px-2 py-0.5 rounded-md`}>
+                        <div className={`${colors.bg} !text-black px-2 py-0.5 rounded-md`}>
                           {frequency}x
                         </div>
                       )}
