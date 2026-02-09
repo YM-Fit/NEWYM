@@ -149,7 +149,7 @@ function TraineesList({ trainees, onTraineeClick, onAddTrainee, onQuickEdit, uns
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
         <div className="premium-card-static p-4 bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
           <div className="flex items-center justify-between mb-2">
             <Users className="h-5 w-5 text-primary" />

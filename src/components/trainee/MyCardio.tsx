@@ -103,7 +103,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
       ) : (
         <>
           {latestActivity && (
-            <div className="premium-card-static p-6">
+            <div className="premium-card-static p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
                   <Target className="h-5 w-5 text-emerald-400" />
@@ -161,7 +161,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[var(--color-border)]">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-4 border-t border-[var(--color-border)]">
                 {latestActivity.frequency > 0 && (
                   <div className="text-center p-3 bg-[var(--color-bg-surface)] rounded-xl border border-[var(--color-border)]">
                     <Calendar className="h-5 w-5 text-sky-400 mx-auto mb-2" />
@@ -194,7 +194,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
           )}
 
           {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
               <div className="stat-card p-5 bg-gradient-to-br from-sky-500/20 to-sky-500/5">
                 <div className="flex items-start justify-between mb-2">
                   <div>
@@ -261,7 +261,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
           )}
 
           {activities.length >= 2 && (
-            <div className="premium-card-static p-6">
+            <div className="premium-card-static p-4 sm:p-6">
               <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-sky-400" />
                 התקדמות לאורך זמן
@@ -293,7 +293,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
             </div>
           )}
 
-          <div className="premium-card-static p-6">
+          <div className="premium-card-static p-4 sm:p-6">
             <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
               <Calendar className="h-5 w-5 text-sky-400" />
               היסטוריית שבועות

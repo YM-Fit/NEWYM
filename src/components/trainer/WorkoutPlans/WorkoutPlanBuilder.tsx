@@ -942,7 +942,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-sm font-semibold text-muted700 mb-2">ימי אימון בשבוע</label>
               <select
@@ -976,7 +976,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-sm font-semibold text-muted700 mb-2">תאריך התחלה</label>
               <input
@@ -1124,7 +1124,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           </div>
 
           <div className="flex gap-3 pt-2">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
             <button
               type="button"
               onClick={() => {

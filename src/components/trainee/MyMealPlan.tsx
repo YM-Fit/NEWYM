@@ -294,14 +294,14 @@ export default function MyMealPlan({ traineeId }: MyMealPlanProps) {
         )}
 
         {meals.length === 0 ? (
-          <div className="premium-card p-8 text-center">
+          <div className="premium-card p-5 sm:p-8 text-center">
             <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-300">
               <AlertCircle className="w-8 h-8 text-amber-500" />
             </div>
             <p className="text-secondary">אין ארוחות בתפריט</p>
           </div>
         ) : filteredMeals.length === 0 ? (
-          <div className="premium-card p-8 text-center">
+          <div className="premium-card p-5 sm:p-8 text-center">
             <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary-300">
               <Search className="w-8 h-8 text-primary-600" />
             </div>
@@ -374,7 +374,7 @@ function PlanHeader({
           <p className="text-white/80 text-sm mb-4 leading-relaxed">{mealPlan.description}</p>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
           {mealPlan.daily_calories && (
             <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center border border-white/10 hover:bg-white/25 transition-all">
               <Flame className="w-5 h-5 mx-auto mb-1 drop-shadow-sm" />
@@ -392,7 +392,7 @@ function PlanHeader({
         </div>
 
         {hasMacroTargets && (
-          <div className="grid grid-cols-3 gap-2 mt-3">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mt-3">
             {mealPlan.protein_grams && (
               <div className="bg-white/15 backdrop-blur-sm rounded-lg p-2 text-center border border-white/10">
                 <p className="text-sm font-bold">{mealPlan.protein_grams} גרם</p>
@@ -811,7 +811,7 @@ function DailySummary({ totals, mealPlan }: { totals: { calories: number; protei
         <DailySummaryIcon className="w-5 h-5 text-primary-600" />
         סיכום יומי (מהארוחות)
       </h3>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
         <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 text-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-full h-1 bg-primary-100">
             <div 

@@ -231,7 +231,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
       <div className="space-y-4 pb-4">
         <Skeleton variant="rounded" height={60} className="w-full" />
         <div className="premium-card-static p-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <Skeleton key={i} variant="rounded" height={80} />
             ))}
@@ -265,7 +265,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
               </span>
             </div>
             <div className="p-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <StatCard
                   icon={Scale}
                   label="משקל"
@@ -324,7 +324,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
                 <Ruler className="w-5 h-5 text-emerald-400" />
                 <h3 className="font-bold text-[var(--color-text-primary)]">היקפים</h3>
               </div>
-              <div className="p-4 grid grid-cols-2 gap-3">
+              <div className="p-3 sm:p-4 grid grid-cols-2 gap-2 sm:gap-3">
                 {latestMeasurement.chest_back && (
                   <CircumferenceItem label="חזה/גב" value={latestMeasurement.chest_back} />
                 )}
@@ -348,7 +348,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
           )}
         </>
       ) : (
-        <div className="premium-card-static p-8 text-center">
+        <div className="premium-card-static p-5 sm:p-8 text-center">
           <div className="w-16 h-16 bg-emerald-500/15 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
             <Scale className="w-8 h-8 text-emerald-400" />
           </div>
@@ -471,7 +471,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
                 </button>
 
                 {expandedMeasurement === m.id && (
-                  <div className="mt-4 pt-4 border-t border-[var(--color-border)] grid grid-cols-2 gap-3 text-sm">
+                  <div className="mt-4 pt-4 border-t border-[var(--color-border)] grid grid-cols-2 gap-2 sm:gap-3 text-sm">
                     {m.weight && (
                       <div>
                         <span className="text-[var(--color-text-muted)]">משקל:</span>{' '}
