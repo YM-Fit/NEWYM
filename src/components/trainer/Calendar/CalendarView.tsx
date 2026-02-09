@@ -111,7 +111,6 @@ interface DraggableWeekEventItemProps {
 
 // Real-time refresh interval - shorter for better sync with Google Calendar
 const REFRESH_INTERVAL_MS = 10000; // 10 seconds for real-time updates
-const CACHE_DURATION_MS = 20000; // Cache events for 20 seconds (reduced for better responsiveness)
 
 // Calendar view modes
 type ViewMode = 'month' | 'week' | 'day';
@@ -721,24 +720,10 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     }
   }, [currentDate, viewMode]);
 
-  const loadEvents = useCallback(async (silent: boolean = false, forceRefresh: boolean = false) => {
+  const loadEvents = useCallback(async (silent: boolean = false) => {
     if (!user || !connected) {
       setLoading(false);
       return;
-    }
-
-    // Check cache first for non-silent requests (unless forcing refresh)
-    // Silent refreshes should ALWAYS fetch fresh data to detect changes
-    if (!forceRefresh && !silent && eventsCacheRef.current) {
-      const { events: cachedEvents, timestamp, dateKey } = eventsCacheRef.current;
-      const cacheAge = Date.now() - timestamp;
-
-      if (dateKey === cacheKey && cacheAge < CACHE_DURATION_MS) {
-        setEvents(cachedEvents);
-        setLoading(false);
-        setIsRefreshing(false);
-        return;
-      }
     }
 
     try {
@@ -748,38 +733,26 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         setIsRefreshing(true);
       }
 
-      // Use cached data from sync table first, only fallback to Google API if needed
-      // For silent refreshes, we want fresh data to detect changes
-      const result = await getGoogleCalendarEvents(
-        user.id,
-        dateRange,
-        { useCache: !silent, forceRefresh: forceRefresh || silent }
-      );
-      
+      const result = await getGoogleCalendarEvents(user.id, dateRange);
+
       if (result.success && result.data) {
         setEvents(result.data);
-        setAuthError(null); // Clear any previous auth error
-        // Update cache
+        setAuthError(null);
         eventsCacheRef.current = {
           events: result.data,
           timestamp: Date.now(),
           dateKey: cacheKey,
         };
         lastRefreshRef.current = new Date();
-        if (silent) {
-          logger.info('Calendar events refreshed automatically', { eventCount: result.data.length }, 'CalendarView');
-        }
       } else if (result.error) {
-        // Check if it's an auth/permission error
-        const isAuthError = result.error.includes('הרשאה') || 
-                           result.error.includes('חיבור מחדש') || 
+        const isAuthError = result.error.includes('הרשאה') ||
+                           result.error.includes('חיבור מחדש') ||
                            result.error.includes('פג') ||
                            result.error.includes('Token') ||
                            result.error.includes('OAuth');
-        
+
         if (isAuthError) {
           setAuthError(result.error);
-          // Don't show toast for silent refreshes on auth errors
           if (!silent) {
             toast.error('נדרש חיבור מחדש ל-Google Calendar');
           }
@@ -799,7 +772,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
   }, [user, connected, dateRange, cacheKey]);
 
   const handleManualRefresh = useCallback(async () => {
-    await loadEvents(false, true); // Force refresh on manual
+    await loadEvents(false);
     toast.success('יומן עודכן');
   }, [loadEvents]);
 
@@ -1007,6 +980,15 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     }
   }, [connected, user, loading, isRefreshing, loadEvents]);
 
+  useEffect(() => {
+    const handleWorkoutDeleted = () => {
+      eventsCacheRef.current = null;
+      loadEvents(true);
+    };
+    window.addEventListener('workout-deleted', handleWorkoutDeleted);
+    return () => window.removeEventListener('workout-deleted', handleWorkoutDeleted);
+  }, [loadEvents]);
+
   const navigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
     if (viewMode === 'month') {
@@ -1170,7 +1152,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
       // Clear cache to ensure fresh data after deletion
       eventsCacheRef.current = null;
       // Refresh events
-      await loadEvents(false, true);
+      await loadEvents(false);
       // Dispatch custom event to notify dashboard and other components
       window.dispatchEvent(new CustomEvent('workout-deleted', { detail: { eventId } }));
     } catch (error) {
@@ -1325,7 +1307,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
       logger.error('Error moving event', error, 'CalendarView');
       toast.error('שגיאה בהעברת אירוע');
       // Refresh to sync with server state
-      await loadEvents(false, true);
+      await loadEvents(false);
     } finally {
       setIsUpdating(false);
     }
@@ -1438,7 +1420,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
     } catch (error) {
       logger.error('Error moving event in week view', error, 'CalendarView');
       toast.error('שגיאה בהעברת אירוע');
-      await loadEvents(false, true);
+      await loadEvents(false);
     } finally {
       setIsUpdating(false);
     }
@@ -1511,7 +1493,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
           <button
             onClick={() => {
               setAuthError(null);
-              loadEvents(false, true);
+              loadEvents(false);
             }}
             className="px-4 py-2 bg-surface hover:bg-elevated text-foreground rounded-xl transition-all duration-300 border border-border"
           >
@@ -2002,7 +1984,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         onClose={() => {
           setShowSyncModal(false);
           // Refresh events after sync
-          loadEvents(false, true);
+          loadEvents(false);
         }}
         onCreateTrainee={onCreateTrainee}
         onQuickCreateTrainee={onQuickCreateTrainee}
@@ -2016,7 +1998,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         selectedDate={quickAddDate}
         onWorkoutCreated={() => {
           // Refresh events after workout creation
-          loadEvents(false, true);
+          loadEvents(false);
         }}
       />
 
@@ -2037,7 +2019,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
             // Small delay to ensure Google Calendar has processed the deletion
             await new Promise(resolve => setTimeout(resolve, 500));
             // Refresh events after workout update with force refresh
-            await loadEvents(false, true);
+            await loadEvents(false);
           }}
         />
       )}
@@ -2048,7 +2030,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         onClose={() => setShowRecurringModal(false)}
         onWorkoutsCreated={() => {
           // Refresh events after workouts creation
-          loadEvents(false, true);
+          loadEvents(false);
         }}
       />
     </div>

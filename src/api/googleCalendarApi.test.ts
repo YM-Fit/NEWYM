@@ -63,110 +63,7 @@ describe('googleCalendarApi', () => {
       end: new Date('2024-01-31T23:59:59Z'),
     };
 
-    it('should return cached events when available', async () => {
-      const mockCachedEvents = [
-        {
-          google_event_id: 'event-1',
-          event_start_time: '2024-01-15T10:00:00Z',
-          event_end_time: '2024-01-15T11:00:00Z',
-          event_summary: 'אימון - יוסי',
-          event_description: 'אימון כוח',
-          sync_status: 'synced',
-          trainees: {
-            full_name: 'יוסי כהן',
-            email: 'yossi@example.com',
-          },
-        },
-        {
-          google_event_id: 'event-2',
-          event_start_time: '2024-01-20T14:00:00Z',
-          event_end_time: '2024-01-20T15:00:00Z',
-          event_summary: 'אימון - דני',
-          event_description: null,
-          sync_status: 'synced',
-          trainees: null,
-        },
-      ];
-
-      const mockSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockReturnThis(),
-        lte: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({
-          data: mockCachedEvents,
-          error: null,
-        }),
-      });
-
-      (supabase.from as any).mockReturnValue({
-        select: mockSelect,
-      });
-
-      const result = await getGoogleCalendarEvents(trainerId, dateRange, { useCache: true });
-
-      expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(2);
-      expect(result.data?.[0].id).toBe('event-1');
-      expect(result.data?.[0].summary).toBe('אימון - יוסי');
-      expect(result.data?.[0].attendees?.[0].email).toBe('yossi@example.com');
-      expect(result.data?.[1].summary).toBe('אימון - דני');
-    });
-
-    it('should filter events that do not overlap with date range', async () => {
-      const mockCachedEvents = [
-        {
-          google_event_id: 'event-1',
-          event_start_time: '2024-01-15T10:00:00Z',
-          event_end_time: '2024-01-15T11:00:00Z',
-          event_summary: 'אימון - יוסי',
-          event_description: null,
-          sync_status: 'synced',
-          trainees: null,
-        },
-        {
-          // Event that starts before range but ends before range start
-          google_event_id: 'event-2',
-          event_start_time: '2023-12-30T10:00:00Z',
-          event_end_time: '2023-12-31T11:00:00Z',
-          event_summary: 'אימון ישן',
-          event_description: null,
-          sync_status: 'synced',
-          trainees: null,
-        },
-      ];
-
-      const mockSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockReturnThis(),
-        lte: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({
-          data: mockCachedEvents,
-          error: null,
-        }),
-      });
-
-      (supabase.from as any).mockReturnValue({
-        select: mockSelect,
-      });
-
-      const result = await getGoogleCalendarEvents(trainerId, dateRange, { useCache: true });
-
-      expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(1); // Only event-1 should be included
-      expect(result.data?.[0].id).toBe('event-1');
-    });
-
-    it('should fallback to Google API when cache is empty', async () => {
-      const mockSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockReturnThis(),
-        lte: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({
-          data: [],
-          error: null,
-        }),
-      });
-
+    const setupCredentialsMock = () => {
       const mockCredentialsSelect = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({
@@ -179,15 +76,38 @@ describe('googleCalendarApi', () => {
           error: null,
         }),
       });
+      return mockCredentialsSelect;
+    };
+
+    const setupSyncTableMock = (events: any[] = []) => {
+      return vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        lte: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({
+          data: events,
+          error: null,
+        }),
+      });
+    };
+
+    it('should always fetch from Google API directly', async () => {
+      const mockCredentialsSelect = setupCredentialsMock();
+      const mockSyncSelect = setupSyncTableMock();
 
       (supabase.from as any).mockImplementation((table: string) => {
         if (table === 'google_calendar_sync') {
-          return { select: mockSelect };
+          return { select: mockSyncSelect };
         }
         if (table === 'trainer_google_credentials') {
           return { select: mockCredentialsSelect };
         }
         return { select: vi.fn() };
+      });
+
+      mockGetValidAccessToken.mockResolvedValue({
+        success: true,
+        data: 'valid-access-token',
       });
 
       const mockGoogleEvents = {
@@ -198,109 +118,40 @@ describe('googleCalendarApi', () => {
             start: { dateTime: '2024-01-15T10:00:00+02:00' },
             end: { dateTime: '2024-01-15T11:00:00+02:00' },
           },
+          {
+            id: 'google-event-2',
+            summary: 'אימון - דני',
+            start: { dateTime: '2024-01-20T14:00:00+02:00' },
+            end: { dateTime: '2024-01-20T15:00:00+02:00' },
+          },
         ],
       };
-
-      mockGetValidAccessToken.mockResolvedValue({
-        success: true,
-        data: 'valid-access-token',
-      });
 
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: async () => mockGoogleEvents,
       });
 
-      const result = await getGoogleCalendarEvents(trainerId, dateRange, { useCache: true });
+      const result = await getGoogleCalendarEvents(trainerId, dateRange);
 
       expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(1);
+      expect(result.data).toHaveLength(2);
       expect(result.data?.[0].id).toBe('google-event-1');
+      expect(result.data?.[0].summary).toBe('אימון - יוסי');
+      expect(result.data?.[1].summary).toBe('אימון - דני');
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('calendar/v3/calendars'),
         expect.any(Object)
       );
     });
 
-    it('should use Google API when forceRefresh is true', async () => {
-      mockGetValidAccessToken.mockResolvedValue({
-        success: true,
-        data: 'valid-access-token',
-      });
-
-      const mockCredentialsSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({
-          data: {
-            access_token: 'token-123',
-            refresh_token: 'refresh-123',
-            token_expires_at: new Date(Date.now() + 3600000).toISOString(),
-            default_calendar_id: 'primary',
-          },
-          error: null,
-        }),
-      });
-
-      (supabase.from as any).mockReturnValue({
-        select: mockCredentialsSelect,
-      });
-
-      mockGetValidAccessToken.mockResolvedValue({
-        success: true,
-        data: 'valid-access-token',
-      });
-
-      const mockGoogleEvents = {
-        items: [
-          {
-            id: 'google-event-1',
-            summary: 'אימון - יוסי',
-            start: { dateTime: '2024-01-15T10:00:00+02:00' },
-            end: { dateTime: '2024-01-15T11:00:00+02:00' },
-          },
-        ],
-      };
-
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        json: async () => mockGoogleEvents,
-      });
-
-      const result = await getGoogleCalendarEvents(trainerId, dateRange, { forceRefresh: true });
-
-      expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(1);
-      // Should not query cache when forceRefresh is true
-      expect(supabase.from).not.toHaveBeenCalledWith('google_calendar_sync');
-    });
-
-    it('should handle cache errors gracefully and fallback to API', async () => {
-      const mockSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockReturnThis(),
-        lte: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({
-          data: null,
-          error: { message: 'Database error' },
-        }),
-      });
-
-      const mockCredentialsSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({
-          data: {
-            access_token: 'token-123',
-            refresh_token: 'refresh-123',
-            token_expires_at: new Date(Date.now() + 3600000).toISOString(),
-            default_calendar_id: 'primary',
-          },
-          error: null,
-        }),
-      });
+    it('should filter out cancelled events from Google API', async () => {
+      const mockCredentialsSelect = setupCredentialsMock();
+      const mockSyncSelect = setupSyncTableMock();
 
       (supabase.from as any).mockImplementation((table: string) => {
         if (table === 'google_calendar_sync') {
-          return { select: mockSelect };
+          return { select: mockSyncSelect };
         }
         if (table === 'trainer_google_credentials') {
           return { select: mockCredentialsSelect };
@@ -313,29 +164,83 @@ describe('googleCalendarApi', () => {
         data: 'valid-access-token',
       });
 
-      const mockGoogleEvents = { items: [] };
+      const mockGoogleEvents = {
+        items: [
+          {
+            id: 'event-1',
+            summary: 'Active event',
+            status: 'confirmed',
+            start: { dateTime: '2024-01-15T10:00:00+02:00' },
+            end: { dateTime: '2024-01-15T11:00:00+02:00' },
+          },
+          {
+            id: 'event-2',
+            summary: 'Cancelled event',
+            status: 'cancelled',
+            start: { dateTime: '2024-01-20T14:00:00+02:00' },
+            end: { dateTime: '2024-01-20T15:00:00+02:00' },
+          },
+        ],
+      };
+
       (global.fetch as any).mockResolvedValue({
         ok: true,
         json: async () => mockGoogleEvents,
       });
 
-      const result = await getGoogleCalendarEvents(trainerId, dateRange, { useCache: true });
+      const result = await getGoogleCalendarEvents(trainerId, dateRange);
 
       expect(result.success).toBe(true);
-      expect(global.fetch).toHaveBeenCalled(); // Should fallback to API
+      expect(result.data).toHaveLength(1);
+      expect(result.data?.[0].id).toBe('event-1');
+    });
+
+    it('should fallback to DB sync table when Google API fails', async () => {
+      const mockCachedEvents = [
+        {
+          google_event_id: 'event-1',
+          event_start_time: '2024-01-15T10:00:00Z',
+          event_end_time: '2024-01-15T11:00:00Z',
+          event_summary: 'אימון - יוסי',
+          event_description: null,
+          sync_status: 'synced',
+          trainees: { full_name: 'יוסי כהן', email: 'yossi@example.com' },
+        },
+      ];
+
+      const mockCredentialsSelect = setupCredentialsMock();
+      const mockSyncSelect = setupSyncTableMock(mockCachedEvents);
+
+      (supabase.from as any).mockImplementation((table: string) => {
+        if (table === 'google_calendar_sync') {
+          return { select: mockSyncSelect };
+        }
+        if (table === 'trainer_google_credentials') {
+          return { select: mockCredentialsSelect };
+        }
+        return { select: vi.fn() };
+      });
+
+      mockGetValidAccessToken.mockResolvedValue({
+        success: true,
+        data: 'valid-access-token',
+      });
+
+      (global.fetch as any).mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => ({ error: { message: 'Internal server error' } }),
+      });
+
+      const result = await getGoogleCalendarEvents(trainerId, dateRange);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(1);
+      expect(result.data?.[0].id).toBe('event-1');
+      expect(result.data?.[0].summary).toBe('אימון - יוסי');
     });
 
     it('should return error when trainer not connected', async () => {
-      const mockSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockReturnThis(),
-        lte: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({
-          data: [],
-          error: null,
-        }),
-      });
-
       const mockCredentialsSelect = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({
@@ -344,14 +249,8 @@ describe('googleCalendarApi', () => {
         }),
       });
 
-      (supabase.from as any).mockImplementation((table: string) => {
-        if (table === 'google_calendar_sync') {
-          return { select: mockSelect };
-        }
-        if (table === 'trainer_google_credentials') {
-          return { select: mockCredentialsSelect };
-        }
-        return { select: vi.fn() };
+      (supabase.from as any).mockReturnValue({
+        select: mockCredentialsSelect,
       });
 
       const result = await getGoogleCalendarEvents(trainerId, dateRange);
@@ -361,43 +260,16 @@ describe('googleCalendarApi', () => {
     });
 
     it('should return error when token is expired', async () => {
+      const mockCredentialsSelect = setupCredentialsMock();
+
+      (supabase.from as any).mockReturnValue({
+        select: mockCredentialsSelect,
+      });
+
       const oauthService = await import('../services/oauthTokenService');
       (oauthService.OAuthTokenService.getValidAccessToken as any).mockResolvedValue({
         success: false,
         error: 'נדרש אימות מחדש ל-Google Calendar',
-      });
-
-      const mockSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockReturnThis(),
-        lte: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({
-          data: [],
-          error: null,
-        }),
-      });
-
-      const mockCredentialsSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({
-          data: {
-            access_token: 'token-123',
-            refresh_token: 'refresh-123',
-            token_expires_at: new Date(Date.now() - 3600000).toISOString(), // Expired
-            default_calendar_id: 'primary',
-          },
-          error: null,
-        }),
-      });
-
-      (supabase.from as any).mockImplementation((table: string) => {
-        if (table === 'google_calendar_sync') {
-          return { select: mockSelect };
-        }
-        if (table === 'trainer_google_credentials') {
-          return { select: mockCredentialsSelect };
-        }
-        return { select: vi.fn() };
       });
 
       const result = await getGoogleCalendarEvents(trainerId, dateRange);
@@ -409,7 +281,7 @@ describe('googleCalendarApi', () => {
     it('should validate date range', async () => {
       const invalidRange = {
         start: new Date('2024-01-31'),
-        end: new Date('2024-01-01'), // End before start
+        end: new Date('2024-01-01'),
       };
 
       const result = await getGoogleCalendarEvents(trainerId, invalidRange);
@@ -425,70 +297,13 @@ describe('googleCalendarApi', () => {
       expect(result.error).toBe('מזהה מאמן לא תקין');
     });
 
-    it('should handle events without end time', async () => {
-      const mockCachedEvents = [
-        {
-          google_event_id: 'event-1',
-          event_start_time: '2024-01-15T10:00:00Z',
-          event_end_time: null, // No end time
-          event_summary: 'אימון - יוסי',
-          event_description: null,
-          sync_status: 'synced',
-          trainees: null,
-        },
-      ];
-
-      const mockSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockReturnThis(),
-        lte: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({
-          data: mockCachedEvents,
-          error: null,
-        }),
-      });
-
-      (supabase.from as any).mockReturnValue({
-        select: mockSelect,
-      });
-
-      const result = await getGoogleCalendarEvents(trainerId, dateRange, { useCache: true });
-
-      expect(result.success).toBe(true);
-      expect(result.data?.[0].end.dateTime).toBeDefined();
-      // Should default to 1 hour after start
-      const startTime = new Date(result.data?.[0].start.dateTime!);
-      const endTime = new Date(result.data?.[0].end.dateTime!);
-      expect(endTime.getTime() - startTime.getTime()).toBe(60 * 60 * 1000); // 1 hour
-    });
-
-    it('should handle Google API errors', async () => {
-      const mockSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockReturnThis(),
-        lte: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({
-          data: [],
-          error: null,
-        }),
-      });
-
-      const mockCredentialsSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({
-          data: {
-            access_token: 'token-123',
-            refresh_token: 'refresh-123',
-            token_expires_at: new Date(Date.now() + 3600000).toISOString(),
-            default_calendar_id: 'primary',
-          },
-          error: null,
-        }),
-      });
+    it('should handle 401 with token refresh', async () => {
+      const mockCredentialsSelect = setupCredentialsMock();
+      const mockSyncSelect = setupSyncTableMock();
 
       (supabase.from as any).mockImplementation((table: string) => {
         if (table === 'google_calendar_sync') {
-          return { select: mockSelect };
+          return { select: mockSyncSelect };
         }
         if (table === 'trainer_google_credentials') {
           return { select: mockCredentialsSelect };
@@ -501,18 +316,31 @@ describe('googleCalendarApi', () => {
         data: 'valid-access-token',
       });
 
-      (global.fetch as any).mockResolvedValue({
-        ok: false,
-        status: 401,
-        json: async () => ({
-          error: { message: 'Invalid credentials' },
-        }),
+      const oauthService = await import('../services/oauthTokenService');
+      (oauthService.OAuthTokenService as any).refreshAccessToken = vi.fn().mockResolvedValue({
+        success: true,
+        data: { access_token: 'new-token' },
       });
+
+      const mockGoogleEvents = {
+        items: [
+          {
+            id: 'event-1',
+            summary: 'Test event',
+            start: { dateTime: '2024-01-15T10:00:00+02:00' },
+            end: { dateTime: '2024-01-15T11:00:00+02:00' },
+          },
+        ],
+      };
+
+      (global.fetch as any)
+        .mockResolvedValueOnce({ ok: false, status: 401, json: async () => ({}) })
+        .mockResolvedValueOnce({ ok: true, json: async () => mockGoogleEvents });
 
       const result = await getGoogleCalendarEvents(trainerId, dateRange);
 
-      expect(result.success).toBeUndefined();
-      expect(result.error).toBe('Invalid credentials');
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(1);
     });
   });
 

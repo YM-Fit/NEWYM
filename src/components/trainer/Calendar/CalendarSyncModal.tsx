@@ -84,10 +84,7 @@ export default function CalendarSyncModal({
 
       // Fetch events DIRECTLY from Google Calendar (not from cache)
       // This ensures we see ALL events including ones not yet synced
-      const result = await getGoogleCalendarEvents(user.id, { start, end }, { 
-        useCache: false, 
-        forceRefresh: true 
-      });
+      const result = await getGoogleCalendarEvents(user.id, { start, end });
       
       console.log('📅 CalendarSync - Events from Google:', result.data?.length || 0, result.data?.map(e => e.summary));
       
@@ -391,10 +388,7 @@ export default function CalendarSyncModal({
           const futureEnd = new Date();
           futureEnd.setMonth(futureEnd.getMonth() + 6);
 
-          const futureEventsResult = await getGoogleCalendarEvents(user.id, { start: futureStart, end: futureEnd }, { 
-            useCache: false, 
-            forceRefresh: true 
-          });
+          const futureEventsResult = await getGoogleCalendarEvents(user.id, { start: futureStart, end: futureEnd });
 
           if (futureEventsResult.success && futureEventsResult.data) {
             // Get existing synced event IDs
