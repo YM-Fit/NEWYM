@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Search, X, Plus, Clock, PlusCircle, Trash2, Info, Edit2, TrendingUp, Star, Zap, Pencil, History, Heart, Shield, Flame, Dumbbell, Target, Filter, SortAsc, SortDesc, Calendar } from 'lucide-react';
+import { Search, X, Plus, Clock, PlusCircle, Trash2, Info, Edit2, TrendingUp, Star, Zap, Pencil, History, Heart, Shield, Flame, Dumbbell, Target, Filter, SortAsc, SortDesc, Calendar, ChevronDown } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
@@ -89,7 +89,7 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [recentExercises, setRecentExercises] = useState<RecentExercise[]>([]);
   const [exerciseLastData, setExerciseLastData] = useState<Map<string, { weight: number; reps: number; date: string }>>(new Map());
-  const [showRecentSection, setShowRecentSection] = useState(true);
+  const [showRecentSection, setShowRecentSection] = useState(false);
   const [confirmationExercise, setConfirmationExercise] = useState<{ exercise: Exercise; lastData: { weight: number; reps: number; date: string } } | null>(null);
   
   // Advanced search and filtering
@@ -632,7 +632,24 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
           </div>
         </div>
 
-        {/* Recent Exercises Section */}
+        {/* Recent Exercises Section - Collapsed by default */}
+        {traineeId && recentExercises.length > 0 && !searchTerm && !showRecentSection && (
+          <div className="p-2 lg:p-3 border-b border-border bg-gradient-to-b from-emerald-500/5 via-emerald-500/3 to-transparent">
+            <button
+              onClick={() => setShowRecentSection(true)}
+              className="w-full flex items-center justify-between text-right"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 bg-amber-500/20 rounded-lg">
+                  <Zap className="h-4 w-4 lg:h-5 lg:w-5 text-amber-400" />
+                </div>
+                <h3 className="font-bold text-foreground text-sm lg:text-base">תרגילים אחרונים ({recentExercises.length})</h3>
+              </div>
+              <ChevronDown className="h-4 w-4 text-muted" />
+            </button>
+          </div>
+        )}
+        
         {traineeId && recentExercises.length > 0 && !searchTerm && showRecentSection && (
           <div className="p-4 lg:p-6 border-b border-border bg-gradient-to-b from-emerald-500/5 via-emerald-500/3 to-transparent">
             <div className="flex items-center justify-between mb-4">
