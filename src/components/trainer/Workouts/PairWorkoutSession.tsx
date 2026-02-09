@@ -401,7 +401,7 @@ export default function PairWorkoutSession({
     }
   }, []);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!user) return;
 
     if (member1Exercises.length === 0 && member2Exercises.length === 0) {
@@ -491,7 +491,7 @@ export default function PairWorkoutSession({
       toast.error('שגיאה בשמירת האימון');
       setSaving(false);
     }
-  }, [member1Exercises, member2Exercises, user?.id, saving, onComplete]);
+  }, [member1Exercises, member2Exercises, user, saving, onComplete]);
 
   const totalVolume1 = useMemo(() => 
     member1Exercises.reduce((sum, ex) => 

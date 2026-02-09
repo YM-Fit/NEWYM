@@ -201,7 +201,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
       logger.error('Error deleting access', error, 'TraineeAccessManager');
       toast.error('שגיאה במחיקת גישה');
     }
-  };
+  }, [access]);
 
   if (loading) {
     return (

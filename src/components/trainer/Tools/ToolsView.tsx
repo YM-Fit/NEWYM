@@ -57,7 +57,7 @@ export default function ToolsView() {
       shadowColor: 'shadow-emerald-600/30',
       hoverShadow: 'hover:shadow-emerald-600/40',
     },
-  ];
+  ], []);
 
   return (
     <div className="max-w-7xl mx-auto">

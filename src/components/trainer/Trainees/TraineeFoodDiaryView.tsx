@@ -425,7 +425,6 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
     );
   }
 
-  const weekDates = getWeekDates();
   const unseenCount = Array.from(diaryEntries.values()).filter(
     (entry) => entry.completed && !entry.is_seen_by_trainer
   ).length;
