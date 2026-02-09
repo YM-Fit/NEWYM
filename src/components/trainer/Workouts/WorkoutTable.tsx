@@ -1,4 +1,5 @@
 import { memo, useMemo } from 'react';
+import { Trash2 } from 'lucide-react';
 import { WorkoutTableHeader } from './WorkoutTableHeader';
 import { WorkoutTableRow } from './WorkoutTableRow';
 
@@ -52,6 +53,7 @@ interface WorkoutTableProps {
   onCompleteSet: (exerciseIndex: number, setIndex: number) => void;
   onAddSet: (exerciseIndex: number) => void;
   onToggleExerciseCollapse?: (exerciseIndex: number) => void;
+  onRemoveExercise?: (exerciseIndex: number) => void;
   isTablet?: boolean;
 }
 
@@ -70,6 +72,7 @@ export const WorkoutTable = memo(({
   onCompleteSet,
   onAddSet,
   onToggleExerciseCollapse = () => {},
+  onRemoveExercise,
   isTablet,
 }: WorkoutTableProps) => {
   // Flatten exercises and sets into rows, filtering out collapsed sets
@@ -113,7 +116,7 @@ export const WorkoutTable = memo(({
   return (
     <div className="premium-card-static overflow-hidden mb-4 shadow-lg border-2 border-emerald-500/30" style={{ display: 'block' }}>
       <div className={`overflow-x-auto ${isTvMode ? 'max-h-[calc(100vh-200px)]' : 'max-h-[calc(100vh-300px)]'} overflow-y-auto`}>
-        <table className={`w-full border-collapse ${isTvMode ? 'min-w-[1200px]' : 'min-w-[900px] lg:min-w-[1200px]'} bg-surface/50`} style={{ display: 'table' }}>
+        <table className={`w-full border-collapse ${isTvMode ? 'min-w-[1200px]' : 'min-w-[800px] sm:min-w-[900px] lg:min-w-[1200px]'} bg-surface/50`} style={{ display: 'table' }}>
           <WorkoutTableHeader isTablet={isTablet} />
           <tbody>
             {exercises.map((exercise, exerciseIndex) => {
@@ -127,22 +130,46 @@ export const WorkoutTable = memo(({
                   <tr
                     key={`exercise-header-${exercise.tempId}`}
                     data-exercise-id={exercise.tempId}
-                    className="border-b-2 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/15 transition-all cursor-pointer"
-                    onClick={() => onToggleExerciseCollapse(exerciseIndex)}
+                    className="border-b-2 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/15 transition-all"
                   >
-                    <td colSpan={10} className="px-4 py-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                          <span className="font-bold text-lg text-foreground">{exercise.exercise.name}</span>
+                    <td colSpan={10} className="px-2 sm:px-4 py-2 sm:py-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div 
+                          className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer"
+                          onClick={() => onToggleExerciseCollapse(exerciseIndex)}
+                        >
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></div>
+                          <span className="font-bold text-base sm:text-lg text-foreground truncate">{exercise.exercise.name}</span>
                           {allSetsCollapsed && (
-                            <span className="text-xs text-muted bg-surface/50 px-2 py-0.5 rounded">
+                            <span className="text-xs text-muted bg-surface/50 px-2 py-0.5 rounded flex-shrink-0">
                               {exercise.sets.length} סטים (ממוזער)
                             </span>
                           )}
                         </div>
-                        <div className="text-emerald-400 text-sm">
-                          {allSetsCollapsed ? '▼' : '▲'}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {onRemoveExercise && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (window.confirm(`האם אתה בטוח שברצונך למחוק את התרגיל "${exercise.exercise.name}"?`)) {
+                                  onRemoveExercise(exerciseIndex);
+                                }
+                              }}
+                              className="p-1.5 sm:p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-all cursor-pointer active:scale-95"
+                              title="מחק תרגיל"
+                              aria-label="מחק תרגיל"
+                            >
+                              <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                            </button>
+                          )}
+                          <div 
+                            className="text-emerald-400 text-sm cursor-pointer"
+                            onClick={() => onToggleExerciseCollapse(exerciseIndex)}
+                          >
+                            {allSetsCollapsed ? '▼' : '▲'}
+                          </div>
                         </div>
                       </div>
                     </td>

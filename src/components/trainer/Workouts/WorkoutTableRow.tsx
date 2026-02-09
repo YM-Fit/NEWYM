@@ -138,7 +138,7 @@ export const WorkoutTableRow = memo(({
       `}
     >
       {/* תרגיל */}
-      <td className={`px-3 ${isCompleted ? 'py-1' : 'py-2'} text-right font-medium text-foreground sticky right-0 bg-inherit z-10 min-w-[120px] border-r-2 border-emerald-500/20 ${isFirstSet ? 'bg-emerald-500/5' : ''}`}>
+      <td className={`px-2 sm:px-3 ${isCompleted ? 'py-1' : 'py-2'} text-right font-medium text-foreground sticky right-0 bg-inherit z-10 min-w-[100px] sm:min-w-[120px] border-r-2 border-emerald-500/20 ${isFirstSet ? 'bg-emerald-500/5' : ''}`}>
         {isFirstSet ? (
           <div className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
@@ -150,14 +150,14 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* סט */}
-      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
+      <td className={`px-1 sm:px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
         <span className={`inline-flex items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 font-bold ${isCompleted ? 'w-6 h-6 text-[10px]' : 'w-7 h-7 text-xs'}`}>
           {set.set_number}
         </span>
       </td>
 
       {/* משקל */}
-      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
+      <td className={`px-1 sm:px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
         {!isTvMode ? (
           <button
             ref={weightButtonRef}
@@ -197,7 +197,7 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* חזרות */}
-      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
+      <td className={`px-1 sm:px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
         {!isTvMode ? (
           <button
             ref={repsButtonRef}
@@ -237,7 +237,7 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* RPE */}
-      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
+      <td className={`px-1 sm:px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
         {!isTvMode ? (
           <button
             ref={rpeButtonRef}
@@ -277,7 +277,7 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* ציוד */}
-      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
+      <td className={`px-1 sm:px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center hidden sm:table-cell`}>
         {!isTvMode ? (
           <button
             type="button"
@@ -308,7 +308,7 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* סוג סט */}
-      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
+      <td className={`px-1 sm:px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
         <div className="flex flex-col gap-1">
           {!isTvMode ? (
             <div className="flex gap-0.5 justify-center">
@@ -594,7 +594,7 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* כשל */}
-      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
+      <td className={`px-1 sm:px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center hidden sm:table-cell`}>
         {!isTvMode ? (
           <button
             type="button"
@@ -623,7 +623,7 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* נפח */}
-      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
+      <td className={`px-1 sm:px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center hidden md:table-cell`}>
         {hasData && (
           <div className={`flex items-center justify-center gap-0.5 bg-emerald-500/10 px-1.5 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded border border-emerald-500/30`}>
             <TrendingUp className={`${isCompleted ? 'h-2.5 w-2.5' : 'h-3 w-3'} text-emerald-400`} />
@@ -633,7 +633,7 @@ export const WorkoutTableRow = memo(({
       </td>
 
       {/* פעולות */}
-      <td className={`px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
+      <td className={`px-1 sm:px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
         {!isTvMode ? (
           <div className="flex items-center justify-center gap-1">
             <button

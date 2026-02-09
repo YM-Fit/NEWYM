@@ -633,17 +633,27 @@ export default function WorkoutSession({
       : null;
   }, [exercises, minimizedExercises, collapsedSets]);
 
-  // Clear focusedSetPart when active set changes
+  // Clear focusedSetPart when active set changes (but not on every exercise update)
+  const prevActiveSetRef = useRef<{ exerciseIndex: number; setIndex: number } | null>(null);
   useEffect(() => {
     const active = findActiveExerciseAndSet();
-    if (active && focusedSetPart) {
-      // If we moved to a different set, clear the focused part
-      if (focusedSetPart.exerciseIndex !== active.exerciseIndex || 
-          focusedSetPart.setIndex !== active.setIndex) {
-        setFocusedSetPart(null);
+    if (active) {
+      // Only clear focusedSetPart if we actually moved to a different set
+      if (prevActiveSetRef.current &&
+          (prevActiveSetRef.current.exerciseIndex !== active.exerciseIndex || 
+           prevActiveSetRef.current.setIndex !== active.setIndex)) {
+        // We moved to a different set, clear the focused part
+        if (focusedSetPart && 
+            (focusedSetPart.exerciseIndex !== active.exerciseIndex || 
+             focusedSetPart.setIndex !== active.setIndex)) {
+          setFocusedSetPart(null);
+        }
       }
+      prevActiveSetRef.current = active;
+    } else {
+      prevActiveSetRef.current = null;
     }
-  }, [exercises, minimizedExercises, collapsedSets, findActiveExerciseAndSet, focusedSetPart]);
+  }, [exercises.length, minimizedExercises.length, collapsedSets.length, findActiveExerciseAndSet, focusedSetPart]);
 
   // Auto-save workout in realtime when exercises change (with debounce)
   // IMPORTANT: Don't skip on empty exercises - we need to save deletions too!
@@ -662,11 +672,23 @@ export default function WorkoutSession({
   // Enhanced keyboard shortcuts for better UX (especially on tablet with external keyboard)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Allow W/R/E shortcuts even when numeric pads are open (for switching between fields)
+      const isWeightRepsRpeShortcut = (e.key.toLowerCase() === 'w' || e.key.toLowerCase() === 'r' || e.key.toLowerCase() === 'e') && !e.ctrlKey && !e.metaKey;
+      
       // Don't handle shortcuts when modals are open or input is focused
-      if (showExerciseSelector || numericPad || equipmentSelector || supersetSelector || 
+      // Exception: Allow W/R/E shortcuts even when numeric pads are open
+      if (!isWeightRepsRpeShortcut && (
+          showExerciseSelector || numericPad || equipmentSelector || supersetSelector || 
           dropsetNumericPad || supersetNumericPad || supersetDropsetNumericPad || supersetEquipmentSelector ||
           showDraftModal || showTemplateModal || showSaveTemplateModal || showSummary ||
-          document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+          document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA')) {
+        return;
+      }
+      
+      // For W/R/E shortcuts, only block if input/textarea is focused (not numeric pads)
+      if (isWeightRepsRpeShortcut && 
+          !numericPad && !supersetNumericPad && !dropsetNumericPad && !supersetDropsetNumericPad &&
+          (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA')) {
         return;
       }
 
@@ -1882,6 +1904,7 @@ export default function WorkoutSession({
         onCompleteSet={(exerciseIndex, setIndex) => completeSetAndMoveNext(exerciseIndex, setIndex)}
         onAddSet={addSet}
         onToggleExerciseCollapse={toggleExerciseCollapse}
+        onRemoveExercise={removeExercise}
         isTablet={isTablet}
       />
 
