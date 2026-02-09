@@ -170,6 +170,12 @@ export default function WorkoutSession({
     exerciseIndex: number;
     setIndex: number;
   } | null>(null);
+  // Track which part of the set is currently focused (for keyboard shortcuts)
+  const [focusedSetPart, setFocusedSetPart] = useState<{
+    exerciseIndex: number;
+    setIndex: number;
+    part: 'regular' | 'superset' | 'dropset' | 'superset_dropset';
+  } | null>(null);
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [draftData, setDraftData] = useState<{
     exercises: WorkoutExercise[];
@@ -627,6 +633,18 @@ export default function WorkoutSession({
       : null;
   }, [exercises, minimizedExercises, collapsedSets]);
 
+  // Clear focusedSetPart when active set changes
+  useEffect(() => {
+    const active = findActiveExerciseAndSet();
+    if (active && focusedSetPart) {
+      // If we moved to a different set, clear the focused part
+      if (focusedSetPart.exerciseIndex !== active.exerciseIndex || 
+          focusedSetPart.setIndex !== active.setIndex) {
+        setFocusedSetPart(null);
+      }
+    }
+  }, [exercises, minimizedExercises, collapsedSets, findActiveExerciseAndSet, focusedSetPart]);
+
   // Auto-save workout in realtime when exercises change (with debounce)
   // IMPORTANT: Don't skip on empty exercises - we need to save deletions too!
   useEffect(() => {
@@ -687,60 +705,106 @@ export default function WorkoutSession({
       }
       // W key to open weight pad for active exercise and set
       // Supports regular sets, supersets, and dropsets
+      // Uses focusedSetPart if available, otherwise determines from set type
       else if (e.key.toLowerCase() === 'w' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
         e.preventDefault();
         const active = findActiveExerciseAndSet();
         if (active) {
-          const set = exercises[active.exerciseIndex].sets[active.setIndex];
-          // Check if this is a superset (has superset_exercise_id) - prioritize superset over dropset
-          if (set.set_type === 'superset' || set.superset_exercise_id) {
-            openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_weight', 'משקל סופר-סט (ק״ג)');
-          }
-          // Check if this is a dropset (has dropset_weight) - only if not superset
-          else if (set.set_type === 'dropset' || (set.dropset_weight !== null && set.dropset_weight !== undefined)) {
-            openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_weight', 'משקל דרופ-סט (ק״ג)');
-          }
-          // Regular set
-          else {
-            openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+          // Check if we have a focused set part (user clicked on superset/dropset button)
+          if (focusedSetPart && 
+              focusedSetPart.exerciseIndex === active.exerciseIndex && 
+              focusedSetPart.setIndex === active.setIndex) {
+            // Use the focused part
+            if (focusedSetPart.part === 'superset') {
+              openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_weight', 'משקל סופר-סט (ק״ג)');
+            } else if (focusedSetPart.part === 'superset_dropset') {
+              openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_dropset_weight', 'משקל דרופ-סט סופר-סט (ק״ג)');
+            } else if (focusedSetPart.part === 'dropset') {
+              openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_weight', 'משקל דרופ-סט (ק״ג)');
+            } else {
+              openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+            }
+          } else {
+            // No focused part, determine from set type
+            const set = exercises[active.exerciseIndex].sets[active.setIndex];
+            // Check if this is a superset (has superset_exercise_id) - prioritize superset over dropset
+            if (set.set_type === 'superset' || set.superset_exercise_id) {
+              openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_weight', 'משקל סופר-סט (ק״ג)');
+            }
+            // Check if this is a dropset (has dropset_weight) - only if not superset
+            else if (set.set_type === 'dropset' || (set.dropset_weight !== null && set.dropset_weight !== undefined)) {
+              openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_weight', 'משקל דרופ-סט (ק״ג)');
+            }
+            // Regular set
+            else {
+              openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+            }
           }
         }
       }
       // R key to open reps pad for active exercise and set
       // Supports regular sets, supersets, and dropsets
+      // Uses focusedSetPart if available, otherwise determines from set type
       else if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
         e.preventDefault();
         const active = findActiveExerciseAndSet();
         if (active) {
-          const set = exercises[active.exerciseIndex].sets[active.setIndex];
-          // Check if this is a superset (has superset_exercise_id) - prioritize superset over dropset
-          if (set.set_type === 'superset' || set.superset_exercise_id) {
-            openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_reps', 'חזרות סופר-סט');
-          }
-          // Check if this is a dropset (has dropset_reps) - only if not superset
-          else if (set.set_type === 'dropset' || (set.dropset_reps !== null && set.dropset_reps !== undefined)) {
-            openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_reps', 'חזרות דרופ-סט');
-          }
-          // Regular set
-          else {
-            openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+          // Check if we have a focused set part (user clicked on superset/dropset button)
+          if (focusedSetPart && 
+              focusedSetPart.exerciseIndex === active.exerciseIndex && 
+              focusedSetPart.setIndex === active.setIndex) {
+            // Use the focused part
+            if (focusedSetPart.part === 'superset') {
+              openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_reps', 'חזרות סופר-סט');
+            } else if (focusedSetPart.part === 'superset_dropset') {
+              openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_dropset_reps', 'חזרות דרופ-סט סופר-סט');
+            } else if (focusedSetPart.part === 'dropset') {
+              openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_reps', 'חזרות דרופ-סט');
+            } else {
+              openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+            }
+          } else {
+            // No focused part, determine from set type
+            const set = exercises[active.exerciseIndex].sets[active.setIndex];
+            // Check if this is a superset (has superset_exercise_id) - prioritize superset over dropset
+            if (set.set_type === 'superset' || set.superset_exercise_id) {
+              openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_reps', 'חזרות סופר-סט');
+            }
+            // Check if this is a dropset (has dropset_reps) - only if not superset
+            else if (set.set_type === 'dropset' || (set.dropset_reps !== null && set.dropset_reps !== undefined)) {
+              openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_reps', 'חזרות דרופ-סט');
+            }
+            // Regular set
+            else {
+              openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+            }
           }
         }
       }
       // E key to open RPE pad for active exercise and set
       // Supports regular sets and supersets (dropsets don't have RPE)
+      // Uses focusedSetPart if available, otherwise determines from set type
       else if (e.key.toLowerCase() === 'e' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
         e.preventDefault();
         const active = findActiveExerciseAndSet();
         if (active) {
-          const set = exercises[active.exerciseIndex].sets[active.setIndex];
-          // Check if this is a superset (has superset_exercise_id)
-          if (set.set_type === 'superset' || set.superset_exercise_id) {
+          // Check if we have a focused set part (user clicked on superset button)
+          if (focusedSetPart && 
+              focusedSetPart.exerciseIndex === active.exerciseIndex && 
+              focusedSetPart.setIndex === active.setIndex &&
+              focusedSetPart.part === 'superset') {
             openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_rpe', 'RPE סופר-סט (1-10)');
-          }
-          // Regular set
-          else {
-            openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
+          } else {
+            // No focused part or not superset, determine from set type
+            const set = exercises[active.exerciseIndex].sets[active.setIndex];
+            // Check if this is a superset (has superset_exercise_id)
+            if (set.set_type === 'superset' || set.superset_exercise_id) {
+              openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_rpe', 'RPE סופר-סט (1-10)');
+            }
+            // Regular set
+            else {
+              openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
+            }
           }
         }
       }
@@ -786,7 +850,7 @@ export default function WorkoutSession({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showExerciseSelector, numericPad, equipmentSelector, supersetSelector, 
       showDraftModal, showTemplateModal, showSaveTemplateModal, showSummary, 
-      exercises.length, saving, isDirty, collapsedSets, minimizedExercises, findActiveExerciseAndSet]);
+      exercises.length, saving, isDirty, collapsedSets, minimizedExercises, findActiveExerciseAndSet, focusedSetPart]);
 
   useEffect(() => {
     const loadMuscleGroups = async () => {
@@ -1112,12 +1176,14 @@ export default function WorkoutSession({
   const openNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe', label: string) => {
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     setNumericPad({ exerciseIndex, setIndex, field, value: currentValue as number, label });
+    setFocusedSetPart({ exerciseIndex, setIndex, part: 'regular' });
   }, [exercises]);
 
   const handleNumericPadConfirm = (value: number) => {
     if (numericPad) {
       updateSet(numericPad.exerciseIndex, numericPad.setIndex, numericPad.field, value);
       setNumericPad(null);
+      setFocusedSetPart(null);
     }
   };
 
@@ -1143,8 +1209,10 @@ export default function WorkoutSession({
     // For superset dropset fields, use the supersetDropsetNumericPad state
     if (field === 'superset_dropset_weight' || field === 'superset_dropset_reps') {
       setSupersetDropsetNumericPad({ exerciseIndex, setIndex, field, value: currentValue as number, label });
+      setFocusedSetPart({ exerciseIndex, setIndex, part: 'superset_dropset' });
     } else {
       setSupersetNumericPad({ exerciseIndex, setIndex, field: field as 'superset_weight' | 'superset_reps' | 'superset_rpe', value: currentValue as number, label });
+      setFocusedSetPart({ exerciseIndex, setIndex, part: 'superset' });
     }
   }, [exercises]);
 
@@ -1160,18 +1228,21 @@ export default function WorkoutSession({
     if (supersetNumericPad) {
       updateSet(supersetNumericPad.exerciseIndex, supersetNumericPad.setIndex, supersetNumericPad.field, value);
       setSupersetNumericPad(null);
+      // Keep focusedSetPart for superset so shortcuts continue to work
     }
   };
 
   const openDropsetNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'dropset_weight' | 'dropset_reps', label: string) => {
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     setDropsetNumericPad({ exerciseIndex, setIndex, field, value: currentValue as number, label });
+    setFocusedSetPart({ exerciseIndex, setIndex, part: 'dropset' });
   }, [exercises]);
 
   const handleDropsetNumericPadConfirm = (value: number) => {
     if (dropsetNumericPad) {
       updateSet(dropsetNumericPad.exerciseIndex, dropsetNumericPad.setIndex, dropsetNumericPad.field, value);
       setDropsetNumericPad(null);
+      // Keep focusedSetPart for dropset so shortcuts continue to work
     }
   };
 
@@ -1184,6 +1255,7 @@ export default function WorkoutSession({
     if (supersetDropsetNumericPad) {
       updateSet(supersetDropsetNumericPad.exerciseIndex, supersetDropsetNumericPad.setIndex, supersetDropsetNumericPad.field, value);
       setSupersetDropsetNumericPad(null);
+      // Keep focusedSetPart for superset_dropset so shortcuts continue to work
     }
   };
 
@@ -1862,7 +1934,10 @@ export default function WorkoutSession({
           value={numericPad.value}
           label={numericPad.label}
           onConfirm={handleNumericPadConfirm}
-          onClose={() => setNumericPad(null)}
+          onClose={() => {
+            setNumericPad(null);
+            setFocusedSetPart(null);
+          }}
           allowDecimal={numericPad.field === 'weight'}
           minValue={numericPad.field === 'rpe' ? 1 : undefined}
           maxValue={numericPad.field === 'rpe' ? 10 : undefined}
@@ -1893,7 +1968,10 @@ export default function WorkoutSession({
           value={supersetNumericPad.value}
           label={supersetNumericPad.label}
           onConfirm={handleSupersetNumericPadConfirm}
-          onClose={() => setSupersetNumericPad(null)}
+          onClose={() => {
+            setSupersetNumericPad(null);
+            // Don't clear focusedSetPart - keep it so shortcuts continue to work on superset
+          }}
           allowDecimal={supersetNumericPad.field === 'superset_weight'}
           minValue={supersetNumericPad.field === 'superset_rpe' ? 1 : undefined}
           maxValue={supersetNumericPad.field === 'superset_rpe' ? 10 : undefined}
@@ -1916,7 +1994,10 @@ export default function WorkoutSession({
           value={dropsetNumericPad.value}
           label={dropsetNumericPad.label}
           onConfirm={handleDropsetNumericPadConfirm}
-          onClose={() => setDropsetNumericPad(null)}
+          onClose={() => {
+            setDropsetNumericPad(null);
+            // Don't clear focusedSetPart - keep it so shortcuts continue to work on dropset
+          }}
           allowDecimal={dropsetNumericPad.field === 'dropset_weight'}
           isTablet={isTablet}
         />
@@ -1927,7 +2008,10 @@ export default function WorkoutSession({
           value={supersetDropsetNumericPad.value}
           label={supersetDropsetNumericPad.label}
           onConfirm={handleSupersetDropsetNumericPadConfirm}
-          onClose={() => setSupersetDropsetNumericPad(null)}
+          onClose={() => {
+            setSupersetDropsetNumericPad(null);
+            // Don't clear focusedSetPart - keep it so shortcuts continue to work on superset_dropset
+          }}
           allowDecimal={supersetDropsetNumericPad.field === 'superset_dropset_weight'}
           isTablet={isTablet}
         />
