@@ -562,32 +562,23 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
         <div className="p-4 lg:p-6 border-b border-border space-y-3">
           <div className="relative">
             <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted" />
-            {preventKeyboard ? (
-              <div className="flex gap-2">
-                <div
-                  className="flex-1 pr-12 pl-4 py-3 lg:py-4 bg-surface border border-border rounded-xl text-foreground min-h-[48px] lg:min-h-[56px] flex items-center text-base lg:text-lg"
-                  onClick={() => {}}
-                >
-                  {searchTerm || <span className="text-muted">חפש תרגיל...</span>}
-                </div>
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="px-4 py-3 lg:py-4 bg-red-500/15 border border-red-500/30 rounded-xl text-red-400 hover:bg-red-500/25 transition-all font-medium"
-                  >
-                    נקה
-                  </button>
-                )}
-              </div>
-            ) : (
+            <div className="flex gap-2">
               <input
                 type="text"
                 placeholder="חפש תרגיל..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pr-12 pl-4 py-3 lg:py-4 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-base lg:text-lg"
+                className="flex-1 pr-12 pl-4 py-3 lg:py-4 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-base lg:text-lg"
               />
-            )}
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="px-4 py-3 lg:py-4 bg-red-500/15 border border-red-500/30 rounded-xl text-red-400 hover:bg-red-500/25 transition-all font-medium"
+                >
+                  נקה
+                </button>
+              )}
+            </div>
           </div>
           
           {/* Advanced Filters */}
