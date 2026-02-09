@@ -52,9 +52,22 @@ export default function ExerciseHistory({
   // Pagination for history
   const { paginatedData: paginatedHistory, currentPage, totalPages, hasNextPage, hasPrevPage, nextPage, prevPage, goToPage } = usePagination(history, { initialPageSize: 5 });
 
-  useEffect(() => {
-    loadHistory();
-  }, [traineeId, exerciseId]);
+  // Define getTotalVolume before using it in useMemo hooks
+  const getTotalVolume = useCallback((sets: HistorySet[]) => {
+    return sets.reduce((total, set) => {
+      let volume = set.weight * set.reps;
+
+      if (set.set_type === 'superset' && set.superset_weight && set.superset_reps) {
+        volume += set.superset_weight * set.superset_reps;
+      }
+
+      if (set.set_type === 'dropset' && set.dropset_weight && set.dropset_reps) {
+        volume += set.dropset_weight * set.dropset_reps;
+      }
+
+      return total + volume;
+    }, 0);
+  }, []);
 
   // Calculate personal records with dates
   const personalRecords = useMemo(() => {
@@ -209,22 +222,6 @@ export default function ExerciseHistory({
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
-
-  const getTotalVolume = useCallback((sets: HistorySet[]) => {
-    return sets.reduce((total, set) => {
-      let volume = set.weight * set.reps;
-
-      if (set.set_type === 'superset' && set.superset_weight && set.superset_reps) {
-        volume += set.superset_weight * set.superset_reps;
-      }
-
-      if (set.set_type === 'dropset' && set.dropset_weight && set.dropset_reps) {
-        volume += set.dropset_weight * set.dropset_reps;
-      }
-
-      return total + volume;
-    }, 0);
-  }, []);
 
   const getBestSet = (sets: HistorySet[]) => {
     if (sets.length === 0) return null;
