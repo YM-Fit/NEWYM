@@ -110,12 +110,76 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
   const isTouchDevice = useIsTouchDevice();
   const preventKeyboard = isTablet || isTouchDevice;
 
-  useEffect(() => {
-    loadMuscleGroupsAndExercises();
-    if (traineeId) {
-      loadRecentExercises();
+  // Load muscle groups and exercises
+  const loadMuscleGroupsAndExercises = useCallback(async () => {
+    const { data: groups, error: groupsError } = await supabase
+      .from('muscle_groups')
+      .select('*')
+      .order('name');
+
+    if (groupsError) {
+      console.error('[ExerciseSelector] Error loading muscle groups:', groupsError);
+      logger.error('Error loading muscle groups:', groupsError, 'ExerciseSelector');
+      setLoading(false);
+      return;
     }
-  }, [traineeId, loadRecentExercises]);
+
+    if (!groups) {
+      console.warn('[ExerciseSelector] No muscle groups returned from database');
+      setLoading(false);
+      return;
+    }
+
+    console.log('[ExerciseSelector] Loaded muscle groups:', groups.length);
+
+    // Always reload exercises from DB to ensure we have the latest data
+    // Cache might be stale or incomplete
+    if (isCacheValid && cachedExercises) {
+      console.log('[ExerciseSelector] Cache found, but reloading from DB to ensure freshness');
+      console.log('[ExerciseSelector] Cached exercises count:', cachedExercises.length);
+    }
+
+    const { data: exercises, error: exercisesError } = await supabase
+      .from('exercises')
+      .select('id, name, muscle_group_id, created_at')
+      .order('name');
+
+    if (exercisesError) {
+      console.error('[ExerciseSelector] Error loading exercises:', exercisesError);
+      logger.error('Error loading exercises:', exercisesError, 'ExerciseSelector');
+      setLoading(false);
+      return;
+    }
+
+    if (!exercises) {
+      console.warn('[ExerciseSelector] No exercises returned from database');
+      setLoading(false);
+      return;
+    }
+
+    console.log('[ExerciseSelector] Loaded exercises:', exercises.length);
+    console.log('[ExerciseSelector] Exercises sample:', exercises.slice(0, 3));
+
+    // Save to cache
+    saveToCache(exercises);
+
+    // Map exercises to groups
+    const groupsWithExercises = groups.map((group) => {
+      const groupExercises = exercises.filter((ex) => ex.muscle_group_id === group.id);
+      console.log(`[ExerciseSelector] Group "${group.name}" has ${groupExercises.length} exercises`);
+      return {
+        ...group,
+        exercises: groupExercises,
+      };
+    });
+
+    const totalExercisesInGroups = groupsWithExercises.reduce((sum, group) => sum + group.exercises.length, 0);
+    console.log('[ExerciseSelector] Total exercises in groups:', totalExercisesInGroups);
+    console.log('[ExerciseSelector] Groups with exercises:', groupsWithExercises.length);
+
+    setMuscleGroups(groupsWithExercises);
+    setLoading(false);
+  }, [isCacheValid, cachedExercises, saveToCache]);
 
   // Load recent exercises for this trainee with frequency calculation
   const loadRecentExercises = useCallback(async () => {
@@ -223,75 +287,12 @@ export default function ExerciseSelector({ traineeId, traineeName, onSelect, onC
     }
   }, [traineeId]);
 
-  const loadMuscleGroupsAndExercises = async () => {
-    const { data: groups, error: groupsError } = await supabase
-      .from('muscle_groups')
-      .select('*')
-      .order('name');
-
-    if (groupsError) {
-      console.error('[ExerciseSelector] Error loading muscle groups:', groupsError);
-      logger.error('Error loading muscle groups:', groupsError, 'ExerciseSelector');
-      setLoading(false);
-      return;
+  useEffect(() => {
+    loadMuscleGroupsAndExercises();
+    if (traineeId) {
+      loadRecentExercises();
     }
-
-    if (!groups) {
-      console.warn('[ExerciseSelector] No muscle groups returned from database');
-      setLoading(false);
-      return;
-    }
-
-    console.log('[ExerciseSelector] Loaded muscle groups:', groups.length);
-
-    // Always reload exercises from DB to ensure we have the latest data
-    // Cache might be stale or incomplete
-    if (isCacheValid && cachedExercises) {
-      console.log('[ExerciseSelector] Cache found, but reloading from DB to ensure freshness');
-      console.log('[ExerciseSelector] Cached exercises count:', cachedExercises.length);
-    }
-
-    const { data: exercises, error: exercisesError } = await supabase
-      .from('exercises')
-      .select('id, name, muscle_group_id, created_at')
-      .order('name');
-
-    if (exercisesError) {
-      console.error('[ExerciseSelector] Error loading exercises:', exercisesError);
-      logger.error('Error loading exercises:', exercisesError, 'ExerciseSelector');
-      setLoading(false);
-      return;
-    }
-
-    if (!exercises) {
-      console.warn('[ExerciseSelector] No exercises returned from database');
-      setLoading(false);
-      return;
-    }
-
-    console.log('[ExerciseSelector] Loaded exercises:', exercises.length);
-    console.log('[ExerciseSelector] Exercises sample:', exercises.slice(0, 3));
-
-    // Save to cache
-    saveToCache(exercises);
-
-    // Map exercises to groups
-    const groupsWithExercises = groups.map((group) => {
-      const groupExercises = exercises.filter((ex) => ex.muscle_group_id === group.id);
-      console.log(`[ExerciseSelector] Group "${group.name}" has ${groupExercises.length} exercises`);
-      return {
-        ...group,
-        exercises: groupExercises,
-      };
-    });
-
-    const totalExercisesInGroups = groupsWithExercises.reduce((sum, group) => sum + group.exercises.length, 0);
-    console.log('[ExerciseSelector] Total exercises in groups:', totalExercisesInGroups);
-    console.log('[ExerciseSelector] Groups with exercises:', groupsWithExercises.length);
-
-    setMuscleGroups(groupsWithExercises);
-    setLoading(false);
-  };
+  }, [traineeId, loadRecentExercises, loadMuscleGroupsAndExercises]);
 
   const handleAddExercise = async () => {
     if (!newExerciseName.trim() || !selectedGroup) return;
