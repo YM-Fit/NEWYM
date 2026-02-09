@@ -1,4 +1,4 @@
-import { Users, Target, Sparkles, Activity, AlertCircle } from 'lucide-react';
+import { Users, Target, Sparkles, Activity, AlertCircle, Scale } from 'lucide-react';
 import RecentActivity from './RecentActivity';
 import QuickActions from './QuickActions';
 import RecentScaleReadings from './RecentScaleReadings';
@@ -42,7 +42,7 @@ export default memo(function Dashboard({
 }: DashboardProps) {
   const { user } = useAuth();
   const traineeIds = useMemo(() => trainees.map(t => t.id), [trainees]);
-  const { data: stats } = useDashboardStatsQuery(user?.id ?? null, traineeIds);
+  const { data: stats, isLoading: statsLoading } = useDashboardStatsQuery(user?.id ?? null, traineeIds);
   const todayWorkouts = stats?.todayWorkouts ?? 0;
   const recentMeasurements = stats?.recentMeasurements ?? 0;
 
@@ -229,20 +229,41 @@ export default memo(function Dashboard({
 
       {/* Stats and Activity - Bottom Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        {/* Stats Cards */}
-        <div className="premium-card-static p-4 md:p-5">
+        {/* Stats Cards - Enhanced */}
+        <div className="premium-card-static p-4 md:p-5 border border-primary/10 hover:border-primary/20 transition-all">
           <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Target className="w-4 h-4 text-success" />
             סטטיסטיקות מהירות
           </h3>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-2 rounded-lg bg-surface/50">
-              <span className="text-xs text-gray-600">מדידות (7 ימים)</span>
-              <span className="text-sm font-bold text-gray-900">{recentMeasurements}</span>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 hover:border-emerald-500/30 transition-all">
+              <div className="flex items-center gap-2">
+                <Scale className="w-4 h-4 text-emerald-500" />
+                <span className="text-xs text-gray-600">מדידות (7 ימים)</span>
+              </div>
+              {statsLoading ? (
+                <div className="w-8 h-4 bg-surface/50 rounded animate-pulse" />
+              ) : (
+                <span className="text-base font-bold text-emerald-600">{recentMeasurements}</span>
+              )}
             </div>
-            <div className="flex items-center justify-between p-2 rounded-lg bg-surface/50">
-              <span className="text-xs text-gray-600">קריאות מאזניים</span>
-              <span className="text-sm font-bold text-gray-900">{scaleReadings.length}</span>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-blue-500/5 border border-blue-500/20 hover:border-blue-500/30 transition-all">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-blue-500" />
+                <span className="text-xs text-gray-600">קריאות מאזניים</span>
+              </div>
+              <span className="text-base font-bold text-blue-600">{scaleReadings.length}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20 hover:border-amber-500/30 transition-all">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-amber-500" />
+                <span className="text-xs text-gray-600">אימונים היום</span>
+              </div>
+              {statsLoading ? (
+                <div className="w-8 h-4 bg-surface/50 rounded animate-pulse" />
+              ) : (
+                <span className="text-base font-bold text-amber-600">{todayWorkouts}</span>
+              )}
             </div>
           </div>
         </div>

@@ -18,27 +18,13 @@ export function useDashboardStatsQuery(trainerId: string | null, traineeIds: str
         return { todayWorkouts: 0, recentMeasurements: 0 };
       }
 
-      const { data: workoutTrainees } = await supabase
+      // Optimized: Direct count query using join
+      const { count: todayWorkouts } = await supabase
         .from('workout_trainees')
-        .select('workout_id')
-        .in('trainee_id', traineeIds);
-
-      const workoutIds = workoutTrainees?.map(wt => wt.workout_id) || [];
-      let todayWorkouts = 0;
-
-      if (workoutIds.length > 0) {
-        const BATCH_SIZE = 100;
-        for (let i = 0; i < workoutIds.length; i += BATCH_SIZE) {
-          const batch = workoutIds.slice(i, i + BATCH_SIZE);
-          const { count } = await supabase
-            .from('workouts')
-            .select('*', { count: 'exact', head: true })
-            .in('id', batch)
-            .gte('workout_date', todayStr)
-            .lt('workout_date', tomorrowStr);
-          todayWorkouts += count || 0;
-        }
-      }
+        .select('workout_id', { count: 'exact', head: true })
+        .in('trainee_id', traineeIds)
+        .gte('workouts!inner.workout_date', todayStr)
+        .lt('workouts!inner.workout_date', tomorrowStr);
 
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -48,7 +34,7 @@ export function useDashboardStatsQuery(trainerId: string | null, traineeIds: str
         .in('trainee_id', traineeIds)
         .gte('measurement_date', sevenDaysAgo.toISOString().split('T')[0]);
 
-      return { todayWorkouts, recentMeasurements: recentMeasurements || 0 };
+      return { todayWorkouts: todayWorkouts || 0, recentMeasurements: recentMeasurements || 0 };
     },
     enabled: !!trainerId && traineeIds.length > 0,
     staleTime: 60_000,
