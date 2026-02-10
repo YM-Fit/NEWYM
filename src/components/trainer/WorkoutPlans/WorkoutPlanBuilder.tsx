@@ -10,6 +10,7 @@ import { useWorkoutPlanExercises } from './hooks/useWorkoutPlanExercises';
 import { useWorkoutPlanNumericPads } from './hooks/useWorkoutPlanNumericPads';
 import { useWorkoutPlanTemplates } from './hooks/useWorkoutPlanTemplates';
 import { cardioApi, type CardioType } from '../../../api/cardioApi';
+import { dayColors } from './constants';
 import WorkoutDayCard from './components/WorkoutDayCard';
 import DayEditView from './components/DayEditView';
 import LoadTemplateModal from './components/LoadTemplateModal';
@@ -1193,11 +1194,13 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
       {/* Day Cards */}
       <div className="space-y-4">
-        {days.map((day) => (
+        {days.map((day) => {
+          const dayColor = dayColors[(day.day_number - 1) % dayColors.length];
+          return (
             <div
               key={day.tempId}
               className={`premium-card-static transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] ${
-              minimizedDays.has(day.tempId) ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-r-4 border-emerald-500' : ''
+              minimizedDays.has(day.tempId) ? `bg-gradient-to-br ${dayColor.light} border-r-4 ${dayColor.borderAccent}` : ''
               }`}
               style={{
               height: minimizedDays.has(day.tempId) ? '88px' : 'auto',
@@ -1216,9 +1219,10 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
               onToggleMinimize={toggleMinimizeDay}
               onComplete={completeDay}
             />
-                        </div>
-                      ))}
-                    </div>
+            </div>
+          );
+        })}
+      </div>
 
       <button
         onClick={addDay}

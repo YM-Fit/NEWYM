@@ -28,7 +28,7 @@ export default function WorkoutDayCard({
   if (isMinimized) {
     return (
       <div
-        className="h-full flex items-center justify-between px-4 lg:px-6 cursor-pointer hover:bg-emerald-50 transition-all duration-300"
+        className={`h-full flex items-center justify-between px-4 lg:px-6 cursor-pointer ${color.light} hover:opacity-90 transition-all duration-300`}
         onClick={() => {
           onSelect(day);
           onToggleMinimize(day.tempId);
@@ -36,7 +36,7 @@ export default function WorkoutDayCard({
         style={{ height: '88px' }}
       >
         <div className="flex items-center space-x-3 rtl:space-x-reverse">
-          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-md">
+          <div className={`w-12 h-12 bg-gradient-to-br ${color.bg} rounded-xl flex items-center justify-center shadow-md`}>
             <span className="text-xl text-white font-bold">{day.day_number}</span>
           </div>
           <div>
@@ -49,7 +49,7 @@ export default function WorkoutDayCard({
           </div>
         </div>
         <div className="flex items-center space-x-2 rtl:space-x-reverse">
-          <span className="text-sm text-emerald-600 font-semibold">לחץ לעריכה</span>
+          <span className={`text-sm font-semibold ${color.text}`}>לחץ לעריכה</span>
           <button
             onClick={(e) => {
               e.stopPropagation();

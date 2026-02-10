@@ -118,10 +118,10 @@ export const WorkoutSetCard = memo(({
             </span>
             <div className="flex items-center gap-2">
               <span className="text-foreground font-semibold text-base lg:text-lg">{set.weight}</span>
-              <span className="text-muted text-sm">ק״ג</span>
-              <span className="text-muted mx-1">×</span>
+              <span className="text-muted700 text-sm">ק״ג</span>
+              <span className="text-muted700 mx-1">×</span>
               <span className="text-foreground font-semibold text-base lg:text-lg">{set.reps}</span>
-              <span className="text-muted text-sm">חזרות</span>
+              <span className="text-muted700 text-sm">חזרות</span>
             </div>
             {set.rpe && (
               <span className="text-amber-400 text-sm font-medium bg-amber-500/10 px-2 py-1 rounded-lg">
@@ -183,7 +183,7 @@ export const WorkoutSetCard = memo(({
             title="סגור סט"
             aria-label="סגור סט"
           >
-            <ChevronUp className="h-4 w-4 lg:h-5 lg:w-5 text-muted" />
+            <ChevronUp className="h-4 w-4 lg:h-5 lg:w-5 text-muted700" />
           </button>
           <button
             type="button"
@@ -218,7 +218,7 @@ export const WorkoutSetCard = memo(({
       {/* Main inputs - Weight, Reps, RPE */}
       <div className="grid grid-cols-3 gap-3 lg:gap-4 mb-4">
         <div>
-          <label className="block text-sm lg:text-base font-semibold text-muted mb-2">משקל (ק״ג)</label>
+          <label className="block text-sm lg:text-base font-semibold text-muted700 mb-2">משקל (ק״ג)</label>
           <button
             type="button"
             onClick={(e) => {
@@ -233,7 +233,7 @@ export const WorkoutSetCard = memo(({
         </div>
 
         <div>
-          <label className="block text-sm lg:text-base font-semibold text-muted mb-2">חזרות</label>
+          <label className="block text-sm lg:text-base font-semibold text-muted700 mb-2">חזרות</label>
           <button
             type="button"
             onClick={(e) => {
@@ -248,7 +248,7 @@ export const WorkoutSetCard = memo(({
         </div>
 
         <div>
-          <label className="block text-sm lg:text-base font-semibold text-muted mb-2">RPE</label>
+          <label className="block text-sm lg:text-base font-semibold text-muted700 mb-2">RPE</label>
           <button
             type="button"
             onClick={(e) => {
@@ -314,7 +314,7 @@ export const WorkoutSetCard = memo(({
           className={`py-3 lg:py-4 px-3 rounded-xl border transition-all cursor-pointer ${
             set.failure
               ? 'border-red-500/50 bg-red-500/10 text-red-400'
-              : 'border-border hover:border-red-500/30 bg-surface/30 text-muted hover:bg-red-500/10'
+              : 'border-border hover:border-red-500/30 bg-surface/30 text-muted700 hover:bg-red-500/10'
           }`}
         >
           <div className="flex items-center justify-center gap-2">
@@ -340,7 +340,7 @@ export const WorkoutSetCard = memo(({
           className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all cursor-pointer ${
             set.set_type === 'regular'
               ? 'bg-emerald-500 text-foreground'
-              : 'bg-surface border border-border text-muted hover:bg-surface hover:border-emerald-500/30 hover:text-foreground'
+              : 'bg-surface border border-border text-muted700 hover:bg-surface hover:border-emerald-500/30 hover:text-foreground'
           }`}
         >
           רגיל
@@ -357,7 +357,7 @@ export const WorkoutSetCard = memo(({
           className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all cursor-pointer ${
             set.set_type === 'superset'
               ? 'bg-blue-500 text-foreground'
-              : 'bg-surface border border-border text-muted hover:bg-surface hover:border-blue-500/30 hover:text-foreground'
+              : 'bg-surface border border-border text-muted700 hover:bg-surface hover:border-blue-500/30 hover:text-foreground'
           }`}
         >
           סופר-סט
@@ -372,7 +372,7 @@ export const WorkoutSetCard = memo(({
           className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all cursor-pointer ${
             set.set_type === 'dropset'
               ? 'bg-amber-500 text-foreground'
-              : 'bg-surface border border-border text-muted hover:bg-surface hover:border-amber-500/30 hover:text-foreground'
+              : 'bg-surface border border-border text-muted700 hover:bg-surface hover:border-amber-500/30 hover:text-foreground'
           }`}
         >
           דרופ-סט
