@@ -7,7 +7,7 @@ import { LoadingSpinner } from '../../ui/LoadingSpinner';
 import { Skeleton } from '../../ui/Skeleton';
 import { getScheduledWorkoutsForTodayAndTomorrow } from '../../../api/workoutApi';
 import { useAuth } from '../../../contexts/AuthContext';
-import { deleteGoogleCalendarEvent } from '../../../api/googleCalendarApi';
+import { deleteGoogleCalendarEvent, syncGoogleCalendar } from '../../../api/googleCalendarApi';
 import toast from 'react-hot-toast';
 
 export interface TodayTrainee {
@@ -135,6 +135,19 @@ export default function TodayTraineesSection({
         isLoadingRef.current = false;
         return;
       }
+
+      // Sync from Google Calendar in background - ensures events added in Google appear in dashboard
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.access_token) {
+          syncGoogleCalendar(trainerId, session.access_token)
+            .then((syncResult) => {
+              if (syncResult.success && !isLoadingRef.current && loadTodayTraineesRef.current) {
+                loadTodayTraineesRef.current(true); // Refresh after sync to show new workouts
+              }
+            })
+            .catch(() => {}); // Silently ignore sync errors - dashboard will show existing data
+        }
+      });
 
       // Use the new unified API function
       let result;

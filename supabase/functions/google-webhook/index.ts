@@ -269,9 +269,6 @@ async function processCalendarEvents(
       .eq("google_calendar_id", event.organizer?.email || "primary")
       .maybeSingle();
 
-    // For sync_direction 'to_google': only process deletions (already handled above). Skip create/update.
-    if (syncDirection === 'to_google') continue;
-
     // Extract trainee name and email from event
     const traineeName = extractTraineeName(event);
     const traineeEmail = extractEmail(event);
@@ -296,40 +293,37 @@ async function processCalendarEvents(
       }
     }
     
-    // If no email match, try name matching
-    if (!traineeId && traineeName) {
-      // First try exact match (case insensitive)
-      const { data: exactMatch } = await supabase
-        .from("trainees")
-        .select("id")
-        .eq("trainer_id", trainerId)
-        .ilike("full_name", traineeName)
-        .maybeSingle();
-      
-      if (exactMatch) {
-        traineeId = exactMatch.id;
-        console.log(`Matched trainee by exact name: ${traineeName} -> ${traineeId}`);
-      } else {
-        // Try partial match, but check for multiple matches
-        const { data: partialMatches } = await supabase
+    // If no email match, try name matching (supports "משה ורינה" - multiple names)
+    const traineeIdsToUse: string[] = [];
+    if (traineeId) {
+      traineeIdsToUse.push(traineeId);
+    } else if (traineeName) {
+      // Split by " ו " or "ו" or "," for multiple names (e.g. "משה ורינה" -> ["משה", "רינה"])
+      const nameParts = traineeName.split(/\s+ו\s+|\s*ו\s*|\s*,\s*/).map((n: string) => n.trim()).filter(Boolean);
+      for (const part of nameParts) {
+        const { data: exactMatch } = await supabase
           .from("trainees")
-          .select("id, full_name")
+          .select("id")
           .eq("trainer_id", trainerId)
-          .ilike("full_name", `%${traineeName}%`);
-        
-        if (partialMatches && partialMatches.length === 1) {
-          traineeId = partialMatches[0].id;
-          console.log(`Matched trainee by partial name: ${traineeName} -> ${traineeId}`);
-        } else if (partialMatches && partialMatches.length > 1) {
-          // Multiple matches found - don't auto-associate to avoid wrong match
-          console.warn(
-            `Multiple trainees found for name "${traineeName}": ${partialMatches.map(t => t.full_name).join(", ")}. ` +
-            `Skipping auto-association to prevent incorrect matching.`
-          );
-          continue; // Skip this event to avoid wrong association
+          .ilike("full_name", part)
+          .maybeSingle();
+        if (exactMatch) {
+          if (!traineeIdsToUse.includes(exactMatch.id)) traineeIdsToUse.push(exactMatch.id);
+        } else {
+          const { data: partialMatches } = await supabase
+            .from("trainees")
+            .select("id, full_name")
+            .eq("trainer_id", trainerId)
+            .ilike("full_name", `%${part}%`);
+          if (partialMatches && partialMatches.length === 1 && !traineeIdsToUse.includes(partialMatches[0].id)) {
+            traineeIdsToUse.push(partialMatches[0].id);
+          } else if (partialMatches && partialMatches.length > 1) {
+            console.warn(`Multiple trainees for "${part}", skipping`);
+          }
         }
       }
     }
+    const effectiveTraineeIds = traineeIdsToUse.length > 0 ? traineeIdsToUse : (traineeId ? [traineeId] : []);
 
     const startTime = new Date(event.start.dateTime || event.start.date);
     const endTime = new Date(event.end.dateTime || event.end.date);
@@ -360,41 +354,37 @@ async function processCalendarEvents(
           .eq("id", existingSync.id);
       }
     } else if (!event.status || event.status !== "cancelled") {
-      // Create new workout
-      if (traineeId) {
+      // Create new workout (supports multiple trainees per event, e.g. "משה ורינה")
+      if (effectiveTraineeIds.length > 0) {
         // IMPORTANT: workout_date is timestamptz, so we need to preserve the full timestamp
-        // Use the exact startTime from Google Calendar event to maintain consistency
         const { data: newWorkout } = await supabase
           .from("workouts")
           .insert({
             trainer_id: trainerId,
             workout_type: "personal",
-            workout_date: startTime.toISOString(), // Full timestamp, not just date
+            workout_date: startTime.toISOString(),
             notes: event.description || null,
             is_completed: false,
-            is_prepared: false, // Google Calendar workouts are always dynamic
+            is_prepared: false,
           })
           .select()
           .single();
 
         if (newWorkout) {
-          await supabase
-            .from("workout_trainees")
-            .insert({
-              workout_id: newWorkout.id,
-              trainee_id: traineeId,
-            });
+          for (const tid of effectiveTraineeIds) {
+            await supabase
+              .from("workout_trainees")
+              .insert({ workout_id: newWorkout.id, trainee_id: tid });
+          }
 
-          // Use user's preferred sync direction
-          const recordSyncDirection = syncDirection === 'bidirectional' 
-            ? 'bidirectional' 
-            : 'from_google';
-          
+          const recordSyncDirection = syncDirection === 'bidirectional' ? 'bidirectional' : 'from_google';
+          // One sync record per trainee (google_calendar_sync has UNIQUE(workout_id) - need to check)
+          const primaryTraineeId = effectiveTraineeIds[0];
           await supabase
             .from("google_calendar_sync")
             .insert({
               trainer_id: trainerId,
-              trainee_id: traineeId,
+              trainee_id: primaryTraineeId,
               workout_id: newWorkout.id,
               google_event_id: event.id,
               google_calendar_id: event.organizer?.email || "primary",
@@ -407,8 +397,7 @@ async function processCalendarEvents(
               last_synced_at: new Date().toISOString(),
             });
 
-          // Update or create calendar client
-          await updateCalendarClient(trainerId, traineeId, event, supabase);
+          await updateCalendarClient(trainerId, primaryTraineeId, event, supabase);
         }
       }
     }

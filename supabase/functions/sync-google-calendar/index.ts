@@ -94,11 +94,7 @@ async function syncTrainerCalendar(
     throw new Error("No sync credentials found");
   }
 
-  // For 'to_google': we still process deletions (if user deleted in Google, delete locally)
-  // For create/update: only when sync_direction is 'from_google' or 'bidirectional'
-  const shouldSyncCreatesFromGoogle = credentials.sync_direction === 'from_google' || 
-                                      credentials.sync_direction === 'bidirectional';
-
+  // Process all events (create, update, delete) - user's calendar should be source of truth
   // Check and refresh token if needed
   let accessToken = credentials.access_token;
   if (new Date(credentials.token_expires_at) < new Date()) {
@@ -179,9 +175,7 @@ async function syncTrainerCalendar(
     // Track this event as existing
     existingEventIds.add(event.id);
 
-    // For sync_direction 'to_google': only process deletions (already handled above). Skip create/update.
-    if (!shouldSyncCreatesFromGoogle) continue;
-
+    // Process create/update for all sync directions - events in Google should appear in app
     const startTime = new Date(event.start.dateTime || event.start.date);
     const endTime = new Date(event.end.dateTime || event.end.date);
 
@@ -217,42 +211,39 @@ async function syncTrainerCalendar(
       }
     }
     
-    // If no email match, try name matching
-    if (!trainee && traineeName) {
-      // First try exact match (case insensitive)
-      const { data: exactMatch } = await supabase
-        .from("trainees")
-        .select("id")
-        .eq("trainer_id", trainerId)
-        .ilike("full_name", traineeName)
-        .maybeSingle();
-      
-      if (exactMatch) {
-        trainee = exactMatch;
-        console.log(`Matched trainee by exact name: ${traineeName} -> ${trainee.id}`);
-      } else {
-        // Try partial match, but check for multiple matches
-        const { data: partialMatches } = await supabase
+    // If no email match, try name matching (supports "משה ורינה" - multiple names)
+    const traineeIdsToUse: string[] = [];
+    if (trainee) {
+      traineeIdsToUse.push(trainee.id);
+    } else if (traineeName) {
+      const nameParts = traineeName.split(/\s+ו\s+|\s*ו\s*|\s*,\s*/).map((n: string) => n.trim()).filter(Boolean);
+      for (const part of nameParts) {
+        const { data: exactMatch } = await supabase
           .from("trainees")
-          .select("id, full_name")
+          .select("id")
           .eq("trainer_id", trainerId)
-          .ilike("full_name", `%${traineeName}%`);
-        
-        if (partialMatches && partialMatches.length === 1) {
-          trainee = partialMatches[0];
-          console.log(`Matched trainee by partial name: ${traineeName} -> ${trainee.id}`);
-        } else if (partialMatches && partialMatches.length > 1) {
-          // Multiple matches found - don't auto-associate to avoid wrong match
-          console.warn(
-            `Multiple trainees found for name "${traineeName}": ${partialMatches.map(t => t.full_name).join(", ")}. ` +
-            `Skipping auto-association to prevent incorrect matching.`
-          );
-          continue; // Skip this event to avoid wrong association
+          .ilike("full_name", part)
+          .maybeSingle();
+        if (exactMatch) {
+          if (!traineeIdsToUse.includes(exactMatch.id)) traineeIdsToUse.push(exactMatch.id);
+        } else {
+          const { data: partialMatches } = await supabase
+            .from("trainees")
+            .select("id, full_name")
+            .eq("trainer_id", trainerId)
+            .ilike("full_name", `%${part}%`);
+          if (partialMatches && partialMatches.length === 1 && !traineeIdsToUse.includes(partialMatches[0].id)) {
+            traineeIdsToUse.push(partialMatches[0].id);
+          } else if (partialMatches && partialMatches.length > 1) {
+            console.warn(`Multiple trainees for "${part}", skipping`);
+          }
         }
       }
     }
 
-    if (!trainee) continue;
+    if (traineeIdsToUse.length === 0) continue;
+
+    const primaryTrainee = { id: traineeIdsToUse[0] };
 
     if (existingSync) {
       // Update existing sync record
@@ -297,23 +288,19 @@ async function syncTrainerCalendar(
         .single();
 
       if (newWorkout) {
-        await supabase
-          .from("workout_trainees")
-          .insert({
-            workout_id: newWorkout.id,
-            trainee_id: trainee.id,
-          });
+        for (const tid of traineeIdsToUse) {
+          await supabase
+            .from("workout_trainees")
+            .insert({ workout_id: newWorkout.id, trainee_id: tid });
+        }
 
-        // Use user's preferred sync direction
-        const syncDirection = credentials.sync_direction === 'bidirectional' 
-          ? 'bidirectional' 
-          : 'from_google';
+        const syncDirection = credentials.sync_direction === 'bidirectional' ? 'bidirectional' : 'from_google';
         
         await supabase
           .from("google_calendar_sync")
           .insert({
             trainer_id: trainerId,
-            trainee_id: trainee.id,
+            trainee_id: primaryTrainee.id,
             workout_id: newWorkout.id,
             google_event_id: event.id,
             google_calendar_id: calendarId,
@@ -326,8 +313,7 @@ async function syncTrainerCalendar(
             last_synced_at: new Date().toISOString(),
           });
 
-        // Update calendar client stats
-        await updateCalendarClientStats(trainerId, trainee.id, event, supabase);
+        await updateCalendarClientStats(trainerId, primaryTrainee.id, event, supabase);
       }
     }
   }
