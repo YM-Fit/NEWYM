@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ArrowRight, Activity, TrendingUp, Calendar, Target, BarChart3, Plus, Edit2, Trash2, Save, X, Footprints, Loader2, Flame } from 'lucide-react';
+import { useConfirmDialog } from '../../../hooks/useConfirmDialog';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, Cell } from 'recharts';
 import toast from 'react-hot-toast';
 import { cardioApi, type CardioActivity, type CardioType, type CardioStats } from '../../../api/cardioApi';
@@ -13,6 +14,7 @@ interface CardioManagerProps {
 }
 
 export default function CardioManager({ traineeId, trainerId, traineeName, onBack }: CardioManagerProps) {
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   const [activities, setActivities] = useState<CardioActivity[]>([]);
   const [cardioTypes, setCardioTypes] = useState<CardioType[]>([]);
   const [stats, setStats] = useState<CardioStats | null>(null);
@@ -183,7 +185,12 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
   }, []);
 
   const handleDelete = useCallback(async (id: string) => {
-    if (!window.confirm('האם למחוק את הפעילות?')) return;
+    const ok = await confirm({
+      title: 'מחיקת פעילות',
+      message: 'האם למחוק את הפעילות?',
+      confirmText: 'מחק',
+    });
+    if (!ok) return;
 
     setDeletingId(id);
     try {
@@ -196,7 +203,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
     } finally {
       setDeletingId(null);
     }
-  }, [loadActivities, loadStats]);
+  }, [confirm, loadActivities, loadStats]);
 
   const latestActivity = useMemo(() => activities[0], [activities]);
 
@@ -224,6 +231,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
 
   return (
     <div className="space-y-6">
+      {ConfirmDialog}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button

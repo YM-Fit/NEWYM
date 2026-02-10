@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useConfirmDialog } from '../../../hooks/useConfirmDialog';
 import {
   ArrowRight,
   Plus,
@@ -85,6 +86,7 @@ const getCategoryLabel = (category: string) => {
 
 export default function MentalToolsEditor({ traineeId, traineeName, onBack }: MentalToolsEditorProps) {
   const { user } = useAuth();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   const { data: tools = [], isLoading: loading } = useMentalToolsQuery(traineeId);
   const createMutation = useCreateMentalToolMutation();
   const updateMutation = useUpdateMentalToolMutation(traineeId);
@@ -153,7 +155,12 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
   }, [user, formData, editingTool, traineeId, createMutation, updateMutation, resetForm]);
 
   const handleDelete = useCallback(async (toolId: string) => {
-    if (!window.confirm('האם אתה בטוח שברצונך למחוק כלי זה?')) return;
+    const ok = await confirm({
+      title: 'מחיקת כלי',
+      message: 'האם אתה בטוח שברצונך למחוק כלי זה?',
+      confirmText: 'מחק',
+    });
+    if (!ok) return;
     try {
       await deleteMutation.mutateAsync(toolId);
       toast.success('הכלי נמחק');
@@ -162,7 +169,7 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
       logger.error('Error deleting mental tool', error, 'MentalToolsEditor');
       toast.error('שגיאה במחיקת הכלי');
     }
-  }, [deleteMutation]);
+  }, [confirm, deleteMutation]);
 
   const handleToggleComplete = useCallback(async (tool: MentalTool) => {
     try {
@@ -221,6 +228,7 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
 
   return (
     <div className="space-y-6 pb-6">
+      {ConfirmDialog}
       <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-blue-700 rounded-2xl p-6 shadow-xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

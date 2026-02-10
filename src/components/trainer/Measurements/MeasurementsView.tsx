@@ -1,5 +1,6 @@
 import { Plus, TrendingDown, TrendingUp, Scale, BarChart3, Trash2, Edit, User, Activity, ArrowRight, Sparkles, List, Table2, Calculator, Target, TrendingDown as TrendingDownIcon, Minus } from 'lucide-react';
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useConfirmDialog } from '../../../hooks/useConfirmDialog';
 import { Trainee, BodyMeasurement } from '../../../types';
 import MeasurementsChart from './MeasurementsChart';
 import { supabase } from '../../../lib/supabase';
@@ -17,6 +18,7 @@ interface MeasurementsViewProps {
 }
 
 export default function MeasurementsView({ trainee, measurements, onNewMeasurement, onEditMeasurement, onMeasurementDeleted, onRefresh, onBack }: MeasurementsViewProps) {
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   const [selectedMetric, setSelectedMetric] = useState<'weight' | 'bodyFat' | 'muscleMass' | 'waterPercentage' | 'metabolicAge'>('weight');
   const [selectedMember, setSelectedMember] = useState<'member_1' | 'member_2' | 'all'>('all');
   const [viewMode, setViewMode] = useState<'list' | 'table'>('list');
@@ -42,11 +44,12 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
   }, [measurements, trainee.isPair, selectedMember]);
 
   const handleDeleteMeasurement = useCallback(async (measurementId: string) => {
-    // Use a better confirmation approach
-    const confirmed = window.confirm('האם אתה בטוח שברצונך למחוק מדידה זו?');
-    if (!confirmed) {
-      return;
-    }
+    const ok = await confirm({
+      title: 'מחיקת מדידה',
+      message: 'האם אתה בטוח שברצונך למחוק מדידה זו?',
+      confirmText: 'מחק',
+    });
+    if (!ok) return;
 
     try {
       const { error } = await supabase
@@ -65,7 +68,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
       logger.error('Unexpected error deleting measurement:', error, 'MeasurementsView');
       toast.error('שגיאה בלתי צפויה במחיקת המדידה');
     }
-  }, [onMeasurementDeleted]);
+  }, [confirm, onMeasurementDeleted]);
 
   const latestMeasurement = useMemo(() => filteredMeasurements[0], [filteredMeasurements]);
   const previousMeasurement = useMemo(() => filteredMeasurements[1], [filteredMeasurements]);
@@ -159,6 +162,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {ConfirmDialog}
       <div className="premium-card-static p-6 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

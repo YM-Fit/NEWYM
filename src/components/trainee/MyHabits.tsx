@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Flame, Plus, CheckCircle2, X, Calendar, TrendingUp } from 'lucide-react';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 import { habitsApi, TraineeHabit, HabitLog } from '../../api/habitsApi';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { Button } from '../ui/Button';
@@ -13,6 +14,7 @@ interface MyHabitsProps {
 }
 
 export default function MyHabits({ traineeId }: MyHabitsProps) {
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   const [habits, setHabits] = useState<TraineeHabit[]>([]);
   const [habitLogs, setHabitLogs] = useState<Map<string, HabitLog[]>>(new Map());
   const [streaks, setStreaks] = useState<Map<string, number>>(new Map());
@@ -148,8 +150,13 @@ export default function MyHabits({ traineeId }: MyHabitsProps) {
     });
   };
 
-  const handleDeleteHabit = async (habitId: string) => {
-    if (!window.confirm('האם אתה בטוח שברצונך למחוק הרגל זה?')) return;
+  const handleDeleteHabit = useCallback(async (habitId: string) => {
+    const ok = await confirm({
+      title: 'מחיקת הרגל',
+      message: 'האם אתה בטוח שברצונך למחוק הרגל זה?',
+      confirmText: 'מחק',
+    });
+    if (!ok) return;
 
     try {
       await habitsApi.deleteHabit(habitId);
@@ -159,7 +166,7 @@ export default function MyHabits({ traineeId }: MyHabitsProps) {
       logger.error('Error deleting habit', error, 'MyHabits');
       toast.error('שגיאה במחיקת הרגל');
     }
-  };
+  }, [confirm, loadHabits]);
 
   const getHabitTypeLabel = (type: string): string => {
     const labels: Record<string, string> = {
@@ -193,6 +200,7 @@ export default function MyHabits({ traineeId }: MyHabitsProps) {
 
   return (
     <div className="space-y-6">
+      {ConfirmDialog}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">

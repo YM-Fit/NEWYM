@@ -19,6 +19,8 @@ interface AuthContextType {
   userType: 'trainer' | 'trainee' | null;
   traineeId: string | null;
   traineeSession: TraineeSession | null;
+  /** Returns current user/trainee ID - use instead of user?.id when both trainer and trainee flows need it */
+  getCurrentUserId: () => string | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInTrainee: (phone: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
@@ -245,18 +247,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAuthenticated = user !== null || traineeSession !== null;
 
+  /** Build a minimal User-like object when we have traineeSession but no Supabase user (e.g. restored from storage) */
+  const resolvedUser = useMemo((): User | null => {
+    if (!isAuthenticated) return null;
+    if (user) return user;
+    if (traineeSession) {
+      return {
+        id: traineeSession.trainee_id,
+        user_metadata: {
+          is_trainee: true,
+          trainee_id: traineeSession.trainee_id,
+          full_name: traineeSession.trainee_name,
+          trainer_id: traineeSession.trainer_id,
+          phone: traineeSession.phone,
+        },
+      } as User;
+    }
+    return null;
+  }, [isAuthenticated, user, traineeSession]);
+
+  const getCurrentUserId = useCallback(() => {
+    return user?.id ?? traineeSession?.trainee_id ?? null;
+  }, [user, traineeSession]);
+
   const contextValue = useMemo(() => ({
-    user: isAuthenticated ? (user || { id: traineeSession?.trainee_id } as User) : null,
+    user: resolvedUser,
     session,
     loading,
     userType,
     traineeId,
     traineeSession,
+    getCurrentUserId,
     signIn,
     signInTrainee,
     signUp,
     signOut,
-  }), [user, session, loading, userType, traineeId, traineeSession, signIn, signInTrainee, signUp, signOut, isAuthenticated]);
+  }), [resolvedUser, session, loading, userType, traineeId, traineeSession, getCurrentUserId, signIn, signInTrainee, signUp, signOut]);
 
   return (
     <AuthContext.Provider value={contextValue}>

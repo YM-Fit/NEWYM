@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Key, Lock, Unlock, Eye, EyeOff, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
+import { useConfirmDialog } from '../../../hooks/useConfirmDialog';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../../utils/logger';
@@ -20,6 +21,7 @@ interface TraineeAccessManagerProps {
 }
 
 export default function TraineeAccessManager({ traineeId, traineeName, onBack }: TraineeAccessManagerProps) {
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   const [access, setAccess] = useState<TraineeAccess | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -183,9 +185,12 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
   const handleDeleteAccess = useCallback(async () => {
     if (!access) return;
 
-    if (!window.confirm('האם למחוק את הגישה? המתאמן לא יוכל להתחבר לאפליקציה.')) {
-      return;
-    }
+    const ok = await confirm({
+      title: 'מחיקת גישה',
+      message: 'האם למחוק את הגישה? המתאמן לא יוכל להתחבר לאפליקציה.',
+      confirmText: 'מחק',
+    });
+    if (!ok) return;
 
     try {
       const { error } = await supabase
@@ -201,7 +206,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
       logger.error('Error deleting access', error, 'TraineeAccessManager');
       toast.error('שגיאה במחיקת גישה');
     }
-  }, [access]);
+  }, [access, confirm]);
 
   if (loading) {
     return (
@@ -216,6 +221,7 @@ export default function TraineeAccessManager({ traineeId, traineeName, onBack }:
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 lg:p-6">
+      {ConfirmDialog}
       <div className="max-w-4xl mx-auto">
         {/* Premium Header */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-6 transition-all duration-300 hover:shadow-2xl">

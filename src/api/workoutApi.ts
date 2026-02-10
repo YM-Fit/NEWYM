@@ -176,6 +176,100 @@ export async function getWorkoutDetails(
 }
 
 /**
+ * Get workout exercises in format suitable for editing session
+ */
+export async function getWorkoutExercisesForEditing(
+  workoutId: string
+): Promise<ApiResponse<any[]>> {
+  const rateLimitKey = `getWorkoutExercises:${workoutId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 100, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('workout_exercises')
+      .select(`
+        id, exercise_id, order_index,
+        exercises (id, name, muscle_group_id),
+        exercise_sets (
+          id, set_number, weight, reps, rpe, set_type,
+          superset_exercise_id, superset_weight, superset_reps,
+          dropset_weight, dropset_reps
+        )
+      `)
+      .eq('workout_id', workoutId)
+      .order('order_index', { ascending: true });
+
+    if (error) return { error: error.message };
+    if (!data) return { data: [], success: true };
+
+    const formatted = data.map((we: any) => ({
+      tempId: we.id,
+      exercise: {
+        id: we.exercises.id,
+        name: we.exercises.name,
+        muscle_group_id: we.exercises.muscle_group_id,
+      },
+      sets: (we.exercise_sets || [])
+        .sort((a: any, b: any) => a.set_number - b.set_number)
+        .map((set: any) => ({
+          id: set.id,
+          set_number: set.set_number,
+          weight: set.weight,
+          reps: set.reps,
+          rpe: set.rpe,
+          set_type: set.set_type as 'regular' | 'superset' | 'dropset',
+          superset_exercise_id: set.superset_exercise_id,
+          superset_weight: set.superset_weight,
+          superset_reps: set.superset_reps,
+          dropset_weight: set.dropset_weight,
+          dropset_reps: set.dropset_reps,
+        })),
+    }));
+
+    return { data: formatted, success: true };
+  } catch (err: any) {
+    return { error: err.message || 'שגיאה בטעינת תרגילי האימון' };
+  }
+}
+
+/**
+ * Get last completed workout for a trainee (for quick edit)
+ */
+export async function getLastCompletedWorkoutForTrainee(
+  traineeId: string,
+  trainerId: string
+): Promise<ApiResponse<{ id: string } | null>> {
+  const rateLimitKey = `getLastWorkout:${traineeId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 50, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('workout_trainees')
+      .select('workout_id, workouts!inner (id, workout_date, is_completed, trainer_id)')
+      .eq('trainee_id', traineeId)
+      .eq('workouts.is_completed', true)
+      .eq('workouts.trainer_id', trainerId)
+      .order('workouts.workout_date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) return { error: error.message };
+    if (!data) return { data: null, success: true };
+
+    const workout = Array.isArray(data.workouts) ? data.workouts[0] : data.workouts;
+    return { data: workout?.id ? { id: workout.id } : null, success: true };
+  } catch (err: any) {
+    return { error: err.message || 'שגיאה בטעינת האימון האחרון' };
+  }
+}
+
+/**
  * Delete workout
  */
 export async function deleteWorkout(

@@ -1,5 +1,6 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import { Trash2 } from 'lucide-react';
+import { useConfirmDialog } from '../../../hooks/useConfirmDialog';
 import { WorkoutTableHeader } from './WorkoutTableHeader';
 import { WorkoutTableRow } from './WorkoutTableRow';
 
@@ -75,6 +76,17 @@ export const WorkoutTable = memo(({
   onRemoveExercise,
   isTablet,
 }: WorkoutTableProps) => {
+  const { confirm, ConfirmDialog } = useConfirmDialog();
+
+  const handleRemoveExercise = useCallback(async (exerciseIndex: number, exerciseName: string) => {
+    const ok = await confirm({
+      title: 'מחיקת תרגיל',
+      message: `האם אתה בטוח שברצונך למחוק את התרגיל "${exerciseName}"?`,
+      confirmText: 'מחק',
+    });
+    if (ok && onRemoveExercise) onRemoveExercise(exerciseIndex);
+  }, [confirm, onRemoveExercise]);
+
   // Flatten exercises and sets into rows, filtering out collapsed sets
   const tableRows = useMemo(() => {
     const rows: Array<{
@@ -115,6 +127,7 @@ export const WorkoutTable = memo(({
   
   return (
     <div className="premium-card-static overflow-hidden mb-4 shadow-lg border-2 border-emerald-500/30" style={{ display: 'block' }}>
+      {ConfirmDialog}
       <div className={`overflow-x-auto ${isTvMode ? 'max-h-[calc(100vh-200px)]' : 'max-h-[calc(100vh-300px)]'} overflow-y-auto`}>
         <table className={`w-full border-collapse ${isTvMode ? 'min-w-[1200px]' : 'min-w-[800px] sm:min-w-[900px] lg:min-w-[1200px]'} bg-surface/50`} style={{ display: 'table' }}>
           <WorkoutTableHeader isTablet={isTablet} />
@@ -153,9 +166,7 @@ export const WorkoutTable = memo(({
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                if (window.confirm(`האם אתה בטוח שברצונך למחוק את התרגיל "${exercise.exercise.name}"?`)) {
-                                  onRemoveExercise(exerciseIndex);
-                                }
+                                handleRemoveExercise(exerciseIndex, exercise.exercise.name);
                               }}
                               className="p-1.5 sm:p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-all cursor-pointer active:scale-95"
                               title="מחק תרגיל"

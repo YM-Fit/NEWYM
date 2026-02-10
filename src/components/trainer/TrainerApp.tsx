@@ -3,11 +3,12 @@ import { Home, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
+import * as workoutApi from '../../api/workoutApi';
 import { queryKeys } from '../../lib/queryClient';
 import { logger } from '../../utils/logger';
 import { useGlobalScaleListener, IdentifiedReading } from '../../hooks/useGlobalScaleListener';
 import { ScaleReading } from '../../hooks/useScaleListener';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 import { useTrainerAppData } from './hooks/useTrainerAppData';
 import { convertTraineeToDisplayFormat } from './utils/traineeDisplayFormat';
 import Header from '../layout/Header';
@@ -75,38 +76,9 @@ interface TrainerAppProps {
   isTablet?: boolean;
 }
 
-async function fetchWorkoutExercises(workoutId: string) {
-  const { data } = await supabase
-    .from('workout_exercises')
-    .select(`
-      id, exercise_id, order_index,
-      exercises (id, name, muscle_group_id),
-      exercise_sets (
-        id, set_number, weight, reps, rpe, set_type,
-        superset_exercise_id, superset_weight, superset_reps,
-        dropset_weight, dropset_reps
-      )
-    `)
-    .eq('workout_id', workoutId)
-    .order('order_index', { ascending: true });
-
-  if (!data) return [];
-  return data.map((we: any) => ({
-    tempId: we.id,
-    exercise: { id: we.exercises.id, name: we.exercises.name, muscle_group_id: we.exercises.muscle_group_id },
-    sets: (we.exercise_sets || [])
-      .sort((a: any, b: any) => a.set_number - b.set_number)
-      .map((set: any) => ({
-        id: set.id, set_number: set.set_number, weight: set.weight, reps: set.reps, rpe: set.rpe,
-        set_type: set.set_type as 'regular' | 'superset' | 'dropset',
-        superset_exercise_id: set.superset_exercise_id, superset_weight: set.superset_weight,
-        superset_reps: set.superset_reps, dropset_weight: set.dropset_weight, dropset_reps: set.dropset_reps,
-      })),
-  }));
-}
-
 export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const { signOut, user } = useAuth();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   const appData = useTrainerAppData();
   const queryClient = useQueryClient();
 
@@ -244,12 +216,16 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   }, [handleSaveTrainee]);
 
   const handleDeleteTrainee = useCallback(async (traineeId: string) => {
-    const confirmed = window.confirm('האם אתה בטוח שברצונך למחוק מתאמן זה? הפעולה אינה ניתנת לביטול!');
-    if (!confirmed) return;
+    const ok = await confirm({
+      title: 'מחיקת מתאמן',
+      message: 'האם אתה בטוח שברצונך למחוק מתאמן זה? הפעולה אינה ניתנת לביטול!',
+      confirmText: 'מחק',
+    });
+    if (!ok) return;
     await deleteTrainee(traineeId);
     setActiveView('trainees');
     selectTrainee(null);
-  }, [deleteTrainee, selectTrainee]);
+  }, [confirm, deleteTrainee, selectTrainee]);
 
   const handleNewWorkout = useCallback((trainee: Trainee, scheduledWorkoutId?: string) => {
     selectTrainee(trainee.id);
@@ -273,7 +249,9 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
 
   const loadScheduledWorkoutForEditing = async (workoutId: string, trainee: Trainee, isPrepared = false) => {
     try {
-      const exercises = await fetchWorkoutExercises(workoutId);
+      const result = await workoutApi.getWorkoutExercisesForEditing(workoutId);
+      if (result.error) throw new Error(result.error);
+      const exercises = result.data || [];
       setSelectedWorkout({ id: workoutId, exercises });
       if (isPrepared) setActiveView('prepared-workout-session');
       else if (trainee.is_pair) setActiveView('workout-type-selection');
@@ -289,29 +267,37 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
 
   const handleEditWorkout = useCallback(async (workout: any) => {
     if (!selectedTrainee) return;
-    const exercises = await fetchWorkoutExercises(workout.id);
+    const result = await workoutApi.getWorkoutExercisesForEditing(workout.id);
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+    const exercises = result.data || [];
     setSelectedWorkout({ ...workout, exercises });
     setActiveView('workout-session');
   }, [selectedTrainee]);
 
   const handleNewWorkoutFromExisting = useCallback(async (workout: any) => {
     if (!selectedTrainee) return;
-    const { data: workoutExercises } = await supabase
-      .from('workout_exercises')
-      .select(`id, exercise_id, order_index, exercises (id, name, muscle_group_id), exercise_sets (id, set_number, weight, reps, rpe, set_type, superset_exercise_id, superset_weight, superset_reps, dropset_weight, dropset_reps)`)
-      .eq('workout_id', workout.id)
-      .order('order_index', { ascending: true });
-    if (workoutExercises) {
-      setPreviousWorkoutForNew({
-        id: workout.id,
-        date: workout.date,
-        workout_exercises: workoutExercises.map((we: any) => ({
-          id: we.id, exercise_id: we.exercise_id, order_index: we.order_index,
-          exercises: we.exercises, exercise_sets: we.exercise_sets,
-        })),
-      });
-      setActiveView(selectedTrainee.is_pair ? 'workout-type-selection' : 'workout-session');
+    const result = await workoutApi.getWorkoutExercisesForEditing(workout.id);
+    if (result.error) {
+      toast.error(result.error);
+      return;
     }
+    const exercises = result.data || [];
+    const workoutExercises = exercises.map((e: any, idx: number) => ({
+      id: e.tempId,
+      exercise_id: e.exercise.id,
+      order_index: idx,
+      exercises: e.exercise,
+      exercise_sets: e.sets,
+    }));
+    setPreviousWorkoutForNew({
+      id: workout.id,
+      date: workout.date,
+      workout_exercises: workoutExercises,
+    });
+    setActiveView(selectedTrainee.is_pair ? 'workout-type-selection' : 'workout-session');
   }, [selectedTrainee]);
 
   const handleDuplicateWorkout = useCallback(async (workout: any) => {
@@ -319,30 +305,30 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   }, [duplicateWorkout]);
 
   const handleDeleteWorkout = useCallback(async (workoutId: string) => {
-    const confirmed = window.confirm('האם אתה בטוח שברצונך למחוק אימון זה?');
-    if (!confirmed) return;
+    const ok = await confirm({
+      title: 'מחיקת אימון',
+      message: 'האם אתה בטוח שברצונך למחוק אימון זה?',
+      confirmText: 'מחק',
+    });
+    if (!ok) return;
     await deleteWorkout(workoutId);
     setActiveView('workouts-list');
-  }, [deleteWorkout]);
+  }, [confirm, deleteWorkout]);
 
   const handleQuickEditLastWorkout = useCallback(async (traineeId: string) => {
     if (!user) return;
     try {
-      const { data: lastWorkout, error } = await supabase
-        .from('workout_trainees')
-        .select(`workout_id, workouts!inner (id, workout_date, is_completed, trainer_id)`)
-        .eq('trainee_id', traineeId)
-        .eq('workouts.is_completed', true)
-        .eq('workouts.trainer_id', user.id)
-        .order('workouts.workout_date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (error || !lastWorkout) { toast.error('לא נמצא אימון אחרון לעריכה'); return; }
-      const workout = Array.isArray(lastWorkout.workouts) ? lastWorkout.workouts[0] : lastWorkout.workouts;
-      if (workout?.id) {
-        selectTrainee(traineeId);
-        await handleEditWorkout({ id: workout.id });
+      const result = await workoutApi.getLastCompletedWorkoutForTrainee(traineeId, user.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
       }
+      if (!result.data) {
+        toast.error('לא נמצא אימון אחרון לעריכה');
+        return;
+      }
+      selectTrainee(traineeId);
+      await handleEditWorkout({ id: result.data.id });
     } catch (err) {
       logger.error('Error loading last workout for quick edit:', err, 'TrainerApp');
       toast.error('שגיאה בטעינת האימון האחרון');
@@ -700,6 +686,7 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
 
   return (
     <div className={`min-h-screen flex touch-manipulation ${isTablet ? 'tablet' : ''}`} dir="rtl">
+      {ConfirmDialog}
       {!sidebarCollapsed && (
         <Sidebar activeView={activeView} onViewChange={handleViewChange} collapsed={sidebarCollapsed} isTablet={isTablet} />
       )}
