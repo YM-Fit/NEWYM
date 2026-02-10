@@ -181,12 +181,11 @@
       window.onerror = function(message, source, lineno, colno, error) {
         console.error('[TV Debug] Global error:', message, source, lineno, colno, error);
         
-        // Check if React has mounted by looking for React root
+        // Check if React has mounted. React 18's createRoot renders children directly into
+        // the root div (no data-reactroot or _reactRootContainer like React 17). So we
+        // simply check if the root has any rendered content.
         var root = document.getElementById('root');
-        var reactMounted = root && root.children.length > 0 && 
-                          (root.querySelector('[data-reactroot]') || 
-                           root.getAttribute('data-reactroot') !== null ||
-                           root._reactRootContainer);
+        var reactMounted = root && root.children.length > 0;
         
         // Only show error screen if React hasn't mounted yet
         // After React mounts, let ErrorBoundary handle it
@@ -196,8 +195,9 @@
             'אירעה שגיאה בעת הפעלת האפליקציה',
             'Error: ' + message + '\nSource: ' + source + '\nLine: ' + lineno + ':' + colno + (error && error.stack ? '\n\nStack:\n' + error.stack : '')
           );
+          return true; // We handled it - suppress browser default
         }
-        return true;
+        return false; // Let browser/ErrorBoundary handle - don't suppress
       };
       
       // Catch unhandled promise rejections
@@ -205,12 +205,10 @@
       window.onunhandledrejection = function(event) {
         console.error('[TV Debug] Unhandled promise rejection:', event.reason);
         
-        // Check if React has mounted
+        // Check if React has mounted. React 18's createRoot renders children directly
+        // into the root div (no data-reactroot or _reactRootContainer like React 17).
         var root = document.getElementById('root');
-        var reactMounted = root && root.children.length > 0 && 
-                          (root.querySelector('[data-reactroot]') || 
-                           root.getAttribute('data-reactroot') !== null ||
-                           root._reactRootContainer);
+        var reactMounted = root && root.children.length > 0;
         
         // Only show error screen if React hasn't mounted yet
         if (!reactMounted) {
