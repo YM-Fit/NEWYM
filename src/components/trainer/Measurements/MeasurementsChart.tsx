@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { BodyMeasurement } from '../../../types';
 import { TrendingUp, TrendingDown, BarChart3, List, Table2, Minus } from 'lucide-react';
-import { themeColors } from '../../../utils/themeColors';
+import { themeColors } from '@/utils/themeColors';
 
 interface MeasurementsChartProps {
   measurements: BodyMeasurement[];

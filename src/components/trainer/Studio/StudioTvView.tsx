@@ -7,7 +7,7 @@ import { Card } from '../../ui/Card';
 import { useThemeClasses } from '../../../contexts/ThemeContext';
 import { Flame, TrendingUp, Trophy, Calendar, Target, AlertCircle, FileText } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
-import { themeColors } from '../../../utils/themeColors';
+import { themeColors } from '@/utils/themeColors';
 
 interface StudioTvViewProps {
   pollIntervalMs?: number;

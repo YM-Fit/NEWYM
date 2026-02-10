@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { themeColors } from '../../../../utils/themeColors';
+import { themeColors } from '@/utils/themeColors';
 
 interface SaveTemplateModalProps {
   isOpen: boolean;

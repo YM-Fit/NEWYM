@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { supabase } from '../../../lib/supabase';
 import { logger } from '../../../utils/logger';
 import toast from 'react-hot-toast';
-import { themeColors } from '../../../utils/themeColors';
+import { themeColors } from '@/utils/themeColors';
 
 interface WorkoutProgressProps {
   trainee: any;

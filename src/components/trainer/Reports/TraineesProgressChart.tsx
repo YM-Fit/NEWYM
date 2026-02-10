@@ -3,7 +3,7 @@ import { TrendingUp, Scale, Users, Filter, ChevronDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
-import { themeColors } from '../../../utils/themeColors';
+import { themeColors } from '@/utils/themeColors';
 
 interface TraineeProgress {
   id: string;

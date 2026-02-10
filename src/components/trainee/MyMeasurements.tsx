@@ -14,7 +14,7 @@ import {
   Minus,
   Ruler,
 } from 'lucide-react';
-import { themeColors } from '../../utils/themeColors';
+import { themeColors } from '@/utils/themeColors';
 import {
   LineChart,
   Line,

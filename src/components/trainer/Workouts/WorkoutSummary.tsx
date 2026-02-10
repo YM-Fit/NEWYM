@@ -4,7 +4,7 @@ import {
   Flame, Target, Star, Share2, CheckCircle, Sparkles
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { themeColors } from '../../../utils/themeColors';
+import { themeColors } from '@/utils/themeColors';
 
 interface WorkoutExercise {
   exercise: {

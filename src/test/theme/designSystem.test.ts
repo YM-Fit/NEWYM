@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { themeColors } from '../../utils/themeColors';
+import { themeColors } from '@/utils/themeColors';
 import { colors, spacing, borderRadius, designClasses } from '../../utils/designTokens';
 
 describe('Design System - Theme Colors', () => {

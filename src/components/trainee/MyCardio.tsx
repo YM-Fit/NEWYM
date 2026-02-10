@@ -3,7 +3,7 @@ import { Activity, TrendingUp, Timer, Calendar, Target, BarChart3, Footprints, C
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
 import toast from 'react-hot-toast';
 import { cardioApi, type CardioActivity } from '../../api/cardioApi';
-import { themeColors } from '../../utils/themeColors';
+import { themeColors } from '@/utils/themeColors';
 
 interface MyCardioProps {
   traineeId: string | null;

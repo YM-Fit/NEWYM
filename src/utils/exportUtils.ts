@@ -3,7 +3,7 @@
  * Functions for exporting data to CSV, PDF, etc.
  */
 
-import { themeColors } from './themeColors';
+import { themeColors } from '@/utils/themeColors';
 
 /**
  * Convert array of objects to CSV string

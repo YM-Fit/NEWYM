@@ -4,7 +4,7 @@ import { supabase } from '../../../lib/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { LazyChart } from '../../common/LazyChart';
 import { usePagination } from '../../../hooks/usePagination';
-import { themeColors } from '../../../utils/themeColors';
+import { themeColors } from '@/utils/themeColors';
 
 interface ExerciseHistoryProps {
   traineeId: string;

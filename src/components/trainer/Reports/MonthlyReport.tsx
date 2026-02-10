@@ -3,7 +3,7 @@ import { FileText, Users, Trophy, TrendingUp, TrendingDown, Minus } from 'lucide
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
-import { themeColors } from '../../../utils/themeColors';
+import { themeColors } from '@/utils/themeColors';
 
 interface MonthlyReportProps {
   month: Date;

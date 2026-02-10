@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { TrendingUp, Target, Calendar, Award } from 'lucide-react';
-import { themeColors } from '../../utils/themeColors';
+import { themeColors } from '@/utils/themeColors';
 
 interface WorkoutDay {
   id: string;

@@ -5,7 +5,7 @@ import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarC
 import toast from 'react-hot-toast';
 import { cardioApi, type CardioActivity, type CardioType, type CardioStats } from '../../../api/cardioApi';
 import { logger } from '../../../utils/logger';
-import { themeColors } from '../../../utils/themeColors';
+import { themeColors } from '@/utils/themeColors';
 
 interface CardioManagerProps {
   traineeId: string;

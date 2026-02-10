@@ -1,3 +1,4 @@
+import path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
@@ -97,6 +98,9 @@ export default defineConfig({
   },
   // Resolve configuration
   resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
     conditions: ['@tanstack/custom-condition', 'import', 'module', 'default'],
   },
   // Optimize dependencies
