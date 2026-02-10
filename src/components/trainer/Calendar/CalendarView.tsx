@@ -212,8 +212,8 @@ function EventItem({ event, onEventClick, onDelete, isDragging, sessionInfo, pos
       onClick={() => onEventClick?.(event)}
       onContextMenu={handleContextMenu}
       onBlur={handleClickOutside}
-      className={`bg-emerald-500 text-white px-2.5 py-1.5 rounded-md cursor-pointer hover:bg-emerald-600 transition-colors duration-200 relative group mb-1 border-r-4 border-emerald-700 ${
-        isDragging ? 'opacity-60 cursor-grabbing ring-2 ring-emerald-400' : 'cursor-pointer'
+      className={`bg-primary-500 text-white px-2.5 py-1.5 rounded-md cursor-pointer hover:bg-primary-600 transition-colors duration-200 relative group mb-1 border-r-4 border-primary-700 ${
+        isDragging ? 'opacity-60 cursor-grabbing ring-2 ring-primary-400' : 'cursor-pointer'
       }`}
       title={`${event.summary}${eventTime ? ` - ${eventTime}` : ''} (גרור להעברה, לחץ ימני למחיקה, לחץ על השם לצפייה בהיסטוריה)`}
     >
@@ -272,7 +272,7 @@ function DraggableEventItem({ event, onEventClick, onDelete, day, sessionInfo, p
       <div
         {...listeners}
         {...attributes}
-        className="absolute right-0 top-0 bottom-0 w-6 flex items-center justify-center cursor-grab active:cursor-grabbing z-10 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity bg-emerald-600/30 rounded-l-md"
+        className="absolute right-0 top-0 bottom-0 w-6 flex items-center justify-center cursor-grab active:cursor-grabbing z-10 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity bg-primary-600/30 rounded-l-md"
         title="גרור להעברה"
       >
         <GripVertical className="h-3 w-3 text-white/80" />
@@ -346,7 +346,7 @@ function DroppableDayCell({
       className={`min-h-[100px] p-2 border-l border-b border-gray-200 transition-colors duration-200 group ${
         day
           ? isOver
-            ? 'bg-emerald-50'
+            ? 'bg-primary-50'
             : 'hover:bg-gray-50 cursor-pointer bg-white'
           : 'bg-gray-50'
       }`}
@@ -464,8 +464,8 @@ function DraggableWeekEventItem({
         height: `${heightPercent}%`,
         minHeight: '44px',
       }}
-      className={`absolute left-1 right-1 bg-emerald-500 text-white text-xs rounded-md cursor-pointer hover:bg-emerald-600 z-10 overflow-hidden group border-r-4 border-emerald-700 transition-colors duration-200 ${
-        isDragging ? 'opacity-60 ring-2 ring-emerald-400' : ''
+      className={`absolute left-1 right-1 bg-primary-500 text-white text-xs rounded-md cursor-pointer hover:bg-primary-600 z-10 overflow-hidden group border-r-4 border-primary-700 transition-colors duration-200 ${
+        isDragging ? 'opacity-60 ring-2 ring-primary-400' : ''
       }`}
       onClick={(e) => {
         e.stopPropagation();
@@ -495,7 +495,7 @@ function DraggableWeekEventItem({
       <div
         {...listeners}
         {...attributes}
-        className="absolute right-0 top-0 bottom-0 w-5 flex items-center justify-center cursor-grab active:cursor-grabbing z-20 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity bg-emerald-600/30"
+        className="absolute right-0 top-0 bottom-0 w-5 flex items-center justify-center cursor-grab active:cursor-grabbing z-20 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity bg-primary-600/30"
         title="גרור להעברה"
       >
         <GripVertical className="h-3 w-3 text-white/80" />
@@ -599,7 +599,7 @@ function DroppableWeekHourCell({
       onClick={() => onCellClick(day, hour)}
       className={`h-14 border-b border-l border-gray-200 cursor-pointer transition-colors duration-200 relative bg-white ${
         isOver 
-          ? 'bg-emerald-50 ring-1 ring-emerald-400/50' 
+          ? 'bg-primary-50 ring-1 ring-primary-400/50' 
           : 'hover:bg-gray-50'
       }`}
     >
@@ -1433,7 +1433,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
       <div className="space-y-4">
         <button
           onClick={() => setShowSettings(false)}
-          className="text-emerald-400 hover:text-emerald-300 flex items-center gap-2"
+          className="text-primary-400 hover:text-primary-300 flex items-center gap-2"
         >
           <ChevronRight className="h-4 w-4" />
           חזרה ליומן
@@ -1459,7 +1459,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         </div>
         <button
           onClick={() => setShowSettings(true)}
-          className="btn-primary mx-auto bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white shadow-lg"
+          className="btn-primary mx-auto bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white shadow-lg"
         >
           הגדר Google Calendar
         </button>
@@ -1488,7 +1488,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         <div className="flex gap-3 justify-center">
           <button
             onClick={() => setShowSettings(true)}
-            className="btn-primary bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white shadow-lg"
+            className="btn-primary bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white shadow-lg"
           >
             חבר מחדש
           </button>
@@ -1620,7 +1620,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         {/* Drag Overlay for week view */}
         <DragOverlay>
           {activeEvent ? (
-            <div className="text-xs bg-emerald-500 text-white p-2 rounded-md border-r-4 border-emerald-700 truncate max-w-[150px]">
+            <div className="text-xs bg-primary-500 text-white p-2 rounded-md border-r-4 border-primary-700 truncate max-w-[150px]">
               <div className="font-semibold">{extractTraineeName(activeEvent)}</div>
               <div className="text-white/85 text-[11px] mt-0.5 font-medium">
                 {activeEvent.start.dateTime && new Date(activeEvent.start.dateTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
@@ -1731,7 +1731,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                             e.stopPropagation();
                             onEventClick?.(event);
                           }}
-                          className="absolute left-2 right-2 bg-emerald-500 text-white text-xs px-2.5 py-1.5 rounded-md cursor-pointer hover:bg-emerald-600 z-10 overflow-hidden border-r-4 border-emerald-700 transition-colors duration-200"
+                          className="absolute left-2 right-2 bg-primary-500 text-white text-xs px-2.5 py-1.5 rounded-md cursor-pointer hover:bg-primary-600 z-10 overflow-hidden border-r-4 border-primary-700 transition-colors duration-200"
                           style={{
                             top: `${(startMinutes / 60) * 100}%`,
                             height: `${heightPercent}%`,
@@ -1807,7 +1807,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                 onClick={() => setViewMode('month')}
                 className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${
                   viewMode === 'month'
-                    ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg'
+                    ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-lg'
                     : 'text-foreground hover:bg-elevated'
                 }`}
                 title="תצוגת חודש"
@@ -1819,7 +1819,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                 onClick={() => setViewMode('week')}
                 className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${
                   viewMode === 'week'
-                    ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg'
+                    ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-lg'
                     : 'text-foreground hover:bg-elevated'
                 }`}
                 title="תצוגת שבוע"
@@ -1831,7 +1831,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                 onClick={() => setViewMode('day')}
                 className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${
                   viewMode === 'day'
-                    ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg'
+                    ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-lg'
                     : 'text-foreground hover:bg-elevated'
                 }`}
                 title="תצוגת יום"
@@ -1854,7 +1854,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
               </button>
               <button
                 onClick={() => setShowSyncModal(true)}
-                className="px-2.5 sm:px-3 md:px-4 py-2 text-xs sm:text-sm bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 hover:from-emerald-500/30 hover:to-emerald-600/30 text-emerald-700 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 border border-emerald-500/30 shadow-sm"
+                className="px-2.5 sm:px-3 md:px-4 py-2 text-xs sm:text-sm bg-gradient-to-br from-primary-500/20 to-primary-600/20 hover:from-primary-500/30 hover:to-primary-600/30 text-primary-700 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 border border-primary-500/30 shadow-sm"
                 title="סנכרון מתאמנים מהיומן"
               >
                 <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -1890,7 +1890,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
               {onCreateWorkout && (
                 <button
                   onClick={onCreateWorkout}
-                  className="col-span-2 sm:col-span-1 btn-primary flex items-center justify-center gap-2 bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white shadow-lg text-xs sm:text-sm py-2.5 md:py-2"
+                  className="col-span-2 sm:col-span-1 btn-primary flex items-center justify-center gap-2 bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white shadow-lg text-xs sm:text-sm py-2.5 md:py-2"
                 >
                   <Plus className="h-4 w-4" />
                   אימון חדש
@@ -1906,7 +1906,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         {loading ? (
           <div className="flex items-center justify-center py-12 min-h-[400px]">
             <div className="flex flex-col items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-emerald-500 flex items-center justify-center animate-pulse">
+              <div className="w-14 h-14 rounded-xl bg-primary-500 flex items-center justify-center animate-pulse">
                 <Calendar className="w-7 h-7 text-white" />
               </div>
               <span className="text-sm font-medium text-gray-500">טוען יומן...</span>
@@ -1964,7 +1964,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
             {/* Drag Overlay - shows floating preview of dragged event */}
             <DragOverlay>
               {activeEvent ? (
-                <div className="text-xs bg-emerald-500 text-white p-2 rounded-md border-r-4 border-emerald-700 truncate max-w-[120px]">
+                <div className="text-xs bg-primary-500 text-white p-2 rounded-md border-r-4 border-primary-700 truncate max-w-[120px]">
                   {activeEvent.summary}
                 </div>
               ) : null}
@@ -1984,7 +1984,7 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
         {isUpdating && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm rounded-xl">
             <div className="flex items-center gap-2.5 bg-white px-5 py-3 rounded-lg shadow-lg border border-gray-200">
-              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-emerald-500"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary-500"></div>
               <span className="text-sm text-gray-700 font-medium">מעביר אירוע...</span>
             </div>
           </div>

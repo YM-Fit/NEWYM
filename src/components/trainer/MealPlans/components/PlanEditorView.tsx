@@ -264,7 +264,7 @@ export function PlanEditorView({
         <button
           onClick={onSave}
           disabled={saving}
-          className="bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 disabled:opacity-50 text-white px-10 py-4 rounded-2xl flex items-center gap-3 font-semibold transition-all duration-300 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/30 hover:scale-[1.02]"
+          className="bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 disabled:opacity-50 text-white px-10 py-4 rounded-2xl flex items-center gap-3 font-semibold transition-all duration-300 shadow-xl shadow-primary-500/25 hover:shadow-2xl hover:shadow-primary-500/30 hover:scale-[1.02]"
         >
           {saving ? (
             <>
@@ -495,7 +495,7 @@ function PlanSettingsCard({
           <label className="block text-sm font-semibold text-[var(--color-text-secondary)]">הערות כלליות</label>
           <button
             onClick={onAddNote}
-            className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors duration-300"
+            className="text-sm text-primary-400 hover:text-primary-300 flex items-center gap-1 transition-colors duration-300"
           >
             <FileText className="h-4 w-4" />
             הוסף מתבנית
@@ -552,7 +552,7 @@ function MealsSection({
         <h3 className="font-bold text-[var(--color-text-primary)] text-xl">ארוחות יומיות</h3>
         <button
           onClick={onAddMeal}
-          className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500/20 text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-500/30 transition-all duration-300 hover:scale-105"
+          className="flex items-center gap-2 px-4 py-2.5 bg-primary-500/20 text-primary-400 rounded-xl text-sm font-semibold hover:bg-primary-500/30 transition-all duration-300 hover:scale-105"
         >
           <Plus className="h-4 w-4" />
           הוסף ארוחה
@@ -627,11 +627,11 @@ function MealsSection({
       )}
 
       {meals.length > 0 && totals.calories > 0 && (
-        <div className="premium-card-static p-5 bg-gradient-to-r from-emerald-500/10 to-emerald-600/10">
+        <div className="premium-card-static p-5 bg-gradient-to-r from-primary-500/10 to-primary-600/10">
           <div className="flex items-center justify-between mb-4">
             <span className="font-semibold text-[var(--color-text-primary)]">סיכום יומי כולל:</span>
             <div className="flex gap-6 text-sm">
-              <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-500 font-semibold">{totals.calories}</span> <span className="text-[var(--color-text-muted)]">קלוריות</span></span>
+              <span className="text-[var(--color-text-secondary)]"><span className="text-primary-500 font-semibold">{totals.calories}</span> <span className="text-[var(--color-text-muted)]">קלוריות</span></span>
               <span className="text-[var(--color-text-secondary)]"><span className="text-red-500 font-semibold">{totals.protein}ג</span> <span className="text-[var(--color-text-muted)]">חלבון</span></span>
               <span className="text-[var(--color-text-secondary)]"><span className="text-blue-500 font-semibold">{totals.carbs}ג</span> <span className="text-[var(--color-text-muted)]">פחמימות</span></span>
               <span className="text-[var(--color-text-secondary)]"><span className="text-amber-600 font-semibold">{totals.fat}ג</span> <span className="text-[var(--color-text-muted)]">שומן</span></span>
@@ -655,7 +655,7 @@ function MealsSection({
                         ? 'bg-red-500'
                         : totals.calories > plan.daily_calories
                         ? 'bg-yellow-500'
-                        : 'bg-emerald-500'
+                        : 'bg-primary-500'
                     }`}
                     style={{ width: `${Math.min((totals.calories / plan.daily_calories) * 100, 100)}%` }}
                   />
@@ -763,7 +763,7 @@ function MealTypeHeader({
   };
 
   return (
-    <div className="p-6 border-b border-[var(--color-border)] bg-gradient-to-r from-emerald-500/10 to-emerald-600/10">
+    <div className="p-6 border-b border-[var(--color-border)] bg-gradient-to-r from-primary-500/10 to-primary-600/10">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-3xl">{mealType.icon}</span>
@@ -776,7 +776,7 @@ function MealTypeHeader({
           {mealTotals.calories > 0 && (
             <div className="flex gap-2 text-sm">
               <span className="text-[var(--color-text-secondary)] bg-[var(--color-bg-surface)] px-3 py-1.5 rounded-lg border border-[var(--color-border)]">
-                <span className="text-emerald-500 font-semibold">{mealTotals.calories}</span> <span className="text-[var(--color-text-muted)]">קל'</span>
+                <span className="text-primary-500 font-semibold">{mealTotals.calories}</span> <span className="text-[var(--color-text-muted)]">קל'</span>
               </span>
               {mealTotals.protein > 0 && (
                 <span className="text-[var(--color-text-secondary)] bg-[var(--color-bg-surface)] px-3 py-1.5 rounded-lg border border-[var(--color-border)]">
@@ -793,7 +793,7 @@ function MealTypeHeader({
                 onUpdateMeal(mealsLength, 'meal_time', defaultTimes[mealType.value] || '12:00');
               }, 100);
             }}
-            className="flex items-center gap-2 px-3 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-500/30 transition-all duration-300"
+            className="flex items-center gap-2 px-3 py-2 bg-primary-500/20 text-primary-400 rounded-xl text-sm font-semibold hover:bg-primary-500/30 transition-all duration-300"
           >
             <Plus className="h-4 w-4" />
             הוסף מזון
@@ -845,8 +845,8 @@ function MealCard({
         onClick={() => onToggleMeal(displayIndex)}
       >
         <div className="flex items-center gap-4 flex-1">
-          <div className="p-2 bg-emerald-500/20 rounded-xl">
-            <Clock className="h-4 w-4 text-emerald-400" />
+          <div className="p-2 bg-primary-500/20 rounded-xl">
+            <Clock className="h-4 w-4 text-primary-400" />
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
@@ -998,7 +998,7 @@ function FoodItemsEditor({
               }
               setCatalogForMeal({ mealId: meal.id, displayIndex });
             }}
-            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs font-semibold hover:bg-emerald-500/30 transition-all"
+            className="flex items-center gap-1 px-3 py-1.5 bg-primary-500/20 text-primary-400 rounded-lg text-xs font-semibold hover:bg-primary-500/30 transition-all"
           >
             <Search className="h-3 w-3" />
             בחר מהקטלוג
@@ -1056,11 +1056,11 @@ function FoodItemsEditor({
             />
           ))}
 
-          <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+          <div className="p-3 bg-primary-500/10 rounded-lg border border-primary-500/20">
             <div className="flex items-center justify-between text-sm">
               <span className="text-[var(--color-text-secondary)] font-semibold">סיכום הארוחה:</span>
               <div className="flex gap-4">
-                <span className="text-emerald-500 font-semibold">
+                <span className="text-primary-500 font-semibold">
                   {meal.food_items.reduce((sum, i) => sum + (i.calories || 0), 0)} קל'
                 </span>
                 <span className="text-red-500 font-semibold">
@@ -1158,7 +1158,7 @@ function FoodItemRow({
         </div>
         <div className="col-span-6 grid grid-cols-4 gap-2">
           <div>
-            <label className="block text-xs font-semibold text-emerald-500 mb-1">קל'</label>
+            <label className="block text-xs font-semibold text-primary-500 mb-1">קל'</label>
             <input
               type="number"
               value={item.calories ?? ''}
@@ -1212,7 +1212,7 @@ function FoodItemRow({
               onClick={onToggleAlternatives}
               className={`p-2 rounded-lg transition-all ${
                 showAlternatives
-                  ? 'bg-emerald-500/20 text-emerald-400'
+                  ? 'bg-primary-500/20 text-primary-400'
                   : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)]'
               }`}
               title="הצג חלופות"

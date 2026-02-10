@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { TrendingUp, Target, Calendar, Award } from 'lucide-react';
+import { themeColors } from '../../utils/themeColors';
 
 interface WorkoutDay {
   id: string;
@@ -135,15 +136,15 @@ export default function WorkoutPlanProgress({
           <div className="flex items-center justify-between mb-2">
             <div>
               <p className="text-xs text-[var(--color-text-muted)] mb-1">אחוז השלמה כללי</p>
-              <p className="text-2xl font-bold text-emerald-400">{Math.round(stats.overallProgress)}%</p>
+              <p className="text-2xl font-bold text-primary-400">{Math.round(stats.overallProgress)}%</p>
             </div>
-            <div className="p-3 bg-emerald-500/15 rounded-xl">
-              <Target className="w-6 h-6 text-emerald-400" />
+            <div className="p-3 bg-primary-500/15 rounded-xl">
+              <Target className="w-6 h-6 text-primary-400" />
             </div>
           </div>
           <div className="h-2 bg-[var(--color-bg-surface)] rounded-full overflow-hidden mt-3">
             <div
-              className="h-full bg-gradient-to-r from-emerald-500 to-emerald-700 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-primary-500 to-primary-700 transition-all duration-500"
               style={{ width: `${stats.overallProgress}%` }}
             />
           </div>
@@ -195,7 +196,7 @@ export default function WorkoutPlanProgress({
       {/* Progress Chart by Day */}
       <div className="premium-card-static p-6">
         <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-emerald-400" />
+          <TrendingUp className="w-5 h-5 text-primary-400" />
           התקדמות לפי יום
         </h3>
         <div className="h-80">
@@ -204,18 +205,18 @@ export default function WorkoutPlanProgress({
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 0, 0, 0.1)" vertical={false} />
               <XAxis
                 dataKey="day"
-                stroke="#6b6b6b"
+                stroke={themeColors.zinc500}
                 style={{ fontSize: '12px' }}
                 tickLine={false}
-                axisLine={{ stroke: '#d4d4d4', strokeOpacity: 0.8 }}
-                tick={{ fill: '#4a4a4a' }}
+                axisLine={{ stroke: themeColors.borderLight, strokeOpacity: 0.8 }}
+                tick={{ fill: themeColors.zinc700 }}
               />
               <YAxis
-                stroke="#6b6b6b"
+                stroke={themeColors.zinc500}
                 style={{ fontSize: '12px' }}
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: '#4a4a4a' }}
+                tick={{ fill: themeColors.zinc700 }}
                 domain={[0, 100]}
               />
               <Tooltip
@@ -227,10 +228,10 @@ export default function WorkoutPlanProgress({
                   color: '#000',
                   padding: '12px'
                 }}
-                cursor={{ fill: 'rgba(16, 185, 129, 0.1)' }}
+                cursor={{ fill: themeColors.chartPrimary + '1a' }}
               />
               <Legend />
-              <Bar dataKey="progress" fill="#10b981" radius={[6, 6, 0, 0]} name="אחוז השלמה (%)" />
+              <Bar dataKey="progress" fill={themeColors.chartPrimary} radius={[6, 6, 0, 0]} name="אחוז השלמה (%)" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -248,18 +249,18 @@ export default function WorkoutPlanProgress({
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 0, 0, 0.1)" vertical={false} />
               <XAxis
                 dataKey="day"
-                stroke="#6b6b6b"
+                stroke={themeColors.zinc500}
                 style={{ fontSize: '12px' }}
                 tickLine={false}
-                axisLine={{ stroke: '#d4d4d4', strokeOpacity: 0.8 }}
-                tick={{ fill: '#4a4a4a' }}
+                axisLine={{ stroke: themeColors.borderLight, strokeOpacity: 0.8 }}
+                tick={{ fill: themeColors.zinc700 }}
               />
               <YAxis
-                stroke="#6b6b6b"
+                stroke={themeColors.zinc500}
                 style={{ fontSize: '12px' }}
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: '#4a4a4a' }}
+                tick={{ fill: themeColors.zinc700 }}
               />
               <Tooltip
                 contentStyle={{
@@ -270,15 +271,15 @@ export default function WorkoutPlanProgress({
                   color: '#000',
                   padding: '12px'
                 }}
-                cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
+                cursor={{ fill: themeColors.chartBlue + '1a' }}
               />
               <Legend />
               <Line
                 type="monotone"
                 dataKey="volume"
-                stroke="#3b82f6"
+                stroke={themeColors.chartBlue}
                 strokeWidth={3}
-                dot={{ fill: '#3b82f6', r: 5 }}
+                dot={{ fill: themeColors.chartBlue, r: 5 }}
                 activeDot={{ r: 8 }}
                 name="נפח (ק״ג)"
               />
@@ -314,7 +315,7 @@ export default function WorkoutPlanProgress({
                     <span
                       className={`px-3 py-1.5 rounded-full text-xs font-bold ${
                         exercise.completed
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
                           : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                       }`}
                     >

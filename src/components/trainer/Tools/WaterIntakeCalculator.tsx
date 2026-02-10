@@ -136,7 +136,7 @@ export default function WaterIntakeCalculator({
               <p className="text-lg text-foreground/80 mt-2 font-medium">ליטר</p>
             </div>
 
-            <div className="bg-emerald-500 rounded-2xl p-6 text-center">
+            <div className="bg-primary-500 rounded-2xl p-6 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
                   <Sun className="w-4 h-4 text-foreground" />

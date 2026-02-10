@@ -37,7 +37,7 @@ const MEAL_TYPES = [
   { value: 'breakfast', label: 'ארוחת בוקר', icon: Coffee, color: 'bg-gradient-to-br from-amber-100 to-orange-100 text-amber-700', iconBg: 'bg-gradient-to-br from-amber-400 to-orange-500' },
   { value: 'lunch', label: 'ארוחת צהריים', icon: Sun, color: 'bg-gradient-to-br from-orange-100 to-amber-100 text-orange-700', iconBg: 'bg-gradient-to-br from-orange-400 to-amber-500' },
   { value: 'dinner', label: 'ארוחת ערב', icon: Moon, color: 'bg-gradient-to-br from-blue-100 to-sky-100 text-blue-700', iconBg: 'bg-gradient-to-br from-blue-400 to-sky-500' },
-  { value: 'snack', label: 'ארוחת ביניים', icon: Cookie, color: 'bg-gradient-to-br from-emerald-100 to-emerald-100 text-emerald-700', iconBg: 'bg-gradient-to-br from-emerald-400 to-emerald-600' },
+  { value: 'snack', label: 'ארוחת ביניים', icon: Cookie, color: 'bg-gradient-to-br from-primary-100 to-primary-100 text-primary-700', iconBg: 'bg-gradient-to-br from-primary-400 to-primary-600' },
 ];
 
 const WATER_GOAL = 2000;
@@ -265,9 +265,9 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             !isSeen && isCompleted
               ? 'bg-gradient-to-br from-red-50 to-rose-100 border-b border-red-200'
               : isToday(date)
-              ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-inverse shadow-lg'
+              ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-inverse shadow-lg'
               : isCompleted
-              ? 'bg-gradient-to-br from-emerald-50 to-emerald-50 border-b border-emerald-200'
+              ? 'bg-gradient-to-br from-primary-50 to-primary-50 border-b border-primary-200'
               : 'bg-gradient-to-br from-gray-50 to-gray-100 border-b border-border'
           }`}
         >
@@ -279,7 +279,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
                     ? 'bg-white/20' 
                     : !isSeen 
                     ? 'bg-gradient-to-br from-red-500 to-rose-600'
-                    : 'bg-gradient-to-br from-emerald-500 to-emerald-700'
+                    : 'bg-gradient-to-br from-primary-500 to-primary-700'
                 }`}>
                   <Check className="w-4 h-4 text-inverse" />
                 </div>
@@ -314,7 +314,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
                       ? 'bg-gradient-to-br from-red-500 to-rose-600 text-inverse shadow-md'
                       : isToday(date)
                       ? 'bg-white/20 text-inverse'
-                      : 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-inverse shadow-md'
+                      : 'bg-gradient-to-br from-primary-500 to-primary-700 text-inverse shadow-md'
                   }`}>
                     {isSeen ? 'נצפה' : 'חדש'}
                   </span>
@@ -327,7 +327,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
                 className={`px-4 py-2 rounded-xl transition-all duration-300 text-sm font-semibold flex items-center gap-2 shadow-md hover:shadow-lg hover:scale-105 ${
                   isToday(date)
                     ? 'bg-white/20 hover:bg-white/30 text-inverse'
-                    : 'bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-inverse'
+                    : 'bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-inverse'
                 }`}
               >
                 <Eye className="w-4 h-4" />
@@ -416,7 +416,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
     return (
       <div className="flex justify-center items-center py-12 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-primary-400/30">
             <BookOpen className="w-8 h-8 text-inverse" />
           </div>
           <span className="text-secondary font-medium">טוען יומן אכילה...</span>
@@ -442,7 +442,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
               <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7 text-secondary" />
             </button>
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105">
+              <div className="w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105">
                 <BookOpen className="w-7 h-7 lg:w-8 lg:h-8 text-inverse" />
               </div>
               <div>
@@ -491,7 +491,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             onClick={() => setViewMode('day')}
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
               viewMode === 'day'
-                ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-inverse shadow-lg'
+                ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-inverse shadow-lg'
                 : 'bg-surface text-secondary hover:bg-surface'
             }`}
           >
@@ -502,7 +502,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             onClick={() => setViewMode('week')}
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
               viewMode === 'week'
-                ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-inverse shadow-lg'
+                ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-inverse shadow-lg'
                 : 'bg-surface text-secondary hover:bg-surface'
             }`}
           >
@@ -513,7 +513,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             onClick={() => setViewMode('month')}
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
               viewMode === 'month'
-                ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-inverse shadow-lg'
+                ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-inverse shadow-lg'
                 : 'bg-surface text-secondary hover:bg-surface'
             }`}
           >
@@ -528,7 +528,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             onClick={() => setFilter('all')}
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 ${
               filter === 'all'
-                ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-inverse shadow-lg'
+                ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-inverse shadow-lg'
                 : 'bg-surface text-secondary hover:bg-surface'
             }`}
           >
@@ -538,7 +538,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             onClick={() => setFilter('completed')}
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 ${
               filter === 'completed'
-                ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-inverse shadow-lg'
+                ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-inverse shadow-lg'
                 : 'bg-surface text-secondary hover:bg-surface'
             }`}
           >
@@ -548,7 +548,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
             onClick={() => setFilter('unseen')}
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 relative ${
               filter === 'unseen'
-                ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-inverse shadow-lg'
+                ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-inverse shadow-lg'
                 : 'bg-surface text-secondary hover:bg-surface'
             }`}
           >
@@ -590,7 +590,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
               <div
                 key={dateStr}
                 className={`premium-card-static bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl ${
-                  isToday(currentDate) ? 'ring-2 ring-emerald-500' : ''
+                  isToday(currentDate) ? 'ring-2 ring-primary-500' : ''
                 } ${!isSeen && isCompleted ? 'ring-2 ring-red-400' : ''}`}
               >
                 {renderDayCard(currentDate, dateStr, dayMeals, waterAmount, waterProgress, isCompleted, isSeen)}
@@ -618,7 +618,7 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
               <div
                 key={dateStr}
                 className={`premium-card-static bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl ${
-                  isToday(date) ? 'ring-2 ring-emerald-500' : ''
+                  isToday(date) ? 'ring-2 ring-primary-500' : ''
                 } ${!isSeen && isCompleted ? 'ring-2 ring-red-400' : ''}`}
               >
                 {renderDayCard(date, dateStr, dayMeals, waterAmount, waterProgress, isCompleted, isSeen)}
@@ -659,9 +659,9 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
                 <div
                   key={index}
                   onClick={() => handleDateClick(date)}
-                  className={`min-h-[80px] p-2 border border-border rounded-lg cursor-pointer transition-all hover:border-emerald-500/50 ${
+                  className={`min-h-[80px] p-2 border border-border rounded-lg cursor-pointer transition-all hover:border-primary-500/50 ${
                     isCurrentDay
-                      ? 'bg-emerald-500/10 border-emerald-500/30'
+                      ? 'bg-primary-500/10 border-primary-500/30'
                       : hasMeals
                       ? 'bg-surface'
                       : 'bg-transparent'
@@ -669,19 +669,19 @@ export default function TraineeFoodDiaryView({ traineeId, traineeName, onBack }:
                 >
                   <div
                     className={`text-sm font-semibold mb-1 ${
-                      isCurrentDay ? 'text-emerald-600' : 'text-foreground'
+                      isCurrentDay ? 'text-primary-600' : 'text-foreground'
                     }`}
                   >
                     {date.getDate()}
                   </div>
                   {hasMeals && (
                     <div className="space-y-1">
-                      <div className="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded truncate">
+                      <div className="text-xs bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded truncate">
                         {dayMeals.length} ארוחות
                       </div>
                       {isCompleted && (
                         <div className={`text-xs px-1.5 py-0.5 rounded ${
-                          isSeen ? 'bg-emerald-500 text-inverse' : 'bg-red-500 text-inverse'
+                          isSeen ? 'bg-primary-500 text-inverse' : 'bg-red-500 text-inverse'
                         }`}>
                           {isSeen ? '✓' : 'חדש'}
                         </div>

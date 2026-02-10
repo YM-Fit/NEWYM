@@ -458,12 +458,12 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
       </button>
 
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl p-4 text-white">
           <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mb-2">
             <Calendar className="w-5 h-5" />
           </div>
           <p className="text-2xl font-bold">{stats.totalWorkouts}</p>
-          <p className="text-xs text-emerald-100">אימונים החודש</p>
+          <p className="text-xs text-primary-100">אימונים החודש</p>
         </div>
 
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white">
@@ -539,7 +539,7 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
           className="w-full px-4 py-3 flex items-center justify-between bg-[var(--color-bg-surface)] border-b border-[var(--color-border)]"
         >
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-emerald-400" />
+            <Filter className="w-4 h-4 text-primary-400" />
             <span className="font-medium text-[var(--color-text-primary)]">סינון</span>
           </div>
           {showFilters ? (
@@ -600,7 +600,7 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
               onClick={() => setViewMode('calendar')}
               className={`px-3 py-1.5 ${
                 viewMode === 'calendar'
-                  ? 'bg-emerald-500/15 text-emerald-400'
+                  ? 'bg-primary-500/15 text-primary-400'
                   : 'text-[var(--color-text-muted)]'
               }`}
             >
@@ -611,7 +611,7 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
               onClick={() => setViewMode('list')}
               className={`px-3 py-1.5 ${
                 viewMode === 'list'
-                  ? 'bg-emerald-500/15 text-emerald-400'
+                  ? 'bg-primary-500/15 text-primary-400'
                   : 'text-[var(--color-text-muted)]'
               }`}
             >
@@ -676,7 +676,7 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
                           <div
                             className={`w-full h-12 rounded-xl border flex flex-col items-center justify-center text-xs ${
                               hasWorkout
-                                ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400'
+                                ? 'bg-primary-500/10 border-primary-500/40 text-primary-400'
                                 : 'bg-[var(--color-bg-surface)] border-[var(--color-border)] text-[var(--color-text-muted)]'
                             }`}
                           >
@@ -742,12 +742,12 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
                   <div
                     className={`w-10 h-10 rounded-lg flex items-center justify-center border ${
                       workout.is_completed
-                        ? 'bg-emerald-500/15 border-emerald-500/30'
+                        ? 'bg-primary-500/15 border-primary-500/30'
                         : 'bg-[var(--color-bg-surface)] border-[var(--color-border)]'
                     }`}
                   >
                     {workout.is_completed ? (
-                      <CheckCircle className="w-5 h-5 text-emerald-400" />
+                      <CheckCircle className="w-5 h-5 text-primary-400" />
                     ) : (
                       <XCircle className="w-5 h-5 text-[var(--color-text-muted)]" />
                     )}
@@ -829,7 +829,7 @@ function WorkoutDetail({
         <span>חזרה לרשימה</span>
       </button>
 
-      <div className="bg-gradient-to-l from-emerald-600 to-emerald-500 rounded-xl p-4 text-white shadow-lg">
+      <div className="bg-gradient-to-l from-primary-600 to-primary-500 rounded-xl p-4 text-white shadow-lg">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-lg font-bold">
@@ -840,7 +840,7 @@ function WorkoutDetail({
                 year: 'numeric',
               })}
             </p>
-            <p className="text-sm text-emerald-100 mt-1">
+            <p className="text-sm text-primary-100 mt-1">
               {workout.workout_exercises?.length || 0} תרגילים
             </p>
           </div>
@@ -881,8 +881,8 @@ function WorkoutDetail({
                   className="w-full p-4 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-500/15 border border-emerald-500/30 rounded-lg flex items-center justify-center">
-                      <Dumbbell className="w-5 h-5 text-emerald-400" />
+                    <div className="w-10 h-10 bg-primary-500/15 border border-primary-500/30 rounded-lg flex items-center justify-center">
+                      <Dumbbell className="w-5 h-5 text-primary-400" />
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-[var(--color-text-primary)]">{we.exercises?.name}</p>
@@ -896,7 +896,7 @@ function WorkoutDetail({
                       <div
                         className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
                           comparison.direction === 'up'
-                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                            ? 'bg-primary-500/15 text-primary-400 border border-primary-500/30'
                             : comparison.direction === 'down'
                             ? 'bg-red-500/15 text-red-400 border border-red-500/30'
                             : 'bg-[var(--color-bg-surface)] text-[var(--color-text-muted)] border border-[var(--color-border)]'
@@ -930,7 +930,7 @@ function WorkoutDetail({
                             <div className="bg-[var(--color-bg-surface)] rounded-lg p-3 border border-[var(--color-border)]">
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-3">
-                                  <span className="w-6 h-6 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center justify-center text-xs font-medium">
+                                  <span className="w-6 h-6 bg-primary-500/15 text-primary-400 border border-primary-500/30 rounded-full flex items-center justify-center text-xs font-medium">
                                     {index + 1}
                                   </span>
                                   <span className="font-medium text-[var(--color-text-primary)]">

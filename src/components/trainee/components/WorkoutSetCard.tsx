@@ -42,11 +42,11 @@ export default function WorkoutSetCard({
     return (
       <div
         onClick={onToggleCollapse}
-        className="bg-[var(--color-bg-surface)] rounded-xl p-3 border border-[var(--color-border)] cursor-pointer hover:border-emerald-500/50 hover:bg-[var(--color-bg-elevated)] transition-all duration-300 animate-fade-in"
+        className="bg-[var(--color-bg-surface)] rounded-xl p-3 border border-[var(--color-border)] cursor-pointer hover:border-primary-500/50 hover:bg-[var(--color-bg-elevated)] transition-all duration-300 animate-fade-in"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="font-bold text-sm text-[var(--color-text-primary)] bg-emerald-500 px-3 py-1.5 rounded-lg shadow-sm">סט {set.set_number}</span>
+            <span className="font-bold text-sm text-[var(--color-text-primary)] bg-primary-500 px-3 py-1.5 rounded-lg shadow-sm">סט {set.set_number}</span>
             <span className="text-[var(--color-text-primary)] font-medium">{set.weight} ק״ג</span>
             <span className="text-[var(--color-text-muted)]">x</span>
             <span className="text-[var(--color-text-primary)] font-medium">{set.reps} חזרות</span>
@@ -59,7 +59,7 @@ export default function WorkoutSetCard({
               </span>
             )}
           </div>
-          <span className="text-xs text-emerald-400 font-medium">לחץ לעריכה</span>
+          <span className="text-xs text-primary-400 font-medium">לחץ לעריכה</span>
         </div>
       </div>
     );
@@ -98,7 +98,7 @@ export default function WorkoutSetCard({
           <button
             type="button"
             onClick={() => onOpenNumericPad('weight', 'משקל (ק״ג)')}
-            className="w-full px-2 py-3 md:py-3.5 text-lg md:text-xl font-bold border-2 border-emerald-500/50 bg-emerald-500/10 text-emerald-400 rounded-lg md:rounded-xl hover:bg-emerald-500/20 transition-all"
+            className="w-full px-2 py-3 md:py-3.5 text-lg md:text-xl font-bold border-2 border-primary-500/50 bg-primary-500/10 text-primary-400 rounded-lg md:rounded-xl hover:bg-primary-500/20 transition-all"
           >
             {set.weight || '0'}
           </button>
@@ -176,7 +176,7 @@ export default function WorkoutSetCard({
           type="button"
           onClick={() => onUpdateSet('set_type', 'regular')}
           className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all ${
-            set.set_type === 'regular' ? 'bg-emerald-500 text-white' : 'bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)]'
+            set.set_type === 'regular' ? 'bg-primary-500 text-white' : 'bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)]'
           }`}
         >
           רגיל
@@ -334,7 +334,7 @@ export default function WorkoutSetCard({
       <button
         type="button"
         onClick={onCompleteSet}
-        className="w-full mt-3 py-2.5 md:py-3 bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white font-semibold md:font-bold text-sm md:text-base rounded-lg md:rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg"
+        className="w-full mt-3 py-2.5 md:py-3 bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white font-semibold md:font-bold text-sm md:text-base rounded-lg md:rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg"
       >
         <CheckCircle className="h-4 w-4 md:h-5 md:w-5" />
         <span>סיים סט</span>

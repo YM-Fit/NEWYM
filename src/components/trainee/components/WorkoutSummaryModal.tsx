@@ -39,7 +39,7 @@ export default function WorkoutSummaryModal({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm text-[var(--color-text-secondary)]">סה"כ נפח</span>
-            <span className="font-bold text-emerald-400">
+            <span className="font-bold text-primary-400">
               {calculateTotalVolume().toLocaleString()} ק"ג
             </span>
           </div>
@@ -75,7 +75,7 @@ export default function WorkoutSummaryModal({
             toast.success('האימון נשמר בהצלחה!');
             onSave();
           }}
-          className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition-all"
+          className="w-full py-3 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-semibold transition-all"
         >
           סיום וחזרה למסך אימונים
         </button>

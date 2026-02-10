@@ -24,7 +24,7 @@ export function CreateNoteTemplateModal({ data, onChange, onSave, onClose }: Cre
               type="text"
               value={data.title}
               onChange={(e) => onChange({ ...data, title: e.target.value })}
-              className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+              className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all duration-300"
               placeholder="e.g., Drink Water"
             />
           </div>
@@ -33,7 +33,7 @@ export function CreateNoteTemplateModal({ data, onChange, onSave, onClose }: Cre
             <textarea
               value={data.content}
               onChange={(e) => onChange({ ...data, content: e.target.value })}
-              className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+              className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all duration-300"
               rows={3}
               placeholder="e.g., Drink a glass of water before each meal"
             />
@@ -42,7 +42,7 @@ export function CreateNoteTemplateModal({ data, onChange, onSave, onClose }: Cre
         <div className="p-6 border-t border-white/10 flex gap-4">
           <button
             onClick={onSave}
-            className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-emerald-500/25"
+            className="flex-1 bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-primary-500/25"
           >
             Save Template
           </button>

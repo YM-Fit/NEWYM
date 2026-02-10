@@ -86,7 +86,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
 
   return (
     <div 
-      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-base via-elevated to-emerald-950/20"
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-base via-elevated to-primary-950/20"
       style={{
         backgroundColor: 'rgb(9, 9, 11)', // Fallback dark background
         minHeight: '100vh',
@@ -98,14 +98,14 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
       {/* Enhanced Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Animated gradient orbs */}
-        <div className="absolute -top-1/2 -right-1/2 w-[800px] h-[800px] bg-gradient-radial from-emerald-500/15 via-emerald-500/5 to-transparent blur-3xl animate-pulse-soft" />
-        <div className="absolute -bottom-1/2 -left-1/2 w-[700px] h-[700px] bg-gradient-radial from-emerald-400/10 via-transparent to-transparent blur-3xl animate-pulse-soft" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/8 rounded-full blur-3xl animate-float-slow" />
-        <div className="absolute bottom-1/3 right-1/3 w-80 h-80 bg-emerald-400/6 rounded-full blur-3xl animate-float-slow" style={{ animationDelay: '2s' }} />
+        <div className="absolute -top-1/2 -right-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/15 via-primary/5 to-transparent blur-3xl animate-pulse-soft" />
+        <div className="absolute -bottom-1/2 -left-1/2 w-[700px] h-[700px] bg-gradient-radial from-primary-400/10 via-transparent to-transparent blur-3xl animate-pulse-soft" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/8 rounded-full blur-3xl animate-float-slow" />
+        <div className="absolute bottom-1/3 right-1/3 w-80 h-80 bg-primary-400/6 rounded-full blur-3xl animate-float-slow" style={{ animationDelay: '2s' }} />
         
         {/* Subtle grid pattern */}
         <div className="absolute inset-0 opacity-[0.02]" style={{
-          backgroundImage: 'linear-gradient(rgba(16, 185, 129, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(16, 185, 129, 0.1) 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(rgb(var(--color-primary) / 0.1) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--color-primary) / 0.1) 1px, transparent 1px)',
           backgroundSize: '50px 50px'
         }} />
       </div>
@@ -127,7 +127,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
           }}
         >
           {/* Card glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-transparent pointer-events-none" />
           
           {/* Header Section */}
           <div 
@@ -150,7 +150,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
               }}
             >
               {/* Glow effect behind logo */}
-              <div className="absolute inset-0 bg-emerald-400/20 blur-2xl animate-pulse-soft -z-10" style={{
+              <div className="absolute inset-0 bg-primary-400/20 blur-2xl animate-pulse-soft -z-10" style={{
                 width: '120%',
                 height: '120%',
                 top: '-10%',
@@ -165,8 +165,8 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
               />
               
               {/* Sparkle effects */}
-              <Star className="absolute top-2 right-2 w-4 h-4 text-emerald-400/60 animate-pulse fill-emerald-400/40" style={{ animationDelay: '0.5s' }} />
-              <Star className="absolute bottom-2 left-2 w-3 h-3 text-emerald-300/50 animate-pulse fill-emerald-300/30" style={{ animationDelay: '1s' }} />
+              <Star className="absolute top-2 right-2 w-4 h-4 text-primary-400/60 animate-pulse fill-primary-400/40" style={{ animationDelay: '0.5s' }} />
+              <Star className="absolute bottom-2 left-2 w-3 h-3 text-primary-300/50 animate-pulse fill-primary-300/30" style={{ animationDelay: '1s' }} />
             </div>
             
             {/* Title */}
@@ -181,8 +181,8 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
               }}
             >
               <span 
-                className="bg-gradient-to-r from-emerald-400 via-emerald-300 to-emerald-400 bg-clip-text text-transparent animate-gradient-x bg-[length:200%_auto]"
-                style={{ color: '#10b981' }}
+                className="bg-gradient-to-r from-primary-400 via-primary-300 to-primary-400 bg-clip-text text-transparent animate-gradient-x bg-[length:200%_auto]"
+                style={{ color: 'rgb(var(--color-primary))' }}
               >
                 YM Coach
               </span>
@@ -213,15 +213,15 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
               }}
               className={`flex-1 flex items-center justify-center gap-2.5 py-4 px-5 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden group ${
                 userType === 'trainer'
-                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-inverse shadow-lg shadow-emerald-500/30 scale-105'
-                  : 'bg-surface text-muted hover:bg-elevated hover:text-foreground border border-border hover:border-emerald-500/30 hover:scale-[1.02] backdrop-blur-sm'
+                  ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-inverse shadow-lg shadow-primary-500/30 scale-105'
+                  : 'bg-surface text-muted hover:bg-elevated hover:text-foreground border border-border hover:border-primary-500/30 hover:scale-[1.02] backdrop-blur-sm'
               }`}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/15 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
               <User className={`w-5 h-5 relative z-10 transition-all ${userType === 'trainer' ? 'scale-110 drop-shadow-lg' : 'group-hover:scale-110'}`} />
               <span className="relative z-10">מאמן</span>
               {userType === 'trainer' && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-emerald-500" />
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-400 to-primary-500" />
               )}
             </button>
             <button
@@ -234,15 +234,15 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
               }}
               className={`flex-1 flex items-center justify-center gap-2.5 py-4 px-5 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden group ${
                 userType === 'trainee'
-                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-inverse shadow-lg shadow-emerald-500/30 scale-105'
-                  : 'bg-surface text-muted hover:bg-elevated hover:text-foreground border border-border hover:border-emerald-500/30 hover:scale-[1.02] backdrop-blur-sm'
+                  ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-inverse shadow-lg shadow-primary-500/30 scale-105'
+                  : 'bg-surface text-muted hover:bg-elevated hover:text-foreground border border-border hover:border-primary-500/30 hover:scale-[1.02] backdrop-blur-sm'
               }`}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/15 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
               <Dumbbell className={`w-5 h-5 relative z-10 transition-all ${userType === 'trainee' ? 'scale-110 drop-shadow-lg' : 'group-hover:scale-110'}`} />
               <span className="relative z-10">מתאמן</span>
               {userType === 'trainee' && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-emerald-500" />
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-400 to-primary-500" />
               )}
             </button>
           </div>
@@ -282,7 +282,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
                 )}
               </label>
               <div className="relative group">
-                <div className={`absolute right-4 top-1/2 -translate-y-1/2 text-muted transition-all duration-300 ${focusedField === 'identifier' ? 'text-emerald-400 scale-110' : 'group-hover:text-foreground'}`}>
+                <div className={`absolute right-4 top-1/2 -translate-y-1/2 text-muted transition-all duration-300 ${focusedField === 'identifier' ? 'text-primary-400 scale-110' : 'group-hover:text-foreground'}`}>
                   {userType === 'trainer' ? <Mail className="w-5 h-5" /> : <Phone className="w-5 h-5" />}
                 </div>
                 <input
@@ -298,7 +298,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
                   dir="ltr"
                 />
                 {focusedField === 'identifier' && (
-                  <div className="absolute inset-0 rounded-xl border-2 border-emerald-500/50 pointer-events-none animate-pulse-soft" />
+                  <div className="absolute inset-0 rounded-xl border-2 border-primary-500/50 pointer-events-none animate-pulse-soft" />
                 )}
               </div>
             </div>
@@ -310,7 +310,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
                 <Lock className="w-4 h-4 text-muted" />
               </label>
               <div className="relative group">
-                <div className={`absolute right-4 top-1/2 -translate-y-1/2 text-muted transition-all duration-300 ${focusedField === 'password' ? 'text-emerald-400 scale-110' : 'group-hover:text-foreground'}`}>
+                <div className={`absolute right-4 top-1/2 -translate-y-1/2 text-muted transition-all duration-300 ${focusedField === 'password' ? 'text-primary-400 scale-110' : 'group-hover:text-foreground'}`}>
                   <Lock className="w-5 h-5" />
                 </div>
                 <input
@@ -325,13 +325,13 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
                   placeholder="הזן סיסמה"
                 />
                 {focusedField === 'password' && (
-                  <div className="absolute inset-0 rounded-xl border-2 border-emerald-500/50 pointer-events-none animate-pulse-soft" />
+                  <div className="absolute inset-0 rounded-xl border-2 border-primary-500/50 pointer-events-none animate-pulse-soft" />
                 )}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isLocked}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-muted hover:text-emerald-400 transition-all rounded-lg hover:bg-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed group/eye"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-muted hover:text-primary-400 transition-all rounded-lg hover:bg-primary-500/10 disabled:opacity-50 disabled:cursor-not-allowed group/eye"
                   aria-label={showPassword ? 'הסתר סיסמה' : 'הצג סיסמה'}
                 >
                   {showPassword ? (
@@ -371,10 +371,10 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
                 אין לך חשבון?{' '}
                 <button
                   onClick={onToggleMode}
-                  className="text-emerald-400 hover:text-emerald-300 font-semibold transition-all duration-300 hover:underline underline-offset-2 relative group"
+                  className="text-primary-400 hover:text-primary-300 font-semibold transition-all duration-300 hover:underline underline-offset-2 relative group"
                 >
                   <span className="relative z-10">הירשם כאן</span>
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400/30 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right" />
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-400/30 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right" />
                 </button>
               </p>
             </div>

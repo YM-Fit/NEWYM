@@ -24,7 +24,7 @@ export function SaveTemplateModal({ templateName, saving, onNameChange, onSave, 
             type="text"
             value={templateName}
             onChange={(e) => onNameChange(e.target.value)}
-            className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+            className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all duration-300"
             placeholder="e.g., 1800 calorie plan"
           />
         </div>
@@ -32,7 +32,7 @@ export function SaveTemplateModal({ templateName, saving, onNameChange, onSave, 
           <button
             onClick={onSave}
             disabled={saving}
-            className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 disabled:opacity-50 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-emerald-500/25"
+            className="flex-1 bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 disabled:opacity-50 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-primary-500/25"
           >
             {saving ? 'Saving...' : 'Save Template'}
           </button>

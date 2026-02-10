@@ -117,7 +117,7 @@ export default function WorkoutPlanHistory({ planId, onClose }: WorkoutPlanHisto
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-surface0 rounded-2xl p-6 w-full max-w-2xl">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
             <p className="text-muted600">טוען היסטוריה...</p>
           </div>
         </div>
@@ -165,7 +165,7 @@ export default function WorkoutPlanHistory({ planId, onClose }: WorkoutPlanHisto
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center text-white">
+                          <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center text-white">
                             <Calendar className="w-5 h-5" />
                           </div>
                           <div>
@@ -176,7 +176,7 @@ export default function WorkoutPlanHistory({ planId, onClose }: WorkoutPlanHisto
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Check className="w-5 h-5 text-emerald-400" />
+                          <Check className="w-5 h-5 text-primary-400" />
                           {isExpanded ? (
                             <ChevronUp className="w-5 h-5 text-muted600" />
                           ) : (
@@ -197,8 +197,8 @@ export default function WorkoutPlanHistory({ planId, onClose }: WorkoutPlanHisto
                             >
                               <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                                    <Dumbbell className="w-4 h-4 text-emerald-400" />
+                                  <div className="w-8 h-8 bg-primary-500/20 rounded-lg flex items-center justify-center">
+                                    <Dumbbell className="w-4 h-4 text-primary-400" />
                                   </div>
                                   <div>
                                     <div className="font-bold text-sm text-muted900">
@@ -216,7 +216,7 @@ export default function WorkoutPlanHistory({ planId, onClose }: WorkoutPlanHisto
                                     </div>
                                   </div>
                                 </div>
-                                <Check className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                                <Check className="w-5 h-5 text-primary-400 flex-shrink-0" />
                               </div>
                               {execution.notes && (
                                 <div className="mt-2 pt-2 border-t border-border200">

@@ -173,7 +173,7 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
 
   const getItemStyles = (type: string) => {
     switch (type) {
-      case 'workout': return { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' };
+      case 'workout': return { bg: 'bg-primary-500/15', text: 'text-primary-400', border: 'border-primary-500/30' };
       case 'measurement': return { bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/30' };
       case 'self_weight': return { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' };
       case 'goal_achieved': return { bg: 'bg-yellow-500/15', text: 'text-yellow-400', border: 'border-yellow-500/30' };
@@ -202,8 +202,8 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
       <div className="premium-card-static max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         <div className="p-6 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-emerald-500/15">
-              <Calendar className="h-6 w-6 text-emerald-400" />
+            <div className="p-3 rounded-xl bg-primary-500/15">
+              <Calendar className="h-6 w-6 text-primary-400" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-foreground">ציר זמן</h2>
@@ -232,7 +232,7 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
                   onClick={() => setFilter(f.id as typeof filter)}
                   className={`px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap transition-all ${
                     filter === f.id
-                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-primary-500/15 text-primary-400 border border-primary-500/30'
                       : 'bg-surface text-muted hover:text-foreground border border-border'
                   }`}
                 >
@@ -244,7 +244,7 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
               <button
                 onClick={() => setViewMode('timeline')}
                 className={`p-2 rounded-lg transition-all ${
-                  viewMode === 'timeline' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
+                  viewMode === 'timeline' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
                 }`}
                 title="ציר זמן"
               >
@@ -253,7 +253,7 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
               <button
                 onClick={() => setViewMode('table')}
                 className={`p-2 rounded-lg transition-all ${
-                  viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
+                  viewMode === 'table' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
                 }`}
                 title="טבלה"
               >
@@ -266,7 +266,7 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+              <div className="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
             </div>
           ) : filteredItems.length === 0 ? (
             <div className="text-center py-12">
@@ -336,10 +336,10 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
                                       </div>
                                     )}
                                     {item.metadata.muscleMass && (
-                                      <div className="bg-emerald-500/10 rounded-xl p-3 text-center border border-emerald-500/20">
-                                        <TrendingUp className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
-                                        <p className="text-xs text-emerald-400 mb-0.5">מסת שריר</p>
-                                        <p className="font-bold text-emerald-400">{item.metadata.muscleMass} ק"ג</p>
+                                      <div className="bg-primary-500/10 rounded-xl p-3 text-center border border-primary-500/20">
+                                        <TrendingUp className="w-4 h-4 text-primary-400 mx-auto mb-1" />
+                                        <p className="text-xs text-primary-400 mb-0.5">מסת שריר</p>
+                                        <p className="font-bold text-primary-400">{item.metadata.muscleMass} ק"ג</p>
                                       </div>
                                     )}
                                     {item.metadata.waterPercentage && (
@@ -375,9 +375,9 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
                               {item.type === 'workout' && (
                                 <div className="space-y-3">
                                   <div className="grid grid-cols-2 gap-2">
-                                    <div className="bg-emerald-500/10 rounded-xl p-3 text-center border border-emerald-500/20">
-                                      <p className="text-xs text-emerald-400 mb-0.5">תרגילים</p>
-                                      <p className="font-bold text-emerald-400">{item.metadata.exerciseCount}</p>
+                                    <div className="bg-primary-500/10 rounded-xl p-3 text-center border border-primary-500/20">
+                                      <p className="text-xs text-primary-400 mb-0.5">תרגילים</p>
+                                      <p className="font-bold text-primary-400">{item.metadata.exerciseCount}</p>
                                     </div>
                                     <div className="bg-blue-500/10 rounded-xl p-3 text-center border border-blue-500/20">
                                       <p className="text-xs text-blue-400 mb-0.5">נפח כולל</p>
@@ -466,14 +466,14 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
                         </td>
                         <td className="py-3 px-3 text-center">
                           {item.metadata?.muscleMass ? (
-                            <span className="font-semibold text-emerald-400">{item.metadata.muscleMass}</span>
+                            <span className="font-semibold text-primary-400">{item.metadata.muscleMass}</span>
                           ) : (
                             <span className="text-muted">-</span>
                           )}
                         </td>
                         <td className="py-3 px-3 text-center">
                           {item.type === 'workout' && item.metadata?.totalVolume ? (
-                            <span className="font-semibold text-emerald-400">{(item.metadata.totalVolume as number).toLocaleString()}</span>
+                            <span className="font-semibold text-primary-400">{(item.metadata.totalVolume as number).toLocaleString()}</span>
                           ) : item.metadata?.bmi ? (
                             <span className="font-semibold text-foreground">{item.metadata.bmi}</span>
                           ) : (

@@ -404,7 +404,7 @@ export default function MyHabits({ traineeId }: MyHabitsProps) {
                 {todayLog && (
                   <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
                     <p className="text-sm text-[var(--color-text-secondary)]">
-                      היום: <span className="font-semibold text-emerald-400">
+                      היום: <span className="font-semibold text-primary-400">
                         {todayLog.actual_value} {habit.unit || ''}
                       </span>
                     </p>

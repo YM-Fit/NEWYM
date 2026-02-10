@@ -92,7 +92,7 @@ export default function ClientDashboard() {
     return (
       <div className="premium-card p-6">
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-400"></div>
         </div>
       </div>
     );
@@ -104,12 +104,12 @@ export default function ClientDashboard() {
         <h1 className="text-2xl font-bold text-foreground mb-6">Dashboard שלי</h1>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-emerald-500/10 rounded-lg p-4 border border-emerald-500/20">
+          <div className="bg-primary-500/10 rounded-lg p-4 border border-primary-500/20">
             <div className="flex items-center gap-2 mb-2">
-              <Calendar className="h-5 w-5 text-emerald-400" />
+              <Calendar className="h-5 w-5 text-primary-400" />
               <div className="text-sm text-muted">אימונים חודשיים</div>
             </div>
-            <div className="text-2xl font-bold text-emerald-400">{stats.workoutsThisMonth}</div>
+            <div className="text-2xl font-bold text-primary-400">{stats.workoutsThisMonth}</div>
           </div>
 
           <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/20">

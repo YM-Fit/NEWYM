@@ -141,7 +141,7 @@ export const WorkoutExerciseCard = memo(({
   if (isMinimized) {
     return (
       <div
-        className="premium-card-static mb-4 lg:mb-6 overflow-hidden border-r-4 border-emerald-500 set-collapsed-hover"
+        className="premium-card-static mb-4 lg:mb-6 overflow-hidden border-r-4 border-primary-500 set-collapsed-hover"
       >
         <div
           className="flex items-center justify-between px-4 lg:px-6 py-3 lg:py-4 cursor-pointer hover:bg-surface transition-all"
@@ -150,13 +150,13 @@ export const WorkoutExerciseCard = memo(({
           <div className="flex items-center gap-3 lg:gap-4 flex-1 min-w-0">
             {/* Success indicator with progress */}
             <div className="relative flex-shrink-0">
-              <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg">
                 <Check className="h-6 w-6 lg:h-7 lg:w-7 text-white" />
               </div>
               {/* Progress ring */}
               <svg className="absolute -top-1 -right-1 w-5 h-5 transform -rotate-90">
                 <circle
-                  className="text-emerald-900"
+                  className="text-primary-900"
                   strokeWidth="2"
                   stroke="currentColor"
                   fill="transparent"
@@ -165,7 +165,7 @@ export const WorkoutExerciseCard = memo(({
                   cy="10"
                 />
                 <circle
-                  className="text-emerald-400"
+                  className="text-primary-400"
                   strokeWidth="2"
                   strokeLinecap="round"
                   stroke="currentColor"
@@ -187,12 +187,12 @@ export const WorkoutExerciseCard = memo(({
                 </span>
                 <span className="text-muted600">•</span>
                 <span className="text-sm text-muted flex items-center gap-1">
-                  מקס: <span className="font-semibold text-emerald-400">{summary.maxWeight}</span> ק״ג
+                  מקס: <span className="font-semibold text-primary-400">{summary.maxWeight}</span> ק״ג
                 </span>
                 <span className="text-muted600">•</span>
-                <div className="flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/30">
-                  <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
-                  <span className="text-sm font-semibold text-emerald-400">{summary.totalVolume.toLocaleString()}</span>
+                <div className="flex items-center gap-1 bg-primary-500/10 px-2 py-0.5 rounded-md border border-primary-500/30">
+                  <TrendingUp className="h-3.5 w-3.5 text-primary-400" />
+                  <span className="text-sm font-semibold text-primary-400">{summary.totalVolume.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -212,7 +212,7 @@ export const WorkoutExerciseCard = memo(({
             >
               <Info className="h-5 w-5" />
             </button>
-            <ChevronDown className="h-5 w-5 text-emerald-400" />
+            <ChevronDown className="h-5 w-5 text-primary-400" />
             <button
               type="button"
               onClick={(e) => {
@@ -278,7 +278,7 @@ export const WorkoutExerciseCard = memo(({
                         cy="50%"
                       />
                       <circle
-                        className="text-emerald-500 progress-ring"
+                        className="text-primary-500 progress-ring"
                         strokeWidth="3"
                         strokeLinecap="round"
                         stroke="currentColor"
@@ -298,10 +298,10 @@ export const WorkoutExerciseCard = memo(({
                 </div>
                 
                 {/* Volume */}
-                <div className="flex items-center gap-2 bg-emerald-500/15 px-4 py-2 rounded-xl border border-emerald-500/40 shadow-sm">
-                  <TrendingUp className="h-5 w-5 text-emerald-400" />
-                  <span className="text-emerald-400 font-bold text-base lg:text-lg">{totalVolume.toLocaleString()}</span>
-                  <span className="text-emerald-400/80 text-xs lg:text-sm">ק״ג</span>
+                <div className="flex items-center gap-2 bg-primary-500/15 px-4 py-2 rounded-xl border border-primary-500/40 shadow-sm">
+                  <TrendingUp className="h-5 w-5 text-primary-400" />
+                  <span className="text-primary-400 font-bold text-base lg:text-lg">{totalVolume.toLocaleString()}</span>
+                  <span className="text-primary-400/80 text-xs lg:text-sm">ק״ג</span>
                 </div>
                 
                 {/* Average stats */}
@@ -326,7 +326,7 @@ export const WorkoutExerciseCard = memo(({
                 e.stopPropagation();
                 onComplete();
               }}
-              className="px-5 py-2.5 lg:px-6 lg:py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all text-sm lg:text-base font-bold cursor-pointer btn-press-feedback shadow-md hover:shadow-lg"
+              className="px-5 py-2.5 lg:px-6 lg:py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl transition-all text-sm lg:text-base font-bold cursor-pointer btn-press-feedback shadow-md hover:shadow-lg"
             >
               סיים תרגיל
             </button>
@@ -386,7 +386,7 @@ export const WorkoutExerciseCard = memo(({
             e.stopPropagation();
             onAddSet();
           }}
-          className="w-full mt-5 lg:mt-6 py-4 lg:py-5 border-2 border-dashed border-border rounded-xl hover:border-emerald-500/50 hover:bg-emerald-500/10 text-muted hover:text-emerald-400 font-bold text-base lg:text-lg transition-all touch-manipulation cursor-pointer btn-press-feedback flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+          className="w-full mt-5 lg:mt-6 py-4 lg:py-5 border-2 border-dashed border-border rounded-xl hover:border-primary-500/50 hover:bg-primary-500/10 text-muted hover:text-primary-400 font-bold text-base lg:text-lg transition-all touch-manipulation cursor-pointer btn-press-feedback flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
         >
           <Plus className="h-5 w-5 lg:h-6 lg:w-6" />
           <span>הוסף סט</span>

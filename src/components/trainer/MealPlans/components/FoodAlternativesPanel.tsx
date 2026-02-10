@@ -182,10 +182,10 @@ export default function FoodAlternativesPanel({
   const categoryLabel = FOOD_CATEGORIES.find(c => c.value === category)?.label || '';
 
   return (
-    <div className="mt-2 p-3 bg-[var(--color-bg-surface)] rounded-xl border border-dashed border-emerald-500/30">
+    <div className="mt-2 p-3 bg-[var(--color-bg-surface)] rounded-xl border border-dashed border-primary-500/30">
       <div className="flex items-center gap-2 mb-2">
-        <ArrowLeftRight className="w-3.5 h-3.5 text-emerald-400" />
-        <span className="text-xs font-semibold text-emerald-400">
+        <ArrowLeftRight className="w-3.5 h-3.5 text-primary-400" />
+        <span className="text-xs font-semibold text-primary-400">
           חלופות ({categoryLabel})
         </span>
       </div>
@@ -194,11 +194,11 @@ export default function FoodAlternativesPanel({
           <button
             key={item.id}
             onClick={() => onSwap(item)}
-            className="flex-shrink-0 text-right p-2 rounded-lg border border-[var(--color-border)] hover:border-emerald-400 hover:bg-emerald-500/5 transition-all text-[11px] min-w-[140px]"
+            className="flex-shrink-0 text-right p-2 rounded-lg border border-[var(--color-border)] hover:border-primary-400 hover:bg-primary-500/5 transition-all text-[11px] min-w-[140px]"
           >
             <p className="font-semibold text-[var(--color-text-primary)] mb-1 truncate">{item.name}</p>
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="flex items-center gap-0.5 text-emerald-500">
+              <span className="flex items-center gap-0.5 text-primary-500">
                 <Flame className="w-2.5 h-2.5" />
                 {item.calories_per_100g}
               </span>

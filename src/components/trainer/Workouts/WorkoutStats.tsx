@@ -30,10 +30,10 @@ export const WorkoutStats = memo(({
     <div className="premium-card-static p-2 mb-2">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         {/* Total Volume */}
-        <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-2 py-1">
-          <TrendingUp className="h-3 w-3 text-emerald-400" />
+        <div className="flex items-center gap-1.5 bg-primary-500/10 border border-primary-500/30 rounded-lg px-2 py-1">
+          <TrendingUp className="h-3 w-3 text-primary-400" />
           <span className="text-xs text-muted">נפח:</span>
-          <span className="text-sm font-bold text-emerald-400">{totalVolume.toLocaleString()}</span>
+          <span className="text-sm font-bold text-primary-400">{totalVolume.toLocaleString()}</span>
           <span className="text-[10px] text-muted">ק״ג</span>
         </div>
 
@@ -61,10 +61,10 @@ export const WorkoutStats = memo(({
         </div>
 
         {/* Total Exercises */}
-        <div className="flex items-center gap-1.5 bg-emerald-600/10 border border-emerald-600/30 rounded-lg px-2 py-1">
-          <Zap className="h-3 w-3 text-emerald-400" />
+        <div className="flex items-center gap-1.5 bg-primary-600/10 border border-primary-600/30 rounded-lg px-2 py-1">
+          <Zap className="h-3 w-3 text-primary-400" />
           <span className="text-xs text-muted">תרגילים:</span>
-          <span className="text-sm font-bold text-emerald-400">{totalExercises}</span>
+          <span className="text-sm font-bold text-primary-400">{totalExercises}</span>
         </div>
       </div>
     </div>

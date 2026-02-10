@@ -29,12 +29,12 @@ export function formatPercentage(value: number, decimals: number = 1): string {
  */
 export function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
-    active: 'emerald',
+    active: 'primary',
     pending: 'yellow',
     overdue: 'red',
-    paid: 'emerald',
+    paid: 'primary',
     failed: 'red',
-    sent: 'emerald',
+    sent: 'primary',
     churned: 'red',
     inactive: 'yellow',
     lead: 'blue',

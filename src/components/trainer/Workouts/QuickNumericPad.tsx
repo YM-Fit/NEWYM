@@ -274,18 +274,18 @@ export default function QuickNumericPad({
     }
     if (allowDecimal) {
       return [
-        { label: '+0.5', value: 0.5, isAbsolute: false, color: 'emerald' },
-        { label: '+1', value: 1, isAbsolute: false, color: 'emerald' },
-        { label: '+2.5', value: 2.5, isAbsolute: false, color: 'emerald' },
+        { label: '+0.5', value: 0.5, isAbsolute: false, color: 'primary' },
+        { label: '+1', value: 1, isAbsolute: false, color: 'primary' },
+        { label: '+2.5', value: 2.5, isAbsolute: false, color: 'primary' },
         { label: '+5', value: 5, isAbsolute: false, color: 'blue' },
         { label: '+10', value: 10, isAbsolute: false, color: 'blue' },
         { label: '+20', value: 20, isAbsolute: false, color: 'blue' },
       ];
     }
     return [
-      { label: '+1', value: 1, isAbsolute: false, color: 'emerald' },
-      { label: '+2', value: 2, isAbsolute: false, color: 'emerald' },
-      { label: '+3', value: 3, isAbsolute: false, color: 'emerald' },
+      { label: '+1', value: 1, isAbsolute: false, color: 'primary' },
+      { label: '+2', value: 2, isAbsolute: false, color: 'primary' },
+      { label: '+3', value: 3, isAbsolute: false, color: 'primary' },
       { label: '+5', value: 5, isAbsolute: false, color: 'blue' },
       { label: '+10', value: 10, isAbsolute: false, color: 'blue' },
       { label: '+15', value: 15, isAbsolute: false, color: 'blue' },
@@ -352,13 +352,13 @@ export default function QuickNumericPad({
       >
         {/* Header */}
         <div className={`flex items-center justify-between ${compact ? 'mb-4' : isTabletMode ? 'mb-6' : 'mb-5'}`}>
-          <h2 className={`font-bold text-emerald-400 ${titleSize} select-none`}>
+          <h2 className={`font-bold text-primary-400 ${titleSize} select-none`}>
             {label}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className={`${isTabletMode ? 'p-3' : 'p-2'} hover:bg-surface rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 touch-manipulation`}
+            className={`${isTabletMode ? 'p-3' : 'p-2'} hover:bg-surface rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary-500/50 touch-manipulation`}
             aria-label="סגור לוח מספרים"
           >
             <X className={`${isTabletMode ? 'h-7 w-7 md:h-8 md:w-8' : 'h-6 w-6 lg:h-7 lg:w-7'} text-muted`} aria-hidden="true" />
@@ -369,7 +369,7 @@ export default function QuickNumericPad({
         <div className={compact ? 'mb-4' : isTabletMode ? 'mb-6' : 'mb-5'}>
           <div 
             ref={displayRef}
-            className={`relative bg-gradient-to-br from-zinc-800/80 to-zinc-800/50 border-4 ${swipeIndicator ? 'border-blue-500/80' : 'border-emerald-500/60'} rounded-2xl ${displayPadding} text-center shadow-inner transition-colors`}
+            className={`relative bg-gradient-to-br from-zinc-800/80 to-zinc-800/50 border-4 ${swipeIndicator ? 'border-blue-500/80' : 'border-primary-500/60'} rounded-2xl ${displayPadding} text-center shadow-inner transition-colors`}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -387,7 +387,7 @@ export default function QuickNumericPad({
             
             {/* Value display */}
             <div
-              className={`w-full bg-transparent font-bold text-emerald-400 tabular-nums text-center ${displaySize} select-none ${isTabletMode ? 'leading-tight' : ''}`}
+              className={`w-full bg-transparent font-bold text-primary-400 tabular-nums text-center ${displaySize} select-none ${isTabletMode ? 'leading-tight' : ''}`}
               aria-label={`${label} - ${inputValue}${allowDecimal ? ' קילוגרמים' : isRpeMode ? ' RPE' : ' חזרות'}`}
               role="textbox"
               aria-readonly="true"
@@ -446,8 +446,8 @@ export default function QuickNumericPad({
                       handleAdd(btn.value, btn.isAbsolute);
                     }}
                     className={`py-4 px-2 rounded-xl font-bold text-xl transition-all active:scale-[0.95] touch-manipulation ${
-                      btn.color === 'emerald' 
-                        ? 'bg-emerald-500/15 border-2 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25'
+                      btn.color === 'primary' 
+                        ? 'bg-primary-500/15 border-2 border-primary-500/30 text-primary-400 hover:bg-primary-500/25'
                         : 'bg-blue-500/15 border-2 border-blue-500/30 text-blue-400 hover:bg-blue-500/25'
                     }`}
                     style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
@@ -552,9 +552,9 @@ export default function QuickNumericPad({
                   aria-pressed={isRpeMode && currentValue === btn.value}
                   className={`${
                     isRpeMode && currentValue === btn.value
-                      ? 'bg-emerald-500 ring-4 ring-emerald-500/40 shadow-lg shadow-emerald-500/30 text-foreground'
+                      ? 'bg-primary-500 ring-4 ring-primary-500/40 shadow-lg shadow-primary-500/30 text-foreground'
                       : 'bg-blue-500/15 border-2 border-blue-500/30 hover:bg-blue-500/25 hover:border-blue-500/50 text-blue-400'
-                  } ${buttonSize} px-3 md:px-4 rounded-xl font-bold transition-all active:scale-[0.95] touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-500/50 select-none`}
+                  } ${buttonSize} px-3 md:px-4 rounded-xl font-bold transition-all active:scale-[0.95] touch-manipulation focus:outline-none focus:ring-2 focus:ring-primary-500/50 select-none`}
                   style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                 >
                   {btn.label}
@@ -613,7 +613,7 @@ export default function QuickNumericPad({
             onTouchStart={(e) => e.stopPropagation()}
             onTouchEnd={(e) => e.stopPropagation()}
             aria-label={`אישור ערך${allowDecimal ? ' בקילוגרמים' : isRpeMode ? ' RPE' : ' בחזרות'}`}
-            className={`bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/30 ${compact ? 'py-3 px-4 rounded-xl text-lg' : isTabletMode ? 'py-5 md:py-6 px-4 rounded-xl text-xl md:text-2xl' : 'py-4 lg:py-5 px-4 rounded-xl text-xl lg:text-2xl'} font-bold transition-all active:scale-[0.95] touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-500/50 select-none flex items-center justify-center gap-2`}
+            className={`bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-lg shadow-primary-500/30 ${compact ? 'py-3 px-4 rounded-xl text-lg' : isTabletMode ? 'py-5 md:py-6 px-4 rounded-xl text-xl md:text-2xl' : 'py-4 lg:py-5 px-4 rounded-xl text-xl lg:text-2xl'} font-bold transition-all active:scale-[0.95] touch-manipulation focus:outline-none focus:ring-2 focus:ring-primary-500/50 select-none flex items-center justify-center gap-2`}
             style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
           >
             <Check className={`${compact ? 'h-5 w-5' : 'h-6 w-6'}`} />

@@ -56,7 +56,7 @@ export default function WorkoutExerciseCard({
   return (
     <div
       className={`bg-[var(--color-bg-surface)] rounded-xl md:rounded-2xl shadow-md md:shadow-lg mb-3 md:mb-4 transition-all border ${
-        isMinimized ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-[var(--color-border)]'
+        isMinimized ? 'border-primary-500/50 bg-primary-500/5' : 'border-[var(--color-border)]'
       }`}
       style={{
         height: isMinimized ? '64px' : 'auto',
@@ -65,11 +65,11 @@ export default function WorkoutExerciseCard({
     >
       {isMinimized ? (
         <div
-          className="h-full flex items-center justify-between px-3 md:px-4 cursor-pointer hover:bg-emerald-500/10 transition-all"
+          className="h-full flex items-center justify-between px-3 md:px-4 cursor-pointer hover:bg-primary-500/10 transition-all"
           onClick={onToggleMinimize}
         >
           <div className="flex items-center space-x-2 rtl:space-x-reverse flex-1 min-w-0">
-            <div className="w-8 h-8 md:w-9 md:h-9 bg-emerald-500 rounded-lg md:rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
+            <div className="w-8 h-8 md:w-9 md:h-9 bg-primary-500 rounded-lg md:rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
               <span className="text-white text-sm md:text-base font-bold">✓</span>
             </div>
             <div className="flex-1 min-w-0">
@@ -79,7 +79,7 @@ export default function WorkoutExerciseCard({
               </p>
             </div>
           </div>
-          <span className="text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/30 flex-shrink-0 mr-2">ערוך</span>
+          <span className="text-xs text-primary-400 font-semibold bg-primary-500/10 px-2 py-0.5 rounded-md border border-primary-500/30 flex-shrink-0 mr-2">ערוך</span>
         </div>
       ) : (
         <div className="p-3 md:p-4">
@@ -105,7 +105,7 @@ export default function WorkoutExerciseCard({
               <button
                 type="button"
                 onClick={onToggleMinimize}
-                className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-all text-xs font-semibold border border-emerald-500/30"
+                className="px-3 py-1.5 bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 rounded-lg transition-all text-xs font-semibold border border-primary-500/30"
               >
                 מינימום
               </button>
@@ -150,7 +150,7 @@ export default function WorkoutExerciseCard({
           <button
             type="button"
             onClick={onAddSet}
-            className="w-full mt-4 py-4 border-2 border-dashed border-[var(--color-border)] rounded-xl hover:border-emerald-500/50 hover:bg-emerald-500/5 text-[var(--color-text-muted)] hover:text-emerald-400 font-bold text-base transition-all"
+            className="w-full mt-4 py-4 border-2 border-dashed border-[var(--color-border)] rounded-xl hover:border-primary-500/50 hover:bg-primary-500/5 text-[var(--color-text-muted)] hover:text-primary-400 font-bold text-base transition-all"
           >
             + הוסף סט
           </button>

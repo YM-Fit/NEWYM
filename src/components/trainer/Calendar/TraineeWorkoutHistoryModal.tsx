@@ -550,8 +550,8 @@ export default function TraineeWorkoutHistoryModal({
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-border border-border30">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-xl border border-emerald-500/30">
-              <Calendar className="h-5 w-5 text-emerald-600" />
+            <div className="p-2 bg-gradient-to-br from-primary-500/20 to-primary-600/20 rounded-xl border border-primary-500/30">
+              <Calendar className="h-5 w-5 text-primary-600" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-foreground text-foreground">היסטוריית אימונים - {traineeName}</h2>
@@ -584,14 +584,14 @@ export default function TraineeWorkoutHistoryModal({
         <div className="flex-1 overflow-y-auto p-5">
           {searchingTrainee ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30 mb-3">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-primary-400/30 mb-3">
                 <Search className="h-8 w-8 text-white" />
               </div>
               <p className="text-muted text-muted">מחפש מתאמן...</p>
             </div>
           ) : loading ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30 mb-3">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-primary-400/30 mb-3">
                 <Loader2 className="h-8 w-8 text-white animate-spin" />
               </div>
               <p className="text-muted text-muted">טוען אימונים...</p>
@@ -619,7 +619,7 @@ export default function TraineeWorkoutHistoryModal({
                   className="flex items-center justify-between p-4 bg-white bg-elevated rounded-xl border border-border border-border30 hover:bg-surface50 transition-all duration-300 shadow-sm"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-bold shadow-md">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold shadow-md">
                       {workout.workoutNumber}
                     </div>
                     <div>

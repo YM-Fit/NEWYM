@@ -178,7 +178,7 @@ export default function WorkoutsList({
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="premium-card-static p-4 sm:p-6 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-0 left-0 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="relative space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
@@ -191,8 +191,8 @@ export default function WorkoutsList({
               </button>
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <Sparkles className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">אימונים</span>
+                  <Sparkles className="w-4 h-4 text-primary-400" />
+                  <span className="text-xs font-semibold text-primary-400 uppercase tracking-wider">אימונים</span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground">{trainee.name}</h1>
                 <p className="text-sm text-muted">
@@ -205,7 +205,7 @@ export default function WorkoutsList({
                 <button
                   onClick={() => handleViewModeChange('list')}
                   className={`p-2 rounded-lg transition-all ${
-                    viewMode === 'list' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
+                    viewMode === 'list' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
                   }`}
                   title="תצוגת רשימה"
                   aria-label="תצוגת רשימה"
@@ -215,7 +215,7 @@ export default function WorkoutsList({
                 <button
                   onClick={() => handleViewModeChange('table')}
                   className={`p-2 rounded-lg transition-all ${
-                    viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
+                    viewMode === 'table' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
                   }`}
                   title="תצוגת טבלה"
                   aria-label="תצוגת טבלה"
@@ -237,7 +237,7 @@ export default function WorkoutsList({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="חיפוש לפי תרגיל או תאריך..."
-                  className="w-full pr-10 pl-4 py-2.5 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                  className="w-full pr-10 pl-4 py-2.5 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all"
                 />
               </div>
 
@@ -247,7 +247,7 @@ export default function WorkoutsList({
                   onClick={() => setFilterType('all')}
                   className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     filterType === 'all'
-                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-primary-500/15 text-primary-400 border border-primary-500/30'
                       : 'bg-surface text-muted border border-border hover:bg-elevated'
                   }`}
                 >
@@ -257,7 +257,7 @@ export default function WorkoutsList({
                   onClick={() => setFilterType('trainer')}
                   className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     filterType === 'trainer'
-                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-primary-500/15 text-primary-400 border border-primary-500/30'
                       : 'bg-surface text-muted border border-border hover:bg-elevated'
                   }`}
                 >
@@ -296,7 +296,7 @@ export default function WorkoutsList({
                 onClick={() => handleSort('date')}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${
                   sortField === 'date'
-                    ? 'bg-emerald-500/15 text-emerald-400'
+                    ? 'bg-primary-500/15 text-primary-400'
                     : 'bg-surface text-muted hover:bg-elevated'
                 }`}
               >
@@ -309,7 +309,7 @@ export default function WorkoutsList({
                 onClick={() => handleSort('volume')}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${
                   sortField === 'volume'
-                    ? 'bg-emerald-500/15 text-emerald-400'
+                    ? 'bg-primary-500/15 text-primary-400'
                     : 'bg-surface text-muted hover:bg-elevated'
                 }`}
               >
@@ -322,7 +322,7 @@ export default function WorkoutsList({
                 onClick={() => handleSort('exercises')}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${
                   sortField === 'exercises'
-                    ? 'bg-emerald-500/15 text-emerald-400'
+                    ? 'bg-primary-500/15 text-primary-400'
                     : 'bg-surface text-muted hover:bg-elevated'
                 }`}
               >
@@ -349,11 +349,11 @@ export default function WorkoutsList({
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className={`p-2.5 rounded-xl ${workout.isSelfRecorded ? 'bg-blue-500/15 border border-blue-500/30' : 'bg-emerald-500/15 border border-emerald-500/30'}`}>
+                      <div className={`p-2.5 rounded-xl ${workout.isSelfRecorded ? 'bg-blue-500/15 border border-blue-500/30' : 'bg-primary-500/15 border border-primary-500/30'}`}>
                         {workout.isSelfRecorded ? (
                           <User className="h-5 w-5 text-blue-400" />
                         ) : (
-                          <Dumbbell className="h-5 w-5 text-emerald-400" />
+                          <Dumbbell className="h-5 w-5 text-primary-400" />
                         )}
                       </div>
                       <div>
@@ -381,7 +381,7 @@ export default function WorkoutsList({
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted">נפח כולל:</span>
-                        <span className="font-semibold text-emerald-400">
+                        <span className="font-semibold text-primary-400">
                           {workout.totalVolume.toLocaleString()} ק״ג
                         </span>
                       </div>
@@ -499,11 +499,11 @@ export default function WorkoutsList({
                       >
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${workout.isSelfRecorded ? 'bg-blue-500/15' : 'bg-emerald-500/15'}`}>
+                            <div className={`p-2 rounded-lg ${workout.isSelfRecorded ? 'bg-blue-500/15' : 'bg-primary-500/15'}`}>
                               {workout.isSelfRecorded ? (
                                 <User className="h-4 w-4 text-blue-400" />
                               ) : (
-                                <Dumbbell className="h-4 w-4 text-emerald-400" />
+                                <Dumbbell className="h-4 w-4 text-primary-400" />
                               )}
                             </div>
                             <div>
@@ -520,7 +520,7 @@ export default function WorkoutsList({
                           <span className={`text-xs px-2 py-1 rounded-lg ${
                             workout.isSelfRecorded
                               ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
-                              : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                              : 'bg-primary-500/15 text-primary-400 border border-primary-500/30'
                           }`}>
                             {workout.isSelfRecorded ? 'עצמאי' : 'מאמן'}
                           </span>
@@ -532,11 +532,11 @@ export default function WorkoutsList({
                         </td>
                         <td className="py-4 px-4 text-center">
                           <div className="flex flex-col items-center">
-                            <span className="font-semibold text-emerald-400">
+                            <span className="font-semibold text-primary-400">
                               {workout.totalVolume.toLocaleString()}
                             </span>
                             {volumeChange !== null && volumeChange !== 0 && (
-                              <span className={`text-xs font-medium ${volumeChange > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                              <span className={`text-xs font-medium ${volumeChange > 0 ? 'text-primary-400' : 'text-red-400'}`}>
                                 {volumeChange > 0 ? '+' : ''}{volumeChange.toLocaleString()}
                               </span>
                             )}

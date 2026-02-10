@@ -279,7 +279,7 @@ export default function NotesManager({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="חפש בהערות..."
-              className="w-full px-4 py-3 pr-10 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+              className="w-full px-4 py-3 pr-10 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
             />
           </div>
           <div className="flex items-center gap-3">
@@ -288,7 +288,7 @@ export default function NotesManager({
                 type="checkbox"
                 checked={showPinnedOnly}
                 onChange={(e) => setShowPinnedOnly(e.target.checked)}
-                className="w-4 h-4 rounded border-border200 text-emerald-600 focus:ring-emerald-500"
+                className="w-4 h-4 rounded border-border200 text-primary-600 focus:ring-primary-500"
               />
               <span className="text-sm text-muted700">הצג רק מוצמדות</span>
             </label>
@@ -303,14 +303,14 @@ export default function NotesManager({
                 value={newNoteText}
                 onChange={(e) => setNewNoteText(e.target.value)}
                 placeholder={`הוסף הערה חדשה ל-${getLevelLabel()}...`}
-                className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all resize-none"
+                className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all resize-none"
                 rows={3}
               />
             </div>
             <button
               onClick={handleCreateNote}
               disabled={!newNoteText.trim() || isCreating}
-              className="px-4 py-3 bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-3 bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <Plus className="w-5 h-5" />
               {isCreating ? 'מוסיף...' : 'הוסף'}
@@ -321,7 +321,7 @@ export default function NotesManager({
         {/* Notes List */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
             <p className="text-muted600">טוען הערות...</p>
           </div>
         ) : filteredNotes.length === 0 ? (
@@ -349,7 +349,7 @@ export default function NotesManager({
                   <div className="space-y-3">
                     <textarea
                       defaultValue={note.note_text}
-                      className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all resize-none"
+                      className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all resize-none"
                       rows={3}
                       autoFocus
                       onKeyDown={(e) => {
@@ -369,7 +369,7 @@ export default function NotesManager({
                             handleUpdateNote(note, textarea.value);
                           }
                         }}
-                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all flex items-center gap-2"
+                        className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl transition-all flex items-center gap-2"
                       >
                         <Save className="w-4 h-4" />
                         שמור

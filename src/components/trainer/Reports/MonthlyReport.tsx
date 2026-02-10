@@ -3,6 +3,7 @@ import { FileText, Users, Trophy, TrendingUp, TrendingDown, Minus } from 'lucide
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
+import { themeColors } from '../../../utils/themeColors';
 
 interface MonthlyReportProps {
   month: Date;
@@ -127,7 +128,7 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
 
   const getWeightChangeIcon = (change: number | null) => {
     if (change === null) return <Minus className="w-4 h-4 text-muted" />;
-    if (change < 0) return <TrendingDown className="w-4 h-4 text-emerald-400" />;
+    if (change < 0) return <TrendingDown className="w-4 h-4 text-primary-400" />;
     if (change > 0) return <TrendingUp className="w-4 h-4 text-red-400" />;
     return <Minus className="w-4 h-4 text-muted" />;
   };
@@ -136,7 +137,7 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
     return (
       <div className="premium-card-static p-8">
         <div className="flex items-center justify-center py-12">
-          <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -148,7 +149,7 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
         <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl p-4 shadow-2xl">
           <p className="text-muted text-xs mb-2 font-medium">{label}</p>
           <div className="flex items-baseline gap-2">
-            <p className="text-emerald-400 font-bold text-2xl">{payload[0].value}</p>
+            <p className="text-primary-400 font-bold text-2xl">{payload[0].value}</p>
             <p className="text-muted text-sm font-medium">אימונים</p>
           </div>
         </div>
@@ -162,8 +163,8 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
       <div className="premium-card-static overflow-hidden">
         <div className="p-5 border-b border-border/50">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
-              <FileText className="w-5 h-5 text-emerald-400" />
+            <div className="p-2.5 rounded-xl bg-primary-500/15 border border-primary-500/30">
+              <FileText className="w-5 h-5 text-primary-400" />
             </div>
             <h2 className="text-xl font-bold text-foreground">אימונים לפי שבוע</h2>
           </div>
@@ -175,31 +176,31 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
               <BarChart data={weeklyData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity={1} />
-                    <stop offset="100%" stopColor="#059669" stopOpacity={0.9} />
+                    <stop offset="0%" stopColor={themeColors.chartPrimary} stopOpacity={1} />
+                    <stop offset="100%" stopColor={themeColors.chartSecondary} stopOpacity={0.9} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
-                  stroke="#3f3f46" 
+                  stroke={themeColors.zinc700} 
                   strokeOpacity={0.3}
                   vertical={false}
                 />
                 <XAxis 
                   dataKey="week" 
-                  tick={{ fontSize: 12, fill: '#a1a1aa' }} 
-                  axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
+                  tick={{ fontSize: 12, fill: themeColors.zinc400 }} 
+                  axisLine={{ stroke: themeColors.zinc700, strokeOpacity: 0.5 }}
                   tickLine={false}
                 />
                 <YAxis 
-                  tick={{ fontSize: 12, fill: '#a1a1aa' }} 
+                  tick={{ fontSize: 12, fill: themeColors.zinc400 }} 
                   axisLine={false}
                   tickLine={false}
                   width={35}
                 />
                 <Tooltip 
                   content={<CustomTooltip />}
-                  cursor={{ fill: 'rgba(16, 185, 129, 0.1)' }}
+                  cursor={{ fill: themeColors.chartPrimary + '1a' }}
                 />
                 <Bar 
                   dataKey="workouts" 
@@ -261,7 +262,7 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
                         <span className="font-semibold text-foreground">{trainee.name}</span>
                       </td>
                       <td className="py-4 px-4 text-center">
-                        <span className="font-bold text-emerald-400 bg-emerald-500/15 px-3 py-1 rounded-lg border border-emerald-500/30">
+                        <span className="font-bold text-primary-400 bg-primary-500/15 px-3 py-1 rounded-lg border border-primary-500/30">
                           {trainee.workoutCount}
                         </span>
                       </td>
@@ -270,7 +271,7 @@ export default function MonthlyReport({ month, stats }: MonthlyReportProps) {
                           {getWeightChangeIcon(trainee.weightChange)}
                           <span className={`font-semibold ${
                             trainee.weightChange === null ? 'text-muted' :
-                            trainee.weightChange < 0 ? 'text-emerald-400' :
+                            trainee.weightChange < 0 ? 'text-primary-400' :
                             trainee.weightChange > 0 ? 'text-red-400' :
                             'text-muted'
                           }`}>

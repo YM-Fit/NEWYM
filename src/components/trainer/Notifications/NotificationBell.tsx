@@ -98,9 +98,9 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
     switch (type) {
       case 'food_diary_completed':
         return {
-          iconColor: 'text-emerald-600',
-          bgColor: 'bg-gradient-to-br from-emerald-100 to-emerald-100',
-          borderColor: 'border-emerald-200'
+          iconColor: 'text-primary-600',
+          bgColor: 'bg-gradient-to-br from-primary-100 to-primary-100',
+          borderColor: 'border-primary-200'
         };
       case 'workout_completed':
         return {
@@ -151,7 +151,7 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
         aria-haspopup="true"
         aria-expanded={showDropdown}
       >
-        <Bell className="w-6 h-6 text-muted700 group-hover:text-emerald-600 transition-colors duration-300" />
+        <Bell className="w-6 h-6 text-muted700 group-hover:text-primary-600 transition-colors duration-300" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 bg-gradient-to-br from-red-500 to-rose-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -167,7 +167,7 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
           aria-label="רשימת התראות"
         >
           {/* Header */}
-          <div className="p-5 bg-gradient-to-br from-emerald-600 via-emerald-700 to-blue-700 flex items-center justify-between">
+          <div className="p-5 bg-gradient-to-br from-primary-600 via-primary-700 to-blue-700 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
                 <Bell className="w-5 h-5 text-white" />
@@ -205,7 +205,7 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
                       key={notification.id}
                       className={`p-4 rounded-xl transition-all duration-300 hover:shadow-lg cursor-pointer border ${
                         !notification.is_read
-                          ? 'bg-gradient-to-br from-emerald-50/80 to-emerald-50/80 border-emerald-200 shadow-md'
+                          ? 'bg-gradient-to-br from-primary-50/80 to-primary-50/80 border-primary-200 shadow-md'
                           : 'bg-white border-border100 hover:bg-surface50'
                       }`}
                     >
@@ -228,7 +228,7 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-semibold text-sm text-muted900">{notification.title}</h4>
                             {!notification.is_read && (
-                              <span className="w-2.5 h-2.5 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full animate-pulse shadow-sm"></span>
+                              <span className="w-2.5 h-2.5 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full animate-pulse shadow-sm"></span>
                             )}
                           </div>
                           {notification.message && (

@@ -36,7 +36,7 @@ export function DailySummaryCard({
           <p className="text-lg font-bold text-[var(--color-text-primary)]">{totals.calories}</p>
           <p className="text-xs text-[var(--color-text-secondary)]">קלוריות</p>
           {mealPlan?.daily_calories && (
-            <p className={`text-xs mt-1 ${totals.calories <= mealPlan.daily_calories ? 'text-emerald-500' : 'text-red-500'}`}>
+            <p className={`text-xs mt-1 ${totals.calories <= mealPlan.daily_calories ? 'text-primary-500' : 'text-red-500'}`}>
               מתוך {mealPlan.daily_calories}
             </p>
           )}
@@ -46,7 +46,7 @@ export function DailySummaryCard({
           <p className="text-lg font-bold text-[var(--color-text-primary)]">{totals.protein}ג'</p>
           <p className="text-xs text-[var(--color-text-secondary)]">חלבון</p>
           {mealPlan?.protein_grams && (
-            <p className={`text-xs mt-1 ${totals.protein >= mealPlan.protein_grams ? 'text-emerald-500' : 'text-orange-500'}`}>
+            <p className={`text-xs mt-1 ${totals.protein >= mealPlan.protein_grams ? 'text-primary-500' : 'text-orange-500'}`}>
               מתוך {mealPlan.protein_grams}ג'
             </p>
           )}

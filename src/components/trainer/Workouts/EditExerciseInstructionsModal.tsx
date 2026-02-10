@@ -62,7 +62,7 @@ export default function EditExerciseInstructionsModal({
       <div className="space-y-4">
         <div className="flex items-start gap-3">
           <div className="mt-1">
-            <Edit2 className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+            <Edit2 className="h-5 w-5 text-primary-400 flex-shrink-0" />
           </div>
           <div className="flex-1">
             <label
@@ -75,7 +75,7 @@ export default function EditExerciseInstructionsModal({
               id="instructions-textarea"
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
-              className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
+              className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
               placeholder="הזן הוראות ביצוע מפורטות לתרגיל..."
               rows={8}
               disabled={saving}
@@ -103,7 +103,7 @@ export default function EditExerciseInstructionsModal({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-foreground rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {saving ? (
               <>

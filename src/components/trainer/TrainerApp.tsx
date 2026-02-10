@@ -721,10 +721,10 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
         <main id="main-content" className={`flex-1 overflow-auto ${headerCollapsed ? 'p-2' : 'p-3 md:p-6'}`} role="main" aria-label="תוכן ראשי">
           {showCollapseControls && (
             <div className="hidden lg:flex gap-3 mb-4 justify-end" role="toolbar" aria-label="בקרות תצוגה">
-              <button type="button" onClick={() => setHeaderCollapsed(!headerCollapsed)} className="btn-glass px-4 py-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50" aria-label={headerCollapsed ? 'הצג כותרת' : 'הסתר כותרת'} aria-pressed={!headerCollapsed}>
+              <button type="button" onClick={() => setHeaderCollapsed(!headerCollapsed)} className="btn-glass px-4 py-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/50" aria-label={headerCollapsed ? 'הצג כותרת' : 'הסתר כותרת'} aria-pressed={!headerCollapsed}>
                 {headerCollapsed ? 'הצג כותרת' : 'הסתר כותרת'}
               </button>
-              <button type="button" onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="btn-glass px-4 py-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50" aria-label={sidebarCollapsed ? 'הצג תפריט' : 'הסתר תפריט'} aria-pressed={!sidebarCollapsed}>
+              <button type="button" onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="btn-glass px-4 py-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/50" aria-label={sidebarCollapsed ? 'הצג תפריט' : 'הסתר תפריט'} aria-pressed={!sidebarCollapsed}>
                 {sidebarCollapsed ? 'הצג תפריט' : 'הסתר תפריט'}
               </button>
             </div>
@@ -734,12 +734,12 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
         <nav id="main-navigation" className="md:hidden fixed bottom-0 left-0 right-0 z-40 px-3 sm:px-4 pb-4 safe-bottom" role="navigation" aria-label="ניווט ראשי">
           <div className="glass-card px-2 py-2.5 rounded-2xl shadow-dark-lg">
             <div className="flex justify-around items-center max-w-lg mx-auto">
-              <button onClick={() => handleViewChange('dashboard')} aria-label="דף הבית" aria-current={activeView === 'dashboard' ? 'page' : undefined} className={`flex flex-col items-center min-w-[64px] min-h-[48px] px-3 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 active:scale-95 ${activeView === 'dashboard' ? 'text-lime-500' : 'text-muted hover:text-foreground'}`}>
-                <Home className={`h-6 w-6 mb-1 ${activeView === 'dashboard' ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} aria-hidden="true" />
+              <button onClick={() => handleViewChange('dashboard')} aria-label="דף הבית" aria-current={activeView === 'dashboard' ? 'page' : undefined} className={`flex flex-col items-center min-w-[64px] min-h-[48px] px-3 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary-500/50 active:scale-95 ${activeView === 'dashboard' ? 'text-lime-500' : 'text-muted hover:text-foreground'}`}>
+                <Home className={`h-6 w-6 mb-1 ${activeView === 'dashboard' ? 'drop-shadow-[0_0_8px_rgb(var(--color-primary)_/_0.6)]' : ''}`} aria-hidden="true" />
                 <span className="text-xs font-medium">בית</span>
               </button>
-              <button onClick={() => handleViewChange('trainees')} aria-label="מתאמנים" aria-current={activeView.includes('trainee') ? 'page' : undefined} className={`flex flex-col items-center min-w-[64px] min-h-[48px] px-3 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 active:scale-95 ${activeView.includes('trainee') ? 'text-lime-500' : 'text-muted hover:text-foreground'}`}>
-                <Users className={`h-6 w-6 mb-1 ${activeView.includes('trainee') ? 'drop-shadow-[0_0_8px_rgba(170,255,0,0.6)]' : ''}`} aria-hidden="true" />
+              <button onClick={() => handleViewChange('trainees')} aria-label="מתאמנים" aria-current={activeView.includes('trainee') ? 'page' : undefined} className={`flex flex-col items-center min-w-[64px] min-h-[48px] px-3 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary-500/50 active:scale-95 ${activeView.includes('trainee') ? 'text-lime-500' : 'text-muted hover:text-foreground'}`}>
+                <Users className={`h-6 w-6 mb-1 ${activeView.includes('trainee') ? 'drop-shadow-[0_0_8px_rgb(var(--color-primary)_/_0.6)]' : ''}`} aria-hidden="true" />
                 <span className="text-xs font-medium">מתאמנים</span>
               </button>
             </div>

@@ -84,7 +84,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
   }, []);
 
   const metrics = useMemo(() => [
-    { key: 'weight' as const, label: 'משקל', unit: 'ק״ג', icon: Scale, color: 'emerald' },
+    { key: 'weight' as const, label: 'משקל', unit: 'ק״ג', icon: Scale, color: 'primary' },
     { key: 'bodyFat' as const, label: 'אחוז שומן', unit: '%', icon: TrendingDown, color: 'amber' },
     { key: 'muscleMass' as const, label: 'מסת שריר', unit: 'ק״ג', icon: TrendingUp, color: 'blue' },
     { key: 'waterPercentage' as const, label: 'אחוז מים', unit: '%', icon: BarChart3, color: 'blue' },
@@ -92,7 +92,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
   ], []);
 
   const colorConfig = {
-    emerald: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' },
+    primary: { bg: 'bg-primary-500/15', text: 'text-primary-400', border: 'border-primary-500/30' },
     amber: { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' },
     blue: { bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/30' },
     red: { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30' },
@@ -105,7 +105,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
     if (change === 0) return null;
     const isPositive = isReversed ? change < 0 : change > 0;
     return (
-      <span className={`text-xs font-medium ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
+      <span className={`text-xs font-medium ${isPositive ? 'text-primary-400' : 'text-red-400'}`}>
         {change > 0 ? '+' : ''}{change.toFixed(1)}
       </span>
     );
@@ -164,7 +164,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
     <div className="space-y-6 animate-fade-in">
       {ConfirmDialog}
       <div className="premium-card-static p-6 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-0 left-0 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
             {onBack && (
@@ -177,8 +177,8 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
             )}
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">מדידות</span>
+                <Sparkles className="w-4 h-4 text-primary-400" />
+                <span className="text-xs font-semibold text-primary-400 uppercase tracking-wider">מדידות</span>
               </div>
               <h1 className="text-2xl font-bold text-foreground">{trainee.name}</h1>
               <p className="text-muted">מעקב אחר התקדמות ושינויים בהרכב הגוף</p>
@@ -281,7 +281,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                 {trend.type === 'up' ? (
                   <TrendingUp className="h-5 w-5 text-red-400" />
                 ) : trend.type === 'down' ? (
-                  <TrendingDown className="h-5 w-5 text-emerald-400" />
+                  <TrendingDown className="h-5 w-5 text-primary-400" />
                 ) : (
                   <Minus className="h-5 w-5 text-muted400" />
                 )}
@@ -307,15 +307,15 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
               onClick={() => setSelectedMember('all')}
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'all'
-                  ? 'border-emerald-500/50 bg-emerald-500/10'
+                  ? 'border-primary-500/50 bg-primary-500/10'
                   : 'border-border bg-surface/30 hover:border-border-hover'
               }`}
             >
               <User className={`h-6 w-6 mx-auto mb-2 ${
-                selectedMember === 'all' ? 'text-emerald-400' : 'text-muted'
+                selectedMember === 'all' ? 'text-primary-400' : 'text-muted'
               }`} />
               <p className={`text-sm font-semibold text-center ${
-                selectedMember === 'all' ? 'text-emerald-400' : 'text-muted'
+                selectedMember === 'all' ? 'text-primary-400' : 'text-muted'
               }`}>{trainee.pairName1} + {trainee.pairName2}</p>
             </button>
             <button
@@ -375,7 +375,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                 </p>
                 {change && (
                   <div className={`flex items-center mt-2 text-xs ${
-                    (['bodyFat', 'metabolicAge'].includes(key) ? change < 0 : change > 0) ? 'text-emerald-400' : 'text-red-400'
+                    (['bodyFat', 'metabolicAge'].includes(key) ? change < 0 : change > 0) ? 'text-primary-400' : 'text-red-400'
                   }`}>
                     {(['bodyFat', 'metabolicAge'].includes(key) ? change < 0 : change > 0) ? (
                       <TrendingUp className="h-3 w-3 ml-1" />
@@ -407,7 +407,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                   onClick={() => setSelectedMetric(key)}
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                     selectedMetric === key
-                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-primary-500/15 text-primary-400 border border-primary-500/30'
                       : 'bg-surface text-muted border border-border hover:text-foreground hover:border-border-hover'
                   }`}
                 >
@@ -434,7 +434,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded-lg transition-all ${
-                  viewMode === 'list' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
+                  viewMode === 'list' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
                 }`}
                 title="תצוגת רשימה"
               >
@@ -443,7 +443,7 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
               <button
                 onClick={() => setViewMode('table')}
                 className={`p-2 rounded-lg transition-all ${
-                  viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
+                  viewMode === 'table' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
                 }`}
                 title="תצוגת טבלה"
               >
@@ -460,8 +460,8 @@ export default function MeasurementsView({ trainee, measurements, onNewMeasureme
                   <div key={measurement.id} className="bg-surface/30 border border-border rounded-xl p-4 hover:border-border-hover transition-all">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
-                          <Scale className="h-5 w-5 text-emerald-400" />
+                        <div className="p-2.5 rounded-xl bg-primary-500/15 border border-primary-500/30">
+                          <Scale className="h-5 w-5 text-primary-400" />
                         </div>
                         <div>
                           <p className="font-medium text-foreground flex items-center gap-2">

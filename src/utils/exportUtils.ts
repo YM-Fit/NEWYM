@@ -3,6 +3,7 @@
  * Functions for exporting data to CSV, PDF, etc.
  */
 
+import { themeColors } from './themeColors';
 
 /**
  * Convert array of objects to CSV string
@@ -97,8 +98,8 @@ export async function generatePDF(
             direction: rtl;
           }
           h1 {
-            color: #333;
-            border-bottom: 2px solid #4ade80;
+            color: ${themeColors.textPrimary};
+            border-bottom: 2px solid ${themeColors.primary};
             padding-bottom: 10px;
           }
           table {
@@ -107,12 +108,12 @@ export async function generatePDF(
             margin-top: 20px;
           }
           th, td {
-            border: 1px solid #ddd;
+            border: 1px solid ${themeColors.borderLight};
             padding: 8px;
             text-align: right;
           }
           th {
-            background-color: #4ade80;
+            background-color: ${themeColors.primary};
             color: white;
           }
         </style>

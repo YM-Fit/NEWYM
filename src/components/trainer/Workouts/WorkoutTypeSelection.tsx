@@ -42,13 +42,13 @@ export default function WorkoutTypeSelection({
             <ArrowRight className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <div className="p-2 sm:p-3 rounded-xl bg-emerald-500/15 flex-shrink-0">
-              <Dumbbell className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
+            <div className="p-2 sm:p-3 rounded-xl bg-primary-500/15 flex-shrink-0">
+              <Dumbbell className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400" />
-                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">סוג אימון</span>
+                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-primary-400" />
+                <span className="text-xs font-semibold text-primary-400 uppercase tracking-wider">סוג אימון</span>
               </div>
               <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">{traineeName}</h1>
               <p className="text-xs sm:text-sm text-muted">בחר סוג אימון</p>
@@ -62,18 +62,18 @@ export default function WorkoutTypeSelection({
           {/* Pair Workout */}
           <button
             onClick={handleSelectPair}
-            className="premium-card-static p-6 sm:p-8 text-center group hover:border-emerald-500/30 hover:shadow-lg transition-all cursor-pointer"
+            className="premium-card-static p-6 sm:p-8 text-center group hover:border-primary-500/30 hover:shadow-lg transition-all cursor-pointer"
             aria-label="אימון זוגי"
           >
-            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-emerald-500/15 rounded-2xl flex items-center justify-center group-hover:bg-emerald-500/25 group-hover:scale-110 transition-all">
-              <Users className="h-8 w-8 sm:h-10 sm:w-10 text-emerald-400" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-primary-500/15 rounded-2xl flex items-center justify-center group-hover:bg-primary-500/25 group-hover:scale-110 transition-all">
+              <Users className="h-8 w-8 sm:h-10 sm:w-10 text-primary-400" />
             </div>
-            <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 group-hover:text-emerald-400 transition-all">אימון זוגי</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 group-hover:text-primary-400 transition-all">אימון זוגי</h3>
             <p className="text-sm sm:text-base text-muted mb-4">
               {pairName1} (1) ו-{pairName2} (2) ביחד
             </p>
-            <div className="mt-4 py-2 px-4 bg-emerald-500/15 border border-emerald-500/30 rounded-xl">
-              <span className="text-xs sm:text-sm font-medium text-emerald-400">לחץ להתחלה</span>
+            <div className="mt-4 py-2 px-4 bg-primary-500/15 border border-primary-500/30 rounded-xl">
+              <span className="text-xs sm:text-sm font-medium text-primary-400">לחץ להתחלה</span>
             </div>
           </button>
 

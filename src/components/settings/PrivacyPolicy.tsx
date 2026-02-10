@@ -162,7 +162,7 @@ export default function PrivacyPolicy() {
     return (
       <div className="premium-card p-6">
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
         </div>
       </div>
     );
@@ -173,7 +173,7 @@ export default function PrivacyPolicy() {
       {/* Header */}
       <div className="premium-card p-6">
         <div className="flex items-center gap-3 mb-4">
-          <Shield className="h-8 w-8 text-emerald-400" />
+          <Shield className="h-8 w-8 text-primary-400" />
           <div>
             <h1 className="text-2xl font-bold text-foreground">מדיניות פרטיות וזכויות GDPR</h1>
             <p className="text-sm text-muted">גרסת מדיניות: {POLICY_VERSION}</p>
@@ -236,7 +236,7 @@ export default function PrivacyPolicy() {
         <div className="space-y-4">
           {/* Right to Data Portability */}
           <div className="flex items-start gap-4 p-4 bg-surface rounded-lg">
-            <Download className="h-6 w-6 text-emerald-400 flex-shrink-0 mt-1" />
+            <Download className="h-6 w-6 text-primary-400 flex-shrink-0 mt-1" />
             <div className="flex-1">
               <h3 className="font-semibold text-foreground mb-1">זכות לניידות נתונים</h3>
               <p className="text-sm text-muted mb-3">
@@ -245,7 +245,7 @@ export default function PrivacyPolicy() {
               <button
                 onClick={handleExportData}
                 disabled={exporting}
-                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-foreground rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {exporting ? 'מייצא...' : 'ייצא נתונים'}
               </button>
@@ -363,7 +363,7 @@ function ConsentToggle({
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         disabled={disabled || required}
-        className="mt-1 h-5 w-5 rounded border-border bg-surface text-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:opacity-50"
+        className="mt-1 h-5 w-5 rounded border-border bg-surface text-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:opacity-50"
       />
       <label
         htmlFor={`consent-${label}`}

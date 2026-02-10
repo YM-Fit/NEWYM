@@ -69,13 +69,13 @@ export function AnimatedStatCard({
   label,
   icon: Icon,
   trend,
-  color = 'emerald',
+  color = 'primary',
 }: {
   value: string | number;
   label: string;
   icon: any;
   trend?: number;
-  color?: 'emerald' | 'blue' | 'amber' | 'rose';
+  color?: 'primary' | 'blue' | 'amber' | 'rose';
 }) {
   const [displayValue, setDisplayValue] = useState(0);
 
@@ -101,7 +101,7 @@ export function AnimatedStatCard({
   }, [value]);
 
   const colorClasses = {
-    emerald: 'from-primary/20 to-primary/5 text-primary',
+    primary: 'from-primary/20 to-primary/5 text-primary',
     blue: 'from-info/20 to-info/5 text-info',
     amber: 'from-warning/20 to-warning/5 text-warning',
     rose: 'from-danger/20 to-danger/5 text-danger',
@@ -249,12 +249,12 @@ export function AnimatedProgressBar({
   value,
   max = 100,
   label,
-  color = 'emerald',
+  color = 'primary',
 }: {
   value: number;
   max?: number;
   label?: string;
-  color?: 'emerald' | 'blue' | 'amber' | 'rose';
+  color?: 'primary' | 'blue' | 'amber' | 'rose';
 }) {
   const percentage = Math.min((value / max) * 100, 100);
   const [animatedValue, setAnimatedValue] = useState(0);
@@ -279,7 +279,7 @@ export function AnimatedProgressBar({
   }, [percentage]);
 
   const colorClasses = {
-    emerald: 'from-primary to-primary/80',
+    primary: 'from-primary to-primary/80',
     blue: 'from-info to-info/80',
     amber: 'from-warning to-warning/80',
     rose: 'from-danger to-danger/80',
@@ -376,11 +376,11 @@ export function GradientText({
 }: {
   children: React.ReactNode;
   className?: string;
-  gradient?: 'primary' | 'emerald' | 'blue' | 'amber';
+  gradient?: 'primary' | 'primary' | 'blue' | 'amber';
 }) {
   const gradientClasses = {
     primary: 'text-gradient-primary',
-    emerald: 'bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent',
+    primary: 'bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent',
     blue: 'bg-gradient-to-r from-info to-info/80 bg-clip-text text-transparent',
     amber: 'bg-gradient-to-r from-warning to-warning/80 bg-clip-text text-transparent',
   };
@@ -421,7 +421,7 @@ export function DesignImprovementsDemo() {
               label="סה&quot;כ מתאמנים"
               icon={Users}
               trend={12}
-              color="emerald"
+              color="primary"
             />
             <AnimatedStatCard
               value={89}
@@ -443,7 +443,7 @@ export function DesignImprovementsDemo() {
         {/* Progress Bar */}
         <div className="mb-8">
           <h3 className="text-lg font-semibold text-foreground mb-4">Animated Progress Bar</h3>
-          <AnimatedProgressBar value={75} max={100} label="התקדמות חודשית" color="emerald" />
+          <AnimatedProgressBar value={75} max={100} label="התקדמות חודשית" color="primary" />
         </div>
 
         {/* Enhanced Button */}

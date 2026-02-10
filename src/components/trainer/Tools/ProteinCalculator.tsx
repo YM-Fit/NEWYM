@@ -17,7 +17,7 @@ export default function ProteinCalculator({
 
   const goalMultipliers = {
     maintain: { value: 1.6, label: 'שמירה על מסה', color: 'blue' },
-    build: { value: 2.2, label: 'בניית שריר', color: 'emerald' },
+    build: { value: 2.2, label: 'בניית שריר', color: 'primary' },
     lose: { value: 2.0, label: 'הרזיה (שמירת שריר)', color: 'amber' },
   };
 
@@ -160,7 +160,7 @@ export default function ProteinCalculator({
               <p className="text-lg text-white/80 mt-2 font-medium">גרם</p>
             </div>
 
-            <div className="bg-emerald-500 rounded-2xl p-6 text-center">
+            <div className="bg-primary-500 rounded-2xl p-6 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
                   <Clock className="w-4 h-4 text-white" />
@@ -172,18 +172,18 @@ export default function ProteinCalculator({
             </div>
           </div>
 
-          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5">
+          <div className="bg-primary-500/10 border border-primary-500/30 rounded-2xl p-5">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
                 <Activity className="w-4 h-4 text-white" />
               </div>
-              <h3 className="font-bold text-emerald-400">חלוקה לארוחות</h3>
+              <h3 className="font-bold text-primary-400">חלוקה לארוחות</h3>
             </div>
             <div className="flex flex-wrap gap-2">
               {mealPlan.map((meal, index) => (
                 <div key={index} className="bg-surface px-4 py-2 rounded-xl border border-border">
                   <span className="text-sm text-muted">{meal.name}: </span>
-                  <span className="font-bold text-emerald-400">{meal.protein}g</span>
+                  <span className="font-bold text-primary-400">{meal.protein}g</span>
                 </div>
               ))}
             </div>
@@ -214,7 +214,7 @@ export default function ProteinCalculator({
                         <span className="text-muted text-sm">{source.portion}</span>
                       </td>
                       <td className="px-5 py-3 text-left">
-                        <span className="font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-lg">
+                        <span className="font-bold text-primary-400 bg-primary-500/10 px-3 py-1 rounded-lg">
                           {source.portions} מנות
                         </span>
                       </td>

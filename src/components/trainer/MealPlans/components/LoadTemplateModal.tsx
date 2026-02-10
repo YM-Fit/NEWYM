@@ -26,11 +26,11 @@ export function LoadTemplateModal({ templates, onLoad, onClose }: LoadTemplateMo
                 <button
                   key={template.id}
                   onClick={() => onLoad(template)}
-                  className="w-full text-right p-5 border-2 border-border700/50 rounded-2xl hover:border-emerald-500/30 hover:bg-gradient-to-br hover:from-emerald-500/5 hover:to-emerald-600/5 transition-all duration-300 group"
+                  className="w-full text-right p-5 border-2 border-border700/50 rounded-2xl hover:border-primary-500/30 hover:bg-gradient-to-br hover:from-primary-500/5 hover:to-primary-600/5 transition-all duration-300 group"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-foreground group-hover:text-emerald-300 transition-colors">{template.name}</p>
+                      <p className="font-semibold text-foreground group-hover:text-primary-300 transition-colors">{template.name}</p>
                       {template.description && (
                         <p className="text-sm text-muted500 mt-1">{template.description}</p>
                       )}
@@ -39,7 +39,7 @@ export function LoadTemplateModal({ templates, onLoad, onClose }: LoadTemplateMo
                         {template.protein_grams && <span>{template.protein_grams}g protein</span>}
                       </div>
                     </div>
-                    <Copy className="h-5 w-5 text-muted500 group-hover:text-emerald-400 transition-colors" />
+                    <Copy className="h-5 w-5 text-muted500 group-hover:text-primary-400 transition-colors" />
                   </div>
                 </button>
               ))}

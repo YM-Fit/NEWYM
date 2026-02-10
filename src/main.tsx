@@ -299,7 +299,7 @@ function initApp() {
         <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;">
           <h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1>
           <p style="font-size: 1.2rem; opacity: 0.9;">אלמנט השורש לא נמצא. אנא רענן את הדף.</p>
-          <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button>
+          <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #4a6b2a; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button>
         </div>
       `;
     }
@@ -315,7 +315,7 @@ function initApp() {
         <div style="display: flex; align-items: center; justify-center: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;">
           <h1 style="font-size: 2rem;">שגיאה בטעינת React</h1>
           <p style="font-size: 1.2rem; opacity: 0.9;">ספריית React לא נטענה. אנא בדוק את החיבור לאינטרנט ורענן את הדף.</p>
-          <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button>
+          <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #4a6b2a; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button>
         </div>
       `;
     }
@@ -365,7 +365,7 @@ function initApp() {
         <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;">
           <h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1>
           <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 1rem;">${errorMessage}</p>
-          <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button>
+          <button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #4a6b2a; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button>
         </div>
       `;
     }

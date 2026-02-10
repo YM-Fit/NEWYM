@@ -39,13 +39,13 @@ export default function AdherenceMetricsComponent() {
   );
 
   const getAdherenceColor = (percentage: number): string => {
-    if (percentage >= 80) return 'text-emerald-400';
+    if (percentage >= 80) return 'text-primary-400';
     if (percentage >= 50) return 'text-amber-400';
     return 'text-red-400';
   };
 
   const getAdherenceBgColor = (percentage: number): string => {
-    if (percentage >= 80) return 'bg-emerald-500/10 border-emerald-500/30';
+    if (percentage >= 80) return 'bg-primary-500/10 border-primary-500/30';
     if (percentage >= 50) return 'bg-amber-500/10 border-amber-500/30';
     return 'bg-red-500/10 border-red-500/30';
   };
@@ -63,7 +63,7 @@ export default function AdherenceMetricsComponent() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <TrendingUp className="w-6 h-6 text-emerald-400" />
+            <TrendingUp className="w-6 h-6 text-primary-400" />
             מדדי Adherence
           </h2>
           <p className="text-sm text-muted400 mt-1">

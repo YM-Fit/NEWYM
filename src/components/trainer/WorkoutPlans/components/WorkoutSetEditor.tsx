@@ -64,7 +64,7 @@ export default function WorkoutSetEditor({
           <label className="block text-sm lg:text-base font-semibold text-muted700 mb-2">משקל (ק״ג)</label>
           <button
             onClick={() => onOpenNumericPad(exerciseIndex, setIndex, 'weight', 'משקל (ק״ג)')}
-            className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-emerald-500 bg-gradient-to-br from-emerald-100 to-emerald-100 text-emerald-700 rounded-xl hover:from-emerald-100 hover:to-emerald-200 transition-all duration-300 shadow-md hover:shadow-lg"
+            className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-primary-500 bg-gradient-to-br from-primary-100 to-primary-100 text-primary-700 rounded-xl hover:from-primary-100 hover:to-primary-200 transition-all duration-300 shadow-md hover:shadow-lg"
           >
             {set.weight || '0'}
           </button>
@@ -148,7 +148,7 @@ export default function WorkoutSetEditor({
           onClick={() => onUpdateSet(exerciseIndex, setIndex, 'set_type', 'regular')}
           className={`flex-1 py-3 px-3 rounded-xl text-sm font-bold transition-all duration-300 ${
             set.set_type === 'regular'
-              ? 'bg-gradient-to-br from-emerald-700 to-emerald-800 text-white shadow-lg'
+              ? 'bg-gradient-to-br from-primary-700 to-primary-800 text-white shadow-lg'
               : 'bg-white border-2 border-border300 text-muted700 hover:bg-surface50'
           }`}
         >

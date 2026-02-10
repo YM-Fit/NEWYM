@@ -71,7 +71,7 @@ export default function ErrorReportingSettings() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <AlertTriangle className="h-6 w-6 text-emerald-400" />
+          <AlertTriangle className="h-6 w-6 text-primary-400" />
           דיווח שגיאות
         </h2>
         <p className="text-muted mt-1">

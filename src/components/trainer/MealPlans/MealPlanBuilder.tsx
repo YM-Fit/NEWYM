@@ -264,7 +264,7 @@ export default function MealPlanBuilder({
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
       </div>
     );
   }
@@ -282,8 +282,8 @@ export default function MealPlanBuilder({
               <ArrowRight className="h-5 w-5" />
             </button>
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-emerald-500/30 to-emerald-600/30 rounded-2xl shadow-lg">
-                <UtensilsCrossed className="h-6 w-6 text-emerald-400" />
+              <div className="p-3 bg-gradient-to-br from-primary-500/30 to-primary-600/30 rounded-2xl shadow-lg">
+                <UtensilsCrossed className="h-6 w-6 text-primary-400" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">תפריט תזונה</h1>
@@ -297,7 +297,7 @@ export default function MealPlanBuilder({
               onClick={() => setView('list')}
               className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
                 view === 'list'
-                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-500/25'
+                  ? 'bg-gradient-to-r from-primary-500 to-primary-700 text-white shadow-lg shadow-primary-500/25'
                   : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
               }`}
             >
@@ -309,7 +309,7 @@ export default function MealPlanBuilder({
                   onClick={() => setView('editor')}
                   className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
                     view === 'editor'
-                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-500/25'
+                      ? 'bg-gradient-to-r from-primary-500 to-primary-700 text-white shadow-lg shadow-primary-500/25'
                       : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
                   }`}
                 >
@@ -322,7 +322,7 @@ export default function MealPlanBuilder({
                   }}
                   className={`p-2.5 rounded-xl font-semibold transition-all duration-300 ${
                     view === 'history'
-                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-500/25'
+                      ? 'bg-gradient-to-r from-primary-500 to-primary-700 text-white shadow-lg shadow-primary-500/25'
                       : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
                   }`}
                 >

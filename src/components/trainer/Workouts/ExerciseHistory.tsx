@@ -4,6 +4,7 @@ import { supabase } from '../../../lib/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { LazyChart } from '../../common/LazyChart';
 import { usePagination } from '../../../hooks/usePagination';
+import { themeColors } from '../../../utils/themeColors';
 
 interface ExerciseHistoryProps {
   traineeId: string;
@@ -244,7 +245,7 @@ export default function ExerciseHistory({
       {/* Side Panel - Minimized */}
       <div className="fixed right-0 top-0 bottom-0 w-full max-w-sm z-50 flex flex-col shadow-2xl bg-card border-r border-border animate-slide-in-right exercise-history-panel">
         {/* Header - Minimized */}
-        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-3 flex-shrink-0">
+        <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-3 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 rtl:space-x-reverse flex-1 min-w-0">
               <div className="p-1.5 bg-white/20 backdrop-blur-sm rounded-lg flex-shrink-0">
@@ -252,7 +253,7 @@ export default function ExerciseHistory({
               </div>
               <div className="min-w-0 flex-1">
                 <h2 className="text-sm font-bold text-white truncate">{exerciseName}</h2>
-                <p className="text-xs text-emerald-100 truncate">{traineeName}</p>
+                <p className="text-xs text-primary-100 truncate">{traineeName}</p>
               </div>
             </div>
             <button
@@ -290,8 +291,8 @@ export default function ExerciseHistory({
                   </div>
                 )}
               </div>
-              <div className="bg-surface rounded-lg p-2 border border-emerald-500/20 text-center relative">
-                <Trophy className="h-3 w-3 text-emerald-400 absolute top-1 left-1" />
+              <div className="bg-surface rounded-lg p-2 border border-primary-500/20 text-center relative">
+                <Trophy className="h-3 w-3 text-primary-400 absolute top-1 left-1" />
                 <div className="text-base font-bold text-foreground">{personalRecords.maxVolume.toLocaleString()}</div>
                 <div className="text-[10px] text-muted">מקס נפח</div>
                 {personalRecords.maxVolumeDate && (
@@ -307,7 +308,7 @@ export default function ExerciseHistory({
               <div className="flex items-center gap-2 text-xs">
                 <span className="text-muted">מגמה:</span>
                 {trends.volumeChange > 0 ? (
-                  <div className="flex items-center gap-1 text-emerald-400">
+                  <div className="flex items-center gap-1 text-primary-400">
                     <TrendingUp className="h-3 w-3" />
                     <span>+{trends.volumeChange.toFixed(1)}% נפח</span>
                   </div>
@@ -397,9 +398,9 @@ export default function ExerciseHistory({
                   <Line 
                     type="monotone" 
                     dataKey={chartType} 
-                    stroke="#10b981" 
+                    stroke={themeColors.chartPrimary} 
                     strokeWidth={2}
-                    dot={{ fill: '#10b981', r: 3 }}
+                    dot={{ fill: themeColors.chartPrimary, r: 3 }}
                     activeDot={{ r: 5 }}
                   />
                 </LineChart>
@@ -411,7 +412,7 @@ export default function ExerciseHistory({
         <div className="flex-1 overflow-y-auto p-2 bg-card min-h-0">
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto mb-2"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-2"></div>
               <p className="text-muted text-xs">טוען...</p>
             </div>
           ) : history.length === 0 ? (
@@ -433,13 +434,13 @@ export default function ExerciseHistory({
                   <div
                     key={workout.workout_id}
                     className={`bg-surface rounded-lg p-2 border transition-all ${
-                      isLatest ? 'border-emerald-500/30' : 'border-border'
+                      isLatest ? 'border-primary-500/30' : 'border-border'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
-                        <div className={`p-1 rounded ${isLatest ? 'bg-emerald-500/20' : 'bg-elevated/50'}`}>
-                          <Calendar className={`h-3 w-3 ${isLatest ? 'text-emerald-400' : 'text-muted'}`} />
+                        <div className={`p-1 rounded ${isLatest ? 'bg-primary-500/20' : 'bg-elevated/50'}`}>
+                          <Calendar className={`h-3 w-3 ${isLatest ? 'text-primary-400' : 'text-muted'}`} />
                         </div>
                         <span className="font-semibold text-foreground text-xs">
                           {new Date(workout.workout_date).toLocaleDateString('he-IL', {
@@ -448,7 +449,7 @@ export default function ExerciseHistory({
                           })}
                         </span>
                         {isLatest && (
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full font-medium">
+                          <span className="text-[10px] bg-primary-500/20 text-primary-400 px-1.5 py-0.5 rounded-full font-medium">
                             אחרון
                           </span>
                         )}
@@ -510,7 +511,7 @@ export default function ExerciseHistory({
                                   {set.rpe}
                                 </span>
                               )}
-                              <span className="text-emerald-400 font-semibold bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/30">
+                              <span className="text-primary-400 font-semibold bg-primary-500/10 px-1 py-0.5 rounded border border-primary-500/30">
                                 {(set.weight * set.reps).toLocaleString()}
                               </span>
                             </div>

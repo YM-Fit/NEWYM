@@ -123,14 +123,14 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
                   <span className="text-xs font-semibold text-muted uppercase tracking-wider">
                     תפריט
                   </span>
-                  <span className="mt-0.5 inline-flex items-center rounded-full border border-emerald-700/30 bg-emerald-700/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600">
+                  <span className="mt-0.5 inline-flex items-center rounded-full border border-primary-700/30 bg-primary-700/10 px-2 py-0.5 text-[10px] font-medium text-primary-600">
                     מצב עבודה: {isTablet ? 'טאבלט / מגע' : 'מחשב'}
                   </span>
                 </div>
               </div>
               <button
                 onClick={() => setIsMinimized(!isMinimized)}
-                className="p-2 rounded-xl text-muted hover:text-emerald-600 hover:bg-emerald-700/10 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-700/50"
+                className="p-2 rounded-xl text-muted hover:text-primary-600 hover:bg-primary-700/10 transition-all focus:outline-none focus:ring-2 focus:ring-primary-700/50"
                 title="מזער"
                 aria-label="מזער תפריט"
                 aria-expanded={!isMinimized}
@@ -151,7 +151,7 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
                 placeholder="חפש בתפריט..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-10 pl-4 py-2.5 text-sm bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-emerald-700/50 focus:border-emerald-700/50 transition-all"
+                className="w-full pr-10 pl-4 py-2.5 text-sm bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary-700/50 focus:border-primary-700/50 transition-all"
                 aria-label="חפש בתפריט"
                 aria-controls="main-navigation"
               />
@@ -173,15 +173,15 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
                   aria-label={label}
                 >
                   {isActive && (
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-600 to-emerald-800 rounded-l-full shadow-glow-sm" />
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-primary-600 to-primary-800 rounded-l-full shadow-glow-sm" />
                   )}
                   <Icon className={`h-5 w-5 transition-all duration-300 ${
                     isActive 
-                      ? 'text-emerald-600 drop-shadow-[0_0_8px_rgba(74,107,42,0.4)] scale-110' 
+                      ? 'text-primary-600 drop-shadow-[0_0_8px_rgba(74,107,42,0.4)] scale-110' 
                       : 'text-muted group-hover:text-foreground group-hover:scale-110'
                   }`} />
                   {isActive && (
-                    <div className="absolute inset-0 bg-emerald-700/10 rounded-xl blur-sm" />
+                    <div className="absolute inset-0 bg-primary-700/10 rounded-xl blur-sm" />
                   )}
                 </button>
               );
@@ -200,7 +200,7 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
                   {category.id !== 'main' && (
                     <button
                       onClick={() => toggleCategory(category.id)}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-muted uppercase tracking-wider hover:text-foreground hover:bg-surface transition-all focus:outline-none focus:ring-2 focus:ring-emerald-700/50"
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-muted uppercase tracking-wider hover:text-foreground hover:bg-surface transition-all focus:outline-none focus:ring-2 focus:ring-primary-700/50"
                       aria-expanded={isExpanded}
                       aria-controls={`sidebar-category-${category.id}`}
                       aria-label={`${category.label}, ${isExpanded ? 'מוקפל' : 'מורחב'}`}
@@ -225,9 +225,9 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
                           <button
                             key={id}
                             onClick={() => handleItemClick(id)}
-                            className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-700/50 ${
+                            className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary-700/50 ${
                               isActive
-                                ? 'bg-gradient-to-r from-emerald-700/20 to-emerald-700/10 text-emerald-600 shadow-lg shadow-emerald-700/10'
+                                ? 'bg-gradient-to-r from-primary-700/20 to-primary-700/10 text-primary-600 shadow-lg shadow-primary-700/10'
                                 : 'text-muted hover:bg-surface hover:text-foreground'
                             }`}
                             aria-current={isActive ? 'page' : undefined}
@@ -236,17 +236,17 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
                             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                             
                             {isActive && (
-                              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-600 to-emerald-800 rounded-l-full shadow-glow-sm" />
+                              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-primary-600 to-primary-800 rounded-l-full shadow-glow-sm" />
                             )}
 
                             <div className="relative ml-3 z-10">
                               <Icon className={`h-5 w-5 transition-all duration-300 ${
                                 isActive 
-                                  ? 'text-emerald-600 drop-shadow-[0_0_8px_rgba(74,107,42,0.4)] scale-110' 
+                                  ? 'text-primary-600 drop-shadow-[0_0_8px_rgba(74,107,42,0.4)] scale-110' 
                                   : 'group-hover:scale-110'
                               }`} />
                               {isActive && (
-                                <div className="absolute inset-0 bg-emerald-600/30 blur-xl rounded-full animate-pulse-soft" />
+                                <div className="absolute inset-0 bg-primary-600/30 blur-xl rounded-full animate-pulse-soft" />
                               )}
                             </div>
 
@@ -258,7 +258,7 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
                                   {label}
                                 </span>
                                 {badge && (
-                                  <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-700/20 text-emerald-600 rounded-full animate-scale-in shadow-sm">
+                                  <span className="px-2 py-0.5 text-xs font-semibold bg-primary-700/20 text-primary-600 rounded-full animate-scale-in shadow-sm">
                                     {badge}
                                   </span>
                                 )}
@@ -283,10 +283,10 @@ export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarP
 
       {!isMinimized && (
         <div className="p-4 border-t border-border">
-          <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-700/10 to-emerald-800/5 border border-emerald-700/20">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-primary-700/10 to-primary-800/5 border border-primary-700/20">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-emerald-700/20 flex items-center justify-center">
-                <Sparkles className="h-4 w-4 text-emerald-600" />
+              <div className="w-8 h-8 rounded-lg bg-primary-700/20 flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-primary-600" />
               </div>
               <span className="text-sm font-semibold text-foreground">YM Coach Pro</span>
             </div>

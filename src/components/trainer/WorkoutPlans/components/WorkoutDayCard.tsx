@@ -143,7 +143,7 @@ export default function WorkoutDayCard({
         {day.exercises.length > 0 && (
           <button
             onClick={() => onComplete(day.tempId)}
-            className="px-5 py-4 bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl"
+            className="px-5 py-4 bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl"
           >
             סיים יום
           </button>

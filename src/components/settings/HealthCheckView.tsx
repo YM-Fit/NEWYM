@@ -94,7 +94,7 @@ export default function HealthCheckView() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Activity className="h-6 w-6 text-emerald-400" />
+            <Activity className="h-6 w-6 text-primary-400" />
             בדיקת בריאות המערכת
           </h2>
           <p className="text-muted mt-1">מצב המערכת ושירותיה</p>
@@ -102,7 +102,7 @@ export default function HealthCheckView() {
         <button
           onClick={checkHealth}
           disabled={loading}
-          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
           רענן
@@ -111,7 +111,7 @@ export default function HealthCheckView() {
 
       {loading && !health && (
         <div className="premium-card p-12 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400 mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-400 mx-auto"></div>
           <p className="mt-4 text-muted">בודק בריאות המערכת...</p>
         </div>
       )}

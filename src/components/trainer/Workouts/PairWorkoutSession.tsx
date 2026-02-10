@@ -510,8 +510,8 @@ export default function PairWorkoutSession({
     const collapsedSets = member === 'member_1' ? collapsedSets1 : collapsedSets2;
     
     return (
-    <div className={`bg-card rounded-2xl border ${isBlue ? 'border-blue-500/30' : 'border-emerald-500/30'} overflow-hidden`}>
-      <div className={`${isBlue ? 'bg-blue-500' : 'bg-emerald-500'} p-5`}>
+    <div className={`bg-card rounded-2xl border ${isBlue ? 'border-blue-500/30' : 'border-primary-500/30'} overflow-hidden`}>
+      <div className={`${isBlue ? 'bg-blue-500' : 'bg-primary-500'} p-5`}>
         <h2 className="text-xl font-bold text-white text-center tracking-wide">
           {name}
         </h2>
@@ -565,11 +565,11 @@ export default function PairWorkoutSession({
                       <div
                         key={setId}
                         onClick={() => toggleCollapseSet(setId, member)}
-                        className="bg-surface/30 rounded-xl p-3 border border-border/30 cursor-pointer hover:border-emerald-500/30 hover:bg-surface transition-all"
+                        className="bg-surface/30 rounded-xl p-3 border border-border/30 cursor-pointer hover:border-primary-500/30 hover:bg-surface transition-all"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <span className={`font-bold text-sm ${isBlue ? 'text-blue-400 bg-blue-500/10' : 'text-emerald-400 bg-emerald-500/10'} px-3 py-1.5 rounded-lg`}>
+                            <span className={`font-bold text-sm ${isBlue ? 'text-blue-400 bg-blue-500/10' : 'text-primary-400 bg-primary-500/10'} px-3 py-1.5 rounded-lg`}>
                               סט #{setIdx + 1}
                             </span>
                             <span className="text-foreground font-medium">{set.weight} ק״ג</span>
@@ -584,7 +584,7 @@ export default function PairWorkoutSession({
                               </span>
                             )}
                           </div>
-                          <span className="text-xs text-emerald-400 font-medium">לחץ לעריכה</span>
+                          <span className="text-xs text-primary-400 font-medium">לחץ לעריכה</span>
                         </div>
                       </div>
                     );
@@ -595,7 +595,7 @@ export default function PairWorkoutSession({
                     <div className="flex items-center justify-between">
                       <span 
                         onClick={() => toggleCollapseSet(setId, member)}
-                        className={`text-sm font-bold ${isBlue ? 'text-blue-400 bg-blue-500/10' : 'text-emerald-400 bg-emerald-500/10'} px-3 py-1.5 rounded-lg cursor-pointer hover:opacity-80 transition-all`}
+                        className={`text-sm font-bold ${isBlue ? 'text-blue-400 bg-blue-500/10' : 'text-primary-400 bg-primary-500/10'} px-3 py-1.5 rounded-lg cursor-pointer hover:opacity-80 transition-all`}
                       >
                         סט #{setIdx + 1}
                       </span>
@@ -624,7 +624,7 @@ export default function PairWorkoutSession({
                         <button
                           type="button"
                           onClick={() => openNumericPad(exIdx, setIdx, 'weight', member)}
-                          className="w-full p-3 border border-emerald-500/30 rounded-xl text-center font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all cursor-pointer"
+                          className="w-full p-3 border border-primary-500/30 rounded-xl text-center font-bold text-primary-400 bg-primary-500/10 hover:bg-primary-500/20 transition-all cursor-pointer"
                         >
                           {set.weight || '0'}
                         </button>
@@ -867,7 +867,7 @@ export default function PairWorkoutSession({
 
               <button
                 onClick={() => addSet(exIdx, member)}
-                className={`mt-4 w-full text-sm ${isBlue ? 'text-blue-400 hover:text-blue-300 border-blue-500/30 hover:bg-blue-500/10' : 'text-emerald-400 hover:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/10'} py-3 border-2 border-dashed rounded-xl transition-all font-medium`}
+                className={`mt-4 w-full text-sm ${isBlue ? 'text-blue-400 hover:text-blue-300 border-blue-500/30 hover:bg-blue-500/10' : 'text-primary-400 hover:text-primary-300 border-primary-500/30 hover:bg-primary-500/10'} py-3 border-2 border-dashed rounded-xl transition-all font-medium`}
               >
                 + הוסף סט
               </button>
@@ -877,7 +877,7 @@ export default function PairWorkoutSession({
 
         <button
           onClick={() => setShowExerciseSelector(member)}
-          className={`w-full ${isBlue ? 'bg-blue-500 hover:bg-blue-600' : 'bg-emerald-500 hover:bg-emerald-600'} text-white py-4 px-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold`}
+          className={`w-full ${isBlue ? 'bg-blue-500 hover:bg-blue-600' : 'bg-primary-500 hover:bg-primary-600'} text-white py-4 px-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold`}
         >
           <Plus className="h-5 w-5" />
           <span>הוסף תרגיל</span>
@@ -900,8 +900,8 @@ export default function PairWorkoutSession({
                 <ArrowRight className="h-6 w-6" />
               </button>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                  <Users className="h-6 w-6 text-emerald-400" />
+                <div className="w-12 h-12 bg-primary-500/20 rounded-xl flex items-center justify-center">
+                  <Users className="h-6 w-6 text-primary-400" />
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-foreground">אימון זוגי</h1>
@@ -921,7 +921,7 @@ export default function PairWorkoutSession({
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-emerald-500 hover:bg-emerald-600 text-foreground px-6 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all disabled:opacity-50 font-bold"
+                className="bg-primary-500 hover:bg-primary-600 text-foreground px-6 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all disabled:opacity-50 font-bold"
               >
                 <Check className="h-5 w-5" />
                 <span>{saving ? 'שומר...' : 'סיים אימון'}</span>

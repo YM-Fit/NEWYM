@@ -4,6 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { supabase } from '../../../lib/supabase';
 import { logger } from '../../../utils/logger';
 import toast from 'react-hot-toast';
+import { themeColors } from '../../../utils/themeColors';
 
 interface WorkoutProgressProps {
   trainee: any;
@@ -207,9 +208,9 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
 
   const getMetricColor = useCallback(() => {
     switch (metricType) {
-      case 'weight': return '#10b981';
-      case 'reps': return '#3b82f6';
-      case 'volume': return '#f59e0b';
+      case 'weight': return themeColors.chartPrimary;
+      case 'reps': return themeColors.chartBlue;
+      case 'volume': return themeColors.chartAmber;
     }
   }, [metricType]);
 
@@ -281,7 +282,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mx-auto mb-4" />
           <p className="text-muted">טוען נתוני התקדמות...</p>
         </div>
       </div>
@@ -297,8 +298,8 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
               <ArrowRight className="h-5 w-5" />
             </button>
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-emerald-500/15">
-                <TrendingUp className="h-6 w-6 text-emerald-400" />
+              <div className="p-3 rounded-xl bg-primary-500/15">
+                <TrendingUp className="h-6 w-6 text-primary-400" />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-foreground">גרף התקדמות</h1>
@@ -333,8 +334,8 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
               <ArrowRight className="h-5 w-5" />
             </button>
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-emerald-500/15">
-                <TrendingUp className="h-6 w-6 text-emerald-400" />
+              <div className="p-3 rounded-xl bg-primary-500/15">
+                <TrendingUp className="h-6 w-6 text-primary-400" />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-foreground">גרף התקדמות</h1>
@@ -365,8 +366,8 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
               <ArrowRight className="h-5 w-5" />
             </button>
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-emerald-500/15">
-                <TrendingUp className="h-6 w-6 text-emerald-400" />
+              <div className="p-3 rounded-xl bg-primary-500/15">
+                <TrendingUp className="h-6 w-6 text-primary-400" />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-foreground">גרף התקדמות</h1>
@@ -376,7 +377,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
           </div>
           {progress && (
             <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
-              progress.isPositive ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
+              progress.isPositive ? 'bg-primary-500/15 text-primary-400' : 'bg-red-500/15 text-red-400'
             }`}>
               {progress.isPositive ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
               <span className="font-bold text-lg">
@@ -392,7 +393,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
           <p className="text-sm font-medium text-muted mb-3">הצג התקדמות עבור:</p>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { id: 'all', label: `${trainee.pair_name_1} + ${trainee.pair_name_2}`, color: 'emerald' },
+              { id: 'all', label: `${trainee.pair_name_1} + ${trainee.pair_name_2}`, color: 'primary' },
               { id: 'member_1', label: trainee.pair_name_1, color: 'blue' },
               { id: 'member_2', label: trainee.pair_name_2, color: 'amber' },
             ].map((member) => (
@@ -401,7 +402,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                 onClick={() => handleMemberChange(member.id as typeof selectedMember)}
                 className={`p-3 rounded-xl border transition-all ${
                   selectedMember === member.id
-                    ? (member.color === 'emerald' ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400' :
+                    ? (member.color === 'primary' ? 'bg-primary-500/15 border-primary-500/30 text-primary-400' :
                        member.color === 'blue' ? 'bg-blue-500/15 border-blue-500/30 text-blue-400' :
                        'bg-amber-500/15 border-amber-500/30 text-amber-400')
                     : 'bg-surface/30 border-border text-muted hover:text-foreground hover:border-border-hover'
@@ -418,10 +419,10 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
       <div className="grid grid-cols-3 gap-3">
         {[
           { id: 'weight', label: 'משקל', sublabel: 'מקסימלי', icon: BarChart3, 
-            activeBg: 'bg-emerald-500/15', inactiveBg: 'bg-surface/30',
-            activeIconBg: 'bg-emerald-500/20', inactiveIconBg: 'bg-elevated/50',
-            activeColor: 'text-emerald-400', inactiveColor: 'text-muted',
-            activeBorder: 'border-emerald-500/30' },
+            activeBg: 'bg-primary-500/15', inactiveBg: 'bg-surface/30',
+            activeIconBg: 'bg-primary-500/20', inactiveIconBg: 'bg-elevated/50',
+            activeColor: 'text-primary-400', inactiveColor: 'text-muted',
+            activeBorder: 'border-primary-500/30' },
           { id: 'reps', label: 'חזרות', sublabel: 'סה"כ', icon: Repeat,
             activeBg: 'bg-blue-500/15', inactiveBg: 'bg-surface/30',
             activeIconBg: 'bg-blue-500/20', inactiveIconBg: 'bg-elevated/50',
@@ -465,7 +466,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
             <select
               value={selectedExercise || ''}
               onChange={(e) => setSelectedExercise(e.target.value)}
-              className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-foreground focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-foreground focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
             >
               {exercises.map((ex) => (
                 <option key={ex.id} value={ex.id}>
@@ -478,7 +479,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
             <button
               onClick={() => handleViewModeChange('chart')}
               className={`p-2.5 rounded-lg transition-all ${
-                viewMode === 'chart' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
+                viewMode === 'chart' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
               }`}
               title="גרף"
               aria-label="תצוגת גרף"
@@ -488,7 +489,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
             <button
               onClick={() => handleViewModeChange('list')}
               className={`p-2.5 rounded-lg transition-all ${
-                viewMode === 'list' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
+                viewMode === 'list' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
               }`}
               title="רשימה"
               aria-label="תצוגת רשימה"
@@ -498,7 +499,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
             <button
               onClick={() => handleViewModeChange('table')}
               className={`p-2.5 rounded-lg transition-all ${
-                viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
+                viewMode === 'table' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
               }`}
               title="טבלה"
               aria-label="תצוגת טבלה"
@@ -523,7 +524,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                 <p className="text-xs text-muted">שיא {metricType === 'weight' ? 'משקל' : metricType === 'reps' ? 'חזרות' : 'נפח'}</p>
               </div>
               <p className={`text-xl font-bold ${
-                metricType === 'weight' ? 'text-emerald-400' : 
+                metricType === 'weight' ? 'text-primary-400' : 
                 metricType === 'reps' ? 'text-blue-400' : 
                 'text-amber-400'
               }`}>
@@ -543,10 +544,10 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
             </div>
             <div className="bg-surface/30 rounded-xl p-3 border border-border">
               <div className="flex items-center gap-2 mb-1">
-                <Flame className="w-4 h-4 text-emerald-500" />
+                <Flame className="w-4 h-4 text-primary-500" />
                 <p className="text-xs text-muted">נוכחי</p>
               </div>
-              <p className="text-xl font-bold text-emerald-400">
+              <p className="text-xl font-bold text-primary-400">
                 {metricType === 'volume'
                   ? getMetricValue(selectedExerciseData.progressData[selectedExerciseData.progressData.length - 1]).toLocaleString()
                   : getMetricValue(selectedExerciseData.progressData[selectedExerciseData.progressData.length - 1])}
@@ -567,24 +568,24 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                 </defs>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
-                  stroke="#3f3f46" 
+                  stroke={themeColors.zinc700} 
                   strokeOpacity={0.3}
                   vertical={false}
                 />
                 <XAxis 
                   dataKey="date" 
-                  stroke="#71717a" 
+                  stroke={themeColors.zinc500} 
                   fontSize={12} 
                   tickLine={false}
-                  axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
-                  tick={{ fill: '#a1a1aa' }}
+                  axisLine={{ stroke: themeColors.zinc700, strokeOpacity: 0.5 }}
+                  tick={{ fill: themeColors.zinc400 }}
                 />
                 <YAxis 
-                  stroke="#71717a" 
+                  stroke={themeColors.zinc500} 
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false}
-                  tick={{ fill: '#a1a1aa' }}
+                  tick={{ fill: themeColors.zinc400 }}
                   width={45}
                 />
                 <Tooltip content={<CustomTooltip />} cursor={{ stroke: getMetricColor(), strokeWidth: 1, strokeDasharray: '5 5', strokeOpacity: 0.3 }} />
@@ -597,14 +598,14 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                     fill: getMetricColor(), 
                     strokeWidth: 3, 
                     r: 5, 
-                    stroke: '#09090b',
-                    filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.3))'
+                    stroke: themeColors.zinc950,
+                    filter: 'drop-shadow(0 0 4px rgb(0 0 0 / 0.3))'
                   }}
                   activeDot={{ 
                     r: 8, 
                     stroke: getMetricColor(), 
                     strokeWidth: 3, 
-                    fill: '#09090b',
+                    fill: themeColors.zinc950,
                     filter: 'drop-shadow(0 0 8px ' + getMetricColor() + ')'
                   }}
                   animationDuration={1000}
@@ -637,7 +638,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                     <div
                       className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                         isBest ? 'bg-amber-500/20' : 
-                        metricType === 'weight' ? 'bg-emerald-500/20' : 
+                        metricType === 'weight' ? 'bg-primary-500/20' : 
                         metricType === 'reps' ? 'bg-blue-500/20' : 
                         'bg-amber-500/20'
                       }`}
@@ -646,7 +647,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                         <Trophy className="w-5 h-5 text-amber-400" />
                       ) : (
                         <span className={`text-sm font-bold ${
-                          metricType === 'weight' ? 'text-emerald-400' : 
+                          metricType === 'weight' ? 'text-primary-400' : 
                           metricType === 'reps' ? 'text-blue-400' : 
                           'text-amber-400'
                         }`}>
@@ -670,7 +671,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                   <div className="flex items-center gap-4">
                     {change && (
                       <div className={`flex items-center gap-1 text-sm ${
-                        change.isPositive ? 'text-emerald-400' : change.diff < 0 ? 'text-red-400' : 'text-muted'
+                        change.isPositive ? 'text-primary-400' : change.diff < 0 ? 'text-red-400' : 'text-muted'
                       }`}>
                         {change.diff === 0 ? (
                           <Minus className="w-3 h-3" />
@@ -686,7 +687,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                     )}
                     <div
                       className={`px-4 py-2 rounded-xl font-bold text-lg ${
-                        metricType === 'weight' ? 'bg-emerald-500/15 text-emerald-400' : 
+                        metricType === 'weight' ? 'bg-primary-500/15 text-primary-400' : 
                         metricType === 'reps' ? 'bg-blue-500/15 text-blue-400' : 
                         'bg-amber-500/15 text-amber-400'
                       }`}
@@ -748,7 +749,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                         <span className="text-blue-400 font-semibold">{data.totalReps}</span>
                       </td>
                       <td className="py-3 px-3 text-center">
-                        <span className="text-emerald-400 font-semibold">{data.maxWeight}</span>
+                        <span className="text-primary-400 font-semibold">{data.maxWeight}</span>
                       </td>
                       <td className="py-3 px-3 text-center">
                         <span className="text-amber-400 font-semibold">{data.totalVolume.toLocaleString()}</span>
@@ -756,7 +757,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                       <td className="py-3 px-3 text-center">
                         {change ? (
                           <span className={`text-sm font-medium ${
-                            change.isPositive ? 'text-emerald-400' : change.diff < 0 ? 'text-red-400' : 'text-muted'
+                            change.isPositive ? 'text-primary-400' : change.diff < 0 ? 'text-red-400' : 'text-muted'
                           }`}>
                             {change.diff > 0 ? '+' : ''}{metricType === 'volume' ? change.diff.toLocaleString() : change.diff.toFixed(1)}
                           </span>
@@ -767,7 +768,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                       <td className="py-3 px-3 text-center">
                         {fromStart ? (
                           <span className={`text-sm font-medium px-2 py-0.5 rounded ${
-                            fromStart.isPositive ? 'bg-emerald-500/15 text-emerald-400' : fromStart.diff < 0 ? 'bg-red-500/15 text-red-400' : 'text-muted'
+                            fromStart.isPositive ? 'bg-primary-500/15 text-primary-400' : fromStart.diff < 0 ? 'bg-red-500/15 text-red-400' : 'text-muted'
                           }`}>
                             {fromStart.diff > 0 ? '+' : ''}{fromStart.percentage}%
                           </span>

@@ -183,9 +183,9 @@ export default function CalendarSyncHistory({ traineeId, trainerId }: CalendarSy
                   <div className="text-xl font-bold text-amber-400">{stats.total}</div>
                   <div className="text-xs text-amber-300">סה״כ</div>
                 </div>
-                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 text-center">
-                  <div className="text-xl font-bold text-emerald-400">{stats.upcoming}</div>
-                  <div className="text-xs text-emerald-300">קרובות</div>
+                <div className="bg-primary-500/10 border border-primary-500/30 rounded-lg p-3 text-center">
+                  <div className="text-xl font-bold text-primary-400">{stats.upcoming}</div>
+                  <div className="text-xs text-primary-300">קרובות</div>
                 </div>
                 <div className="bg-surface500/10 border border-border500/30 rounded-lg p-3 text-center">
                   <div className="text-xl font-bold text-muted400">{stats.past}</div>
@@ -257,7 +257,7 @@ export default function CalendarSyncHistory({ traineeId, trainerId }: CalendarSy
                       <div className={`text-xs px-2 py-1 rounded ${
                         isPast
                           ? 'bg-surface700/50 text-muted500'
-                          : 'bg-emerald-500/20 text-emerald-400'
+                          : 'bg-primary-500/20 text-primary-400'
                       }`}>
                         {isPast ? 'הסתיים' : 'קרוב'}
                       </div>

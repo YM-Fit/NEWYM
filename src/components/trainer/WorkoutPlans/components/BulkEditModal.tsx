@@ -73,7 +73,7 @@ export default function BulkEditModal({
               type="number"
               value={setsCount}
               onChange={(e) => setSetsCount(e.target.value === '' ? '' : parseInt(e.target.value) || '')}
-              className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+              className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300"
               placeholder="השאר ריק כדי לא לשנות"
               min="1"
               max="10"
@@ -89,7 +89,7 @@ export default function BulkEditModal({
               type="number"
               value={reps}
               onChange={(e) => setReps(e.target.value === '' ? '' : parseInt(e.target.value) || '')}
-              className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+              className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300"
               placeholder="השאר ריק כדי לא לשנות"
               min="1"
               max="100"
@@ -105,7 +105,7 @@ export default function BulkEditModal({
               type="number"
               value={restSeconds}
               onChange={(e) => setRestSeconds(e.target.value === '' ? '' : parseInt(e.target.value) || '')}
-              className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+              className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300"
               placeholder="השאר ריק כדי לא לשנות"
               min="0"
               max="600"
@@ -121,7 +121,7 @@ export default function BulkEditModal({
               type="number"
               value={weight}
               onChange={(e) => setWeight(e.target.value === '' ? '' : parseFloat(e.target.value) || '')}
-              className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+              className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300"
               placeholder="השאר ריק כדי לא לשנות"
               min="0"
               step="0.5"
@@ -147,7 +147,7 @@ export default function BulkEditModal({
                   }
                 }
               }}
-              className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+              className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300"
               placeholder="השאר ריק כדי לא לשנות"
               min="1"
               max="10"
@@ -164,7 +164,7 @@ export default function BulkEditModal({
           </button>
           <button
             onClick={handleApply}
-            className="flex-1 py-3 bg-gradient-to-br from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-800 text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-gradient-to-br from-primary-700 to-primary-800 hover:from-primary-800 hover:to-primary-800 text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
           >
             <Save className="w-5 h-5" />
             החל על כל התרגילים

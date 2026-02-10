@@ -520,7 +520,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
     return (
       <div className="flex justify-center items-center py-12 min-h-[400px]">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-primary-400/30">
             <Utensils className="w-8 h-8 text-white" />
           </div>
           <span className="text-sm font-medium text-[var(--color-text-muted)]">טוען יומן אכילה...</span>
@@ -547,7 +547,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       <div
         key={dateStr}
         className={`premium-card-static overflow-hidden transition-all duration-300 hover:shadow-card-hover ${
-          isToday(currentDate) ? 'ring-2 ring-emerald-500/50' : ''
+          isToday(currentDate) ? 'ring-2 ring-primary-500/50' : ''
         } ${isCompleted ? 'opacity-75' : ''}`}
       >
         {renderDayContent(currentDate, dateStr, dayMeals, waterAmount, waterGoal, waterProgress, isCompleted)}
@@ -586,9 +586,9 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               <div
                 key={index}
                 onClick={() => handleDateClick(date)}
-                className={`min-h-[80px] p-2 border border-border200 rounded-lg cursor-pointer transition-all hover:border-emerald-500/50 ${
+                className={`min-h-[80px] p-2 border border-border200 rounded-lg cursor-pointer transition-all hover:border-primary-500/50 ${
                   isCurrentDay
-                    ? 'bg-emerald-500/10 border-emerald-500/30'
+                    ? 'bg-primary-500/10 border-primary-500/30'
                     : hasMeals
                     ? 'bg-surface50'
                     : 'bg-transparent'
@@ -596,18 +596,18 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               >
                 <div
                   className={`text-sm font-semibold mb-1 ${
-                    isCurrentDay ? 'text-emerald-600' : 'text-muted900'
+                    isCurrentDay ? 'text-primary-600' : 'text-muted900'
                   }`}
                 >
                   {date.getDate()}
                 </div>
                 {hasMeals && (
                   <div className="space-y-1">
-                    <div className="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded truncate">
+                    <div className="text-xs bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded truncate">
                       {dayMeals.length} ארוחות
                     </div>
                     {isCompleted && (
-                      <div className="text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded">
+                      <div className="text-xs bg-primary-500 text-white px-1.5 py-0.5 rounded">
                         ✓
                       </div>
                     )}
@@ -635,9 +635,9 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
         <div
           className={`px-4 py-4 rounded-t-2xl transition-all duration-300 ${
             isToday(date) 
-              ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg'
+              ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-lg'
               : isCompleted
-              ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-b border-emerald-200' 
+              ? 'bg-gradient-to-br from-primary-50 to-primary-100 border-b border-primary-200' 
               : 'bg-gradient-to-br from-gray-50 to-gray-100 border-b border-border200'
           }`}
         >
@@ -645,7 +645,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
             <div className="flex items-center gap-2">
               {isCompleted && (
                 <div className={`rounded-full p-1 shadow-md transition-all duration-300 ${
-                  isToday(date) ? 'bg-white/20' : 'bg-emerald-500'
+                  isToday(date) ? 'bg-white/20' : 'bg-primary-500'
                 }`}>
                   <Check className="w-4 h-4 text-white" />
                 </div>
@@ -670,7 +670,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                   <span className={`text-xs px-2 py-0.5 rounded-full mr-2 font-medium ${
                     isToday(date) 
                       ? 'bg-white/20 text-white' 
-                      : 'bg-emerald-500 text-white shadow-sm'
+                      : 'bg-primary-500 text-white shadow-sm'
                   }`}>
                     הושלם
                   </span>
@@ -684,7 +684,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                   className={`px-4 py-2 rounded-xl transition-all duration-300 text-sm font-medium flex items-center gap-1 shadow-md hover:shadow-lg ${
                     isToday(date)
                       ? 'bg-white/20 hover:bg-white/30 text-white'
-                      : 'bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white'
+                      : 'bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white'
                   }`}
                 >
                   <Check className="w-4 h-4" />
@@ -699,7 +699,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                     ? 'opacity-50 cursor-not-allowed bg-surface100 text-muted400'
                     : isToday(date)
                     ? 'bg-white/20 hover:bg-white/30 text-white'
-                    : 'bg-emerald-500/15 hover:bg-emerald-500/20 text-emerald-600 border border-emerald-500/30 shadow-md hover:shadow-lg'
+                    : 'bg-primary-500/15 hover:bg-primary-500/20 text-primary-600 border border-primary-500/30 shadow-md hover:shadow-lg'
                 }`}
               >
                 <Plus className="w-5 h-5" />
@@ -743,13 +743,13 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
         </div>
 
         {dayMeals.length > 0 && (
-          <div className="px-4 py-3 border-b border-border200 bg-gradient-to-br from-emerald-50/50 to-emerald-100/50">
+          <div className="px-4 py-3 border-b border-border200 bg-gradient-to-br from-primary-50/50 to-primary-100/50">
             <button
               onClick={() => toggleDailySummary(dateStr)}
-              className="w-full flex items-center justify-between hover:bg-emerald-50/50 rounded-lg p-2 -m-2 transition-colors duration-200"
+              className="w-full flex items-center justify-between hover:bg-primary-50/50 rounded-lg p-2 -m-2 transition-colors duration-200"
             >
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-emerald-600" />
+                <BarChart3 className="w-4 h-4 text-primary-600" />
                 <span className="text-sm font-bold text-muted900">סיכום יומי</span>
               </div>
               {showDailySummary.has(dateStr) ? (
@@ -784,7 +784,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                     setSelectedDate(dateStr);
                     setShowMealPlanCopy(true);
                   }}
-                  className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1 mx-auto font-medium transition-colors duration-200"
+                  className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1 mx-auto font-medium transition-colors duration-200"
                 >
                   <Copy className="w-4 h-4" />
                   העתק מתפריט
@@ -804,7 +804,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 return (
                   <div
                     key={meal.id}
-                    className="border-2 border-border200 rounded-xl p-4 hover:border-emerald-500/50 transition-all duration-300 hover:shadow-lg bg-white shadow-sm"
+                    className="border-2 border-border200 rounded-xl p-4 hover:border-primary-500/50 transition-all duration-300 hover:shadow-lg bg-white shadow-sm"
                   >
                     <div className="flex items-start gap-3">
                       <div className={`p-2.5 rounded-xl ${typeInfo.color} shadow-md`}>
@@ -879,7 +879,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                         {shouldTruncate && (
                           <button
                             onClick={() => toggleMealExpand(meal.id)}
-                            className="text-xs text-emerald-600 flex items-center gap-1 mt-2 font-medium hover:text-emerald-700 transition-colors"
+                            className="text-xs text-primary-600 flex items-center gap-1 mt-2 font-medium hover:text-primary-700 transition-colors"
                           >
                             {isExpanded ? (
                               <>
@@ -899,7 +899,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                         <div className="flex gap-1">
                           <button
                             onClick={() => openEditMeal(meal)}
-                            className="p-2 text-muted600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-300"
+                            className="p-2 text-muted600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-300"
                           >
                             <svg
                               className="w-4 h-4"
@@ -936,7 +936,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="premium-card-static rounded-2xl p-4 sm:p-6 shadow-xl sticky top-0 z-10 bg-gradient-to-br from-emerald-500 to-emerald-700">
+      <div className="premium-card-static rounded-2xl p-4 sm:p-6 shadow-xl sticky top-0 z-10 bg-gradient-to-br from-primary-500 to-primary-700">
         <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div className="flex items-center gap-2 w-full">
             <button
@@ -1021,7 +1021,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               <div
                 key={dateStr}
                 className={`premium-card-static overflow-hidden transition-all duration-300 hover:shadow-card-hover ${
-                  isToday(date) ? 'ring-2 ring-emerald-500/50' : ''
+                  isToday(date) ? 'ring-2 ring-primary-500/50' : ''
                 } ${isCompleted ? 'opacity-75' : ''}`}
               >
                 {renderDayContent(date, dateStr, dayMeals, waterAmount, waterGoal, waterProgress, isCompleted)}
@@ -1035,7 +1035,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
           <div className="premium-card-static w-full max-w-md max-h-[90vh] overflow-y-auto bg-white shadow-2xl animate-scale-in">
-            <div className="sticky top-0 bg-gradient-to-br from-emerald-500 to-emerald-700 p-4 flex items-center justify-between rounded-t-2xl z-10">
+            <div className="sticky top-0 bg-gradient-to-br from-primary-500 to-primary-700 p-4 flex items-center justify-between rounded-t-2xl z-10">
               <h3 className="text-lg font-bold text-white">
                 {editingMeal ? 'עריכת ארוחה' : 'הוספת ארוחה'}
               </h3>
@@ -1058,7 +1058,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                       <button
                         key={planMeal.id}
                         onClick={() => copyMealFromPlan(planMeal)}
-                        className="p-3 rounded-xl border-2 border-emerald-500/30 hover:border-emerald-500/50 bg-emerald-50 hover:bg-emerald-100 transition-all text-right"
+                        className="p-3 rounded-xl border-2 border-primary-500/30 hover:border-primary-500/50 bg-primary-50 hover:bg-primary-100 transition-all text-right"
                       >
                         <div className="text-sm font-bold text-muted900">
                           {planMeal.meal_name === 'breakfast' ? 'ארוחת בוקר' :
@@ -1108,8 +1108,8 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                         }
                         className={`p-4 rounded-xl border-2 flex items-center gap-2 transition-all duration-300 ${
                           mealForm.meal_type === type.value
-                            ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                            : 'border-border300 hover:border-emerald-500/50 hover:shadow-md bg-white'
+                            ? 'border-primary-500 bg-primary-50 shadow-md'
+                            : 'border-border300 hover:border-primary-500/50 hover:shadow-md bg-white'
                         }`}
                       >
                         <div className={`p-2 rounded-xl ${type.color} shadow-sm`}>
@@ -1227,7 +1227,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       {showMealPlanCopy && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
           <div className="premium-card-static w-full max-w-md max-h-[90vh] overflow-y-auto bg-white shadow-2xl animate-scale-in">
-            <div className="sticky top-0 bg-gradient-to-br from-emerald-500 to-emerald-700 p-4 flex items-center justify-between rounded-t-2xl z-10">
+            <div className="sticky top-0 bg-gradient-to-br from-primary-500 to-primary-700 p-4 flex items-center justify-between rounded-t-2xl z-10">
               <h3 className="text-lg font-bold text-white">העתק מתפריט</h3>
               <button
                 onClick={() => {
@@ -1248,7 +1248,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                     setShowMealPlanCopy(false);
                     setShowModal(true);
                   }}
-                  className="w-full p-4 rounded-xl border-2 border-emerald-500/30 hover:border-emerald-500/50 bg-emerald-50 hover:bg-emerald-100 transition-all text-right"
+                  className="w-full p-4 rounded-xl border-2 border-primary-500/30 hover:border-primary-500/50 bg-primary-50 hover:bg-primary-100 transition-all text-right"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-sm font-bold text-muted900">
@@ -1329,7 +1329,7 @@ function DailySummaryCard({
           <p className="text-lg font-bold text-muted900">{totals.calories}</p>
           <p className="text-xs text-muted700">קלוריות</p>
           {mealPlan?.daily_calories && (
-            <p className={`text-xs mt-1 ${totals.calories <= mealPlan.daily_calories ? 'text-emerald-600' : 'text-red-600'}`}>
+            <p className={`text-xs mt-1 ${totals.calories <= mealPlan.daily_calories ? 'text-primary-600' : 'text-red-600'}`}>
               מתוך {mealPlan.daily_calories}
             </p>
           )}
@@ -1339,7 +1339,7 @@ function DailySummaryCard({
           <p className="text-lg font-bold text-muted900">{totals.protein}ג'</p>
           <p className="text-xs text-muted700">חלבון</p>
           {mealPlan?.protein_grams && (
-            <p className={`text-xs mt-1 ${totals.protein >= mealPlan.protein_grams ? 'text-emerald-600' : 'text-orange-600'}`}>
+            <p className={`text-xs mt-1 ${totals.protein >= mealPlan.protein_grams ? 'text-primary-600' : 'text-orange-600'}`}>
               מתוך {mealPlan.protein_grams}ג'
             </p>
           )}

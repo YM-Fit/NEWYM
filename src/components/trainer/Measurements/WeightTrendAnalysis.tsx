@@ -161,7 +161,7 @@ export default function WeightTrendAnalysis({
     return (
       <div className="premium-card-static p-8">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 text-emerald-400 animate-spin" />
+          <Loader2 className="h-8 w-8 text-primary-400 animate-spin" />
         </div>
       </div>
     );
@@ -186,7 +186,7 @@ export default function WeightTrendAnalysis({
       case 'up':
         return <TrendingUp className="h-6 w-6 text-red-400" />;
       case 'down':
-        return <TrendingDown className="h-6 w-6 text-emerald-400" />;
+        return <TrendingDown className="h-6 w-6 text-primary-400" />;
       default:
         return <Minus className="h-6 w-6 text-muted400" />;
     }
@@ -197,7 +197,7 @@ export default function WeightTrendAnalysis({
       case 'up':
         return 'text-red-400 bg-red-500/20 border-red-500/30';
       case 'down':
-        return 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30';
+        return 'text-primary-400 bg-primary-500/20 border-primary-500/30';
       default:
         return 'text-muted400 bg-surface500/20 border-border500/30';
     }
@@ -229,7 +229,7 @@ export default function WeightTrendAnalysis({
         <select
           value={selectedPeriod}
           onChange={(e) => setSelectedPeriod(e.target.value as any)}
-          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-foreground text-sm focus:ring-2 focus:ring-emerald-600/50"
+          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-foreground text-sm focus:ring-2 focus:ring-primary-600/50"
         >
           <option value="1m">חודש אחרון</option>
           <option value="3m">3 חודשים</option>
@@ -286,7 +286,7 @@ export default function WeightTrendAnalysis({
 
         <div className="p-4 rounded-xl bg-surface800/50 border border-border700/50">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="h-4 w-4 text-emerald-400" />
+            <TrendingUp className="h-4 w-4 text-primary-400" />
             <p className="text-xs text-muted400">מקסימום</p>
           </div>
           <p className="text-xl font-bold text-foreground">{analysis.maxWeight.toFixed(1)} ק״ג</p>

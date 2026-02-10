@@ -125,15 +125,15 @@ export default memo(function Dashboard({
       {/* Enhanced Header Section */}
       <div className="premium-card-static p-5 md:p-6 lg:p-7 relative overflow-hidden
                       border border-primary/10 hover:border-primary/20 transition-all duration-500">
-        <div className="absolute top-0 left-0 w-80 h-80 bg-gradient-to-br from-primary/15 via-emerald-700/8 to-transparent 
+        <div className="absolute top-0 left-0 w-80 h-80 bg-gradient-to-br from-primary/15 via-primary-700/8 to-transparent 
                         rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 animate-pulse" />
-        <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-tl from-emerald-700/10 via-primary/5 to-transparent 
+        <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-tl from-primary-700/10 via-primary/5 to-transparent 
                         rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
         <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-emerald-700/20 
+              <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary-700/20 
                             border border-primary/20 shadow-lg shadow-primary/10">
                 <Sparkles className="w-5 h-5 text-primary" />
               </div>
@@ -160,7 +160,7 @@ export default memo(function Dashboard({
             
             {/* Enhanced Quick Stats */}
             <div className="hidden md:flex items-center gap-2.5">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-primary/15 to-emerald-700/10 
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-primary/15 to-primary-700/10 
                             border border-primary/20 hover:border-primary/30 transition-all duration-300 hover:scale-105
                             shadow-sm">
                 <Users className="w-4 h-4 text-primary" />
@@ -178,7 +178,7 @@ export default memo(function Dashboard({
             <button
               type="button"
               onClick={() => onViewChange('studio-tv')}
-              className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-lime-500 text-black font-semibold text-sm shadow-lg shadow-emerald-700/30 hover:shadow-emerald-500/50 hover:scale-[1.03] active:scale-[0.99] transition-all"
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary-600 to-lime-500 text-black font-semibold text-sm shadow-lg shadow-primary-700/30 hover:shadow-primary-500/50 hover:scale-[1.03] active:scale-[0.99] transition-all"
             >
               <span>מצב טלוויזיה לסטודיו</span>
             </button>
@@ -236,15 +236,15 @@ export default memo(function Dashboard({
             סטטיסטיקות מהירות
           </h3>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 hover:border-emerald-500/30 transition-all">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-primary-500/10 to-primary-500/5 border border-primary-500/20 hover:border-primary-500/30 transition-all">
               <div className="flex items-center gap-2">
-                <Scale className="w-4 h-4 text-emerald-500" />
+                <Scale className="w-4 h-4 text-primary-500" />
                 <span className="text-xs text-gray-600">מדידות (7 ימים)</span>
               </div>
               {statsLoading ? (
                 <div className="w-8 h-4 bg-surface/50 rounded animate-pulse" />
               ) : (
-                <span className="text-base font-bold text-emerald-600">{recentMeasurements}</span>
+                <span className="text-base font-bold text-primary-600">{recentMeasurements}</span>
               )}
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-blue-500/5 border border-blue-500/20 hover:border-blue-500/30 transition-all">

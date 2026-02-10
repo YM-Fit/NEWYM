@@ -76,8 +76,8 @@ export const WorkoutHeader = memo(({
             <ArrowRight className="h-4 w-4 lg:h-5 lg:w-5" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-emerald-500/15">
-              <Dumbbell className="h-4 w-4 lg:h-5 lg:w-5 text-emerald-400" />
+            <div className="p-1.5 rounded-lg bg-primary-500/15">
+              <Dumbbell className="h-4 w-4 lg:h-5 lg:w-5 text-primary-400" />
             </div>
             <div>
               <h1 className="text-base lg:text-lg font-bold text-foreground">
@@ -94,7 +94,7 @@ export const WorkoutHeader = memo(({
                 </p>
               )}
               {exercisesCount > 0 && (
-                <p className="text-xs font-semibold mt-0.5 text-emerald-400 bg-emerald-500/15 rounded-lg px-1.5 py-0.5 inline-block">
+                <p className="text-xs font-semibold mt-0.5 text-primary-400 bg-primary-500/15 rounded-lg px-1.5 py-0.5 inline-block">
                   נפח: {totalVolume.toLocaleString()} ק"ג
                 </p>
               )}
@@ -140,7 +140,7 @@ export const WorkoutHeader = memo(({
               onSave();
             }}
             disabled={saving || exercisesCount === 0}
-            className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-elevated disabled:text-muted text-foreground px-3 lg:px-4 py-2 lg:py-2.5 rounded-lg flex items-center gap-1.5 transition-all disabled:cursor-not-allowed touch-manipulation font-bold cursor-pointer text-xs lg:text-sm min-h-[40px] active:scale-95"
+            className="bg-primary-500 hover:bg-primary-600 disabled:bg-elevated disabled:text-muted text-foreground px-3 lg:px-4 py-2 lg:py-2.5 rounded-lg flex items-center gap-1.5 transition-all disabled:cursor-not-allowed touch-manipulation font-bold cursor-pointer text-xs lg:text-sm min-h-[40px] active:scale-95"
           >
             <Save className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
             <span>{saving ? 'שומר...' : (workoutId ? 'עדכן' : 'שמור')}</span>
@@ -154,7 +154,7 @@ export const WorkoutHeader = memo(({
           type="date"
           value={workoutDate.toISOString().split('T')[0]}
           onChange={(e) => onDateChange(new Date(e.target.value))}
-          className="text-xs px-2 py-1 bg-surface border border-border text-foreground rounded-lg focus:ring-1 focus:ring-emerald-500 focus:border-transparent transition-all"
+          className="text-xs px-2 py-1 bg-surface border border-border text-foreground rounded-lg focus:ring-1 focus:ring-primary-500 focus:border-transparent transition-all"
           readOnly={isTablet}
           tabIndex={isTablet ? -1 : 0}
           inputMode={isTablet ? 'none' : undefined}

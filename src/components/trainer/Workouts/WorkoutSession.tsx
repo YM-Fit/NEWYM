@@ -1946,7 +1946,7 @@ export default function WorkoutSession({
           e.stopPropagation();
           setShowExerciseSelector(true);
         }}
-        className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-foreground py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all touch-manipulation font-bold cursor-pointer"
+        className="w-full bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-foreground py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all touch-manipulation font-bold cursor-pointer"
       >
         <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
         <span className="text-lg lg:text-xl">{exercises.length === 0 ? 'התחל אימון ריק' : 'הוסף תרגיל'}</span>

@@ -122,8 +122,8 @@ export default function WorkoutHistoryModal({ traineeId, exercises, onClose }: W
       <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-surface">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-emerald-500/15">
-              <Dumbbell className="h-5 w-5 text-emerald-400" />
+            <div className="p-2 rounded-xl bg-primary-500/15">
+              <Dumbbell className="h-5 w-5 text-primary-400" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-foreground">היסטוריית אימון</h2>
@@ -144,7 +144,7 @@ export default function WorkoutHistoryModal({ traineeId, exercises, onClose }: W
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+              <div className="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
             </div>
           ) : groups.length === 0 ? (
             <div className="text-center py-12 text-muted">
@@ -158,7 +158,7 @@ export default function WorkoutHistoryModal({ traineeId, exercises, onClose }: W
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Dumbbell className="h-4 w-4 text-emerald-400" />
+                    <Dumbbell className="h-4 w-4 text-primary-400" />
                     <h3 className="font-semibold text-foreground">{group.exerciseName}</h3>
                   </div>
                   <span className="text-xs text-muted">
@@ -191,7 +191,7 @@ export default function WorkoutHistoryModal({ traineeId, exercises, onClose }: W
                                 )
                                 .join(' • ')}
                             </span>
-                            <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+                            <span className="flex items-center gap-1 text-primary-400 font-semibold">
                               <TrendingUp className="h-3 w-3" />
                               {calculateVolume(entry.sets).toLocaleString()} ק״ג
                             </span>

@@ -40,7 +40,7 @@ export const WorkoutQuickActions = memo(({
         <button
           type="button"
           onClick={onSave}
-          className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback disabled:opacity-60"
+          className="w-14 h-14 bg-primary-500 hover:bg-primary-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback disabled:opacity-60"
           title="סיים אימון"
           disabled={saving || exercisesCount === 0}
         >
@@ -63,7 +63,7 @@ export const WorkoutQuickActions = memo(({
         <button
           type="button"
           onClick={onAddExercise}
-          className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
+          className="w-14 h-14 bg-primary-500 hover:bg-primary-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center btn-press-feedback"
           title="הוסף תרגיל (קיצור: Ctrl+N)"
         >
           <BookMarked className="h-6 w-6" />

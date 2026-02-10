@@ -36,7 +36,7 @@ export default function Header({ onLogout, trainerName, onNavigateToTrainee, onT
                   animated={true}
                 />
               </div>
-              <div className="absolute inset-0 bg-emerald-600/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
+              <div className="absolute inset-0 bg-primary-600/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
             </div>
             <div className="hidden sm:block animate-fade-in">
               <h1 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
@@ -53,11 +53,11 @@ export default function Header({ onLogout, trainerName, onNavigateToTrainee, onT
           <NotificationBell onNavigateToTrainee={onNavigateToTrainee} />
 
           <div className="hidden sm:flex items-center gap-3 px-4 py-2.5 bg-surface rounded-xl border border-border hover:border-border-hover transition-all duration-300 hover:bg-elevated group cursor-pointer">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-700/20 to-emerald-800/20 flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-6">
-              <User className="h-4 w-4 text-emerald-600" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-700/20 to-primary-800/20 flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-6">
+              <User className="h-4 w-4 text-primary-600" />
             </div>
             <div className="text-right">
-              <span className="text-sm font-medium text-foreground block transition-colors group-hover:text-emerald-600">
+              <span className="text-sm font-medium text-foreground block transition-colors group-hover:text-primary-600">
                 {trainerName || 'מאמן'}
               </span>
               <span className="text-xs text-muted">מאמן אישי</span>

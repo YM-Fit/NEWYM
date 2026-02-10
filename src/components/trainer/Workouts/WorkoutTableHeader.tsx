@@ -6,9 +6,9 @@ interface WorkoutTableHeaderProps {
 
 export const WorkoutTableHeader = memo(({ isTablet }: WorkoutTableHeaderProps) => {
   return (
-    <thead className="workout-table-header sticky top-0 z-20 bg-elevated border-b-2 border-emerald-500/30 shadow-lg backdrop-blur-sm">
-      <tr className="bg-gradient-to-r from-emerald-500/10 to-emerald-600/10">
-        <th className="px-2 sm:px-3 py-2 text-right font-bold text-foreground text-[10px] sm:text-xs lg:text-sm sticky right-0 bg-elevated z-10 min-w-[100px] sm:min-w-[120px] border-r-2 border-emerald-500/20">
+    <thead className="workout-table-header sticky top-0 z-20 bg-elevated border-b-2 border-primary-500/30 shadow-lg backdrop-blur-sm">
+      <tr className="bg-gradient-to-r from-primary-500/10 to-primary-600/10">
+        <th className="px-2 sm:px-3 py-2 text-right font-bold text-foreground text-[10px] sm:text-xs lg:text-sm sticky right-0 bg-elevated z-10 min-w-[100px] sm:min-w-[120px] border-r-2 border-primary-500/20">
           תרגיל
         </th>
         <th className="px-1 sm:px-2 py-2 text-center font-bold text-foreground text-[10px] sm:text-xs lg:text-sm min-w-[40px] sm:min-w-[50px]">

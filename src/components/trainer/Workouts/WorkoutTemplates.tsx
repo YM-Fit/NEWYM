@@ -129,7 +129,7 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+              <div className="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
             </div>
           ) : templates.length === 0 ? (
             <div className="text-center py-12 bg-surface/30 rounded-2xl border border-border">
@@ -144,11 +144,11 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
               {templates.map(template => (
                 <div
                   key={template.id}
-                  className="bg-surface/30 rounded-2xl p-5 border border-border hover:border-emerald-500/30 transition-all group"
+                  className="bg-surface/30 rounded-2xl p-5 border border-border hover:border-primary-500/30 transition-all group"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-foreground mb-1 group-hover:text-emerald-400 transition-all">{template.name}</h3>
+                      <h3 className="text-lg font-bold text-foreground mb-1 group-hover:text-primary-400 transition-all">{template.name}</h3>
                       {template.description && (
                         <p className="text-sm text-muted mb-2">{template.description}</p>
                       )}
@@ -162,7 +162,7 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
                           {new Date(template.createdAt).toLocaleDateString('he-IL')}
                         </span>
                         {template.traineeName && (
-                          <span className="flex items-center bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-lg text-xs">
+                          <span className="flex items-center bg-primary-500/10 text-primary-400 px-2 py-1 rounded-lg text-xs">
                             מתאמן: {template.traineeName}
                           </span>
                         )}
@@ -177,11 +177,11 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
                     <ul className="space-y-1 text-sm">
                       {template.exercises.map((exercise, idx) => (
                         <li key={idx} className="text-muted flex items-center">
-                          <span className="w-6 h-6 bg-emerald-500 text-foreground rounded-lg flex items-center justify-center text-xs font-bold ml-2">
+                          <span className="w-6 h-6 bg-primary-500 text-foreground rounded-lg flex items-center justify-center text-xs font-bold ml-2">
                             {idx + 1}
                           </span>
                           <span className="flex-1 font-medium text-foreground">{exercise.exerciseName}</span>
-                          <span className="text-emerald-400 text-xs bg-emerald-500/10 px-2 py-0.5 rounded-lg">
+                          <span className="text-primary-400 text-xs bg-primary-500/10 px-2 py-0.5 rounded-lg">
                             {exercise.setsCount} סטים
                           </span>
                         </li>
@@ -192,7 +192,7 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleSelectTemplate(template)}
-                      className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-foreground px-4 py-3 rounded-xl font-semibold transition-all flex items-center justify-center"
+                      className="flex-1 bg-primary-500 hover:bg-primary-600 text-foreground px-4 py-3 rounded-xl font-semibold transition-all flex items-center justify-center"
                     >
                       <Plus className="h-4 w-4 ml-1" />
                       השתמש בתבנית

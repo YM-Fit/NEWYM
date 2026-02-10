@@ -37,7 +37,7 @@
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
 
-    /* Primary colors - Enhanced emerald green theme */
+    /* Primary colors - Olive green theme */
     --color-primary: 74 107 42;
     --color-primary-50: 240 245 237;
     --color-primary-100: 232 240 224;
@@ -76,7 +76,7 @@
     --color-danger-text: 185 28 28;
     --color-info-text: 61 90 31;
 
-    /* Background colors - Refined emerald tones */
+    /* Background colors - Refined primary tones */
     --color-bg-base: 240 245 237;
     --color-bg-elevated: 255 255 255;
     --color-bg-surface: 232 240 224;
@@ -93,6 +93,12 @@
     --color-text-secondary: 31 41 55;
     --color-text-muted: 75 85 99;
     --color-text-inverse: 244 244 245;
+
+    /* Foreground variants for text hierarchy (used by text-foreground400/600/700/900) */
+    --color-foreground-400: 55 65 81;
+    --color-foreground-600: 31 41 55;
+    --color-foreground-700: 17 24 39;
+    --color-foreground-900: 15 23 42;
 
     /* Border colors - Enhanced with intermediate shades */
     --color-border: 74 107 42;
@@ -111,10 +117,10 @@
     /* Shadow colors - Refined opacity levels */
     --color-shadow: 74 107 42;
     --color-shadow-strong: 61 90 31;
-    --shadow-soft: rgba(74, 107, 42, 0.08);
-    --shadow-medium: rgba(74, 107, 42, 0.12);
-    --shadow-strong: rgba(74, 107, 42, 0.2);
-    --shadow-stronger: rgba(61, 90, 31, 0.25);
+    --shadow-soft: rgb(var(--color-primary) / 0.08);
+    --shadow-medium: rgb(var(--color-primary) / 0.12);
+    --shadow-strong: rgb(var(--color-primary) / 0.2);
+    --shadow-stronger: rgb(var(--color-primary-dark) / 0.25);
 
     --color-muted-300: 148 163 184;
     --color-muted-400: 100 116 139;
@@ -141,11 +147,26 @@
     --color-border-num-600: 71 85 105;
     --color-border-num-700: 51 65 85;
 
+    /* Accent cyan for badge-info */
+    --color-accent-cyan: 6 182 212;
+
+    /* Accent colors for action buttons (sky, amber, green, slate, rose) */
+    --color-sky-500: 14 165 233;
+    --color-sky-600: 2 132 199;
+    --color-amber-500: 245 158 11;
+    --color-amber-600: 217 119 6;
+    --color-success-bright: 34 197 94;
+    --color-success-bright-dark: 22 163 74;
+    --color-slate-500: 71 85 105;
+    --color-slate-600: 51 65 85;
+    --color-rose-500: 244 63 94;
+    --color-rose-600: 225 29 72;
+
     /* Toast colors */
     --color-toast-bg: 24 24 27;
     --color-toast-text: 255 255 255;
     --color-toast-border: 39 39 42;
-    --color-toast-success-icon: 16 185 129;
+    --color-toast-success-icon: 74 107 42;
     --color-toast-error-icon: 220 38 38;
   }
 }

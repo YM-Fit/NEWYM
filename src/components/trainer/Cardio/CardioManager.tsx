@@ -5,6 +5,7 @@ import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarC
 import toast from 'react-hot-toast';
 import { cardioApi, type CardioActivity, type CardioType, type CardioStats } from '../../../api/cardioApi';
 import { logger } from '../../../utils/logger';
+import { themeColors } from '../../../utils/themeColors';
 
 interface CardioManagerProps {
   traineeId: string;
@@ -263,7 +264,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
         <div className="premium-card-static p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <Target className="h-5 w-5 text-emerald-400" />
+              <Target className="h-5 w-5 text-primary-400" />
               תוכנית אירובי נוכחית
             </h3>
             <span className="text-sm text-muted">
@@ -282,10 +283,10 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
 
             <div className="p-4 bg-card/50 rounded-xl border border-border">
               <div className="flex items-center gap-2 mb-2">
-                <Target className="h-4 w-4 text-emerald-400" />
+                <Target className="h-4 w-4 text-primary-400" />
                 <span className="text-xs text-muted">יעד צעדים שבועי</span>
               </div>
-              <p className="text-lg font-bold text-emerald-400">{latestActivity.weekly_goal_steps.toLocaleString()}</p>
+              <p className="text-lg font-bold text-primary-400">{latestActivity.weekly_goal_steps.toLocaleString()}</p>
             </div>
 
             <div className="p-4 bg-card/50 rounded-xl border border-border">
@@ -303,7 +304,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
               </div>
               <p className={`text-lg font-bold ${
                 latestActivity.avg_weekly_steps >= latestActivity.weekly_goal_steps
-                  ? 'text-emerald-400'
+                  ? 'text-primary-400'
                   : latestActivity.avg_weekly_steps >= latestActivity.weekly_goal_steps * 0.8
                     ? 'text-amber-400'
                     : 'text-red-400'
@@ -359,20 +360,20 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
               </div>
             </div>
             {stats.stepsChange !== 0 && (
-              <p className={`text-xs ${stats.stepsChange > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              <p className={`text-xs ${stats.stepsChange > 0 ? 'text-primary-400' : 'text-red-400'}`}>
                 {stats.stepsChange > 0 ? '+' : ''}{stats.stepsChange.toLocaleString()} מהפעם הקודמת
               </p>
             )}
           </div>
 
-          <div className="stat-card p-5 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5">
+          <div className="stat-card p-5 bg-gradient-to-br from-primary-500/20 to-primary-500/5">
             <div className="flex items-start justify-between mb-2">
               <div>
                 <p className="text-xs font-medium text-muted mb-1">עמידה ביעד</p>
-                <p className="text-2xl font-bold text-emerald-400">{stats.goalProgress}%</p>
+                <p className="text-2xl font-bold text-primary-400">{stats.goalProgress}%</p>
               </div>
-              <div className="p-2 rounded-lg bg-emerald-500/20">
-                <Target className="h-4 w-4 text-emerald-400" />
+              <div className="p-2 rounded-lg bg-primary-500/20">
+                <Target className="h-4 w-4 text-primary-400" />
               </div>
             </div>
             <p className="text-xs text-muted mt-1">אחוז הצלחה: {stats.successRate}%</p>
@@ -413,7 +414,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
       {activities.length >= 2 && (
         <div className="premium-card-static p-6">
           <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-emerald-400" />
+            <BarChart3 className="h-5 w-5 text-primary-400" />
             גרף התקדמות - יעד מול ביצוע
           </h3>
           <div className="h-72">
@@ -421,36 +422,36 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
               <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
-                  stroke="#3f3f46" 
+                  stroke={themeColors.zinc700} 
                   strokeOpacity={0.3}
                   vertical={false}
                 />
                 <XAxis 
                   dataKey="date" 
-                  stroke="#71717a" 
+                  stroke={themeColors.zinc500} 
                   style={{ fontSize: '12px' }}
                   tickLine={false}
-                  axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
-                  tick={{ fill: '#a1a1aa' }}
+                  axisLine={{ stroke: themeColors.zinc700, strokeOpacity: 0.5 }}
+                  tick={{ fill: themeColors.zinc400 }}
                 />
                 <YAxis 
-                  stroke="#71717a" 
+                  stroke={themeColors.zinc500} 
                   style={{ fontSize: '12px' }}
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fill: '#a1a1aa' }}
+                  tick={{ fill: themeColors.zinc400 }}
                   width={45}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'rgba(24, 24, 27, 0.95)',
+                    backgroundColor: `${themeColors.zinc900}F2`,
                     backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(63, 63, 70, 0.5)',
+                    border: `1px solid ${themeColors.zinc700}80`,
                     borderRadius: '12px',
-                    color: '#fff',
+                    color: themeColors.textInverse,
                     padding: '12px'
                   }}
-                  cursor={{ fill: 'rgba(16, 185, 129, 0.1)' }}
+                  cursor={{ fill: `${themeColors.chartPrimary}1A` }}
                 />
                 <Legend 
                   wrapperStyle={{ paddingTop: '20px' }}
@@ -458,7 +459,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
                 />
                 <Bar 
                   dataKey="יעד" 
-                  fill="#10b981" 
+                  fill={themeColors.chartPrimary} 
                   radius={[6, 6, 0, 0]}
                   animationDuration={1000}
                   animationEasing="ease-in-out"
@@ -470,7 +471,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
                   animationEasing="ease-in-out"
                 >
                   {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.achieved ? '#3b82f6' : '#f59e0b'} />
+                    <Cell key={`cell-${index}`} fill={entry.achieved ? themeColors.chartBlue : themeColors.chartAmber} />
                   ))}
                 </Bar>
               </BarChart>
@@ -521,7 +522,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div>
                         <p className="text-xs text-muted">יעד</p>
-                        <p className="text-sm font-semibold text-emerald-400">
+                        <p className="text-sm font-semibold text-primary-400">
                           {activity.weekly_goal_steps.toLocaleString()}
                         </p>
                       </div>
@@ -535,7 +536,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
                         <p className="text-xs text-muted">עמידה ביעד</p>
                         <p className={`text-sm font-semibold ${
                           activity.avg_weekly_steps >= activity.weekly_goal_steps
-                            ? 'text-emerald-400'
+                            ? 'text-primary-400'
                             : 'text-red-400'
                         }`}>
                           {activity.weekly_goal_steps > 0
@@ -632,7 +633,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
                       placeholder="שם סוג אירובי"
                       className="flex-1 px-4 py-3 bg-card/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
-                    <button onClick={handleAddCardioType} className="px-3 py-2 bg-emerald-500/15 text-emerald-400 rounded-xl hover:bg-emerald-500/25">שמור</button>
+                    <button onClick={handleAddCardioType} className="px-3 py-2 bg-primary-500/15 text-primary-400 rounded-xl hover:bg-primary-500/25">שמור</button>
                     <button onClick={() => { setShowNewType(false); setNewCardioType(''); }} className="px-3 py-2 bg-surface text-muted rounded-xl">ביטול</button>
                   </div>
                 )}
@@ -655,7 +656,7 @@ export default function CardioManager({ traineeId, trainerId, traineeName, onBac
                     type="number"
                     value={formData.weekly_goal_steps || ''}
                     onChange={(e) => setFormData({ ...formData, weekly_goal_steps: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-3 bg-card/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-4 py-3 bg-card/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
                 <div>

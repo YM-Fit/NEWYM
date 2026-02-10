@@ -15,14 +15,14 @@ export function PlanListView({ plans, activePlan, onActivate, onEdit, onDelete, 
     <div className="space-y-6">
       <button
         onClick={onCreateNew}
-        className="w-full bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white py-4 rounded-2xl flex items-center justify-center gap-3 font-semibold transition-all duration-300 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/30 hover:scale-[1.01]"
+        className="w-full bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white py-4 rounded-2xl flex items-center justify-center gap-3 font-semibold transition-all duration-300 shadow-xl shadow-primary-500/25 hover:shadow-2xl hover:shadow-primary-500/30 hover:scale-[1.01]"
       >
         <Plus className="h-5 w-5" />
         צור תפריט חדש
       </button>
 
       {activePlan && (
-        <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-2xl p-8 text-white shadow-xl shadow-emerald-500/20">
+        <div className="bg-gradient-to-br from-primary-600 to-primary-800 rounded-2xl p-8 text-white shadow-xl shadow-primary-500/20">
           <div className="flex items-center justify-between mb-6">
             <div>
               <span className="bg-white/20 text-xs px-3 py-1.5 rounded-xl font-semibold">תפריט פעיל</span>
@@ -100,7 +100,7 @@ export function PlanListView({ plans, activePlan, onActivate, onEdit, onDelete, 
                   <div className="flex gap-3">
                     <button
                       onClick={() => onActivate(plan.id)}
-                      className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-500/30 transition-all duration-300 hover:scale-105"
+                      className="px-4 py-2 bg-primary-500/20 text-primary-400 rounded-xl text-sm font-semibold hover:bg-primary-500/30 transition-all duration-300 hover:scale-105"
                     >
                       הפעל
                     </button>

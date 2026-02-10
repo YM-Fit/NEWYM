@@ -257,7 +257,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
     return (
       <div className="premium-card-static p-8">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 text-emerald-400 animate-spin" />
+          <Loader2 className="h-8 w-8 text-primary-400 animate-spin" />
         </div>
       </div>
     );
@@ -303,7 +303,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
         <select
           value={filterPriority}
           onChange={(e) => setFilterPriority(e.target.value as any)}
-          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-[var(--color-text-primary)] text-sm focus:ring-2 focus:ring-emerald-600/50"
+          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-[var(--color-text-primary)] text-sm focus:ring-2 focus:ring-primary-600/50"
         >
           <option value="all">כל העדיפויות</option>
           <option value="high">גבוהה</option>
@@ -313,7 +313,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
         <select
           value={filterSeen}
           onChange={(e) => setFilterSeen(e.target.value as any)}
-          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-[var(--color-text-primary)] text-sm focus:ring-2 focus:ring-emerald-600/50"
+          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-[var(--color-text-primary)] text-sm focus:ring-2 focus:ring-primary-600/50"
         >
           <option value="unseen">לא נראה</option>
           <option value="seen">נראה</option>
@@ -419,7 +419,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
                     type="checkbox"
                     checked={alertSettings.enableSignificantChange}
                     onChange={(e) => setAlertSettings(prev => ({ ...prev, enableSignificantChange: e.target.checked }))}
-                    className="w-4 h-4 rounded border-border600 bg-surface800 text-emerald-500"
+                    className="w-4 h-4 rounded border-border600 bg-surface800 text-primary-500"
                   />
                   <span className="text-sm font-semibold text-[var(--color-text-secondary)]">התראה על שינוי משמעותי</span>
                 </label>
@@ -441,7 +441,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
                     type="checkbox"
                     checked={alertSettings.enableNoWeighIn}
                     onChange={(e) => setAlertSettings(prev => ({ ...prev, enableNoWeighIn: e.target.checked }))}
-                    className="w-4 h-4 rounded border-border600 bg-surface800 text-emerald-500"
+                    className="w-4 h-4 rounded border-border600 bg-surface800 text-primary-500"
                   />
                   <span className="text-sm font-semibold text-[var(--color-text-secondary)]">התראה על חוסר שקילות</span>
                 </label>
@@ -462,7 +462,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
                     type="checkbox"
                     checked={alertSettings.enableGoalReached}
                     onChange={(e) => setAlertSettings(prev => ({ ...prev, enableGoalReached: e.target.checked }))}
-                    className="w-4 h-4 rounded border-border600 bg-surface800 text-emerald-500"
+                    className="w-4 h-4 rounded border-border600 bg-surface800 text-primary-500"
                   />
                   <span className="text-sm font-semibold text-[var(--color-text-secondary)]">התראה על הגעה ליעד</span>
                 </label>
@@ -478,7 +478,7 @@ export default function WeightAlerts({ trainerId, onTraineeClick }: WeightAlerts
               </button>
               <button
                 onClick={saveSettings}
-                className="flex-1 px-4 py-3 rounded-xl font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg transition-all hover:scale-[1.02]"
+                className="flex-1 px-4 py-3 rounded-xl font-semibold bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-lg transition-all hover:scale-[1.02]"
               >
                 שמור
               </button>

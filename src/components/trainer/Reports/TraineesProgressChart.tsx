@@ -3,6 +3,7 @@ import { TrendingUp, Scale, Users, Filter, ChevronDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
+import { themeColors } from '../../../utils/themeColors';
 
 interface TraineeProgress {
   id: string;
@@ -16,8 +17,8 @@ interface TraineesProgressChartProps {
 }
 
 const COLORS = [
-  '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#f59e0b',
-  '#ec4899', '#10b981', '#84cc16', '#f97316', '#f59e0b',
+  themeColors.chartPrimary, themeColors.chartBlue, themeColors.chartAmber, themeColors.chartRose, themeColors.chartAmber,
+  themeColors.chartPink, themeColors.chartPrimary, themeColors.chartTeal, themeColors.chartOrange, themeColors.chartAmber,
 ];
 
 export default function TraineesProgressChart({ selectedMonth }: TraineesProgressChartProps) {
@@ -201,7 +202,7 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
     return (
       <div className="premium-card-static p-8">
         <div className="flex items-center justify-center py-12">
-          <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -223,7 +224,7 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
               <button
                 onClick={() => setChartType('weight')}
                 className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-1.5 ${
-                  chartType === 'weight' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
+                  chartType === 'weight' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
                 }`}
               >
                 <Scale className="w-4 h-4" />
@@ -232,7 +233,7 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
               <button
                 onClick={() => setChartType('volume')}
                 className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-1.5 ${
-                  chartType === 'volume' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
+                  chartType === 'volume' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
                 }`}
               >
                 <TrendingUp className="w-4 h-4" />
@@ -265,7 +266,7 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
                           type="checkbox"
                           checked={selectedTrainees.includes(trainee.id)}
                           onChange={() => toggleTrainee(trainee.id)}
-                          className="w-4 h-4 rounded border-border bg-surface text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                          className="w-4 h-4 rounded border-border bg-surface text-primary-500 focus:ring-primary-500 focus:ring-offset-0"
                           disabled={!selectedTrainees.includes(trainee.id) && selectedTrainees.length >= 10}
                         />
                         <span className="text-sm font-medium text-foreground">{trainee.name}</span>
@@ -301,18 +302,18 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
                 <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                   <CartesianGrid 
                     strokeDasharray="3 3" 
-                    stroke="#3f3f46" 
+                    stroke={themeColors.zinc700} 
                     strokeOpacity={0.3}
                     vertical={false}
                   />
                   <XAxis 
                     dataKey="date" 
-                    tick={{ fontSize: 11, fill: '#a1a1aa' }} 
-                    axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
+                    tick={{ fontSize: 11, fill: themeColors.zinc400 }} 
+                    axisLine={{ stroke: themeColors.zinc700, strokeOpacity: 0.5 }}
                     tickLine={false}
                   />
                   <YAxis
-                    tick={{ fontSize: 11, fill: '#a1a1aa' }}
+                    tick={{ fontSize: 11, fill: themeColors.zinc400 }}
                     axisLine={false}
                     tickLine={false}
                     tickFormatter={(value) => chartType === 'volume' ? `${(value / 1000).toFixed(0)}K` : value}
@@ -320,7 +321,7 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
                   />
                   <Tooltip 
                     content={<CustomTooltip />}
-                    cursor={{ stroke: '#10b981', strokeWidth: 1, strokeDasharray: '5 5', strokeOpacity: 0.3 }}
+                    cursor={{ stroke: themeColors.chartPrimary, strokeWidth: 1, strokeDasharray: '5 5', strokeOpacity: 0.3 }}
                   />
                   <Legend
                     wrapperStyle={{ paddingTop: '20px' }}
@@ -338,11 +339,11 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
                         r: 4, 
                         fill: trainee.color,
                         strokeWidth: 2,
-                        stroke: '#09090b'
+                        stroke: themeColors.zinc950
                       }}
                       activeDot={{ 
                         r: 7,
-                        fill: '#09090b',
+                        fill: themeColors.zinc950,
                         stroke: trainee.color,
                         strokeWidth: 3
                       }}
@@ -374,8 +375,8 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
                     {change !== null && (
                       <span className={`text-xs font-semibold ${
                         chartType === 'weight'
-                          ? (change < 0 ? 'text-emerald-400' : change > 0 ? 'text-red-400' : 'text-muted')
-                          : (change > 0 ? 'text-emerald-400' : change < 0 ? 'text-red-400' : 'text-muted')
+                          ? (change < 0 ? 'text-primary-400' : change > 0 ? 'text-red-400' : 'text-muted')
+                          : (change > 0 ? 'text-primary-400' : change < 0 ? 'text-red-400' : 'text-muted')
                       }`}>
                         {change > 0 ? '+' : ''}{chartType === 'weight' ? change.toFixed(1) : (change / 1000).toFixed(1)}
                         {chartType === 'weight' ? ' ק"ג' : 'K'}

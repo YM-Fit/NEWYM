@@ -119,7 +119,7 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-emerald-600" />
+            <Sparkles className="h-5 w-5 text-primary-600" />
             <span className="text-lg font-bold text-foreground">YM Coach</span>
           </div>
           <button
@@ -140,7 +140,7 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
               placeholder="חפש בתפריט..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pr-10 pl-4 py-2.5 text-sm bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-emerald-700/50 focus:border-emerald-700/50 transition-all"
+              className="w-full pr-10 pl-4 py-2.5 text-sm bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary-700/50 focus:border-primary-700/50 transition-all"
             />
           </div>
         </div>
@@ -190,18 +190,18 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
                           onClick={() => handleItemClick(id)}
                           className={`w-full flex items-center px-4 py-4 rounded-xl transition-all duration-200 group relative ${
                             isActive
-                              ? 'bg-gradient-to-r from-emerald-700/15 to-emerald-700/5 text-emerald-600'
+                              ? 'bg-gradient-to-r from-primary-700/15 to-primary-700/5 text-primary-600'
                               : 'text-muted hover:bg-surface hover:text-foreground active:bg-elevated'
                           }`}
                           aria-current={isActive ? 'page' : undefined}
                         >
                           {isActive && (
-                            <div className="absolute right-0 w-1 h-12 bg-gradient-to-b from-emerald-600 to-emerald-800 rounded-l-full" />
+                            <div className="absolute right-0 w-1 h-12 bg-gradient-to-b from-primary-600 to-primary-800 rounded-l-full" />
                           )}
 
                           <div className="relative">
                             <Icon className={`h-6 w-6 transition-all ${
-                              isActive ? 'text-emerald-600 drop-shadow-[0_0_8px_rgba(74,107,42,0.4)]' : ''
+                              isActive ? 'text-primary-600 drop-shadow-[0_0_8px_rgba(74,107,42,0.4)]' : ''
                             }`} />
                           </div>
 
@@ -211,7 +211,7 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
                                 {label}
                               </span>
                               {badge && (
-                                <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-700/20 text-emerald-600 rounded-full">
+                                <span className="px-2 py-0.5 text-xs font-semibold bg-primary-700/20 text-primary-600 rounded-full">
                                   {badge}
                                 </span>
                               )}
@@ -232,10 +232,10 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
 
         {/* Footer */}
         <div className="p-4 border-t border-border">
-          <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-700/10 to-emerald-800/5 border border-emerald-700/20">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-primary-700/10 to-primary-800/5 border border-primary-700/20">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-emerald-700/20 flex items-center justify-center">
-                <Sparkles className="h-4 w-4 text-emerald-600" />
+              <div className="w-8 h-8 rounded-lg bg-primary-700/20 flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-primary-600" />
               </div>
               <span className="text-sm font-semibold text-foreground">YM Coach Pro</span>
             </div>

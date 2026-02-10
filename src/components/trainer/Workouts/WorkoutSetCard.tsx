@@ -107,13 +107,13 @@ export const WorkoutSetCard = memo(({
         onClick={onToggleCollapse}
         className={`workout-set-card rounded-xl p-3 lg:p-4 border cursor-pointer transition-all duration-300 set-collapsed-hover ${
           hasData 
-            ? 'set-card-completed border-emerald-500/30 bg-gradient-to-r from-zinc-800/40 to-emerald-500/5' 
-            : 'bg-surface/30 border-border hover:border-emerald-500/30'
+            ? 'set-card-completed border-primary-500/30 bg-gradient-to-r from-zinc-800/40 to-primary-500/5' 
+            : 'bg-surface/30 border-border hover:border-primary-500/30'
         }`}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 lg:gap-3 flex-wrap">
-            <span className={`set-number-badge font-bold text-sm lg:text-base text-foreground px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-sm ${hasData ? 'completed bg-gradient-to-r from-emerald-500 to-emerald-600' : 'bg-emerald-500'}`}>
+            <span className={`set-number-badge font-bold text-sm lg:text-base text-foreground px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-sm ${hasData ? 'completed bg-gradient-to-r from-primary-500 to-primary-600' : 'bg-primary-500'}`}>
               סט {set.set_number}
             </span>
             <div className="flex items-center gap-2">
@@ -143,12 +143,12 @@ export const WorkoutSetCard = memo(({
           </div>
           <div className="flex items-center gap-2 lg:gap-3">
             {hasData && (
-              <div className="flex items-center gap-1.5 bg-emerald-500/10 px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg border border-emerald-500/30 animate-volume-pop">
-                <TrendingUp className="h-3.5 w-3.5 lg:h-4 lg:w-4 text-emerald-400" />
-                <span className="text-emerald-400 font-semibold text-xs lg:text-sm">{setVolume.toLocaleString()}</span>
+              <div className="flex items-center gap-1.5 bg-primary-500/10 px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg border border-primary-500/30 animate-volume-pop">
+                <TrendingUp className="h-3.5 w-3.5 lg:h-4 lg:w-4 text-primary-400" />
+                <span className="text-primary-400 font-semibold text-xs lg:text-sm">{setVolume.toLocaleString()}</span>
               </div>
             )}
-            <ChevronDown className="h-4 w-4 lg:h-5 lg:w-5 text-emerald-400" />
+            <ChevronDown className="h-4 w-4 lg:h-5 lg:w-5 text-primary-400" />
           </div>
         </div>
       </div>
@@ -159,19 +159,19 @@ export const WorkoutSetCard = memo(({
     <div 
       ref={cardRef}
       className={`workout-set-card rounded-2xl p-4 lg:p-5 border transition-all duration-300 animate-set-expand ${
-        isActive ? 'set-card-active border-emerald-500/50 bg-surface' : 'bg-surface/30 border-border'
+        isActive ? 'set-card-active border-primary-500/50 bg-surface' : 'bg-surface/30 border-border'
       } ${isCompleting ? 'animate-set-complete' : ''}`}
     >
       {/* Header with set number and actions */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <span className="set-number-badge font-bold text-base lg:text-xl text-foreground bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 lg:px-5 lg:py-2.5 rounded-xl shadow-lg">
+          <span className="set-number-badge font-bold text-base lg:text-xl text-foreground bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 lg:px-5 lg:py-2.5 rounded-xl shadow-lg">
             סט {set.set_number}
           </span>
           {hasData && (
-            <div className="flex items-center gap-1.5 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/30">
-              <TrendingUp className="h-4 w-4 text-emerald-400" />
-              <span className="text-emerald-400 font-semibold text-sm">{setVolume.toLocaleString()} ק״ג</span>
+            <div className="flex items-center gap-1.5 bg-primary-500/10 px-3 py-1.5 rounded-lg border border-primary-500/30">
+              <TrendingUp className="h-4 w-4 text-primary-400" />
+              <span className="text-primary-400 font-semibold text-sm">{setVolume.toLocaleString()} ק״ג</span>
             </div>
           )}
         </div>
@@ -226,7 +226,7 @@ export const WorkoutSetCard = memo(({
               e.stopPropagation();
               onOpenNumericPad('weight');
             }}
-            className="workout-input-btn w-full px-3 py-4 lg:py-6 text-2xl lg:text-4xl font-bold border-2 border-emerald-500/50 bg-emerald-500/10 text-emerald-400 rounded-xl hover:bg-emerald-500/20 active:bg-emerald-500/30 active:scale-[0.98] transition-all touch-manipulation cursor-pointer btn-press-feedback shadow-sm"
+            className="workout-input-btn w-full px-3 py-4 lg:py-6 text-2xl lg:text-4xl font-bold border-2 border-primary-500/50 bg-primary-500/10 text-primary-400 rounded-xl hover:bg-primary-500/20 active:bg-primary-500/30 active:scale-[0.98] transition-all touch-manipulation cursor-pointer btn-press-feedback shadow-sm"
           >
             {set.weight || '0'}
           </button>
@@ -339,8 +339,8 @@ export const WorkoutSetCard = memo(({
           }}
           className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all cursor-pointer ${
             set.set_type === 'regular'
-              ? 'bg-emerald-500 text-foreground'
-              : 'bg-surface border border-border text-slate-700 hover:bg-surface hover:border-emerald-500/30 hover:text-foreground'
+              ? 'bg-primary-500 text-foreground'
+              : 'bg-surface border border-border text-slate-700 hover:bg-surface hover:border-primary-500/30 hover:text-foreground'
           }`}
         >
           רגיל
@@ -559,7 +559,7 @@ export const WorkoutSetCard = memo(({
         type="button"
         onClick={handleCompleteSet}
         disabled={isCompleting}
-        className={`w-full mt-5 py-5 lg:py-6 bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-lg lg:text-xl rounded-xl flex items-center justify-center gap-3 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] touch-manipulation cursor-pointer btn-press-feedback ${
+        className={`w-full mt-5 py-5 lg:py-6 bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-700 text-white font-bold text-lg lg:text-xl rounded-xl flex items-center justify-center gap-3 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] touch-manipulation cursor-pointer btn-press-feedback ${
           isCompleting ? 'animate-set-complete opacity-90' : ''
         }`}
       >

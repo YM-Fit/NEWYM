@@ -25,7 +25,7 @@ export function CreatePlanModal({ data, saving, onChange, onSave, onClose }: Cre
               type="text"
               value={data.name}
               onChange={(e) => onChange({ ...data, name: e.target.value })}
-              className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+              className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all duration-300"
               placeholder="לדוגמה: תפריט הורדה במשקל"
             />
           </div>
@@ -35,7 +35,7 @@ export function CreatePlanModal({ data, saving, onChange, onSave, onClose }: Cre
               type="text"
               value={data.description}
               onChange={(e) => onChange({ ...data, description: e.target.value })}
-              className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+              className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all duration-300"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -45,7 +45,7 @@ export function CreatePlanModal({ data, saving, onChange, onSave, onClose }: Cre
                 type="number"
                 value={data.daily_calories}
                 onChange={(e) => onChange({ ...data, daily_calories: e.target.value })}
-                className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+                className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all duration-300"
               />
             </div>
             <div>
@@ -54,7 +54,7 @@ export function CreatePlanModal({ data, saving, onChange, onSave, onClose }: Cre
                 type="number"
                 value={data.daily_water_ml}
                 onChange={(e) => onChange({ ...data, daily_water_ml: e.target.value })}
-                className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+                className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all duration-300"
               />
             </div>
           </div>
@@ -65,7 +65,7 @@ export function CreatePlanModal({ data, saving, onChange, onSave, onClose }: Cre
                 type="number"
                 value={data.protein_grams}
                 onChange={(e) => onChange({ ...data, protein_grams: e.target.value })}
-                className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+                className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all duration-300"
               />
             </div>
             <div>
@@ -74,7 +74,7 @@ export function CreatePlanModal({ data, saving, onChange, onSave, onClose }: Cre
                 type="number"
                 value={data.carbs_grams}
                 onChange={(e) => onChange({ ...data, carbs_grams: e.target.value })}
-                className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+                className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all duration-300"
               />
             </div>
             <div>
@@ -83,7 +83,7 @@ export function CreatePlanModal({ data, saving, onChange, onSave, onClose }: Cre
                 type="number"
                 value={data.fat_grams}
                 onChange={(e) => onChange({ ...data, fat_grams: e.target.value })}
-                className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+                className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all duration-300"
               />
             </div>
           </div>
@@ -92,7 +92,7 @@ export function CreatePlanModal({ data, saving, onChange, onSave, onClose }: Cre
             <textarea
               value={data.notes}
               onChange={(e) => onChange({ ...data, notes: e.target.value })}
-              className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+              className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all duration-300"
               rows={3}
             />
           </div>
@@ -101,7 +101,7 @@ export function CreatePlanModal({ data, saving, onChange, onSave, onClose }: Cre
           <button
             onClick={onSave}
             disabled={saving}
-            className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 disabled:opacity-50 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-emerald-500/25"
+            className="flex-1 bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 disabled:opacity-50 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-primary-500/25"
           >
             {saving ? 'יוצר...' : 'צור תפריט'}
           </button>

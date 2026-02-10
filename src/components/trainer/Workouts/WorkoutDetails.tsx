@@ -219,7 +219,7 @@ export default function WorkoutDetails({
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
           <p className="text-muted">טוען אימון...</p>
         </div>
       </div>
@@ -255,7 +255,7 @@ export default function WorkoutDetails({
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in">
       {/* Premium Header */}
-      <div className="premium-card-static p-4 sm:p-6 relative overflow-hidden bg-gradient-to-br from-emerald-500 to-emerald-700">
+      <div className="premium-card-static p-4 sm:p-6 relative overflow-hidden bg-gradient-to-br from-primary-500 to-primary-700">
         <div className="absolute top-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
@@ -268,8 +268,8 @@ export default function WorkoutDetails({
             </button>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <Calendar className="w-4 h-4 text-emerald-100" />
-                <span className="text-xs font-semibold text-emerald-100 uppercase tracking-wider">אימון</span>
+                <Calendar className="w-4 h-4 text-primary-100" />
+                <span className="text-xs font-semibold text-primary-100 uppercase tracking-wider">אימון</span>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold text-white truncate">
                 {workoutDate.toLocaleDateString('he-IL', {
@@ -279,7 +279,7 @@ export default function WorkoutDetails({
                   day: 'numeric'
                 })}
               </h1>
-              <p className="text-emerald-100 text-sm sm:text-base">{trainee.name || trainee.full_name}</p>
+              <p className="text-primary-100 text-sm sm:text-base">{trainee.name || trainee.full_name}</p>
             </div>
           </div>
 
@@ -315,10 +315,10 @@ export default function WorkoutDetails({
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="premium-card-static p-4 sm:p-6 text-center hover:shadow-lg transition-all">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500/15 to-emerald-600/15 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <Dumbbell className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-500/15 to-primary-600/15 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <Dumbbell className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400" />
           </div>
-          <p className="text-2xl sm:text-3xl font-bold text-emerald-400">{exercises.length}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-primary-400">{exercises.length}</p>
           <p className="text-xs sm:text-sm text-muted font-medium">תרגילים</p>
         </div>
         <div className="premium-card-static p-4 sm:p-6 text-center hover:shadow-lg transition-all">
@@ -343,7 +343,7 @@ export default function WorkoutDetails({
           <div key={exercise.id} className="premium-card-static p-4 sm:p-6 hover:shadow-lg transition-all">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="bg-gradient-to-br from-primary-500 to-primary-700 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
                   <span className="text-white font-bold text-sm">{idx + 1}</span>
                 </div>
                 <h3 className="text-lg font-bold text-muted900">{exercise.name}</h3>
@@ -445,7 +445,7 @@ export default function WorkoutDetails({
               <div className="pt-3 border-t border-border mt-3">
                 <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-muted">נפח תרגיל:</span>
-                  <span className="font-bold text-emerald-400">
+                  <span className="font-bold text-primary-400">
                     {exercise.sets.reduce((sum, set) => {
                       let setVolume = set.weight * set.reps;
 

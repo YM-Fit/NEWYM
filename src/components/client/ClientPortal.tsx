@@ -129,7 +129,7 @@ export default function ClientPortal() {
     return (
       <div className="premium-card p-6">
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-400"></div>
         </div>
       </div>
     );
@@ -150,8 +150,8 @@ export default function ClientPortal() {
       {/* Header */}
       <div className="premium-card p-6">
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 flex items-center justify-center">
-            <User className="h-8 w-8 text-emerald-400" />
+          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-500/20 to-primary-600/10 flex items-center justify-center">
+            <User className="h-8 w-8 text-primary-400" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">{trainee.full_name}</h1>
@@ -172,7 +172,7 @@ export default function ClientPortal() {
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 flex items-center gap-2 transition-all ${
                 activeTab === tab.id
-                  ? 'border-b-2 border-emerald-500 text-emerald-400'
+                  ? 'border-b-2 border-primary-500 text-primary-400'
                   : 'text-muted hover:text-foreground'
               }`}
             >
@@ -188,9 +188,9 @@ export default function ClientPortal() {
         <div className="premium-card p-6">
           <h2 className="text-xl font-semibold text-foreground mb-4">סקירה כללית</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-emerald-500/10 rounded-lg p-4 border border-emerald-500/20">
+            <div className="bg-primary-500/10 rounded-lg p-4 border border-primary-500/20">
               <div className="text-sm text-muted mb-1">תשלומים ממתינים</div>
-              <div className="text-2xl font-bold text-emerald-400">
+              <div className="text-2xl font-bold text-primary-400">
                 {payments.filter(p => p.status === 'pending').length}
               </div>
             </div>
@@ -221,14 +221,14 @@ export default function ClientPortal() {
                       תאריך תשלום: {new Date(payment.due_date).toLocaleDateString('he-IL')}
                     </div>
                     {payment.paid_date && (
-                      <div className="text-sm text-emerald-400">
+                      <div className="text-sm text-primary-400">
                         שולם ב: {new Date(payment.paid_date).toLocaleDateString('he-IL')}
                       </div>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`px-3 py-1 rounded-lg text-sm ${
-                      payment.status === 'paid' ? 'bg-emerald-500/20 text-emerald-400' :
+                      payment.status === 'paid' ? 'bg-primary-500/20 text-primary-400' :
                       payment.status === 'overdue' ? 'bg-red-500/20 text-red-400' :
                       'bg-yellow-500/20 text-yellow-400'
                     }`}>
@@ -262,7 +262,7 @@ export default function ClientPortal() {
             {documents.map((document) => (
               <div key={document.id} className="premium-card p-4">
                 <div className="flex items-center gap-3 mb-3">
-                  <FileText className="h-5 w-5 text-emerald-400" />
+                  <FileText className="h-5 w-5 text-primary-400" />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-foreground truncate">{document.file_name}</h3>
                     <p className="text-xs text-muted">

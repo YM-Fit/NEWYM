@@ -126,7 +126,7 @@ export const WorkoutTable = memo(({
   const isTvMode = typeof document !== 'undefined' && (document.body.classList.contains('tv-mode-active') || document.documentElement.classList.contains('tv-mode-active'));
   
   return (
-    <div className="premium-card-static overflow-hidden mb-4 shadow-lg border-2 border-emerald-500/30" style={{ display: 'block' }}>
+    <div className="premium-card-static overflow-hidden mb-4 shadow-lg border-2 border-primary-500/30" style={{ display: 'block' }}>
       {ConfirmDialog}
       <div className={`overflow-x-auto ${isTvMode ? 'max-h-[calc(100vh-200px)]' : 'max-h-[calc(100vh-300px)]'} overflow-y-auto`}>
         <table className={`w-full border-collapse ${isTvMode ? 'min-w-[1200px]' : 'min-w-[800px] sm:min-w-[900px] lg:min-w-[1200px]'} bg-surface/50`} style={{ display: 'table' }}>
@@ -143,7 +143,7 @@ export const WorkoutTable = memo(({
                   <tr
                     key={`exercise-header-${exercise.tempId}`}
                     data-exercise-id={exercise.tempId}
-                    className="border-b-2 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/15 transition-all"
+                    className="border-b-2 border-primary-500/30 bg-primary-500/10 hover:bg-primary-500/15 transition-all"
                   >
                     <td colSpan={10} className="px-2 sm:px-4 py-2 sm:py-3">
                       <div className="flex items-center justify-between gap-2">
@@ -151,7 +151,7 @@ export const WorkoutTable = memo(({
                           className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer"
                           onClick={() => onToggleExerciseCollapse(exerciseIndex)}
                         >
-                          <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></div>
+                          <div className="w-2 h-2 rounded-full bg-primary-500 flex-shrink-0"></div>
                           <span className="font-bold text-base sm:text-lg text-foreground truncate">{exercise.exercise.name}</span>
                           {allSetsCollapsed && (
                             <span className="text-xs text-muted bg-surface/50 px-2 py-0.5 rounded flex-shrink-0">
@@ -176,7 +176,7 @@ export const WorkoutTable = memo(({
                             </button>
                           )}
                           <div 
-                            className="text-emerald-400 text-sm cursor-pointer"
+                            className="text-primary-400 text-sm cursor-pointer"
                             onClick={() => onToggleExerciseCollapse(exerciseIndex)}
                           >
                             {allSetsCollapsed ? '▼' : '▲'}
@@ -226,7 +226,7 @@ export const WorkoutTable = memo(({
                         {isLastRowOfExercise && (
                           <tr
                             key={`add-set-${row.exerciseIndex}`}
-                            className="border-b border-border/20 bg-surface/10 hover:bg-emerald-500/5 transition-all"
+                            className="border-b border-border/20 bg-surface/10 hover:bg-primary-500/5 transition-all"
                           >
                             <td colSpan={10} className="px-2 py-1 text-center">
                               <button
@@ -236,7 +236,7 @@ export const WorkoutTable = memo(({
                                   e.stopPropagation();
                                   onAddSet(row.exerciseIndex);
                                 }}
-                                className="w-full py-1 px-2 border border-dashed border-emerald-500/30 rounded hover:border-emerald-500/50 hover:bg-emerald-500/10 text-emerald-400 text-xs font-medium transition-all cursor-pointer"
+                                className="w-full py-1 px-2 border border-dashed border-primary-500/30 rounded hover:border-primary-500/50 hover:bg-primary-500/10 text-primary-400 text-xs font-medium transition-all cursor-pointer"
                               >
                                 + הוסף סט ל-{row.exerciseName}
                               </button>

@@ -545,8 +545,8 @@ export default function CalendarSyncModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border border-border30">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-xl border border-emerald-500/30">
-              <Users className="h-5 w-5 text-emerald-600" />
+            <div className="p-2 bg-gradient-to-br from-primary-500/20 to-primary-600/20 rounded-xl border border-primary-500/30">
+              <Users className="h-5 w-5 text-primary-600" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-foreground text-foreground">סנכרון מתאמנים</h2>
@@ -567,7 +567,7 @@ export default function CalendarSyncModal({
         <div className="flex-1 overflow-y-auto p-6">
           {step === 'loading' && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-primary-400/30">
                 <RefreshCw className="h-8 w-8 text-white animate-spin" />
               </div>
               <p className="text-muted text-muted font-medium">טוען אירועים ומתאים שמות...</p>
@@ -591,8 +591,8 @@ export default function CalendarSyncModal({
 
           {step === 'review' && !error && matchedEvents.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-100 flex items-center justify-center shadow-lg border-2 border-emerald-300">
-                <Check className="h-8 w-8 text-emerald-600" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-100 to-primary-100 flex items-center justify-center shadow-lg border-2 border-primary-300">
+                <Check className="h-8 w-8 text-primary-600" />
               </div>
               <p className="text-foreground text-foreground font-medium">כל האירועים כבר מסונכרנים!</p>
               <p className="text-muted text-muted text-sm">אין אירועים חדשים לקשר</p>
@@ -603,9 +603,9 @@ export default function CalendarSyncModal({
             <div className="space-y-6">
               {/* Stats */}
               <div className="grid grid-cols-4 gap-3">
-                <div className="bg-gradient-to-br from-emerald-50 to-emerald-50 border border-emerald-200 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
-                  <div className="text-2xl font-bold text-emerald-600">{stats.matched}</div>
-                  <div className="text-xs text-emerald-700 font-medium">התאמות מדויקות</div>
+                <div className="bg-gradient-to-br from-primary-50 to-primary-50 border border-primary-200 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
+                  <div className="text-2xl font-bold text-primary-600">{stats.matched}</div>
+                  <div className="text-xs text-primary-700 font-medium">התאמות מדויקות</div>
                 </div>
                 <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 text-center transition-all duration-300 shadow-sm">
                   <div className="text-2xl font-bold text-amber-600">{stats.pending}</div>
@@ -641,13 +641,13 @@ export default function CalendarSyncModal({
                       >
                         <div className="flex items-center gap-3">
                           <div className={`p-2 rounded-lg ${
-                            firstEvent.status === 'matched' ? 'bg-emerald-500/20' :
+                            firstEvent.status === 'matched' ? 'bg-primary-500/20' :
                             firstEvent.status === 'pending' ? 'bg-amber-500/20' :
                             firstEvent.status === 'new' ? 'bg-blue-500/20' :
                             'bg-elevated/50'
                           }`}>
                             {firstEvent.status === 'matched' ? (
-                              <Check className="h-4 w-4 text-emerald-400" />
+                              <Check className="h-4 w-4 text-primary-400" />
                             ) : firstEvent.status === 'new' ? (
                               <UserPlus className="h-4 w-4 text-blue-400" />
                             ) : (
@@ -661,7 +661,7 @@ export default function CalendarSyncModal({
                             <div className="text-xs text-muted text-muted">
                               {events.length} אירועים
                               {hasDecision && (
-                                <span className="mr-2 text-emerald-600 font-semibold">
+                                <span className="mr-2 text-primary-600 font-semibold">
                                   • {decision.action === 'link' ? 'יקושר' : 
                                      decision.action === 'create' ? 'ייוצר מתאמן' : 'ידולג'}
                                 </span>
@@ -726,13 +726,13 @@ export default function CalendarSyncModal({
                                   }}
                                   className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-300 ${
                                     decision?.traineeId === match.trainee.id
-                                      ? 'bg-gradient-to-br from-emerald-50 to-emerald-50 border border-emerald-200'
+                                      ? 'bg-gradient-to-br from-primary-50 to-primary-50 border border-primary-200'
                                       : 'bg-white bg-elevated hover:bg-surface border border-border border-border30'
                                   }`}
                                 >
                                   <div className="flex items-center gap-3">
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                      match.matchType === 'exact' ? 'bg-emerald-500/30' :
+                                      match.matchType === 'exact' ? 'bg-primary-500/30' :
                                       match.matchType === 'close' ? 'bg-amber-500/30' :
                                       'bg-elevated/50'
                                     }`}>
@@ -744,7 +744,7 @@ export default function CalendarSyncModal({
                                     </div>
                                   </div>
                                   <div className={`text-xs px-2 py-1 rounded-lg ${
-                                    match.matchType === 'exact' ? 'bg-emerald-100 text-emerald-700' :
+                                    match.matchType === 'exact' ? 'bg-primary-100 text-primary-700' :
                                     match.matchType === 'close' ? 'bg-amber-100 text-amber-700' :
                                     'bg-surface bg-surface text-muted text-muted'
                                   }`}>
@@ -774,7 +774,7 @@ export default function CalendarSyncModal({
                                   });
                                 }
                               }}
-                              className="w-full p-3 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-emerald-500/50 focus:outline-none transition-all duration-300"
+                              className="w-full p-3 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-primary-500/50 focus:outline-none transition-all duration-300"
                             >
                               <option value="">-- בחר מתאמן --</option>
                               {getAllTraineesForSelection(trainees || []).map(({ trainee }) => (
@@ -797,8 +797,8 @@ export default function CalendarSyncModal({
                                 disabled={quickCreatingFor === (firstEvent.event.extractedName || firstEvent.event.summary)}
                                 className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 ${
                                   decision?.action === 'link' && decision.traineeId
-                                    ? 'bg-gradient-to-br from-emerald-50 to-emerald-50 text-emerald-700 border border-emerald-200'
-                                    : 'bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white shadow-lg'
+                                    ? 'bg-gradient-to-br from-primary-50 to-primary-50 text-primary-700 border border-primary-200'
+                                    : 'bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white shadow-lg'
                                 } disabled:opacity-50 disabled:cursor-wait`}
                               >
                                 {quickCreatingFor === (firstEvent.event.extractedName || firstEvent.event.summary) ? (
@@ -867,7 +867,7 @@ export default function CalendarSyncModal({
 
           {step === 'saving' && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-primary-400/30">
                 <RefreshCw className="h-8 w-8 text-white animate-spin" />
               </div>
               <p className="text-muted text-muted font-medium">שומר קישורים...</p>
@@ -876,8 +876,8 @@ export default function CalendarSyncModal({
 
           {step === 'done' && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <div className="p-4 bg-gradient-to-br from-emerald-100 to-emerald-100 rounded-full shadow-lg border-2 border-emerald-300">
-                <Check className="h-10 w-10 text-emerald-600" />
+              <div className="p-4 bg-gradient-to-br from-primary-100 to-primary-100 rounded-full shadow-lg border-2 border-primary-300">
+                <Check className="h-10 w-10 text-primary-600" />
               </div>
               <p className="text-xl font-bold text-foreground text-foreground">הסנכרון הושלם!</p>
             </div>
@@ -900,7 +900,7 @@ export default function CalendarSyncModal({
               <button
                 onClick={handleSave}
                 disabled={decisions.size === 0 || saving}
-                className="px-6 py-2 bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
+                className="px-6 py-2 bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
               >
                 <Link2 className="h-4 w-4" />
                 שמור קישורים

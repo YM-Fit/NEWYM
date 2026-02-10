@@ -19,7 +19,7 @@ interface TraineeNotesProps {
 const CATEGORIES = {
   general: { label: 'כללי', bg: 'bg-muted/15', text: 'text-muted', border: 'border-border/30' },
   health: { label: 'בריאות', bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30' },
-  nutrition: { label: 'תזונה', bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' },
+  nutrition: { label: 'תזונה', bg: 'bg-primary-500/15', text: 'text-primary-400', border: 'border-primary-500/30' },
   training: { label: 'אימון', bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/30' },
   personal: { label: 'אישי', bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' },
 };
@@ -137,7 +137,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
             <button
               onClick={() => setFilter('all')}
               className={`px-3 py-2 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
-                filter === 'all' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-surface800/50 text-muted400 border border-border700/30'
+                filter === 'all' ? 'bg-primary-500/15 text-primary-400 border border-primary-500/30' : 'bg-surface800/50 text-muted400 border border-border700/30'
               }`}
             >
               הכל
@@ -166,7 +166,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+              <div className="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
             </div>
           ) : filteredNotes.length === 0 ? (
             <div className="text-center py-12">
@@ -176,7 +176,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
               <p className="text-muted500">אין הערות להצגה</p>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="mt-4 text-emerald-400 font-medium hover:text-emerald-300 transition-colors"
+                className="mt-4 text-primary-400 font-medium hover:text-primary-300 transition-colors"
               >
                 הוסף הערה ראשונה
               </button>
@@ -271,7 +271,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                     type="checkbox"
                     checked={formData.is_pinned}
                     onChange={(e) => setFormData({ ...formData, is_pinned: e.target.checked })}
-                    className="w-5 h-5 rounded border-border600 bg-surface800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                    className="w-5 h-5 rounded border-border600 bg-surface800 text-primary-500 focus:ring-primary-500 focus:ring-offset-0"
                   />
                   <span className="text-sm font-medium text-muted300">הצמד הערה</span>
                 </label>

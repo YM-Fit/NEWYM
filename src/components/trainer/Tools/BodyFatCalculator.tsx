@@ -31,13 +31,13 @@ export default function BodyFatCalculator({
   const getCategory = (bf: number, gender: 'male' | 'female') => {
     if (gender === 'male') {
       if (bf < 6) return { label: 'חיוני', color: 'text-red-400', bg: 'bg-red-500/10' };
-      if (bf < 14) return { label: 'ספורטאי', color: 'text-emerald-400', bg: 'bg-emerald-500/10' };
+      if (bf < 14) return { label: 'ספורטאי', color: 'text-primary-400', bg: 'bg-primary-500/10' };
       if (bf < 18) return { label: 'כושר', color: 'text-blue-400', bg: 'bg-blue-500/10' };
       if (bf < 25) return { label: 'ממוצע', color: 'text-amber-400', bg: 'bg-amber-500/10' };
       return { label: 'מעל הממוצע', color: 'text-red-400', bg: 'bg-red-500/10' };
     } else {
       if (bf < 14) return { label: 'חיוני', color: 'text-red-400', bg: 'bg-red-500/10' };
-      if (bf < 21) return { label: 'ספורטאית', color: 'text-emerald-400', bg: 'bg-emerald-500/10' };
+      if (bf < 21) return { label: 'ספורטאית', color: 'text-primary-400', bg: 'bg-primary-500/10' };
       if (bf < 25) return { label: 'כושר', color: 'text-blue-400', bg: 'bg-blue-500/10' };
       if (bf < 32) return { label: 'ממוצע', color: 'text-amber-400', bg: 'bg-amber-500/10' };
       return { label: 'מעל הממוצע', color: 'text-red-400', bg: 'bg-red-500/10' };
@@ -48,13 +48,13 @@ export default function BodyFatCalculator({
 
   const categories = gender === 'male' ? [
     { label: 'שומן חיוני', range: '2-5%', color: 'bg-red-500' },
-    { label: 'ספורטאי', range: '6-13%', color: 'bg-emerald-500' },
+    { label: 'ספורטאי', range: '6-13%', color: 'bg-primary-500' },
     { label: 'כושר', range: '14-17%', color: 'bg-blue-500' },
     { label: 'ממוצע', range: '18-24%', color: 'bg-amber-500' },
     { label: 'מעל הממוצע', range: '25%+', color: 'bg-red-400' },
   ] : [
     { label: 'שומן חיוני', range: '10-13%', color: 'bg-red-500' },
-    { label: 'ספורטאית', range: '14-20%', color: 'bg-emerald-500' },
+    { label: 'ספורטאית', range: '14-20%', color: 'bg-primary-500' },
     { label: 'כושר', range: '21-24%', color: 'bg-blue-500' },
     { label: 'ממוצע', range: '25-31%', color: 'bg-amber-500' },
     { label: 'מעל הממוצע', range: '32%+', color: 'bg-red-400' },

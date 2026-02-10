@@ -198,7 +198,7 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 lg:p-6 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-muted600">טוען בלוקים...</p>
         </div>
       </div>
@@ -213,7 +213,7 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
             <button
               onClick={onBack}
-              className="p-3 lg:p-4 hover:bg-surface100 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+              className="p-3 lg:p-4 hover:bg-surface100 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               aria-label="חזור"
             >
               <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7 text-muted600" />
@@ -225,7 +225,7 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-gradient-to-br from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-800 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+            className="bg-gradient-to-br from-primary-700 to-primary-800 hover:from-primary-800 hover:to-primary-800 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             aria-label="צור בלוק חדש"
           >
             <Plus className="h-5 w-5 lg:h-6 lg:w-6" />
@@ -261,7 +261,7 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
             </div>
             <button
               onClick={() => onSelectBlock(block)}
-              className="w-full py-3 bg-gradient-to-br from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-800 text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="w-full py-3 bg-gradient-to-br from-primary-700 to-primary-800 hover:from-primary-800 hover:to-primary-800 text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               השתמש בבלוק
             </button>
@@ -271,8 +271,8 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
 
       {blocks.length === 0 && (
         <div className="text-center py-12 premium-card-static">
-          <div className="w-16 h-16 bg-emerald-500/15 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Copy className="w-8 h-8 text-emerald-400" />
+          <div className="w-16 h-16 bg-primary-500/15 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Copy className="w-8 h-8 text-primary-400" />
           </div>
           <p className="text-[var(--color-text-primary)] font-bold text-lg">אין בלוקים שמורים</p>
           <p className="text-sm text-[var(--color-text-muted)] mt-2">צור בלוק ראשון כדי להתחיל</p>
@@ -308,7 +308,7 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
                   type="text"
                   value={newBlockName}
                   onChange={(e) => setNewBlockName(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                  className="w-full px-4 py-3 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                   placeholder="לדוגמה: בלוק כוח בסיסי"
                 />
               </div>
@@ -320,7 +320,7 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
                 <textarea
                   value={newBlockDescription}
                   onChange={(e) => setNewBlockDescription(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all resize-none"
+                  className="w-full px-4 py-3 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all resize-none"
                   rows={3}
                   placeholder="תיאור קצר של הבלוק..."
                 />
@@ -342,7 +342,7 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
                       setEndMonth(null);
                     }
                   }}
-                  className="w-full px-4 py-3 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all mb-3"
+                  className="w-full px-4 py-3 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all mb-3"
                 >
                   <option value="none">ללא טווח זמן</option>
                   <option value="weeks">שבועות</option>
@@ -358,7 +358,7 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
                         min="1"
                         value={startWeek || ''}
                         onChange={(e) => setStartWeek(e.target.value ? parseInt(e.target.value) : null)}
-                        className="w-full px-3 py-2 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                        className="w-full px-3 py-2 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                         placeholder="1"
                       />
                     </div>
@@ -369,7 +369,7 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
                         min={startWeek || 1}
                         value={endWeek || ''}
                         onChange={(e) => setEndWeek(e.target.value ? parseInt(e.target.value) : null)}
-                        className="w-full px-3 py-2 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                        className="w-full px-3 py-2 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                         placeholder="4"
                       />
                     </div>
@@ -383,7 +383,7 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
                       <select
                         value={startMonth || ''}
                         onChange={(e) => setStartMonth(e.target.value ? parseInt(e.target.value) : null)}
-                        className="w-full px-3 py-2 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                        className="w-full px-3 py-2 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                       >
                         <option value="">בחר חודש</option>
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
@@ -396,7 +396,7 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
                       <select
                         value={endMonth || ''}
                         onChange={(e) => setEndMonth(e.target.value ? parseInt(e.target.value) : null)}
-                        className="w-full px-3 py-2 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                        className="w-full px-3 py-2 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                       >
                         <option value="">בחר חודש</option>
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
@@ -456,12 +456,12 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
                           }}
                           className={`w-full text-right p-3 rounded-xl border-2 transition-all ${
                             isSelected
-                              ? 'border-emerald-500 bg-emerald-50'
-                              : 'border-[var(--color-border)] hover:border-emerald-300'
+                              ? 'border-primary-500 bg-primary-50'
+                              : 'border-[var(--color-border)] hover:border-primary-300'
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className={`text-sm font-bold ${isSelected ? 'text-emerald-700' : 'text-[var(--color-text-primary)]'}`}>
+                            <span className={`text-sm font-bold ${isSelected ? 'text-primary-700' : 'text-[var(--color-text-primary)]'}`}>
                               יום {day.day_number}{day.day_name ? ` - ${day.day_name}` : ''}
                             </span>
                             <span className="text-xs text-[var(--color-text-muted)]">
@@ -489,7 +489,7 @@ export default function PlanBlockBuilder({ traineeId, onBack, onSelectBlock, cur
               <button
                 onClick={handleCreateBlock}
                 disabled={!newBlockName.trim() || selectedDays.length === 0}
-                className="flex-1 py-3 bg-gradient-to-br from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-800 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-gradient-to-br from-primary-700 to-primary-800 hover:from-primary-800 hover:to-primary-800 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 title={selectedDays.length === 0 ? 'יש לבחור ימים לבלוק' : 'שמור בלוק'}
               >
                 <Save className="w-5 h-5" />

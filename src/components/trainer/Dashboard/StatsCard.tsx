@@ -6,16 +6,16 @@ interface StatsCardProps {
   change?: string;
   trend?: 'up' | 'down' | 'neutral';
   icon: LucideIcon;
-  color: 'emerald' | 'blue' | 'amber' | 'rose';
+  color: 'primary' | 'blue' | 'amber' | 'rose';
 }
 
 export default function StatsCard({ title, value, change, icon: Icon, color }: StatsCardProps) {
   const colorConfig = {
-    emerald: {
-      bg: 'from-emerald-500/20 to-emerald-500/5',
-      icon: 'bg-emerald-500/20 text-emerald-400',
-      value: 'text-emerald-400',
-      glow: 'shadow-[0_0_20px_rgba(16,185,129,0.15)]',
+    primary: {
+      bg: 'from-primary/20 to-primary/5',
+      icon: 'bg-primary/20 text-primary',
+      value: 'text-primary',
+      glow: 'shadow-[0_0_20px_rgb(var(--color-primary)_/_0.15)]',
     },
     blue: {
       bg: 'from-blue-500/20 to-blue-500/5',

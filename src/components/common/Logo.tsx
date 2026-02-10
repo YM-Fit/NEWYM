@@ -95,12 +95,12 @@ export default function Logo({
     >
       {/* Glow effect on hover */}
       {onClick && (
-        <div className="absolute inset-0 bg-emerald-500/20 rounded-xl blur-xl opacity-0 hover:opacity-100 transition-opacity duration-300 -z-10" />
+        <div className="absolute inset-0 bg-primary-500/20 rounded-xl blur-xl opacity-0 hover:opacity-100 transition-opacity duration-300 -z-10" />
       )}
 
       {/* Loading skeleton */}
       {!imageLoaded && !imageError && (
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-700/20 to-emerald-800/20 rounded-xl animate-pulse" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-700/20 to-primary-800/20 rounded-xl animate-pulse" />
       )}
 
       {/* Logo image with background blending */}
@@ -131,7 +131,7 @@ export default function Logo({
 
       {/* Fallback text if image fails */}
       {imageError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-emerald-700 to-emerald-800 rounded-xl">
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary-700 to-primary-800 rounded-xl">
           <span className="text-white font-bold text-lg">YM</span>
         </div>
       )}

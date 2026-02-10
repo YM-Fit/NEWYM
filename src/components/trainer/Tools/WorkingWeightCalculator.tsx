@@ -40,7 +40,7 @@ const FORMULAS: Record<Formula, { name: string; description: string; calculate: 
 const GOALS = {
   strength: { label: 'כוח', range: '1-5', percent: '85-100%', color: 'red' },
   hypertrophy: { label: 'היפרטרופיה', range: '6-12', percent: '67-85%', color: 'blue' },
-  endurance: { label: 'סיבולת', range: '15-20+', percent: '50-67%', color: 'emerald' },
+  endurance: { label: 'סיבולת', range: '15-20+', percent: '50-67%', color: 'primary' },
 };
 
 export default function WorkingWeightCalculator({ onClose, initialWeight = 100, initialReps = 10 }: WorkingWeightCalculatorProps) {
@@ -97,14 +97,14 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
   const getRowStyle = (percentage: number) => {
     if (percentage >= 90) return 'bg-red-500/10 hover:bg-red-500/15';
     if (percentage >= 80) return 'bg-amber-500/10 hover:bg-amber-500/15';
-    if (percentage >= 70) return 'bg-emerald-500/10 hover:bg-emerald-500/15';
+    if (percentage >= 70) return 'bg-primary-500/10 hover:bg-primary-500/15';
     return 'bg-blue-500/10 hover:bg-blue-500/15';
   };
 
   const getPercentageStyle = (percentage: number) => {
     if (percentage >= 90) return 'text-red-400 bg-red-500/20';
     if (percentage >= 80) return 'text-amber-400 bg-amber-500/20';
-    if (percentage >= 70) return 'text-emerald-400 bg-emerald-500/20';
+    if (percentage >= 70) return 'text-primary-400 bg-primary-500/20';
     return 'text-blue-400 bg-blue-500/20';
   };
 
@@ -228,7 +228,7 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
                 </button>
               </div>
 
-              <div className="bg-emerald-500 rounded-2xl p-8 text-center">
+              <div className="bg-primary-500 rounded-2xl p-8 text-center">
                 <div className="flex items-center justify-center gap-2 mb-3">
                   <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
                     <Dumbbell className="w-4 h-4 text-foreground" />
@@ -268,12 +268,12 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
                 </div>
               )}
 
-              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5">
+              <div className="bg-primary-500/10 border border-primary-500/30 rounded-2xl p-5">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
                     <Lightbulb className="w-4 h-4 text-foreground" />
                   </div>
-                  <h3 className="font-bold text-emerald-400">המלצות לפי מטרה</h3>
+                  <h3 className="font-bold text-primary-400">המלצות לפי מטרה</h3>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {Object.entries(GOALS).map(([key, goal]) => {
@@ -281,10 +281,10 @@ export default function WorkingWeightCalculator({ onClose, initialWeight = 100, 
                     const maxPercent = key === 'strength' ? 100 : key === 'hypertrophy' ? 85 : 67;
                     const minWeight = (oneRM * minPercent / 100).toFixed(1);
                     const maxWeight = (oneRM * maxPercent / 100).toFixed(1);
-                    const colorClass = goal.color === 'red' ? 'text-red-400 border-red-500/30' : goal.color === 'blue' ? 'text-blue-400 border-blue-500/30' : 'text-emerald-400 border-emerald-500/30';
+                    const colorClass = goal.color === 'red' ? 'text-red-400 border-red-500/30' : goal.color === 'blue' ? 'text-blue-400 border-blue-500/30' : 'text-primary-400 border-primary-500/30';
                     return (
                       <div key={key} className={`bg-surface rounded-xl p-4 border ${colorClass}`}>
-                        <p className={`font-bold mb-1 ${goal.color === 'red' ? 'text-red-400' : goal.color === 'blue' ? 'text-blue-400' : 'text-emerald-400'}`}>{goal.label}</p>
+                        <p className={`font-bold mb-1 ${goal.color === 'red' ? 'text-red-400' : goal.color === 'blue' ? 'text-blue-400' : 'text-primary-400'}`}>{goal.label}</p>
                         <p className="text-xs text-muted mb-2">{goal.range} חזרות</p>
                         <p className="text-sm font-semibold text-foreground">
                           {minWeight}-{maxWeight} ק״ג

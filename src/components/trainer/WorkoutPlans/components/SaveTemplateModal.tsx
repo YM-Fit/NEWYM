@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { themeColors } from '../../../../utils/themeColors';
 
 interface SaveTemplateModalProps {
   isOpen: boolean;
@@ -33,7 +34,7 @@ export default function SaveTemplateModal({
             type="text"
             value={templateName}
             onChange={(e) => onTemplateNameChange(e.target.value)}
-            className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+            className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 text-lg"
             placeholder="לדוגמה: תוכנית כוח בסיסית"
             autoFocus
           />
@@ -45,15 +46,15 @@ export default function SaveTemplateModal({
           <div className="space-y-3">
             <label className="flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-surface50"
               style={{
-                borderColor: isGeneralTemplate ? '#10b981' : '#e5e7eb',
-                backgroundColor: isGeneralTemplate ? '#ecfdf5' : 'transparent'
+                borderColor: isGeneralTemplate ? themeColors.primary : themeColors.borderLight,
+                backgroundColor: isGeneralTemplate ? themeColors.primary50 : 'transparent'
               }}>
               <input
                 type="radio"
                 name="templateType"
                 checked={isGeneralTemplate}
                 onChange={() => setIsGeneralTemplate(true)}
-                className="w-5 h-5 text-emerald-600 focus:ring-emerald-500"
+                className="w-5 h-5 text-primary-600 focus:ring-primary-500"
               />
               <div className="flex-1">
                 <div className="font-semibold text-muted900">תבנית כללית</div>
@@ -63,15 +64,15 @@ export default function SaveTemplateModal({
             {traineeName && (
               <label className="flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-surface50"
                 style={{
-                  borderColor: !isGeneralTemplate ? '#10b981' : '#e5e7eb',
-                  backgroundColor: !isGeneralTemplate ? '#ecfdf5' : 'transparent'
+                  borderColor: !isGeneralTemplate ? themeColors.primary : themeColors.borderLight,
+                  backgroundColor: !isGeneralTemplate ? themeColors.primary50 : 'transparent'
                 }}>
                 <input
                   type="radio"
                   name="templateType"
                   checked={!isGeneralTemplate}
                   onChange={() => setIsGeneralTemplate(false)}
-                  className="w-5 h-5 text-emerald-600 focus:ring-emerald-500"
+                  className="w-5 h-5 text-primary-600 focus:ring-primary-500"
                 />
                 <div className="flex-1">
                   <div className="font-semibold text-muted900">תבנית למתאמן זה</div>
@@ -85,7 +86,7 @@ export default function SaveTemplateModal({
         <div className="flex gap-3">
           <button
             onClick={() => onSave(isGeneralTemplate)}
-            className="flex-1 py-4 bg-gradient-to-br from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-800 text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+            className="flex-1 py-4 bg-gradient-to-br from-primary-700 to-primary-800 hover:from-primary-800 hover:to-primary-800 text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
           >
             שמור
           </button>

@@ -898,9 +898,9 @@ export default function TodayTraineesSection({
       <div className="premium-card-static p-4 sm:p-6 md:p-8 lg:p-10 relative overflow-hidden
                       border-2 border-primary/10 hover:border-primary/20 transition-all duration-500">
         {/* Enhanced Background gradient effects */}
-        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-primary/10 via-emerald-700/5 to-transparent 
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-primary/10 via-primary-700/5 to-transparent 
                         rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 animate-pulse" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-gradient-to-tl from-emerald-700/10 via-primary/5 to-transparent 
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-gradient-to-tl from-primary-700/10 via-primary/5 to-transparent 
                         rounded-full blur-3xl translate-x-1/2 translate-y-1/2 animate-pulse" 
              style={{ animationDelay: '1s' }} />
         
@@ -915,7 +915,7 @@ export default function TodayTraineesSection({
               <div className="flex items-center gap-4 mb-3">
                 <div className="relative">
                   <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl animate-pulse" />
-                  <div className="relative p-3 rounded-2xl bg-gradient-to-br from-primary/30 via-primary/20 to-emerald-700/20 
+                  <div className="relative p-3 rounded-2xl bg-gradient-to-br from-primary/30 via-primary/20 to-primary-700/20 
                                 border-2 border-primary/30 shadow-lg shadow-primary/20">
                     <Calendar className="w-7 h-7 text-primary" />
                   </div>
@@ -942,7 +942,7 @@ export default function TodayTraineesSection({
                 <RefreshCw className="h-5 w-5 text-primary" />
                 <span className="text-sm font-medium text-foreground hidden sm:inline">רענון</span>
               </button>
-              <div className="px-5 py-3 rounded-2xl bg-gradient-to-r from-primary/25 via-emerald-700/20 to-primary/25 
+              <div className="px-5 py-3 rounded-2xl bg-gradient-to-r from-primary/25 via-primary-700/20 to-primary/25 
                             border-2 border-primary/30 shadow-lg shadow-primary/10
                             hover:scale-105 transition-transform duration-300">
                 <span className="text-2xl md:text-3xl font-extrabold text-primary">{todayTrainees.length}</span>
@@ -1227,8 +1227,8 @@ function TraineeTableRow({
             }}
             className="btn-primary min-w-[36px] min-h-[36px] p-2 md:p-2.5 rounded-lg flex items-center gap-1 md:gap-1.5
                        hover:scale-105 active:scale-95 transition-all duration-300
-                       shadow-lg shadow-emerald-700/50
-                       focus:outline-none focus:ring-2 focus:ring-emerald-700/50"
+                       shadow-lg shadow-primary-700/50
+                       focus:outline-none focus:ring-2 focus:ring-primary-700/50"
             aria-label={`הוסף אימון חדש ל${trainee.full_name}`}
             title="אימון חדש (דינמי)"
           >
@@ -1336,13 +1336,13 @@ function TraineeCardToday({
   // Get status colors and styles
   const statusConfig = {
     completed: {
-      bar: 'bg-gradient-to-r from-success to-emerald-700',
+      bar: 'bg-gradient-to-r from-success to-primary-700',
       badge: 'bg-success/20 text-green-800 border-success/30 shadow-success/20',
       gradient: 'from-success/15 via-success/5 to-transparent',
       glow: 'shadow-success/10'
     },
     scheduled: {
-      bar: 'bg-gradient-to-r from-primary to-emerald-700',
+      bar: 'bg-gradient-to-r from-primary to-primary-700',
       badge: 'bg-primary/20 text-blue-800 border-primary/30 shadow-primary/20',
       gradient: 'from-primary/15 via-primary/5 to-transparent',
       glow: 'shadow-primary/10'
@@ -1490,8 +1490,8 @@ function TraineeCardToday({
             }}
             className="btn-primary p-4 sm:p-5 rounded-xl flex flex-col items-center gap-2
                        hover:scale-110 active:scale-95 transition-all duration-300
-                       shadow-lg shadow-emerald-700/50 hover:shadow-2xl hover:shadow-emerald-700/70
-                       focus:outline-none focus:ring-2 focus:ring-emerald-700/50 focus:ring-offset-2
+                       shadow-lg shadow-primary-700/50 hover:shadow-2xl hover:shadow-primary-700/70
+                       focus:outline-none focus:ring-2 focus:ring-primary-700/50 focus:ring-offset-2
                        group/btn relative overflow-hidden"
             aria-label={`הוסף אימון חדש ל${trainee.full_name}`}
           >

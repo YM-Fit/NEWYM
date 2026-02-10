@@ -88,7 +88,7 @@
     
     <!-- Loading indicator - OUTSIDE of React root to prevent conflicts -->
     <div id="app-loading" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; direction: rtl; z-index: 9999;">
-      <div id="loading-spinner" style="width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.2); border-top-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1.5rem;"></div>
+      <div id="loading-spinner" style="width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.2); border-top-color: #4a6b2a; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1.5rem;"></div>
       <p id="loading-title" style="font-size: 1.5rem; margin-bottom: 0.5rem;">YM Coach</p>
       <p id="loading-text" style="font-size: 1rem; opacity: 0.7;">טוען אפליקציה...</p>
       <p id="loading-status" style="font-size: 0.9rem; opacity: 0.5; margin-top: 1rem;"></p>
@@ -117,7 +117,7 @@
             loadingEl.style.color = 'white';
           }
           if (spinnerEl) {
-            spinnerEl.style.borderTopColor = '#10b981';
+            spinnerEl.style.borderTopColor = '#4a6b2a';
             spinnerEl.style.borderColor = 'rgba(255,255,255,0.2)';
           }
         } else {
@@ -172,7 +172,7 @@
             '<h1 style="font-size: 2rem; color: #ff6b6b; margin-bottom: 1rem;">' + title + '</h1>' +
             '<p style="font-size: 1.2rem; color: #f8f8f8; margin-bottom: 1rem;">' + message + '</p>' +
             (details ? '<pre style="font-size: 0.8rem; color: #aaa; background: #2a2a3e; padding: 1rem; border-radius: 0.5rem; max-width: 90%; overflow: auto; text-align: left; direction: ltr; margin-bottom: 1rem;">' + details + '</pre>' : '') +
-            '<button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer;">רענן דף</button>';
+            '<button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #4a6b2a; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer;">רענן דף</button>';
         }
       }
       
@@ -285,7 +285,7 @@
           var loadingEl = document.getElementById('app-loading');
           if (loadingEl) loadingEl.style.display = 'none';
           if (root) {
-            root.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;"><h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1><p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 0.5rem;">הדפדפן לא תומך ב-ES Modules.</p><p style="font-size: 1rem; opacity: 0.7; margin-bottom: 1rem;">אנא עדכן את דפדפן הטלוויזיה או נסה בדפדפן אחר.</p><button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button></div>';
+            root.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;"><h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1><p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 0.5rem;">הדפדפן לא תומך ב-ES Modules.</p><p style="font-size: 1rem; opacity: 0.7; margin-bottom: 1rem;">אנא עדכן את דפדפן הטלוויזיה או נסה בדפדפן אחר.</p><button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #4a6b2a; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button></div>';
           }
         });
       } catch (e) {
@@ -294,7 +294,7 @@
         var loadingEl = document.getElementById('app-loading');
         if (loadingEl) loadingEl.style.display = 'none';
         if (root) {
-          root.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;"><h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1><p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 0.5rem;">הדפדפן לא תומך ב-ES Modules.</p><p style="font-size: 1rem; opacity: 0.7; margin-bottom: 1rem;">אנא עדכן את דפדפן הטלוויזיה או נסה בדפדפן אחר.</p><button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button></div>';
+          root.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;"><h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1><p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 0.5rem;">הדפדפן לא תומך ב-ES Modules.</p><p style="font-size: 1rem; opacity: 0.7; margin-bottom: 1rem;">אנא עדכן את דפדפן הטלוויזיה או נסה בדפדפן אחר.</p><button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #4a6b2a; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button></div>';
         }
       }
     </script>

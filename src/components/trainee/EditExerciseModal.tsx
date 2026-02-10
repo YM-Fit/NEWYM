@@ -226,7 +226,7 @@ export default function EditExerciseModal({
                 <select
                   value={formData.exercise_id}
                   onChange={(e) => setFormData({ ...formData, exercise_id: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                  className="w-full px-4 py-3 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                 >
                   <option value="">בחר תרגיל</option>
                   {exercises.map(ex => (
@@ -262,7 +262,7 @@ export default function EditExerciseModal({
                 trainee_target_weight: e.target.value ? parseFloat(e.target.value) : null,
               })}
               placeholder={!isAddingNew && exercise?.target_weight ? `המאמן המליץ: ${exercise.target_weight}` : 'הזן משקל יעד'}
-              className="w-full px-4 py-3 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+              className="w-full px-4 py-3 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
             />
           </div>
 
@@ -275,7 +275,7 @@ export default function EditExerciseModal({
               onChange={(e) => setFormData({ ...formData, trainee_notes: e.target.value })}
               placeholder="הוסף הערות אישיות לתרגיל..."
               rows={4}
-              className="w-full px-4 py-3 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all resize-none"
+              className="w-full px-4 py-3 border-2 border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all resize-none"
             />
           </div>
         </div>
@@ -284,7 +284,7 @@ export default function EditExerciseModal({
           <button
             onClick={handleSave}
             disabled={saving || (isAddingNew && !formData.exercise_id)}
-            className="flex-1 py-3 bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {saving ? (
               <>

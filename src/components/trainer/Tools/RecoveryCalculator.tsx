@@ -24,7 +24,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
   };
 
   const intensityMultipliers = {
-    low: { value: 0.7, label: 'נמוכה', description: 'אימון קל, הרגשה טובה בסוף', color: 'emerald' },
+    low: { value: 0.7, label: 'נמוכה', description: 'אימון קל, הרגשה טובה בסוף', color: 'primary' },
     moderate: { value: 1.0, label: 'בינונית', description: 'אימון סטנדרטי, עייפות סבירה', color: 'blue' },
     high: { value: 1.3, label: 'גבוהה', description: 'אימון אינטנסיבי, עייפות משמעותית', color: 'amber' },
     extreme: { value: 1.5, label: 'קיצונית', description: 'אימון עד כשל, תשישות', color: 'red' },
@@ -82,14 +82,14 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-emerald-500 p-6 rounded-t-2xl flex items-center justify-between">
+        <div className="sticky top-0 bg-primary-500 p-6 rounded-t-2xl flex items-center justify-between">
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
             <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
               <Clock className="h-7 w-7 text-white" />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white">מחשבון זמן התאוששות</h2>
-              <p className="text-sm text-emerald-100">כמה מנוחה צריך בין אימונים?</p>
+              <p className="text-sm text-primary-100">כמה מנוחה צריך בין אימונים?</p>
             </div>
           </div>
           <button
@@ -103,7 +103,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
         <div className="p-6 space-y-6">
           <div className="bg-surface rounded-2xl p-6 border border-border">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center">
                 <Activity className="w-5 h-5 text-white" />
               </div>
               <h3 className="text-lg font-bold text-foreground">פרטי האימון</h3>
@@ -115,7 +115,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
                 <select
                   value={muscleGroup}
                   onChange={(e) => setMuscleGroup(e.target.value)}
-                  className="w-full px-4 py-3 text-lg font-bold border border-border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-surface text-foreground"
+                  className="w-full px-4 py-3 text-lg font-bold border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all bg-surface text-foreground"
                 >
                   {Object.entries(muscleGroups).map(([key, { label }]) => (
                     <option key={key} value={key}>{label}</option>
@@ -132,7 +132,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
                       onClick={() => setIntensity(key as any)}
                       className={`py-3 px-4 rounded-xl font-bold transition-all text-sm ${
                         intensity === key
-                          ? 'bg-emerald-500 text-foreground'
+                          ? 'bg-primary-500 text-foreground'
                           : 'bg-surface border border-border text-foreground hover:bg-elevated'
                       }`}
                     >
@@ -149,7 +149,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
                     type="number"
                     value={age}
                     onChange={(e) => setAge(Number(e.target.value))}
-                    className="w-full px-4 py-3 text-lg font-bold text-center border border-border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-surface text-foreground"
+                    className="w-full px-4 py-3 text-lg font-bold text-center border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all bg-surface text-foreground"
                     min="15"
                     max="80"
                   />
@@ -159,7 +159,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
                   <select
                     value={experience}
                     onChange={(e) => setExperience(e.target.value as any)}
-                    className="w-full px-4 py-3 text-lg font-bold border border-border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-surface text-foreground"
+                    className="w-full px-4 py-3 text-lg font-bold border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all bg-surface text-foreground"
                   >
                     {Object.entries(experienceMultipliers).map(([key, { label }]) => (
                       <option key={key} value={key}>{label}</option>
@@ -177,7 +177,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
                       onClick={() => setSleepQuality(key as any)}
                       className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
                         sleepQuality === key
-                          ? 'bg-emerald-500 text-foreground'
+                          ? 'bg-primary-500 text-foreground'
                           : 'bg-surface border border-border text-foreground hover:bg-elevated'
                       }`}
                     >
@@ -190,7 +190,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-emerald-500 rounded-2xl p-6 text-center">
+            <div className="bg-primary-500 rounded-2xl p-6 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
                   <Clock className="w-4 h-4 text-foreground" />
@@ -229,11 +229,11 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
                     <tr
                       key={item.key}
                       className={`transition-all ${
-                        item.key === muscleGroup ? 'bg-emerald-500/10' : 'hover:bg-surface'
+                        item.key === muscleGroup ? 'bg-primary-500/10' : 'hover:bg-surface'
                       }`}
                     >
                       <td className="px-5 py-3">
-                        <span className={`font-semibold ${item.key === muscleGroup ? 'text-emerald-400' : 'text-foreground'}`}>
+                        <span className={`font-semibold ${item.key === muscleGroup ? 'text-primary-400' : 'text-foreground'}`}>
                           {item.label}
                         </span>
                       </td>
@@ -243,7 +243,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
                       <td className="px-5 py-3 text-left">
                         <span className={`font-bold px-3 py-1 rounded-lg ${
                           item.key === muscleGroup
-                            ? 'text-emerald-400 bg-emerald-500/10'
+                            ? 'text-primary-400 bg-primary-500/10'
                             : 'text-muted bg-surface'
                         }`}>
                           {item.days}
@@ -295,7 +295,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
         <div className="sticky bottom-0 bg-card border-t border-border p-6 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-foreground px-6 py-4 rounded-xl font-bold text-lg transition-all"
+            className="w-full bg-primary-500 hover:bg-primary-600 text-foreground px-6 py-4 rounded-xl font-bold text-lg transition-all"
           >
             סגור
           </button>

@@ -109,7 +109,7 @@ export default function FoodCatalogSelector({ onSelect, onClose }: FoodCatalogSe
               onClick={() => setActiveCategory(null)}
               className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
                 !activeCategory
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
                   : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-bg-elevated)]'
               }`}
             >
@@ -164,10 +164,10 @@ export default function FoodCatalogSelector({ onSelect, onClose }: FoodCatalogSe
                   <button
                     key={item.id}
                     onClick={() => onSelect(item)}
-                    className="w-full text-right p-3 rounded-xl border border-[var(--color-border)] hover:border-emerald-400 hover:bg-emerald-500/5 transition-all duration-200 group"
+                    className="w-full text-right p-3 rounded-xl border border-[var(--color-border)] hover:border-primary-400 hover:bg-primary-500/5 transition-all duration-200 group"
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <span className="font-semibold text-[var(--color-text-primary)] text-sm group-hover:text-emerald-500 transition-colors">
+                      <span className="font-semibold text-[var(--color-text-primary)] text-sm group-hover:text-primary-500 transition-colors">
                         {item.name}
                       </span>
                       <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${colors.bg} ${colors.text} border ${colors.border} whitespace-nowrap`}>
@@ -175,7 +175,7 @@ export default function FoodCatalogSelector({ onSelect, onClose }: FoodCatalogSe
                       </span>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap text-[11px]">
-                      <span className="flex items-center gap-0.5 text-emerald-500">
+                      <span className="flex items-center gap-0.5 text-primary-500">
                         <Flame className="w-3 h-3" />
                         {item.calories_per_100g}
                       </span>

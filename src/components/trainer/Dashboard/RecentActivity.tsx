@@ -29,9 +29,9 @@ export default function RecentActivity() {
         };
       case 'measurement':
         return {
-          bg: 'bg-emerald-700/15',
-          text: 'text-emerald-600',
-          border: 'border-emerald-700/20',
+          bg: 'bg-primary-700/15',
+          text: 'text-primary-600',
+          border: 'border-primary-700/20',
         };
       default:
         return {

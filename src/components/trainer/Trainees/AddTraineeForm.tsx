@@ -111,7 +111,7 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
     `w-full p-4 text-base bg-input border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 transition-all ${
       hasError
         ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
-        : 'border-border focus:border-emerald-500/50 focus:ring-emerald-500/20'
+        : 'border-border focus:border-primary-500/50 focus:ring-primary-500/20'
     }`, []);
 
   const labelClass = useMemo(() => "block text-sm font-medium text-muted mb-2", []);
@@ -119,7 +119,7 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
   return (
     <div className="min-h-screen bg-[var(--color-bg-base)] transition-colors duration-300 p-4 md:p-6 animate-fade-in">
       <div className="premium-card-static p-6 mb-6 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-0 left-0 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="relative flex items-center gap-4">
           <button
             onClick={onBack}
@@ -129,8 +129,8 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
           </button>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">מתאמן חדש</span>
+              <Sparkles className="w-4 h-4 text-primary-400" />
+              <span className="text-xs font-semibold text-primary-400 uppercase tracking-wider">מתאמן חדש</span>
             </div>
             <h1 className="text-2xl font-bold text-foreground">הוסף מתאמן</h1>
             <p className="text-muted">מלא את הפרטים הבסיסיים של המתאמן</p>
@@ -147,15 +147,15 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
               onClick={() => setIsPair(false)}
               className={`p-6 rounded-xl border-2 transition-all ${
                 !isPair
-                  ? 'border-emerald-500/50 bg-emerald-500/10'
+                  ? 'border-primary-500/50 bg-primary-500/10'
                   : 'border-border bg-surface hover:border-border-hover'
               }`}
             >
               <User className={`h-10 w-10 mx-auto mb-3 ${
-                !isPair ? 'text-emerald-400' : 'text-muted'
+                !isPair ? 'text-primary-400' : 'text-muted'
               }`} />
               <p className={`font-semibold ${
-                !isPair ? 'text-emerald-400' : 'text-muted'
+                !isPair ? 'text-primary-400' : 'text-muted'
               }`}>מתאמן אישי</p>
             </button>
             <button
@@ -163,15 +163,15 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
               onClick={() => setIsPair(true)}
               className={`p-6 rounded-xl border-2 transition-all ${
                 isPair
-                  ? 'border-emerald-500/50 bg-emerald-500/10'
+                  ? 'border-primary-500/50 bg-primary-500/10'
                   : 'border-border bg-surface hover:border-border-hover'
               }`}
             >
               <Users className={`h-10 w-10 mx-auto mb-3 ${
-                isPair ? 'text-emerald-400' : 'text-muted'
+                isPair ? 'text-primary-400' : 'text-muted'
               }`} />
               <p className={`font-semibold ${
-                isPair ? 'text-emerald-400' : 'text-muted'
+                isPair ? 'text-primary-400' : 'text-muted'
               }`}>מתאמן זוגי</p>
             </button>
           </div>
@@ -180,8 +180,8 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
         {!isPair && (
         <div className="premium-card-static p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 rounded-xl bg-emerald-500/15">
-              <User className="h-5 w-5 text-emerald-400" />
+            <div className="p-3 rounded-xl bg-primary-500/15">
+              <User className="h-5 w-5 text-primary-400" />
             </div>
             <h3 className="text-lg font-semibold text-foreground">פרטים אישיים</h3>
           </div>
@@ -243,7 +243,7 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
                   onClick={() => setFormData(prev => ({ ...prev, gender: 'male' }))}
                   className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                     formData.gender === 'male'
-                      ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                      ? 'border-primary-500/50 bg-primary-500/10 text-primary-400'
                       : 'border-border bg-surface text-muted hover:border-border-hover'
                   }`}
                 >
@@ -254,7 +254,7 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
                   onClick={() => setFormData(prev => ({ ...prev, gender: 'female' }))}
                   className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                     formData.gender === 'female'
-                      ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                      ? 'border-primary-500/50 bg-primary-500/10 text-primary-400'
                       : 'border-border bg-surface text-muted hover:border-border-hover'
                   }`}
                 >
@@ -283,8 +283,8 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
         {isPair && (
         <div className="premium-card-static p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 rounded-xl bg-emerald-500/15">
-              <Users className="h-5 w-5 text-emerald-400" />
+            <div className="p-3 rounded-xl bg-primary-500/15">
+              <Users className="h-5 w-5 text-primary-400" />
             </div>
             <h3 className="text-lg font-semibold text-foreground">פרטי הזוג</h3>
           </div>
@@ -349,7 +349,7 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
                       onClick={() => setFormData(prev => ({ ...prev, pair_gender_1: 'male' }))}
                       className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                         formData.pair_gender_1 === 'male'
-                          ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                          ? 'border-primary-500/50 bg-primary-500/10 text-primary-400'
                           : 'border-border bg-surface text-muted hover:border-border-hover'
                       }`}
                     >
@@ -360,7 +360,7 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
                       onClick={() => setFormData(prev => ({ ...prev, pair_gender_1: 'female' }))}
                       className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                         formData.pair_gender_1 === 'female'
-                          ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                          ? 'border-primary-500/50 bg-primary-500/10 text-primary-400'
                           : 'border-border bg-surface text-muted hover:border-border-hover'
                       }`}
                     >
@@ -444,7 +444,7 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
                       onClick={() => setFormData(prev => ({ ...prev, pair_gender_2: 'male' }))}
                       className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                         formData.pair_gender_2 === 'male'
-                          ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                          ? 'border-primary-500/50 bg-primary-500/10 text-primary-400'
                           : 'border-border bg-surface text-muted hover:border-border-hover'
                       }`}
                     >
@@ -455,7 +455,7 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
                       onClick={() => setFormData(prev => ({ ...prev, pair_gender_2: 'female' }))}
                       className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                         formData.pair_gender_2 === 'female'
-                          ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                          ? 'border-primary-500/50 bg-primary-500/10 text-primary-400'
                           : 'border-border bg-surface text-muted hover:border-border-hover'
                       }`}
                     >
@@ -488,7 +488,7 @@ export default function AddTraineeForm({ onBack, onSave, initialName }: AddTrain
           <textarea
             value={formData.notes}
             onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-            className="w-full p-4 bg-input border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+            className="w-full p-4 bg-input border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:border-primary-500/50 focus:ring-2 focus:ring-primary-500/20 transition-all"
             rows={4}
             placeholder="הערות כלליות על המתאמן, מטרות, הגבלות רפואיות וכו'..."
           />

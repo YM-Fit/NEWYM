@@ -211,7 +211,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
     return (
       <div className="premium-card-static p-8">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 text-emerald-400 animate-spin" />
+          <Loader2 className="h-8 w-8 text-primary-400 animate-spin" />
         </div>
       </div>
     );
@@ -243,7 +243,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
         <select
           value={selectedPeriod}
           onChange={(e) => setSelectedPeriod(e.target.value as any)}
-          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-foreground text-sm focus:ring-2 focus:ring-emerald-600/50"
+          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-foreground text-sm focus:ring-2 focus:ring-primary-600/50"
         >
           <option value="week">שבוע</option>
           <option value="month">חודש</option>
@@ -254,7 +254,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
           type="date"
           value={selectedDate.toISOString().split('T')[0]}
           onChange={(e) => setSelectedDate(new Date(e.target.value))}
-          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-foreground text-sm focus:ring-2 focus:ring-emerald-600/50"
+          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-foreground text-sm focus:ring-2 focus:ring-primary-600/50"
         />
       </div>
 
@@ -270,7 +270,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
               key={report.trainee_id}
               className={`p-5 rounded-2xl border transition-all ${
                 report.trend === 'down'
-                  ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-emerald-500/5'
+                  ? 'border-primary-500/30 bg-gradient-to-br from-primary-500/5 to-primary-500/5'
                   : report.trend === 'up'
                   ? 'border-red-500/30 bg-gradient-to-br from-red-500/5 to-orange-500/5'
                   : 'border-border500/30 bg-surface800/30'
@@ -282,7 +282,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
                     <Users className="h-5 w-5 text-muted400" />
                     <h4 className="font-bold text-foreground text-lg">{report.trainee_name}</h4>
                     {report.trend === 'down' ? (
-                      <TrendingDown className="h-5 w-5 text-emerald-400" />
+                      <TrendingDown className="h-5 w-5 text-primary-400" />
                     ) : report.trend === 'up' ? (
                       <TrendingUp className="h-5 w-5 text-red-400" />
                     ) : null}
@@ -296,7 +296,7 @@ export default function WeightReports({ trainerId, period = 'month' }: WeightRep
                 </div>
                 <div className="text-left">
                   <p className={`text-2xl font-bold ${
-                    report.change < 0 ? 'text-emerald-400' : report.change > 0 ? 'text-red-400' : 'text-muted400'
+                    report.change < 0 ? 'text-primary-400' : report.change > 0 ? 'text-red-400' : 'text-muted400'
                   }`}>
                     {report.change > 0 ? '+' : ''}{report.change.toFixed(1)} ק״ג
                   </p>

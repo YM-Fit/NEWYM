@@ -130,18 +130,18 @@ export const WorkoutTableRow = memo(({
     <tr
       className={`
         workout-table-row border-b border-border/50 transition-all duration-200
-        ${isActive ? 'workout-table-row-active bg-emerald-500/10 border-l-4 border-l-emerald-500' : ''}
-        ${isNewExercise && isFirstSet ? 'border-t-2 border-t-emerald-500/30' : ''}
+        ${isActive ? 'workout-table-row-active bg-primary-500/10 border-l-4 border-l-primary-500' : ''}
+        ${isNewExercise && isFirstSet ? 'border-t-2 border-t-primary-500/30' : ''}
         ${isCompleted ? 'bg-surface/30 opacity-90' : 'bg-surface/20'}
-        hover:bg-emerald-500/10
+        hover:bg-primary-500/10
         ${isCompleted ? 'py-1' : ''}
       `}
     >
       {/* תרגיל */}
-      <td className={`px-2 sm:px-3 ${isCompleted ? 'py-1' : 'py-2'} text-right font-medium text-foreground sticky right-0 bg-inherit z-10 min-w-[100px] sm:min-w-[120px] border-r-2 border-emerald-500/20 ${isFirstSet ? 'bg-emerald-500/5' : ''}`}>
+      <td className={`px-2 sm:px-3 ${isCompleted ? 'py-1' : 'py-2'} text-right font-medium text-foreground sticky right-0 bg-inherit z-10 min-w-[100px] sm:min-w-[120px] border-r-2 border-primary-500/20 ${isFirstSet ? 'bg-primary-500/5' : ''}`}>
         {isFirstSet ? (
           <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+            <div className="w-1.5 h-1.5 rounded-full bg-primary-500"></div>
             <span className={`font-semibold ${isCompleted ? 'text-xs' : 'text-sm'}`}>{exerciseName}</span>
           </div>
         ) : (
@@ -151,7 +151,7 @@ export const WorkoutTableRow = memo(({
 
       {/* סט */}
       <td className={`px-1 sm:px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center`}>
-        <span className={`inline-flex items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 font-bold ${isCompleted ? 'w-6 h-6 text-[10px]' : 'w-7 h-7 text-xs'}`}>
+        <span className={`inline-flex items-center justify-center rounded-lg bg-primary-500/20 text-primary-400 font-bold ${isCompleted ? 'w-6 h-6 text-[10px]' : 'w-7 h-7 text-xs'}`}>
           {set.set_number}
         </span>
       </td>
@@ -172,11 +172,11 @@ export const WorkoutTableRow = memo(({
               workout-table-cell w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold transition-all
               ${isCompleted ? 'text-sm' : 'text-base'}
               ${hasData && set.weight > 0 
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' 
-                : 'bg-surface/50 text-muted border border-border hover:border-emerald-500/30'
+                ? 'bg-primary-500/20 text-primary-400 border border-primary-500/50' 
+                : 'bg-surface/50 text-muted border border-border hover:border-primary-500/30'
               }
               hover:scale-105 active:scale-95 touch-manipulation cursor-pointer
-              focus:outline-none focus:ring-1 focus:ring-emerald-500
+              focus:outline-none focus:ring-1 focus:ring-primary-500
             `}
             tabIndex={isActive ? 0 : -1}
           >
@@ -187,7 +187,7 @@ export const WorkoutTableRow = memo(({
             w-full px-2 ${isCompleted ? 'py-1' : 'py-1.5'} rounded-lg font-bold
             ${isCompleted ? 'text-sm' : 'text-base'}
             ${hasData && set.weight > 0 
-              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' 
+              ? 'bg-primary-500/20 text-primary-400 border border-primary-500/50' 
               : 'bg-surface/50 text-muted border border-border'
             }
           `}>
@@ -323,8 +323,8 @@ export const WorkoutTableRow = memo(({
                   px-1 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded font-medium transition-all touch-manipulation active:scale-95
                   ${isCompleted ? 'text-[10px]' : 'text-xs'}
                   ${set.set_type === 'regular'
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-surface/50 text-muted hover:bg-emerald-500/20'
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-surface/50 text-muted hover:bg-primary-500/20'
                   }
                 `}
               >
@@ -379,7 +379,7 @@ export const WorkoutTableRow = memo(({
           ) : (
             <div className="flex items-center justify-center">
               <span className={`${isCompleted ? 'text-[10px]' : 'text-xs'} font-medium ${
-                set.set_type === 'regular' ? 'text-emerald-400' :
+                set.set_type === 'regular' ? 'text-primary-400' :
                 set.set_type === 'superset' ? 'text-blue-400' :
                 'text-amber-400'
               }`}>
@@ -625,9 +625,9 @@ export const WorkoutTableRow = memo(({
       {/* נפח */}
       <td className={`px-1 sm:px-2 ${isCompleted ? 'py-1' : 'py-2'} text-center hidden md:table-cell`}>
         {hasData && (
-          <div className={`flex items-center justify-center gap-0.5 bg-emerald-500/10 px-1.5 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded border border-emerald-500/30`}>
-            <TrendingUp className={`${isCompleted ? 'h-2.5 w-2.5' : 'h-3 w-3'} text-emerald-400`} />
-            <span className={`text-emerald-400 font-semibold ${isCompleted ? 'text-[10px]' : 'text-xs'}`}>{setVolume.toLocaleString()}</span>
+          <div className={`flex items-center justify-center gap-0.5 bg-primary-500/10 px-1.5 ${isCompleted ? 'py-0.5' : 'py-0.5'} rounded border border-primary-500/30`}>
+            <TrendingUp className={`${isCompleted ? 'h-2.5 w-2.5' : 'h-3 w-3'} text-primary-400`} />
+            <span className={`text-primary-400 font-semibold ${isCompleted ? 'text-[10px]' : 'text-xs'}`}>{setVolume.toLocaleString()}</span>
           </div>
         )}
       </td>
@@ -643,7 +643,7 @@ export const WorkoutTableRow = memo(({
                 e.stopPropagation();
                 onCompleteSet(exerciseIndex, setIndex);
               }}
-              className={`${isCompleted ? 'p-1' : 'p-1.5'} hover:bg-emerald-500/20 text-emerald-400 rounded-lg transition-all cursor-pointer`}
+              className={`${isCompleted ? 'p-1' : 'p-1.5'} hover:bg-primary-500/20 text-primary-400 rounded-lg transition-all cursor-pointer`}
               title="סיים סט (Enter)"
             >
               <CheckCircle2 className={`${isCompleted ? 'h-3 w-3' : 'h-4 w-4'}`} />
@@ -678,7 +678,7 @@ export const WorkoutTableRow = memo(({
         ) : (
           <div className="flex items-center justify-center gap-1 text-muted">
             {set.weight > 0 && set.reps > 0 && (
-              <CheckCircle2 className={`${isCompleted ? 'h-3 w-3' : 'h-4 w-4'} text-emerald-400`} />
+              <CheckCircle2 className={`${isCompleted ? 'h-3 w-3' : 'h-4 w-4'} text-primary-400`} />
             )}
           </div>
         )}

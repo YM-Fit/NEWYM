@@ -129,7 +129,7 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-emerald-500 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary-500 border-t-transparent"></div>
       </div>
     );
   }
@@ -257,7 +257,7 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-foreground">{plan.name || 'תפריט ללא שם'}</h3>
                         {plan.is_active ? (
-                          <span className="bg-emerald-500/15 text-emerald-400 text-xs px-2 py-0.5 rounded-full border border-emerald-500/30">
+                          <span className="bg-primary-500/15 text-primary-400 text-xs px-2 py-0.5 rounded-full border border-primary-500/30">
                             פעיל
                           </span>
                         ) : (
@@ -286,7 +286,7 @@ export default function MealPlanManager({ traineeId, traineeName, onBack, onEdit
                     className={`p-2 rounded-lg transition-all ${
                       plan.is_active
                         ? 'text-amber-400 hover:bg-amber-500/15'
-                        : 'text-emerald-400 hover:bg-emerald-500/15'
+                        : 'text-primary-400 hover:bg-primary-500/15'
                     }`}
                     title={plan.is_active ? 'השבת' : 'הפעל'}
                   >

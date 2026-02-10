@@ -16,7 +16,7 @@ function getColorFromCSSVar(varName: string): string {
       '--color-toast-bg': 'rgb(24, 24, 27)',
       '--color-toast-text': 'rgb(255, 255, 255)',
       '--color-toast-border': 'rgb(39, 39, 42)',
-      '--color-toast-success-icon': 'rgb(16, 185, 129)',
+      '--color-toast-success-icon': 'rgb(74, 107, 42)',
       '--color-toast-error-icon': 'rgb(220, 38, 38)',
     };
     return fallbacks[varName] || 'rgb(24, 24, 27)';

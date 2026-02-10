@@ -322,7 +322,7 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
       <div className="premium-card-static bg-white rounded-2xl shadow-xl p-6 transition-all duration-300">
         <div className="flex items-center justify-center py-8">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-emerald-400/30">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-primary-400/30">
               <RefreshCw className="h-8 w-8 text-white animate-spin" />
             </div>
             <span className="text-sm font-medium text-muted600">טוען הגדרות...</span>
@@ -336,8 +336,8 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
     <div className="premium-card-static bg-white rounded-2xl shadow-xl p-6 space-y-6 transition-all duration-300">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-xl border border-emerald-500/30">
-            <Calendar className="h-5 w-5 text-emerald-600" />
+          <div className="p-2 bg-gradient-to-br from-primary-500/20 to-primary-600/20 rounded-xl border border-primary-500/30">
+            <Calendar className="h-5 w-5 text-primary-600" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-muted900">הגדרות Google Calendar</h2>
@@ -376,7 +376,7 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
           <button
             onClick={handleConnect}
             disabled={loading}
-            className="btn-primary flex items-center gap-2 mx-auto bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white shadow-lg"
+            className="btn-primary flex items-center gap-2 mx-auto bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white shadow-lg"
           >
             <Calendar className="h-4 w-4" />
             חבר Google Calendar
@@ -385,11 +385,11 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
       ) : (
         <div className="space-y-4">
           {/* Connection Status */}
-          <div className="flex items-center justify-between p-4 bg-gradient-to-br from-emerald-50 to-emerald-50 rounded-xl border border-emerald-200 transition-all duration-300">
+          <div className="flex items-center justify-between p-4 bg-gradient-to-br from-primary-50 to-primary-50 rounded-xl border border-primary-200 transition-all duration-300">
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              <CheckCircle2 className="h-5 w-5 text-primary-600" />
               <div>
-                <span className="text-emerald-600 font-semibold block">מחובר</span>
+                <span className="text-primary-600 font-semibold block">מחובר</span>
                 <span className="text-xs text-muted600">Google Calendar פעיל</span>
               </div>
             </div>
@@ -447,7 +447,7 @@ export default function GoogleCalendarSettings({ onClose }: GoogleCalendarSettin
                   type="button"
                   onClick={loadCalendars}
                   disabled={loadingCalendars}
-                  className="text-xs text-emerald-400 hover:text-emerald-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  className="text-xs text-primary-400 hover:text-primary-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                   title="רענון רשימת יומנים"
                 >
                   <RefreshCw className={`h-3 w-3 ${loadingCalendars ? 'animate-spin' : ''}`} />

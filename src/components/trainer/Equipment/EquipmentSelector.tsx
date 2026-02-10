@@ -105,8 +105,8 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
       <div className="space-y-6" dir="rtl">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
-              <Package className="h-6 w-6 text-emerald-400" />
+            <div className="p-3 rounded-xl bg-primary-500/15 border border-primary-500/30">
+              <Package className="h-6 w-6 text-primary-400" />
             </div>
             <div>
               <p className="text-sm text-muted">בחר ציוד לכל סט</p>
@@ -114,7 +114,7 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
             </div>
           </div>
           <div className="hidden md:flex items-center gap-2 text-xs text-muted">
-            <span className="w-2 h-2 rounded-full bg-emerald-500/80" />
+            <span className="w-2 h-2 rounded-full bg-primary-500/80" />
             <span>לחיצה על כרטיס תבחר את הציוד</span>
           </div>
         </div>
@@ -140,7 +140,7 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
                   size="sm"
                   className={`whitespace-nowrap ${
                     filter === cat.id
-                      ? 'bg-emerald-500 text-foreground'
+                      ? 'bg-primary-500 text-foreground'
                       : 'text-muted hover:text-foreground hover:bg-surface/60'
                   }`}
                   onClick={() => setFilter(cat.id)}
@@ -161,7 +161,7 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
                 <div
                   className={`p-2 rounded-xl ${
                     !currentEquipmentId
-                      ? 'bg-emerald-500/20 text-emerald-300'
+                      ? 'bg-primary-500/20 text-primary-300'
                       : 'bg-surface text-foreground'
                   }`}
                 >
@@ -176,7 +176,7 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
                   </p>
                 </div>
               </div>
-              {!currentEquipmentId && <Check className="h-5 w-5 text-emerald-400" />}
+              {!currentEquipmentId && <Check className="h-5 w-5 text-primary-400" />}
             </Button>
           </div>
 
@@ -184,7 +184,7 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="flex flex-col items-center gap-3">
-                  <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
                   <p className="text-sm text-muted">טוען ציוד...</p>
                 </div>
               </div>
@@ -205,7 +205,7 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
                 {Object.entries(groupedEquipment).map(([category, items]) => (
                   <div key={category}>
                     <div className="flex items-center gap-2 mb-3 px-1">
-                      <span className="w-1.5 h-6 rounded-full bg-gradient-to-b from-emerald-500 to-emerald-600" />
+                      <span className="w-1.5 h-6 rounded-full bg-gradient-to-b from-primary-500 to-primary-600" />
                       <h3 className="text-sm font-semibold text-foreground">
                         {getCategoryLabel(category)}
                       </h3>
@@ -218,15 +218,15 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
                           onClick={() => handleSelect(item)}
                           className={`group flex items-center gap-3 p-3 rounded-2xl border text-right transition-all ${
                             currentEquipmentId === item.id
-                              ? 'border-emerald-500/50 bg-emerald-500/10 shadow-lg shadow-emerald-500/10'
-                              : 'border-border bg-card/40 hover:border-emerald-500/40 hover:bg-emerald-500/5'
+                              ? 'border-primary-500/50 bg-primary-500/10 shadow-lg shadow-primary-500/10'
+                              : 'border-border bg-card/40 hover:border-primary-500/40 hover:bg-primary-500/5'
                           }`}
                         >
                           <span className="text-3xl filter drop-shadow-md group-hover:scale-110 transition-transform duration-200">
                             {item.emoji}
                           </span>
                           <div className="flex-1">
-                            <p className="text-sm font-semibold text-foreground group-hover:text-emerald-300">
+                            <p className="text-sm font-semibold text-foreground group-hover:text-primary-300">
                               {item.name}
                             </p>
                             <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -241,14 +241,14 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
                                 </span>
                               )}
                               {item.is_bodyweight && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-500/20 text-[11px] text-emerald-300">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary-500/20 text-[11px] text-primary-300">
                                   משקל גוף
                                 </span>
                               )}
                             </div>
                           </div>
                           {currentEquipmentId === item.id && (
-                            <Check className="h-5 w-5 text-emerald-400" />
+                            <Check className="h-5 w-5 text-primary-400" />
                           )}
                         </button>
                       ))}

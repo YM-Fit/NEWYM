@@ -210,7 +210,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
     const change = current - previous;
     if (Math.abs(change) < 0.1) return null;
     const text = `${change > 0 ? '+' : ''}${change.toFixed(1)} ק"ג`;
-    const color = change > 0 ? 'text-red-300' : 'text-emerald-300';
+    const color = change > 0 ? 'text-red-300' : 'text-primary-300';
     return { text, color };
   }, []);
 
@@ -219,7 +219,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
     const change = current - previous;
     if (Math.abs(change) < 0.1) return null;
     const text = `${change > 0 ? '+' : ''}${change.toFixed(1)}%`;
-    const color = change > 0 ? 'text-red-300' : 'text-emerald-300';
+    const color = change > 0 ? 'text-red-300' : 'text-primary-300';
     return { text, color };
   }, []);
 
@@ -360,7 +360,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
     if (Math.abs(change) < 0.1) return null;
 
     return (
-      <span className={`text-sm font-medium ${change > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+      <span className={`text-sm font-medium ${change > 0 ? 'text-red-400' : 'text-primary-400'}`}>
         ({change > 0 ? '+' : ''}{change.toFixed(1)})
       </span>
     );
@@ -369,8 +369,8 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
   const inputClass = useCallback((hasHighlight: boolean) =>
     `w-full p-4 text-xl bg-surface border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 transition-all ${
       hasHighlight
-        ? 'border-emerald-500/50 bg-emerald-500/10 ring-2 ring-emerald-500/30'
-        : 'border-border focus:border-emerald-500/50 focus:ring-emerald-500/20'
+        ? 'border-primary-500/50 bg-primary-500/10 ring-2 ring-primary-500/30'
+        : 'border-border focus:border-primary-500/50 focus:ring-primary-500/20'
     }`, []);
 
   const labelClass = useMemo(() => "block text-sm font-medium text-muted mb-2", []);
@@ -391,9 +391,9 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
       {showScaleDataToast && pendingScaleData && (
         <div className={`fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-96 ${
-          showValidationWarning ? 'bg-amber-500/90' : 'bg-emerald-500/90'
+          showValidationWarning ? 'bg-amber-500/90' : 'bg-primary-500/90'
         } backdrop-blur-sm text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-slide-in-top border ${
-          showValidationWarning ? 'border-amber-400/50' : 'border-emerald-400/50'
+          showValidationWarning ? 'border-amber-400/50' : 'border-primary-400/50'
         }`}>
           <div className="flex items-start gap-3 mb-3">
             {showValidationWarning ? (
@@ -454,7 +454,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       )}
 
       <div className="premium-card-static p-6 sticky top-0 z-10 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-0 left-0 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -466,8 +466,8 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
             </button>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                <Sparkles className="w-4 h-4 text-primary-400" />
+                <span className="text-xs font-semibold text-primary-400 uppercase tracking-wider">
                   {isEditing ? 'עריכת מדידה' : 'מדידה חדשה'}
                 </span>
               </div>
@@ -476,7 +476,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                 <div className="flex flex-col gap-2 mt-2">
                   <div className="flex items-center gap-3 flex-wrap">
                     <div className={`flex items-center gap-1 text-xs ${
-                      connectionStatus === 'connected' ? 'text-emerald-400' :
+                      connectionStatus === 'connected' ? 'text-primary-400' :
                       connectionStatus === 'stale' ? 'text-amber-400' :
                       'text-red-400'
                     }`}>
@@ -493,7 +493,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                     </div>
 
                     <div className={`flex items-center gap-1 text-xs ${
-                      scriptStatus.isOnline ? 'text-emerald-400' : 'text-muted'
+                      scriptStatus.isOnline ? 'text-primary-400' : 'text-muted'
                     }`}>
                       <Server className="h-3.5 w-3.5" />
                       <span>
@@ -522,7 +522,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                         title={soundEnabled ? 'השתק צלילים' : 'הפעל צלילים'}
                       >
                         {soundEnabled ? (
-                          <Volume2 className="h-3.5 w-3.5 text-emerald-400" />
+                          <Volume2 className="h-3.5 w-3.5 text-primary-400" />
                         ) : (
                           <VolumeX className="h-3.5 w-3.5 text-muted" />
                         )}
@@ -545,12 +545,12 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
           </div>
 
           <div className="flex items-center gap-2">
-            <Scale className="h-5 w-5 text-emerald-400" />
+            <Scale className="h-5 w-5 text-primary-400" />
             <input
               type="date"
               value={measurementDate}
               onChange={(e) => setMeasurementDate(e.target.value)}
-              className="px-3 py-2 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 text-foreground text-sm transition-all"
+              className="px-3 py-2 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 text-foreground text-sm transition-all"
             />
           </div>
         </div>
@@ -565,15 +565,15 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               onClick={() => setSelectedMember('both')}
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'both'
-                  ? 'border-emerald-500/50 bg-emerald-500/10'
+                  ? 'border-primary-500/50 bg-primary-500/10'
                   : 'border-border bg-surface/30 hover:border-border-hover'
               }`}
             >
               <User className={`h-8 w-8 mx-auto mb-2 ${
-                selectedMember === 'both' ? 'text-emerald-400' : 'text-muted'
+                selectedMember === 'both' ? 'text-primary-400' : 'text-muted'
               }`} />
               <p className={`font-semibold text-sm text-center ${
-                selectedMember === 'both' ? 'text-emerald-400' : 'text-muted'
+                selectedMember === 'both' ? 'text-primary-400' : 'text-muted'
               }`}>{trainee.pairName1} + {trainee.pairName2}</p>
             </button>
             <button
@@ -620,7 +620,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
             onClick={() => setFormData(prev => ({ ...prev, source: 'tanita' }))}
             className={`flex items-center justify-center gap-2 px-6 py-4 rounded-xl transition-all ${
               formData.source === 'tanita'
-                ? 'bg-emerald-500/15 text-emerald-400 border-2 border-emerald-500/50'
+                ? 'bg-primary-500/15 text-primary-400 border-2 border-primary-500/50'
                 : 'bg-surface/30 text-muted border-2 border-border hover:border-border-hover'
             }`}
           >
@@ -632,7 +632,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
             onClick={() => setFormData(prev => ({ ...prev, source: 'manual' }))}
             className={`flex items-center justify-center gap-2 px-6 py-4 rounded-xl transition-all ${
               formData.source === 'manual'
-                ? 'bg-emerald-500/15 text-emerald-400 border-2 border-emerald-500/50'
+                ? 'bg-primary-500/15 text-primary-400 border-2 border-primary-500/50'
                 : 'bg-surface/30 text-muted border-2 border-border hover:border-border-hover'
             }`}
           >
@@ -779,7 +779,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                 const message = getMetabolicAgeMessage(metabolicAge, age, inputs);
 
                 const statusColors = {
-                  excellent: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
+                  excellent: 'bg-primary-500/10 border-primary-500/30 text-primary-400',
                   good: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
                   'needs-improvement': 'bg-amber-500/10 border-amber-500/30 text-amber-400'
                 };
@@ -797,7 +797,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                       {statusIcons[message.status]}
                     </div>
                     <p className={`mt-2 text-sm font-medium ${
-                      message.status === 'excellent' ? 'text-emerald-400' :
+                      message.status === 'excellent' ? 'text-primary-400' :
                       message.status === 'good' ? 'text-blue-400' :
                       'text-amber-400'
                     }`}>
@@ -847,7 +847,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
         <textarea
           value={formData.notes}
           onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-          className="w-full p-4 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-all resize-none"
+          className="w-full p-4 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:border-primary-500/50 focus:ring-primary-500/20 transition-all resize-none"
           rows={3}
           placeholder="הערות על השקילה, התקדמות, מצב כללי..."
         />

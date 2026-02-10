@@ -295,7 +295,7 @@ function AppContent() {
       <ComponentErrorBoundary componentName="אפליקציית מתאמן">
         <Suspense
           fallback={
-            <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center">
               <LoadingSpinner size="lg" variant="ring" text="טוען אפליקציה..." />
             </div>
           }
@@ -310,7 +310,7 @@ function AppContent() {
     <ComponentErrorBoundary componentName="אפליקציית מאמן">
       <Suspense
         fallback={
-          <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 flex items-center justify-center">
+          <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center">
             <LoadingSpinner size="lg" />
           </div>
         }

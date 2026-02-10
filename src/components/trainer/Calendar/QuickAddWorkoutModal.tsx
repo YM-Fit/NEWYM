@@ -236,8 +236,8 @@ export default function QuickAddWorkoutModal({
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-border border-border30 sticky top-0 bg-white z-10">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-1.5 sm:p-2 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-xl border border-emerald-500/30">
-              <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
+            <div className="p-1.5 sm:p-2 bg-gradient-to-br from-primary-500/20 to-primary-600/20 rounded-xl border border-primary-500/30">
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-primary-600" />
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-foreground text-foreground">הוספת אימון מהירה</h2>
@@ -263,14 +263,14 @@ export default function QuickAddWorkoutModal({
           {/* Trainee Selection */}
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-medium text-foreground text-foreground">
-              <User className="h-4 w-4 text-emerald-600" />
+              <User className="h-4 w-4 text-primary-600" />
               בחירת מתאמן
             </label>
             <select
               value={selectedTraineeId}
               onChange={(e) => setSelectedTraineeId(e.target.value)}
               disabled={traineesLoading}
-              className="w-full p-2.5 sm:p-3 md:p-3.5 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300 text-sm sm:text-base"
+              className="w-full p-2.5 sm:p-3 md:p-3.5 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-primary-500/50 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all duration-300 text-sm sm:text-base"
             >
               <option value="">-- בחר מתאמן --</option>
               {sortedTrainees.map((trainee) => (
@@ -285,7 +285,7 @@ export default function QuickAddWorkoutModal({
           {/* Duration Selection */}
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-medium text-foreground text-foreground">
-              <Clock className="h-4 w-4 text-emerald-600" />
+              <Clock className="h-4 w-4 text-primary-600" />
               משך האימון
             </label>
             <div className="grid grid-cols-2 gap-2 sm:gap-3">
@@ -294,7 +294,7 @@ export default function QuickAddWorkoutModal({
                 onClick={() => setDuration('30')}
                 className={`p-2.5 sm:p-3 md:p-3.5 rounded-xl border transition-all duration-300 text-sm sm:text-base ${
                   duration === '30'
-                    ? 'bg-gradient-to-br from-emerald-50 to-emerald-50 border-emerald-200 text-emerald-700 font-semibold shadow-sm'
+                    ? 'bg-gradient-to-br from-primary-50 to-primary-50 border-primary-200 text-primary-700 font-semibold shadow-sm'
                     : 'bg-white bg-elevated border border-border border-border30 text-foreground text-foreground hover:bg-surface'
                 }`}
               >
@@ -305,7 +305,7 @@ export default function QuickAddWorkoutModal({
                 onClick={() => setDuration('60')}
                 className={`p-2.5 sm:p-3 md:p-3.5 rounded-xl border transition-all duration-300 text-sm sm:text-base ${
                   duration === '60'
-                    ? 'bg-gradient-to-br from-emerald-50 to-emerald-50 border-emerald-200 text-emerald-700 font-semibold shadow-sm'
+                    ? 'bg-gradient-to-br from-primary-50 to-primary-50 border-primary-200 text-primary-700 font-semibold shadow-sm'
                     : 'bg-white bg-elevated border border-border border-border30 text-foreground text-foreground hover:bg-surface'
                 }`}
               >
@@ -318,26 +318,26 @@ export default function QuickAddWorkoutModal({
           <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium text-foreground text-foreground">
-                <Calendar className="h-4 w-4 text-emerald-600" />
+                <Calendar className="h-4 w-4 text-primary-600" />
                 תאריך
               </label>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full p-2.5 sm:p-3 md:p-3.5 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300 text-sm sm:text-base"
+                className="w-full p-2.5 sm:p-3 md:p-3.5 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-primary-500/50 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all duration-300 text-sm sm:text-base"
               />
             </div>
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium text-foreground text-foreground">
-                <Clock className="h-4 w-4 text-emerald-600" />
+                <Clock className="h-4 w-4 text-primary-600" />
                 שעה
               </label>
               <input
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full p-2.5 sm:p-3 md:p-3.5 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300 text-sm sm:text-base"
+                className="w-full p-2.5 sm:p-3 md:p-3.5 bg-white bg-elevated border border-border border-border30 rounded-xl text-foreground text-foreground focus:border-primary-500/50 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all duration-300 text-sm sm:text-base"
               />
             </div>
           </div>
@@ -354,7 +354,7 @@ export default function QuickAddWorkoutModal({
           <button
             onClick={handleSave}
             disabled={saving || !selectedTraineeId}
-            className="px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg text-sm sm:text-base font-medium"
+            className="px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg text-sm sm:text-base font-medium"
           >
             {saving ? (
               <>

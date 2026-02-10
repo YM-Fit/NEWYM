@@ -62,11 +62,11 @@ const getCategoryStyle = (category: string) => {
       };
     case 'focus':
       return {
-        bg: 'bg-gradient-to-br from-emerald-500/15 to-emerald-500/8',
-        border: 'border-emerald-500/30',
-        text: 'text-emerald-400',
-        badge: 'bg-emerald-500/20',
-        icon: 'bg-emerald-500',
+        bg: 'bg-gradient-to-br from-primary-500/15 to-primary-500/8',
+        border: 'border-primary-500/30',
+        text: 'text-primary-400',
+        badge: 'bg-primary-500/20',
+        icon: 'bg-primary-500',
       };
     default:
       return {
@@ -122,7 +122,7 @@ export default function MyMentalTools({ traineeId }: MyMentalToolsProps) {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-400 via-primary-500 to-primary-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
           <Brain className="w-8 h-8 text-white" />
         </div>
       </div>
@@ -132,8 +132,8 @@ export default function MyMentalTools({ traineeId }: MyMentalToolsProps) {
   if (tools.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="w-20 h-20 bg-emerald-500/15 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg border border-emerald-500/20">
-          <Brain className="w-10 h-10 text-emerald-400" />
+        <div className="w-20 h-20 bg-primary-500/15 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg border border-primary-500/20">
+          <Brain className="w-10 h-10 text-primary-400" />
         </div>
         <h3 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)] mb-2">אין כלים מנטליים</h3>
         <p className="text-sm text-[var(--color-text-muted)]">המאמן שלך עדיין לא הגדיר כלים מנטליים</p>
@@ -143,21 +143,21 @@ export default function MyMentalTools({ traineeId }: MyMentalToolsProps) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl p-6 shadow-xl">
+      <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl p-6 shadow-xl">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center shadow-lg">
             <Sparkles className="w-7 h-7 text-white" />
           </div>
           <div className="text-white">
             <h2 className="text-2xl font-bold">כלים מנטליים</h2>
-            <p className="text-emerald-100">המשימות שלי להצלחה</p>
+            <p className="text-primary-100">המשימות שלי להצלחה</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="stat-card p-4 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 hover:shadow-card-hover transition-all duration-300">
-          <div className="text-3xl font-bold text-emerald-400">{activeTools.length}</div>
+        <div className="stat-card p-4 bg-gradient-to-br from-primary-500/20 to-primary-600/10 border border-primary-500/30 hover:shadow-card-hover transition-all duration-300">
+          <div className="text-3xl font-bold text-primary-400">{activeTools.length}</div>
           <div className="text-sm text-[var(--color-text-secondary)] font-medium">פעילים</div>
         </div>
         <div className="stat-card p-4 bg-gradient-to-br from-[var(--color-bg-surface)] to-[var(--color-bg-elevated)] border border-[var(--color-border)] hover:shadow-card-hover transition-all duration-300">

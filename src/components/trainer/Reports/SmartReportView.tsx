@@ -978,7 +978,7 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
             <button
               onClick={() => saveMonthlyReport(false)}
               disabled={savingReport || !monthlyReport}
-              className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-all flex items-center gap-2 border border-emerald-500/30 disabled:opacity-50"
+              className="px-4 py-2 bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 rounded-lg transition-all flex items-center gap-2 border border-primary-500/30 disabled:opacity-50"
             >
               {savingReport ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -1069,7 +1069,7 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="premium-card-static p-5">
             <div className="text-sm text-[var(--color-text-muted)] mb-1">סה"כ הכנסה חודשית</div>
-            <div className="text-2xl font-bold text-emerald-400">₪{monthlyReport.total_income.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-primary-400">₪{monthlyReport.total_income.toLocaleString()}</div>
             {monthlyReport.income_goal > 0 && (
               <div className="mt-2">
                 <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] mb-1">
@@ -1078,7 +1078,7 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
                 </div>
                 <div className="w-full bg-surface rounded-full h-2">
                   <div
-                    className="bg-emerald-500 h-2 rounded-full transition-all"
+                    className="bg-primary-500 h-2 rounded-full transition-all"
                     style={{ width: `${Math.min((monthlyReport.total_income / monthlyReport.income_goal) * 100, 100)}%` }}
                   />
                 </div>
@@ -1240,7 +1240,7 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
         </div>
         <div className="premium-card-static p-5">
           <div className="text-sm text-muted mb-1">סה"כ לחיוב</div>
-          <div className="text-2xl font-bold text-emerald-400">
+          <div className="text-2xl font-bold text-primary-400">
             ₪{filteredData.reduce((sum, row) => sum + row.total_due, 0).toLocaleString()}
           </div>
         </div>
@@ -1381,7 +1381,7 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
 
                       {/* Total Due */}
                       <td className="p-4">
-                        <span className={`font-semibold ${row.total_due > 0 ? 'text-emerald-400' : 'text-[var(--color-text-muted)]'}`}>
+                        <span className={`font-semibold ${row.total_due > 0 ? 'text-primary-400' : 'text-[var(--color-text-muted)]'}`}>
                           {row.total_due > 0 ? `₪${row.total_due}` : '-'}
                         </span>
                       </td>
@@ -1397,7 +1397,7 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
                                 title={row.card_forecast_weeks ? `החבילה תסתיים בעוד ${row.card_remaining} אימונים (צפי: ~${row.card_forecast_weeks} שבועות)` : undefined}
                               >
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className={`font-medium ${row.card_remaining > 2 ? 'text-emerald-400' : row.card_remaining > 0 ? 'text-amber-400' : 'text-red-400'}`}>
+                                  <span className={`font-medium ${row.card_remaining > 2 ? 'text-primary-400' : row.card_remaining > 0 ? 'text-amber-400' : 'text-red-400'}`}>
                                     {row.card_remaining}
                                   </span>
                                   <span className="text-[var(--color-text-muted)] text-sm">/ {row.card_sessions_total}</span>
@@ -1413,7 +1413,7 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
                                   )}
                                 </div>
                                 {row.card_purchased_this_month && (
-                                  <span className="text-xs text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded">
+                                  <span className="text-xs text-primary-400 bg-primary-400/10 px-2 py-0.5 rounded">
                                     נרכש החודש - ₪{row.active_card.price_paid}
                                   </span>
                                 )}
@@ -1446,7 +1446,7 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
                               <button
                                 onClick={saveEditing}
                                 disabled={saving}
-                                className="p-2 bg-emerald-500/20 hover:bg-emerald-500/30 rounded-lg transition-all text-emerald-400"
+                                className="p-2 bg-primary-500/20 hover:bg-primary-500/30 rounded-lg transition-all text-primary-400"
                               >
                                 {saving ? (
                                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -1554,7 +1554,7 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
               <button
                 onClick={saveNewCard}
                 disabled={savingCard || newCard.sessions_purchased < 1}
-                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 rounded-lg text-foreground font-medium transition-all flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 rounded-lg text-foreground font-medium transition-all flex items-center justify-center gap-2"
               >
                 {savingCard ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -1651,7 +1651,7 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
                                 </span>
                               )}
                             </div>
-                            <span className="font-bold text-emerald-400">₪{card.price_paid.toLocaleString()}</span>
+                            <span className="font-bold text-primary-400">₪{card.price_paid.toLocaleString()}</span>
                           </div>
                           <div className="flex items-center justify-between text-sm text-[var(--color-text-muted)] mb-2">
                             <span>נרכש: {new Date(card.purchase_date).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' })}</span>

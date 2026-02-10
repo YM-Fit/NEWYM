@@ -767,7 +767,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 lg:p-6 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-muted600">טוען תוכנית...</p>
         </div>
       </div>
@@ -836,14 +836,14 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
             <button
               onClick={onBack}
-              className="p-3 lg:p-4 hover:bg-surface100 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+              className="p-3 lg:p-4 hover:bg-surface100 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               aria-label="חזור"
               title="חזור"
             >
               <ArrowRight className="h-6 w-6 lg:h-7 lg:w-7 text-muted600" />
             </button>
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl flex items-center justify-center shadow-glow transition-all duration-300 hover:scale-105">
+              <div className="w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center shadow-glow transition-all duration-300 hover:scale-105">
                 <Dumbbell className="w-7 h-7 lg:w-8 lg:h-8 text-white" />
               </div>
               <div>
@@ -896,7 +896,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
           <button
             onClick={handleSave}
             disabled={saving || days.length === 0 || !planName.trim()}
-              className={`bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${hasUnsavedChanges ? 'ring-2 ring-amber-500 ring-offset-2' : ''}`}
+              className={`bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${hasUnsavedChanges ? 'ring-2 ring-amber-500 ring-offset-2' : ''}`}
               aria-label={saving ? 'שומר תוכנית' : activePlanId ? 'עדכן תוכנית' : 'שמור תוכנית'}
               aria-disabled={saving || days.length === 0 || !planName.trim()}
           >
@@ -924,7 +924,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                 setPlanName(e.target.value);
                 setHasUnsavedChanges(true);
               }}
-              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 text-lg"
               placeholder="לדוגמה: תוכנית כוח - שלב 1"
             />
           </div>
@@ -937,7 +937,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                 setPlanDescription(e.target.value);
                 setHasUnsavedChanges(true);
               }}
-              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 text-lg"
               rows={2}
               placeholder="מטרות, הערות כלליות..."
             />
@@ -952,7 +952,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                   setDaysPerWeek(parseInt(e.target.value));
                   setHasUnsavedChanges(true);
                 }}
-                className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+                className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 text-lg"
               >
                 {[1, 2, 3, 4, 5, 6, 7].map(n => (
                   <option key={n} value={n}>{n} ימים</option>
@@ -971,7 +971,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                   setDurationWeeks(weeks);
                   setHasUnsavedChanges(true);
                 }}
-                className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+                className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 text-lg"
                 placeholder="אופציונלי"
               />
             </div>
@@ -987,7 +987,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                   setStartDate(e.target.value || null);
                   setHasUnsavedChanges(true);
                 }}
-                className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+                className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 text-lg"
               />
             </div>
 
@@ -1001,7 +1001,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                   setHasUnsavedChanges(true);
                 }}
                 min={startDate || undefined}
-                className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+                className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 text-lg"
               />
             </div>
           </div>
@@ -1056,7 +1056,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                           setCardioWeeklyGoalSteps(null);
                         }
                       }}
-                      className="w-5 h-5 rounded border-border200 text-emerald-600 focus:ring-emerald-500"
+                      className="w-5 h-5 rounded border-border200 text-primary-600 focus:ring-primary-500"
                     />
                     <span className="text-sm font-semibold text-muted700 flex items-center gap-2">
                       <Activity className="w-4 h-4" />
@@ -1067,7 +1067,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
                 {/* Cardio Settings */}
                 {includeCardio && (
-                  <div className="space-y-4 bg-white p-4 rounded-xl border border-emerald-200">
+                  <div className="space-y-4 bg-white p-4 rounded-xl border border-primary-200">
                     {/* Cardio Type */}
                     <div>
                       <label className="block text-sm font-semibold text-muted700 mb-2">
@@ -1079,7 +1079,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                         <select
                           value={cardioTypeId || ''}
                           onChange={(e) => setCardioTypeId(e.target.value || null)}
-                          className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                          className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300"
                         >
                           <option value="">בחר סוג אירובי</option>
                           {cardioTypes.map(type => (
@@ -1100,7 +1100,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                         max="7"
                         value={cardioFrequency}
                         onChange={(e) => setCardioFrequency(parseInt(e.target.value) || 0)}
-                        className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                        className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300"
                       />
                     </div>
 
@@ -1115,7 +1115,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
                         value={cardioWeeklyGoalSteps || ''}
                         onChange={(e) => setCardioWeeklyGoalSteps(e.target.value ? parseInt(e.target.value) : null)}
                         placeholder="לדוגמה: 10000"
-                        className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
+                        className="w-full px-4 py-3 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300"
                       />
                     </div>
                   </div>
@@ -1141,7 +1141,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
               <button
                 type="button"
                 onClick={() => setShowSaveTemplateModal(true)}
-                  className="py-4 px-4 bg-gradient-to-br from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 text-emerald-700 font-bold rounded-xl transition-all duration-300 border-2 border-emerald-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                  className="py-4 px-4 bg-gradient-to-br from-primary-50 to-primary-100 hover:from-primary-100 hover:to-primary-200 text-primary-700 font-bold rounded-xl transition-all duration-300 border-2 border-primary-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                   aria-label="שמור כתבנית"
               >
                 שמור כתבנית
@@ -1226,7 +1226,7 @@ export default function WorkoutPlanBuilder({ traineeId, traineeName, onBack }: W
 
       <button
         onClick={addDay}
-        className="w-full mt-4 bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+        className="w-full mt-4 bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
         aria-label={days.length === 0 ? 'הוסף יום אימון ראשון' : 'הוסף יום אימון נוסף'}
       >
         <Plus className="h-6 w-6 lg:h-7 lg:w-7" />

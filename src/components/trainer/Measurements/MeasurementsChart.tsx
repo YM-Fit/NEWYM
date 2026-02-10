@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { BodyMeasurement } from '../../../types';
 import { TrendingUp, TrendingDown, BarChart3, List, Table2, Minus } from 'lucide-react';
+import { themeColors } from '../../../utils/themeColors';
 
 interface MeasurementsChartProps {
   measurements: BodyMeasurement[];
@@ -29,12 +30,12 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
 
   const getMetricColor = (metric: string) => {
     switch (metric) {
-      case 'weight': return '#10b981';        // emerald-500
-      case 'bodyFat': return '#f59e0b';       // amber-500
-      case 'muscleMass': return '#3b82f6';    // blue-500
-      case 'waterPercentage': return '#3b82f6'; // blue-500
-      case 'metabolicAge': return '#ef4444';  // red-500
-      default: return '#71717a';              // zinc-500
+      case 'weight': return themeColors.chartPrimary;
+      case 'bodyFat': return themeColors.chartAmber;
+      case 'muscleMass': return themeColors.chartBlue;
+      case 'waterPercentage': return themeColors.chartBlue;
+      case 'metabolicAge': return themeColors.chartRose;
+      default: return themeColors.zinc500;
     }
   };
 
@@ -89,7 +90,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
               {payload.map((entry: any, index: number) => {
                 if (entry.value === null || entry.value === undefined) return null;
                 const memberName = index === 0 ? (trainee?.pairName1 || 'בן זוג 1') : (trainee?.pairName2 || 'בן זוג 2');
-                const color = index === 0 ? '#3b82f6' : '#f59e0b';
+                const color = index === 0 ? themeColors.chartBlue : themeColors.chartAmber;
                 return (
                   <div key={index} className="flex items-baseline gap-2">
                     <p className="text-xs text-muted light:text-muted font-medium">{memberName}:</p>
@@ -143,7 +144,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
         <div className="flex items-center gap-3">
           {totalChange && (
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-              totalChange.isPositive ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
+              totalChange.isPositive ? 'bg-primary-500/15 text-primary-400' : 'bg-red-500/15 text-red-400'
             }`}>
               {totalChange.isPositive ? (
                 <TrendingUp className="w-4 h-4" />
@@ -163,7 +164,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
           <button
             onClick={() => setViewMode('chart')}
             className={`p-2 rounded-lg transition-all ${
-              viewMode === 'chart' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
+              viewMode === 'chart' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
             }`}
             title="גרף"
           >
@@ -172,7 +173,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
           <button
             onClick={() => setViewMode('list')}
             className={`p-2 rounded-lg transition-all ${
-              viewMode === 'list' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
+              viewMode === 'list' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
             }`}
             title="רשימה"
           >
@@ -181,7 +182,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
           <button
             onClick={() => setViewMode('table')}
             className={`p-2 rounded-lg transition-all ${
-              viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
+              viewMode === 'table' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
             }`}
             title="טבלה"
           >
@@ -196,30 +197,30 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
             <LineChart data={combinedChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid 
                 strokeDasharray="3 3" 
-                stroke="#3f3f46" 
+                stroke={themeColors.zinc700} 
                 strokeOpacity={0.3}
                 vertical={false}
               />
               <XAxis
                 dataKey="date"
-                stroke="#71717a"
+                stroke={themeColors.zinc500}
                 fontSize={12}
                 tickLine={false}
-                axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
-                tick={{ fill: '#a1a1aa' }}
+                axisLine={{ stroke: themeColors.zinc700, strokeOpacity: 0.5 }}
+                tick={{ fill: themeColors.zinc400 }}
               />
               <YAxis
-                stroke="#71717a"
+                stroke={themeColors.zinc500}
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: '#a1a1aa' }}
+                tick={{ fill: themeColors.zinc400 }}
                 width={45}
               />
               <Tooltip 
                 content={<CustomTooltip />} 
                 cursor={{ 
-                  stroke: isPairWithBothMembers ? '#3b82f6' : getMetricColor(metric), 
+                  stroke: isPairWithBothMembers ? themeColors.chartBlue : getMetricColor(metric), 
                   strokeWidth: 1, 
                   strokeDasharray: '5 5', 
                   strokeOpacity: 0.3 
@@ -230,21 +231,21 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                   <Line
                     type="monotone"
                     dataKey="value1"
-                    stroke="#3b82f6"
+                    stroke={themeColors.chartBlue}
                     strokeWidth={3}
                     dot={{ 
-                      fill: '#3b82f6', 
+                      fill: themeColors.chartBlue, 
                       strokeWidth: 3, 
                       r: 5, 
-                      stroke: '#09090b',
+                      stroke: themeColors.zinc950,
                       filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.3))'
                     }}
                     activeDot={{ 
                       r: 8, 
-                      stroke: '#3b82f6', 
+                      stroke: themeColors.chartBlue, 
                       strokeWidth: 3, 
-                      fill: '#09090b',
-                      filter: 'drop-shadow(0 0 8px #3b82f6)'
+                      fill: themeColors.zinc950,
+                      filter: `drop-shadow(0 0 8px ${themeColors.chartBlue})`
                     }}
                     name={trainee?.pairName1 || 'בן זוג 1'}
                     connectNulls={false}
@@ -254,21 +255,21 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                   <Line
                     type="monotone"
                     dataKey="value2"
-                    stroke="#f59e0b"
+                    stroke={themeColors.chartAmber}
                     strokeWidth={3}
                     dot={{ 
-                      fill: '#f59e0b', 
+                      fill: themeColors.chartAmber, 
                       strokeWidth: 3, 
                       r: 5, 
-                      stroke: '#09090b',
+                      stroke: themeColors.zinc950,
                       filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.3))'
                     }}
                     activeDot={{ 
                       r: 8, 
-                      stroke: '#f59e0b', 
+                      stroke: themeColors.chartAmber, 
                       strokeWidth: 3, 
-                      fill: '#09090b',
-                      filter: 'drop-shadow(0 0 8px #f59e0b)'
+                      fill: themeColors.zinc950,
+                      filter: `drop-shadow(0 0 8px ${themeColors.chartAmber})`
                     }}
                     name={trainee?.pairName2 || 'בן זוג 2'}
                     connectNulls={false}
@@ -286,14 +287,14 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                     fill: getMetricColor(metric), 
                     strokeWidth: 3, 
                     r: 5, 
-                    stroke: '#09090b',
+                    stroke: themeColors.zinc950,
                     filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.3))'
                   }}
                   activeDot={{ 
                     r: 8, 
                     stroke: getMetricColor(metric), 
                     strokeWidth: 3, 
-                    fill: '#09090b',
+                    fill: themeColors.zinc950,
                     filter: 'drop-shadow(0 0 8px ' + getMetricColor(metric) + ')'
                   }}
                   name={getMetricLabel(metric)}
@@ -344,7 +345,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                 <div className="flex items-center gap-4">
                   {change && (
                     <div className={`flex items-center gap-1 text-sm ${
-                      change.isPositive ? 'text-emerald-400' : 'text-red-400'
+                      change.isPositive ? 'text-primary-400' : 'text-red-400'
                     }`}>
                       {change.diff === 0 ? (
                         <Minus className="w-3 h-3" />
@@ -417,7 +418,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                     <td className="py-2 px-3 text-center">
                       {change ? (
                         <span className={`text-sm font-medium ${
-                          change.isPositive ? 'text-emerald-400' : 'text-red-400'
+                          change.isPositive ? 'text-primary-400' : 'text-red-400'
                         }`}>
                           {change.diff > 0 ? '+' : ''}{change.diff.toFixed(1)}
                         </span>
@@ -428,7 +429,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                     <td className="py-2 px-3 text-center">
                       {change ? (
                         <span className={`text-sm ${
-                          change.isPositive ? 'text-emerald-400' : 'text-red-400'
+                          change.isPositive ? 'text-primary-400' : 'text-red-400'
                         }`}>
                           {change.percentage}%
                         </span>
@@ -439,7 +440,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                     <td className="py-2 px-3 text-center">
                       {fromStart && index < arr.length - 1 ? (
                         <span className={`text-sm font-medium px-2 py-0.5 rounded ${
-                          fromStart.isPositive ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
+                          fromStart.isPositive ? 'bg-primary-500/15 text-primary-400' : 'bg-red-500/15 text-red-400'
                         }`}>
                           {fromStart.diff > 0 ? '+' : ''}{fromStart.diff.toFixed(1)}
                         </span>

@@ -28,7 +28,13 @@ export default {
           focus: 'rgb(var(--color-bg-input-focus) / <alpha-value>)',
         },
         overlay: 'rgb(var(--color-bg-overlay) / <alpha-value>)',
-        foreground: 'rgb(var(--color-text-primary) / <alpha-value>)',
+        foreground: {
+          DEFAULT: 'rgb(var(--color-text-primary) / <alpha-value>)',
+          400: 'rgb(var(--color-foreground-400) / <alpha-value>)',
+          600: 'rgb(var(--color-foreground-600) / <alpha-value>)',
+          700: 'rgb(var(--color-foreground-700) / <alpha-value>)',
+          900: 'rgb(var(--color-foreground-900) / <alpha-value>)',
+        },
         secondary: 'rgb(var(--color-text-secondary) / <alpha-value>)',
         muted: {
           DEFAULT: 'rgb(var(--color-text-muted) / <alpha-value>)',
@@ -102,6 +108,7 @@ export default {
           light: 'rgb(var(--color-accent-bg-light) / <alpha-value>)',
           dark: 'rgb(var(--color-accent-bg-dark) / <alpha-value>)',
         },
+        /* emerald overridden to match primary (olive) - for any legacy emerald-* usage */
         emerald: {
           50: '#f0f5ed',
           100: '#e8f0e0',
@@ -159,6 +166,20 @@ export default {
           rose: '#f43f5e',
           teal: '#14b8a6',
         },
+        /* Flat aliases for backward compatibility (border-border200, bg-surface100, etc.) */
+        border100: 'rgb(var(--color-border-num-100) / <alpha-value>)',
+        border200: 'rgb(var(--color-border-num-200) / <alpha-value>)',
+        border300: 'rgb(var(--color-border-num-300) / <alpha-value>)',
+        surface0: 'rgb(var(--color-surface-0) / <alpha-value>)',
+        surface50: 'rgb(var(--color-surface-50) / <alpha-value>)',
+        surface100: 'rgb(var(--color-surface-100) / <alpha-value>)',
+        surface200: 'rgb(var(--color-surface-200) / <alpha-value>)',
+        surface300: 'rgb(var(--color-surface-300) / <alpha-value>)',
+        muted400: 'rgb(var(--color-muted-400) / <alpha-value>)',
+        muted500: 'rgb(var(--color-muted-500) / <alpha-value>)',
+        muted600: 'rgb(var(--color-muted-600) / <alpha-value>)',
+        muted700: 'rgb(var(--color-muted-700) / <alpha-value>)',
+        muted900: 'rgb(var(--color-muted-900) / <alpha-value>)',
       },
       screens: {
         'landscape': { 'raw': '(orientation: landscape)' },

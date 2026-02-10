@@ -31,7 +31,7 @@ export const WorkoutProgressBar = memo(({
       {/* Progress bar */}
       <div className="relative h-3 bg-surface rounded-full overflow-hidden mb-3 shadow-inner">
         <div 
-          className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-600 via-emerald-500 to-blue-500 rounded-full transition-all duration-500 shadow-lg"
+          className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary-600 via-primary-500 to-blue-500 rounded-full transition-all duration-500 shadow-lg"
           style={{ width: `${progressPercent}%` }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" style={{
@@ -64,10 +64,10 @@ export const WorkoutProgressBar = memo(({
         </div>
         
         {/* Volume */}
-        <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/30">
-          <TrendingUp className="h-4 w-4 text-emerald-400" />
-          <span className="font-semibold text-emerald-400 text-sm lg:text-base">{totalVolume.toLocaleString()}</span>
-          <span className="text-emerald-400/70 text-xs">ק״ג</span>
+        <div className="flex items-center gap-2 bg-primary-500/10 px-3 py-1.5 rounded-lg border border-primary-500/30">
+          <TrendingUp className="h-4 w-4 text-primary-400" />
+          <span className="font-semibold text-primary-400 text-sm lg:text-base">{totalVolume.toLocaleString()}</span>
+          <span className="text-primary-400/70 text-xs">ק״ג</span>
         </div>
         
         {/* Exercises progress */}
@@ -81,7 +81,7 @@ export const WorkoutProgressBar = memo(({
         </div>
         
         {/* Progress percentage */}
-        <div className="flex items-center gap-1 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 px-4 py-1.5 rounded-lg border border-emerald-500/30">
+        <div className="flex items-center gap-1 bg-gradient-to-r from-primary-500/20 to-primary-600/20 px-4 py-1.5 rounded-lg border border-primary-500/30">
           <span className="text-lg lg:text-xl font-bold text-foreground">{progressPercent}%</span>
           <span className="text-xs text-muted">הושלמו</span>
         </div>

@@ -229,7 +229,7 @@ export default function DayEditView({
             )}
             <button
               onClick={() => onComplete(day.tempId)}
-              className="bg-gradient-to-br from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-800 text-white px-5 py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="bg-gradient-to-br from-primary-700 to-primary-800 hover:from-primary-800 hover:to-primary-800 text-white px-5 py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
             >
               סיים יום
             </button>
@@ -243,7 +243,7 @@ export default function DayEditView({
               type="text"
               value={day.day_name}
               onChange={(e) => onUpdateDay(day.tempId, 'day_name', e.target.value)}
-              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 text-lg"
               placeholder="לדוגמה: חזה + טריצפס"
             />
           </div>
@@ -254,7 +254,7 @@ export default function DayEditView({
               type="text"
               value={day.focus}
               onChange={(e) => onUpdateDay(day.tempId, 'focus', e.target.value)}
-              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 text-lg"
               placeholder="חזה, כתפיים קדמיות, טריצפס"
             />
           </div>
@@ -264,7 +264,7 @@ export default function DayEditView({
             <textarea
               value={day.notes}
               onChange={(e) => onUpdateDay(day.tempId, 'notes', e.target.value)}
-              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 text-lg"
               rows={2}
               placeholder="הערות כלליות ליום האימון..."
             />
@@ -284,7 +284,7 @@ export default function DayEditView({
               }}
               min="0"
               max="7"
-              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-lg"
+              className="w-full px-4 py-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 text-lg"
               placeholder="1"
             />
             <p className="text-xs text-muted600 mt-1">
@@ -337,7 +337,7 @@ export default function DayEditView({
         )}
         <button
           onClick={() => onSetShowExerciseSelector(true)}
-          className={`${day.exercises.length > 0 ? 'flex-1' : 'w-full'} bg-gradient-to-br from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-800 text-white py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]`}
+          className={`${day.exercises.length > 0 ? 'flex-1' : 'w-full'} bg-gradient-to-br from-primary-700 to-primary-800 hover:from-primary-800 hover:to-primary-800 text-white py-5 lg:py-6 rounded-2xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]`}
         >
           <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
           <span className="font-bold text-lg lg:text-xl">הוסף תרגיל</span>
