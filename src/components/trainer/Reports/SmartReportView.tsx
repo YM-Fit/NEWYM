@@ -1578,81 +1578,111 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
 
       {/* Card History Modal */}
       {showCardHistoryModal && selectedTraineeForCard && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--color-bg-surface)] rounded-2xl max-w-lg w-full p-6 border border-[var(--color-border)] max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-                <History className="w-6 h-6 text-blue-400" />
-                היסטוריית כרטיסיות - {selectedTraineeForCard.name}
-              </h2>
-              <button
-                onClick={() => setShowCardHistoryModal(false)}
-                className="p-2 hover:bg-[var(--color-bg-elevated)] rounded-lg transition-all"
-              >
-                <X className="w-5 h-5 text-[var(--color-text-muted)]" />
-              </button>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="premium-card-static rounded-2xl max-w-md w-full max-h-[85vh] flex flex-col border border-border shadow-2xl animate-scale-in overflow-hidden">
+            {/* Header */}
+            <div className="p-6 pb-4 border-b border-border">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/20 border border-amber-500/30">
+                    <History className="w-6 h-6 text-amber-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
+                      היסטוריית כרטיסיות
+                    </h2>
+                    <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
+                      {selectedTraineeForCard.name}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowCardHistoryModal(false)}
+                  className="p-2 hover:bg-surface rounded-xl transition-all text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+                  aria-label="סגור"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6 pt-4">
               {cardHistory.length === 0 ? (
-                <div className="text-center py-8 text-[var(--color-text-muted)]">
-                  אין היסטוריית כרטיסיות
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="p-4 rounded-2xl bg-surface/50 mb-4">
+                    <Ticket className="w-12 h-12 text-[var(--color-text-muted)] opacity-50" />
+                  </div>
+                  <p className="text-[var(--color-text-muted)] font-medium">אין היסטוריית כרטיסיות</p>
+                  <p className="text-sm text-[var(--color-text-muted)] mt-1">הוסף כרטיסיה ראשונה למתאמן</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {cardHistory.map((card) => (
-                    <div
-                      key={card.id}
-                      className={`p-4 rounded-lg border ${
-                        card.is_active 
-                          ? 'bg-emerald-500/10 border-emerald-500/30' 
-                          : 'bg-[var(--color-bg-elevated)]/50 border-[var(--color-border)]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Ticket className={`w-5 h-5 ${card.is_active ? 'text-emerald-400' : 'text-[var(--color-text-muted)]'}`} />
-                          <span className="font-medium text-[var(--color-text-primary)]">
-                            {card.sessions_purchased} אימונים
-                          </span>
-                          {card.is_active && (
-                            <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded">
-                              פעילה
-                            </span>
-                          )}
+                <div className="relative">
+                  {/* Timeline line */}
+                  <div className="absolute right-5 top-0 bottom-0 w-px bg-border" />
+                  <div className="space-y-4">
+                    {cardHistory.map((card, index) => (
+                      <div key={card.id} className="relative flex gap-4">
+                        {/* Timeline dot */}
+                        <div className={`relative z-10 flex-shrink-0 w-3 h-3 rounded-full mt-1.5 ${
+                          card.is_active 
+                            ? 'bg-amber-400 ring-4 ring-amber-400/30' 
+                            : 'bg-surface border-2 border-border'
+                        }`} />
+                        {/* Card */}
+                        <div className={`flex-1 min-w-0 rounded-xl border p-4 transition-all ${
+                          card.is_active 
+                            ? 'bg-amber-500/5 border-amber-500/30 shadow-sm' 
+                            : 'bg-surface/30 border-border/50'
+                        }`}>
+                          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-[var(--color-text-primary)]">
+                                {card.sessions_purchased} אימונים
+                              </span>
+                              {card.is_active && (
+                                <span className="text-xs font-medium bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-lg">
+                                  פעילה
+                                </span>
+                              )}
+                              {!card.is_active && card.sessions_used === card.sessions_purchased && (
+                                <span className="text-xs font-medium bg-surface text-[var(--color-text-muted)] px-2.5 py-1 rounded-lg">
+                                  הושלמה
+                                </span>
+                              )}
+                            </div>
+                            <span className="font-bold text-emerald-400">₪{card.price_paid.toLocaleString()}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm text-[var(--color-text-muted)] mb-2">
+                            <span>נרכש: {new Date(card.purchase_date).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                            <span className="font-medium">{card.sessions_used}/{card.sessions_purchased} נוצלו</span>
+                          </div>
+                          <div className="h-2 bg-surface rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 ${
+                                card.is_active 
+                                  ? 'bg-gradient-to-l from-amber-500 to-amber-400' 
+                                  : 'bg-[var(--color-text-muted)]/30'
+                              }`}
+                              style={{ width: `${Math.min(100, (card.sessions_used / card.sessions_purchased) * 100)}%` }}
+                            />
+                          </div>
                         </div>
-                        <span className="text-emerald-400 font-medium">₪{card.price_paid}</span>
                       </div>
-                      <div className="flex items-center justify-between text-sm text-[var(--color-text-muted)]">
-                        <span>
-                          נרכש: {new Date(card.purchase_date).toLocaleDateString('he-IL')}
-                        </span>
-                        <span>
-                          נוצל: {card.sessions_used} / {card.sessions_purchased}
-                        </span>
-                      </div>
-                      {/* Progress bar */}
-                      <div className="mt-2 h-2 bg-elevated rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all ${
-                            card.is_active ? 'bg-emerald-500' : 'bg-surface'
-                          }`}
-                          style={{ width: `${(card.sessions_used / card.sessions_purchased) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
 
-            <div className="mt-6 pt-4 border-t border-[var(--color-border)]">
+            {/* Footer */}
+            <div className="p-6 pt-4 border-t border-border bg-surface/30">
               <button
                 onClick={() => {
                   setShowCardHistoryModal(false);
                   openAddCardModal(selectedTraineeForCard.id, selectedTraineeForCard.name);
                 }}
-                className="w-full py-3 bg-amber-500 hover:bg-amber-600 rounded-lg text-foreground font-medium transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 bg-gradient-to-l from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg shadow-amber-500/20"
               >
                 <Plus className="w-5 h-5" />
                 הוסף כרטיסיה חדשה
