@@ -295,6 +295,7 @@ export function formatTraineeNameWithSession(
 /**
  * Format trainee name with event position for display
  * This shows the monthly position of the workout (e.g., "אריאל 3/8" - 3rd workout out of 8 this month)
+ * For card_ticket: when this workout uses the last session, shows "שם 10/10 סיום חבילה"
  */
 export function formatTraineeNameWithPosition(
   traineeName: string,
@@ -304,6 +305,21 @@ export function formatTraineeNameWithPosition(
   if (!positionInfo) {
     // Fallback to session info format if no position
     return formatTraineeNameWithSession(traineeName, sessionInfo);
+  }
+
+  // Check if this is the last session of a card (package completion)
+  const isLastSessionOfCard =
+    sessionInfo?.countingMethod === 'card_ticket' &&
+    sessionInfo?.hasActiveCard &&
+    sessionInfo.cardSessionsUsed + positionInfo.position === sessionInfo.cardSessionsTotal;
+
+  if (isLastSessionOfCard) {
+    const sessionText = `${sessionInfo.cardSessionsTotal}/${sessionInfo.cardSessionsTotal} סיום חבילה`;
+    return {
+      displayName: `${traineeName} ${sessionText}`,
+      sessionText,
+      hasSessionInfo: true,
+    };
   }
 
   // Show monthly position/total format (e.g., "3/8")
@@ -786,8 +802,39 @@ export async function generateGoogleCalendarEventTitle(
     
     // Prefer card/ticket format if available
     if (sessionInfo.countingMethod === 'card_ticket' && sessionInfo.hasActiveCard) {
-      // Show card sessions: remaining/total
-      sessionText = `${sessionInfo.cardSessionsRemaining}/${sessionInfo.cardSessionsTotal}`;
+      // Calculate position in card sequence (which session this workout uses)
+      const { data: allWorkouts } = await supabase
+        .from('workouts')
+        .select('id, workout_date')
+        .eq('trainer_id', trainerId)
+        .lte('workout_date', eventDate.toISOString())
+        .order('workout_date', { ascending: true });
+      const workoutIds = (allWorkouts || []).map(w => (w as any).id);
+      let position = 1;
+      if (workoutIds.length > 0) {
+        const { data: links } = await batchQuery(
+          async (ids) => supabase
+            .from('workout_trainees')
+            .select('workout_id')
+            .eq('trainee_id', traineeId)
+            .in('workout_id', ids),
+          workoutIds
+        );
+        const traineeWorkoutIds = new Set((links || []).map(l => l.workout_id));
+        const traineeWorkouts = (allWorkouts || []).filter(w => traineeWorkoutIds.has((w as any).id));
+        if (workoutId) {
+          const idx = traineeWorkouts.findIndex(w => (w as any).id === workoutId);
+          position = idx >= 0 ? idx + 1 : traineeWorkouts.length + 1;
+        } else {
+          const eventDateMs = eventDate.getTime();
+          const match = traineeWorkouts.find(w => Math.abs(new Date((w as any).workout_date).getTime() - eventDateMs) < 3600000);
+          position = match ? traineeWorkouts.indexOf(match) + 1 : traineeWorkouts.filter(w => new Date((w as any).workout_date).getTime() < eventDateMs).length + 1;
+        }
+      }
+      const isLastSession = position === sessionInfo.cardSessionsTotal;
+      sessionText = isLastSession
+        ? `${sessionInfo.cardSessionsTotal}/${sessionInfo.cardSessionsTotal} סיום חבילה`
+        : `${sessionInfo.cardSessionsRemaining}/${sessionInfo.cardSessionsTotal}`;
     } else {
       // Calculate monthly position for this specific workout
       const eventMonth = new Date(eventDate.getFullYear(), eventDate.getMonth(), 1);

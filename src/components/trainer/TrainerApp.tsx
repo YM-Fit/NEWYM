@@ -102,6 +102,8 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
   const [editingMeasurement, setEditingMeasurement] = useState<any | null>(null);
   const [selectedPairMember, setSelectedPairMember] = useState<'member_1' | 'member_2' | null>(null);
   const [initialTraineeName, setInitialTraineeName] = useState<string | undefined>(undefined);
+  const [smartReportInitialMonth, setSmartReportInitialMonth] = useState<Date | null>(null);
+  const [calendarInitialDate, setCalendarInitialDate] = useState<Date | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -118,6 +120,18 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
       document.body.classList.remove('tv-mode-active');
       document.documentElement.classList.remove('tv-mode-active');
     };
+  }, [activeView]);
+
+  useEffect(() => {
+    if (activeView !== 'smart-report') {
+      setSmartReportInitialMonth(null);
+    }
+  }, [activeView]);
+
+  useEffect(() => {
+    if (activeView !== 'calendar') {
+      setCalendarInitialDate(null);
+    }
   }, [activeView]);
 
   const handleScaleReading = useCallback((reading: IdentifiedReading) => {
@@ -644,6 +658,8 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
               onCreateWorkout={() => { setActiveView('trainees'); toast('בחר מתאמן ליצירת אימון חדש', { icon: '💪' }); }}
               onCreateTrainee={(name: string) => { setInitialTraineeName(name); setActiveView('add-trainee'); toast(`יוצר כרטיס מתאמן חדש: ${name}`, { icon: '👤' }); }}
               onQuickCreateTrainee={handleQuickCreateTrainee}
+              onViewSmartReport={(month) => { setSmartReportInitialMonth(month); setActiveView('smart-report'); }}
+              initialDate={calendarInitialDate}
             />
           </Suspense>
         );
@@ -653,7 +669,14 @@ export default function TrainerApp({ isTablet }: TrainerAppProps) {
       case 'reports':
         return <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}><ReportsView /></Suspense>;
       case 'smart-report':
-        return <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}><SmartReportView /></Suspense>;
+        return (
+          <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
+            <SmartReportView
+              initialMonth={smartReportInitialMonth ?? undefined}
+              onBackToCalendar={(month) => { setCalendarInitialDate(month); setActiveView('calendar'); }}
+            />
+          </Suspense>
+        );
       case 'health-check':
         return <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}><HealthCheckView /></Suspense>;
       case 'error-reporting':

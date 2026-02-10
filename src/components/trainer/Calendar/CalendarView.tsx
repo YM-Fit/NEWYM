@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Plus, RefreshCw, Trash2, GripVertical, Users, CalendarDays, CalendarRange, Repeat } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Plus, RefreshCw, Trash2, GripVertical, Users, CalendarDays, CalendarRange, Repeat, FileSpreadsheet } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { 
   getGoogleCalendarEvents, 
@@ -51,6 +51,8 @@ interface CalendarViewProps {
   onCreateWorkout?: () => void;
   onCreateTrainee?: (name: string, eventId?: string) => void;
   onQuickCreateTrainee?: (name: string) => Promise<string | null>;
+  onViewSmartReport?: (month: Date) => void;
+  initialDate?: Date | null;
 }
 
 interface EventItemProps {
@@ -621,10 +623,10 @@ function DroppableWeekHourCell({
   );
 }
 
-export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTrainee, onQuickCreateTrainee }: CalendarViewProps) {
+export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTrainee, onQuickCreateTrainee, onViewSmartReport, initialDate }: CalendarViewProps) {
   const { user } = useAuth();
   
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(initialDate ?? new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1868,6 +1870,17 @@ export default function CalendarView({ onEventClick, onCreateWorkout, onCreateTr
                 <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 רענון
               </button>
+              {onViewSmartReport && (
+                <button
+                  onClick={() => onViewSmartReport(currentDate)}
+                  className="px-2.5 sm:px-3 md:px-4 py-2 text-xs sm:text-sm bg-gradient-to-br from-amber-500/20 to-amber-600/20 hover:from-amber-500/30 hover:to-amber-600/30 text-amber-700 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 border border-amber-500/30 shadow-sm"
+                  title="דוח חכם לחודש נוכחי"
+                >
+                  <FileSpreadsheet className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden md:inline">דוח חכם</span>
+                  <span className="md:hidden">דוח</span>
+                </button>
+              )}
               <button
                 onClick={() => setShowSettings(true)}
                 className="px-2.5 sm:px-3 md:px-4 py-2 text-xs sm:text-sm bg-surface hover:bg-elevated text-foreground rounded-xl transition-all duration-300 border border-border flex items-center justify-center"

@@ -16,6 +16,7 @@ import {
   ChevronLeft, 
   ChevronRight, 
   Calendar,
+  CalendarDays,
   Edit2,
   Save,
   X,
@@ -76,6 +77,7 @@ interface TraineeReportRow {
   active_card: TraineeCard | null; // Current active card
   card_purchased_this_month: boolean; // Whether card was purchased in selected month
   card_remaining: number; // Remaining sessions on active card
+  card_forecast_weeks?: number; // Estimated weeks until card runs out (based on avg workouts/week)
 }
 
 interface EditingState {
@@ -128,14 +130,19 @@ const COUNTING_METHOD_ICONS: Record<CountingMethod, typeof CreditCard> = {
   monthly_count: Banknote,
 };
 
-export default function SmartReportView() {
+interface SmartReportViewProps {
+  initialMonth?: Date;
+  onBackToCalendar?: (month: Date) => void;
+}
+
+export default function SmartReportView({ initialMonth, onBackToCalendar }: SmartReportViewProps = {}) {
   const { user } = useAuth();
   const { data: traineesData, loading: traineesLoading, refetch } = useTrainees(user?.id || null);
   
   // Ensure trainees is always an array
   const trainees = Array.isArray(traineesData) ? traineesData : [];
   
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [selectedMonth, setSelectedMonth] = useState(initialMonth ?? new Date());
   const [reportData, setReportData] = useState<TraineeReportRow[]>([]);
   const [monthlyReport, setMonthlyReport] = useState<MonthlyReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -276,8 +283,13 @@ export default function SmartReportView() {
       const startOfMonthStr = startOfMonth.toISOString();
       const endOfMonthStr = endOfMonth.toISOString();
 
+      // Workouts in last 30 days for forecast calculation
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const thirtyDaysAgoStr = thirtyDaysAgo.toISOString();
+
       // OPTIMIZATION: Load all data in parallel instead of sequentially
-      const [workoutsResult, cardsResult, allWorkoutsResult] = await Promise.all([
+      const [workoutsResult, cardsResult, allWorkoutsResult, recentWorkoutsResult] = await Promise.all([
         // Get workouts for the selected month
         supabase
           .from('workouts')
@@ -300,6 +312,14 @@ export default function SmartReportView() {
           .select('id, workout_date')
           .eq('trainer_id', user.id)
           .lte('workout_date', endOfMonthStr)
+          .order('workout_date', { ascending: true }),
+        
+        // Get workouts in last 30 days for card forecast
+        supabase
+          .from('workouts')
+          .select('id, workout_date')
+          .eq('trainer_id', user.id)
+          .gte('workout_date', thirtyDaysAgoStr)
           .order('workout_date', { ascending: true })
       ]);
 
@@ -325,9 +345,10 @@ export default function SmartReportView() {
 
       const workoutIds = workoutsData?.map(w => w.id) || [];
       const allWorkoutIds = allWorkoutsData?.map(w => w.id) || [];
-      
+      const recentWorkoutIds = (recentWorkoutsResult.data || []).map(w => (w as { id: string }).id) || [];
+
       // OPTIMIZATION: Load trainee links in parallel
-      const [monthLinksResult, allLinksResult] = await Promise.all([
+      const [monthLinksResult, allLinksResult, recentLinksResult] = await Promise.all([
         // Get trainee links for this month's workouts
         workoutIds.length > 0 
           ? supabase
@@ -342,6 +363,14 @@ export default function SmartReportView() {
               .from('workout_trainees')
               .select('trainee_id, workout_id')
               .in('workout_id', allWorkoutIds)
+          : Promise.resolve({ data: [], error: null }),
+        
+        // Get trainee links for recent workouts (last 30 days - for card forecast)
+        recentWorkoutIds.length > 0
+          ? supabase
+              .from('workout_trainees')
+              .select('trainee_id, workout_id')
+              .in('workout_id', recentWorkoutIds)
           : Promise.resolve({ data: [], error: null })
       ]);
 
@@ -392,6 +421,12 @@ export default function SmartReportView() {
         data.numbers = numbers;
       }
 
+      // Workouts per trainee in last 30 days (for card forecast)
+      const traineeRecentWorkoutCount = new Map<string, number>();
+      (recentLinksResult.data || []).forEach((link: { trainee_id: string }) => {
+        traineeRecentWorkoutCount.set(link.trainee_id, (traineeRecentWorkoutCount.get(link.trainee_id) || 0) + 1);
+      });
+
       // Build report data
       const report: TraineeReportRow[] = trainees.map((trainee) => {
         const traineeWorkoutData = traineeWorkouts.get(trainee.id) || { dates: [], numbers: new Map() };
@@ -419,6 +454,16 @@ export default function SmartReportView() {
         const cardRemaining = activeCard 
           ? activeCard.sessions_purchased - activeCard.sessions_used 
           : 0;
+
+        // Calculate forecast: weeks until card runs out (based on avg workouts/week in last 30 days)
+        let cardForecastWeeks: number | undefined;
+        if (countingMethod === 'card_ticket' && activeCard && cardRemaining > 0) {
+          const recentWorkouts = traineeRecentWorkoutCount.get(trainee.id) || 0;
+          const avgPerWeek = recentWorkouts / 4.3; // ~4.3 weeks in 30 days
+          if (avgPerWeek > 0) {
+            cardForecastWeeks = Math.ceil(cardRemaining / avgPerWeek);
+          }
+        }
 
         // Calculate total due based on counting method (not payment method)
         let totalDue = 0;
@@ -453,6 +498,7 @@ export default function SmartReportView() {
           active_card: activeCard,
           card_purchased_this_month: cardPurchasedThisMonth,
           card_remaining: cardRemaining,
+          card_forecast_weeks: cardForecastWeeks,
           workout_dates: traineeWorkoutData.dates.sort(),
           workout_numbers: traineeWorkoutData.numbers,
         };
@@ -900,9 +946,26 @@ export default function SmartReportView() {
             <div>
               <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-1">דוח חכם</h1>
               <p className="text-[var(--color-text-muted)] text-lg">ניהול תשלומים וסיכום חודשי של מתאמנים</p>
+              <div className="flex items-center gap-2 mt-2 text-sm text-[var(--color-text-muted)]" title="הנתונים מבוססים על אימונים מהיומן (Google Calendar)">
+                <span>יומן</span>
+                <span className="opacity-60">›</span>
+                <span>אימונים</span>
+                <span className="opacity-60">›</span>
+                <span>דוח תשלומים</span>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {onBackToCalendar && (
+              <button
+                onClick={() => onBackToCalendar(selectedMonth)}
+                className="px-4 py-2 bg-surface hover:bg-elevated/50 text-[var(--color-text-secondary)] rounded-lg transition-all flex items-center gap-2 border border-border"
+                title="צפה ביומן לחודש זה"
+              >
+                <CalendarDays className="w-4 h-4" />
+                צפה ביומן
+              </button>
+            )}
             <label className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
               <input
                 type="checkbox"
@@ -1331,12 +1394,23 @@ export default function SmartReportView() {
                               <button
                                 onClick={() => openCardHistoryModal(row.id, row.full_name)}
                                 className="flex flex-col gap-1 text-right hover:bg-surface p-2 -m-2 rounded-lg transition-all"
+                                title={row.card_forecast_weeks ? `החבילה תסתיים בעוד ${row.card_remaining} אימונים (צפי: ~${row.card_forecast_weeks} שבועות)` : undefined}
                               >
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
                                   <span className={`font-medium ${row.card_remaining > 2 ? 'text-emerald-400' : row.card_remaining > 0 ? 'text-amber-400' : 'text-red-400'}`}>
                                     {row.card_remaining}
                                   </span>
                                   <span className="text-[var(--color-text-muted)] text-sm">/ {row.card_sessions_total}</span>
+                                  {row.card_forecast_weeks !== undefined && row.card_remaining > 0 && (
+                                    <span className="text-xs text-[var(--color-text-muted)]">
+                                      (צפי: ~{row.card_forecast_weeks} שבועות)
+                                    </span>
+                                  )}
+                                  {row.card_remaining > 0 && row.card_remaining <= 2 && (
+                                    <span className="text-xs text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded">
+                                      נגמר בקרוב
+                                    </span>
+                                  )}
                                 </div>
                                 {row.card_purchased_this_month && (
                                   <span className="text-xs text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded">
