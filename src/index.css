@@ -936,6 +936,11 @@
     box-shadow: 0 2px 8px rgba(74, 107, 42, 0.3);
   }
 
+  /* Ensure set card labels are always dark (override any theme/import that sets light text) */
+  .workout-set-card label {
+    color: #1e293b !important;
+  }
+
   .tablet .workout-set-card { min-height: 60px; }
   .tablet .workout-input-btn { min-height: 56px; font-size: 1.75rem; }
 
