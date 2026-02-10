@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Dumbbell, ClipboardList, UtensilsCrossed, Clock, Users, Calendar, AlertCircle, Scale, CalendarDays, CalendarCheck, User, Trash2, FileText } from 'lucide-react';
+import { Dumbbell, ClipboardList, UtensilsCrossed, Clock, Users, Calendar, AlertCircle, Scale, CalendarDays, CalendarCheck, User, Trash2, FileText, RefreshCw } from 'lucide-react';
 import { Trainee } from '../../../types';
 import { supabase } from '../../../lib/supabase';
 import { logger } from '../../../utils/logger';
@@ -760,9 +760,9 @@ export default function TodayTraineesSection({
       // Set up 60-second polling as fallback (Realtime handles immediate updates)
       refreshIntervalRef.current = setInterval(() => {
         if (!isLoadingRef.current) {
-          loadTodayTrainees(true); // Silent refresh
+          loadTodayTrainees(true); // Silent refresh every 30 seconds
         }
-      }, 60000); // 60 seconds - fallback polling
+      }, 30000); // 30 seconds - fallback polling
 
       return () => {
         if (refreshIntervalRef.current) {
@@ -867,6 +867,14 @@ export default function TodayTraineesSection({
         <p className="text-gray-700 mb-6 max-w-md mx-auto">
           אין מתאמנים עם אימון מתוזמן להיום או למחר. תוכל להוסיף אימון חדש מהרשימה הכללית.
         </p>
+        <button
+          type="button"
+          onClick={() => loadTodayTrainees(false)}
+          className="btn-secondary inline-flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          רענון
+        </button>
       </div>
     );
   }
@@ -910,6 +918,17 @@ export default function TodayTraineesSection({
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => loadTodayTrainees(false)}
+                className="p-2.5 rounded-xl bg-surface/80 border border-border/30 hover:bg-primary/10 hover:border-primary/30 
+                          transition-all duration-200 flex items-center gap-2"
+                title="רענון"
+                aria-label="רענון"
+              >
+                <RefreshCw className="h-5 w-5 text-primary" />
+                <span className="text-sm font-medium text-foreground hidden sm:inline">רענון</span>
+              </button>
               <div className="px-5 py-3 rounded-2xl bg-gradient-to-r from-primary/25 via-emerald-700/20 to-primary/25 
                             border-2 border-primary/30 shadow-lg shadow-primary/10
                             hover:scale-105 transition-transform duration-300">

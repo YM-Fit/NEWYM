@@ -106,22 +106,9 @@ Deno.serve(async (req: Request) => {
           .eq("trainer_id", credentials.trainer_id)
           .single();
 
-        // Only sync from Google if sync_direction is 'from_google' or 'bidirectional' and auto_sync is enabled
-        if (creds && creds.auto_sync_enabled) {
-          const shouldSyncFromGoogle = creds.sync_direction === 'from_google' || 
-                                      creds.sync_direction === 'bidirectional';
-          
-          if (!shouldSyncFromGoogle) {
-            // If sync direction is 'to_google' only, don't process webhook events from Google
-            return new Response(
-              JSON.stringify({ success: true, message: "Sync direction set to 'to_google' only, skipping webhook" }),
-              {
-                status: 200,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-              }
-            );
-          }
-        }
+        // For sync_direction 'to_google': still process DELETIONS (if user deleted in Google, delete locally)
+        // For create/update: only process when sync_direction is 'from_google' or 'bidirectional'
+        // Early return removed - we always process to handle deletions
 
         if (fetchCredError || !creds) {
           return new Response(
@@ -162,11 +149,11 @@ Deno.serve(async (req: Request) => {
           }
         }
 
-        // Fetch events from calendar
+        // Fetch events from calendar - 30 days back and 30 days forward
         const timeMin = new Date();
-        timeMin.setDate(timeMin.getDate() - 7);
+        timeMin.setDate(timeMin.getDate() - 30);
         const timeMax = new Date();
-        timeMax.setDate(timeMax.getDate() + 7);
+        timeMax.setDate(timeMax.getDate() + 30);
 
         const eventsResponse = await fetch(
           `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(creds.default_calendar_id)}/events?` +
@@ -234,11 +221,11 @@ async function processCalendarEvents(
   const existingEventIds = new Set<string>();
   const calendarId = events.length > 0 ? (events[0].organizer?.email || "primary") : "primary";
   
-  // Calculate time window for cleanup
+  // Calculate time window for cleanup - 30 days back and 30 days forward
   const timeMin = new Date();
-  timeMin.setDate(timeMin.getDate() - 7);
+  timeMin.setDate(timeMin.getDate() - 30);
   const timeMax = new Date();
-  timeMax.setDate(timeMax.getDate() + 7);
+  timeMax.setDate(timeMax.getDate() + 30);
   
   for (const event of events) {
     // Handle cancelled events - delete their sync records
@@ -251,8 +238,8 @@ async function processCalendarEvents(
         .maybeSingle();
       
       if (cancelledSync) {
-        // Delete workout if exists and sync direction allows it
-        if (cancelledSync.workout_id && cancelledSync.sync_direction !== 'to_google') {
+        // Always delete workout when deleted from Google - no need to keep if user deleted there
+        if (cancelledSync.workout_id) {
           await supabase
             .from("workouts")
             .delete()
@@ -281,6 +268,9 @@ async function processCalendarEvents(
       .eq("google_event_id", event.id)
       .eq("google_calendar_id", event.organizer?.email || "primary")
       .maybeSingle();
+
+    // For sync_direction 'to_google': only process deletions (already handled above). Skip create/update.
+    if (syncDirection === 'to_google') continue;
 
     // Extract trainee name and email from event
     const traineeName = extractTraineeName(event);
@@ -440,8 +430,8 @@ async function processCalendarEvents(
       if (!existingEventIds.has(syncRecord.google_event_id)) {
         console.log(`Deleting sync record for event that no longer exists: ${syncRecord.google_event_id}`);
         
-        // Delete workout if exists and sync direction allows it
-        if (syncRecord.workout_id && syncRecord.sync_direction !== 'to_google') {
+        // Always delete workout when deleted from Google - no need to keep if user deleted there
+        if (syncRecord.workout_id) {
           await supabase
             .from("workouts")
             .delete()

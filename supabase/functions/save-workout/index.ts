@@ -43,6 +43,63 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
 }
 
 /**
+ * Increment sessions_used when workout is completed (for card_ticket counting method)
+ * Supports both trainee_cards (active card) and trainees.card_sessions_used
+ */
+async function incrementCardSessionsUsed(
+  supabase: any,
+  traineeId: string,
+  trainerId: string
+): Promise<void> {
+  try {
+    const { data: trainee } = await supabase
+      .from('trainees')
+      .select('counting_method')
+      .eq('id', traineeId)
+      .eq('trainer_id', trainerId)
+      .single();
+
+    if (!trainee || trainee.counting_method !== 'card_ticket') return;
+
+    // Check for active trainee_cards first
+    const { data: activeCard } = await supabase
+      .from('trainee_cards')
+      .select('id, sessions_used, sessions_purchased')
+      .eq('trainee_id', traineeId)
+      .eq('trainer_id', trainerId)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (activeCard) {
+      const newUsed = Math.min((activeCard.sessions_used || 0) + 1, activeCard.sessions_purchased || 999);
+      await supabase
+        .from('trainee_cards')
+        .update({ sessions_used: newUsed })
+        .eq('id', activeCard.id);
+    } else {
+      // Fallback to trainees.card_sessions_used
+      const { data: traineeWithCard } = await supabase
+        .from('trainees')
+        .select('card_sessions_used, card_sessions_total')
+        .eq('id', traineeId)
+        .single();
+
+      if (traineeWithCard) {
+        const currentUsed = traineeWithCard.card_sessions_used || 0;
+        const total = traineeWithCard.card_sessions_total || 999;
+        const newUsed = Math.min(currentUsed + 1, total);
+        await supabase
+          .from('trainees')
+          .update({ card_sessions_used: newUsed })
+          .eq('id', traineeId);
+      }
+    }
+  } catch (err) {
+    console.warn('Error incrementing card sessions_used:', err);
+  }
+}
+
+/**
  * Generate Google Calendar event title with session info
  */
 async function generateEventTitle(
@@ -513,6 +570,11 @@ Deno.serve(async (req: Request) => {
       }
 
       workout = updatedWorkout;
+
+      // Auto-increment card sessions_used when workout is first marked as completed
+      if (updateData.is_completed && existingWorkout?.is_completed !== true) {
+        await incrementCardSessionsUsed(supabase, trainee_id, trainer_id);
+      }
       
       // Process exercises - update existing or create new
       // Only process if we have exercises (skip if empty array)
@@ -648,6 +710,11 @@ Deno.serve(async (req: Request) => {
       }
 
       workout = newWorkout;
+
+      // Auto-increment card sessions_used when new workout is created as completed
+      if (!is_auto_save) {
+        await incrementCardSessionsUsed(supabase, trainee_id, trainer_id);
+      }
       
       // Insert exercises for new workout
       for (const exercise of exercises) {

@@ -94,14 +94,10 @@ async function syncTrainerCalendar(
     throw new Error("No sync credentials found");
   }
 
-  // Only sync from Google if sync_direction is 'from_google' or 'bidirectional'
-  const shouldSyncFromGoogle = credentials.sync_direction === 'from_google' || 
-                                credentials.sync_direction === 'bidirectional';
-  
-  if (!shouldSyncFromGoogle) {
-    // If sync direction is 'to_google' only, we don't sync from Google Calendar
-    return;
-  }
+  // For 'to_google': we still process deletions (if user deleted in Google, delete locally)
+  // For create/update: only when sync_direction is 'from_google' or 'bidirectional'
+  const shouldSyncCreatesFromGoogle = credentials.sync_direction === 'from_google' || 
+                                      credentials.sync_direction === 'bidirectional';
 
   // Check and refresh token if needed
   let accessToken = credentials.access_token;
@@ -117,11 +113,11 @@ async function syncTrainerCalendar(
     accessToken = refreshed;
   }
 
-  // Fetch events from Google Calendar
+  // Fetch events from Google Calendar - 30 days back and 30 days forward
   const timeMin = new Date();
-  timeMin.setDate(timeMin.getDate() - 7);
+  timeMin.setDate(timeMin.getDate() - 30);
   const timeMax = new Date();
-  timeMax.setDate(timeMax.getDate() + 7);
+  timeMax.setDate(timeMax.getDate() + 30);
 
   const calendarId = credentials.default_calendar_id || "primary";
   const eventsResponse = await fetch(
@@ -160,8 +156,8 @@ async function syncTrainerCalendar(
         .maybeSingle();
       
       if (cancelledSync) {
-        // Delete workout if exists and sync direction allows it
-        if (cancelledSync.workout_id && cancelledSync.sync_direction !== 'to_google') {
+        // Always delete workout when deleted from Google - no need to keep if user deleted there
+        if (cancelledSync.workout_id) {
           await supabase
             .from("workouts")
             .delete()
@@ -182,6 +178,9 @@ async function syncTrainerCalendar(
     
     // Track this event as existing
     existingEventIds.add(event.id);
+
+    // For sync_direction 'to_google': only process deletions (already handled above). Skip create/update.
+    if (!shouldSyncCreatesFromGoogle) continue;
 
     const startTime = new Date(event.start.dateTime || event.start.date);
     const endTime = new Date(event.end.dateTime || event.end.date);
@@ -349,8 +348,8 @@ async function syncTrainerCalendar(
       if (!existingEventIds.has(syncRecord.google_event_id)) {
         console.log(`Deleting sync record for event that no longer exists: ${syncRecord.google_event_id}`);
         
-        // Delete workout if exists and sync direction allows it
-        if (syncRecord.workout_id && syncRecord.sync_direction !== 'to_google') {
+        // Always delete workout when deleted from Google - no need to keep if user deleted there
+        if (syncRecord.workout_id) {
           await supabase
             .from("workouts")
             .delete()
