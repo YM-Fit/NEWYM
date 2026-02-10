@@ -21,3 +21,16 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Editor and IDE config (keep project-specific in .vscode)
+.cursor/
+
+# Internal development artifacts - investigation reports, debug pages
+public/tv-debug.html
+*_REPORT.md
+*_CHECK.md
+*_VERIFICATION.md
+*_IMPROVEMENTS.md
+*_ANALYSIS.md
+*_SUMMARY.md
+*_TESTING_GUIDE.md
