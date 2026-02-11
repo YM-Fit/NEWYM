@@ -1,19 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, FileText, Plus, Pin, Trash2, Edit2 } from 'lucide-react';
-import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import toast from 'react-hot-toast';
-
-interface Note {
-  id: string;
-  trainee_id: string;
-  trainer_id: string;
-  note_text: string;
-  is_pinned: boolean;
-  category: 'general' | 'health' | 'nutrition' | 'training' | 'personal';
-  created_at: string;
-  updated_at: string;
-}
+import { TrainerNote } from '../../../api/notesApi';
+import {
+  useNotesQuery,
+  useCreateNoteMutation,
+  useUpdateNoteMutation,
+  useDeleteNoteMutation,
+} from '../../../hooks/queries/useNoteQueries';
 
 interface TraineeNotesProps {
   traineeId: string;
@@ -22,83 +17,58 @@ interface TraineeNotesProps {
 }
 
 const CATEGORIES = {
-  general: { label: 'כללי', bg: 'bg-zinc-500/15', text: 'text-zinc-400', border: 'border-zinc-500/30' },
+  general: { label: 'כללי', bg: 'bg-muted/15', text: 'text-muted', border: 'border-border/30' },
   health: { label: 'בריאות', bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30' },
-  nutrition: { label: 'תזונה', bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' },
-  training: { label: 'אימון', bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/30' },
+  nutrition: { label: 'תזונה', bg: 'bg-primary-500/15', text: 'text-primary-400', border: 'border-primary-500/30' },
+  training: { label: 'אימון', bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/30' },
   personal: { label: 'אישי', bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' },
 };
 
 export default function TraineeNotes({ traineeId, traineeName, onClose }: TraineeNotesProps) {
   const { user } = useAuth();
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: notes = [], isLoading: loading } = useNotesQuery(traineeId);
+  const createMutation = useCreateNoteMutation(traineeId);
+  const updateMutation = useUpdateNoteMutation(traineeId);
+  const deleteMutation = useDeleteNoteMutation(traineeId);
+
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingNote, setEditingNote] = useState<Note | null>(null);
-  const [filter, setFilter] = useState<'all' | Note['category']>('all');
+  const [editingNote, setEditingNote] = useState<TrainerNote | null>(null);
+  const [filter, setFilter] = useState<'all' | TrainerNote['category']>('all');
 
   const [formData, setFormData] = useState({
     note_text: '',
-    category: 'general' as Note['category'],
+    category: 'general' as TrainerNote['category'],
     is_pinned: false,
   });
-
-  useEffect(() => {
-    loadNotes();
-  }, [traineeId]);
-
-  const loadNotes = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('trainer_notes')
-      .select('*')
-      .eq('trainee_id', traineeId)
-      .order('is_pinned', { ascending: false })
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      toast.error('שגיאה בטעינת ההערות');
-    } else {
-      setNotes(data || []);
-    }
-    setLoading(false);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
-    const noteData = {
-      trainee_id: traineeId,
-      trainer_id: user.id,
-      note_text: formData.note_text,
-      category: formData.category,
-      is_pinned: formData.is_pinned,
-    };
-
-    if (editingNote) {
-      const { error } = await supabase
-        .from('trainer_notes')
-        .update({ ...noteData, updated_at: new Date().toISOString() })
-        .eq('id', editingNote.id);
-
-      if (error) {
-        toast.error('שגיאה בעדכון ההערה');
-      } else {
+    try {
+      if (editingNote) {
+        await updateMutation.mutateAsync({
+          noteId: editingNote.id,
+          updates: {
+            note_text: formData.note_text,
+            category: formData.category,
+            is_pinned: formData.is_pinned,
+          },
+        });
         toast.success('ההערה עודכנה');
-        loadNotes();
-        resetForm();
-      }
-    } else {
-      const { error } = await supabase.from('trainer_notes').insert(noteData);
-
-      if (error) {
-        toast.error('שגיאה בהוספת ההערה');
       } else {
+        await createMutation.mutateAsync({
+          trainee_id: traineeId,
+          trainer_id: user.id,
+          note_text: formData.note_text,
+          category: formData.category,
+          is_pinned: formData.is_pinned,
+        });
         toast.success('ההערה נוספה');
-        loadNotes();
-        resetForm();
       }
+      resetForm();
+    } catch {
+      toast.error(editingNote ? 'שגיאה בעדכון ההערה' : 'שגיאה בהוספת ההערה');
     }
   };
 
@@ -108,7 +78,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
     setEditingNote(null);
   };
 
-  const handleEdit = (note: Note) => {
+  const handleEdit = (note: TrainerNote) => {
     setFormData({
       note_text: note.note_text,
       category: note.category,
@@ -120,58 +90,54 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
 
   const handleDelete = async (noteId: string) => {
     if (!confirm('האם אתה בטוח שברצונך למחוק הערה זו?')) return;
-
-    const { error } = await supabase.from('trainer_notes').delete().eq('id', noteId);
-    if (error) {
-      toast.error('שגיאה במחיקת ההערה');
-    } else {
+    try {
+      await deleteMutation.mutateAsync(noteId);
       toast.success('ההערה נמחקה');
-      loadNotes();
+    } catch {
+      toast.error('שגיאה במחיקת ההערה');
     }
   };
 
-  const handleTogglePin = async (note: Note) => {
-    const { error } = await supabase
-      .from('trainer_notes')
-      .update({ is_pinned: !note.is_pinned, updated_at: new Date().toISOString() })
-      .eq('id', note.id);
-
-    if (error) {
+  const handleTogglePin = async (note: TrainerNote) => {
+    try {
+      await updateMutation.mutateAsync({
+        noteId: note.id,
+        updates: { is_pinned: !note.is_pinned },
+      });
+    } catch {
       toast.error('שגיאה בעדכון ההערה');
-    } else {
-      loadNotes();
     }
   };
 
   const filteredNotes = filter === 'all' ? notes : notes.filter(n => n.category === filter);
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 backdrop-blur-sm bg-overlay/70 flex items-center justify-center z-50 p-4">
       <div className="premium-card-static max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="p-6 border-b border-zinc-800/50 flex items-center justify-between">
+        <div className="p-6 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-amber-500/15">
               <FileText className="h-6 w-6 text-amber-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">הערות פנימיות</h2>
-              <p className="text-sm text-zinc-500">{traineeName} (רק המאמן רואה)</p>
+              <h2 className="text-xl font-bold text-foreground">הערות פנימיות</h2>
+              <p className="text-sm text-muted500">{traineeName} (רק המאמן רואה)</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
+            className="p-2.5 rounded-xl bg-surface800/50 text-muted400 hover:text-foreground hover:bg-surface700/50 transition-all"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="p-4 border-b border-zinc-800/50 flex items-center justify-between flex-wrap gap-3">
+        <div className="p-4 border-b border-border flex items-center justify-between flex-wrap gap-3">
           <div className="flex gap-2 overflow-x-auto no-scrollbar">
             <button
               onClick={() => setFilter('all')}
               className={`px-3 py-2 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
-                filter === 'all' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/30'
+                filter === 'all' ? 'bg-primary-500/15 text-primary-400 border border-primary-500/30' : 'bg-surface800/50 text-muted400 border border-border700/30'
               }`}
             >
               הכל
@@ -179,9 +145,9 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
             {Object.entries(CATEGORIES).map(([key, { label, bg, text, border }]) => (
               <button
                 key={key}
-                onClick={() => setFilter(key as Note['category'])}
+                onClick={() => setFilter(key as TrainerNote['category'])}
                 className={`px-3 py-2 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
-                  filter === key ? `${bg} ${text} border ${border}` : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/30'
+                  filter === key ? `${bg} ${text} border ${border}` : 'bg-surface800/50 text-muted400 border border-border700/30'
                 }`}
               >
                 {label}
@@ -200,17 +166,17 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+              <div className="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
             </div>
           ) : filteredNotes.length === 0 ? (
             <div className="text-center py-12">
-              <div className="w-14 h-14 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-7 h-7 text-zinc-600" />
+              <div className="w-14 h-14 rounded-xl bg-surface800/50 flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-7 h-7 text-muted600" />
               </div>
-              <p className="text-zinc-500">אין הערות להצגה</p>
+              <p className="text-muted500">אין הערות להצגה</p>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="mt-4 text-emerald-400 font-medium hover:text-emerald-300 transition-colors"
+                className="mt-4 text-primary-400 font-medium hover:text-primary-300 transition-colors"
               >
                 הוסף הערה ראשונה
               </button>
@@ -221,8 +187,8 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
               return (
                 <div
                   key={note.id}
-                  className={`bg-zinc-800/30 rounded-xl border p-5 transition-all ${
-                    note.is_pinned ? 'border-amber-500/30 bg-amber-500/5' : 'border-zinc-700/30 hover:border-zinc-600/50'
+                  className={`bg-surface800/30 rounded-xl border p-5 transition-all ${
+                    note.is_pinned ? 'border-amber-500/30 bg-amber-500/5' : 'border-border700/30 hover:border-border600/50'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -233,7 +199,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                       <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${catStyle.bg} ${catStyle.text} border ${catStyle.border}`}>
                         {catStyle.label}
                       </span>
-                      <span className="text-xs text-zinc-600">
+                      <span className="text-xs text-muted600">
                         {new Date(note.created_at).toLocaleDateString('he-IL')}
                       </span>
                     </div>
@@ -241,7 +207,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                       <button
                         onClick={() => handleTogglePin(note)}
                         className={`p-2 rounded-lg transition-all ${
-                          note.is_pinned ? 'text-amber-400 hover:bg-amber-500/10' : 'text-zinc-500 hover:bg-zinc-700/50'
+                          note.is_pinned ? 'text-amber-400 hover:bg-amber-500/10' : 'text-muted500 hover:bg-surface700/50'
                         }`}
                         title={note.is_pinned ? 'בטל הצמדה' : 'הצמד'}
                       >
@@ -249,7 +215,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                       </button>
                       <button
                         onClick={() => handleEdit(note)}
-                        className="p-2 text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-all"
+                        className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -261,7 +227,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                       </button>
                     </div>
                   </div>
-                  <p className="text-zinc-300 whitespace-pre-wrap leading-relaxed">{note.note_text}</p>
+                  <p className="text-muted300 whitespace-pre-wrap leading-relaxed">{note.note_text}</p>
                 </div>
               );
             })
@@ -269,17 +235,17 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
         </div>
 
         {showAddForm && (
-          <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-[60] p-4">
+          <div className="fixed inset-0 backdrop-blur-sm bg-overlay/60 flex items-center justify-center z-[60] p-4">
             <div className="premium-card-static max-w-md w-full p-6">
-              <h3 className="text-xl font-bold text-white mb-4">
+              <h3 className="text-xl font-bold text-foreground mb-4">
                 {editingNote ? 'עריכת הערה' : 'הערה חדשה'}
               </h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">קטגוריה</label>
+                  <label className="block text-sm font-medium text-muted400 mb-2">קטגוריה</label>
                   <select
                     value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value as Note['category'] })}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value as TrainerNote['category'] })}
                     className="w-full glass-input px-4 py-3"
                   >
                     {Object.entries(CATEGORIES).map(([key, { label }]) => (
@@ -289,7 +255,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">תוכן ההערה *</label>
+                  <label className="block text-sm font-medium text-muted400 mb-2">תוכן ההערה *</label>
                   <textarea
                     value={formData.note_text}
                     onChange={(e) => setFormData({ ...formData, note_text: e.target.value })}
@@ -305,9 +271,9 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                     type="checkbox"
                     checked={formData.is_pinned}
                     onChange={(e) => setFormData({ ...formData, is_pinned: e.target.checked })}
-                    className="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                    className="w-5 h-5 rounded border-border600 bg-surface800 text-primary-500 focus:ring-primary-500 focus:ring-offset-0"
                   />
-                  <span className="text-sm font-medium text-zinc-300">הצמד הערה</span>
+                  <span className="text-sm font-medium text-muted300">הצמד הערה</span>
                 </label>
 
                 <div className="flex gap-3 pt-4">
@@ -330,7 +296,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
           </div>
         )}
 
-        <div className="p-6 border-t border-zinc-800/50">
+        <div className="p-6 border-t border-border">
           <button
             onClick={onClose}
             className="w-full btn-primary px-6 py-4 text-lg font-bold"

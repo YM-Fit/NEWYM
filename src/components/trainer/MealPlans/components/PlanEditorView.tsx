@@ -1,15 +1,24 @@
-import { Plus, Save, Trash2, Clock, ChevronDown, ChevronUp, Download, Upload, FileText, AlertCircle, Flame, Beef, Wheat, Droplet, Droplets } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Save, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { createFoodItem, deleteFoodItem } from '../../../../api/nutritionApi';
+import { createFoodItem } from '../../../../api/nutritionApi';
 import type { NutritionFoodItem } from '../../../../types/nutritionTypes';
 import type { Meal, MealPlan } from '../types/mealPlanTypes';
-import { MEAL_NAMES } from '../constants/mealPlanConstants';
+import type { FoodCatalogItem } from '../../../../data/foodCatalog';
+import { calculateNutrition, recalculateFromPer100g, quantityToGrams, gramsToQuantity } from '../utils/nutritionCalculator';
+import FoodCatalogSelector from './FoodCatalogSelector';
+import { PlanSettingsCard } from './PlanSettingsCard';
+import { QuickAddFoodBar } from './QuickAddFoodBar';
+import { MealsTimeline } from './MealsTimeline';
+import { CalculateTdeeModal } from './modals/CalculateTdeeModal';
 
 interface PlanEditorViewProps {
   plan: MealPlan;
   meals: Meal[];
   expandedMeals: Set<number>;
   saving: boolean;
+  trainerId?: string;
+  traineeId?: string;
   onUpdatePlan: (updates: Partial<MealPlan>) => void;
   onAddMeal: () => void;
   onUpdateMeal: (index: number, field: keyof Meal, value: any) => void;
@@ -22,10 +31,13 @@ interface PlanEditorViewProps {
   onSaveAsTemplate: () => void;
   onLoadTemplate: () => void;
   onAddNote: () => void;
-  getMealLabel: (value: string) => string;
   calculateTotalMacros: () => { calories: number; protein: number; carbs: number; fat: number };
   setMeals: React.Dispatch<React.SetStateAction<Meal[]>>;
   debouncedUpdateFoodItem: (foodItemId: string, updates: Partial<NutritionFoodItem>, displayIndex: number, itemIndex: number) => void;
+}
+
+function hasPer100g(item: NutritionFoodItem): boolean {
+  return item.calories_per_100g != null && item.calories_per_100g !== undefined;
 }
 
 export function PlanEditorView({
@@ -33,6 +45,8 @@ export function PlanEditorView({
   meals,
   expandedMeals,
   saving,
+  trainerId,
+  traineeId,
   onUpdatePlan,
   onAddMeal,
   onUpdateMeal,
@@ -45,563 +59,346 @@ export function PlanEditorView({
   onSaveAsTemplate,
   onLoadTemplate,
   onAddNote,
-  getMealLabel,
   calculateTotalMacros,
   setMeals,
   debouncedUpdateFoodItem,
 }: PlanEditorViewProps) {
-  const totals = calculateTotalMacros();
+  const totals = useMemo(() => calculateTotalMacros(), [calculateTotalMacros, meals]);
+  const [catalogForMeal, setCatalogForMeal] = useState<{ mealId: string; displayIndex: number } | null>(null);
+  const [showAlternatives, setShowAlternatives] = useState<Record<string, boolean>>({});
+  const [showTdeeModal, setShowTdeeModal] = useState(false);
+
+  // חישוב אזהרות
+  const warnings = useMemo(() => {
+    return {
+      exceedsDailyGoal: 
+        plan.daily_calories && totals.calories > plan.daily_calories * 1.1,
+      inconsistentValues:
+        plan.daily_calories && 
+        Math.abs(totals.calories - plan.daily_calories) > plan.daily_calories * 0.2,
+      missingData: totals.calories === 0 && meals.length > 0,
+      exceedsProtein: 
+        plan.protein_grams && totals.protein > plan.protein_grams * 1.1,
+      exceedsCarbs: 
+        plan.carbs_grams && totals.carbs > plan.carbs_grams * 1.1,
+      exceedsFat: 
+        plan.fat_grams && totals.fat > plan.fat_grams * 1.1,
+    };
+  }, [totals, plan, meals]);
+
+  const handleCatalogSelect = async (item: FoodCatalogItem) => {
+    if (!catalogForMeal) return;
+    const { mealId, displayIndex } = catalogForMeal;
+
+    const nutrition = calculateNutrition(item, 100);
+    const newItem = await createFoodItem(mealId, {
+      food_name: item.name,
+      quantity: 100,
+      unit: 'g',
+      calories: nutrition.calories,
+      protein: nutrition.protein,
+      carbs: nutrition.carbs,
+      fat: nutrition.fat,
+      order_index: (meals[displayIndex].food_items?.length || 0),
+      category: item.category,
+      calories_per_100g: item.calories_per_100g,
+      protein_per_100g: item.protein_per_100g,
+      carbs_per_100g: item.carbs_per_100g,
+      fat_per_100g: item.fat_per_100g,
+    });
+
+    if (newItem) {
+      const updatedMeals = [...meals];
+      updatedMeals[displayIndex] = {
+        ...updatedMeals[displayIndex],
+        food_items: [...(updatedMeals[displayIndex].food_items || []), newItem],
+      };
+      setMeals(updatedMeals);
+      toast.success(`${item.name} נוסף`);
+    }
+    setCatalogForMeal(null);
+  };
+
+  const handleQuickAdd = async (item: FoodCatalogItem, mealId: string) => {
+    const displayIndex = meals.findIndex((m) => m.id === mealId);
+    if (displayIndex < 0) return;
+
+    const nutrition = calculateNutrition(item, 100);
+    const newItem = await createFoodItem(mealId, {
+      food_name: item.name,
+      quantity: 100,
+      unit: 'g',
+      calories: nutrition.calories,
+      protein: nutrition.protein,
+      carbs: nutrition.carbs,
+      fat: nutrition.fat,
+      order_index: (meals[displayIndex].food_items?.length || 0),
+      category: item.category,
+      calories_per_100g: item.calories_per_100g,
+      protein_per_100g: item.protein_per_100g,
+      carbs_per_100g: item.carbs_per_100g,
+      fat_per_100g: item.fat_per_100g,
+    });
+
+    if (newItem) {
+      const updatedMeals = [...meals];
+      updatedMeals[displayIndex] = {
+        ...updatedMeals[displayIndex],
+        food_items: [...(updatedMeals[displayIndex].food_items || []), newItem],
+      };
+      setMeals(updatedMeals);
+      toast.success(`${item.name} נוסף`);
+    }
+  };
+
+  const handleQuantityChange = (
+    item: NutritionFoodItem,
+    newQuantity: number,
+    displayIndex: number,
+    itemIndex: number
+  ) => {
+    // בדיקה שהכמות החדשה תקינה
+    if (newQuantity <= 0 || isNaN(newQuantity)) {
+      return;
+    }
+
+    // אם יש ערכים per_100g – חשב לפי גרם מקביל (תומך ב־g, tbsp, tsp, cup, ml). יחידה (unit) לא ממירים לגרם.
+    if (hasPer100g(item) && item.unit !== 'unit') {
+      const gramsEquivalent = quantityToGrams(newQuantity, item.unit);
+      const recalc = recalculateFromPer100g(
+        item.calories_per_100g,
+        item.protein_per_100g,
+        item.carbs_per_100g,
+        item.fat_per_100g,
+        gramsEquivalent
+      );
+      debouncedUpdateFoodItem(item.id, {
+        quantity: newQuantity,
+        calories: recalc.calories,
+        protein: recalc.protein,
+        carbs: recalc.carbs,
+        fat: recalc.fat,
+      }, displayIndex, itemIndex);
+    }
+    // אם אין per_100g אבל יש ערכים תזונתיים קיימים וכמות קיימת, חשב פרופורציונלית
+    else if (item.quantity > 0 && (item.calories !== null || item.protein !== null || item.carbs !== null || item.fat !== null)) {
+      const ratio = newQuantity / item.quantity;
+      debouncedUpdateFoodItem(item.id, {
+        quantity: newQuantity,
+        calories: item.calories !== null ? Math.round(item.calories * ratio) : null,
+        protein: item.protein !== null ? Math.round(item.protein * ratio) : null,
+        carbs: item.carbs !== null ? Math.round(item.carbs * ratio) : null,
+        fat: item.fat !== null ? Math.round(item.fat * ratio) : null,
+      }, displayIndex, itemIndex);
+    } 
+    // אחרת, עדכן רק את הכמות
+    else {
+      debouncedUpdateFoodItem(item.id, { quantity: newQuantity }, displayIndex, itemIndex);
+    }
+  };
+
+  const handleUnitChange = (
+    item: NutritionFoodItem,
+    newUnit: string,
+    displayIndex: number,
+    itemIndex: number
+  ) => {
+    const oldUnit = item.unit;
+    const currentQty = item.quantity;
+    const gramsEq = quantityToGrams(currentQty, oldUnit);
+    const newQuantity = newUnit === 'unit' ? currentQty : gramsToQuantity(gramsEq, newUnit);
+    if (hasPer100g(item) && newUnit !== 'unit') {
+      const gramsForNewUnit = quantityToGrams(newQuantity, newUnit);
+      const recalc = recalculateFromPer100g(
+        item.calories_per_100g,
+        item.protein_per_100g,
+        item.carbs_per_100g,
+        item.fat_per_100g,
+        gramsForNewUnit
+      );
+      debouncedUpdateFoodItem(item.id, {
+        unit: newUnit,
+        quantity: newQuantity,
+        calories: recalc.calories,
+        protein: recalc.protein,
+        carbs: recalc.carbs,
+        fat: recalc.fat,
+      }, displayIndex, itemIndex);
+    } else {
+      debouncedUpdateFoodItem(item.id, { unit: newUnit, quantity: newQuantity }, displayIndex, itemIndex);
+    }
+  };
+
+  const SUPPLEMENTS: { name: string; whenToTake: string; targetMeal?: string }[] = [
+    { name: 'מולטי ויטמין', whenToTake: 'עם ארוחת בוקר', targetMeal: 'breakfast' },
+    { name: 'אומגה 3', whenToTake: 'עם הארוחה', targetMeal: 'lunch' },
+    { name: 'ויטמין D', whenToTake: 'עם ארוחה שמכילה שומן', targetMeal: 'lunch' },
+    { name: 'מגנזיום', whenToTake: 'לפני השינה', targetMeal: 'evening_snack' },
+    { name: 'ברזל', whenToTake: 'על קיבה ריקה (בוקר)', targetMeal: 'breakfast' },
+    { name: 'ויטמין B12', whenToTake: 'עם ארוחת בוקר', targetMeal: 'breakfast' },
+    { name: 'קולגן', whenToTake: 'עם הארוחה', targetMeal: 'lunch' },
+    { name: 'פרוביוטיקה', whenToTake: 'עם ארוחת בוקר', targetMeal: 'breakfast' },
+    { name: 'תוסף אחר', whenToTake: '', targetMeal: undefined },
+  ];
+
+  const handleAddSupplement = async (supp: { name: string; whenToTake: string; targetMeal?: string }) => {
+    const targetMeal = supp.targetMeal
+      ? meals.find((m) => m.meal_name === supp.targetMeal && m.id)
+      : meals.find((m) => m.id);
+    const mealToUse = targetMeal || meals.find((m) => m.id);
+    if (!mealToUse?.id) {
+      toast.error('הוסף לפחות ארוחה אחת לפני הוספת תוספים');
+      return;
+    }
+    const displayIndex = meals.findIndex((m) => m.id === mealToUse.id);
+    const foodName = supp.whenToTake
+      ? `${supp.name} – ${supp.whenToTake}`
+      : supp.name;
+    const newItem = await createFoodItem(mealToUse.id, {
+      food_name: foodName,
+      quantity: 1,
+      unit: 'unit',
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      order_index: (mealToUse.food_items?.length || 0),
+    });
+    if (newItem) {
+      const updatedMeals = [...meals];
+      updatedMeals[displayIndex] = {
+        ...updatedMeals[displayIndex],
+        food_items: [...(updatedMeals[displayIndex].food_items || []), newItem],
+      };
+      setMeals(updatedMeals);
+      toast.success(`${supp.name} נוסף`);
+    }
+  };
+
+  const handleSwapFood = (
+    item: NutritionFoodItem,
+    catalogItem: FoodCatalogItem,
+    displayIndex: number,
+    itemIndex: number
+  ) => {
+    const gramsEquivalent = quantityToGrams(item.quantity, item.unit);
+    const nutrition = calculateNutrition(catalogItem, gramsEquivalent);
+    debouncedUpdateFoodItem(item.id, {
+      food_name: catalogItem.name,
+      quantity: gramsEquivalent,
+      unit: 'g',
+      calories: nutrition.calories,
+      protein: nutrition.protein,
+      carbs: nutrition.carbs,
+      fat: nutrition.fat,
+      category: catalogItem.category,
+      calories_per_100g: catalogItem.calories_per_100g,
+      protein_per_100g: catalogItem.protein_per_100g,
+      carbs_per_100g: catalogItem.carbs_per_100g,
+      fat_per_100g: catalogItem.fat_per_100g,
+    }, displayIndex, itemIndex);
+    toast.success(`הוחלף ל-${catalogItem.name}`);
+  };
 
   return (
-    <div className="space-y-8">
-      {/* Plan Settings Card */}
-      <div className="premium-card-static p-8">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="font-bold text-[var(--color-text-primary)] text-xl">הגדרות תפריט</h3>
-          <div className="flex gap-3">
-            <button
-              onClick={onLoadTemplate}
-              className="flex items-center gap-2 px-4 py-2.5 bg-cyan-500/20 text-cyan-400 rounded-xl text-sm font-semibold hover:bg-cyan-500/30 transition-all duration-300 hover:scale-105"
-            >
-              <Download className="h-4 w-4" />
-              טען תבנית
-            </button>
-            <button
-              onClick={onSaveAsTemplate}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] rounded-xl text-sm font-semibold hover:bg-[var(--color-bg-elevated)] transition-all duration-300 border border-[var(--color-border)]"
-            >
-              <Upload className="h-4 w-4" />
-              שמור כתבנית
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
-            <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">שם התפריט</label>
-            <input
-              type="text"
-              value={plan.name || ''}
-              onChange={(e) => onUpdatePlan({ name: e.target.value })}
-              className="glass-input w-full px-4 py-3"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">תיאור</label>
-            <input
-              type="text"
-              value={plan.description || ''}
-              onChange={(e) => onUpdatePlan({ description: e.target.value })}
-              className="glass-input w-full px-4 py-3"
-              placeholder="לדוגמה: תפריט הורדה במשקל"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
-              <Flame className="h-4 w-4 inline ml-1 text-amber-400" />
-              קלוריות יומיות
-            </label>
-            <input
-              type="number"
-              value={plan.daily_calories || ''}
-              onChange={(e) => onUpdatePlan({ daily_calories: e.target.value ? parseInt(e.target.value) : null })}
-              className="glass-input w-full px-4 py-3"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
-              <Beef className="h-4 w-4 inline ml-1 text-red-400" />
-              חלבון (גרם)
-            </label>
-            <input
-              type="number"
-              value={plan.protein_grams || ''}
-              onChange={(e) => onUpdatePlan({ protein_grams: e.target.value ? parseInt(e.target.value) : null })}
-              className="glass-input w-full px-4 py-3"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
-              <Wheat className="h-4 w-4 inline ml-1 text-amber-500" />
-              פחמימות (גרם)
-            </label>
-            <input
-              type="number"
-              value={plan.carbs_grams || ''}
-              onChange={(e) => onUpdatePlan({ carbs_grams: e.target.value ? parseInt(e.target.value) : null })}
-              className="glass-input w-full px-4 py-3"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
-              <Droplet className="h-4 w-4 inline ml-1 text-yellow-400" />
-              שומן (גרם)
-            </label>
-            <input
-              type="number"
-              value={plan.fat_grams || ''}
-              onChange={(e) => onUpdatePlan({ fat_grams: e.target.value ? parseInt(e.target.value) : null })}
-              className="glass-input w-full px-4 py-3"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
-              <Droplets className="h-4 w-4 inline ml-1 text-blue-400" />
-              מים (מ״ל)
-            </label>
-            <input
-              type="number"
-              value={plan.daily_water_ml || ''}
-              onChange={(e) => onUpdatePlan({ daily_water_ml: e.target.value ? parseInt(e.target.value) : null })}
-              className="glass-input w-full px-4 py-3"
-            />
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-semibold text-[var(--color-text-secondary)]">הערות כלליות</label>
-            <button
-              onClick={onAddNote}
-              className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors duration-300"
-            >
-              <FileText className="h-4 w-4" />
-              הוסף מתבנית
-            </button>
-          </div>
-          <textarea
-            value={plan.notes || ''}
-            onChange={(e) => onUpdatePlan({ notes: e.target.value })}
-            className="glass-input w-full px-4 py-3"
-            rows={3}
-            placeholder="הערות כלליות לתפריט..."
-          />
-        </div>
-      </div>
-
-      {/* Meals organized by meal type */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-[var(--color-text-primary)] text-xl">ארוחות יומיות</h3>
-          <button
-            onClick={onAddMeal}
-            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500/20 text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-500/30 transition-all duration-300 hover:scale-105"
-          >
-            <Plus className="h-4 w-4" />
-            הוסף ארוחה
-          </button>
-        </div>
-
-        {meals.length === 0 ? (
-          <div className="premium-card-static p-12 text-center">
-            <AlertCircle className="h-14 w-14 mx-auto mb-4 text-[var(--color-text-muted)]" />
-            <p className="font-medium text-[var(--color-text-secondary)]">אין ארוחות בתפריט זה</p>
-            <p className="text-sm mt-2 text-[var(--color-text-muted)]">לחץ על "הוסף ארוחה" כדי להתחיל</p>
-          </div>
-        ) : (
-          // Group meals by meal type
-          MEAL_NAMES.map((mealType) => {
-            const mealsForType = meals.filter(m => m.meal_name === mealType.value);
-            if (mealsForType.length === 0) return null;
-
-            const mealTotals = mealsForType.reduce(
-              (acc, m) => ({
-                calories: acc.calories + (m.total_calories || 0),
-                protein: acc.protein + (m.total_protein || 0),
-                carbs: acc.carbs + (m.total_carbs || 0),
-                fat: acc.fat + (m.total_fat || 0),
-              }),
-              { calories: 0, protein: 0, carbs: 0, fat: 0 }
-            );
-
-            return (
-              <div
-                key={mealType.value}
-                className="premium-card-static overflow-hidden"
-              >
-                <div className="p-6 border-b border-[var(--color-border)] bg-gradient-to-r from-emerald-500/10 to-teal-500/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">{mealType.icon}</span>
-                      <div>
-                        <h4 className="font-bold text-[var(--color-text-primary)] text-xl">{mealType.label}</h4>
-                        <p className="text-sm text-[var(--color-text-muted)]">{mealsForType.length} {mealsForType.length === 1 ? 'מזון' : 'מזונות'}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      {mealTotals.calories > 0 && (
-                        <div className="flex gap-2 text-sm">
-                          {mealTotals.calories > 0 && (
-                            <span className="text-[var(--color-text-secondary)] bg-[var(--color-bg-surface)] px-3 py-1.5 rounded-lg border border-[var(--color-border)]">
-                              <span className="text-emerald-400 font-semibold">{mealTotals.calories}</span> קל'
-                            </span>
-                          )}
-                          {mealTotals.protein > 0 && (
-                            <span className="text-[var(--color-text-secondary)] bg-[var(--color-bg-surface)] px-3 py-1.5 rounded-lg border border-[var(--color-border)]">
-                              <span className="text-emerald-400 font-semibold">{mealTotals.protein}ג</span> חלבון
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      <button
-                        onClick={() => {
-                          const defaultTimes: Record<string, string> = {
-                            breakfast: '08:00',
-                            morning_snack: '10:00',
-                            lunch: '13:00',
-                            afternoon_snack: '16:00',
-                            dinner: '19:00',
-                            evening_snack: '21:00',
-                          };
-                          const newMeal: Meal = {
-                            meal_time: defaultTimes[mealType.value] || '12:00',
-                            meal_name: mealType.value,
-                            description: '',
-                            alternatives: '',
-                            calories: null,
-                            protein: null,
-                            carbs: null,
-                            fat: null,
-                            notes: '',
-                            order_index: meals.length,
-                          };
-                          onAddMeal();
-                          // Update the new meal to match the meal type
-                          setTimeout(() => {
-                            const lastIndex = meals.length;
-                            onUpdateMeal(lastIndex, 'meal_name', mealType.value);
-                            onUpdateMeal(lastIndex, 'meal_time', newMeal.meal_time);
-                          }, 100);
-                        }}
-                        className="flex items-center gap-2 px-3 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-500/30 transition-all duration-300"
-                      >
-                        <Plus className="h-4 w-4" />
-                        הוסף מזון
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="divide-y divide-[var(--color-border)]">
-                  {mealsForType
-                    .sort((a, b) => a.order_index - b.order_index)
-                    .map((meal) => {
-                      const mealIndex = meals.findIndex(m => 
-                        (m.id && meal.id && m.id === meal.id) || 
-                        (!m.id && !meal.id && m.meal_name === meal.meal_name && m.order_index === meal.order_index && m.meal_time === meal.meal_time)
-                      );
-                      const displayIndex = mealIndex >= 0 ? mealIndex : meals.findIndex(m => m.meal_name === meal.meal_name);
-                      
-                      return (
-                        <div
-                          key={meal.id || `${meal.meal_name}-${meal.order_index}-${meal.meal_time}`}
-                          className="p-5 hover:bg-[var(--color-accent-bg)] transition-all duration-300"
-                        >
-                          <div
-                            className="flex items-center justify-between cursor-pointer"
-                            onClick={() => onToggleMeal(displayIndex)}
-                          >
-                            <div className="flex items-center gap-4 flex-1">
-                              <div className="p-2 bg-emerald-500/20 rounded-xl">
-                                <Clock className="h-4 w-4 text-emerald-400" />
-                              </div>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-1">
-                                  <span className="font-semibold text-[var(--color-text-primary)]">{meal.meal_time}</span>
-                                  {meal.description && (
-                                    <span className="text-[var(--color-text-muted)] text-sm line-clamp-1">{meal.description}</span>
-                                  )}
-                                </div>
-                                {meal.total_calories || meal.total_protein ? (
-                                  <div className="flex gap-2 text-xs">
-                                    {meal.total_calories && (
-                                      <span className="text-[var(--color-text-muted)] bg-[var(--color-bg-surface)] px-2 py-0.5 rounded border border-[var(--color-border)]">{meal.total_calories} קל'</span>
-                                    )}
-                                    {meal.total_protein && (
-                                      <span className="text-[var(--color-text-muted)] bg-[var(--color-bg-surface)] px-2 py-0.5 rounded border border-[var(--color-border)]">{meal.total_protein}ג חלבון</span>
-                                    )}
-                                  </div>
-                                ) : null}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onDeleteMeal(displayIndex);
-                                }}
-                                className="p-2 text-red-400 hover:bg-red-500/20 rounded-xl transition-all duration-300"
-                                title="מחק מזון"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                              {expandedMeals.has(displayIndex) ? (
-                                <ChevronUp className="h-5 w-5 text-[var(--color-text-muted)]" />
-                              ) : (
-                                <ChevronDown className="h-5 w-5 text-[var(--color-text-muted)]" />
-                              )}
-                            </div>
-                          </div>
-
-                          {expandedMeals.has(displayIndex) && (
-                            <div className="mt-6 space-y-5 pr-10">
-                              <div className="grid grid-cols-2 gap-5">
-                                <div>
-                                  <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">שעה</label>
-                                  <input
-                                    type="time"
-                                    value={meal.meal_time}
-                                    onChange={(e) => onUpdateMeal(displayIndex, 'meal_time', e.target.value)}
-                                    className="glass-input w-full px-4 py-3"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">סוג ארוחה</label>
-                                  <select
-                                    value={meal.meal_name}
-                                    onChange={(e) => onUpdateMeal(displayIndex, 'meal_name', e.target.value)}
-                                    className="glass-input w-full px-4 py-3"
-                                  >
-                                    {MEAL_NAMES.map((m) => (
-                                      <option key={m.value} value={m.value}>
-                                        {m.icon} {m.label}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              </div>
-
-                              {/* Food Items List */}
-                              <div>
-                                <div className="flex items-center justify-between mb-3">
-                                  <label className="block text-sm font-semibold text-[var(--color-text-secondary)]">פריטי מזון</label>
-                                  <button
-                                    onClick={async () => {
-                                      if (!meal.id) {
-                                        toast.error('שמור את הארוחה קודם לפני הוספת פריטי מזון');
-                                        return;
-                                      }
-                                      const newItem = await createFoodItem(meal.id, {
-                                        food_name: '',
-                                        quantity: 1,
-                                        unit: 'g',
-                                        calories: null,
-                                        protein: null,
-                                        carbs: null,
-                                        fat: null,
-                                        order_index: (meal.food_items?.length || 0),
-                                      });
-                                      if (newItem) {
-                                        const updatedMeals = [...meals];
-                                        updatedMeals[displayIndex] = {
-                                          ...updatedMeals[displayIndex],
-                                          food_items: [...(updatedMeals[displayIndex].food_items || []), newItem],
-                                        };
-                                        setMeals(updatedMeals);
-                                        toast.success('פריט מזון נוסף');
-                                      }
-                                    }}
-                                    className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs font-semibold hover:bg-emerald-500/30 transition-all"
-                                  >
-                                    <Plus className="h-3 w-3" />
-                                    הוסף פריט מזון
-                                  </button>
-                                </div>
-
-                                {meal.food_items && meal.food_items.length > 0 ? (
-                                  <div className="space-y-2">
-                                    {meal.food_items.map((item, itemIndex) => (
-                                      <div
-                                        key={item.id}
-                                        className="bg-[var(--color-bg-surface)] rounded-xl p-4 border border-[var(--color-border)]"
-                                      >
-                                        <div className="grid grid-cols-12 gap-3 items-end">
-                                          <div className="col-span-4">
-                                            <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">שם מזון</label>
-                                            <input
-                                              type="text"
-                                              value={item.food_name}
-                                              onChange={(e) => {
-                                                debouncedUpdateFoodItem(item.id, { food_name: e.target.value }, displayIndex, itemIndex);
-                                              }}
-                                              className="glass-input w-full px-3 py-2 text-sm"
-                                              placeholder="לדוגמה: ביצה"
-                                            />
-                                          </div>
-                                          <div className="col-span-2">
-                                            <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">כמות</label>
-                                            <input
-                                              type="number"
-                                              step="0.1"
-                                              value={item.quantity}
-                                              onChange={(e) => {
-                                                debouncedUpdateFoodItem(item.id, { quantity: parseFloat(e.target.value) || 0 }, displayIndex, itemIndex);
-                                              }}
-                                              className="glass-input w-full px-3 py-2 text-sm"
-                                            />
-                                          </div>
-                                          <div className="col-span-2">
-                                            <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">יחידה</label>
-                                            <select
-                                              value={item.unit}
-                                              onChange={(e) => {
-                                                debouncedUpdateFoodItem(item.id, { unit: e.target.value }, displayIndex, itemIndex);
-                                              }}
-                                              className="glass-input w-full px-3 py-2 text-sm"
-                                            >
-                                              <option value="g">גרם</option>
-                                              <option value="unit">יחידה</option>
-                                              <option value="ml">מ"ל</option>
-                                              <option value="cup">כוס</option>
-                                              <option value="tbsp">כף</option>
-                                              <option value="tsp">כפית</option>
-                                            </select>
-                                          </div>
-                                          <div className="col-span-3 flex gap-2">
-                                            <div className="flex-1">
-                                              <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">קל'</label>
-                                              <input
-                                                type="number"
-                                                value={item.calories || ''}
-                                                onChange={(e) => {
-                                                  debouncedUpdateFoodItem(item.id, { calories: e.target.value ? parseInt(e.target.value) : null }, displayIndex, itemIndex);
-                                                }}
-                                                className="glass-input w-full px-2 py-2 text-xs"
-                                                placeholder="קל'"
-                                              />
-                                            </div>
-                                            <div className="flex-1">
-                                              <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">חלבון</label>
-                                              <input
-                                                type="number"
-                                                value={item.protein || ''}
-                                                onChange={(e) => {
-                                                  debouncedUpdateFoodItem(item.id, { protein: e.target.value ? parseInt(e.target.value) : null }, displayIndex, itemIndex);
-                                                }}
-                                                className="glass-input w-full px-2 py-2 text-xs"
-                                                placeholder="גרם"
-                                              />
-                                            </div>
-                                          </div>
-                                          <div className="col-span-1">
-                                            <button
-                                              onClick={async () => {
-                                                if (await deleteFoodItem(item.id)) {
-                                                  const updatedMeals = [...meals];
-                                                  updatedMeals[displayIndex] = {
-                                                    ...updatedMeals[displayIndex],
-                                                    food_items: (updatedMeals[displayIndex].food_items || []).filter(fi => fi.id !== item.id),
-                                                  };
-                                                  setMeals(updatedMeals);
-                                                  toast.success('פריט מזון נמחק');
-                                                }
-                                              }}
-                                              className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-all"
-                                              title="מחק"
-                                            >
-                                              <Trash2 className="h-4 w-4" />
-                                            </button>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <div className="text-center py-6 text-[var(--color-text-muted)] text-sm bg-[var(--color-bg-surface)] rounded-xl border border-dashed border-[var(--color-border)]">
-                                    אין פריטי מזון. לחץ על "הוסף פריט מזון" כדי להתחיל.
-                                  </div>
-                                )}
-
-                                {/* Meal totals from food items */}
-                                {meal.food_items && meal.food_items.length > 0 && (
-                                  <div className="mt-3 p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-                                    <div className="flex items-center justify-between text-sm">
-                                      <span className="text-[var(--color-text-secondary)] font-semibold">סיכום הארוחה:</span>
-                                      <div className="flex gap-4">
-                                        <span className="text-emerald-400">
-                                          {meal.food_items.reduce((sum, item) => sum + (item.calories || 0), 0)} קל'
-                                        </span>
-                                        <span className="text-emerald-400">
-                                          {meal.food_items.reduce((sum, item) => sum + (item.protein || 0), 0)}ג חלבון
-                                        </span>
-                                        <span className="text-emerald-400">
-                                          {meal.food_items.reduce((sum, item) => sum + (item.carbs || 0), 0)}ג פחמימות
-                                        </span>
-                                        <span className="text-emerald-400">
-                                          {meal.food_items.reduce((sum, item) => sum + (item.fat || 0), 0)}ג שומן
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-
-                              <div>
-                                <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">הערות כלליות (אופציונלי)</label>
-                                <textarea
-                                  value={meal.description}
-                                  onChange={(e) => onUpdateMeal(displayIndex, 'description', e.target.value)}
-                                  className="glass-input w-full px-4 py-3"
-                                  rows={2}
-                                  placeholder="הערות כלליות על הארוחה..."
-                                />
-                              </div>
-
-                              <div>
-                                <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">חלופות</label>
-                                <textarea
-                                  value={meal.alternatives}
-                                  onChange={(e) => onUpdateMeal(displayIndex, 'alternatives', e.target.value)}
-                                  className="glass-input w-full px-4 py-3"
-                                  rows={2}
-                                  placeholder="ניתן להחליף ב..."
-                                />
-                              </div>
-
-                              <div>
-                                <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">הערות</label>
-                                <input
-                                  type="text"
-                                  value={meal.notes}
-                                  onChange={(e) => onUpdateMeal(displayIndex, 'notes', e.target.value)}
-                                  className="glass-input w-full px-4 py-3"
-                                  placeholder="הערות נוספות..."
-                                />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
-            );
-          })
-        )}
-
-        {meals.length > 0 && totals.calories > 0 && (
-          <div className="premium-card-static p-5 bg-gradient-to-r from-emerald-500/10 to-teal-500/10">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-[var(--color-text-primary)]">סיכום יומי כולל:</span>
-              <div className="flex gap-6 text-sm">
-                <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.calories}</span> קלוריות</span>
-                <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.protein}ג</span> חלבון</span>
-                <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.carbs}ג</span> פחמימות</span>
-                <span className="text-[var(--color-text-secondary)]"><span className="text-emerald-400 font-semibold">{totals.fat}ג</span> שומן</span>
-              </div>
+    <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 overflow-x-hidden">
+      {/* אזהרות */}
+      {(warnings.exceedsDailyGoal || warnings.inconsistentValues || warnings.missingData || 
+        warnings.exceedsProtein || warnings.exceedsCarbs || warnings.exceedsFat) && (
+        <div className="premium-card-static p-4 bg-yellow-500/10 border border-yellow-500/30">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 space-y-2">
+              <h4 className="font-semibold text-yellow-400">אזהרות</h4>
+              <ul className="space-y-1 text-sm text-yellow-300">
+                {warnings.exceedsDailyGoal && (
+                  <li>• סיכום הקלוריות חורג מיעד יומי ב-{Math.round(((totals.calories / (plan.daily_calories || 1)) - 1) * 100)}%</li>
+                )}
+                {warnings.inconsistentValues && (
+                  <li>• יש חוסר עקביות בין ערכי התפריט לערכי הארוחות</li>
+                )}
+                {warnings.missingData && (
+                  <li>• יש ארוחות ללא נתונים תזונתיים</li>
+                )}
+                {warnings.exceedsProtein && (
+                  <li>• סיכום החלבון חורג מיעד יומי</li>
+                )}
+                {warnings.exceedsCarbs && (
+                  <li>• סיכום הפחמימות חורג מיעד יומי</li>
+                )}
+                {warnings.exceedsFat && (
+                  <li>• סיכום השומן חורג מיעד יומי</li>
+                )}
+              </ul>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {meals.some((m) => m.id) && (
+        <QuickAddFoodBar meals={meals} onAdd={handleQuickAdd} />
+      )}
+
+      {meals.some((m) => m.id) && (
+        <div className="premium-card-static p-4 rounded-2xl border border-[var(--color-border)] shadow-sm">
+          <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-1">תוספי תזונה</h3>
+          <p className="text-xs text-[var(--color-text-muted)] mb-3">לחיצה מוסיפה לארוחה המתאימה עם הכוונה מתי לקחת</p>
+          <div className="flex flex-wrap gap-2">
+            {SUPPLEMENTS.map((supp) => (
+              <button
+                key={supp.name}
+                type="button"
+                onClick={() => handleAddSupplement(supp)}
+                title={supp.whenToTake || undefined}
+                className="flex flex-col items-center gap-0.5 px-4 py-2.5 rounded-xl text-sm font-medium bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] hover:border-primary-500/30 transition-all"
+              >
+                <span>{supp.name}</span>
+                {supp.whenToTake && (
+                  <span className="text-[10px] text-[var(--color-text-muted)] font-normal">
+                    {supp.whenToTake}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <PlanSettingsCard
+        plan={plan}
+        onUpdatePlan={onUpdatePlan}
+        onLoadTemplate={onLoadTemplate}
+        onSaveAsTemplate={onSaveAsTemplate}
+        onAddNote={onAddNote}
+        trainerId={trainerId}
+        traineeId={traineeId}
+      />
+
+      <MealsTimeline
+        plan={plan}
+        meals={meals}
+        expandedMeals={expandedMeals}
+        totals={totals}
+        onAddMeal={onAddMeal}
+        onUpdateMeal={onUpdateMeal}
+        onDeleteMeal={onDeleteMeal}
+        onToggleMeal={onToggleMeal}
+        setMeals={setMeals}
+        debouncedUpdateFoodItem={debouncedUpdateFoodItem}
+        setCatalogForMeal={setCatalogForMeal}
+        showAlternatives={showAlternatives}
+        setShowAlternatives={setShowAlternatives}
+        handleQuantityChange={handleQuantityChange}
+        handleUnitChange={handleUnitChange}
+        handleSwapFood={handleSwapFood}
+        onCalculateTdee={() => setShowTdeeModal(true)}
+      />
 
       <div className="flex justify-end">
         <button
           onClick={onSave}
           disabled={saving}
-          className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 text-white px-10 py-4 rounded-2xl flex items-center gap-3 font-semibold transition-all duration-300 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/30 hover:scale-[1.02]"
+          className="bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 disabled:opacity-50 text-white px-10 py-4 rounded-2xl flex items-center gap-3 font-semibold transition-all duration-300 shadow-xl shadow-primary-500/25 hover:shadow-2xl hover:shadow-primary-500/30 hover:scale-[1.02]"
         >
           {saving ? (
             <>
@@ -616,6 +413,25 @@ export function PlanEditorView({
           )}
         </button>
       </div>
+
+      {catalogForMeal && (
+        <FoodCatalogSelector
+          onSelect={handleCatalogSelect}
+          onClose={() => setCatalogForMeal(null)}
+        />
+      )}
+
+      {showTdeeModal && traineeId && (
+        <CalculateTdeeModal
+          traineeId={traineeId}
+          onApply={(macros) => {
+            onUpdatePlan(macros);
+            toast.success('המאקרו עודכן בהתאם ל-TDEE');
+          }}
+          onClose={() => setShowTdeeModal(false)}
+        />
+      )}
     </div>
   );
 }
+

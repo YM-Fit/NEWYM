@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import {
@@ -18,7 +18,9 @@ import {
   XCircle,
   Plus,
 } from 'lucide-react';
-import SelfWorkoutSession from './SelfWorkoutSession';
+import WorkoutSession from '../trainer/Workouts/WorkoutSession';
+import type { Trainee } from '../../types';
+import { classifyWorkout, WORKOUT_SOURCE_FILTER_OPTIONS, WORKOUT_SOURCE_LABELS } from '../../utils/workoutClassification';
 import { LoadingSpinner, Skeleton, SkeletonWorkoutCard } from '../ui';
 import { EmptyState } from '../common/EmptyState';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -27,6 +29,7 @@ interface WorkoutHistoryProps {
   traineeId: string | null;
   traineeName?: string;
   trainerId?: string;
+  trainee?: Trainee | null;
 }
 
 interface WorkoutExercise {
@@ -76,7 +79,10 @@ interface Workout {
   workout_date: string;
   is_completed: boolean;
   notes: string | null;
+  is_self_recorded?: boolean | null;
   workout_exercises: WorkoutExercise[];
+  /** Computed: studio | program | self */
+  workout_source?: 'studio' | 'program' | 'self';
 }
 
 interface MuscleGroup {
@@ -84,7 +90,7 @@ interface MuscleGroup {
   name: string;
 }
 
-export default function WorkoutHistory({ traineeId, traineeName, trainerId }: WorkoutHistoryProps) {
+const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, trainerId, trainee }: WorkoutHistoryProps) {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [muscleGroups, setMuscleGroups] = useState<MuscleGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,6 +100,8 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
   const [showFilters, setShowFilters] = useState(false);
   const [previousExerciseData, setPreviousExerciseData] = useState<Map<string, { weight: number; reps: number }>>(new Map());
   const [showSelfWorkout, setShowSelfWorkout] = useState(false);
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [workoutSourceFilter, setWorkoutSourceFilter] = useState<'all' | 'studio' | 'program' | 'self'>('all');
 
   useEffect(() => {
     if (traineeId) {
@@ -106,52 +114,88 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
     if (!traineeId) return;
     setLoading(true);
 
-    const { data } = await supabase
-      .from('workout_trainees')
-      .select(`
-        workouts!inner (
-          id,
-          workout_date,
-          is_completed,
-          notes,
-          workout_exercises (
+    const [wtResult, planData, calendarResult] = await Promise.all([
+      supabase
+        .from('workout_trainees')
+        .select(`
+          workouts!inner (
             id,
-            exercise_id,
-            order_index,
-            exercises (
+            workout_date,
+            is_completed,
+            notes,
+            is_self_recorded,
+            workout_exercises (
               id,
-              name,
-              muscle_group_id,
-              muscle_groups (name)
-            ),
-            exercise_sets (
-              id,
-              set_number,
-              weight,
-              reps,
-              rpe,
-              failure,
-              set_type,
-              equipment_id,
-              superset_weight,
-              superset_reps,
-              superset_equipment_id,
-              superset_rpe,
-              dropset_weight,
-              dropset_reps,
-              equipment:equipment_id(id, name, emoji),
-              superset_equipment:superset_equipment_id(id, name, emoji)
+              exercise_id,
+              order_index,
+              exercises (
+                id,
+                name,
+                muscle_group_id,
+                muscle_groups (name)
+              ),
+              exercise_sets (
+                id,
+                set_number,
+                weight,
+                reps,
+                rpe,
+                failure,
+                set_type,
+                equipment_id,
+                superset_weight,
+                superset_reps,
+                superset_equipment_id,
+                superset_rpe,
+                dropset_weight,
+                dropset_reps,
+                equipment:equipment_id(id, name, emoji),
+                superset_equipment:superset_equipment_id(id, name, emoji)
+              )
             )
           )
-        )
-      `)
-      .eq('trainee_id', traineeId)
-      .order('workouts(workout_date)', { ascending: false });
+        `)
+        .eq('trainee_id', traineeId)
+        .order('workouts(workout_date)', { ascending: false }),
+      (async () => {
+        const { data: plans } = await supabase
+          .from('trainee_workout_plans')
+          .select('id')
+          .eq('trainee_id', traineeId);
+        const planIds = (plans || []).map((p: { id: string }) => p.id);
+        if (planIds.length === 0) return [];
+        const { data: execs } = await supabase
+          .from('workout_plan_weekly_executions')
+          .select('workout_id')
+          .in('plan_id', planIds)
+          .not('workout_id', 'is', null);
+        return execs || [];
+      })(),
+      supabase
+        .from('google_calendar_sync')
+        .select('workout_id')
+        .eq('trainee_id', traineeId)
+        .not('workout_id', 'is', null),
+    ]);
 
-    if (data) {
-      const formattedWorkouts = data
+    const wtData = (wtResult as { data?: unknown[] })?.data;
+    const calendarData = (calendarResult as { data?: { workout_id: string }[] })?.data || [];
+    const planWorkoutIds = new Set((Array.isArray(planData) ? planData : []).map((r: { workout_id: string }) => r.workout_id));
+    const calendarWorkoutIds = new Set(calendarData.map((r: { workout_id: string }) => r.workout_id));
+
+    if (wtData) {
+      const formattedWorkouts: Workout[] = wtData
         .map((w: any) => w.workouts)
-        .filter((w: Workout) => w !== null);
+        .filter((w: Workout) => w !== null)
+        .map((w: Workout) => {
+          const source = classifyWorkout({
+            id: w.id,
+            is_self_recorded: w.is_self_recorded,
+            in_workout_plan: planWorkoutIds.has(w.id),
+            in_google_calendar: calendarWorkoutIds.has(w.id),
+          });
+          return { ...w, workout_source: source };
+        });
       setWorkouts(formattedWorkouts);
       buildPreviousExerciseData(formattedWorkouts);
     }
@@ -211,19 +255,26 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
     setPreviousExerciseData(previousData);
   };
 
-  const getAvailableMonths = () => {
+  const getAvailableMonths = useMemo(() => {
     const months = new Set<string>();
     workouts.forEach((w) => {
       const date = new Date(w.workout_date);
       months.add(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
     });
     return Array.from(months).sort().reverse();
-  };
+  }, [workouts]);
 
-  const getFilteredWorkouts = () => {
+  const getFilteredWorkouts = useMemo(() => {
+    const now = new Date();
     return workouts.filter((w) => {
+      const date = new Date(w.workout_date);
+
+      // אל תכלול אימונים עתידיים בהיסטוריה
+      if (date.getTime() > now.getTime()) {
+        return false;
+      }
+
       if (selectedMonth !== 'all') {
-        const date = new Date(w.workout_date);
         const workoutMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         if (workoutMonth !== selectedMonth) return false;
       }
@@ -235,11 +286,15 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
         if (!hasMuscleGroup) return false;
       }
 
+      if (workoutSourceFilter !== 'all' && w.workout_source !== workoutSourceFilter) {
+        return false;
+      }
+
       return true;
     });
-  };
+  }, [workouts, selectedMonth, selectedMuscleGroup, workoutSourceFilter]);
 
-  const calculateWorkoutVolume = (workout: Workout) => {
+  const calculateWorkoutVolume = useCallback((workout: Workout) => {
     let totalVolume = 0;
     workout.workout_exercises?.forEach((we) => {
       we.exercise_sets?.forEach((set) => {
@@ -253,9 +308,9 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
       });
     });
     return totalVolume;
-  };
+  }, []);
 
-  const getMonthlyStats = () => {
+  const getMonthlyStats = useMemo(() => {
     const now = new Date();
     const thisMonth = workouts.filter((w) => {
       const date = new Date(w.workout_date);
@@ -271,7 +326,7 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
     const avgVolume = totalWorkouts > 0 ? Math.round(totalVolume / totalWorkouts) : 0;
 
     return { totalWorkouts, avgVolume };
-  };
+  }, [workouts, calculateWorkoutVolume]);
 
   const getLatestPR = () => {
     let latestPR: { exercise: string; weight: number; date: string } | null = null;
@@ -335,9 +390,60 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
     return `${months[parseInt(month) - 1]} ${year}`;
   };
 
-  const stats = useMemo(() => getMonthlyStats(), [workouts]);
+  const getCurrentMonthKey = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  };
+
+  const getCalendarMonthInfo = () => {
+    const monthKey = selectedMonth === 'all' ? getCurrentMonthKey() : selectedMonth;
+    const [yearStr, monthStr] = monthKey.split('-');
+    const year = parseInt(yearStr, 10);
+    const monthIndex = parseInt(monthStr, 10) - 1; // 0-based
+    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+    return { monthKey, year, monthIndex, daysInMonth };
+  };
+
+  const getMonthCalendarData = () => {
+    const now = new Date();
+    const { monthKey, year, monthIndex, daysInMonth } = getCalendarMonthInfo();
+    const days: Record<number, Workout[]> = {};
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      days[day] = [];
+    }
+
+    workouts.forEach((w) => {
+      const date = new Date(w.workout_date);
+      // רק עבר והיום, לא עתיד
+      if (date.getTime() > now.getTime()) return;
+      if (date.getFullYear() !== year || date.getMonth() !== monthIndex) return;
+      if (workoutSourceFilter !== 'all' && w.workout_source !== workoutSourceFilter) return;
+      const day = date.getDate();
+      if (!days[day]) {
+        days[day] = [];
+      }
+      days[day].push(w);
+    });
+
+    return { monthKey, year, monthIndex, daysInMonth, days };
+  };
+
+  const getPlannedWorkouts = () => {
+    const now = new Date();
+    return workouts
+      .filter((w) => {
+        const date = new Date(w.workout_date);
+        return date.getTime() > now.getTime();
+      })
+      .sort((a, b) => new Date(a.workout_date).getTime() - new Date(b.workout_date).getTime());
+  };
+
+  const stats = getMonthlyStats;
   const latestPR = useMemo(() => getLatestPR(), [workouts, previousExerciseData]);
-  const filteredWorkoutsMemo = useMemo(() => getFilteredWorkouts(), [workouts, selectedMonth, selectedMuscleGroup]);
+  const filteredWorkoutsMemo = getFilteredWorkouts;
+  const calendarData = useMemo(() => getMonthCalendarData(), [workouts, selectedMonth, workoutSourceFilter]);
+  const plannedWorkouts = useMemo(() => getPlannedWorkouts(), [workouts]);
 
   if (loading) {
     return (
@@ -358,22 +464,21 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
   }
 
   if (showSelfWorkout) {
-    if (!trainerId) {
+    if (!trainerId || !trainee) {
       toast.error('לא ניתן לבצע אימון עצמאי ללא מאמן');
       setShowSelfWorkout(false);
       return null;
     }
 
     return (
-      <SelfWorkoutSession
-        traineeId={traineeId!}
-        traineeName={traineeName || ''}
-        trainerId={trainerId}
+      <WorkoutSession
+        trainee={trainee}
         onBack={() => setShowSelfWorkout(false)}
         onSave={() => {
           setShowSelfWorkout(false);
           loadWorkouts();
         }}
+        isSelfWorkout
       />
     );
   }
@@ -393,27 +498,28 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
     <div className="space-y-4 pb-4">
       <button
         onClick={() => setShowSelfWorkout(true)}
-        className="w-full btn-primary py-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all shadow-lg"
+        disabled={!trainee || !trainerId}
+        className="w-full btn-primary py-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Plus className="w-6 h-6" />
         <span className="font-bold text-lg">אימון עצמאי</span>
       </button>
 
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl p-4 text-white">
           <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mb-2">
             <Calendar className="w-5 h-5" />
           </div>
           <p className="text-2xl font-bold">{stats.totalWorkouts}</p>
-          <p className="text-xs text-emerald-100">אימונים החודש</p>
+          <p className="text-xs text-primary-100">אימונים החודש</p>
         </div>
 
-        <div className="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white">
           <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mb-2">
             <Activity className="w-5 h-5" />
           </div>
           <p className="text-2xl font-bold">{stats.avgVolume.toLocaleString()}</p>
-          <p className="text-xs text-cyan-100">נפח ממוצע</p>
+          <p className="text-xs text-blue-100">נפח ממוצע</p>
         </div>
 
         <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-4 text-white">
@@ -434,13 +540,54 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
         </div>
       </div>
 
+      {plannedWorkouts.length > 0 && (
+        <div className="premium-card-static overflow-hidden">
+          <div className="bg-[var(--color-bg-surface)] px-4 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
+            <h3 className="font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+              <Clock className="w-4 h-4 text-blue-400" />
+              אימונים מתוכננים
+            </h3>
+            <span className="text-xs text-[var(--color-text-muted)]">
+              {plannedWorkouts.length} אימונים קדימה
+            </span>
+          </div>
+          <div className="divide-y divide-[var(--color-border)]">
+            {plannedWorkouts.slice(0, 5).map((workout) => (
+              <button
+                key={workout.id}
+                onClick={() => setSelectedWorkout(workout)}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-[var(--color-bg-surface)] transition-colors text-right"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center border bg-blue-500/10 border-blue-500/30">
+                    <Clock className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-[var(--color-text-primary)]">
+                      {new Date(workout.workout_date).toLocaleDateString('he-IL', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                      })}
+                    </p>
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      אימון מתוכנן • {workout.workout_exercises?.length || 0} תרגילים
+                    </p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="premium-card-static overflow-hidden">
         <button
           onClick={() => setShowFilters(!showFilters)}
           className="w-full px-4 py-3 flex items-center justify-between bg-[var(--color-bg-surface)] border-b border-[var(--color-border)]"
         >
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-emerald-400" />
+            <Filter className="w-4 h-4 text-primary-400" />
             <span className="font-medium text-[var(--color-text-primary)]">סינון</span>
           </div>
           {showFilters ? (
@@ -459,10 +606,25 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
                 onChange={(e) => setSelectedMonth(e.target.value)}
                 className="glass-input w-full p-2"
               >
-                <option value="all">כל החודשים</option>
-                {getAvailableMonths().map((month) => (
+                <option value="all">חודש נוכחי</option>
+                {getAvailableMonths.map((month) => (
                   <option key={month} value={month}>
                     {formatMonthName(month)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">סוג אימון</label>
+              <select
+                value={workoutSourceFilter}
+                onChange={(e) => setWorkoutSourceFilter(e.target.value as typeof workoutSourceFilter)}
+                className="glass-input w-full p-2"
+              >
+                {WORKOUT_SOURCE_FILTER_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </select>
@@ -488,20 +650,155 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
       </div>
 
       <div className="premium-card-static overflow-hidden">
-        <div className="bg-[var(--color-bg-surface)] px-4 py-3 border-b border-[var(--color-border)]">
-          <h3 className="font-bold text-[var(--color-text-primary)]">היסטוריית אימונים</h3>
+        <div className="bg-[var(--color-bg-surface)] px-4 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-[var(--color-text-primary)]">היסטוריית אימונים</h3>
+            <p className="text-xs text-[var(--color-text-muted)]">
+              תצוגה לפי חודש, מסומנים הימים שבהם ביצעת אימון
+            </p>
+          </div>
+          <div className="inline-flex items-center rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] overflow-hidden text-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode('calendar')}
+              className={`px-3 py-1.5 ${
+                viewMode === 'calendar'
+                  ? 'bg-primary-500/15 text-primary-400'
+                  : 'text-[var(--color-text-muted)]'
+              }`}
+            >
+              לוח חודשי
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1.5 ${
+                viewMode === 'list'
+                  ? 'bg-primary-500/15 text-primary-400'
+                  : 'text-[var(--color-text-muted)]'
+              }`}
+            >
+              רשימה
+            </button>
+          </div>
         </div>
 
-        {filteredWorkoutsMemo.length === 0 ? (
+        {viewMode === 'calendar' ? (
+          <div>
+            <div className="px-4 pt-3 pb-2 flex items-center justify-between text-xs text-[var(--color-text-muted)]">
+              <span>{formatMonthName(calendarData.monthKey)}</span>
+              <span>לחיצה על יום עם אימון תפתח את פירוט האימון</span>
+            </div>
+            {calendarData.daysInMonth === 0 ? (
+              <div className="p-6">
+                <EmptyState
+                  icon={Dumbbell}
+                  title="לא נמצאו אימונים בחודש זה"
+                  description="בחר חודש אחר או התחל באימון הראשון שלך"
+                  action={
+                    workouts.length === 0
+                      ? {
+                          label: 'התחל אימון',
+                          onClick: () => setShowSelfWorkout(true),
+                        }
+                      : undefined
+                  }
+                />
+              </div>
+            ) : (
+              <div className="px-2 pb-4">
+                {/* כותרת ימי השבוע */}
+                <div className="grid grid-cols-7 gap-1 px-2 pb-2 text-center text-[10px] text-[var(--color-text-muted)]">
+                  <div>א׳</div>
+                  <div>ב׳</div>
+                  <div>ג׳</div>
+                  <div>ד׳</div>
+                  <div>ה׳</div>
+                  <div>ו׳</div>
+                  <div>ש׳</div>
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {(() => {
+                    const firstDayOfWeek = new Date(
+                      calendarData.year,
+                      calendarData.monthIndex,
+                      1
+                    ).getDay(); // 0 = Sunday
+                    const blanks = Array.from({ length: firstDayOfWeek }, (_, index) => (
+                      <div key={`blank-${index}`} className="h-12" />
+                    ));
+                    const dayCells = Array.from(
+                      { length: calendarData.daysInMonth },
+                      (_, index) => {
+                        const day = index + 1;
+                        const dayWorkouts = calendarData.days[day] || [];
+                        const hasWorkout = dayWorkouts.length > 0;
+                        const workout = hasWorkout ? dayWorkouts[0] : null;
+
+                        const sourceColor =
+                          hasWorkout && workout?.workout_source === 'self'
+                            ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
+                            : hasWorkout && workout?.workout_source === 'program'
+                            ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+                            : hasWorkout
+                            ? 'bg-primary-500/10 border-primary-500/40 text-primary-400'
+                            : '';
+                        const cellContent = (
+                          <div
+                            className={`w-full h-12 rounded-xl border flex flex-col items-center justify-center text-xs ${
+                              hasWorkout
+                                ? `text-primary-400 ${sourceColor}`
+                                : 'bg-[var(--color-bg-surface)] border-[var(--color-border)] text-[var(--color-text-muted)]'
+                            }`}
+                          >
+                            <span className="text-sm font-medium">{day}</span>
+                            {hasWorkout && workout && (
+                              <span className="text-[10px]">
+                                {workout.workout_exercises?.length || 0} תרגילים
+                              </span>
+                            )}
+                          </div>
+                        );
+
+                        return hasWorkout ? (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => setSelectedWorkout(dayWorkouts[0])}
+                            className="w-full"
+                          >
+                            {cellContent}
+                          </button>
+                        ) : (
+                          <div key={day}>{cellContent}</div>
+                        );
+                      }
+                    );
+
+                    return [...blanks, ...dayCells];
+                  })()}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : filteredWorkoutsMemo.length === 0 ? (
           <div className="p-8">
             <EmptyState
               icon={Dumbbell}
-              title={workouts.length === 0 ? "אין אימונים עדיין" : "לא נמצאו אימונים"}
-              description={workouts.length === 0 ? "התחל באימון הראשון שלך" : "לא נמצאו אימונים בתקופה שנבחרה"}
-              action={workouts.length === 0 ? {
-                label: 'התחל אימון',
-                onClick: () => setShowSelfWorkout(true)
-              } : undefined}
+              title={workouts.length === 0 ? 'אין אימונים עדיין' : 'לא נמצאו אימונים'}
+              description={
+                workouts.length === 0
+                  ? 'התחל באימון הראשון שלך'
+                  : 'לא נמצאו אימונים בתקופה שנבחרה'
+              }
+              action={
+                workouts.length === 0
+                  ? {
+                      label: 'התחל אימון',
+                      onClick: () => setShowSelfWorkout(true),
+                    }
+                  : undefined
+              }
             />
           </div>
         ) : (
@@ -515,11 +812,13 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-10 h-10 rounded-lg flex items-center justify-center border ${
-                      workout.is_completed ? 'bg-emerald-500/15 border-emerald-500/30' : 'bg-[var(--color-bg-surface)] border-[var(--color-border)]'
+                      workout.is_completed
+                        ? 'bg-primary-500/15 border-primary-500/30'
+                        : 'bg-[var(--color-bg-surface)] border-[var(--color-border)]'
                     }`}
                   >
                     {workout.is_completed ? (
-                      <CheckCircle className="w-5 h-5 text-emerald-400" />
+                      <CheckCircle className="w-5 h-5 text-primary-400" />
                     ) : (
                       <XCircle className="w-5 h-5 text-[var(--color-text-muted)]" />
                     )}
@@ -532,9 +831,22 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
                         month: 'long',
                       })}
                     </p>
-                    <div className="flex items-center gap-3 text-sm text-[var(--color-text-muted)]">
+                    <div className="flex items-center gap-3 text-sm text-[var(--color-text-muted)] flex-wrap">
                       <span>{workout.workout_exercises?.length || 0} תרגילים</span>
                       <span>{calculateWorkoutVolume(workout).toLocaleString()} ק״ג נפח</span>
+                      {workout.workout_source && (
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-lg ${
+                            workout.workout_source === 'self'
+                              ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                              : workout.workout_source === 'program'
+                              ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
+                              : 'bg-primary-500/15 text-primary-400 border border-primary-500/30'
+                          }`}
+                        >
+                          {WORKOUT_SOURCE_LABELS[workout.workout_source]}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -546,7 +858,9 @@ export default function WorkoutHistory({ traineeId, traineeName, trainerId }: Wo
       </div>
     </div>
   );
-}
+});
+
+export default WorkoutHistory;
 
 interface WorkoutDetailProps {
   workout: Workout;
@@ -599,7 +913,7 @@ function WorkoutDetail({
         <span>חזרה לרשימה</span>
       </button>
 
-      <div className="bg-gradient-to-l from-emerald-600 to-emerald-500 rounded-xl p-4 text-white shadow-lg">
+      <div className="bg-gradient-to-l from-primary-600 to-primary-500 rounded-xl p-4 text-white shadow-lg">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-lg font-bold">
@@ -610,9 +924,16 @@ function WorkoutDetail({
                 year: 'numeric',
               })}
             </p>
-            <p className="text-sm text-emerald-100 mt-1">
-              {workout.workout_exercises?.length || 0} תרגילים
-            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-sm text-primary-100">
+                {workout.workout_exercises?.length || 0} תרגילים
+              </p>
+              {workout.workout_source && (
+                <span className="text-xs px-2 py-0.5 rounded-lg bg-white/20 border border-white/30">
+                  {WORKOUT_SOURCE_LABELS[workout.workout_source]}
+                </span>
+              )}
+            </div>
           </div>
           {workout.is_completed ? (
             <div className="bg-white/20 px-3 py-1 rounded-full text-sm">הושלם</div>
@@ -651,8 +972,8 @@ function WorkoutDetail({
                   className="w-full p-4 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-500/15 border border-emerald-500/30 rounded-lg flex items-center justify-center">
-                      <Dumbbell className="w-5 h-5 text-emerald-400" />
+                    <div className="w-10 h-10 bg-primary-500/15 border border-primary-500/30 rounded-lg flex items-center justify-center">
+                      <Dumbbell className="w-5 h-5 text-primary-400" />
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-[var(--color-text-primary)]">{we.exercises?.name}</p>
@@ -666,7 +987,7 @@ function WorkoutDetail({
                       <div
                         className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
                           comparison.direction === 'up'
-                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                            ? 'bg-primary-500/15 text-primary-400 border border-primary-500/30'
                             : comparison.direction === 'down'
                             ? 'bg-red-500/15 text-red-400 border border-red-500/30'
                             : 'bg-[var(--color-bg-surface)] text-[var(--color-text-muted)] border border-[var(--color-border)]'
@@ -700,7 +1021,7 @@ function WorkoutDetail({
                             <div className="bg-[var(--color-bg-surface)] rounded-lg p-3 border border-[var(--color-border)]">
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-3">
-                                  <span className="w-6 h-6 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center justify-center text-xs font-medium">
+                                  <span className="w-6 h-6 bg-primary-500/15 text-primary-400 border border-primary-500/30 rounded-full flex items-center justify-center text-xs font-medium">
                                     {index + 1}
                                   </span>
                                   <span className="font-medium text-[var(--color-text-primary)]">
@@ -725,20 +1046,20 @@ function WorkoutDetail({
                             </div>
 
                             {set.superset_weight && set.superset_reps && (
-                              <div className="bg-cyan-500/15 border border-cyan-500/30 rounded-lg p-3 mr-4">
+                              <div className="bg-blue-500/15 border border-blue-500/30 rounded-lg p-3 mr-4">
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center gap-3">
-                                    <span className="text-xs text-cyan-400 font-medium">סופרסט</span>
-                                    <span className="font-medium text-cyan-300">
+                                    <span className="text-xs text-blue-400 font-medium">סופרסט</span>
+                                    <span className="font-medium text-blue-300">
                                       {set.superset_weight} ק״ג × {set.superset_reps}
                                     </span>
                                   </div>
                                   {set.superset_rpe && (
-                                    <span className="text-sm text-cyan-400">RPE {set.superset_rpe}</span>
+                                    <span className="text-sm text-blue-400">RPE {set.superset_rpe}</span>
                                   )}
                                 </div>
                                 {set.superset_equipment && (
-                                  <div className="flex items-center gap-2 text-sm text-cyan-400">
+                                  <div className="flex items-center gap-2 text-sm text-blue-400">
                                     {set.superset_equipment.emoji && <span>{set.superset_equipment.emoji}</span>}
                                     <span>{set.superset_equipment.name}</span>
                                   </div>

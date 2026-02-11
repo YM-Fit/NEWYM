@@ -1,52 +1,41 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Bell, X, Calendar, ClipboardCheck, Check } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
-import toast from 'react-hot-toast';
-import { logger } from '../../../utils/logger';
-
-interface Notification {
-  id: string;
-  trainee_id: string;
-  notification_type: string;
-  title: string;
-  message: string | null;
-  is_read: boolean;
-  created_at: string;
-}
+import { useAuth } from '../../../contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  useNotificationsQuery,
+  useMarkNotificationReadMutation,
+  useMarkAllNotificationsReadMutation,
+  useDeleteNotificationMutation,
+} from '../../../hooks/queries/useNotificationQueries';
 
 interface NotificationBellProps {
   onNavigateToTrainee?: (traineeId: string, tab?: string) => void;
 }
 
 export default function NotificationBell({ onNavigateToTrainee }: NotificationBellProps) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { data: notifications = [] } = useNotificationsQuery(user?.id ?? null);
+  const markReadMutation = useMarkNotificationReadMutation();
+  const markAllReadMutation = useMarkAllNotificationsReadMutation();
+  const deleteMutation = useDeleteNotificationMutation();
   const [showDropdown, setShowDropdown] = useState(false);
-  const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    loadNotifications();
+  const unreadCount = useMemo(() => notifications.filter((n: any) => !n.is_read).length, [notifications]);
 
+  useEffect(() => {
+    if (!user) return;
     const channel = supabase
       .channel('trainer_notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'trainer_notifications',
-        },
-        () => {
-          loadNotifications();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trainer_notifications' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      })
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+    return () => { supabase.removeChannel(channel); };
+  }, [user, queryClient]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -54,104 +43,38 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
         setShowDropdown(false);
       }
     };
-
-    if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    if (showDropdown) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDropdown]);
 
-  const loadNotifications = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('trainer_notifications')
-        .select('*')
-        .eq('trainer_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-
-      setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.is_read).length || 0);
-    } catch (error) {
-      logger.error('Error loading notifications', error, 'NotificationBell');
-    }
+  const handleMarkAsRead = (notificationId: string) => {
+    markReadMutation.mutate(notificationId);
   };
 
-  const handleMarkAsRead = async (notificationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('trainer_notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
-
-      setNotifications(notifications.map(n =>
-        n.id === notificationId ? { ...n, is_read: true } : n
-      ));
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      logger.error('Error marking notification as read', error, 'NotificationBell');
-    }
+  const handleMarkAllAsRead = () => {
+    if (!user) return;
+    markAllReadMutation.mutate(user.id);
   };
 
-  const handleMarkAllAsRead = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { error } = await supabase
-        .from('trainer_notifications')
-        .update({ is_read: true })
-        .eq('trainer_id', user.id)
-        .eq('is_read', false);
-
-      if (error) throw error;
-
-      setNotifications(notifications.map(n => ({ ...n, is_read: true })));
-      setUnreadCount(0);
-      toast.success('כל התראות סומנו כנקראו');
-    } catch (error) {
-      logger.error('Error marking all as read', error, 'NotificationBell');
-      toast.error('שגיאה בסימון התראות');
-    }
+  const handleDeleteNotification = (notificationId: string) => {
+    deleteMutation.mutate(notificationId);
   };
 
-  const handleDeleteNotification = async (notificationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('trainer_notifications')
-        .delete()
-        .eq('id', notificationId);
-
-      if (error) throw error;
-
-      const notification = notifications.find(n => n.id === notificationId);
-      if (notification && !notification.is_read) {
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      }
-      setNotifications(notifications.filter(n => n.id !== notificationId));
-    } catch (error) {
-      logger.error('Error deleting notification', error, 'NotificationBell');
-      toast.error('שגיאה במחיקת התראה');
-    }
-  };
-
-  const handleNotificationClick = async (notification: Notification) => {
+  const handleNotificationClick = async (notification: any) => {
     if (!notification.is_read) {
       await handleMarkAsRead(notification.id);
     }
 
     if (notification.notification_type === 'food_diary_completed' && onNavigateToTrainee) {
       onNavigateToTrainee(notification.trainee_id, 'food_diary');
+      setShowDropdown(false);
+    } else if (
+      (notification.notification_type === 'workout_plan_exercise_edited' ||
+       notification.notification_type === 'workout_plan_exercise_added' ||
+       notification.notification_type === 'workout_plan_exercise_removed') &&
+      onNavigateToTrainee
+    ) {
+      onNavigateToTrainee(notification.trainee_id, 'workout-plans');
       setShowDropdown(false);
     }
   };
@@ -162,6 +85,10 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
         return ClipboardCheck;
       case 'workout_completed':
         return Calendar;
+      case 'workout_plan_exercise_edited':
+      case 'workout_plan_exercise_added':
+      case 'workout_plan_exercise_removed':
+        return ClipboardCheck;
       default:
         return Bell;
     }
@@ -171,21 +98,29 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
     switch (type) {
       case 'food_diary_completed':
         return {
-          iconColor: 'text-emerald-600',
-          bgColor: 'bg-gradient-to-br from-emerald-100 to-teal-100',
-          borderColor: 'border-emerald-200'
+          iconColor: 'text-primary-600',
+          bgColor: 'bg-gradient-to-br from-primary-100 to-primary-100',
+          borderColor: 'border-primary-200'
         };
       case 'workout_completed':
         return {
           iconColor: 'text-blue-600',
-          bgColor: 'bg-gradient-to-br from-blue-100 to-cyan-100',
+          bgColor: 'bg-gradient-to-br from-blue-100 to-blue-100',
+          borderColor: 'border-blue-200'
+        };
+      case 'workout_plan_exercise_edited':
+      case 'workout_plan_exercise_added':
+      case 'workout_plan_exercise_removed':
+        return {
+          iconColor: 'text-blue-600',
+          bgColor: 'bg-gradient-to-br from-blue-100 to-blue-100',
           borderColor: 'border-blue-200'
         };
       default:
         return {
-          iconColor: 'text-gray-600',
+          iconColor: 'text-muted600',
           bgColor: 'bg-gradient-to-br from-gray-100 to-slate-100',
-          borderColor: 'border-gray-200'
+          borderColor: 'border-border200'
         };
     }
   };
@@ -207,7 +142,7 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
       {/* Bell Button */}
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="relative p-2.5 hover:bg-gray-100 rounded-xl transition-all duration-300 hover:scale-105 group"
+        className="relative p-2.5 hover:bg-surface100 rounded-xl transition-all duration-300 hover:scale-105 group"
         aria-label={
           unreadCount > 0
             ? `יש ${unreadCount > 9 ? 'יותר מתשע' : unreadCount} התראות שלא נקראו, פתח התראות`
@@ -216,7 +151,7 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
         aria-haspopup="true"
         aria-expanded={showDropdown}
       >
-        <Bell className="w-6 h-6 text-gray-700 group-hover:text-emerald-600 transition-colors duration-300" />
+        <Bell className="w-6 h-6 text-muted700 group-hover:text-primary-600 transition-colors duration-300" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 bg-gradient-to-br from-red-500 to-rose-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -227,12 +162,12 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
       {/* Dropdown */}
       {showDropdown && (
         <div
-          className="absolute left-0 mt-3 w-[400px] bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 max-h-[600px] flex flex-col overflow-hidden backdrop-blur-sm"
+          className="absolute left-0 mt-3 w-[400px] bg-white rounded-2xl shadow-2xl border border-border200 z-50 max-h-[600px] flex flex-col overflow-hidden backdrop-blur-sm"
           role="dialog"
           aria-label="רשימת התראות"
         >
           {/* Header */}
-          <div className="p-5 bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 flex items-center justify-between">
+          <div className="p-5 bg-gradient-to-br from-primary-600 via-primary-700 to-blue-700 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
                 <Bell className="w-5 h-5 text-white" />
@@ -255,9 +190,9 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
             {notifications.length === 0 ? (
               <div className="p-10 text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Bell className="w-8 h-8 text-gray-400" />
+                  <Bell className="w-8 h-8 text-muted400" />
                 </div>
-                <p className="text-gray-500 font-medium">אין התראות חדשות</p>
+                <p className="text-muted500 font-medium">אין התראות חדשות</p>
               </div>
             ) : (
               <div className="p-3 space-y-2">
@@ -270,8 +205,8 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
                       key={notification.id}
                       className={`p-4 rounded-xl transition-all duration-300 hover:shadow-lg cursor-pointer border ${
                         !notification.is_read
-                          ? 'bg-gradient-to-br from-emerald-50/80 to-teal-50/80 border-emerald-200 shadow-md'
-                          : 'bg-white border-gray-100 hover:bg-gray-50'
+                          ? 'bg-gradient-to-br from-primary-50/80 to-primary-50/80 border-primary-200 shadow-md'
+                          : 'bg-white border-border100 hover:bg-surface50'
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -291,22 +226,22 @@ export default function NotificationBell({ onNavigateToTrainee }: NotificationBe
                           }}
                         >
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-sm text-gray-900">{notification.title}</h4>
+                            <h4 className="font-semibold text-sm text-muted900">{notification.title}</h4>
                             {!notification.is_read && (
-                              <span className="w-2.5 h-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full animate-pulse shadow-sm"></span>
+                              <span className="w-2.5 h-2.5 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full animate-pulse shadow-sm"></span>
                             )}
                           </div>
                           {notification.message && (
-                            <p className="text-sm text-gray-600 mb-2 line-clamp-2">{notification.message}</p>
+                            <p className="text-sm text-muted600 mb-2 line-clamp-2">{notification.message}</p>
                           )}
-                          <p className="text-xs text-gray-400 font-medium">{getTimeAgo(notification.created_at)}</p>
+                          <p className="text-xs text-muted400 font-medium">{getTimeAgo(notification.created_at)}</p>
                         </div>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteNotification(notification.id);
                           }}
-                          className="text-gray-400 hover:text-red-500 transition-all duration-300 p-1.5 hover:bg-red-50 rounded-lg flex-shrink-0"
+                          className="text-muted400 hover:text-red-500 transition-all duration-300 p-1.5 hover:bg-red-50 rounded-lg flex-shrink-0"
                         >
                           <X className="w-4 h-4" />
                         </button>

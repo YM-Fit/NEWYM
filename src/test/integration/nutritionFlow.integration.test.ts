@@ -289,4 +289,77 @@ describe('Nutrition Flow Integration Tests', () => {
       expect(avgCalories).toBeLessThan(2200);
     });
   });
+
+  describe('Macro Calculations Integration', () => {
+    it('should calculate macros correctly for meal plan', async () => {
+      const { calculateMacros } = await import('../../utils/calorieCalculations');
+      
+      const macros = calculateMacros(2000, 80, 'cutting');
+      
+      expect(macros.protein.grams).toBe(176); // 80 * 2.2
+      expect(macros.fat.percentage).toBe(25);
+      
+      // סכום אחוזים צריך להיות ~100%
+      const totalPercentage = macros.protein.percentage + 
+                              macros.carbs.percentage + 
+                              macros.fat.percentage;
+      expect(Math.abs(totalPercentage - 100)).toBeLessThan(2);
+    });
+
+    it('should maintain consistency between plan goals and calculated macros', async () => {
+      const { calculateMacros, calculateCaloriesByGoal } = await import('../../utils/calorieCalculations');
+      
+      const tdee = 2000;
+      const cuttingCalories = calculateCaloriesByGoal(tdee, 'cutting');
+      const macros = calculateMacros(cuttingCalories, 80, 'cutting');
+      
+      // חלבון צריך להיות גבוה יותר ב-cutting
+      expect(macros.protein.grams).toBeGreaterThan(160);
+    });
+
+    it('should calculate daily summary correctly from meals', async () => {
+      const meals = [
+        { total_calories: 500, total_protein: 30, total_carbs: 50, total_fat: 20 },
+        { total_calories: 300, total_protein: 20, total_carbs: 30, total_fat: 10 },
+        { total_calories: 400, total_protein: 25, total_carbs: 40, total_fat: 15 },
+      ];
+
+      const dailySummary = meals.reduce(
+        (acc, meal) => ({
+          calories: acc.calories + (meal.total_calories || 0),
+          protein: acc.protein + (meal.total_protein || 0),
+          carbs: acc.carbs + (meal.total_carbs || 0),
+          fat: acc.fat + (meal.total_fat || 0),
+        }),
+        { calories: 0, protein: 0, carbs: 0, fat: 0 }
+      );
+
+      expect(dailySummary.calories).toBe(1200);
+      expect(dailySummary.protein).toBe(75);
+      expect(dailySummary.carbs).toBe(120);
+      expect(dailySummary.fat).toBe(45);
+    });
+
+    it('should detect inconsistencies between plan goals and actual meals', async () => {
+      const planGoals = {
+        daily_calories: 2000,
+        protein_grams: 150,
+        carbs_grams: 200,
+        fat_grams: 65,
+      };
+
+      const actualMeals = {
+        calories: 2500,
+        protein: 120,
+        carbs: 250,
+        fat: 80,
+      };
+
+      const exceedsCalories = actualMeals.calories > planGoals.daily_calories * 1.1;
+      const inconsistentProtein = Math.abs(actualMeals.protein - planGoals.protein_grams) > planGoals.protein_grams * 0.2;
+
+      expect(exceedsCalories).toBe(true);
+      expect(inconsistentProtein).toBe(true);
+    });
+  });
 });

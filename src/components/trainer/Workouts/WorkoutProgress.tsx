@@ -1,7 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ArrowRight, TrendingUp, TrendingDown, Dumbbell, User, BarChart3, Target, Repeat, List, Table2, Minus, Trophy, Calendar, Flame } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../../../lib/supabase';
+import { logger } from '../../../utils/logger';
+import toast from 'react-hot-toast';
+import { themeColors } from '@/utils/themeColors';
+import { classifyWorkout, WORKOUT_SOURCE_FILTER_OPTIONS } from '../../../utils/workoutClassification';
 
 interface WorkoutProgressProps {
   trainee: any;
@@ -18,6 +22,8 @@ interface ExerciseData {
     totalReps: number;
     totalSets: number;
     totalVolume: number;
+    workoutId?: string;
+    workoutSource?: 'studio' | 'program' | 'self';
   }>;
 }
 
@@ -25,65 +31,119 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
   const [exercises, setExercises] = useState<ExerciseData[]>([]);
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [metricType, setMetricType] = useState<'weight' | 'reps' | 'volume'>('weight');
   const [selectedMember, setSelectedMember] = useState<'member_1' | 'member_2' | 'all'>('all');
   const [viewMode, setViewMode] = useState<'chart' | 'list' | 'table'>('chart');
+  const [workoutSourceFilter, setWorkoutSourceFilter] = useState<'all' | 'studio' | 'program' | 'self'>('all');
 
-  useEffect(() => {
-    loadProgressData();
-  }, [trainee.id, selectedMember]);
+  const loadProgressData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-  const loadProgressData = async () => {
-    const { data: workoutTrainees } = await supabase
-      .from('workout_trainees')
-      .select('workout_id')
-      .eq('trainee_id', trainee.id);
+    try {
+      const { data: workoutTrainees, error: workoutTraineesError } = await supabase
+        .from('workout_trainees')
+        .select('workout_id')
+        .eq('trainee_id', trainee.id);
 
-    if (!workoutTrainees) {
-      setLoading(false);
-      return;
-    }
+      if (workoutTraineesError) {
+        logger.error('Error loading workout trainees', workoutTraineesError, 'WorkoutProgress');
+        setError('שגיאה בטעינת האימונים');
+        toast.error('שגיאה בטעינת האימונים');
+        setLoading(false);
+        return;
+      }
 
-    const workoutIds = workoutTrainees.map((wt) => wt.workout_id);
+      if (!workoutTrainees || workoutTrainees.length === 0) {
+        setExercises([]);
+        setLoading(false);
+        return;
+      }
 
-    const { data: workouts } = await supabase
-      .from('workouts')
-      .select(`
-        id,
-        workout_date,
-        is_completed,
-        workout_exercises (
-          id,
-          exercise_id,
-          pair_member,
-          exercises (
+      const workoutIds = workoutTrainees.map((wt) => wt.workout_id);
+
+      const [workoutsResult, planData, calendarResult] = await Promise.all([
+        supabase
+          .from('workouts')
+          .select(`
             id,
-            name
-          ),
-          exercise_sets (
-            weight,
-            reps,
-            equipment_id,
-            equipment:equipment_id (
+            workout_date,
+            is_completed,
+            is_self_recorded,
+            workout_exercises (
+            id,
+            exercise_id,
+            pair_member,
+            exercises (
               id,
-              name,
-              emoji
+              name
+            ),
+            exercise_sets (
+              weight,
+              reps,
+              equipment_id,
+              equipment:equipment_id (
+                id,
+                name,
+                emoji
+              )
             )
           )
-        )
-      `)
-      .in('id', workoutIds)
-      .eq('is_completed', true)
-      .order('workout_date', { ascending: true });
+        `)
+          .in('id', workoutIds)
+          .eq('is_completed', true)
+          .order('workout_date', { ascending: true }),
+        (async () => {
+          const { data: plans } = await supabase
+            .from('trainee_workout_plans')
+            .select('id')
+            .eq('trainee_id', trainee.id);
+          const planIds = (plans || []).map((p: { id: string }) => p.id);
+          if (planIds.length === 0) return [];
+          const { data: execs } = await supabase
+            .from('workout_plan_weekly_executions')
+            .select('workout_id')
+            .in('plan_id', planIds)
+            .not('workout_id', 'is', null);
+          return execs || [];
+        })(),
+        supabase
+          .from('google_calendar_sync')
+          .select('workout_id')
+          .eq('trainee_id', trainee.id)
+          .not('workout_id', 'is', null),
+      ]);
 
-    if (!workouts) {
-      setLoading(false);
-      return;
-    }
+      const workouts = (workoutsResult as { data?: unknown[] })?.data;
+      const workoutsError = (workoutsResult as { error?: unknown })?.error;
+      const calendarData = (calendarResult as { data?: { workout_id: string }[] })?.data || [];
+      const planWorkoutIds = new Set((Array.isArray(planData) ? planData : []).map((r: { workout_id: string }) => r.workout_id));
+      const calendarWorkoutIds = new Set(calendarData.map((r: { workout_id: string }) => r.workout_id));
+
+      if (workoutsError) {
+        logger.error('Error loading workouts', workoutsError, 'WorkoutProgress');
+        setError('שגיאה בטעינת האימונים');
+        toast.error('שגיאה בטעינת האימונים');
+        setLoading(false);
+        return;
+      }
+
+      if (!workouts || workouts.length === 0) {
+        setExercises([]);
+        setLoading(false);
+        return;
+      }
 
     const exerciseMap = new Map<string, ExerciseData>();
 
     workouts.forEach((workout) => {
+      const workoutSource = classifyWorkout({
+        id: workout.id,
+        is_self_recorded: workout.is_self_recorded,
+        in_workout_plan: planWorkoutIds.has(workout.id),
+        in_google_calendar: calendarWorkoutIds.has(workout.id),
+      });
       workout.workout_exercises?.forEach((we: any) => {
         if (trainee.is_pair) {
           if (selectedMember === 'all') {
@@ -122,71 +182,93 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
           totalReps,
           totalSets,
           totalVolume,
+          workoutId: workout.id,
+          workoutSource,
         });
       });
     });
 
-    const exercisesArray = Array.from(exerciseMap.values()).filter(
-      (ex) => ex.progressData.length >= 2
-    );
+      const exercisesArray = Array.from(exerciseMap.values()).filter(
+        (ex) => ex.progressData.length >= 2
+      );
 
-    setExercises(exercisesArray);
-    if (exercisesArray.length > 0) {
-      setSelectedExercise(exercisesArray[0].id);
+      setExercises(exercisesArray);
+      if (exercisesArray.length > 0 && !selectedExercise) {
+        setSelectedExercise(exercisesArray[0].id);
+      }
+      setLoading(false);
+      setError(null);
+    } catch (err) {
+      logger.error('Error loading progress data', err, 'WorkoutProgress');
+      setError('שגיאה בטעינת נתוני ההתקדמות');
+      toast.error('שגיאה בטעינת נתוני ההתקדמות');
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  }, [trainee.id, selectedMember, selectedExercise]);
 
-  const selectedExerciseData = exercises.find((ex) => ex.id === selectedExercise);
+  useEffect(() => {
+    loadProgressData();
+  }, [loadProgressData]);
 
-  const getMetricValue = (data: ExerciseData['progressData'][0]) => {
+  const selectedExerciseData = useMemo(() => {
+    const ex = exercises.find((e) => e.id === selectedExercise);
+    if (!ex) return null;
+    const filteredProgress =
+      workoutSourceFilter === 'all'
+        ? ex.progressData
+        : ex.progressData.filter((p) => p.workoutSource === workoutSourceFilter);
+    if (filteredProgress.length === 0) return null;
+    return { ...ex, progressData: filteredProgress };
+  }, [exercises, selectedExercise, workoutSourceFilter]);
+
+  const getMetricValue = useCallback((data: ExerciseData['progressData'][0]) => {
     switch (metricType) {
       case 'weight': return data.maxWeight;
       case 'reps': return data.totalReps;
       case 'volume': return data.totalVolume;
     }
-  };
+  }, [metricType]);
 
-  const getChartData = () => {
+  const getChartData = useMemo(() => {
     if (!selectedExerciseData) return [];
     return selectedExerciseData.progressData.map((d) => ({
       date: d.date,
       value: getMetricValue(d),
     }));
-  };
+  }, [selectedExerciseData, getMetricValue]);
 
-  const getMetricLabel = () => {
+  const getMetricLabel = useCallback(() => {
     switch (metricType) {
       case 'weight': return 'משקל מקסימלי (ק"ג)';
       case 'reps': return 'סה"כ חזרות';
       case 'volume': return 'נפח כולל (ק"ג)';
     }
-  };
+  }, [metricType]);
 
-  const getMetricUnit = () => {
+  const getMetricUnit = useCallback(() => {
     switch (metricType) {
       case 'weight': return 'ק"ג';
       case 'reps': return 'חזרות';
       case 'volume': return 'ק"ג';
     }
-  };
+  }, [metricType]);
 
-  const getMetricColor = () => {
+  const getMetricColor = useCallback(() => {
     switch (metricType) {
-      case 'weight': return '#10b981';
-      case 'reps': return '#06b6d4';
-      case 'volume': return '#f59e0b';
+      case 'weight': return themeColors.chartPrimary;
+      case 'reps': return themeColors.chartBlue;
+      case 'volume': return themeColors.chartAmber;
     }
-  };
+  }, [metricType]);
 
-  const getChange = (current: number, previous: number) => {
+  const getChange = useCallback((current: number, previous: number) => {
     const diff = current - previous;
     const percentage = previous > 0 ? ((diff / previous) * 100).toFixed(1) : '0';
     const isPositive = diff > 0;
     return { diff, percentage, isPositive };
-  };
+  }, []);
 
-  const getProgress = () => {
+  const progress = useMemo(() => {
     if (!selectedExerciseData || selectedExerciseData.progressData.length < 2) return null;
 
     const data = selectedExerciseData.progressData;
@@ -197,9 +279,9 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
     const lastValue = getMetricValue(last);
 
     return getChange(lastValue, firstValue);
-  };
+  }, [selectedExerciseData, getMetricValue, getChange]);
 
-  const getBestWorkout = () => {
+  const bestWorkout = useMemo(() => {
     if (!selectedExerciseData) return null;
     let best = selectedExerciseData.progressData[0];
     selectedExerciseData.progressData.forEach(d => {
@@ -208,26 +290,84 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
       }
     });
     return best;
-  };
+  }, [selectedExerciseData, getMetricValue]);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const handleMetricTypeChange = useCallback((type: 'weight' | 'reps' | 'volume') => {
+    setMetricType(type);
+  }, []);
+
+  const handleViewModeChange = useCallback((mode: 'chart' | 'list' | 'table') => {
+    setViewMode(mode);
+  }, []);
+
+  const handleMemberChange = useCallback((member: 'member_1' | 'member_2' | 'all') => {
+    setSelectedMember(member);
+    setSelectedExercise(null); // Reset selected exercise when member changes
+  }, []);
+
+  const CustomTooltip = useCallback(({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3 shadow-xl">
-          <p className="text-zinc-400 text-sm mb-1">{label}</p>
-          <p className="font-bold text-lg" style={{ color: getMetricColor() }}>
-            {metricType === 'volume' ? payload[0].value.toLocaleString() : payload[0].value} {getMetricUnit()}
-          </p>
+        <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl p-4 shadow-2xl">
+          <p className="text-muted text-xs mb-2 font-medium">{label}</p>
+          <div className="flex items-baseline gap-2">
+            <p className="font-bold text-2xl" style={{ color: getMetricColor() }}>
+              {metricType === 'volume' ? payload[0].value.toLocaleString() : payload[0].value}
+            </p>
+            <p className="text-sm text-muted font-medium">{getMetricUnit()}</p>
+          </div>
+          <div className="mt-2 pt-2 border-t border-border">
+            <p className="text-xs text-muted">{getMetricLabel()}</p>
+          </div>
         </div>
       );
     }
     return null;
-  };
+  }, [metricType, getMetricColor, getMetricUnit, getMetricLabel]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted">טוען נתוני התקדמות...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="premium-card-static p-6">
+          <div className="flex items-center gap-4">
+            <button onClick={onBack} className="p-2.5 rounded-xl bg-surface text-muted hover:text-foreground hover:bg-elevated/50 transition-all">
+              <ArrowRight className="h-5 w-5" />
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-primary-500/15">
+                <TrendingUp className="h-6 w-6 text-primary-400" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-foreground">גרף התקדמות</h1>
+                <p className="text-sm text-muted">{trainee.name || trainee.full_name}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="text-center py-12 premium-card-static">
+          <div className="w-16 h-16 rounded-xl bg-red-500/15 flex items-center justify-center mx-auto mb-4">
+            <TrendingDown className="h-8 w-8 text-red-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">שגיאה בטעינת הנתונים</h3>
+          <p className="text-muted mb-6">{error}</p>
+          <button
+            onClick={loadProgressData}
+            className="btn-primary px-6 py-3 rounded-xl font-medium"
+          >
+            נסה שוב
+          </button>
+        </div>
       </div>
     );
   }
@@ -237,57 +377,54 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
       <div className="space-y-6">
         <div className="premium-card-static p-6">
           <div className="flex items-center gap-4">
-            <button onClick={onBack} className="p-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all">
+            <button onClick={onBack} className="p-2.5 rounded-xl bg-surface text-muted hover:text-foreground hover:bg-elevated/50 transition-all">
               <ArrowRight className="h-5 w-5" />
             </button>
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-emerald-500/15">
-                <TrendingUp className="h-6 w-6 text-emerald-400" />
+              <div className="p-3 rounded-xl bg-primary-500/15">
+                <TrendingUp className="h-6 w-6 text-primary-400" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">גרף התקדמות</h1>
-                <p className="text-sm text-zinc-500">{trainee.name}</p>
+                <h1 className="text-xl font-bold text-foreground">גרף התקדמות</h1>
+                <p className="text-sm text-muted">{trainee.name}</p>
               </div>
             </div>
           </div>
         </div>
 
         <div className="text-center py-12 premium-card-static">
-          <div className="w-16 h-16 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
-            <TrendingUp className="h-8 w-8 text-zinc-600" />
+          <div className="w-16 h-16 rounded-xl bg-surface flex items-center justify-center mx-auto mb-4">
+            <TrendingUp className="h-8 w-8 text-muted" />
           </div>
-          <h3 className="text-lg font-semibold text-white mb-2">אין מספיק נתונים</h3>
-          <p className="text-zinc-500">נדרשים לפחות 2 אימונים עם אותו תרגיל כדי לראות התקדמות</p>
+          <h3 className="text-lg font-semibold text-foreground mb-2">אין מספיק נתונים</h3>
+          <p className="text-muted">נדרשים לפחות 2 אימונים עם אותו תרגיל כדי לראות התקדמות</p>
         </div>
       </div>
     );
   }
 
-  const progress = getProgress();
-  const chartData = getChartData();
-  const bestWorkout = getBestWorkout();
 
   return (
     <div className="space-y-6">
       <div className="premium-card-static p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={onBack} className="p-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all">
+            <button onClick={onBack} className="p-2.5 rounded-xl bg-surface text-muted hover:text-foreground hover:bg-elevated/50 transition-all">
               <ArrowRight className="h-5 w-5" />
             </button>
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-emerald-500/15">
-                <TrendingUp className="h-6 w-6 text-emerald-400" />
+              <div className="p-3 rounded-xl bg-primary-500/15">
+                <TrendingUp className="h-6 w-6 text-primary-400" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">גרף התקדמות</h1>
-                <p className="text-sm text-zinc-500">{trainee.name}</p>
+                <h1 className="text-xl font-bold text-foreground">גרף התקדמות</h1>
+                <p className="text-sm text-muted">{trainee.name || trainee.full_name}</p>
               </div>
             </div>
           </div>
           {progress && (
             <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
-              progress.isPositive ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
+              progress.isPositive ? 'bg-primary-500/15 text-primary-400' : 'bg-red-500/15 text-red-400'
             }`}>
               {progress.isPositive ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
               <span className="font-bold text-lg">
@@ -300,20 +437,22 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
 
       {trainee.is_pair && (
         <div className="premium-card-static p-4">
-          <p className="text-sm font-medium text-zinc-400 mb-3">הצג התקדמות עבור:</p>
+          <p className="text-sm font-medium text-muted mb-3">הצג התקדמות עבור:</p>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { id: 'all', label: `${trainee.pair_name_1} + ${trainee.pair_name_2}`, color: 'emerald' },
-              { id: 'member_1', label: trainee.pair_name_1, color: 'cyan' },
+              { id: 'all', label: `${trainee.pair_name_1} + ${trainee.pair_name_2}`, color: 'primary' },
+              { id: 'member_1', label: trainee.pair_name_1, color: 'blue' },
               { id: 'member_2', label: trainee.pair_name_2, color: 'amber' },
             ].map((member) => (
               <button
                 key={member.id}
-                onClick={() => setSelectedMember(member.id as typeof selectedMember)}
+                onClick={() => handleMemberChange(member.id as typeof selectedMember)}
                 className={`p-3 rounded-xl border transition-all ${
                   selectedMember === member.id
-                    ? `bg-${member.color}-500/15 border-${member.color}-500/30 text-${member.color}-400`
-                    : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:text-white hover:border-zinc-600/50'
+                    ? (member.color === 'primary' ? 'bg-primary-500/15 border-primary-500/30 text-primary-400' :
+                       member.color === 'blue' ? 'bg-blue-500/15 border-blue-500/30 text-blue-400' :
+                       'bg-amber-500/15 border-amber-500/30 text-amber-400')
+                    : 'bg-surface/30 border-border text-muted hover:text-foreground hover:border-border-hover'
                 }`}
               >
                 <User className="w-5 h-5 mx-auto mb-2" />
@@ -326,143 +465,222 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
 
       <div className="grid grid-cols-3 gap-3">
         {[
-          { id: 'weight', label: 'משקל', sublabel: 'מקסימלי', icon: BarChart3, color: '#10b981' },
-          { id: 'reps', label: 'חזרות', sublabel: 'סה"כ', icon: Repeat, color: '#06b6d4' },
-          { id: 'volume', label: 'נפח', sublabel: 'כולל', icon: Target, color: '#f59e0b' },
+          { id: 'weight', label: 'משקל', sublabel: 'מקסימלי', icon: BarChart3, 
+            activeBg: 'bg-primary-500/15', inactiveBg: 'bg-surface/30',
+            activeIconBg: 'bg-primary-500/20', inactiveIconBg: 'bg-elevated/50',
+            activeColor: 'text-primary-400', inactiveColor: 'text-muted',
+            activeBorder: 'border-primary-500/30' },
+          { id: 'reps', label: 'חזרות', sublabel: 'סה"כ', icon: Repeat,
+            activeBg: 'bg-blue-500/15', inactiveBg: 'bg-surface/30',
+            activeIconBg: 'bg-blue-500/20', inactiveIconBg: 'bg-elevated/50',
+            activeColor: 'text-blue-400', inactiveColor: 'text-muted',
+            activeBorder: 'border-blue-500/30' },
+          { id: 'volume', label: 'נפח', sublabel: 'כולל', icon: Target,
+            activeBg: 'bg-amber-500/15', inactiveBg: 'bg-surface/30',
+            activeIconBg: 'bg-amber-500/20', inactiveIconBg: 'bg-elevated/50',
+            activeColor: 'text-amber-400', inactiveColor: 'text-muted',
+            activeBorder: 'border-amber-500/30' },
         ].map((metric) => (
           <button
             key={metric.id}
-            onClick={() => setMetricType(metric.id as typeof metricType)}
+            onClick={() => handleMetricTypeChange(metric.id as typeof metricType)}
             className={`p-4 rounded-xl border transition-all ${
               metricType === metric.id
-                ? 'border-emerald-500/30'
-                : 'border-zinc-700/30 hover:border-zinc-600/50'
+                ? `${metric.activeBg} ${metric.activeBorder}`
+                : `${metric.inactiveBg} border-border hover:border-border-hover`
             }`}
-            style={{
-              backgroundColor: metricType === metric.id ? `${metric.color}15` : 'rgba(39, 39, 42, 0.3)'
-            }}
           >
             <div
-              className="w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: metricType === metric.id ? `${metric.color}20` : 'rgba(63, 63, 70, 0.5)' }}
+              className={`w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center ${
+                metricType === metric.id ? metric.activeIconBg : metric.inactiveIconBg
+              }`}
             >
               <metric.icon
-                className="w-5 h-5"
-                style={{ color: metricType === metric.id ? metric.color : '#71717a' }}
+                className={`w-5 h-5 ${metricType === metric.id ? metric.activeColor : 'text-muted'}`}
               />
             </div>
-            <p className="font-bold text-center" style={{ color: metricType === metric.id ? metric.color : '#fff' }}>
+            <p className={`font-bold text-center ${metricType === metric.id ? metric.activeColor : 'text-foreground'}`}>
               {metric.label}
             </p>
-            <p className="text-xs text-zinc-500 text-center">{metric.sublabel}</p>
+            <p className="text-xs text-muted text-center">{metric.sublabel}</p>
           </button>
         ))}
       </div>
 
       <div className="premium-card-static p-6 space-y-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex-1">
-            <select
-              value={selectedExercise || ''}
-              onChange={(e) => setSelectedExercise(e.target.value)}
-              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-            >
-              {exercises.map((ex) => (
-                <option key={ex.id} value={ex.id}>
-                  {ex.name} ({ex.progressData.length} אימונים)
-                </option>
-              ))}
-            </select>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex-1 min-w-[200px]">
+              <select
+                value={selectedExercise || ''}
+                onChange={(e) => setSelectedExercise(e.target.value)}
+                className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-foreground focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              >
+                {exercises.map((ex) => (
+                  <option key={ex.id} value={ex.id}>
+                    {ex.name} ({ex.progressData.length} אימונים)
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="min-w-[140px]">
+              <select
+                value={workoutSourceFilter}
+                onChange={(e) => setWorkoutSourceFilter(e.target.value as typeof workoutSourceFilter)}
+                className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-foreground focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              >
+                {WORKOUT_SOURCE_FILTER_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div className="flex gap-1 bg-zinc-800/50 p-1 rounded-xl border border-zinc-700/50">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1" />
+          <div className="flex gap-1 bg-surface p-1 rounded-xl border border-border">
             <button
-              onClick={() => setViewMode('chart')}
+              onClick={() => handleViewModeChange('chart')}
               className={`p-2.5 rounded-lg transition-all ${
-                viewMode === 'chart' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+                viewMode === 'chart' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
               }`}
               title="גרף"
+              aria-label="תצוגת גרף"
             >
               <BarChart3 className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setViewMode('list')}
+              onClick={() => handleViewModeChange('list')}
               className={`p-2.5 rounded-lg transition-all ${
-                viewMode === 'list' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+                viewMode === 'list' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
               }`}
               title="רשימה"
+              aria-label="תצוגת רשימה"
             >
               <List className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setViewMode('table')}
+              onClick={() => handleViewModeChange('table')}
               className={`p-2.5 rounded-lg transition-all ${
-                viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+                viewMode === 'table' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
               }`}
               title="טבלה"
+              aria-label="תצוגת טבלה"
             >
               <Table2 className="w-4 h-4" />
             </button>
           </div>
         </div>
+        </div>
 
-        {selectedExerciseData && (
+        {selectedExerciseData ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-zinc-800/30 rounded-xl p-3 border border-zinc-700/30">
+            <div className="bg-surface/30 rounded-xl p-3 border border-border">
               <div className="flex items-center gap-2 mb-1">
-                <Calendar className="w-4 h-4 text-zinc-500" />
-                <p className="text-xs text-zinc-500">אימונים</p>
+                <Calendar className="w-4 h-4 text-muted" />
+                <p className="text-xs text-muted">אימונים</p>
               </div>
-              <p className="text-xl font-bold text-white">{selectedExerciseData.progressData.length}</p>
+              <p className="text-xl font-bold text-foreground">{selectedExerciseData.progressData.length}</p>
             </div>
-            <div className="bg-zinc-800/30 rounded-xl p-3 border border-zinc-700/30">
+            <div className="bg-surface/30 rounded-xl p-3 border border-border">
               <div className="flex items-center gap-2 mb-1">
-                <Trophy className="w-4 h-4 text-amber-500" />
-                <p className="text-xs text-zinc-500">שיא {metricType === 'weight' ? 'משקל' : metricType === 'reps' ? 'חזרות' : 'נפח'}</p>
+                <Trophy className="w-4 h-4 text-amber-400" />
+                <p className="text-xs text-muted">שיא {metricType === 'weight' ? 'משקל' : metricType === 'reps' ? 'חזרות' : 'נפח'}</p>
               </div>
-              <p className="text-xl font-bold" style={{ color: getMetricColor() }}>
-                {metricType === 'volume' ? getMetricValue(bestWorkout!).toLocaleString() : getMetricValue(bestWorkout!)}
+              <p className={`text-xl font-bold ${
+                metricType === 'weight' ? 'text-primary-400' : 
+                metricType === 'reps' ? 'text-blue-400' : 
+                'text-amber-400'
+              }`}>
+                {bestWorkout ? (metricType === 'volume' ? getMetricValue(bestWorkout).toLocaleString() : getMetricValue(bestWorkout)) : '-'}
               </p>
             </div>
-            <div className="bg-zinc-800/30 rounded-xl p-3 border border-zinc-700/30">
+            <div className="bg-surface/30 rounded-xl p-3 border border-border">
               <div className="flex items-center gap-2 mb-1">
-                <Dumbbell className="w-4 h-4 text-zinc-500" />
-                <p className="text-xs text-zinc-500">התחלה</p>
+                <Dumbbell className="w-4 h-4 text-muted" />
+                <p className="text-xs text-muted">התחלה</p>
               </div>
-              <p className="text-xl font-bold text-zinc-300">
+              <p className="text-xl font-bold text-foreground">
                 {metricType === 'volume'
                   ? getMetricValue(selectedExerciseData.progressData[0]).toLocaleString()
                   : getMetricValue(selectedExerciseData.progressData[0])}
               </p>
             </div>
-            <div className="bg-zinc-800/30 rounded-xl p-3 border border-zinc-700/30">
+            <div className="bg-surface/30 rounded-xl p-3 border border-border">
               <div className="flex items-center gap-2 mb-1">
-                <Flame className="w-4 h-4 text-emerald-500" />
-                <p className="text-xs text-zinc-500">נוכחי</p>
+                <Flame className="w-4 h-4 text-primary-500" />
+                <p className="text-xs text-muted">נוכחי</p>
               </div>
-              <p className="text-xl font-bold text-emerald-400">
+              <p className="text-xl font-bold text-primary-400">
                 {metricType === 'volume'
                   ? getMetricValue(selectedExerciseData.progressData[selectedExerciseData.progressData.length - 1]).toLocaleString()
                   : getMetricValue(selectedExerciseData.progressData[selectedExerciseData.progressData.length - 1])}
               </p>
             </div>
           </div>
+        ) : (
+          <div className="text-center py-8 text-muted">
+            {workoutSourceFilter !== 'all'
+              ? 'אין נתונים עבור סוג האימון שנבחר'
+              : 'בחר תרגיל להצגת התקדמות'}
+          </div>
         )}
 
-        {viewMode === 'chart' && (
-          <div className="h-72">
+        {viewMode === 'chart' && selectedExerciseData && (
+          <div className="h-64 sm:h-72 lg:h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                <XAxis dataKey="date" stroke="#71717a" fontSize={12} tickLine={false} />
-                <YAxis stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip content={<CustomTooltip />} />
+              <LineChart data={getChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                <defs>
+                  <linearGradient id={`gradient-${metricType}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={getMetricColor()} stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={getMetricColor()} stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke={themeColors.zinc700} 
+                  strokeOpacity={0.3}
+                  vertical={false}
+                />
+                <XAxis 
+                  dataKey="date" 
+                  stroke={themeColors.zinc500} 
+                  fontSize={12} 
+                  tickLine={false}
+                  axisLine={{ stroke: themeColors.zinc700, strokeOpacity: 0.5 }}
+                  tick={{ fill: themeColors.zinc400 }}
+                />
+                <YAxis 
+                  stroke={themeColors.zinc500} 
+                  fontSize={12} 
+                  tickLine={false} 
+                  axisLine={false}
+                  tick={{ fill: themeColors.zinc400 }}
+                  width={45}
+                />
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: getMetricColor(), strokeWidth: 1, strokeDasharray: '5 5', strokeOpacity: 0.3 }} />
                 <Line
                   type="monotone"
                   dataKey="value"
                   stroke={getMetricColor()}
                   strokeWidth={3}
-                  dot={{ fill: getMetricColor(), strokeWidth: 2, r: 5, stroke: '#18181b' }}
-                  activeDot={{ r: 7, stroke: getMetricColor(), strokeWidth: 2, fill: '#18181b' }}
+                  dot={{ 
+                    fill: getMetricColor(), 
+                    strokeWidth: 3, 
+                    r: 5, 
+                    stroke: themeColors.zinc950,
+                    filter: 'drop-shadow(0 0 4px rgb(0 0 0 / 0.3))'
+                  }}
+                  activeDot={{ 
+                    r: 8, 
+                    stroke: getMetricColor(), 
+                    strokeWidth: 3, 
+                    fill: themeColors.zinc950,
+                    filter: 'drop-shadow(0 0 8px ' + getMetricColor() + ')'
+                  }}
+                  animationDuration={1000}
+                  animationEasing="ease-in-out"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -484,31 +702,39 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                   className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
                     isBest
                       ? 'bg-amber-500/10 border-amber-500/30'
-                      : 'bg-zinc-800/30 border-zinc-700/30 hover:border-zinc-600/50'
+                      : 'bg-surface/30 border-border hover:border-border-hover'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: isBest ? 'rgba(245, 158, 11, 0.2)' : `${getMetricColor()}20` }}
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        isBest ? 'bg-amber-500/20' : 
+                        metricType === 'weight' ? 'bg-primary-500/20' : 
+                        metricType === 'reps' ? 'bg-blue-500/20' : 
+                        'bg-amber-500/20'
+                      }`}
                     >
                       {isBest ? (
                         <Trophy className="w-5 h-5 text-amber-400" />
                       ) : (
-                        <span className="text-sm font-bold" style={{ color: getMetricColor() }}>
+                        <span className={`text-sm font-bold ${
+                          metricType === 'weight' ? 'text-primary-400' : 
+                          metricType === 'reps' ? 'text-blue-400' : 
+                          'text-amber-400'
+                        }`}>
                           {arr.length - index}
                         </span>
                       )}
                     </div>
                     <div>
-                      <p className="text-white font-semibold">
+                      <p className="text-foreground font-semibold">
                         {new Date(data.fullDate).toLocaleDateString('he-IL', {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric'
                         })}
                       </p>
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-muted">
                         {data.totalSets} סטים - {data.totalReps} חזרות - {data.totalVolume.toLocaleString()} ק"ג נפח
                       </p>
                     </div>
@@ -516,7 +742,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                   <div className="flex items-center gap-4">
                     {change && (
                       <div className={`flex items-center gap-1 text-sm ${
-                        change.isPositive ? 'text-emerald-400' : change.diff < 0 ? 'text-red-400' : 'text-zinc-500'
+                        change.isPositive ? 'text-primary-400' : change.diff < 0 ? 'text-red-400' : 'text-muted'
                       }`}>
                         {change.diff === 0 ? (
                           <Minus className="w-3 h-3" />
@@ -531,14 +757,14 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                       </div>
                     )}
                     <div
-                      className="px-4 py-2 rounded-xl font-bold text-lg"
-                      style={{
-                        backgroundColor: `${getMetricColor()}15`,
-                        color: getMetricColor()
-                      }}
+                      className={`px-4 py-2 rounded-xl font-bold text-lg ${
+                        metricType === 'weight' ? 'bg-primary-500/15 text-primary-400' : 
+                        metricType === 'reps' ? 'bg-blue-500/15 text-blue-400' : 
+                        'bg-amber-500/15 text-amber-400'
+                      }`}
                     >
                       {metricType === 'volume' ? value.toLocaleString() : value}
-                      <span className="text-xs font-normal mr-1">{getMetricUnit()}</span>
+                      <span className="text-xs font-normal mr-1 text-muted">{getMetricUnit()}</span>
                     </div>
                   </div>
                 </div>
@@ -550,16 +776,16 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
         {viewMode === 'table' && selectedExerciseData && (
           <div className="overflow-x-auto max-h-[400px]">
             <table className="w-full min-w-[700px]">
-              <thead className="sticky top-0 bg-zinc-900">
-                <tr className="border-b border-zinc-700/50">
-                  <th className="text-right py-3 px-3 text-xs font-semibold text-zinc-400">#</th>
-                  <th className="text-right py-3 px-3 text-xs font-semibold text-zinc-400">תאריך</th>
-                  <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">סטים</th>
-                  <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">חזרות</th>
-                  <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">משקל מקס'</th>
-                  <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">נפח</th>
-                  <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">שינוי</th>
-                  <th className="text-center py-3 px-3 text-xs font-semibold text-zinc-400">מהתחלה</th>
+              <thead className="sticky top-0 bg-card">
+                <tr className="border-b border-border">
+                  <th className="text-right py-3 px-3 text-xs font-semibold text-muted">#</th>
+                  <th className="text-right py-3 px-3 text-xs font-semibold text-muted">תאריך</th>
+                  <th className="text-center py-3 px-3 text-xs font-semibold text-muted">סטים</th>
+                  <th className="text-center py-3 px-3 text-xs font-semibold text-muted">חזרות</th>
+                  <th className="text-center py-3 px-3 text-xs font-semibold text-muted">משקל מקס'</th>
+                  <th className="text-center py-3 px-3 text-xs font-semibold text-muted">נפח</th>
+                  <th className="text-center py-3 px-3 text-xs font-semibold text-muted">שינוי</th>
+                  <th className="text-center py-3 px-3 text-xs font-semibold text-muted">מהתחלה</th>
                 </tr>
               </thead>
               <tbody>
@@ -573,28 +799,28 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                   const isBest = bestWorkout && data.fullDate === bestWorkout.fullDate;
 
                   return (
-                    <tr key={index} className={`border-b border-zinc-800/50 transition-all ${
-                      isBest ? 'bg-amber-500/10' : 'hover:bg-zinc-800/30'
+                    <tr key={index} className={`border-b border-border/50 transition-all ${
+                      isBest ? 'bg-amber-500/10' : 'hover:bg-surface/30'
                     }`}>
                       <td className="py-3 px-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-zinc-500 text-sm">{arr.length - index}</span>
+                          <span className="text-muted text-sm">{arr.length - index}</span>
                           {isBest && <Trophy className="w-4 h-4 text-amber-400" />}
                         </div>
                       </td>
                       <td className="py-3 px-3">
-                        <span className="text-white text-sm">
+                        <span className="text-foreground text-sm">
                           {new Date(data.fullDate).toLocaleDateString('he-IL')}
                         </span>
                       </td>
                       <td className="py-3 px-3 text-center">
-                        <span className="text-zinc-300">{data.totalSets}</span>
+                        <span className="text-foreground">{data.totalSets}</span>
                       </td>
                       <td className="py-3 px-3 text-center">
-                        <span className="text-cyan-400 font-semibold">{data.totalReps}</span>
+                        <span className="text-blue-400 font-semibold">{data.totalReps}</span>
                       </td>
                       <td className="py-3 px-3 text-center">
-                        <span className="text-emerald-400 font-semibold">{data.maxWeight}</span>
+                        <span className="text-primary-400 font-semibold">{data.maxWeight}</span>
                       </td>
                       <td className="py-3 px-3 text-center">
                         <span className="text-amber-400 font-semibold">{data.totalVolume.toLocaleString()}</span>
@@ -602,23 +828,23 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
                       <td className="py-3 px-3 text-center">
                         {change ? (
                           <span className={`text-sm font-medium ${
-                            change.isPositive ? 'text-emerald-400' : change.diff < 0 ? 'text-red-400' : 'text-zinc-500'
+                            change.isPositive ? 'text-primary-400' : change.diff < 0 ? 'text-red-400' : 'text-muted'
                           }`}>
                             {change.diff > 0 ? '+' : ''}{metricType === 'volume' ? change.diff.toLocaleString() : change.diff.toFixed(1)}
                           </span>
                         ) : (
-                          <span className="text-zinc-600">-</span>
+                          <span className="text-muted">-</span>
                         )}
                       </td>
                       <td className="py-3 px-3 text-center">
                         {fromStart ? (
                           <span className={`text-sm font-medium px-2 py-0.5 rounded ${
-                            fromStart.isPositive ? 'bg-emerald-500/15 text-emerald-400' : fromStart.diff < 0 ? 'bg-red-500/15 text-red-400' : 'text-zinc-500'
+                            fromStart.isPositive ? 'bg-primary-500/15 text-primary-400' : fromStart.diff < 0 ? 'bg-red-500/15 text-red-400' : 'text-muted'
                           }`}>
                             {fromStart.diff > 0 ? '+' : ''}{fromStart.percentage}%
                           </span>
                         ) : (
-                          <span className="text-zinc-600">-</span>
+                          <span className="text-muted">-</span>
                         )}
                       </td>
                     </tr>

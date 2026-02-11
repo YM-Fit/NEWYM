@@ -21,6 +21,16 @@ export function useKeyboardShortcut(
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Don't handle keyboard shortcuts when user is typing in input fields
+      const target = event.target as HTMLElement;
+      if (
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+
       const {
         ctrlKey = false,
         shiftKey = false,

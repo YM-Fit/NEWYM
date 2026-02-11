@@ -41,15 +41,15 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 w-full max-w-md overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-primary-50 to-blue-100 flex items-center justify-center p-4">
+      <div className="bg-card rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 w-full max-w-md overflow-hidden">
         {/* Premium gradient header */}
-        <div className="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 p-8 text-center">
+        <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-blue-500 p-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl mb-4 shadow-lg">
-            <UserPlus className="w-8 h-8 text-white" />
+            <UserPlus className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">YM Coach</h1>
-          <p className="text-emerald-100">הרשם למערכת ניהול המתאמנים</p>
+          <h1 className="text-3xl font-bold text-primary-foreground mb-2">YM Coach</h1>
+          <p className="text-primary-100">הרשם למערכת ניהול המתאמנים</p>
         </div>
 
         <div className="p-8">
@@ -61,7 +61,7 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-right text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-right text-sm font-semibold text-foreground mb-2">
                 שם מלא
               </label>
               <input
@@ -69,13 +69,13 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-right transition-all duration-300 hover:border-emerald-300 bg-gray-50 hover:bg-white focus:bg-white"
+                className="w-full px-4 py-3 border-2 border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-right transition-all duration-300 hover:border-primary-300 bg-input hover:bg-card focus:bg-card text-foreground"
                 placeholder="שם מלא"
               />
             </div>
 
             <div>
-              <label className="block text-right text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-right text-sm font-semibold text-foreground mb-2">
                 אימייל
               </label>
               <input
@@ -83,14 +83,14 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-right transition-all duration-300 hover:border-emerald-300 bg-gray-50 hover:bg-white focus:bg-white"
+                className="w-full px-4 py-3 border-2 border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-right transition-all duration-300 hover:border-primary-300 bg-input hover:bg-card focus:bg-card text-foreground"
                 placeholder="your@email.com"
                 dir="ltr"
               />
             </div>
 
             <div>
-              <label className="block text-right text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-right text-sm font-semibold text-foreground mb-2">
                 סיסמה
               </label>
               <input
@@ -98,13 +98,13 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-right transition-all duration-300 hover:border-emerald-300 bg-gray-50 hover:bg-white focus:bg-white"
+                className="w-full px-4 py-3 border-2 border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-right transition-all duration-300 hover:border-primary-300 bg-input hover:bg-card focus:bg-card text-foreground"
                 placeholder="••••••••"
               />
             </div>
 
             <div>
-              <label className="block text-right text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-right text-sm font-semibold text-foreground mb-2">
                 אימות סיסמה
               </label>
               <input
@@ -112,7 +112,7 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-right transition-all duration-300 hover:border-emerald-300 bg-gray-50 hover:bg-white focus:bg-white"
+                className="w-full px-4 py-3 border-2 border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-right transition-all duration-300 hover:border-primary-300 bg-input hover:bg-card focus:bg-card text-foreground"
                 placeholder="••••••••"
               />
             </div>
@@ -120,7 +120,7 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold py-3.5 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:shadow-md mt-2"
+              className="w-full bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-inverse font-semibold py-3.5 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:shadow-md mt-2"
             >
               {loading ? 'יוצר חשבון...' : 'הרשם'}
             </button>
@@ -129,7 +129,7 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
           <div className="mt-6 text-center">
             <button
               onClick={onToggleMode}
-              className="text-emerald-600 hover:text-teal-700 font-semibold transition-all duration-300 hover:underline"
+              className="text-primary-600 hover:text-primary-800 font-semibold transition-all duration-300 hover:underline"
             >
               כבר יש לך חשבון? התחבר כאן
             </button>

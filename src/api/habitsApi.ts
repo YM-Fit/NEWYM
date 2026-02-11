@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { handleApiError } from './config';
+import { handleApiError } from '../utils/apiErrorHandler';
 import { rateLimiter } from '../utils/rateLimiter';
 
 export interface TraineeHabit {
@@ -110,7 +110,7 @@ export const habitsApi = {
     try {
       const { data, error } = await supabase
         .from('trainee_habits')
-        .insert([input])
+        .insert([input] as any)
         .select()
         .single();
 
@@ -126,7 +126,7 @@ export const habitsApi = {
     try {
       const { data, error } = await supabase
         .from('trainee_habits')
-        .update(updates)
+        .update(updates as never)
         .eq('id', habitId)
         .select()
         .single();
@@ -143,7 +143,7 @@ export const habitsApi = {
     try {
       const { error } = await supabase
         .from('trainee_habits')
-        .update({ is_active: false })
+        .update({ is_active: false } as never)
         .eq('id', habitId);
 
       if (error) throw error;
@@ -182,7 +182,7 @@ export const habitsApi = {
     try {
       const { data, error } = await supabase
         .from('habit_logs')
-        .upsert([input], { onConflict: 'habit_id,log_date' })
+        .upsert([input] as any, { onConflict: 'habit_id,log_date' })
         .select()
         .single();
 
@@ -210,7 +210,7 @@ export const habitsApi = {
       today.setHours(0, 0, 0, 0);
 
       for (let i = 0; i < data.length; i++) {
-        const logDate = new Date(data[i].log_date);
+        const logDate = new Date((data[i] as { log_date: string }).log_date);
         logDate.setHours(0, 0, 0, 0);
         const expectedDate = new Date(today);
         expectedDate.setDate(today.getDate() - i);

@@ -1,5 +1,5 @@
 import { ArrowRight, Save, Scale, User, CheckCircle, TrendingDown, TrendingUp, Minus, RefreshCw, AlertTriangle, X, Check, Volume2, VolumeX, Wifi, WifiOff, Loader2, Server, Sparkles } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Trainee, BodyMeasurement } from '../../../types';
 import { supabase } from '../../../lib/supabase';
 import { useScaleListener } from '../../../hooks/useScaleListener';
@@ -9,6 +9,7 @@ import AutoSaveIndicator from '../../common/AutoSaveIndicator';
 import DraftModal from '../../common/DraftModal';
 import { calculateMetabolicAge, getMetabolicAgeMessage } from '../../../utils/metabolicAge';
 import { logger } from '../../../utils/logger';
+import toast from 'react-hot-toast';
 
 interface MeasurementFormProps {
   trainee: Trainee;
@@ -82,7 +83,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
     }
   }, []);
 
-  const handleRestoreDraft = () => {
+  const handleRestoreDraft = useCallback(() => {
     if (draftData) {
       setFormData(draftData.formData);
       if (draftData.selectedMember) {
@@ -94,13 +95,13 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       setShowDraftModal(false);
       setDraftData(null);
     }
-  };
+  }, [draftData]);
 
-  const handleDiscardDraft = () => {
+  const handleDiscardDraft = useCallback(() => {
     clearSaved();
     setShowDraftModal(false);
     setDraftData(null);
-  };
+  }, [clearSaved]);
 
   useEffect(() => {
     if (isEditing) return;
@@ -166,7 +167,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
     }
   }, [latestReading, isEditing, playDataReceived, playWarning]);
 
-  const acceptScaleData = () => {
+  const acceptScaleData = useCallback(() => {
     if (pendingScaleData) {
       const fieldsToHighlight: string[] = [];
       if (pendingScaleData.weight) fieldsToHighlight.push('weight');
@@ -187,70 +188,70 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       setShowScaleDataToast(false);
       setShowValidationWarning(false);
     }
-  };
+  }, [pendingScaleData]);
 
-  const toggleSound = () => {
+  const toggleSound = useCallback(() => {
     const newValue = !soundEnabled;
     setSoundEnabled(newValue);
     setSoundEnabledHook(newValue);
-  };
+  }, [soundEnabled, setSoundEnabledHook]);
 
-  const formatWaitingTime = (seconds: number): string => {
+  const formatWaitingTime = useCallback((seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     if (mins > 0) {
       return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
     return `${secs} שניות`;
-  };
+  }, []);
 
-  const getWeightChangeDisplay = (current: number, previous?: number): { text: string; color: string } | null => {
+  const getWeightChangeDisplay = useCallback((current: number, previous?: number): { text: string; color: string } | null => {
     if (!previous || !current) return null;
     const change = current - previous;
     if (Math.abs(change) < 0.1) return null;
     const text = `${change > 0 ? '+' : ''}${change.toFixed(1)} ק"ג`;
-    const color = change > 0 ? 'text-red-300' : 'text-emerald-300';
+    const color = change > 0 ? 'text-red-300' : 'text-primary-300';
     return { text, color };
-  };
+  }, []);
 
-  const getBodyFatChangeDisplay = (current: number, previous?: number): { text: string; color: string } | null => {
+  const getBodyFatChangeDisplay = useCallback((current: number, previous?: number): { text: string; color: string } | null => {
     if (!previous || !current) return null;
     const change = current - previous;
     if (Math.abs(change) < 0.1) return null;
     const text = `${change > 0 ? '+' : ''}${change.toFixed(1)}%`;
-    const color = change > 0 ? 'text-red-300' : 'text-emerald-300';
+    const color = change > 0 ? 'text-red-300' : 'text-primary-300';
     return { text, color };
-  };
+  }, []);
 
-  const rejectScaleData = () => {
+  const rejectScaleData = useCallback(() => {
     setPendingScaleData(null);
     setShowScaleDataToast(false);
     setShowValidationWarning(false);
-  };
+  }, []);
 
-  const calculateBMI = (weight: number, height: number) => {
+  const calculateBMI = useCallback((weight: number, height: number) => {
     if (weight && height) {
       return Number((weight / Math.pow(height / 100, 2)).toFixed(1));
     }
     return 0;
-  };
+  }, []);
 
-  const calculateBMR = (weight: number, height: number, age: number, gender: 'male' | 'female') => {
+  const calculateBMR = useCallback((weight: number, height: number, age: number, gender: 'male' | 'female') => {
     if (!weight || !height || !age) return 0;
     const baseBMR = (10 * weight) + (6.25 * height) - (5 * age);
     const bmr = gender === 'male' ? baseBMR + 5 : baseBMR - 161;
     return Number(bmr.toFixed(1));
-  };
+  }, []);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     // ולידציה למתאמנים זוגיים
     if (trainee.isPair) {
       if (!selectedMember || selectedMember === 'both') {
-        alert('יש לבחור בן זוג ספציפי למדידה (member_1 או member_2)');
+        toast.error('יש לבחור בן זוג ספציפי למדידה (member_1 או member_2)');
         return;
       }
       if (selectedMember !== 'member_1' && selectedMember !== 'member_2') {
-        alert('יש לבחור בן זוג תקין למדידה');
+        toast.error('יש לבחור בן זוג תקין למדידה');
         return;
       }
     }
@@ -317,7 +318,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
     if (error) {
       logger.error('Error saving measurement', error, 'MeasurementForm');
-      alert('שגיאה בשמירת המדידה');
+      toast.error('שגיאה בשמירת המדידה');
       return;
     }
 
@@ -348,35 +349,36 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       };
 
       clearSaved();
+      toast.success(isEditing ? 'המדידה עודכנה בהצלחה' : 'המדידה נשמרה בהצלחה');
       onSave(measurement);
     }
-  };
+  }, [trainee, selectedMember, measurementDate, formData, isEditing, editingMeasurement, calculateBMI, calculateBMR, clearSaved, onSave]);
 
-  const getChangeIndicator = (current: number, previous?: number) => {
+  const getChangeIndicator = useCallback((current: number, previous?: number) => {
     if (!previous || !current) return null;
     const change = current - previous;
     if (Math.abs(change) < 0.1) return null;
 
     return (
-      <span className={`text-sm font-medium ${change > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+      <span className={`text-sm font-medium ${change > 0 ? 'text-red-400' : 'text-primary-400'}`}>
         ({change > 0 ? '+' : ''}{change.toFixed(1)})
       </span>
     );
-  };
+  }, []);
 
-  const inputClass = (hasHighlight: boolean) =>
-    `w-full p-4 text-xl bg-zinc-800/50 border rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 transition-all ${
+  const inputClass = useCallback((hasHighlight: boolean) =>
+    `w-full p-4 text-xl bg-surface border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 transition-all ${
       hasHighlight
-        ? 'border-emerald-500/50 bg-emerald-500/10 ring-2 ring-emerald-500/30'
-        : 'border-zinc-700/50 focus:border-emerald-500/50 focus:ring-emerald-500/20'
-    }`;
+        ? 'border-primary-500/50 bg-primary-500/10 ring-2 ring-primary-500/30'
+        : 'border-border focus:border-primary-500/50 focus:ring-primary-500/20'
+    }`, []);
 
-  const labelClass = "block text-sm font-medium text-zinc-400 mb-2";
+  const labelClass = useMemo(() => "block text-sm font-medium text-muted mb-2", []);
 
   return (
     <div className="space-y-6 animate-fade-in">
       {isStabilizing && !showScaleDataToast && (
-        <div className="fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-80 bg-cyan-500/90 backdrop-blur-sm text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-pulse border border-cyan-400/50">
+        <div className="fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-80 bg-blue-500/90 backdrop-blur-sm text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-pulse border border-blue-400/50">
           <div className="flex items-center gap-3">
             <Loader2 className="h-6 w-6 animate-spin" />
             <div>
@@ -389,9 +391,9 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
       {showScaleDataToast && pendingScaleData && (
         <div className={`fixed top-4 right-4 left-4 md:left-auto md:right-4 md:w-96 ${
-          showValidationWarning ? 'bg-amber-500/90' : 'bg-emerald-500/90'
+          showValidationWarning ? 'bg-amber-500/90' : 'bg-primary-500/90'
         } backdrop-blur-sm text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-slide-in-top border ${
-          showValidationWarning ? 'border-amber-400/50' : 'border-emerald-400/50'
+          showValidationWarning ? 'border-amber-400/50' : 'border-primary-400/50'
         }`}>
           <div className="flex items-start gap-3 mb-3">
             {showValidationWarning ? (
@@ -452,29 +454,29 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       )}
 
       <div className="premium-card-static p-6 sticky top-0 z-10 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-0 left-0 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               type="button"
               onClick={onBack}
-              className="p-3 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
+              className="p-3 rounded-xl bg-surface text-muted hover:text-foreground hover:bg-elevated/50 transition-all"
             >
               <ArrowRight className="h-5 w-5" />
             </button>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                <Sparkles className="w-4 h-4 text-primary-400" />
+                <span className="text-xs font-semibold text-primary-400 uppercase tracking-wider">
                   {isEditing ? 'עריכת מדידה' : 'מדידה חדשה'}
                 </span>
               </div>
-              <h1 className="text-2xl font-bold text-white">{trainee.name}</h1>
+              <h1 className="text-2xl font-bold text-foreground">{trainee.name}</h1>
               {!isEditing && (
                 <div className="flex flex-col gap-2 mt-2">
                   <div className="flex items-center gap-3 flex-wrap">
                     <div className={`flex items-center gap-1 text-xs ${
-                      connectionStatus === 'connected' ? 'text-emerald-400' :
+                      connectionStatus === 'connected' ? 'text-primary-400' :
                       connectionStatus === 'stale' ? 'text-amber-400' :
                       'text-red-400'
                     }`}>
@@ -491,7 +493,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                     </div>
 
                     <div className={`flex items-center gap-1 text-xs ${
-                      scriptStatus.isOnline ? 'text-emerald-400' : 'text-zinc-500'
+                      scriptStatus.isOnline ? 'text-primary-400' : 'text-muted'
                     }`}>
                       <Server className="h-3.5 w-3.5" />
                       <span>
@@ -509,29 +511,29 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                     <div className="flex items-center gap-1">
                       <button
                         onClick={refreshConnection}
-                        className="p-1.5 hover:bg-zinc-800/50 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-surface rounded-lg transition-colors"
                         title="רענן חיבור"
                       >
-                        <RefreshCw className="h-3.5 w-3.5 text-zinc-500 hover:text-white" />
+                        <RefreshCw className="h-3.5 w-3.5 text-muted hover:text-foreground" />
                       </button>
                       <button
                         onClick={toggleSound}
-                        className="p-1.5 hover:bg-zinc-800/50 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-surface rounded-lg transition-colors"
                         title={soundEnabled ? 'השתק צלילים' : 'הפעל צלילים'}
                       >
                         {soundEnabled ? (
-                          <Volume2 className="h-3.5 w-3.5 text-emerald-400" />
+                          <Volume2 className="h-3.5 w-3.5 text-primary-400" />
                         ) : (
-                          <VolumeX className="h-3.5 w-3.5 text-zinc-500" />
+                          <VolumeX className="h-3.5 w-3.5 text-muted" />
                         )}
                       </button>
                     </div>
                   </div>
 
                   {waitingForScale && !hasReceivedDataRef.current && formData.weight === 0 && (
-                    <div className="bg-cyan-500/15 border border-cyan-500/30 rounded-lg px-3 py-2 flex items-center gap-2">
-                      <Scale className="h-4 w-4 text-cyan-400 animate-bounce" />
-                      <span className="text-sm text-cyan-400">
+                    <div className="bg-blue-500/15 border border-blue-500/30 rounded-lg px-3 py-2 flex items-center gap-2">
+                      <Scale className="h-4 w-4 text-blue-400 animate-bounce" />
+                      <span className="text-sm text-blue-400">
                         ממתין לשקילה... ({formatWaitingTime(elapsedWaitingTime)})
                       </span>
                     </div>
@@ -543,12 +545,12 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
           </div>
 
           <div className="flex items-center gap-2">
-            <Scale className="h-5 w-5 text-emerald-400" />
+            <Scale className="h-5 w-5 text-primary-400" />
             <input
               type="date"
               value={measurementDate}
               onChange={(e) => setMeasurementDate(e.target.value)}
-              className="px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 text-white text-sm transition-all"
+              className="px-3 py-2 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500/50 text-foreground text-sm transition-all"
             />
           </div>
         </div>
@@ -556,22 +558,22 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
       {trainee.isPair && (
         <div className="premium-card-static p-5">
-          <h3 className="text-sm font-medium text-zinc-400 mb-4">מי מתשקל/ת?</h3>
+          <h3 className="text-sm font-medium text-muted mb-4">מי מתשקל/ת?</h3>
           <div className="grid grid-cols-3 gap-3">
             <button
               type="button"
               onClick={() => setSelectedMember('both')}
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'both'
-                  ? 'border-emerald-500/50 bg-emerald-500/10'
-                  : 'border-zinc-700/50 bg-zinc-800/30 hover:border-zinc-600/50'
+                  ? 'border-primary-500/50 bg-primary-500/10'
+                  : 'border-border bg-surface/30 hover:border-border-hover'
               }`}
             >
               <User className={`h-8 w-8 mx-auto mb-2 ${
-                selectedMember === 'both' ? 'text-emerald-400' : 'text-zinc-500'
+                selectedMember === 'both' ? 'text-primary-400' : 'text-muted'
               }`} />
               <p className={`font-semibold text-sm text-center ${
-                selectedMember === 'both' ? 'text-emerald-400' : 'text-zinc-400'
+                selectedMember === 'both' ? 'text-primary-400' : 'text-muted'
               }`}>{trainee.pairName1} + {trainee.pairName2}</p>
             </button>
             <button
@@ -579,15 +581,15 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               onClick={() => setSelectedMember('member_1')}
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'member_1'
-                  ? 'border-cyan-500/50 bg-cyan-500/10'
-                  : 'border-zinc-700/50 bg-zinc-800/30 hover:border-zinc-600/50'
+                  ? 'border-blue-500/50 bg-blue-500/10'
+                  : 'border-border bg-surface/30 hover:border-border-hover'
               }`}
             >
               <User className={`h-8 w-8 mx-auto mb-2 ${
-                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-zinc-500'
+                selectedMember === 'member_1' ? 'text-blue-400' : 'text-muted'
               }`} />
               <p className={`font-semibold text-sm ${
-                selectedMember === 'member_1' ? 'text-cyan-400' : 'text-zinc-400'
+                selectedMember === 'member_1' ? 'text-blue-400' : 'text-muted'
               }`}>{trainee.pairName1}</p>
             </button>
             <button
@@ -596,14 +598,14 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedMember === 'member_2'
                   ? 'border-amber-500/50 bg-amber-500/10'
-                  : 'border-zinc-700/50 bg-zinc-800/30 hover:border-zinc-600/50'
+                  : 'border-border bg-surface/30 hover:border-border-hover'
               }`}
             >
               <User className={`h-8 w-8 mx-auto mb-2 ${
-                selectedMember === 'member_2' ? 'text-amber-400' : 'text-zinc-500'
+                selectedMember === 'member_2' ? 'text-amber-400' : 'text-muted'
               }`} />
               <p className={`font-semibold text-sm ${
-                selectedMember === 'member_2' ? 'text-amber-400' : 'text-zinc-400'
+                selectedMember === 'member_2' ? 'text-amber-400' : 'text-muted'
               }`}>{trainee.pairName2}</p>
             </button>
           </div>
@@ -611,15 +613,15 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       )}
 
       <div className="premium-card-static p-5">
-        <h3 className="text-lg font-semibold text-white mb-4">מקור המדידה</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">מקור המדידה</h3>
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => setFormData(prev => ({ ...prev, source: 'tanita' }))}
             className={`flex items-center justify-center gap-2 px-6 py-4 rounded-xl transition-all ${
               formData.source === 'tanita'
-                ? 'bg-emerald-500/15 text-emerald-400 border-2 border-emerald-500/50'
-                : 'bg-zinc-800/30 text-zinc-400 border-2 border-zinc-700/50 hover:border-zinc-600/50'
+                ? 'bg-primary-500/15 text-primary-400 border-2 border-primary-500/50'
+                : 'bg-surface/30 text-muted border-2 border-border hover:border-border-hover'
             }`}
           >
             <Scale className="h-5 w-5" />
@@ -630,8 +632,8 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
             onClick={() => setFormData(prev => ({ ...prev, source: 'manual' }))}
             className={`flex items-center justify-center gap-2 px-6 py-4 rounded-xl transition-all ${
               formData.source === 'manual'
-                ? 'bg-emerald-500/15 text-emerald-400 border-2 border-emerald-500/50'
-                : 'bg-zinc-800/30 text-zinc-400 border-2 border-zinc-700/50 hover:border-zinc-600/50'
+                ? 'bg-primary-500/15 text-primary-400 border-2 border-primary-500/50'
+                : 'bg-surface/30 text-muted border-2 border-border hover:border-border-hover'
             }`}
           >
             <User className="h-5 w-5" />
@@ -641,7 +643,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       </div>
 
       <div className="premium-card-static p-5">
-        <h3 className="text-lg font-semibold text-white mb-6">מדידות בסיסיות</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-6">מדידות בסיסיות</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className={highlightedFields.includes('weight') ? 'animate-highlight-pulse' : ''}>
@@ -663,7 +665,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
 
           <div>
             <label className={labelClass}>גובה (ס״מ)</label>
-            <div className="w-full p-4 text-xl bg-zinc-800/30 border border-zinc-700/50 rounded-xl text-zinc-400">
+            <div className="w-full p-4 text-xl bg-surface/30 border border-border rounded-xl text-muted">
               {(() => {
                 const height = trainee.isPair
                   ? (selectedMember === 'member_1' ? trainee.pairHeight1 : selectedMember === 'member_2' ? trainee.pairHeight2 : trainee.pairHeight1)
@@ -671,7 +673,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                 return height || 'לא הוגדר';
               })()}
             </div>
-            <p className="text-xs text-zinc-500 mt-1">הגובה נשמר בפרופיל המתאמן</p>
+            <p className="text-xs text-muted mt-1">הגובה נשמר בפרופיל המתאמן</p>
           </div>
 
           <div className={highlightedFields.includes('bodyFat') ? 'animate-highlight-pulse' : ''}>
@@ -725,9 +727,9 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
           <div>
             <label className={labelClass}>
               BMR (קלוריות בסיסיות)
-              <span className="text-xs text-zinc-500 mr-2">(מחושב אוטומטית)</span>
+              <span className="text-xs text-muted mr-2">(מחושב אוטומטית)</span>
             </label>
-            <div className="w-full p-4 text-xl bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400 font-semibold">
+            <div className="w-full p-4 text-xl bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-400 font-semibold">
               {(() => {
                 const height = trainee.isPair
                   ? (selectedMember === 'member_1' ? trainee.pairHeight1 : selectedMember === 'member_2' ? trainee.pairHeight2 : trainee.pairHeight1)
@@ -746,7 +748,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
           <div>
             <label className={labelClass}>
               גיל מטבולי
-              <span className="text-xs text-zinc-500 mr-2">(מחושב אוטומטית)</span>
+              <span className="text-xs text-muted mr-2">(מחושב אוטומטית)</span>
             </label>
             {(() => {
               const height = trainee.isPair
@@ -777,8 +779,8 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                 const message = getMetabolicAgeMessage(metabolicAge, age, inputs);
 
                 const statusColors = {
-                  excellent: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
-                  good: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400',
+                  excellent: 'bg-primary-500/10 border-primary-500/30 text-primary-400',
+                  good: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
                   'needs-improvement': 'bg-amber-500/10 border-amber-500/30 text-amber-400'
                 };
 
@@ -795,8 +797,8 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                       {statusIcons[message.status]}
                     </div>
                     <p className={`mt-2 text-sm font-medium ${
-                      message.status === 'excellent' ? 'text-emerald-400' :
-                      message.status === 'good' ? 'text-cyan-400' :
+                      message.status === 'excellent' ? 'text-primary-400' :
+                      message.status === 'good' ? 'text-blue-400' :
                       'text-amber-400'
                     }`}>
                       {message.text}
@@ -804,7 +806,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
                     {message.recommendations && message.recommendations.length > 0 && (
                       <div className="mt-3 space-y-1">
                         {message.recommendations.map((rec, idx) => (
-                          <p key={idx} className="text-xs text-zinc-500 flex items-start">
+                          <p key={idx} className="text-xs text-muted flex items-start">
                             <span className="mr-1">*</span>
                             <span>{rec}</span>
                           </p>
@@ -816,7 +818,7 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
               }
 
               return (
-                <div className="w-full p-4 text-xl bg-zinc-800/30 border border-zinc-700/50 rounded-xl text-zinc-500 font-semibold">
+                <div className="w-full p-4 text-xl bg-surface/30 border border-border rounded-xl text-muted font-semibold">
                   נדרש משקל וגובה לחישוב
                 </div>
               );
@@ -826,9 +828,9 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
           <div>
             <label className={labelClass}>
               BMI
-              <span className="text-xs text-zinc-500 mr-2">(מחושב אוטומטית)</span>
+              <span className="text-xs text-muted mr-2">(מחושב אוטומטית)</span>
             </label>
-            <div className="w-full p-4 text-xl bg-zinc-800/30 border border-zinc-700/50 rounded-xl text-zinc-300 font-semibold">
+            <div className="w-full p-4 text-xl bg-surface/30 border border-border rounded-xl text-foreground font-semibold">
               {(() => {
                 const height = trainee.isPair
                   ? (selectedMember === 'member_1' ? trainee.pairHeight1 : selectedMember === 'member_2' ? trainee.pairHeight2 : trainee.pairHeight1)
@@ -841,18 +843,18 @@ export default function MeasurementForm({ trainee, onBack, onSave, previousMeasu
       </div>
 
       <div className="premium-card-static p-5">
-        <h3 className="text-lg font-semibold text-white mb-4">הערות למדידה</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">הערות למדידה</h3>
         <textarea
           value={formData.notes}
           onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-          className="w-full p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-all resize-none"
+          className="w-full p-4 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:border-primary-500/50 focus:ring-primary-500/20 transition-all resize-none"
           rows={3}
           placeholder="הערות על השקילה, התקדמות, מצב כללי..."
         />
       </div>
 
       <div className="premium-card-static p-5">
-        <h3 className="text-lg font-semibold text-white mb-6">מדידות היקפים (ס״מ)</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-6">מדידות היקפים (ס״מ)</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div>

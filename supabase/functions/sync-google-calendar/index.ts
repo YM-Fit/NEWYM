@@ -94,15 +94,7 @@ async function syncTrainerCalendar(
     throw new Error("No sync credentials found");
   }
 
-  // Only sync from Google if sync_direction is 'from_google' or 'bidirectional'
-  const shouldSyncFromGoogle = credentials.sync_direction === 'from_google' || 
-                                credentials.sync_direction === 'bidirectional';
-  
-  if (!shouldSyncFromGoogle) {
-    // If sync direction is 'to_google' only, we don't sync from Google Calendar
-    return;
-  }
-
+  // Process all events (create, update, delete) - user's calendar should be source of truth
   // Check and refresh token if needed
   let accessToken = credentials.access_token;
   if (new Date(credentials.token_expires_at) < new Date()) {
@@ -117,18 +109,19 @@ async function syncTrainerCalendar(
     accessToken = refreshed;
   }
 
-  // Fetch events from Google Calendar
+  // Fetch events from Google Calendar - 30 days back and 30 days forward
   const timeMin = new Date();
-  timeMin.setDate(timeMin.getDate() - 7);
+  timeMin.setDate(timeMin.getDate() - 30);
   const timeMax = new Date();
-  timeMax.setDate(timeMax.getDate() + 7);
+  timeMax.setDate(timeMax.getDate() + 30);
 
   const calendarId = credentials.default_calendar_id || "primary";
   const eventsResponse = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?` +
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?` +
     `timeMin=${timeMin.toISOString()}&` +
     `timeMax=${timeMax.toISOString()}&` +
     `singleEvents=true&` +
+    `showDeleted=true&` +
     `orderBy=startTime`,
     {
       headers: {
@@ -143,18 +136,53 @@ async function syncTrainerCalendar(
 
   const eventsData = await eventsResponse.json();
   const events = eventsData.items || [];
+  
+  // Track which event IDs exist in Google Calendar (for cleanup later)
+  const existingEventIds = new Set<string>();
 
   // Process each event
   for (const event of events) {
-    if (event.status === "cancelled") continue;
+    // Handle cancelled events - delete their sync records
+    if (event.status === "cancelled") {
+      const { data: cancelledSync } = await supabase
+        .from("google_calendar_sync")
+        .select("id, workout_id, sync_direction")
+        .eq("google_event_id", event.id)
+        .eq("google_calendar_id", calendarId)
+        .maybeSingle();
+      
+      if (cancelledSync) {
+        // Always delete workout when deleted from Google - no need to keep if user deleted there
+        if (cancelledSync.workout_id) {
+          await supabase
+            .from("workouts")
+            .delete()
+            .eq("id", cancelledSync.workout_id)
+            .eq("trainer_id", trainerId);
+        }
+        
+        // Delete sync record
+        await supabase
+          .from("google_calendar_sync")
+          .delete()
+          .eq("id", cancelledSync.id);
+        
+        console.log(`Deleted sync record for cancelled event: ${event.id}`);
+      }
+      continue;
+    }
+    
+    // Track this event as existing
+    existingEventIds.add(event.id);
 
+    // Process create/update for all sync directions - events in Google should appear in app
     const startTime = new Date(event.start.dateTime || event.start.date);
     const endTime = new Date(event.end.dateTime || event.end.date);
 
     // Check if already synced
     const { data: existingSync } = await supabase
       .from("google_calendar_sync")
-      .select("workout_id, trainee_id")
+      .select("id, workout_id, trainee_id")
       .eq("google_event_id", event.id)
       .eq("google_calendar_id", calendarId)
       .maybeSingle();
@@ -183,42 +211,39 @@ async function syncTrainerCalendar(
       }
     }
     
-    // If no email match, try name matching
-    if (!trainee && traineeName) {
-      // First try exact match (case insensitive)
-      const { data: exactMatch } = await supabase
-        .from("trainees")
-        .select("id")
-        .eq("trainer_id", trainerId)
-        .ilike("full_name", traineeName)
-        .maybeSingle();
-      
-      if (exactMatch) {
-        trainee = exactMatch;
-        console.log(`Matched trainee by exact name: ${traineeName} -> ${trainee.id}`);
-      } else {
-        // Try partial match, but check for multiple matches
-        const { data: partialMatches } = await supabase
+    // If no email match, try name matching (supports "משה ורינה" - multiple names)
+    const traineeIdsToUse: string[] = [];
+    if (trainee) {
+      traineeIdsToUse.push(trainee.id);
+    } else if (traineeName) {
+      const nameParts = traineeName.split(/\s+ו\s+|\s*ו\s*|\s*,\s*/).map((n: string) => n.trim()).filter(Boolean);
+      for (const part of nameParts) {
+        const { data: exactMatch } = await supabase
           .from("trainees")
-          .select("id, full_name")
+          .select("id")
           .eq("trainer_id", trainerId)
-          .ilike("full_name", `%${traineeName}%`);
-        
-        if (partialMatches && partialMatches.length === 1) {
-          trainee = partialMatches[0];
-          console.log(`Matched trainee by partial name: ${traineeName} -> ${trainee.id}`);
-        } else if (partialMatches && partialMatches.length > 1) {
-          // Multiple matches found - don't auto-associate to avoid wrong match
-          console.warn(
-            `Multiple trainees found for name "${traineeName}": ${partialMatches.map(t => t.full_name).join(", ")}. ` +
-            `Skipping auto-association to prevent incorrect matching.`
-          );
-          continue; // Skip this event to avoid wrong association
+          .ilike("full_name", part)
+          .maybeSingle();
+        if (exactMatch) {
+          if (!traineeIdsToUse.includes(exactMatch.id)) traineeIdsToUse.push(exactMatch.id);
+        } else {
+          const { data: partialMatches } = await supabase
+            .from("trainees")
+            .select("id, full_name")
+            .eq("trainer_id", trainerId)
+            .ilike("full_name", `%${part}%`);
+          if (partialMatches && partialMatches.length === 1 && !traineeIdsToUse.includes(partialMatches[0].id)) {
+            traineeIdsToUse.push(partialMatches[0].id);
+          } else if (partialMatches && partialMatches.length > 1) {
+            console.warn(`Multiple trainees for "${part}", skipping`);
+          }
         }
       }
     }
 
-    if (!trainee) continue;
+    if (traineeIdsToUse.length === 0) continue;
+
+    const primaryTrainee = { id: traineeIdsToUse[0] };
 
     if (existingSync) {
       // Update existing sync record
@@ -236,46 +261,79 @@ async function syncTrainerCalendar(
 
       // Update workout if exists
       if (existingSync.workout_id) {
+        // IMPORTANT: workout_date is timestamptz, so we need to preserve the full timestamp
+        // Use the exact startTime from Google Calendar event to maintain consistency
         await supabase
           .from("workouts")
           .update({
-            workout_date: startTime.toISOString().split("T")[0],
+            workout_date: startTime.toISOString(), // Full timestamp, not just date
             notes: event.description || null,
           })
           .eq("id", existingSync.workout_id);
       }
     } else {
+      // Re-check for existing sync before create (prevents race with webhook or another sync)
+      const { data: recheckSync } = await supabase
+        .from("google_calendar_sync")
+        .select("id, workout_id, trainee_id")
+        .eq("google_event_id", event.id)
+        .eq("google_calendar_id", calendarId)
+        .maybeSingle();
+      if (recheckSync) {
+        // Another process created it - treat as update
+        await supabase
+          .from("google_calendar_sync")
+          .update({
+            event_start_time: startTime.toISOString(),
+            event_end_time: endTime.toISOString(),
+            event_summary: event.summary,
+            event_description: event.description,
+            sync_status: "synced",
+            last_synced_at: new Date().toISOString(),
+          })
+          .eq("id", recheckSync.id);
+        if (recheckSync.workout_id) {
+          await supabase
+            .from("workouts")
+            .update({
+              workout_date: startTime.toISOString(),
+              notes: event.description || null,
+            })
+            .eq("id", recheckSync.workout_id);
+        }
+        continue;
+      }
+
       // Create new workout and sync record
-      const { data: newWorkout } = await supabase
+      const { data: newWorkout, error: workoutError } = await supabase
         .from("workouts")
         .insert({
           trainer_id: trainerId,
           workout_type: "personal",
-          workout_date: startTime.toISOString().split("T")[0],
+          workout_date: startTime.toISOString(),
           notes: event.description || null,
           is_completed: false,
         })
         .select()
         .single();
 
+      if (workoutError) {
+        console.warn("sync-google-calendar: workout insert failed", workoutError.message);
+        continue;
+      }
       if (newWorkout) {
-        await supabase
-          .from("workout_trainees")
-          .insert({
-            workout_id: newWorkout.id,
-            trainee_id: trainee.id,
-          });
+        for (const tid of traineeIdsToUse) {
+          await supabase
+            .from("workout_trainees")
+            .insert({ workout_id: newWorkout.id, trainee_id: tid });
+        }
 
-        // Use user's preferred sync direction
-        const syncDirection = credentials.sync_direction === 'bidirectional' 
-          ? 'bidirectional' 
-          : 'from_google';
-        
-        await supabase
+        const syncDirection = credentials.sync_direction === 'bidirectional' ? 'bidirectional' : 'from_google';
+        const { error: syncInsertError } = await supabase
           .from("google_calendar_sync")
           .insert({
             trainer_id: trainerId,
-            trainee_id: trainee.id,
+            trainee_id: primaryTrainee.id,
             workout_id: newWorkout.id,
             google_event_id: event.id,
             google_calendar_id: calendarId,
@@ -287,9 +345,49 @@ async function syncTrainerCalendar(
             event_description: event.description,
             last_synced_at: new Date().toISOString(),
           });
+        if (syncInsertError) {
+          if (syncInsertError.code === "23505") {
+            console.log("sync-google-calendar: sync record already exists for event (race), skipping");
+          } else {
+            console.warn("sync-google-calendar: sync insert failed", syncInsertError.message);
+          }
+        } else {
+          await updateCalendarClientStats(trainerId, primaryTrainee.id, event, supabase);
+        }
+      }
+    }
+  }
 
-        // Update calendar client stats
-        await updateCalendarClientStats(trainerId, trainee.id, event, supabase);
+  // Cleanup: Delete sync records for events that no longer exist in Google Calendar
+  // (within the time window we're syncing)
+  const { data: allSyncRecords } = await supabase
+    .from("google_calendar_sync")
+    .select("id, google_event_id, workout_id, sync_direction")
+    .eq("trainer_id", trainerId)
+    .eq("google_calendar_id", calendarId)
+    .gte("event_start_time", timeMin.toISOString())
+    .lte("event_start_time", timeMax.toISOString());
+
+  if (allSyncRecords) {
+    for (const syncRecord of allSyncRecords) {
+      // If this sync record's event doesn't exist in Google Calendar, delete it
+      if (!existingEventIds.has(syncRecord.google_event_id)) {
+        console.log(`Deleting sync record for event that no longer exists: ${syncRecord.google_event_id}`);
+        
+        // Always delete workout when deleted from Google - no need to keep if user deleted there
+        if (syncRecord.workout_id) {
+          await supabase
+            .from("workouts")
+            .delete()
+            .eq("id", syncRecord.workout_id)
+            .eq("trainer_id", trainerId);
+        }
+        
+        // Delete sync record
+        await supabase
+          .from("google_calendar_sync")
+          .delete()
+          .eq("id", syncRecord.id);
       }
     }
   }

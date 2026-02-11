@@ -118,6 +118,11 @@ export function calculateFullCalorieData(
 
 /**
  * חישוב חלוקת מקרו-נוטריינטים מומלצת
+ * @param totalCalories - סך הקלוריות היומיות (חייב להיות > 0)
+ * @param weight - משקל בק"ג (חייב להיות > 0)
+ * @param goal - מטרת התזונה (cutting/maintenance/bulking)
+ * @returns חלוקת מקרו-נוטריינטים מומלצת
+ * @throws {Error} אם totalCalories <= 0 או weight <= 0
  */
 export interface MacroSplit {
   protein: { grams: number; calories: number; percentage: number };
@@ -130,6 +135,20 @@ export function calculateMacros(
   weight: number,
   goal: Goal
 ): MacroSplit {
+  // ולידציה
+  if (totalCalories <= 0) {
+    throw new Error('totalCalories חייב להיות גדול מ-0');
+  }
+  if (weight <= 0) {
+    throw new Error('weight חייב להיות גדול מ-0');
+  }
+  if (weight > 500) {
+    throw new Error('weight לא יכול להיות גדול מ-500 ק"ג');
+  }
+  if (totalCalories > 20000) {
+    throw new Error('totalCalories לא יכול להיות גדול מ-20000');
+  }
+
   let proteinPerKg: number;
   let fatPercentage: number;
 
@@ -159,39 +178,70 @@ export function calculateMacros(
   const carbsCalories = totalCalories - proteinCalories - fatCalories;
   const carbsGrams = Math.round(carbsCalories / 4); // 4 קלוריות לגרם פחמימה
 
+  const proteinPercentage = Math.round((proteinCalories / totalCalories) * 100);
+  const carbsPercentage = Math.round((carbsCalories / totalCalories) * 100);
+  const fatPercentageValue = Math.round((fatCalories / totalCalories) * 100);
+
+  // בדיקת סכום אחוזים (צריך להיות ~100%)
+  const totalPercentage = proteinPercentage + carbsPercentage + fatPercentageValue;
+  if (Math.abs(totalPercentage - 100) > 1) {
+    console.warn(`סכום אחוזים לא שווה ל-100%: ${totalPercentage}%`);
+  }
+
   return {
     protein: {
       grams: proteinGrams,
       calories: proteinCalories,
-      percentage: Math.round((proteinCalories / totalCalories) * 100),
+      percentage: proteinPercentage,
     },
     carbs: {
       grams: carbsGrams,
       calories: carbsCalories,
-      percentage: Math.round((carbsCalories / totalCalories) * 100),
+      percentage: carbsPercentage,
     },
     fat: {
       grams: fatGrams,
       calories: fatCalories,
-      percentage: Math.round((fatCalories / totalCalories) * 100),
+      percentage: fatPercentageValue,
     },
   };
 }
 
 /**
  * חישוב צפי שינוי משקל (ק"ג לשבוע)
+ * @param currentCalories - הקלוריות הנוכחיות (יכול להיות שלילי)
+ * @param tdee - TDEE (Total Daily Energy Expenditure) - חייב להיות > 0
+ * @returns צפי שינוי משקל שבועי וחודשי
  */
 export function estimateWeightChange(currentCalories: number, tdee: number): {
   weeklyChange: number;
   monthlyChange: number;
   description: string;
 } {
+  // ולידציה
+  if (tdee <= 0) {
+    return {
+      weeklyChange: 0,
+      monthlyChange: 0,
+      description: 'לא ניתן לחשב - TDEE לא תקין',
+    };
+  }
+  
+  if (currentCalories < 0) {
+    currentCalories = 0; // טיפול בערכים שליליים
+  }
+
   const dailyDeficitOrSurplus = currentCalories - tdee;
   const weeklyCalorieChange = dailyDeficitOrSurplus * 7;
 
   // 7700 קלוריות = 1 ק"ג שומן בקירוב
   const weeklyChange = weeklyCalorieChange / 7700;
   const monthlyChange = weeklyChange * 4;
+
+  // בדיקת גבולות (שינוי קיצוני)
+  if (Math.abs(weeklyChange) > 2) {
+    console.warn(`שינוי משקל קיצוני: ${weeklyChange.toFixed(2)} ק"ג לשבוע`);
+  }
 
   let description: string;
   if (weeklyChange < -0.1) {
@@ -211,8 +261,20 @@ export function estimateWeightChange(currentCalories: number, tdee: number): {
 
 /**
  * המלצה לכמות מים ביום (מ"ל)
+ * @param weight - משקל בק"ג (חייב להיות > 0)
+ * @param activityLevel - רמת פעילות
+ * @returns כמות מים מומלצת במ"ל
+ * @throws {Error} אם weight <= 0
  */
 export function calculateWaterIntake(weight: number, activityLevel: ActivityLevel): number {
+  // ולידציה
+  if (weight <= 0) {
+    throw new Error('weight חייב להיות גדול מ-0');
+  }
+  if (weight > 500) {
+    throw new Error('weight לא יכול להיות גדול מ-500 ק"ג');
+  }
+
   // נוסחה בסיסית: 30-35 מ"ל לכל ק"ג
   let baseWater = weight * 33;
 
@@ -225,5 +287,16 @@ export function calculateWaterIntake(weight: number, activityLevel: ActivityLeve
     very_active: 1000,
   };
 
-  return Math.round(baseWater + activityBonus[activityLevel]);
+  const totalWater = baseWater + activityBonus[activityLevel];
+  
+  // בדיקת גבולות (מינימום 500 מ"ל, מקסימום 10000 מ"ל)
+  if (totalWater < 500) {
+    return 500;
+  }
+  if (totalWater > 10000) {
+    console.warn(`כמות מים גבוהה מאוד: ${totalWater} מ"ל`);
+    return 10000;
+  }
+
+  return Math.round(totalWater);
 }

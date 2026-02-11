@@ -3,7 +3,7 @@
  */
 
 import { supabase } from '../lib/supabase';
-import { handleApiError } from './config';
+import { handleApiError } from '../utils/apiErrorHandler';
 import { rateLimiter } from '../utils/rateLimiter';
 
 export interface CardioType {
@@ -224,7 +224,7 @@ export const cardioApi = {
           duration: input.duration ?? 0,
           frequency: input.frequency ?? 0,
           weekly_goal_steps: input.weekly_goal_steps ?? 0,
-        }])
+        }] as any)
         .select('*, cardio_type:cardio_types(id, name)')
         .single();
 
@@ -245,7 +245,7 @@ export const cardioApi = {
       
       const { data, error } = await supabase
         .from('cardio_activities')
-        .update(updates)
+        .update(updates as never)
         .eq('id', activityId)
         .select('*, cardio_type:cardio_types(id, name)')
         .single();
@@ -305,7 +305,7 @@ export const cardioApi = {
 
       const { data, error } = await supabase
         .from('cardio_types')
-        .insert([{ ...input, name: input.name.trim() }])
+        .insert([{ ...input, name: input.name.trim() }] as any)
         .select()
         .single();
 
@@ -328,7 +328,7 @@ export const cardioApi = {
 
       const { data, error } = await supabase
         .from('cardio_types')
-        .update({ name: name.trim() })
+        .update({ name: name.trim() } as never)
         .eq('id', typeId)
         .select()
         .single();

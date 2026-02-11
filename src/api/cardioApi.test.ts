@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { cardioApi } from './cardioApi';
 import { supabase } from '../lib/supabase';
-import { handleApiError } from './config';
 
 vi.mock('../lib/supabase', () => ({
   supabase: {
@@ -9,9 +8,7 @@ vi.mock('../lib/supabase', () => ({
   },
 }));
 
-vi.mock('./config', () => ({
-  handleApiError: vi.fn((error, message) => new Error(message)),
-}));
+// Mocks are not needed for these tests
 
 describe('cardioApi', () => {
   beforeEach(() => {

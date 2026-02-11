@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, BookMarked } from 'lucide-react';
+import { Plus, BookMarked, Timer, Target, TrendingUp, Zap, Pencil, CheckCircle2, History } from 'lucide-react';
 import { supabase, logSupabaseError } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useAutoSave } from '../../../hooks/useAutoSave';
 import { useWorkoutSession } from '../../../hooks/useWorkoutSession';
 import { useErrorHandler } from '../../../hooks/useErrorHandler';
+import { useIsTouchDevice } from '../../../hooks/useIsTouchDevice';
 import { saveWorkout } from '../../../api/workoutApi';
 import { logger } from '../../../utils/logger';
 import ExerciseSelector from './ExerciseSelector';
@@ -16,6 +17,11 @@ import DraftModal from '../../common/DraftModal';
 import WorkoutTemplates from './WorkoutTemplates';
 import { WorkoutHeader } from './WorkoutHeader';
 import { WorkoutExerciseCard } from './WorkoutExerciseCard';
+import { WorkoutTable } from './WorkoutTable';
+import { WorkoutQuickActions } from './WorkoutQuickActions';
+import { WorkoutProgressBar } from './WorkoutProgressBar';
+import { WorkoutStats } from './WorkoutStats';
+import WorkoutHistoryModal from './WorkoutHistoryModal';
 import { WorkoutTemplate, WorkoutTemplateExercise, Trainee, Workout } from '../../../types';
 
 interface Exercise {
@@ -71,6 +77,9 @@ interface WorkoutSessionProps {
   };
   initialSelectedMember?: 'member_1' | 'member_2' | null;
   isTablet?: boolean;
+  isPrepared?: boolean;
+  /** When true, trainee is doing self-workout - same UI as trainer flow but saves via create_trainee_workout. */
+  isSelfWorkout?: boolean;
 }
 
 export default function WorkoutSession({
@@ -81,9 +90,16 @@ export default function WorkoutSession({
   editingWorkout,
   initialSelectedMember,
   isTablet,
+  isPrepared = false,
+  isSelfWorkout = false,
 }: WorkoutSessionProps) {
   const { user } = useAuth();
   const { handleError } = useErrorHandler();
+
+  // Use touch device detection - prevents keyboard on all touch devices (phones & tablets)
+  const isTouchDevice = useIsTouchDevice();
+  const preventKeyboard = isTablet || isTouchDevice;
+
   const {
     exercises,
     setExercises,
@@ -102,6 +118,7 @@ export default function WorkoutSession({
     getExerciseSummary,
     toggleCollapseSet,
     completeSetAndMoveNext,
+    toggleExerciseCollapse,
   } = useWorkoutSession({ initialExercises: editingWorkout?.exercises });
 
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
@@ -111,8 +128,11 @@ export default function WorkoutSession({
   );
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
-  const [workoutId] = useState(editingWorkout?.id || null);
+  const [workoutId, setWorkoutId] = useState<string | null>(editingWorkout?.id || null);
+  // Track if this is an editing workout to prevent deletion
+  const isEditingWorkout = useRef<boolean>(!!editingWorkout?.id);
   const [workoutDate, setWorkoutDate] = useState(new Date());
+  const [creatingWorkout, setCreatingWorkout] = useState(false);
   const [numericPad, setNumericPad] = useState<{
     exerciseIndex: number;
     setIndex: number;
@@ -153,6 +173,12 @@ export default function WorkoutSession({
     exerciseIndex: number;
     setIndex: number;
   } | null>(null);
+  // Track which part of the set is currently focused (for keyboard shortcuts)
+  const [focusedSetPart, setFocusedSetPart] = useState<{
+    exerciseIndex: number;
+    setIndex: number;
+    part: 'regular' | 'superset' | 'dropset' | 'superset_dropset';
+  } | null>(null);
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [draftData, setDraftData] = useState<{
     exercises: WorkoutExercise[];
@@ -165,6 +191,8 @@ export default function WorkoutSession({
   const [templateName, setTemplateName] = useState('');
   const [templateDescription, setTemplateDescription] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateNameKeyboardEnabled, setTemplateNameKeyboardEnabled] = useState(false);
+  const [templateDescriptionKeyboardEnabled, setTemplateDescriptionKeyboardEnabled] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [savedWorkout, setSavedWorkout] = useState<Workout | null>(null);
   const [muscleGroups, setMuscleGroups] = useState<{ id: string; name: string }[]>([]);
@@ -172,6 +200,11 @@ export default function WorkoutSession({
   const workoutStartTime = useRef(Date.now());
   const exerciseCacheRef = useRef<Map<string, { sets: SetData[]; timestamp: number }>>(new Map());
   const [loadingExercise, setLoadingExercise] = useState<string | null>(null);
+  const [showWorkoutHistory, setShowWorkoutHistory] = useState(false);
+  // Track exercises that are being deleted to prevent auto-save from re-adding them
+  const deletedExerciseIdsRef = useRef<Set<string>>(new Set());
+  // Track exercises currently being deleted (async operation in progress)
+  const deletingExerciseIdsRef = useRef<Set<string>>(new Set());
 
   const workoutData = {
     exercises,
@@ -196,7 +229,7 @@ export default function WorkoutSession({
     }
   }, []);
 
-  const handleRestoreDraft = () => {
+  const handleRestoreDraft = useCallback(() => {
     if (draftData) {
       setExercises(draftData.exercises);
       setNotes(draftData.notes || '');
@@ -205,13 +238,366 @@ export default function WorkoutSession({
       setShowDraftModal(false);
       setDraftData(null);
     }
-  };
+  }, [draftData, setExercises]);
 
-  const handleDiscardDraft = () => {
+  const handleDiscardDraft = useCallback(() => {
     clearSaved();
     setShowDraftModal(false);
     setDraftData(null);
-  };
+  }, [clearSaved]);
+
+  // Create initial workout when first exercise is added
+  const createInitialWorkout = useCallback(async (): Promise<string | null> => {
+    if (editingWorkout?.id) {
+      if (isPrepared) {
+        await supabase
+          .from('workouts')
+          .update({ is_prepared: true })
+          .eq('id', editingWorkout.id);
+      }
+      setWorkoutId(editingWorkout.id);
+      isEditingWorkout.current = true;
+      return editingWorkout.id;
+    }
+    
+    if (!user || workoutId || creatingWorkout) return null;
+
+    setCreatingWorkout(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        return null;
+      }
+
+      // First, check if there's an existing scheduled workout (is_completed=false) for this trainee and date
+      // This prevents creating duplicate workouts when opening a scheduled workout
+      const workoutDateStr = workoutDate.toISOString().split('T')[0]; // Get date part only
+      const workoutDateStart = new Date(workoutDateStr);
+      workoutDateStart.setHours(0, 0, 0, 0);
+      const workoutDateEnd = new Date(workoutDateStr);
+      workoutDateEnd.setHours(23, 59, 59, 999);
+
+      const { data: existingScheduledWorkouts } = await supabase
+        .from('workout_trainees')
+        .select(`
+          workout_id,
+          workouts!inner (
+            id,
+            workout_date,
+            is_completed,
+            trainer_id
+          )
+        `)
+        .eq('trainee_id', trainee.id)
+        .eq('workouts.is_completed', false)
+        .eq('workouts.trainer_id', user.id)
+        .gte('workouts.workout_date', workoutDateStart.toISOString())
+        .lte('workouts.workout_date', workoutDateEnd.toISOString())
+        .limit(1);
+
+      if (existingScheduledWorkouts && existingScheduledWorkouts.length > 0) {
+        const workoutData = existingScheduledWorkouts[0];
+        let workout;
+        if (Array.isArray(workoutData.workouts)) {
+          workout = workoutData.workouts[0];
+        } else {
+          workout = workoutData.workouts;
+        }
+
+        if (workout && workout.id) {
+          if (isPrepared) {
+            await supabase
+              .from('workouts')
+              .update({ is_prepared: true })
+              .eq('id', workout.id);
+          }
+          setWorkoutId(workout.id);
+          logger.info('Using existing scheduled workout', { workoutId: workout.id, isPrepared }, 'WorkoutSession');
+          setCreatingWorkout(false);
+          return workout.id;
+        }
+      }
+
+      // No existing scheduled workout found, create a new one
+      const { data: newWorkout, error: workoutError } = await supabase
+        .from('workouts')
+        .insert([
+          {
+            trainer_id: user.id,
+            workout_type: workoutType,
+            notes: notes || null,
+            workout_date: workoutDate.toISOString(),
+            is_completed: false, // Mark as incomplete - will be completed when user saves
+            is_prepared: isPrepared, // Use the isPrepared prop
+          },
+        ])
+        .select()
+        .single();
+
+      if (workoutError || !newWorkout) {
+        logger.error('Error creating initial workout', workoutError, 'WorkoutSession');
+        toast.error('שגיאה ביצירת אימון. נסה שוב.');
+        return null;
+      }
+
+      // Link trainee to workout
+      const { error: traineeError } = await supabase
+        .from('workout_trainees')
+        .insert([
+          {
+            workout_id: newWorkout.id,
+            trainee_id: trainee.id,
+          },
+        ]);
+
+      if (traineeError) {
+        logger.error('Error linking trainee to workout', traineeError, 'WorkoutSession');
+        // Try to delete the workout we just created to prevent orphaned records
+        try {
+          await supabase.from('workouts').delete().eq('id', newWorkout.id);
+        } catch (deleteError) {
+          logger.error('Error deleting orphaned workout', deleteError, 'WorkoutSession');
+        }
+        toast.error('שגיאה בקישור המתאמן לאימון. נסה שוב.');
+        return null;
+      }
+
+      setWorkoutId(newWorkout.id);
+      logger.info('Created initial workout', { workoutId: newWorkout.id }, 'WorkoutSession');
+      return newWorkout.id;
+    } catch (err) {
+      logger.error('Unexpected error creating initial workout', err, 'WorkoutSession');
+      return null;
+    } finally {
+      setCreatingWorkout(false);
+    }
+  }, [user, workoutId, creatingWorkout, workoutType, notes, workoutDate, trainee.id]);
+
+  // Delete incomplete workout if user cancels/leaves
+  // Only delete workouts that were created during this session (new workouts, not scheduled ones)
+  const deleteIncompleteWorkout = useCallback(async () => {
+    // Don't delete if this is an editing workout (scheduled workout being edited)
+    // Only delete workouts that were created during this session
+    if (!workoutId || !user || isEditingWorkout.current) return;
+    
+    try {
+      // Check if workout exists, is not completed, and has exercises
+      // Scheduled workouts typically don't have exercises yet, so we only delete workouts with exercises
+      const { data: workout } = await supabase
+        .from('workouts')
+        .select(`
+          id, 
+          is_completed,
+          created_at,
+          workout_exercises (id)
+        `)
+        .eq('id', workoutId)
+        .eq('trainer_id', user.id)
+        .single();
+
+      if (!workout) return;
+
+      // Only delete if:
+      // 1. Workout exists and is not completed
+      // 2. Workout has exercises (meaning it was filled during this session, not a scheduled workout)
+      // 3. Workout was created recently (within last hour) - this indicates it's a new workout, not a scheduled one
+      // 4. Workout date is today or in the past (not a future scheduled workout)
+      // This prevents deleting scheduled workouts that don't have exercises yet
+      const workoutCreatedAt = new Date(workout.created_at);
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const isRecentWorkout = workoutCreatedAt > oneHourAgo;
+      
+      // Check if workout date is in the future (scheduled workout)
+      const { data: workoutDetails } = await supabase
+        .from('workouts')
+        .select('workout_date')
+        .eq('id', workoutId)
+        .single();
+      
+      const isFutureWorkout = workoutDetails?.workout_date 
+        ? new Date(workoutDetails.workout_date) > new Date()
+        : false;
+      
+      // Only delete if it's a recent workout with exercises that's not in the future
+      // This ensures scheduled workouts (future dates) are never deleted
+      if (!workout.is_completed && 
+          workout.workout_exercises && 
+          workout.workout_exercises.length > 0 && 
+          isRecentWorkout && 
+          !isFutureWorkout) {
+        await supabase
+          .from('workouts')
+          .delete()
+          .eq('id', workoutId);
+        logger.info('Deleted incomplete workout on cancel', { workoutId }, 'WorkoutSession');
+      }
+    } catch (err) {
+      // Log error but don't block - user is leaving anyway
+      logger.error('Error deleting incomplete workout', err, 'WorkoutSession');
+    }
+  }, [workoutId, user, editingWorkout]);
+
+  // Cleanup: delete incomplete workout when component unmounts or user navigates away
+  useEffect(() => {
+    return () => {
+      // Only delete if workout is not completed (auto-saved workouts)
+      deleteIncompleteWorkout();
+    };
+  }, [deleteIncompleteWorkout]);
+
+  // Handle back button - delete incomplete workout before leaving
+  const handleBackWithCleanup = useCallback(async () => {
+    await deleteIncompleteWorkout();
+    onBack();
+  }, [deleteIncompleteWorkout, onBack]);
+
+  // Auto-save workout in realtime when exercises change
+  const autoSaveWorkoutRef = useRef<(() => Promise<void>) | null>(null);
+  
+  const autoSaveWorkout = useCallback(async () => {
+    console.log('[AUTO-SAVE] Starting auto-save check', {
+      user: !!user,
+      workoutId,
+      saving,
+      creatingWorkout,
+      exercisesCount: exercises.length,
+      deletedIds: Array.from(deletedExerciseIdsRef.current),
+      deletingIds: Array.from(deletingExerciseIdsRef.current)
+    });
+
+    if (!user || !workoutId || saving || creatingWorkout) {
+      console.log('[AUTO-SAVE] Skipping - conditions not met');
+      return;
+    }
+
+    // CRITICAL FIX: Filter out exercises that are being deleted OR currently in deletion process
+    // This prevents auto-save from re-adding exercises that were just deleted
+    const exercisesToSave = exercises.filter(ex =>
+      !deletedExerciseIdsRef.current.has(ex.exercise.id) &&
+      !deletingExerciseIdsRef.current.has(ex.exercise.id)
+    );
+
+    console.log('[AUTO-SAVE] Filtered exercises', {
+      originalCount: exercises.length,
+      filteredCount: exercisesToSave.length,
+      filteredOutIds: exercises
+        .filter(ex => deletedExerciseIdsRef.current.has(ex.exercise.id) || deletingExerciseIdsRef.current.has(ex.exercise.id))
+        .map(ex => ex.exercise.id)
+    });
+
+    // IMPORTANT: Even if exercisesToSave is empty, we MUST call the edge function
+    // to delete all exercises from the database. Only skip if there's nothing to do.
+    if (exercisesToSave.length === 0 && exercises.length === 0 &&
+        deletedExerciseIdsRef.current.size === 0 && deletingExerciseIdsRef.current.size === 0) {
+      console.log('[AUTO-SAVE] Skipping - no exercises and nothing being deleted');
+      logger.debug('No exercises and nothing being deleted, skipping auto-save', 'WorkoutSession');
+      return;
+    }
+
+    // CRITICAL FIX: Check for duplicate exercises before saving
+    // This prevents the autosave from creating duplicate exercises in the database
+    const exerciseIds = exercisesToSave.map(ex => ex.exercise.id);
+    const uniqueExerciseIds = new Set(exerciseIds);
+
+    if (exerciseIds.length !== uniqueExerciseIds.size) {
+      logger.error('Duplicate exercises detected in state, skipping autosave to prevent DB corruption', {
+        totalExercises: exerciseIds.length,
+        uniqueExercises: uniqueExerciseIds.size,
+        exerciseIds
+      }, 'WorkoutSession');
+
+      // Remove duplicates from state
+      const seen = new Set<string>();
+      const uniqueExercises = exercisesToSave.filter(ex => {
+        if (seen.has(ex.exercise.id)) {
+          logger.debug('Removing duplicate exercise from state', {
+            exerciseId: ex.exercise.id,
+            exerciseName: ex.exercise.name,
+            tempId: ex.tempId
+          }, 'WorkoutSession');
+          return false;
+        }
+        seen.add(ex.exercise.id);
+        return true;
+      });
+
+      setExercises(uniqueExercises);
+      toast.error('זוהו תרגילים כפולים והוסרו. אנא בדוק את הרשימה.');
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // Validate and fix set numbers before saving
+      const exercisesData = exercisesToSave.map((ex, index) => ({
+        exercise_id: ex.exercise.id,
+        order_index: index,
+        sets: ex.sets.map((set, setIndex) => ({
+          // Ensure set numbers are sequential (1, 2, 3...) - use setIndex instead of set.set_number
+          // This prevents issues with duplicate or invalid set numbers
+          set_number: setIndex + 1,
+          weight: set.weight || 0,
+          reps: set.reps || 0,
+          rpe: set.rpe && set.rpe >= 1 && set.rpe <= 10 ? set.rpe : null,
+          set_type: set.set_type || 'regular',
+          failure: set.failure || false,
+          superset_exercise_id: set.superset_exercise_id || null,
+          superset_weight: set.superset_weight || null,
+          superset_reps: set.superset_reps || null,
+          superset_rpe: set.superset_rpe && set.superset_rpe >= 1 && set.superset_rpe <= 10 ? set.superset_rpe : null,
+          superset_equipment_id: set.superset_equipment_id || null,
+          superset_dropset_weight: set.superset_dropset_weight || null,
+          superset_dropset_reps: set.superset_dropset_reps || null,
+          dropset_weight: set.dropset_weight || null,
+          dropset_reps: set.dropset_reps || null,
+          equipment_id: set.equipment_id || null,
+        })),
+      }));
+
+      const requestBody = {
+        trainee_id: trainee.id,
+        trainer_id: user.id,
+        workout_type: workoutType,
+        notes: notes || null,
+        workout_date: workoutDate.toISOString(),
+        exercises: exercisesData,
+        pair_member: trainee.is_pair ? selectedMember : null,
+        workout_id: workoutId,
+        is_auto_save: true, // Mark as auto-save so workout won't be marked as completed
+      };
+
+      console.log('[AUTO-SAVE] Sending to edge function', {
+        workoutId,
+        exercisesCount: exercisesData.length,
+        exerciseIds: exercisesData.map(e => e.exercise_id),
+        is_auto_save: true
+      });
+
+      logger.debug('Auto-saving workout', {
+        workoutId,
+        exercisesCount: exercisesData.length,
+        exerciseIds: exercisesData.map(e => e.exercise_id)
+      }, 'WorkoutSession');
+
+      const result = await saveWorkout(requestBody, session.access_token);
+      if (result.error) {
+        console.error('[AUTO-SAVE] Error from edge function', result.error);
+        logger.error('Auto-save error', result.error, 'WorkoutSession');
+      } else {
+        console.log('[AUTO-SAVE] Success!', { workoutId, exercisesCount: exercisesData.length });
+        logger.debug('Auto-save successful', { workoutId }, 'WorkoutSession');
+      }
+    } catch (err) {
+      logger.error('Unexpected error in auto-save', err, 'WorkoutSession');
+    }
+  }, [user, workoutId, exercises, workoutType, notes, workoutDate, trainee, selectedMember, saving, creatingWorkout, setExercises]);
+
+  // Update ref when function changes
+  useEffect(() => {
+    autoSaveWorkoutRef.current = autoSaveWorkout;
+  }, [autoSaveWorkout]);
 
   useEffect(() => {
     if (workoutId) return;
@@ -228,13 +614,91 @@ export default function WorkoutSession({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty, exercises.length, workoutId]);
 
-  // Keyboard shortcuts for better UX
+  // Find the active exercise (first non-minimized) and active set (first non-collapsed)
+  const findActiveExerciseAndSet = useCallback((): { exerciseIndex: number; setIndex: number } | null => {
+    for (let i = 0; i < exercises.length; i++) {
+      if (!minimizedExercises.includes(exercises[i].tempId)) {
+        const exercise = exercises[i];
+        for (let j = 0; j < exercise.sets.length; j++) {
+          if (!collapsedSets.includes(exercise.sets[j].id)) {
+            return { exerciseIndex: i, setIndex: j };
+          }
+        }
+        // If no non-collapsed set, return the first set
+        if (exercise.sets.length > 0) {
+          return { exerciseIndex: i, setIndex: 0 };
+        }
+      }
+    }
+    // Fallback to first exercise and first set
+    return exercises.length > 0 && exercises[0].sets.length > 0 
+      ? { exerciseIndex: 0, setIndex: 0 }
+      : null;
+  }, [exercises, minimizedExercises, collapsedSets]);
+
+  // Clear focusedSetPart when active set changes (but not on every exercise update)
+  // Only clear if we moved to a completely different exercise or set
+  // IMPORTANT: Don't clear focusedSetPart on every render - only when we actually move to a different set
+  const prevActiveSetRef = useRef<{ exerciseIndex: number; setIndex: number } | null>(null);
+  useEffect(() => {
+    const active = findActiveExerciseAndSet();
+    if (active) {
+      // Only clear focusedSetPart if we actually moved to a different exercise OR different set
+      if (prevActiveSetRef.current &&
+          (prevActiveSetRef.current.exerciseIndex !== active.exerciseIndex || 
+           prevActiveSetRef.current.setIndex !== active.setIndex)) {
+        // We moved to a different set, clear the focused part only if it's for a different set
+        // Use functional update to access current value without causing dependency issues
+        setFocusedSetPart(prev => {
+          if (prev && 
+              (prev.exerciseIndex !== active.exerciseIndex || 
+               prev.setIndex !== active.setIndex)) {
+            return null;
+          }
+          return prev;
+        });
+      }
+      prevActiveSetRef.current = active;
+    } else {
+      prevActiveSetRef.current = null;
+    }
+    // Don't include focusedSetPart in dependencies to avoid clearing it on every change
+  }, [exercises.length, minimizedExercises.length, collapsedSets.length, findActiveExerciseAndSet]);
+
+  // Auto-save workout in realtime when exercises change (with debounce)
+  // IMPORTANT: Don't skip on empty exercises - we need to save deletions too!
+  useEffect(() => {
+    if (!workoutId || saving || creatingWorkout) return;
+
+    const timeoutId = setTimeout(() => {
+      if (autoSaveWorkoutRef.current) {
+        autoSaveWorkoutRef.current();
+      }
+    }, 2000); // Debounce: wait 2 seconds after last change
+
+    return () => clearTimeout(timeoutId);
+  }, [exercises, workoutId, saving, creatingWorkout]);
+
+  // Enhanced keyboard shortcuts for better UX (especially on tablet with external keyboard)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Allow W/R/E shortcuts even when numeric pads are open (for switching between fields)
+      const isWeightRepsRpeShortcut = (e.key.toLowerCase() === 'w' || e.key.toLowerCase() === 'r' || e.key.toLowerCase() === 'e') && !e.ctrlKey && !e.metaKey;
+      
       // Don't handle shortcuts when modals are open or input is focused
-      if (showExerciseSelector || numericPad || equipmentSelector || supersetSelector || 
+      // Exception: Allow W/R/E shortcuts even when numeric pads are open
+      if (!isWeightRepsRpeShortcut && (
+          showExerciseSelector || numericPad || equipmentSelector || supersetSelector || 
+          dropsetNumericPad || supersetNumericPad || supersetDropsetNumericPad || supersetEquipmentSelector ||
           showDraftModal || showTemplateModal || showSaveTemplateModal || showSummary ||
-          document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+          document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA')) {
+        return;
+      }
+      
+      // For W/R/E shortcuts, only block if input/textarea is focused (not numeric pads)
+      if (isWeightRepsRpeShortcut && 
+          !numericPad && !supersetNumericPad && !dropsetNumericPad && !supersetDropsetNumericPad &&
+          (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA')) {
         return;
       }
 
@@ -242,12 +706,16 @@ export default function WorkoutSession({
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         if (exercises.length > 0 && !saving && user) {
-          // Call handleSave directly - it's defined in the component scope
           handleSave();
         }
       }
-      // Ctrl/Cmd + N to add exercise
+      // Ctrl/Cmd + N or just N to add exercise
       else if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        setShowExerciseSelector(true);
+      }
+      // Just N (without modifier) to add exercise when no exercises
+      else if (e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.metaKey && exercises.length === 0) {
         e.preventDefault();
         setShowExerciseSelector(true);
       }
@@ -258,6 +726,158 @@ export default function WorkoutSession({
           setShowTemplateModal(true);
         }
       }
+      // Plus key to add set to last exercise
+      else if (e.key === '+' || e.key === '=') {
+        e.preventDefault();
+        if (exercises.length > 0) {
+          const lastExerciseIndex = exercises.length - 1;
+          addSet(lastExerciseIndex);
+          toast.success('סט חדש נוסף', { duration: 1500, position: 'bottom-center' });
+        }
+      }
+      // W key to open weight pad for active exercise and set
+      // Supports regular sets, supersets, and dropsets
+      // Uses focusedSetPart if available, otherwise determines from set type
+      else if (e.key.toLowerCase() === 'w' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
+        e.preventDefault();
+        const active = findActiveExerciseAndSet();
+        if (active) {
+          // Check if we have a focused set part (user clicked on superset/dropset button)
+          // IMPORTANT: Use focusedSetPart if it exists for this exercise and set
+          // This allows shortcuts to work on the last clicked superset/dropset button
+          // Debug: Log to check if focusedSetPart is being used
+          if (focusedSetPart && 
+              focusedSetPart.exerciseIndex === active.exerciseIndex && 
+              focusedSetPart.setIndex === active.setIndex) {
+            // Use the focused part
+            if (focusedSetPart.part === 'superset') {
+              openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_weight', 'משקל סופר-סט (ק״ג)');
+            } else if (focusedSetPart.part === 'superset_dropset') {
+              openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_dropset_weight', 'משקל דרופ-סט סופר-סט (ק״ג)');
+            } else if (focusedSetPart.part === 'dropset') {
+              openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_weight', 'משקל דרופ-סט (ק״ג)');
+            } else {
+              openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+            }
+          } else {
+            // No focused part, determine from set type
+            const set = exercises[active.exerciseIndex].sets[active.setIndex];
+            // Check if this is a superset (has superset_exercise_id) - prioritize superset over dropset
+            if (set.set_type === 'superset' || set.superset_exercise_id) {
+              openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_weight', 'משקל סופר-סט (ק״ג)');
+            }
+            // Check if this is a dropset (has dropset_weight) - only if not superset
+            else if (set.set_type === 'dropset' || (set.dropset_weight !== null && set.dropset_weight !== undefined)) {
+              openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_weight', 'משקל דרופ-סט (ק״ג)');
+            }
+            // Regular set
+            else {
+              openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+            }
+          }
+        }
+      }
+      // R key to open reps pad for active exercise and set
+      // Supports regular sets, supersets, and dropsets
+      // Uses focusedSetPart if available, otherwise determines from set type
+      else if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
+        e.preventDefault();
+        const active = findActiveExerciseAndSet();
+        if (active) {
+          // Check if we have a focused set part (user clicked on superset/dropset button)
+          if (focusedSetPart && 
+              focusedSetPart.exerciseIndex === active.exerciseIndex && 
+              focusedSetPart.setIndex === active.setIndex) {
+            // Use the focused part
+            if (focusedSetPart.part === 'superset') {
+              openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_reps', 'חזרות סופר-סט');
+            } else if (focusedSetPart.part === 'superset_dropset') {
+              openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_dropset_reps', 'חזרות דרופ-סט סופר-סט');
+            } else if (focusedSetPart.part === 'dropset') {
+              openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_reps', 'חזרות דרופ-סט');
+            } else {
+              openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+            }
+          } else {
+            // No focused part, determine from set type
+            const set = exercises[active.exerciseIndex].sets[active.setIndex];
+            // Check if this is a superset (has superset_exercise_id) - prioritize superset over dropset
+            if (set.set_type === 'superset' || set.superset_exercise_id) {
+              openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_reps', 'חזרות סופר-סט');
+            }
+            // Check if this is a dropset (has dropset_reps) - only if not superset
+            else if (set.set_type === 'dropset' || (set.dropset_reps !== null && set.dropset_reps !== undefined)) {
+              openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_reps', 'חזרות דרופ-סט');
+            }
+            // Regular set
+            else {
+              openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+            }
+          }
+        }
+      }
+      // E key to open RPE pad for active exercise and set
+      // Supports regular sets and supersets (dropsets don't have RPE)
+      // Uses focusedSetPart if available, otherwise determines from set type
+      else if (e.key.toLowerCase() === 'e' && !e.ctrlKey && !e.metaKey && exercises.length > 0) {
+        e.preventDefault();
+        const active = findActiveExerciseAndSet();
+        if (active) {
+          // Check if we have a focused set part (user clicked on superset button)
+          if (focusedSetPart && 
+              focusedSetPart.exerciseIndex === active.exerciseIndex && 
+              focusedSetPart.setIndex === active.setIndex &&
+              focusedSetPart.part === 'superset') {
+            openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_rpe', 'RPE סופר-סט (1-10)');
+          } else {
+            // No focused part or not superset, determine from set type
+            const set = exercises[active.exerciseIndex].sets[active.setIndex];
+            // Check if this is a superset (has superset_exercise_id)
+            if (set.set_type === 'superset' || set.superset_exercise_id) {
+              openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_rpe', 'RPE סופר-סט (1-10)');
+            }
+            // Regular set
+            else {
+              openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
+            }
+          }
+        }
+      }
+      // Escape to go back (with confirmation if dirty)
+      else if (e.key === 'Escape') {
+        if (exercises.length > 0 && isDirty) {
+          if (confirm('יש שינויים שלא נשמרו. בטוח שברצונך לצאת?')) {
+            handleBackWithCleanup();
+          }
+        } else if (exercises.length === 0) {
+          handleBackWithCleanup();
+        }
+      }
+      // Arrow down to expand next collapsed set
+      else if (e.key === 'ArrowDown' && !e.ctrlKey && !e.metaKey) {
+        const firstCollapsedSet = collapsedSets[0];
+        if (firstCollapsedSet) {
+          toggleCollapseSet(firstCollapsedSet);
+        }
+      }
+      // Enter to complete current set (first non-collapsed exercise, first non-collapsed set)
+      else if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
+        // Find the first non-minimized exercise with a non-collapsed set
+        for (let i = 0; i < exercises.length; i++) {
+          if (!minimizedExercises.includes(exercises[i].tempId)) {
+            const exercise = exercises[i];
+            for (let j = 0; j < exercise.sets.length; j++) {
+              if (!collapsedSets.includes(exercise.sets[j].id)) {
+                // This is the active set - complete it
+                completeSetAndMoveNext(i, j);
+                toast.success('סט הושלם', { duration: 1500, position: 'bottom-center' });
+                break;
+              }
+            }
+            break;
+          }
+        }
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -265,7 +885,7 @@ export default function WorkoutSession({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showExerciseSelector, numericPad, equipmentSelector, supersetSelector, 
       showDraftModal, showTemplateModal, showSaveTemplateModal, showSummary, 
-      exercises.length, saving]);
+      exercises.length, saving, isDirty, collapsedSets, minimizedExercises, findActiveExerciseAndSet, focusedSetPart]);
 
   useEffect(() => {
     const loadMuscleGroups = async () => {
@@ -279,35 +899,117 @@ export default function WorkoutSession({
     loadMuscleGroups();
   }, []);
 
-  const handleAddExerciseWithAutoFill = async (exercise: Exercise) => {
-    if (!user) {
-      addExercise(exercise);
+  const handleAddExerciseWithAutoFill = async (exercise: Exercise, loadPreviousData: boolean = false) => {
+    // Prevent duplicate additions - check if exercise is already being loaded
+    if (loadingExercise === exercise.id) {
+      logger.debug('Exercise already being added, skipping duplicate request', { exerciseId: exercise.id }, 'WorkoutSession');
       return;
     }
 
-    // Check cache first (cache valid for 5 minutes)
-    const cacheKey = `${trainee.id}-${exercise.id}`;
-    const cached = exerciseCacheRef.current.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
-      addExercise(exercise);
-      setExercises((prev) => {
-        if (!prev.length) return prev;
-        const updated = [...prev];
-        const lastIndex = updated.length - 1;
-        updated[lastIndex] = {
-          ...updated[lastIndex],
-          sets: cached.sets.map((set, index) => ({
-            ...set,
-            id: `temp-${Date.now()}-${index}`,
-          })),
-        };
-        return updated;
-      });
-      return;
-    }
-
+    // Set loading state IMMEDIATELY to prevent rapid clicks from adding duplicates
     setLoadingExercise(exercise.id);
+    logger.debug('Adding exercise:', { exerciseId: exercise.id, exerciseName: exercise.name, loadPreviousData }, 'WorkoutSession');
+
     try {
+      // Create workout if this is the first exercise (skip for self-workout - created on save)
+      if (exercises.length === 0 && !workoutId && user && !isSelfWorkout) {
+        const newWorkoutId = await createInitialWorkout();
+        if (!newWorkoutId) {
+          logger.error('Failed to create workout, cannot add exercise', {}, 'WorkoutSession');
+          toast.error('שגיאה ביצירת אימון. נסה שוב.');
+          setLoadingExercise(null);
+          return;
+        }
+        // Set workoutId directly to ensure it's available for auto-save
+        setWorkoutId(newWorkoutId);
+        // Use the returned value directly instead of waiting for state update
+        // This prevents race conditions with auto-save
+        const currentWorkoutId = newWorkoutId;
+        
+        // Proceed with the workoutId we just created
+        if (!currentWorkoutId) {
+          logger.error('Failed to create workout, cannot add exercise', {}, 'WorkoutSession');
+          toast.error('שגיאה ביצירת אימון. נסה שוב.');
+          setLoadingExercise(null);
+          return;
+        }
+        
+        // Continue with the workoutId we have
+        // Note: We use currentWorkoutId instead of workoutId state to avoid race conditions
+      } else if (!workoutId && !isSelfWorkout) {
+        // No workout ID and we didn't just create one - this shouldn't happen (except for self-workout)
+        logger.error('Cannot add exercise: no workout ID', {}, 'WorkoutSession');
+        toast.error('שגיאה: אין מזהה אימון. נסה שוב.');
+        setLoadingExercise(null);
+        return;
+      }
+
+      if (!user) {
+        const newExerciseId = addExercise(exercise);
+        setLoadingExercise(null);
+        // Scroll to new exercise after a short delay
+        if (newExerciseId) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
+        return;
+      }
+
+      // If not loading previous data, just add exercise without data
+      if (!loadPreviousData) {
+        const newExerciseId = addExercise(exercise);
+        setLoadingExercise(null);
+        // Scroll to new exercise after a short delay
+        if (newExerciseId) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
+        return;
+      }
+
+      // Check cache first (cache valid for 5 minutes)
+      const cacheKey = `${trainee.id}-${exercise.id}`;
+      const cached = exerciseCacheRef.current.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+        const newExerciseId = addExercise(exercise);
+        setExercises((prev) => {
+          if (!prev.length) return prev;
+          const updated = [...prev];
+          const lastIndex = updated.length - 1;
+          // Only load the first set
+          const firstSet = cached.sets[0];
+          if (firstSet) {
+            updated[lastIndex] = {
+              ...updated[lastIndex],
+              sets: [{
+                ...firstSet,
+                id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-0`,
+              }],
+            };
+          }
+          return updated;
+        });
+        setLoadingExercise(null);
+        // Scroll to new exercise
+        if (newExerciseId) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
+        return;
+      }
+
       const { data: workouts, error } = await supabase
         .from('workouts')
         .select(`
@@ -349,14 +1051,30 @@ export default function WorkoutSession({
       if (error) {
         logger.error('Error loading last exercise for autofill:', error, 'WorkoutSession');
         toast.error('שגיאה בטעינת התרגיל הקודם, התרגיל נוסף ללא נתונים');
-        addExercise(exercise);
+        const newExerciseId = addExercise(exercise);
         setLoadingExercise(null);
+        if (newExerciseId) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
         return;
       }
 
       if (!workouts || workouts.length === 0 || !workouts[0].workout_exercises?.length) {
-        addExercise(exercise);
+        const newExerciseId = addExercise(exercise);
         setLoadingExercise(null);
+        if (newExerciseId) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
         return;
       }
 
@@ -364,76 +1082,143 @@ export default function WorkoutSession({
       const previousSets = lastExercise.exercise_sets || [];
 
       if (!previousSets.length) {
-        addExercise(exercise);
+        const newExerciseId = addExercise(exercise);
         setLoadingExercise(null);
+        if (newExerciseId) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
         return;
       }
 
-      const mappedSets: SetData[] = previousSets
-        .sort((a: any, b: any) => (a.set_number || 0) - (b.set_number || 0))
-        .map((set: any, index: number) => ({
-          id: `temp-${Date.now()}-${index}`,
-          set_number: set.set_number || index + 1,
-          weight: set.weight || 0,
-          reps: set.reps || 0,
-          rpe: set.rpe,
-          set_type: set.set_type || 'regular',
-          failure: set.failure || false,
-          superset_exercise_id: set.superset_exercise_id,
-          superset_exercise_name: undefined,
-          superset_weight: set.superset_weight,
-          superset_reps: set.superset_reps,
-          superset_rpe: set.superset_rpe,
-          superset_equipment_id: set.superset_equipment_id,
-          superset_equipment: null,
-          superset_dropset_weight: set.superset_dropset_weight,
-          superset_dropset_reps: set.superset_dropset_reps,
-          dropset_weight: set.dropset_weight,
-          dropset_reps: set.dropset_reps,
-          equipment_id: set.equipment_id,
-          equipment: null,
-        }));
+      // Sort sets and take only the first one
+      const sortedSets = previousSets.sort((a: any, b: any) => (a.set_number || 0) - (b.set_number || 0));
+      const firstSet = sortedSets[0];
 
-      // Cache the sets for future use
+      if (!firstSet) {
+        const newExerciseId = addExercise(exercise);
+        setLoadingExercise(null);
+        if (newExerciseId) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
+        return;
+      }
+
+      // Map only the first set
+      const mappedFirstSet: SetData = {
+        id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-0`,
+        set_number: firstSet.set_number || 1,
+        weight: firstSet.weight || 0,
+        reps: firstSet.reps || 0,
+        rpe: firstSet.rpe,
+        set_type: firstSet.set_type || 'regular',
+        failure: firstSet.failure || false,
+        superset_exercise_id: firstSet.superset_exercise_id,
+        superset_exercise_name: undefined,
+        superset_weight: firstSet.superset_weight,
+        superset_reps: firstSet.superset_reps,
+        superset_rpe: firstSet.superset_rpe,
+        superset_equipment_id: firstSet.superset_equipment_id,
+        superset_equipment: null,
+        superset_dropset_weight: firstSet.superset_dropset_weight,
+        superset_dropset_reps: firstSet.superset_dropset_reps,
+        dropset_weight: firstSet.dropset_weight,
+        dropset_reps: firstSet.dropset_reps,
+        equipment_id: firstSet.equipment_id,
+        equipment: null,
+      };
+
+      // Cache all sets for future use (in case user wants to see history)
+      const allMappedSets: SetData[] = sortedSets.map((set: any, index: number) => ({
+        id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${index}`,
+        set_number: set.set_number || index + 1,
+        weight: set.weight || 0,
+        reps: set.reps || 0,
+        rpe: set.rpe,
+        set_type: set.set_type || 'regular',
+        failure: set.failure || false,
+        superset_exercise_id: set.superset_exercise_id,
+        superset_exercise_name: undefined,
+        superset_weight: set.superset_weight,
+        superset_reps: set.superset_reps,
+        superset_rpe: set.superset_rpe,
+        superset_equipment_id: set.superset_equipment_id,
+        superset_equipment: null,
+        superset_dropset_weight: set.superset_dropset_weight,
+        superset_dropset_reps: set.superset_dropset_reps,
+        dropset_weight: set.dropset_weight,
+        dropset_reps: set.dropset_reps,
+        equipment_id: set.equipment_id,
+        equipment: null,
+      }));
+
       exerciseCacheRef.current.set(cacheKey, {
-        sets: mappedSets,
+        sets: allMappedSets,
         timestamp: Date.now(),
       });
 
       // Add the exercise using the existing hook logic (minimize previous exercise etc.)
-      addExercise(exercise);
+      const newExerciseId = addExercise(exercise);
 
-      // Replace the just-added exercise's sets with the auto-filled ones
+      // Replace the just-added exercise's sets with only the first set
       setExercises((prev) => {
         if (!prev.length) return prev;
         const updated = [...prev];
         const lastIndex = updated.length - 1;
         updated[lastIndex] = {
           ...updated[lastIndex],
-          sets: mappedSets,
+          sets: [mappedFirstSet],
         };
         return updated;
       });
-      toast.success('התרגיל נטען עם הנתונים מהאימון הקודם');
+      toast.success('התרגיל נטען עם הסט הראשון מהאימון הקודם');
+      
+      // Scroll to new exercise
+      if (newExerciseId) {
+        setTimeout(() => {
+          const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
+      }
     } catch (err) {
       logger.error('Unexpected error in exercise autofill:', err, 'WorkoutSession');
       toast.error('שגיאה בטעינת התרגיל, התרגיל נוסף ללא נתונים');
-      addExercise(exercise);
+      const newExerciseId = addExercise(exercise);
+      if (newExerciseId) {
+        setTimeout(() => {
+          const element = document.querySelector(`[data-exercise-id="${newExerciseId}"]`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
+      }
     } finally {
       setLoadingExercise(null);
     }
   };
 
-
-  const openNumericPad = (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe', label: string) => {
+  const openNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe', label: string) => {
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     setNumericPad({ exerciseIndex, setIndex, field, value: currentValue as number, label });
-  };
+    setFocusedSetPart({ exerciseIndex, setIndex, part: 'regular' });
+  }, [exercises]);
 
   const handleNumericPadConfirm = (value: number) => {
     if (numericPad) {
       updateSet(numericPad.exerciseIndex, numericPad.setIndex, numericPad.field, value);
       setNumericPad(null);
+      setFocusedSetPart(null);
     }
   };
 
@@ -454,10 +1239,17 @@ export default function WorkoutSession({
     }
   };
 
-  const openSupersetNumericPad = (exerciseIndex: number, setIndex: number, field: 'superset_weight' | 'superset_reps' | 'superset_rpe', label: string) => {
+  const openSupersetNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'superset_weight' | 'superset_reps' | 'superset_rpe' | 'superset_dropset_weight' | 'superset_dropset_reps', label: string) => {
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
-    setSupersetNumericPad({ exerciseIndex, setIndex, field, value: currentValue as number, label });
-  };
+    // For superset dropset fields, use the supersetDropsetNumericPad state
+    if (field === 'superset_dropset_weight' || field === 'superset_dropset_reps') {
+      setSupersetDropsetNumericPad({ exerciseIndex, setIndex, field, value: currentValue as number, label });
+      setFocusedSetPart({ exerciseIndex, setIndex, part: 'superset_dropset' });
+    } else {
+      setSupersetNumericPad({ exerciseIndex, setIndex, field: field as 'superset_weight' | 'superset_reps' | 'superset_rpe', value: currentValue as number, label });
+      setFocusedSetPart({ exerciseIndex, setIndex, part: 'superset' });
+    }
+  }, [exercises]);
 
   const handleSupersetEquipmentSelect = (equipment: Equipment | null) => {
     if (supersetEquipmentSelector) {
@@ -471,30 +1263,35 @@ export default function WorkoutSession({
     if (supersetNumericPad) {
       updateSet(supersetNumericPad.exerciseIndex, supersetNumericPad.setIndex, supersetNumericPad.field, value);
       setSupersetNumericPad(null);
+      // Keep focusedSetPart for superset so shortcuts continue to work
     }
   };
 
-  const openDropsetNumericPad = (exerciseIndex: number, setIndex: number, field: 'dropset_weight' | 'dropset_reps', label: string) => {
+  const openDropsetNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'dropset_weight' | 'dropset_reps', label: string) => {
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     setDropsetNumericPad({ exerciseIndex, setIndex, field, value: currentValue as number, label });
-  };
+    setFocusedSetPart({ exerciseIndex, setIndex, part: 'dropset' });
+  }, [exercises]);
 
   const handleDropsetNumericPadConfirm = (value: number) => {
     if (dropsetNumericPad) {
       updateSet(dropsetNumericPad.exerciseIndex, dropsetNumericPad.setIndex, dropsetNumericPad.field, value);
       setDropsetNumericPad(null);
+      // Keep focusedSetPart for dropset so shortcuts continue to work
     }
   };
 
-  const openSupersetDropsetNumericPad = (exerciseIndex: number, setIndex: number, field: 'superset_dropset_weight' | 'superset_dropset_reps', label: string) => {
+  const openSupersetDropsetNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'superset_dropset_weight' | 'superset_dropset_reps', label: string) => {
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     setSupersetDropsetNumericPad({ exerciseIndex, setIndex, field, value: currentValue as number, label });
-  };
+    setFocusedSetPart({ exerciseIndex, setIndex, part: 'superset_dropset' });
+  }, [exercises]);
 
   const handleSupersetDropsetNumericPadConfirm = (value: number) => {
     if (supersetDropsetNumericPad) {
       updateSet(supersetDropsetNumericPad.exerciseIndex, supersetDropsetNumericPad.setIndex, supersetDropsetNumericPad.field, value);
       setSupersetDropsetNumericPad(null);
+      // Keep focusedSetPart for superset_dropset so shortcuts continue to work
     }
   };
 
@@ -568,8 +1365,51 @@ export default function WorkoutSession({
     if (!user) return;
 
     try {
-      // First get all workouts for this trainer and trainee
-      const { data: workouts, error: workoutsError } = await supabase
+      // If previousWorkout prop is provided, use it directly
+      if (previousWorkout && previousWorkout.workout_exercises) {
+        const loadedExercises: WorkoutExercise[] = previousWorkout.workout_exercises
+          .sort((a: any, b: any) => a.order_index - b.order_index)
+          .map((we: any) => ({
+            tempId: Date.now().toString() + Math.random(),
+            exercise: {
+              id: we.exercises.id,
+              name: we.exercises.name,
+              muscle_group_id: we.exercises.muscle_group_id,
+            },
+            sets: we.exercise_sets
+              .sort((a: any, b: any) => a.set_number - b.set_number)
+              .map((set: any, index: number) => ({
+                id: `temp-${Date.now()}-${index}`,
+                set_number: set.set_number,
+                weight: set.weight,
+                reps: set.reps,
+                rpe: set.rpe,
+                set_type: set.set_type,
+                failure: set.failure || false,
+                superset_exercise_id: set.superset_exercise_id,
+                superset_weight: set.superset_weight,
+                superset_reps: set.superset_reps,
+                superset_rpe: set.superset_rpe,
+                superset_equipment_id: set.superset_equipment_id,
+                superset_dropset_weight: set.superset_dropset_weight,
+                superset_dropset_reps: set.superset_dropset_reps,
+                dropset_weight: set.dropset_weight,
+                dropset_reps: set.dropset_reps,
+                equipment_id: set.equipment_id,
+                equipment: null,
+                superset_equipment: null,
+              })),
+          }));
+
+        setExercises(loadedExercises);
+        toast.success('האימון נטען בהצלחה!');
+        return;
+      }
+
+      // Otherwise, load from database
+      // For self-workout, only load is_self_recorded workouts
+      const trainerIdToUse = isSelfWorkout ? trainee.trainer_id : user.id;
+      let query = supabase
         .from('workouts')
         .select(`
           id,
@@ -606,10 +1446,15 @@ export default function WorkoutSession({
             )
           )
         `)
-        .eq('trainer_id', user.id)
+        .eq('trainer_id', trainerIdToUse)
         .eq('workout_trainees.trainee_id', trainee.id)
         .order('workout_date', { ascending: false })
         .limit(10);
+
+      if (isSelfWorkout) {
+        query = query.eq('is_self_recorded', true);
+      }
+      const { data: workouts, error: workoutsError } = await query;
 
       if (workoutsError) {
         logger.error('Error loading previous workout:', workoutsError, 'WorkoutSession');
@@ -679,7 +1524,39 @@ export default function WorkoutSession({
   };
 
   const handleSave = async () => {
-    if (!user || exercises.length === 0) return;
+    if (!user) {
+      toast.error('נדרשת התחברות');
+      return;
+    }
+
+    // For new workouts, require at least one exercise
+    // For existing workouts, allow empty exercises (to delete all exercises)
+    if (!workoutId && exercises.length === 0) {
+      toast.error('יש להוסיף לפחות תרגיל אחד לפני שמירה');
+      return;
+    }
+
+    // Validate that all exercises have valid sets with set numbers
+    const hasInvalidSets = exercises.some(ex => {
+      return ex.sets.some((set, index) => {
+        // Set numbers should be sequential starting from 1
+        const expectedSetNumber = index + 1;
+        return set.set_number !== expectedSetNumber;
+      });
+    });
+
+    if (hasInvalidSets) {
+      // Fix set numbers before saving
+      const fixedExercises = exercises.map(ex => ({
+        ...ex,
+        sets: ex.sets.map((set, index) => ({
+          ...set,
+          set_number: index + 1
+        }))
+      }));
+      setExercises(fixedExercises);
+      logger.warn('Fixed invalid set numbers before saving', {}, 'WorkoutSession');
+    }
 
     setSaving(true);
 
@@ -692,20 +1569,144 @@ export default function WorkoutSession({
         return;
       }
 
+      // Self-workout: save via create_trainee_workout RPC (categorized as independent)
+      if (isSelfWorkout) {
+        if (!trainee.trainer_id) {
+          toast.error('לא ניתן לשמור אימון ללא מאמן');
+          setSaving(false);
+          return;
+        }
+
+        const { data: workoutIdResult, error: workoutError } = await supabase
+          .rpc('create_trainee_workout', {
+            p_trainer_id: trainee.trainer_id,
+            p_workout_type: 'personal',
+            p_notes: notes || '',
+            p_workout_date: workoutDate.toISOString().split('T')[0],
+            p_is_completed: true,
+            p_is_self_recorded: true,
+          });
+
+        if (workoutError || !workoutIdResult) {
+          logger.error('Self-workout save error:', workoutError, 'WorkoutSession');
+          toast.error('שגיאה בשמירת האימון');
+          setSaving(false);
+          return;
+        }
+
+        const newWorkoutId = workoutIdResult as string;
+
+        const { error: traineeError } = await supabase
+          .from('workout_trainees')
+          .insert({ workout_id: newWorkoutId, trainee_id: trainee.id });
+
+        if (traineeError) {
+          logger.error('Trainee link error:', traineeError, 'WorkoutSession');
+          toast.error('שגיאה בקישור המתאמן לאימון');
+          setSaving(false);
+          return;
+        }
+
+        for (let i = 0; i < exercises.length; i++) {
+          const exercise = exercises[i];
+          const { data: workoutExercise, error: exerciseError } = await supabase
+            .from('workout_exercises')
+            .insert({
+              workout_id: newWorkoutId,
+              trainee_id: trainee.id,
+              exercise_id: exercise.exercise.id,
+              order_index: i,
+              pair_member: null,
+            })
+            .select()
+            .single();
+
+          if (exerciseError || !workoutExercise) {
+            logger.error('Exercise insert error:', exerciseError, 'WorkoutSession');
+            toast.error('שגיאה בשמירת התרגיל');
+            setSaving(false);
+            return;
+          }
+
+          const weId = (workoutExercise as { id: string }).id;
+          const setsToInsert = exercise.sets.map((set) => ({
+            workout_exercise_id: weId,
+            set_number: set.set_number,
+            weight: set.weight,
+            reps: set.reps,
+            rpe: set.rpe && set.rpe >= 1 && set.rpe <= 10 ? set.rpe : null,
+            set_type: set.set_type,
+            failure: set.failure || false,
+            superset_exercise_id: set.superset_exercise_id || null,
+            superset_weight: set.superset_weight ?? null,
+            superset_reps: set.superset_reps ?? null,
+            superset_rpe: set.superset_rpe && set.superset_rpe >= 1 && set.superset_rpe <= 10 ? set.superset_rpe : null,
+            superset_equipment_id: set.superset_equipment_id ?? null,
+            superset_dropset_weight: set.superset_dropset_weight ?? null,
+            superset_dropset_reps: set.superset_dropset_reps ?? null,
+            dropset_weight: set.dropset_weight ?? null,
+            dropset_reps: set.dropset_reps ?? null,
+            equipment_id: set.equipment_id ?? null,
+          }));
+
+          const { error: setsError } = await supabase.from('exercise_sets').insert(setsToInsert);
+          if (setsError) {
+            logger.error('Sets insert error:', setsError, 'WorkoutSession');
+            toast.error('שגיאה בשמירת הסטים');
+            setSaving(false);
+            return;
+          }
+        }
+
+        if (trainee.trainer_id) {
+          await supabase.from('trainer_notifications').insert({
+            trainer_id: trainee.trainer_id,
+            trainee_id: trainee.id,
+            notification_type: 'self_workout',
+            title: 'אימון עצמאי חדש',
+            message: `${trainee.full_name} סיים אימון עצמאי`,
+            is_read: false,
+          });
+        }
+
+        clearSaved();
+        const savedWorkoutData: Workout = {
+          id: newWorkoutId,
+          traineeId: trainee.id,
+          date: workoutDate.toISOString(),
+          type: 'personal',
+          exercises: exercises.map((ex) => ({
+            exerciseId: ex.exercise.id,
+            exerciseName: ex.exercise.name,
+            sets: ex.sets.map((s) => ({ weight: s.weight, reps: s.reps, rpe: s.rpe || 0 })),
+          })),
+          totalVolume: calculateTotalVolume(),
+          averageRpe: 0,
+          duration: 0,
+          notes: notes || undefined,
+          isSelfRecorded: true,
+        };
+        setSavedWorkout(savedWorkoutData);
+        setShowSummary(true);
+        setSaving(false);
+        return;
+      }
+
       const exercisesData = exercises.map((ex, index) => ({
         exercise_id: ex.exercise.id,
         order_index: index,
-        sets: ex.sets.map((set) => ({
-          set_number: set.set_number,
-          weight: set.weight,
-          reps: set.reps,
-          rpe: set.rpe,
-          set_type: set.set_type,
+        sets: ex.sets.map((set, setIndex) => ({
+          // Ensure set numbers are sequential (1, 2, 3...)
+          set_number: setIndex + 1,
+          weight: set.weight || 0,
+          reps: set.reps || 0,
+          rpe: set.rpe && set.rpe >= 1 && set.rpe <= 10 ? set.rpe : null,
+          set_type: set.set_type || 'regular',
           failure: set.failure || false,
           superset_exercise_id: set.superset_exercise_id || null,
           superset_weight: set.superset_weight || null,
           superset_reps: set.superset_reps || null,
-          superset_rpe: set.superset_rpe || null,
+          superset_rpe: set.superset_rpe && set.superset_rpe >= 1 && set.superset_rpe <= 10 ? set.superset_rpe : null,
           superset_equipment_id: set.superset_equipment_id || null,
           superset_dropset_weight: set.superset_dropset_weight || null,
           superset_dropset_reps: set.superset_dropset_reps || null,
@@ -724,18 +1725,65 @@ export default function WorkoutSession({
         exercises: exercisesData,
         pair_member: trainee.is_pair ? selectedMember : null,
         workout_id: workoutId || undefined,
+        is_prepared: isPrepared,
       };
 
       const result = await saveWorkout(requestBody, session.access_token);
 
       if (result.error || !result.data) {
-        logger.error('Save workout error:', result, 'WorkoutSession');
-        toast.error(result.error || 'שגיאה בשמירת האימון');
+        // Extract error message for better logging
+        const errorMessage = result.error || 'Unknown error saving workout';
+        const errorDetails = result.error 
+          ? { error: result.error, fullResult: result }
+          : { message: 'No error message provided', fullResult: result };
+        
+        logger.error('Save workout error:', errorDetails, 'WorkoutSession');
+        
+        // Provide user-friendly error messages based on error type
+        const errorStr = typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage);
+        
+        let userMessage = 'שגיאה בשמירת האימון. נסה שוב.';
+        
+        if (errorStr.includes('כבר קיים') || errorStr.includes('already exists') || errorStr.includes('409')) {
+          userMessage = 'שגיאה: אימון כבר קיים. אם יש אימון מתוזמן, תוכל ליצור אימון חדש.';
+        } else if (errorStr.includes('Unauthorized') || errorStr.includes('401')) {
+          userMessage = 'נדרשת התחברות מחדש. אנא התחבר שוב.';
+        } else if (errorStr.includes('Forbidden') || errorStr.includes('403')) {
+          userMessage = 'אין הרשאה לשמור אימון זה. אנא בדוק את ההרשאות.';
+        } else if (errorStr.includes('Not Found') || errorStr.includes('404')) {
+          userMessage = 'המתאמן לא נמצא. אנא בדוק את הפרטים.';
+        } else if (errorStr.includes('Missing required fields') || errorStr.includes('400')) {
+          userMessage = 'חסרים שדות נדרשים. אנא בדוק שכל השדות מולאו.';
+        } else if (typeof errorMessage === 'string' && errorMessage.length > 0) {
+          // Use the error message if it's a meaningful string
+          userMessage = errorMessage;
+        }
+        
+        toast.error(userMessage);
         setSaving(false);
         return;
       }
 
       const workoutResult = result.data;
+
+      // Update workout to completed only if it wasn't already completed
+      // This preserves the is_completed status when editing a completed workout
+      if (workoutId && workoutResult.workout.id === workoutId) {
+        const { data: existingWorkout } = await supabase
+          .from('workouts')
+          .select('is_completed')
+          .eq('id', workoutId)
+          .single();
+        
+        // Only update to completed if it wasn't already completed
+        // This allows editing completed workouts without changing their status
+        if (existingWorkout?.is_completed !== true) {
+          await supabase
+            .from('workouts')
+            .update({ is_completed: true })
+            .eq('id', workoutId);
+        }
+      }
 
       clearSaved();
 
@@ -860,11 +1908,69 @@ export default function WorkoutSession({
     }
   };
 
-  const totalVolume = useMemo(() => calculateTotalVolume(), [exercises]);
+  const totalVolume = useMemo(() => calculateTotalVolume(), [exercises, calculateTotalVolume]);
+
+  // Calculate workout progress stats
+  const workoutProgress = useMemo(() => {
+    let totalSets = 0;
+    let completedSets = 0;
+    
+    exercises.forEach(ex => {
+      totalSets += ex.sets.length;
+      ex.sets.forEach(set => {
+        if (set.weight > 0 && set.reps > 0) {
+          completedSets++;
+        }
+      });
+    });
+    
+    const progressPercent = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
+    
+    return {
+      totalSets,
+      completedSets,
+      progressPercent,
+      totalExercises: exercises.length,
+      completedExercises: minimizedExercises.length,
+    };
+  }, [exercises, minimizedExercises]);
+
+  // Calculate workout stats (average weight and reps) - memoized for performance
+  const workoutStats = useMemo(() => {
+    if (exercises.length === 0) {
+      return { avgWeight: 0, avgReps: 0 };
+    }
+    const allSets = exercises.flatMap(ex => ex.sets);
+    const setsWithData = allSets.filter(s => s.weight > 0 && s.reps > 0);
+    const avgWeight = setsWithData.length > 0
+      ? setsWithData.reduce((sum, s) => sum + s.weight, 0) / setsWithData.length
+      : 0;
+    const avgReps = setsWithData.length > 0
+      ? setsWithData.reduce((sum, s) => sum + s.reps, 0) / setsWithData.length
+      : 0;
+    return { avgWeight, avgReps };
+  }, [exercises]);
+
+  // Workout timer display
+  const [elapsedTime, setElapsedTime] = useState(0);
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - workoutStartTime.current) / 1000));
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
+  
+  const formatTime = useCallback((seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }, []);
 
   return (
     <div
-      className={`trainer-workout-session min-h-screen bg-[var(--color-bg-base)] p-4 lg:p-6 transition-colors duration-300 ${
+      className={`trainer-workout-session min-h-screen bg-[var(--color-bg-base)] p-2 sm:p-4 lg:p-6 transition-colors duration-300 ${
         isTablet ? 'tablet-padding' : ''
       }`}
     >
@@ -879,33 +1985,47 @@ export default function WorkoutSession({
         exercisesCount={exercises.length}
         saving={saving}
         selectedMember={selectedMember}
-        onBack={onBack}
+        onBack={handleBackWithCleanup}
         onSave={handleSave}
         onSaveTemplate={() => setShowSaveTemplateModal(true)}
         onLoadPrevious={handleLoadPrevious}
         onDateChange={setWorkoutDate}
         onWorkoutTypeChange={setWorkoutType}
+        isTablet={isTablet}
+        isSelfWorkout={isSelfWorkout}
       />
 
-      <div className={isTablet ? 'trainer-workout-layout grid gap-4' : 'space-y-4'}>
-        {exercises.map((workoutExercise, exerciseIndex) => (
-          <WorkoutExerciseCard
-            key={workoutExercise.tempId}
-            workoutExercise={workoutExercise}
-            exerciseIndex={exerciseIndex}
-            isMinimized={minimizedExercises.includes(workoutExercise.tempId)}
-            collapsedSets={collapsedSets}
-            summary={getExerciseSummary(workoutExercise)}
-            totalVolume={calculateExerciseVolume(workoutExercise)}
-            onRemove={() => removeExercise(exerciseIndex)}
-            onToggleMinimize={() => toggleMinimizeExercise(workoutExercise.tempId)}
-            onComplete={() => completeExercise(workoutExercise.tempId)}
-            onAddSet={() => addSet(exerciseIndex)}
-            onDuplicateSet={(setIndex) => duplicateSet(exerciseIndex, setIndex)}
-            onRemoveSet={(setIndex) => removeSet(exerciseIndex, setIndex)}
-            onToggleCollapseSet={toggleCollapseSet}
-            onCompleteSet={(setIndex) => completeSetAndMoveNext(exerciseIndex, setIndex)}
-            onOpenNumericPad={(setIndex, field) =>
+      {/* Workout Progress Bar - Only show when workout has exercises */}
+      {exercises.length > 0 && (
+        <WorkoutProgressBar
+          totalSets={workoutProgress.totalSets}
+          completedSets={workoutProgress.completedSets}
+          totalExercises={workoutProgress.totalExercises}
+          completedExercises={workoutProgress.completedExercises}
+          totalVolume={totalVolume}
+          elapsedTime={elapsedTime}
+          progressPercent={workoutProgress.progressPercent}
+        />
+      )}
+
+      {/* Workout Stats - Only show when workout has exercises */}
+      {exercises.length > 0 && (
+        <WorkoutStats
+          totalVolume={totalVolume}
+          averageWeight={workoutStats.avgWeight}
+          averageReps={workoutStats.avgReps}
+          totalSets={workoutProgress.totalSets}
+          totalExercises={workoutProgress.totalExercises}
+          elapsedTime={elapsedTime}
+          isTablet={isTablet}
+        />
+      )}
+
+      {/* Workout Table - Always show table view instead of cards */}
+      <WorkoutTable
+        exercises={exercises}
+        collapsedSets={collapsedSets}
+        onOpenNumericPad={(exerciseIndex, setIndex, field) =>
               openNumericPad(
                 exerciseIndex,
                 setIndex,
@@ -917,50 +2037,25 @@ export default function WorkoutSession({
                   : 'RPE (1-10)'
               )
             }
-            onOpenEquipmentSelector={(setIndex) => setEquipmentSelector({ exerciseIndex, setIndex })}
-            onOpenSupersetSelector={(setIndex) => setSupersetSelector({ exerciseIndex, setIndex })}
-            onOpenSupersetNumericPad={(setIndex, field) =>
-              openSupersetNumericPad(
-                exerciseIndex,
-                setIndex,
-                field,
-                field === 'superset_weight'
-                  ? 'משקל סופר-סט (ק״ג)'
-                  : field === 'superset_reps'
-                  ? 'חזרות סופר-סט'
-                  : 'RPE סופר-סט (1-10)'
-              )
-            }
-            onOpenSupersetEquipmentSelector={(setIndex) =>
-              setSupersetEquipmentSelector({ exerciseIndex, setIndex })
-            }
-            onOpenDropsetNumericPad={(setIndex, field) =>
-              openDropsetNumericPad(
-                exerciseIndex,
-                setIndex,
-                field,
-                field === 'dropset_weight' ? 'משקל דרופ-סט (ק״ג)' : 'חזרות דרופ-סט'
-              )
-            }
-            onOpenSupersetDropsetNumericPad={(setIndex, field) =>
-              openSupersetDropsetNumericPad(
-                exerciseIndex,
-                setIndex,
-                field,
-                field === 'superset_dropset_weight'
-                  ? 'משקל דרופ-סט סופר (ק״ג)'
-                  : 'חזרות דרופ-סט סופר'
-              )
-            }
-            onUpdateSet={(setIndex, field, value) => updateSet(exerciseIndex, setIndex, field, value)}
-          />
-        ))}
-      </div>
+        onOpenEquipmentSelector={(exerciseIndex, setIndex) => setEquipmentSelector({ exerciseIndex, setIndex })}
+        onOpenSupersetNumericPad={openSupersetNumericPad}
+        onOpenDropsetNumericPad={openDropsetNumericPad}
+        onOpenSupersetSelector={(exerciseIndex, setIndex) => setSupersetSelector({ exerciseIndex, setIndex })}
+        onOpenSupersetEquipmentSelector={(exerciseIndex, setIndex) => setSupersetEquipmentSelector({ exerciseIndex, setIndex })}
+        onUpdateSet={updateSet}
+        onRemoveSet={removeSet}
+        onDuplicateSet={duplicateSet}
+        onCompleteSet={(exerciseIndex, setIndex) => completeSetAndMoveNext(exerciseIndex, setIndex)}
+        onAddSet={addSet}
+        onToggleExerciseCollapse={toggleExerciseCollapse}
+        onRemoveExercise={removeExercise}
+        isTablet={isTablet}
+      />
 
       {exercises.length === 0 && !workoutId && (
         <div className="premium-card-static p-6 mb-4">
-          <h3 className="text-lg font-bold text-white mb-2">התחל אימון חדש</h3>
-          <p className="text-zinc-400 mb-4">בחר תבנית קיימת או התחל אימון ריק</p>
+          <h3 className="text-lg font-bold text-foreground mb-2">התחל אימון חדש</h3>
+          <p className="text-muted mb-4">בחר תבנית קיימת או התחל אימון ריק</p>
           <button
             type="button"
             onClick={(e) => {
@@ -968,12 +2063,12 @@ export default function WorkoutSession({
               e.stopPropagation();
               setShowTemplateModal(true);
             }}
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold mb-3 cursor-pointer"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold mb-3 cursor-pointer"
           >
             <BookMarked className="h-5 w-5" />
             <span>טען תבנית קיימת</span>
           </button>
-          <p className="text-center text-sm text-zinc-500">או</p>
+          <p className="text-center text-sm text-muted">או</p>
         </div>
       )}
 
@@ -984,7 +2079,7 @@ export default function WorkoutSession({
           e.stopPropagation();
           setShowExerciseSelector(true);
         }}
-        className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all touch-manipulation font-bold cursor-pointer"
+        className="w-full bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-foreground py-5 lg:py-6 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all touch-manipulation font-bold cursor-pointer"
       >
         <Plus className="h-6 w-6 lg:h-7 lg:w-7" />
         <span className="text-lg lg:text-xl">{exercises.length === 0 ? 'התחל אימון ריק' : 'הוסף תרגיל'}</span>
@@ -997,6 +2092,7 @@ export default function WorkoutSession({
           onSelect={handleAddExerciseWithAutoFill}
           onClose={() => setShowExerciseSelector(false)}
           loadingExerciseId={loadingExercise}
+          isTablet={isTablet}
         />
       )}
 
@@ -1005,10 +2101,14 @@ export default function WorkoutSession({
           value={numericPad.value}
           label={numericPad.label}
           onConfirm={handleNumericPadConfirm}
-          onClose={() => setNumericPad(null)}
+          onClose={() => {
+            setNumericPad(null);
+            setFocusedSetPart(null);
+          }}
           allowDecimal={numericPad.field === 'weight'}
           minValue={numericPad.field === 'rpe' ? 1 : undefined}
           maxValue={numericPad.field === 'rpe' ? 10 : undefined}
+          isTablet={isTablet}
         />
       )}
 
@@ -1026,6 +2126,7 @@ export default function WorkoutSession({
         <ExerciseSelector
           onSelect={handleSupersetExerciseSelect}
           onClose={() => setSupersetSelector(null)}
+          isTablet={isTablet}
         />
       )}
 
@@ -1034,10 +2135,14 @@ export default function WorkoutSession({
           value={supersetNumericPad.value}
           label={supersetNumericPad.label}
           onConfirm={handleSupersetNumericPadConfirm}
-          onClose={() => setSupersetNumericPad(null)}
+          onClose={() => {
+            setSupersetNumericPad(null);
+            // Don't clear focusedSetPart - keep it so shortcuts continue to work on superset
+          }}
           allowDecimal={supersetNumericPad.field === 'superset_weight'}
           minValue={supersetNumericPad.field === 'superset_rpe' ? 1 : undefined}
           maxValue={supersetNumericPad.field === 'superset_rpe' ? 10 : undefined}
+          isTablet={isTablet}
         />
       )}
 
@@ -1056,8 +2161,12 @@ export default function WorkoutSession({
           value={dropsetNumericPad.value}
           label={dropsetNumericPad.label}
           onConfirm={handleDropsetNumericPadConfirm}
-          onClose={() => setDropsetNumericPad(null)}
+          onClose={() => {
+            setDropsetNumericPad(null);
+            // Don't clear focusedSetPart - keep it so shortcuts continue to work on dropset
+          }}
           allowDecimal={dropsetNumericPad.field === 'dropset_weight'}
+          isTablet={isTablet}
         />
       )}
 
@@ -1066,8 +2175,12 @@ export default function WorkoutSession({
           value={supersetDropsetNumericPad.value}
           label={supersetDropsetNumericPad.label}
           onConfirm={handleSupersetDropsetNumericPadConfirm}
-          onClose={() => setSupersetDropsetNumericPad(null)}
+          onClose={() => {
+            setSupersetDropsetNumericPad(null);
+            // Don't clear focusedSetPart - keep it so shortcuts continue to work on superset_dropset
+          }}
           allowDecimal={supersetDropsetNumericPad.field === 'superset_dropset_weight'}
+          isTablet={isTablet}
         />
       )}
 
@@ -1089,42 +2202,88 @@ export default function WorkoutSession({
 
       {showSaveTemplateModal && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 rounded-xl bg-amber-500/15">
                 <BookMarked className="h-6 w-6 text-amber-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">שמור כתבנית</h3>
-                <p className="text-zinc-500 text-sm">שמור את האימון הזה כתבנית לשימוש עתידי מהיר</p>
+                <h3 className="text-xl font-bold text-foreground">שמור כתבנית</h3>
+                <p className="text-muted text-sm">שמור את האימון הזה כתבנית לשימוש עתידי מהיר</p>
               </div>
             </div>
 
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
-                  שם התבנית *
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-muted">
+                    שם התבנית *
+                  </label>
+                  {preventKeyboard && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setTemplateNameKeyboardEnabled(true);
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-medium"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      <span>אפשר כתיבה</span>
+                    </button>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-surface/50 border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="למשל: אימון רגליים מלא"
-                  autoFocus={!isTablet}
+                  autoFocus={!preventKeyboard}
+                  readOnly={preventKeyboard && !templateNameKeyboardEnabled}
+                  inputMode={preventKeyboard && !templateNameKeyboardEnabled ? 'none' : 'text'}
+                  onFocus={(e) => {
+                    if (preventKeyboard && !templateNameKeyboardEnabled) {
+                      e.target.blur();
+                    }
+                  }}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
-                  תיאור (אופציונלי)
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-muted">
+                    תיאור (אופציונלי)
+                  </label>
+                  {preventKeyboard && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setTemplateDescriptionKeyboardEnabled(true);
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-medium"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      <span>אפשר כתיבה</span>
+                    </button>
+                  )}
+                </div>
                 <textarea
                   value={templateDescription}
                   onChange={(e) => setTemplateDescription(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-surface/50 border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="הוסף תיאור לתבנית..."
                   rows={3}
+                  readOnly={preventKeyboard && !templateDescriptionKeyboardEnabled}
+                  inputMode={preventKeyboard && !templateDescriptionKeyboardEnabled ? 'none' : 'text'}
+                  onFocus={(e) => {
+                    if (preventKeyboard && !templateDescriptionKeyboardEnabled) {
+                      e.target.blur();
+                    }
+                  }}
                 />
               </div>
 
@@ -1144,7 +2303,7 @@ export default function WorkoutSession({
                   handleSaveAsTemplate();
                 }}
                 disabled={savingTemplate || !templateName.trim()}
-                className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
+                className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:bg-elevated disabled:text-muted disabled:cursor-not-allowed text-foreground px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
               >
                 {savingTemplate ? 'שומר...' : 'שמור תבנית'}
               </button>
@@ -1157,7 +2316,7 @@ export default function WorkoutSession({
                   setTemplateName('');
                   setTemplateDescription('');
                 }}
-                className="flex-1 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 text-zinc-300 px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
+                className="flex-1 bg-surface/50 hover:bg-surface border border-border text-foreground px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
               >
                 ביטול
               </button>
@@ -1185,6 +2344,113 @@ export default function WorkoutSession({
             averageRpe: previousWorkout.averageRpe || 0,
           } : null}
           personalRecords={personalRecords}
+        />
+      )}
+
+      {showWorkoutHistory && (
+        <WorkoutHistoryModal
+          traineeId={trainee.id}
+          exercises={exercises}
+          onClose={() => setShowWorkoutHistory(false)}
+        />
+      )}
+
+      {/* Floating Action Buttons for tablet - Quick actions + finish + history */}
+      {isTablet && exercises.length > 0 && !showExerciseSelector && !numericPad && !showSummary && (
+        <WorkoutQuickActions
+          exercisesCount={exercises.length}
+          saving={saving}
+          isTablet={isTablet}
+          onAddExercise={() => setShowExerciseSelector(true)}
+          onSave={handleSave}
+          onShowHistory={() => setShowWorkoutHistory(true)}
+          onAddSet={() => {
+            if (exercises.length > 0) {
+              const lastExerciseIndex = exercises.length - 1;
+              addSet(lastExerciseIndex);
+              toast.success('סט חדש נוסף', { duration: 1500, position: 'bottom-center' });
+            }
+          }}
+          onOpenWeightPad={() => {
+                  const active = findActiveExerciseAndSet();
+                  if (active) {
+                    // Check if we have a focused set part (user clicked on superset/dropset button)
+                    if (focusedSetPart && 
+                        focusedSetPart.exerciseIndex === active.exerciseIndex && 
+                        focusedSetPart.setIndex === active.setIndex) {
+                      // Use the focused part
+                      if (focusedSetPart.part === 'superset') {
+                        openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_weight', 'משקל סופר-סט (ק״ג)');
+                      } else if (focusedSetPart.part === 'superset_dropset') {
+                        openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_dropset_weight', 'משקל דרופ-סט סופר-סט (ק״ג)');
+                      } else if (focusedSetPart.part === 'dropset') {
+                        openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_weight', 'משקל דרופ-סט (ק״ג)');
+                      } else {
+                        openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+                      }
+                    } else {
+                      // No focused part, determine from set type
+                      const set = exercises[active.exerciseIndex].sets[active.setIndex];
+                      if (set.set_type === 'superset' || set.superset_exercise_id) {
+                        openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_weight', 'משקל סופר-סט (ק״ג)');
+                      } else if (set.set_type === 'dropset' || (set.dropset_weight !== null && set.dropset_weight !== undefined)) {
+                        openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_weight', 'משקל דרופ-סט (ק״ג)');
+                      } else {
+                        openNumericPad(active.exerciseIndex, active.setIndex, 'weight', 'משקל (ק״ג)');
+                      }
+                    }
+                  }
+                }}
+          onOpenRepsPad={() => {
+                  const active = findActiveExerciseAndSet();
+                  if (active) {
+                    // Check if we have a focused set part (user clicked on superset/dropset button)
+                    if (focusedSetPart && 
+                        focusedSetPart.exerciseIndex === active.exerciseIndex && 
+                        focusedSetPart.setIndex === active.setIndex) {
+                      // Use the focused part
+                      if (focusedSetPart.part === 'superset') {
+                        openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_reps', 'חזרות סופר-סט');
+                      } else if (focusedSetPart.part === 'superset_dropset') {
+                        openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_dropset_reps', 'חזרות דרופ-סט סופר-סט');
+                      } else if (focusedSetPart.part === 'dropset') {
+                        openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_reps', 'חזרות דרופ-סט');
+                      } else {
+                        openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+                      }
+                    } else {
+                      // No focused part, determine from set type
+                      const set = exercises[active.exerciseIndex].sets[active.setIndex];
+                      if (set.set_type === 'superset' || set.superset_exercise_id) {
+                        openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_reps', 'חזרות סופר-סט');
+                      } else if (set.set_type === 'dropset' || (set.dropset_reps !== null && set.dropset_reps !== undefined)) {
+                        openDropsetNumericPad(active.exerciseIndex, active.setIndex, 'dropset_reps', 'חזרות דרופ-סט');
+                      } else {
+                        openNumericPad(active.exerciseIndex, active.setIndex, 'reps', 'חזרות');
+                      }
+                    }
+                  }
+                }}
+          onOpenRpePad={() => {
+                  const active = findActiveExerciseAndSet();
+                  if (active) {
+                    // Check if we have a focused set part (user clicked on superset button)
+                    if (focusedSetPart && 
+                        focusedSetPart.exerciseIndex === active.exerciseIndex && 
+                        focusedSetPart.setIndex === active.setIndex &&
+                        focusedSetPart.part === 'superset') {
+                      openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_rpe', 'RPE סופר-סט (1-10)');
+                    } else {
+                      // No focused part or not superset, determine from set type
+                      const set = exercises[active.exerciseIndex].sets[active.setIndex];
+                      if (set.set_type === 'superset' || set.superset_exercise_id) {
+                        openSupersetNumericPad(active.exerciseIndex, active.setIndex, 'superset_rpe', 'RPE סופר-סט (1-10)');
+                      } else {
+                        openNumericPad(active.exerciseIndex, active.setIndex, 'rpe', 'RPE (1-10)');
+                      }
+                    }
+                  }
+                }}
         />
       )}
     </div>

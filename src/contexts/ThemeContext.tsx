@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useMemo, ReactNode } from 'react';
 
-export type Theme = 'dark' | 'light';
+export type Theme = 'light';
 
 interface ThemeContextType {
   theme: Theme;
@@ -17,56 +17,14 @@ interface ThemeProviderProps {
   defaultTheme?: Theme;
 }
 
-export function ThemeProvider({ children, defaultTheme = 'dark' }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    try {
-      const saved = localStorage.getItem('ym-coach-theme');
-      if (saved === 'light' || saved === 'dark') {
-        return saved;
-      }
-    } catch {
-      // localStorage not available
-    }
-    return defaultTheme;
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('ym-coach-theme', theme);
-    } catch {
-      // localStorage not available
-    }
-
-    // Update document class for Tailwind dark mode
-    const root = document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-
-    // Update meta theme-color for mobile browsers
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute(
-        'content',
-        theme === 'dark' ? '#09090b' : '#f8faf9'
-      );
-    }
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-  };
-
-  const value: ThemeContextType = {
-    theme,
-    toggleTheme,
-    setTheme,
-    isDark: theme === 'dark',
-    isLight: theme === 'light',
-  };
+export function ThemeProvider({ children }: ThemeProviderProps) {
+  const value: ThemeContextType = useMemo(() => ({
+    theme: 'light' as Theme,
+    toggleTheme: () => {},
+    setTheme: () => {},
+    isDark: false,
+    isLight: true,
+  }), []);
 
   return (
     <ThemeContext.Provider value={value}>
@@ -83,35 +41,23 @@ export function useTheme(): ThemeContextType {
   return context;
 }
 
-// Hook for components that need theme-aware classes
 export function useThemeClasses() {
-  const { isDark } = useTheme();
-
   return {
-    // Background classes - elegant gray-green for light mode
-    bgBase: isDark ? 'bg-zinc-950' : 'bg-[#f8faf9]',
-    bgElevated: isDark ? 'bg-zinc-900' : 'bg-white',
-    bgSurface: isDark ? 'bg-zinc-800' : 'bg-[#ecf0ed]',
-    bgCard: isDark ? 'bg-zinc-900/90' : 'bg-white/97',
-
-    // Text classes - gray-green tones for light mode
-    textPrimary: isDark ? 'text-white' : 'text-[#1a2e22]',
-    textSecondary: isDark ? 'text-zinc-400' : 'text-[#3d5347]',
-    textMuted: isDark ? 'text-zinc-500' : 'text-[#6b7f72]',
-
-    // Border classes - emerald tinted for light mode
-    border: isDark ? 'border-zinc-800' : 'border-emerald-500/10',
-    borderHover: isDark ? 'border-zinc-700' : 'border-emerald-500/20',
-
-    // Input classes
-    inputBg: isDark ? 'bg-zinc-800/50' : 'bg-white/95',
-    inputBorder: isDark ? 'border-zinc-700' : 'border-emerald-500/15',
-    inputText: isDark ? 'text-white' : 'text-[#1a2e22]',
-    inputPlaceholder: isDark ? 'placeholder-zinc-500' : 'placeholder-[#6b7f72]',
-
-    // Card background
-    cardBg: isDark ? 'bg-zinc-900/90' : 'bg-white/95',
-    cardBorder: isDark ? 'border-zinc-800' : 'border-emerald-500/12',
-    cardShadow: isDark ? 'shadow-lg shadow-black/20' : 'shadow-lg shadow-emerald-900/8',
+    bgBase: 'bg-base',
+    bgElevated: 'bg-elevated',
+    bgSurface: 'bg-surface',
+    bgCard: 'bg-card',
+    textPrimary: 'text-foreground',
+    textSecondary: 'text-secondary',
+    textMuted: 'text-muted',
+    border: 'border-border',
+    borderHover: 'border-border-hover',
+    inputBg: 'bg-input',
+    inputBorder: 'border-border',
+    inputText: 'text-foreground',
+    inputPlaceholder: 'placeholder-muted',
+    cardBg: 'bg-card',
+    cardBorder: 'border-border',
+    cardShadow: 'shadow-card',
   };
 }

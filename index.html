@@ -10,9 +10,315 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="description" content="YM Coach - מערכת ניהול מתאמנים מקצועית" />
     <title>YM Coach - מערכת ניהול מתאמנים</title>
+    
+    <!-- Resource hints for Supabase -->
+    <link rel="dns-prefetch" href="https://supabase.co" />
+    <link rel="preconnect" href="https://supabase.co" crossorigin />
+    <link rel="dns-prefetch" href="https://*.supabase.co" />
+    <link rel="preconnect" href="https://*.supabase.co" crossorigin />
+    
+    <!-- Suppress console warnings from build tools and third-party libraries -->
+    <script>
+      // Suppress contextify warnings from Vite legacy plugin polyfills (harmless but noisy)
+      if (typeof console !== 'undefined') {
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+          const message = String(args[0] || '');
+          const fullMessage = args.map(String).join(' ');
+          if (
+            message.includes('[Contextify]') ||
+            fullMessage.includes('[Contextify]') ||
+            fullMessage.includes('running source code in new context')
+          ) {
+            return; // Suppress contextify warnings
+          }
+          // Suppress performance warnings (expected in development environments)
+          if (
+            message.includes('Performance issue detected') ||
+            fullMessage.includes('Performance issue detected') ||
+            message.includes('FCP =') ||
+            message.includes('LCP =') ||
+            message.includes('CLS =') ||
+            message.includes('bundle-load-time =')
+          ) {
+            return; // Suppress performance warnings
+          }
+          originalWarn.apply(console, args);
+        };
+        
+        // Suppress preload warnings (browser optimization warnings, not errors)
+        const originalError = console.error;
+        console.error = function(...args) {
+          const message = String(args[0] || '');
+          const fullMessage = args.map(String).join(' ');
+          if (
+            message.includes('preloaded using link preload but not used') ||
+            fullMessage.includes('preloaded using link preload but not used')
+          ) {
+            return; // Suppress preload warnings
+          }
+          // Suppress performance warnings (expected in development environments)
+          if (
+            message.includes('Performance issue detected') ||
+            fullMessage.includes('Performance issue detected') ||
+            message.includes('FCP =') ||
+            message.includes('LCP =') ||
+            message.includes('CLS =') ||
+            message.includes('bundle-load-time =')
+          ) {
+            return; // Suppress performance warnings
+          }
+          originalError.apply(console, args);
+        };
+      }
+    </script>
+    
+    <!-- Preload critical chunks will be added by Vite build -->
   </head>
   <body>
+    <!-- Fallback message if JavaScript fails to load -->
+    <noscript>
+      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #1a1a2e; color: white; text-align: center; padding: 2rem; direction: rtl;">
+        <div>
+          <h1 style="font-size: 2rem; margin-bottom: 1rem;">JavaScript נדרש</h1>
+          <p style="font-size: 1.2rem; opacity: 0.9;">אנא הפעל JavaScript בדפדפן כדי להשתמש באפליקציה.</p>
+        </div>
+      </div>
+    </noscript>
+    
+    <!-- Loading indicator - OUTSIDE of React root to prevent conflicts -->
+    <div id="app-loading" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; direction: rtl; z-index: 9999;">
+      <div id="loading-spinner" style="width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.2); border-top-color: #4a6b2a; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1.5rem;"></div>
+      <p id="loading-title" style="font-size: 1.5rem; margin-bottom: 0.5rem;">YM Coach</p>
+      <p id="loading-text" style="font-size: 1rem; opacity: 0.7;">טוען אפליקציה...</p>
+      <p id="loading-status" style="font-size: 0.9rem; opacity: 0.5; margin-top: 1rem;"></p>
+      <style>
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
+    <script>
+      // Detect theme and update loading screen colors
+      (function() {
+        var html = document.documentElement;
+        var isDark = html.classList.contains('dark') || (!html.classList.contains('light') && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        
+        var loadingEl = document.getElementById('app-loading');
+        var spinnerEl = document.getElementById('loading-spinner');
+        var titleEl = document.getElementById('loading-title');
+        var textEl = document.getElementById('loading-text');
+        var statusEl = document.getElementById('loading-status');
+        
+        if (isDark) {
+          // Dark mode colors
+          if (loadingEl) {
+            loadingEl.style.background = 'linear-gradient(to bottom right, #09090b, #18181b)';
+            loadingEl.style.color = 'white';
+          }
+          if (spinnerEl) {
+            spinnerEl.style.borderTopColor = '#4a6b2a';
+            spinnerEl.style.borderColor = 'rgba(255,255,255,0.2)';
+          }
+        } else {
+          // Light mode colors
+          if (loadingEl) {
+            loadingEl.style.background = 'linear-gradient(to bottom right, #f0f5ed, #ffffff, #e8f0e0)';
+            loadingEl.style.color = '#1a2e16';
+          }
+          if (spinnerEl) {
+            spinnerEl.style.borderTopColor = '#4a6b2a';
+            spinnerEl.style.borderColor = 'rgba(26, 46, 22, 0.2)';
+          }
+        }
+      })();
+    </script>
+    
+    <!-- React root - keep empty for React to manage -->
     <div id="root"></div>
+    <script>
+      // Update loading status on screen
+      function updateLoadingStatus(msg) {
+        var el = document.getElementById('loading-status');
+        if (el) el.textContent = msg;
+        console.log('[TV Debug]', msg);
+      }
+      
+      updateLoadingStatus('מתחיל...');
+      
+      // Debug: Log browser info
+      console.log('[TV Debug] User Agent:', navigator.userAgent);
+      console.log('[TV Debug] Screen size:', window.innerWidth, 'x', window.innerHeight);
+      console.log('[TV Debug] Document ready state:', document.readyState);
+      
+      updateLoadingStatus('בודק תאימות דפדפן...');
+      
+      // Check if module scripts are supported
+      var supportsModules = 'noModule' in HTMLScriptElement.prototype;
+      console.log('[TV Debug] Module scripts supported:', supportsModules);
+      
+      if (!supportsModules) {
+        console.warn('[TV Debug] Module scripts may not be supported');
+        updateLoadingStatus('טוען גרסה ישנה...');
+      } else {
+        updateLoadingStatus('טוען קבצים...');
+      }
+      
+      // Show error on screen for TV debugging
+      function showErrorOnScreen(title, message, details) {
+        var loadingEl = document.getElementById('app-loading');
+        if (loadingEl) {
+          loadingEl.innerHTML = 
+            '<h1 style="font-size: 2rem; color: #ff6b6b; margin-bottom: 1rem;">' + title + '</h1>' +
+            '<p style="font-size: 1.2rem; color: #f8f8f8; margin-bottom: 1rem;">' + message + '</p>' +
+            (details ? '<pre style="font-size: 0.8rem; color: #aaa; background: #2a2a3e; padding: 1rem; border-radius: 0.5rem; max-width: 90%; overflow: auto; text-align: left; direction: ltr; margin-bottom: 1rem;">' + details + '</pre>' : '') +
+            '<button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #4a6b2a; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer;">רענן דף</button>';
+        }
+      }
+      
+      // Global error handler - catch ALL JavaScript errors
+      // Only show errors if React hasn't mounted (let React ErrorBoundary handle errors after mount)
+      window.onerror = function(message, source, lineno, colno, error) {
+        console.error('[TV Debug] Global error:', message, source, lineno, colno, error);
+        
+        // Check if React has mounted. React 18's createRoot renders children directly into
+        // the root div (no data-reactroot or _reactRootContainer like React 17). So we
+        // simply check if the root has any rendered content.
+        var root = document.getElementById('root');
+        var reactMounted = root && root.children.length > 0;
+        
+        // Only show error screen if React hasn't mounted yet
+        // After React mounts, let ErrorBoundary handle it
+        if (!reactMounted) {
+          showErrorOnScreen(
+            'שגיאת JavaScript',
+            'אירעה שגיאה בעת הפעלת האפליקציה',
+            'Error: ' + message + '\nSource: ' + source + '\nLine: ' + lineno + ':' + colno + (error && error.stack ? '\n\nStack:\n' + error.stack : '')
+          );
+          return true; // We handled it - suppress browser default
+        }
+        return false; // Let browser/ErrorBoundary handle - don't suppress
+      };
+      
+      // Catch unhandled promise rejections
+      // Only show errors if React hasn't mounted (let React ErrorBoundary handle errors after mount)
+      window.onunhandledrejection = function(event) {
+        console.error('[TV Debug] Unhandled promise rejection:', event.reason);
+        
+        // Check if React has mounted. React 18's createRoot renders children directly
+        // into the root div (no data-reactroot or _reactRootContainer like React 17).
+        var root = document.getElementById('root');
+        var reactMounted = root && root.children.length > 0;
+        
+        // Only show error screen if React hasn't mounted yet
+        if (!reactMounted) {
+          var errorMsg = event.reason ? (event.reason.message || String(event.reason)) : 'Unknown error';
+          var stack = event.reason && event.reason.stack ? event.reason.stack : '';
+          showErrorOnScreen(
+            'שגיאת Promise',
+            'אירעה שגיאה אסינכרונית',
+            'Error: ' + errorMsg + (stack ? '\n\nStack:\n' + stack : '')
+          );
+        }
+      };
+      
+      // Check for script loading errors
+      window.addEventListener('error', function(e) {
+        if (e.target && e.target.tagName === 'SCRIPT') {
+          console.error('[TV Debug] Script loading error:', e.target.src, e.message);
+          updateLoadingStatus('שגיאה בטעינת קובץ!');
+          showErrorOnScreen(
+            'שגיאה בטעינת קבצים',
+            'קובץ JavaScript לא נטען',
+            'URL: ' + (e.target.src || 'לא ידוע')
+          );
+        }
+      }, true);
+      
+      // Track script loading progress
+      var scriptsToLoad = 0;
+      var scriptsLoaded = 0;
+      document.querySelectorAll('script[src]').forEach(function(script) {
+        scriptsToLoad++;
+        script.addEventListener('load', function() {
+          scriptsLoaded++;
+          updateLoadingStatus('נטענו ' + scriptsLoaded + '/' + scriptsToLoad + ' קבצים');
+        });
+      });
+      
+      // Fallback: Show error if app doesn't load within 15 seconds
+      var appLoadTimeout = setTimeout(function() {
+        var root = document.getElementById('root');
+        var loadingEl = document.getElementById('app-loading');
+        var hasContent = root && root.children.length > 0;
+        
+        if (!hasContent && loadingEl && loadingEl.style.display !== 'none') {
+          console.error('[TV Debug] App failed to load after 15 seconds');
+          
+          // Get browser info for debugging
+          var browserInfo = 'User Agent: ' + navigator.userAgent + '\n';
+          browserInfo += 'Screen: ' + window.innerWidth + 'x' + window.innerHeight + '\n';
+          browserInfo += 'Module support: ' + ('noModule' in HTMLScriptElement.prototype);
+          
+          showErrorOnScreen(
+            'שגיאה בטעינת האפליקציה',
+            'האפליקציה לא נטענה תוך 15 שניות. אנא בדוק את החיבור לאינטרנט.',
+            browserInfo
+          );
+        }
+      }, 15000);
+      
+      // Clear timeout if app loads successfully
+      window.addEventListener('app-loaded', function() {
+        clearTimeout(appLoadTimeout);
+      });
+    </script>
+    <script type="module">
+      // Check if module scripts are actually supported
+      try {
+        // Try to load the main module
+        import('/src/main.tsx').catch(function(error) {
+          console.error('[TV Debug] Failed to load main module:', error);
+          var root = document.getElementById('root');
+          var loadingEl = document.getElementById('app-loading');
+          if (loadingEl) loadingEl.style.display = 'none';
+          if (root) {
+            root.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;"><h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1><p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 0.5rem;">הדפדפן לא תומך ב-ES Modules.</p><p style="font-size: 1rem; opacity: 0.7; margin-bottom: 1rem;">אנא עדכן את דפדפן הטלוויזיה או נסה בדפדפן אחר.</p><button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #4a6b2a; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button></div>';
+          }
+        });
+      } catch (e) {
+        console.error('[TV Debug] Module import not supported:', e);
+        var root = document.getElementById('root');
+        var loadingEl = document.getElementById('app-loading');
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (root) {
+          root.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #09090b; color: white; text-align: center; padding: 2rem; direction: rtl; flex-direction: column; gap: 1rem;"><h1 style="font-size: 2rem;">שגיאה בטעינת האפליקציה</h1><p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 0.5rem;">הדפדפן לא תומך ב-ES Modules.</p><p style="font-size: 1rem; opacity: 0.7; margin-bottom: 1rem;">אנא עדכן את דפדפן הטלוויזיה או נסה בדפדפן אחר.</p><button onclick="window.location.reload()" style="padding: 0.75rem 1.5rem; background: #4a6b2a; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem;">רענן דף</button></div>';
+        }
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Hide loading indicator once React takes over
+      // We check periodically if React has rendered content
+      (function() {
+        var checkInterval = setInterval(function() {
+          var root = document.getElementById('root');
+          var loadingEl = document.getElementById('app-loading');
+          
+          // If React has rendered something in the root, hide loading
+          if (root && root.children.length > 0 && loadingEl) {
+            loadingEl.style.display = 'none';
+            clearInterval(checkInterval);
+            clearTimeout(appLoadTimeout); // Clear the timeout since app loaded
+            console.log('[TV Debug] App loaded successfully, hiding loading screen');
+          }
+        }, 100);
+        
+        // Stop checking after 20 seconds to prevent memory leak
+        setTimeout(function() {
+          clearInterval(checkInterval);
+        }, 20000);
+      })();
+    </script>
   </body>
 </html>

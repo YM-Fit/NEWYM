@@ -1,6 +1,10 @@
 import { ArrowRight, Save, Sparkles, User, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '../../../lib/supabase';
+import { validateTraineeForm } from '../../../utils/validation';
+import { useAuth } from '../../../contexts/AuthContext';
+import { logger } from '../../../utils/logger';
+import toast from 'react-hot-toast';
 
 interface EditTraineeFormProps {
   trainee: any;
@@ -9,7 +13,9 @@ interface EditTraineeFormProps {
 }
 
 export default function EditTraineeForm({ trainee, onBack, onSave }: EditTraineeFormProps) {
+  const { user } = useAuth();
   const isPair = trainee.isPair || false;
+  const originalName = !isPair ? (trainee.name || '') : `${trainee.pairName1 || ''} ו${trainee.pairName2 || ''}`;
 
   const [formData, setFormData] = useState({
     // Regular trainee fields
@@ -38,56 +44,21 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  const validateForm = useCallback(() => {
+    const { errors, isValid } = validateTraineeForm(formData, isPair, false);
+    setErrors(errors);
+    return isValid;
+  }, [formData, isPair]);
 
-    if (isPair) {
-      if (!formData.pair_name_1.trim()) newErrors.pair_name_1 = 'שם ראשון נדרש';
-      if (!formData.pair_name_2.trim()) newErrors.pair_name_2 = 'שם שני נדרש';
-      if (!formData.pair_phone_1.trim()) newErrors.pair_phone_1 = 'טלפון ראשון נדרש';
-      if (!formData.pair_phone_2.trim()) newErrors.pair_phone_2 = 'טלפון שני נדרש';
-      if (!formData.pair_height_1 || Number(formData.pair_height_1) < 1 || Number(formData.pair_height_1) > 250) {
-        newErrors.pair_height_1 = 'גובה תקין נדרש (1-250)';
-      }
-      if (!formData.pair_height_2 || Number(formData.pair_height_2) < 1 || Number(formData.pair_height_2) > 250) {
-        newErrors.pair_height_2 = 'גובה תקין נדרש (1-250)';
-      }
-      if (formData.pair_email_1 && !/\S+@\S+\.\S+/.test(formData.pair_email_1)) {
-        newErrors.pair_email_1 = 'כתובת אימייל לא תקינה';
-      }
-      if (formData.pair_email_2 && !/\S+@\S+\.\S+/.test(formData.pair_email_2)) {
-        newErrors.pair_email_2 = 'כתובת אימייל לא תקינה';
-      }
-      // Validate birth dates are in the past
-      if (formData.pair_birth_date_1 && new Date(formData.pair_birth_date_1) > new Date()) {
-        newErrors.pair_birth_date_1 = 'תאריך לידה חייב להיות בעבר';
-      }
-      if (formData.pair_birth_date_2 && new Date(formData.pair_birth_date_2) > new Date()) {
-        newErrors.pair_birth_date_2 = 'תאריך לידה חייב להיות בעבר';
-      }
-    } else {
-      if (!formData.full_name.trim()) newErrors.full_name = 'שם מלא נדרש';
-      if (!formData.phone.trim()) newErrors.phone = 'מספר טלפון נדרש';
-      if (!formData.height || Number(formData.height) < 1 || Number(formData.height) > 250) {
-        newErrors.height = 'גובה תקין נדרש (1-250)';
-      }
-      if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-        newErrors.email = 'כתובת אימייל לא תקינה';
-      }
-      // Validate birth date is in the past
-      if (formData.birth_date && new Date(formData.birth_date) > new Date()) {
-        newErrors.birth_date = 'תאריך לידה חייב להיות בעבר';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    if (saving) return;
+
+    if (!validateForm()) {
+      toast.error('יש לתקן את השגיאות בטופס');
+      return;
+    }
 
     setSaving(true);
 
@@ -119,7 +90,10 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
           })
           .eq('id', trainee.id);
 
-        if (error) throw error;
+        if (error) {
+          logger.error('Error updating pair trainee', error, 'EditTraineeForm');
+          throw error;
+        }
       } else {
         const { error } = await supabase
           .from('trainees')
@@ -151,41 +125,61 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
         if (error) throw error;
       }
 
+      // Check if name changed - if so, sync to Google Calendar automatically
+      const newName = isPair 
+        ? `${formData.pair_name_1.trim()} ו${formData.pair_name_2.trim()}`
+        : formData.full_name.trim();
+      
+      if (newName !== originalName && user) {
+        // Trigger calendar sync in the background (non-blocking)
+        import('../../../services/traineeCalendarSyncService').then(({ syncTraineeEventsToCalendar }) => {
+          syncTraineeEventsToCalendar(trainee.id, user.id, 'current_month_and_future')
+            .then(result => {
+              if (result.data && result.data.updated > 0) {
+                logger.info(`Calendar sync: updated ${result.data.updated} events`, 'EditTraineeForm');
+              }
+            })
+            .catch(err => logger.error('Calendar sync failed', err, 'EditTraineeForm'));
+        }).catch(err => logger.error('Failed to load calendar sync service', err, 'EditTraineeForm'));
+      }
+
+      toast.success('המתאמן עודכן בהצלחה');
       onSave();
     } catch (error: any) {
-      alert('שגיאה בשמירת הפרטים: ' + (error.message || 'שגיאה לא ידועה'));
+      logger.error('Error updating trainee', error, 'EditTraineeForm');
+      toast.error('שגיאה בעדכון המתאמן: ' + (error.message || 'שגיאה לא ידועה'));
     } finally {
       setSaving(false);
     }
-  };
+  }, [formData, isPair, trainee.id, originalName, user, validateForm, onSave, saving]);
 
-  const inputClass = (hasError: boolean) =>
-    `w-full p-4 text-base bg-zinc-800/50 border rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 transition-all ${
+  const inputClass = useCallback((hasError: boolean) =>
+    `w-full p-4 text-base bg-input border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 transition-all ${
       hasError
         ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
-        : 'border-zinc-700/50 focus:border-emerald-500/50 focus:ring-emerald-500/20'
-    }`;
+        : 'border-border focus:border-primary-500/50 focus:ring-primary-500/20'
+    }`, []);
 
-  const labelClass = "block text-sm font-medium text-zinc-400 mb-2";
+  const labelClass = useMemo(() => "block text-sm font-medium text-muted mb-2", []);
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="premium-card-static p-6 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-0 left-0 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="relative flex items-center gap-4">
           <button
             onClick={onBack}
-            className="p-3 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
+            className="p-3 rounded-xl bg-surface text-muted hover:text-foreground hover:bg-elevated transition-all"
           >
             <ArrowRight className="h-5 w-5" />
           </button>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">עריכה</span>
+              <Sparkles className="w-4 h-4 text-primary-400" />
+              <span className="text-xs font-semibold text-primary-400 uppercase tracking-wider">עריכה</span>
             </div>
-            <h1 className="text-2xl font-bold text-white">עריכת פרופיל</h1>
-            <p className="text-zinc-500">{trainee.name}</p>
+            <h1 className="text-2xl font-bold text-foreground">עריכת פרופיל</h1>
+            <p className="text-muted">{trainee.name}</p>
           </div>
         </div>
       </div>
@@ -194,10 +188,10 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
         {!isPair ? (
           <div className="premium-card-static p-6">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 rounded-xl bg-emerald-500/15">
-                <User className="h-5 w-5 text-emerald-400" />
+              <div className="p-3 rounded-xl bg-primary-500/15">
+                <User className="h-5 w-5 text-primary-400" />
               </div>
-              <h3 className="text-lg font-semibold text-white">פרטים אישיים</h3>
+              <h3 className="text-lg font-semibold text-foreground">פרטים אישיים</h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -271,8 +265,8 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
                     onClick={() => setFormData({ ...formData, gender: 'male' })}
                     className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                       formData.gender === 'male'
-                        ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                        : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                        ? 'border-primary-500/50 bg-primary-500/10 text-primary-400'
+                        : 'border-border bg-surface text-muted hover:border-border-hover'
                     }`}
                   >
                     זכר
@@ -282,8 +276,8 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
                     onClick={() => setFormData({ ...formData, gender: 'female' })}
                     className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                       formData.gender === 'female'
-                        ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                        : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                        ? 'border-primary-500/50 bg-primary-500/10 text-primary-400'
+                        : 'border-border bg-surface text-muted hover:border-border-hover'
                     }`}
                   >
                     נקבה
@@ -295,15 +289,15 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
         ) : (
           <div className="premium-card-static p-6">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 rounded-xl bg-emerald-500/15">
-                <Users className="h-5 w-5 text-emerald-400" />
+              <div className="p-3 rounded-xl bg-primary-500/15">
+                <Users className="h-5 w-5 text-primary-400" />
               </div>
-              <h3 className="text-lg font-semibold text-white">פרטי הזוג</h3>
+              <h3 className="text-lg font-semibold text-foreground">פרטי הזוג</h3>
             </div>
 
             <div className="space-y-8">
-              <div className="pb-6 border-b border-zinc-800/50">
-                <h4 className="text-base font-semibold text-cyan-400 mb-4">מתאמן/ת ראשון/ה</h4>
+              <div className="pb-6 border-b border-border">
+                <h4 className="text-base font-semibold text-blue-400 mb-4">מתאמן/ת ראשון/ה</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className={labelClass}>שם מלא *</label>
@@ -361,8 +355,8 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
                         onClick={() => setFormData(prev => ({ ...prev, pair_gender_1: 'male' }))}
                         className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                           formData.pair_gender_1 === 'male'
-                            ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                            : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                            ? 'border-primary-500/50 bg-primary-500/10 text-primary-400'
+                            : 'border-border bg-surface text-muted hover:border-border-hover'
                         }`}
                       >
                         זכר
@@ -372,8 +366,8 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
                         onClick={() => setFormData(prev => ({ ...prev, pair_gender_1: 'female' }))}
                         className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                           formData.pair_gender_1 === 'female'
-                            ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                            : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                            ? 'border-primary-500/50 bg-primary-500/10 text-primary-400'
+                            : 'border-border bg-surface text-muted hover:border-border-hover'
                         }`}
                       >
                         נקבה
@@ -456,8 +450,8 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
                         onClick={() => setFormData(prev => ({ ...prev, pair_gender_2: 'male' }))}
                         className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                           formData.pair_gender_2 === 'male'
-                            ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                            : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                            ? 'border-primary-500/50 bg-primary-500/10 text-primary-400'
+                            : 'border-border bg-surface text-muted hover:border-border-hover'
                         }`}
                       >
                         זכר
@@ -467,8 +461,8 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
                         onClick={() => setFormData(prev => ({ ...prev, pair_gender_2: 'female' }))}
                         className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                           formData.pair_gender_2 === 'female'
-                            ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                            : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600/50'
+                            ? 'border-primary-500/50 bg-primary-500/10 text-primary-400'
+                            : 'border-border bg-surface text-muted hover:border-border-hover'
                         }`}
                       >
                         נקבה
@@ -496,11 +490,11 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
         )}
 
         <div className="premium-card-static p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">הערות מאמן</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">הערות מאמן</h3>
           <textarea
             value={formData.notes}
             onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-            className="w-full p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+            className="w-full p-4 bg-input border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:border-primary-500/50 focus:ring-2 focus:ring-primary-500/20 transition-all"
             rows={4}
             placeholder="הערות כלליות על המתאמן, מטרות, הגבלות רפואיות וכו'..."
           />
@@ -510,7 +504,7 @@ export default function EditTraineeForm({ trainee, onBack, onSave }: EditTrainee
           <button
             type="button"
             onClick={onBack}
-            className="px-6 py-3 rounded-xl border border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all"
+            className="px-6 py-3 rounded-xl border border-border text-muted hover:text-foreground hover:bg-surface transition-all"
           >
             ביטול
           </button>

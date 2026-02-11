@@ -12,6 +12,7 @@ export interface PerformanceMetric {
   unit: string;
   timestamp: string;
   metadata?: Record<string, any>;
+  rating?: 'good' | 'needs-improvement' | 'poor';
 }
 
 export interface WebVitals {
@@ -210,8 +211,18 @@ class PerformanceMonitor {
     }
 
     // Log significant performance issues
-    if (value > this.getThreshold(name)) {
-      logger.warn(`Performance issue detected: ${name} = ${value}${unit}`, metadata, 'Performance');
+    // In development, only log critical issues (2x threshold) to reduce noise
+    const threshold = this.getThreshold(name);
+    const isDev = import.meta.env.DEV;
+    const shouldLog = isDev ? value > threshold * 2 : value > threshold;
+    
+    if (shouldLog) {
+      // In development, use debug level instead of warn to reduce console noise
+      if (isDev) {
+        logger.debug(`Performance issue detected: ${name} = ${value}${unit}`, metadata, 'Performance');
+      } else {
+        logger.warn(`Performance issue detected: ${name} = ${value}${unit}`, metadata, 'Performance');
+      }
       
       // Add to Sentry breadcrumb
       addBreadcrumb(`Performance: ${name}`, 'performance', {
@@ -255,12 +266,14 @@ class PerformanceMonitor {
    */
   private getThreshold(metricName: string): number {
     const thresholds: Record<string, number> = {
-      LCP: 2500, // Good LCP is < 2.5s
+      LCP: 4000, // Poor LCP is > 4s (warn at 4s)
       FID: 100, // Good FID is < 100ms
       CLS: 0.1, // Good CLS is < 0.1
       FCP: 1800, // Good FCP is < 1.8s
-      TTFB: 800, // Good TTFB is < 800ms
+      TTFB: 1800, // Poor TTFB is > 1.8s (warn at 1.8s, not 800ms)
       'long-task': 50, // Long tasks should be < 50ms
+      'bundle-load-time': 5000, // Bundle load time threshold (5s)
+      'resource-load': 10000, // Resource load time threshold (10s) - actual time window, not sum
     };
 
     return thresholds[metricName] || 1000;
@@ -367,6 +380,50 @@ export async function trackAPICall<T>(
 }
 
 /**
+ * Measure API response time (backward compatibility wrapper)
+ * This function provides the same interface as the old performanceMonitor.ts
+ */
+export function measureApiCall<T>(
+  apiCall: () => Promise<T>,
+  endpoint: string
+): Promise<T> {
+  return trackAPICall(endpoint, 'GET', apiCall);
+}
+
+/**
+ * Get all performance metrics (backward compatibility wrapper)
+ */
+export function getPerformanceMetrics(): Array<{ name: string; value: number; rating: 'good' | 'needs-improvement' | 'poor'; timestamp: number }> {
+  const metrics = performanceMonitor.getRecentMetrics(1000);
+  return metrics.map(m => ({
+    name: m.name,
+    value: m.value,
+    rating: (m.metadata?.rating as 'good' | 'needs-improvement' | 'poor') || 'good',
+    timestamp: new Date(m.timestamp).getTime(),
+  }));
+}
+
+/**
+ * Get performance rating based on Web Vitals thresholds
+ */
+function getRating(name: string, value: number): 'good' | 'needs-improvement' | 'poor' {
+  const thresholds: Record<string, { good: number; poor: number }> = {
+    lcp: { good: 2500, poor: 4000 }, // milliseconds
+    fcp: { good: 1800, poor: 3000 },
+    fid: { good: 100, poor: 300 },
+    cls: { good: 0.1, poor: 0.25 },
+    ttfb: { good: 800, poor: 1800 },
+  };
+
+  const threshold = thresholds[name.toLowerCase()];
+  if (!threshold) return 'good';
+
+  if (value <= threshold.good) return 'good';
+  if (value <= threshold.poor) return 'needs-improvement';
+  return 'poor';
+}
+
+/**
  * Track Web Vitals using the Performance Monitor
  */
 export function trackWebVitals(onPerfEntry?: (metric: PerformanceMetric) => void): void {
@@ -379,7 +436,8 @@ export function trackWebVitals(onPerfEntry?: (metric: PerformanceMetric) => void
   const originalRecord = performanceMonitor.recordMetric.bind(performanceMonitor);
   
   performanceMonitor.recordMetric = function(name, value, unit, metadata) {
-    originalRecord(name, value, unit, metadata);
+    const rating = getRating(name.toLowerCase(), value);
+    originalRecord(name, value, unit, { ...metadata, rating });
     
     if (onPerfEntry && ['LCP', 'FID', 'CLS', 'FCP', 'TTFB'].includes(name)) {
       onPerfEntry({
@@ -387,10 +445,28 @@ export function trackWebVitals(onPerfEntry?: (metric: PerformanceMetric) => void
         value,
         unit,
         timestamp: new Date().toISOString(),
-        metadata,
+        metadata: { ...metadata, rating },
+        rating,
       });
     }
   };
+}
+
+/**
+ * Measure and report Web Vitals (backward compatibility wrapper)
+ * This function provides the same interface as the old performanceMonitor.ts
+ */
+export function measureWebVitals(onReport?: (metric: { name: string; value: number; rating: 'good' | 'needs-improvement' | 'poor'; timestamp: number }) => void): void {
+  trackWebVitals((metric) => {
+    if (onReport) {
+      onReport({
+        name: metric.name,
+        value: metric.value,
+        rating: metric.rating || 'good',
+        timestamp: new Date(metric.timestamp).getTime(),
+      });
+    }
+  });
 }
 
 /**
@@ -414,20 +490,32 @@ export function trackBundlePerformance(): void {
       // Track resource loading
       const resources = window.performance.getEntriesByType('resource') as PerformanceResourceTiming[];
       let totalResourceSize = 0;
-      let totalResourceTime = 0;
+      let earliestStart = Infinity;
+      let latestEnd = 0;
 
       resources.forEach((resource) => {
         if (resource.transferSize) {
           totalResourceSize += resource.transferSize;
         }
-        totalResourceTime += resource.duration;
+        // Track the actual time window for resource loading (not sum of durations)
+        if (resource.startTime < earliestStart) {
+          earliestStart = resource.startTime;
+        }
+        const resourceEnd = resource.startTime + resource.duration;
+        if (resourceEnd > latestEnd) {
+          latestEnd = resourceEnd;
+        }
       });
 
-      if (resources.length > 0) {
-        performanceMonitor.recordMetric('resource-load', totalResourceTime, 'ms', {
+      if (resources.length > 0 && earliestStart !== Infinity) {
+        // Calculate actual time window for resource loading
+        const resourceLoadWindow = latestEnd - earliestStart;
+        performanceMonitor.recordMetric('resource-load', resourceLoadWindow, 'ms', {
           count: resources.length,
           totalSize: totalResourceSize,
           averageSize: totalResourceSize / resources.length,
+          earliestStart,
+          latestEnd,
         });
 
         // Log large resources

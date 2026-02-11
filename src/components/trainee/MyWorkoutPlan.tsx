@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../utils/logger';
+import { getRequiredFrequency, getWeekStartDate } from '../../utils/workoutPlanUtils';
 import {
   Calendar,
   Clock,
@@ -27,6 +28,10 @@ import {
   BookOpen,
 } from 'lucide-react';
 import ExerciseInstructionsModal from '../common/ExerciseInstructionsModal';
+import WorkoutPlanTable from './WorkoutPlanTable';
+import EditExerciseModal from './EditExerciseModal';
+import WorkoutPlanProgress from './WorkoutPlanProgress';
+import WorkoutPlanHistory from './WorkoutPlanHistory';
 
 interface MyWorkoutPlanProps {
   traineeId: string | null;
@@ -40,6 +45,7 @@ interface WorkoutPlan {
   is_active: boolean;
   updated_at: string | null;
   last_modified_by: string | null;
+  trainer_id: string;
 }
 
 interface WorkoutDay {
@@ -50,6 +56,7 @@ interface WorkoutDay {
   focus: string | null;
   notes: string | null;
   order_index: number;
+  times_per_week?: number | null; // Number of times per week this day should be executed
 }
 
 interface DayExercise {
@@ -125,13 +132,13 @@ const muscleGroupIcons: Record<string, typeof Dumbbell> = {
 // Removed unused muscleGroupColors - colors are now handled by muscleGroupIcons
 
 const dayGradients = [
-  'from-emerald-500 to-teal-600',
-  'from-cyan-500 to-blue-600',
+  'from-primary-500 to-primary-700',
+  'from-blue-500 to-blue-700',
   'from-amber-500 to-orange-600',
-  'from-rose-500 to-pink-600',
-  'from-purple-500 to-indigo-600',
-  'from-teal-500 to-emerald-600',
-  'from-blue-500 to-cyan-600',
+  'from-rose-500 to-rose-700',
+  'from-slate-500 to-slate-700',
+  'from-primary-600 to-primary-800',
+  'from-blue-600 to-blue-800',
 ];
 
 export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
@@ -139,8 +146,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   const [days, setDays] = useState<WorkoutDay[]>([]);
   const [dayExercises, setDayExercises] = useState<Record<string, DayExercise[]>>({});
   const [loading, setLoading] = useState(true);
-  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
-  const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
+  const [dayCompletions, setDayCompletions] = useState<Record<string, { count: number; required: number }>>({});
   const [editingExercise, setEditingExercise] = useState<string | null>(null);
   const [editData, setEditData] = useState<{ trainee_notes: string; trainee_target_weight: number | null }>({
     trainee_notes: '',
@@ -154,6 +160,14 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     name: string;
     instructions: string | null | undefined;
   } | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedExerciseForEdit, setSelectedExerciseForEdit] = useState<DayExercise | null>(null);
+  const [selectedDayIdForAdd, setSelectedDayIdForAdd] = useState<string | null>(null);
+  const [isAddingNewExercise, setIsAddingNewExercise] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
+  const [showExecutionHistory, setShowExecutionHistory] = useState(false);
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+  const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (traineeId) {
@@ -193,6 +207,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     setPlan(planData as WorkoutPlan);
     await loadPlanDays((planData as WorkoutPlan).id);
     await loadHistory((planData as WorkoutPlan).id);
+    // Load day completions will be called automatically by useEffect when plan and days are set
 
     setLoading(false);
   };
@@ -294,12 +309,29 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     });
   };
 
-  const startEditing = (exercise: DayExercise) => {
-    setEditingExercise(exercise.id);
-    setEditData({
-      trainee_notes: exercise.trainee_notes || '',
-      trainee_target_weight: exercise.trainee_target_weight,
+  const toggleExerciseComplete = (exerciseId: string) => {
+    setCompletedExercises(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(exerciseId)) {
+        newSet.delete(exerciseId);
+      } else {
+        newSet.add(exerciseId);
+      }
+      return newSet;
     });
+  };
+
+  const startEditing = (exercise: DayExercise) => {
+    setSelectedExerciseForEdit(exercise);
+    setIsAddingNewExercise(false);
+    setShowEditModal(true);
+  };
+
+  const handleAddExercise = (dayId: string) => {
+    setSelectedDayIdForAdd(dayId);
+    setSelectedExerciseForEdit(null);
+    setIsAddingNewExercise(true);
+    setShowEditModal(true);
   };
 
   const cancelEditing = () => {
@@ -362,21 +394,180 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     setSaving(false);
   };
 
-  const toggleExerciseComplete = (exerciseId: string) => {
-    setCompletedExercises((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(exerciseId)) {
-        newSet.delete(exerciseId);
+  // Toggle day complete - marks the entire day as completed
+  const toggleDayComplete = async (dayId: string) => {
+    if (!plan) return;
+    
+    const day = days.find(d => d.id === dayId);
+    if (!day) return;
+
+    try {
+      const weekStart = getWeekStartDate(new Date());
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+
+      // Check if already completed this week
+      const { data: existingExecutions } = await supabase
+        .from('workout_plan_weekly_executions')
+        .select('id')
+        .eq('plan_id', plan.id)
+        .eq('day_id', dayId)
+        .eq('week_start_date', weekStartStr);
+
+      if (existingExecutions && existingExecutions.length > 0) {
+        // Unmark - delete the execution
+        const { error } = await supabase
+          .from('workout_plan_weekly_executions')
+          .delete()
+          .eq('plan_id', plan.id)
+          .eq('day_id', dayId)
+          .eq('week_start_date', weekStartStr);
+
+        if (error) {
+          logger.error('Error unmarking day complete', error, 'MyWorkoutPlan');
+          toast.error('שגיאה בביטול ביצוע');
+          return;
+        }
+        toast.success('ביצוע בוטל');
       } else {
-        newSet.add(exerciseId);
+        // Mark as complete
+        const executionDate = new Date().toISOString().split('T')[0];
+        const { error } = await supabase
+          .from('workout_plan_weekly_executions')
+          .insert({
+            plan_id: plan.id,
+            day_id: dayId,
+            week_start_date: weekStartStr,
+            execution_date: executionDate,
+            completed_at: new Date().toISOString(),
+          } as any);
+
+        if (error) {
+          if (error.code === '42P01' || error.code === 'PGRST116' || 
+              error.message?.includes('does not exist') || 
+              error.message?.includes('relation') ||
+              error.message?.includes('Could not find')) {
+            logger.warn('workout_plan_weekly_executions table does not exist yet', error, 'MyWorkoutPlan');
+            toast.error('טבלת ביצועים שבועיים עדיין לא קיימת. אנא הפעל את המיגרציות: supabase/migrations/20260203000006_create_workout_plan_weekly_executions.sql', { duration: 6000 });
+            return;
+          }
+          logger.error('Error marking day complete', error, 'MyWorkoutPlan');
+          toast.error(`שגיאה בשמירת ביצוע: ${error.message || 'שגיאה לא ידועה'}`);
+          return;
+        }
+        toast.success('יום סומן כהושלם!');
       }
-      return newSet;
-    });
+
+      // Reload completions
+      await loadDayCompletions();
+    } catch (error) {
+      logger.error('Error toggling day complete', error, 'MyWorkoutPlan');
+      toast.error('שגיאה בעדכון ביצוע');
+    }
   };
 
+  // Load day completions for current week
+  const loadDayCompletions = async () => {
+    if (!plan) return;
+
+    try {
+      const weekStart = currentWeekStart || getWeekStartDate(new Date());
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+
+      const completions: Record<string, { count: number; required: number }> = {};
+
+      for (const day of days) {
+        const required = getRequiredFrequency(
+          { times_per_week: day.times_per_week },
+          plan.days_per_week,
+          days.length
+        );
+
+        const { data: executions, error: execError } = await supabase
+          .from('workout_plan_weekly_executions')
+          .select('id')
+          .eq('plan_id', plan.id)
+          .eq('day_id', day.id)
+          .eq('week_start_date', weekStartStr);
+
+        // If table doesn't exist (404, 42P01, or PGRST116), set count to 0
+        if (execError) {
+          if (execError.code === '42P01' || execError.code === 'PGRST116' || 
+              execError.message?.includes('does not exist') || 
+              execError.message?.includes('relation') ||
+              execError.message?.includes('Could not find')) {
+            // Table doesn't exist - migrations not run yet
+            logger.warn('workout_plan_weekly_executions table does not exist', { dayId: day.id, error: execError }, 'MyWorkoutPlan');
+            completions[day.id] = {
+              count: 0,
+              required,
+            };
+            continue;
+          }
+          // Other error - log but continue
+          logger.warn('Error loading executions for day', { dayId: day.id, error: execError }, 'MyWorkoutPlan');
+        }
+
+        completions[day.id] = {
+          count: executions?.length || 0,
+          required,
+        };
+      }
+
+      setDayCompletions(completions);
+    } catch (error) {
+      logger.error('Error loading day completions', error, 'MyWorkoutPlan');
+    }
+  };
+
+  // Track current week to detect week changes
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date | null>(null);
+
+  // Check for week change and reset if needed
+  useEffect(() => {
+    if (!plan || days.length === 0) return;
+
+    const now = new Date();
+    const weekStart = getWeekStartDate(now);
+
+    // Initialize current week or check if week has changed
+    if (!currentWeekStart) {
+      setCurrentWeekStart(weekStart);
+      loadDayCompletions();
+    } else if (weekStart.getTime() !== currentWeekStart.getTime()) {
+      // Week has changed - reset completions for new week
+      logger.info('Week changed, resetting completions', { oldWeek: currentWeekStart, newWeek: weekStart }, 'MyWorkoutPlan');
+      setCurrentWeekStart(weekStart);
+      // Reload completions for the new week
+      loadDayCompletions();
+    } else {
+      // Same week - just reload to get latest data
+      loadDayCompletions();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan, days]);
+
+  // Also check periodically (every hour) for week changes
+  useEffect(() => {
+    if (!plan || days.length === 0 || !currentWeekStart) return;
+
+    const checkInterval = setInterval(() => {
+      const now = new Date();
+      const weekStart = getWeekStartDate(now);
+
+      if (weekStart.getTime() !== currentWeekStart.getTime()) {
+        // Week has changed
+        logger.info('Week changed (periodic check), resetting completions', { oldWeek: currentWeekStart, newWeek: weekStart }, 'MyWorkoutPlan');
+        setCurrentWeekStart(weekStart);
+        loadDayCompletions();
+      }
+    }, 60 * 60 * 1000); // Check every hour
+
+    return () => clearInterval(checkInterval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan, days, currentWeekStart]);
+
   const getCompletedCount = (dayId: string) => {
-    const exercises = dayExercises[dayId] || [];
-    return exercises.filter((ex) => completedExercises.has(ex.id)).length;
+    return dayCompletions[dayId]?.count || 0;
   };
 
   const calculateDayVolume = (dayId: string) => {
@@ -447,7 +638,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-400 via-primary-500 to-primary-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
           <Dumbbell className="w-8 h-8 text-white" />
         </div>
       </div>
@@ -457,11 +648,11 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   if (!plan) {
     return (
       <div className="text-center py-12">
-        <div className="w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg border border-emerald-500/20">
-          <ClipboardList className="w-10 h-10 text-emerald-400" />
+        <div className="w-20 h-20 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg border border-primary-300">
+          <ClipboardList className="w-10 h-10 text-primary-600" />
         </div>
-        <h3 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)] mb-2">אין תוכנית אימונים פעילה</h3>
-        <p className="text-sm text-[var(--color-text-muted)]">המאמן שלך עדיין לא יצר לך תוכנית אימונים</p>
+        <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">אין תוכנית אימונים פעילה</h3>
+        <p className="text-sm text-muted">המאמן שלך עדיין לא יצר לך תוכנית אימונים</p>
       </div>
     );
   }
@@ -471,46 +662,62 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
       {/* Header Card - Premium Design */}
       <div className="relative premium-card-static overflow-hidden animate-fade-in">
         {/* Background Gradient Glow */}
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-teal-500/15 to-cyan-500/10 opacity-60" />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 via-primary-600/15 to-primary-700/10 opacity-60" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
         
         <div className="relative p-5 md:p-7 lg:p-8">
           <div className="flex items-start justify-between mb-5">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-[0_0_25px_rgba(16,185,129,0.4)]">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-glow">
                   <ClipboardList className="w-6 h-6 md:w-7 md:h-7 text-white" />
                 </div>
                 <div>
-                  <p className="text-xs md:text-sm font-semibold text-emerald-400 uppercase tracking-wider mb-1">תוכנית אימון</p>
-                  <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[var(--color-text-primary)] leading-tight">
+                  <p className="text-xs md:text-sm font-semibold text-primary-500 uppercase tracking-wider mb-1">תוכנית אימון</p>
+                  <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight">
                     {plan.name}
                   </h1>
                 </div>
               </div>
               {plan.description && (
-                <p className="text-[var(--color-text-secondary)] text-sm md:text-base leading-relaxed max-w-2xl">
+                <p className="text-secondary text-sm md:text-base leading-relaxed max-w-2xl">
                   {plan.description}
                 </p>
               )}
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-[var(--color-border)]">
-            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-xl backdrop-blur-sm">
-              <Calendar className="w-4 h-4 text-emerald-400" />
-              <span className="font-semibold text-sm text-emerald-400">{plan.days_per_week} ימים/שבוע</span>
+          <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-border-light">
+            <div className="flex items-center gap-2 bg-primary-100 border border-primary-300 px-4 py-2 rounded-xl backdrop-blur-sm">
+              <Calendar className="w-4 h-4 text-primary-600" />
+              <span className="font-semibold text-sm text-primary-700">{plan.days_per_week} ימים/שבוע</span>
             </div>
 
             {plan.updated_at && (
-              <div className="flex items-center gap-2 bg-[var(--color-bg-surface)] border border-[var(--color-border)] px-4 py-2 rounded-xl">
-                <Clock className="w-4 h-4 text-[var(--color-text-muted)]" />
-                <span className="text-[var(--color-text-secondary)] text-sm font-medium">
+              <div className="flex items-center gap-2 bg-surface-light border border-border-light px-4 py-2 rounded-xl">
+                <Clock className="w-4 h-4 text-muted" />
+                <span className="text-secondary text-sm font-medium">
                   עדכון: {formatDate(plan.updated_at)}
                 </span>
               </div>
             )}
+
+            <button
+              onClick={() => setShowProgress(!showProgress)}
+              className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-4 py-2 rounded-xl backdrop-blur-sm hover:bg-blue-500/20 transition-all"
+            >
+              <TrendingUp className="w-4 h-4 text-blue-400" />
+              <span className="font-semibold text-sm text-blue-400">התקדמות</span>
+            </button>
+
+            <button
+              onClick={() => setShowExecutionHistory(true)}
+              className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-4 py-2 rounded-xl backdrop-blur-sm hover:bg-amber-500/20 transition-all"
+            >
+              <History className="w-4 h-4 text-amber-500" />
+              <span className="font-semibold text-sm text-amber-500">היסטוריית ביצועים</span>
+            </button>
           </div>
         </div>
       </div>
@@ -520,33 +727,33 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
         <div className="premium-card-static overflow-hidden animate-fade-in">
           <button
             onClick={() => setShowHistory(!showHistory)}
-            className="w-full p-4 md:p-5 flex items-center justify-between text-right hover:bg-[var(--color-bg-surface)] transition-all duration-300"
+            className="w-full p-4 md:p-5 flex items-center justify-between text-right hover:bg-surface-light transition-all duration-300"
           >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-emerald-500/15 rounded-xl flex items-center justify-center border border-emerald-500/20">
-                <History className="w-6 h-6 text-emerald-400" />
+              <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center border border-primary-300">
+                <History className="w-6 h-6 text-primary-600" />
               </div>
-              <span className="font-bold text-[var(--color-text-primary)]">היסטוריית שינויים</span>
+              <span className="font-bold text-foreground">היסטוריית שינויים</span>
             </div>
             {showHistory ? (
-              <ChevronUp className="w-5 h-5 text-[var(--color-text-muted)] transition-transform duration-300" />
+              <ChevronUp className="w-5 h-5 text-muted transition-transform duration-300" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)] transition-transform duration-300" />
+              <ChevronDown className="w-5 h-5 text-muted transition-transform duration-300" />
             )}
           </button>
 
           {showHistory && (
-            <div className="border-t border-[var(--color-border)] p-4 md:p-5 space-y-3 max-h-64 overflow-y-auto animate-slide-down">
+            <div className="border-t border-border-light p-4 md:p-5 space-y-3 max-h-64 overflow-y-auto animate-slide-down">
               {history.map((item) => (
-                <div key={item.id} className="flex items-start gap-3 text-sm bg-[var(--color-bg-surface)] p-4 rounded-xl transition-all duration-300 hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border)]">
+                <div key={item.id} className="flex items-start gap-3 text-sm bg-surface-light p-4 rounded-xl transition-all duration-300 hover:bg-elevated border border-border-light">
                   <div
                     className={`w-3 h-3 rounded-full mt-1.5 shadow-sm ${
-                      item.changed_by_type === 'trainer' ? 'bg-cyan-500' : 'bg-emerald-500'
+                      item.changed_by_type === 'trainer' ? 'bg-blue-500' : 'bg-primary-500'
                     }`}
                   />
                   <div className="flex-1">
-                    <p className="text-[var(--color-text-primary)] font-medium">{item.change_description}</p>
-                    <p className="text-[var(--color-text-muted)] text-xs mt-1">
+                    <p className="text-foreground font-medium">{item.change_description}</p>
+                    <p className="text-muted text-xs mt-1">
                       {formatDate(item.created_at)} | {item.changed_by_type === 'trainer' ? 'מאמן' : 'מתאמן'}
                     </p>
                   </div>
@@ -557,7 +764,37 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
         </div>
       )}
 
-      {/* Workout Days Grid - Accordion Pattern */}
+      {/* Progress Tracking */}
+      {showProgress && (
+        <WorkoutPlanProgress
+          days={days}
+          dayExercises={dayExercises}
+          dayCompletions={dayCompletions}
+          getCompletedCount={getCompletedCount}
+          calculateDayVolume={calculateDayVolume}
+        />
+      )}
+
+      {/* Workout Plan Table */}
+      <WorkoutPlanTable
+        days={days}
+        dayExercises={dayExercises}
+        dayCompletions={dayCompletions}
+        editingExercise={editingExercise}
+        onToggleDayComplete={toggleDayComplete}
+        onStartEditing={startEditing}
+        onAddExercise={handleAddExercise}
+        onShowInstructions={(name, instructions) => setInstructionsExercise({ name, instructions })}
+        instructionsExercise={instructionsExercise}
+        onSetInstructionsExercise={setInstructionsExercise}
+        calculateDayVolume={calculateDayVolume}
+        getCompletedCount={getCompletedCount}
+        formatRestTime={formatRestTime}
+        plan={plan}
+      />
+
+      {/* Legacy Accordion View - Hidden but kept for reference */}
+      {false && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
         {days.map((day, dayIndex) => {
           const gradient = dayGradients[dayIndex % dayGradients.length];
@@ -572,7 +809,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           return (
             <div
               key={day.id}
-              className="premium-card-static overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:-translate-y-1 animate-fade-in-up border border-[var(--color-border)]"
+              className="premium-card-static overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:-translate-y-1 animate-fade-in-up border border-border-light"
               style={{ animationDelay: `${dayIndex * 50}ms` }}
             >
               {/* Accordion Header - Always Visible */}
@@ -669,14 +906,14 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
               {/* Accordion Content - Exercises */}
               {isExpanded && (
-                <div className="p-4 md:p-5 lg:p-6 space-y-4 animate-slide-down bg-[var(--color-bg-base)]">
+                <div className="p-4 md:p-5 lg:p-6 space-y-4 animate-slide-down bg-base">
                   {day.notes && (
-                    <div className="bg-amber-500/15 border border-amber-500/30 rounded-2xl p-4 shadow-sm">
-                      <p className="text-sm font-bold text-amber-400 mb-1 flex items-center gap-2">
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-sm">
+                      <p className="text-sm font-bold text-amber-700 mb-1 flex items-center gap-2">
                         <Info className="w-4 h-4" />
                         הערות ליום זה
                       </p>
-                      <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">{day.notes}</p>
+                      <p className="text-secondary text-sm leading-relaxed">{day.notes}</p>
                     </div>
                   )}
 
@@ -689,7 +926,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                       <div
                         key={exercise.id}
                         className={`premium-card-static overflow-hidden transition-all duration-300 hover:shadow-card-hover border-2 ${
-                          isCompleted ? 'border-emerald-500/50 bg-emerald-500/10' : 'border-[var(--color-border)]'
+                          isCompleted ? 'border-primary-300 bg-primary-50' : 'border-border-light'
                         }`}
                         style={{ animationDelay: `${exIndex * 30}ms` }}
                       >
@@ -700,8 +937,8 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                               onClick={() => toggleExerciseComplete(exercise.id)}
                               className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg ${
                                 isCompleted
-                                  ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white scale-105'
-                                  : 'bg-[var(--color-bg-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border)]'
+                                  ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-white scale-105'
+                                  : 'bg-surface-light text-muted hover:bg-elevated border border-border-light'
                               }`}
                             >
                               {isCompleted ? (
@@ -715,11 +952,11 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                               {/* Exercise Name & Action Buttons */}
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex-1">
-                                  <h4 className={`text-base md:text-lg font-bold leading-tight ${isCompleted ? 'text-emerald-400' : 'text-[var(--color-text-primary)]'}`}>
+                                  <h4 className={`text-base md:text-lg font-bold leading-tight ${isCompleted ? 'text-primary-300' : 'text-foreground'}`}>
                                     {exerciseName}
                                   </h4>
                                   {exercise.exercise?.muscle_group?.name && (
-                                    <p className="text-xs md:text-sm text-[var(--color-text-muted)] mt-1 font-medium">{exercise.exercise.muscle_group.name}</p>
+                                    <p className="text-xs md:text-sm text-muted mt-1 font-medium">{exercise.exercise.muscle_group.name}</p>
                                   )}
                                 </div>
                                 {!isEditing && (
@@ -730,7 +967,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                                           name: exerciseName,
                                           instructions: exercise.exercise?.instructions
                                         })}
-                                        className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-cyan-500/30 group"
+                                        className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-blue-500/30 group"
                                         title="הצג הוראות ביצוע"
                                         aria-label="הצג הוראות ביצוע"
                                       >
@@ -739,7 +976,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                                     )}
                                     <button
                                       onClick={() => startEditing(exercise)}
-                                      className="p-2 text-[var(--color-text-muted)] hover:text-cyan-400 hover:bg-cyan-500/15 rounded-lg transition-all duration-300 border border-transparent hover:border-cyan-500/30 group"
+                                      className="p-2 text-muted hover:text-primary-500 hover:bg-primary-100 rounded-lg transition-all duration-300 border border-transparent hover:border-primary-300 group"
                                       title="ערוך תרגיל"
                                       aria-label="ערוך תרגיל"
                                     >
@@ -751,14 +988,14 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
                               {/* Pills - Sets, Reps, Rest */}
                               <div className="flex flex-wrap gap-2 mb-3">
-                                <div className="bg-emerald-500/12 border border-emerald-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
-                                  <Repeat className="w-3.5 h-3.5 text-emerald-400" />
-                                  <span className="text-xs md:text-sm font-bold text-emerald-400">{exercise.sets_count} סטים</span>
+                                <div className="bg-primary-100 border border-primary-300 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
+                                  <Repeat className="w-3.5 h-3.5 text-primary-600" />
+                                  <span className="text-xs md:text-sm font-bold text-primary-700">{exercise.sets_count} סטים</span>
                                 </div>
 
-                                <div className="bg-cyan-500/12 border border-cyan-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
-                                  <Target className="w-3.5 h-3.5 text-cyan-400" />
-                                  <span className="text-xs md:text-sm font-bold text-cyan-400">{exercise.reps_range} חזרות</span>
+                                <div className="bg-blue-500/12 border border-blue-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
+                                  <Target className="w-3.5 h-3.5 text-blue-400" />
+                                  <span className="text-xs md:text-sm font-bold text-blue-400">{exercise.reps_range} חזרות</span>
                                 </div>
 
                                 <div className="bg-amber-500/12 border border-amber-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
@@ -774,9 +1011,9 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                                 )}
 
                                 {exercise.target_rpe && (
-                                  <div className="bg-purple-500/12 border border-purple-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
-                                    <Award className="w-3.5 h-3.5 text-purple-400" />
-                                    <span className="text-xs md:text-sm font-bold text-purple-400">RPE {exercise.target_rpe}</span>
+                                  <div className="bg-amber-500/12 border border-amber-500/25 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
+                                    <Award className="w-3.5 h-3.5 text-amber-400" />
+                                    <span className="text-xs md:text-sm font-bold text-amber-400">RPE {exercise.target_rpe}</span>
                                   </div>
                                 )}
                               </div>
@@ -785,8 +1022,8 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                               <div className="space-y-2">
                                 {exercise.equipment && (
                                   <div className="flex items-center gap-2 text-sm">
-                                    <span className="text-[var(--color-text-muted)] font-medium">ציוד:</span>
-                                    <div className="flex items-center gap-1.5 font-bold text-[var(--color-text-primary)]">
+                                    <span className="text-muted font-medium">ציוד:</span>
+                                    <div className="flex items-center gap-1.5 font-bold text-foreground">
                                       {exercise.equipment.emoji && <span className="text-base">{exercise.equipment.emoji}</span>}
                                       {exercise.equipment.name}
                                     </div>
@@ -795,28 +1032,28 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
                                 {exercise.target_weight && (
                                   <div className="flex items-center gap-2 text-sm">
-                                    <span className="text-[var(--color-text-muted)] font-medium">משקל יעד (מאמן):</span>
-                                    <span className="font-bold text-teal-400">{exercise.target_weight} ק״ג</span>
+                                    <span className="text-muted font-medium">משקל יעד (מאמן):</span>
+                                    <span className="font-bold text-primary-600">{exercise.target_weight} ק״ג</span>
                                   </div>
                                 )}
 
                                 {exercise.trainee_target_weight && !isEditing && (
                                   <div className="flex items-center gap-2 text-sm">
-                                    <span className="text-[var(--color-text-muted)] font-medium">משקל יעד שלי:</span>
-                                    <span className="font-bold text-emerald-400">{exercise.trainee_target_weight} ק״ג</span>
+                                    <span className="text-muted font-medium">משקל יעד שלי:</span>
+                                    <span className="font-bold text-primary-600">{exercise.trainee_target_weight} ק״ג</span>
                                   </div>
                                 )}
                               </div>
 
                               {/* Superset Info */}
                               {exercise.set_type === 'superset' && exercise.superset_exercise && (
-                                <div className="mt-3 bg-cyan-500/15 border border-cyan-500/30 rounded-xl p-3 shadow-sm">
+                                <div className="mt-3 bg-blue-500/15 border border-blue-500/30 rounded-xl p-3 shadow-sm">
                                   <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-xs font-bold text-cyan-400 bg-cyan-500/20 px-2 py-1 rounded-full">סופרסט</span>
-                                    <span className="font-bold text-cyan-300 text-sm">{exercise.superset_exercise.name}</span>
+                                    <span className="text-xs font-bold text-blue-400 bg-blue-500/20 px-2 py-1 rounded-full">סופרסט</span>
+                                    <span className="font-bold text-blue-300 text-sm">{exercise.superset_exercise.name}</span>
                                   </div>
                                   {exercise.superset_weight && exercise.superset_reps && (
-                                    <div className="text-xs text-cyan-400">
+                                    <div className="text-xs text-blue-400">
                                       <span className="font-medium">משקל וחזרות:</span> <span className="font-bold">{exercise.superset_weight} ק״ג × {exercise.superset_reps}</span>
                                     </div>
                                   )}
@@ -853,19 +1090,19 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
                               {/* Trainee Notes - Display */}
                               {exercise.trainee_notes && !isEditing && (
-                                <div className="mt-3 p-3 bg-emerald-500/15 rounded-xl border border-emerald-500/30 shadow-sm">
-                                  <p className="text-xs font-bold text-emerald-400 mb-1">ההערות שלי</p>
-                                  <p className="text-sm text-emerald-300 leading-relaxed">{exercise.trainee_notes}</p>
+                                <div className="mt-3 p-3 bg-primary-50 rounded-xl border border-primary-200 shadow-sm">
+                                  <p className="text-xs font-bold text-primary-700 mb-1">ההערות שלי</p>
+                                  <p className="text-sm text-primary-600 leading-relaxed">{exercise.trainee_notes}</p>
                                 </div>
                               )}
 
                               {/* Edit Mode */}
                               {isEditing && (
-                                <div className="mt-4 p-4 bg-cyan-500/15 rounded-2xl border border-cyan-500/30 space-y-4 shadow-md animate-fade-in">
-                                  <h5 className="font-bold text-cyan-300">עריכה אישית</h5>
+                                <div className="mt-4 p-4 bg-blue-500/15 rounded-2xl border border-blue-500/30 space-y-4 shadow-md animate-fade-in">
+                                  <h5 className="font-bold text-blue-300">עריכה אישית</h5>
 
                                   <div>
-                                    <label className="block text-sm font-bold text-cyan-400 mb-2">
+                                    <label className="block text-sm font-bold text-blue-400 mb-2">
                                       משקל יעד שלי (ק״ג)
                                     </label>
                                     <input
@@ -880,7 +1117,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                                   </div>
 
                                   <div>
-                                    <label className="block text-sm font-bold text-cyan-400 mb-2">
+                                    <label className="block text-sm font-bold text-blue-400 mb-2">
                                       הערות שלי
                                     </label>
                                     <textarea
@@ -913,7 +1150,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
                               {/* Last Modified */}
                               {exercise.trainee_modified_at && !isEditing && (
-                                <p className="text-xs text-[var(--color-text-muted)] mt-2">
+                                <p className="text-xs text-muted mt-2">
                                   עודכן על ידך: {formatDate(exercise.trainee_modified_at)}
                                 </p>
                               )}
@@ -926,14 +1163,14 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
                   {/* Completion Message */}
                   {exercises.length > 0 && completedCount === exercises.length && (
-                    <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl p-6 text-white text-center shadow-[0_8px_30px_rgba(16,185,129,0.3)] animate-scale-in overflow-hidden">
+                    <div className="relative bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 rounded-2xl p-6 text-white text-center shadow-glow-lg animate-scale-in overflow-hidden">
                       <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,.1)_50%,transparent_75%,transparent_100%)] bg-[length:30px_30px] opacity-20" />
                       <div className="relative">
                         <div className="w-16 h-16 bg-white/25 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-[0_0_25px_rgba(255,255,255,0.3)] backdrop-blur-md border border-white/20">
                           <Check className="w-8 h-8" />
                         </div>
                         <h4 className="text-xl md:text-2xl font-bold mb-2">כל הכבוד!</h4>
-                        <p className="text-emerald-50 mt-1 text-sm md:text-base">סיימת את כל התרגילים ליום זה</p>
+                        <p className="text-primary-50 mt-1 text-sm md:text-base">סיימת את כל התרגילים ליום זה</p>
                       </div>
                     </div>
                   )}
@@ -943,16 +1180,38 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           );
         })}
       </div>
+      )}
 
       {/* Empty State */}
       {days.length === 0 && (
         <div className="text-center py-12 premium-card-static animate-fade-in">
-          <div className="w-16 h-16 bg-emerald-500/15 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg border border-emerald-500/20">
-            <Calendar className="w-8 h-8 text-emerald-400" />
+          <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg border border-primary-300">
+            <Calendar className="w-8 h-8 text-primary-600" />
           </div>
-          <p className="text-[var(--color-text-primary)] font-bold text-lg">אין ימי אימון בתוכנית</p>
-          <p className="text-sm text-[var(--color-text-muted)] mt-2">המאמן שלך יוסיף ימי אימון בקרוב</p>
+          <p className="text-foreground font-bold text-lg">אין ימי אימון בתוכנית</p>
+          <p className="text-sm text-muted mt-2">המאמן שלך יוסיף ימי אימון בקרוב</p>
         </div>
+      )}
+
+      {/* Edit Exercise Modal */}
+      {plan && traineeId && (
+        <EditExerciseModal
+          isOpen={showEditModal}
+          exercise={selectedExerciseForEdit}
+          dayId={selectedDayIdForAdd || selectedExerciseForEdit?.day_id || ''}
+          traineeId={traineeId}
+          planId={plan.id}
+          trainerId={plan.trainer_id}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedExerciseForEdit(null);
+            setSelectedDayIdForAdd(null);
+          }}
+          onSave={() => {
+            loadActivePlan();
+          }}
+          isAddingNew={isAddingNewExercise}
+        />
       )}
 
       {/* Exercise Instructions Modal */}
@@ -962,6 +1221,14 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           onClose={() => setInstructionsExercise(null)}
           exerciseName={instructionsExercise.name}
           instructions={instructionsExercise.instructions}
+        />
+      )}
+
+      {/* Execution History Modal */}
+      {plan && showExecutionHistory && (
+        <WorkoutPlanHistory
+          planId={plan.id}
+          onClose={() => setShowExecutionHistory(false)}
         />
       )}
     </div>

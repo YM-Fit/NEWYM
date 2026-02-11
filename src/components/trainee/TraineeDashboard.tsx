@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { useState, useEffect, memo, useMemo } from 'react';
 import { Dumbbell, Scale, Flame, TrendingUp, Sparkles, Lightbulb, ClipboardList, CheckCircle2, Activity, CalendarCheck2 } from 'lucide-react';
-import { habitsApi } from '../../api/habitsApi';
-import { smartRecommendations, Recommendation } from '../../utils/smartRecommendations';
-import { logger } from '../../utils/logger';
+import { Recommendation } from '../../utils/smartRecommendations';
+import { useTraineeDashboardQuery } from '../../hooks/queries/useTraineeDashboardQueries';
 
 const MOTIVATIONAL_QUOTES = [
   'הצלחה היא סכום של מאמצים קטנים, יום אחרי יום',
@@ -26,43 +24,51 @@ const MOTIVATIONAL_QUOTES = [
   'השקעה בעצמך היא ההשקעה הטובה ביותר',
   'תן לתוצאות לדבר בשבילך',
   'המאמץ של היום הוא הכוח של מחר',
-];
+] as const;
+
+const HEBREW_DAYS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'] as const;
+
+const COLOR_CONFIGS = {
+  primary: {
+    bg: 'bg-primary/15',
+    text: 'text-primary',
+    glow: 'shadow-[0_0_15px_rgb(var(--color-primary)_/_0.15)]',
+  },
+  blue: {
+    bg: 'bg-blue-500/15',
+    text: 'text-blue-400',
+    glow: 'shadow-[0_0_15px_rgba(59,130,246,0.15)]',
+  },
+  amber: {
+    bg: 'bg-amber-500/15',
+    text: 'text-amber-400',
+    glow: 'shadow-[0_0_15px_rgba(245,158,11,0.15)]',
+  },
+  slate: {
+    bg: 'bg-primary-600/15',
+    text: 'text-primary',
+    glow: 'shadow-[0_0_15px_rgb(var(--color-primary-dark)_/_0.15)]',
+  },
+} as const;
 
 interface TraineeDashboardProps {
   traineeId: string | null;
   traineeName: string;
 }
 
-interface DashboardStats {
-  workoutsThisMonth: number;
-  lastWeight: number | null;
-  consecutiveDays: number;
-  personalGoal: string | null;
-}
+export default memo(function TraineeDashboard({ traineeId, traineeName }: TraineeDashboardProps) {
+  const { data: dashboardData, isLoading: loading } = useTraineeDashboardQuery(traineeId);
+  const stats = dashboardData?.stats ?? { workoutsThisMonth: 0, lastWeight: null, consecutiveDays: 0, personalGoal: null };
+  const weekDays = dashboardData?.weekDays ?? [];
+  const habitsStreak = dashboardData?.habitsStreak ?? 0;
+  const recommendations = dashboardData?.recommendations ?? [];
+  const todayWorkoutStatus = dashboardData?.todayStatuses?.workout ?? 'none';
+  const todayFoodStatus = dashboardData?.todayStatuses?.food ?? 'none';
+  const todayHabitsStatus = dashboardData?.todayStatuses?.habits ?? 'none';
+  const todayWeighInStatus = dashboardData?.todayStatuses?.weighIn ?? 'none';
 
-interface WorkoutDay {
-  date: Date;
-  hasWorkout: boolean;
-  isToday: boolean;
-}
-
-export default function TraineeDashboard({ traineeId, traineeName }: TraineeDashboardProps) {
-  const [stats, setStats] = useState<DashboardStats>({
-    workoutsThisMonth: 0,
-    lastWeight: null,
-    consecutiveDays: 0,
-    personalGoal: null,
-  });
-  const [weekDays, setWeekDays] = useState<WorkoutDay[]>([]);
   const [currentQuote, setCurrentQuote] = useState('');
   const [quoteVisible, setQuoteVisible] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [habitsStreak, setHabitsStreak] = useState(0);
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [todayWorkoutStatus, setTodayWorkoutStatus] = useState<'none' | 'planned' | 'in_progress' | 'completed'>('none');
-  const [todayFoodStatus, setTodayFoodStatus] = useState<'none' | 'partial' | 'completed'>('none');
-  const [todayHabitsStatus, setTodayHabitsStatus] = useState<'none' | 'partial' | 'completed'>('none');
-  const [todayWeighInStatus, setTodayWeighInStatus] = useState<'none' | 'recent'>('none');
 
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
@@ -80,253 +86,21 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    if (traineeId) {
-      loadDashboardData();
-    }
-  }, [traineeId]);
-
-  const loadDashboardData = async () => {
-    if (!traineeId) return;
-    setLoading(true);
-
-    try {
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const startOfMonthStr = startOfMonth.toISOString().split('T')[0];
-
-      const { count: workoutsCount } = await supabase
-        .from('workout_trainees')
-        .select('workouts!inner(id, workout_date, is_completed)', { count: 'exact', head: true })
-        .eq('trainee_id', traineeId)
-        .eq('workouts.is_completed', true)
-        .gte('workouts.workout_date', startOfMonthStr);
-
-      const { data: lastMeasurement } = await supabase
-        .from('measurements')
-        .select('weight')
-        .eq('trainee_id', traineeId)
-        .not('weight', 'is', null)
-        .order('measurement_date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      const consecutiveDays = await calculateConsecutiveDays(traineeId);
-
-      const weekWorkouts = await loadWeekWorkouts(traineeId);
-
-      // Load habits streak (if table exists)
-      try {
-        const habits = await habitsApi.getTraineeHabits(traineeId);
-        let maxStreak = 0;
-        for (const habit of habits) {
-          const streak = await habitsApi.getHabitStreak(habit.id);
-          maxStreak = Math.max(maxStreak, streak);
-        }
-        setHabitsStreak(maxStreak);
-      } catch (error) {
-        // Table might not exist yet, set streak to 0
-        logger.warn('Habits table not available:', error, 'TraineeDashboard');
-        setHabitsStreak(0);
-      }
-
-      // Load recommendations
-      const recs = await smartRecommendations.getTraineeRecommendations(traineeId);
-      setRecommendations(recs.slice(0, 3)); // Show top 3
-
-      // Load today's checklist statuses
-      await loadTodayStatuses(traineeId);
-
-      setStats({
-        workoutsThisMonth: workoutsCount || 0,
-        lastWeight: lastMeasurement?.weight || null,
-        consecutiveDays,
-        personalGoal: null,
-      });
-
-      setWeekDays(weekWorkouts);
-    } catch (error) {
-      logger.error('Error loading dashboard data:', error, 'TraineeDashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadTodayStatuses = async (traineeId: string) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString().split('T')[0];
-
-    // Workout today
-    const { data: todayWorkouts } = await supabase
-      .from('workout_trainees')
-      .select('workouts!inner(id, workout_date, is_completed)')
-      .eq('trainee_id', traineeId)
-      .eq('workouts.workout_date', todayStr);
-
-    if (todayWorkouts && todayWorkouts.length > 0) {
-      const anyCompleted = todayWorkouts.some((w: any) => w.workouts.is_completed);
-      setTodayWorkoutStatus(anyCompleted ? 'completed' : 'planned');
-    } else {
-      setTodayWorkoutStatus('none');
-    }
-
-    // Food diary today (simple: any entries for today)
-    const { data: todayMeals } = await supabase
-      .from('meals')
-      .select('id, meal_type')
-      .eq('trainee_id', traineeId)
-      .eq('meal_date', todayStr);
-
-    if (todayMeals && todayMeals.length > 0) {
-      const mealTypes = new Set(todayMeals.map((e: any) => e.meal_type));
-      // heuristic: 3+ meal types => completed, אחרת חלקי
-      setTodayFoodStatus(mealTypes.size >= 3 ? 'completed' : 'partial');
-    } else {
-      setTodayFoodStatus('none');
-    }
-
-    // Habits today: any logged habits for today
-    // Need to join through trainee_habits since habit_logs has habit_id, not trainee_id
-    const { data: traineeHabits } = await supabase
-      .from('trainee_habits')
-      .select('id')
-      .eq('trainee_id', traineeId)
-      .eq('is_active', true);
-
-    if (traineeHabits && traineeHabits.length > 0) {
-      const habitIds = traineeHabits.map((h: any) => h.id);
-      const { data: todayHabitsLogs } = await supabase
-        .from('habit_logs')
-        .select('id')
-        .in('habit_id', habitIds)
-        .eq('log_date', todayStr);
-
-      if (todayHabitsLogs && todayHabitsLogs.length > 0) {
-        // לא יודעים אחוז מדויק, אבל יש ביצוע
-        setTodayHabitsStatus('partial');
-      } else {
-        setTodayHabitsStatus('none');
-      }
-    } else {
-      setTodayHabitsStatus('none');
-    }
-
-    // Recent weigh-in (last 7 days)
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(today.getDate() - 7);
-    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
-
-    const { data: recentWeights } = await supabase
-      .from('trainee_self_weights')
-      .select('id, weight_date')
-      .eq('trainee_id', traineeId)
-      .gte('weight_date', sevenDaysAgoStr);
-
-    setTodayWeighInStatus(recentWeights && recentWeights.length > 0 ? 'recent' : 'none');
-  };
-
-  const calculateConsecutiveDays = async (traineeId: string): Promise<number> => {
-    const { data: workouts } = await supabase
-      .from('workout_trainees')
-      .select('workouts!inner(workout_date, is_completed)')
-      .eq('trainee_id', traineeId)
-      .eq('workouts.is_completed', true)
-      .order('workouts(workout_date)', { ascending: false });
-
-    if (!workouts || workouts.length === 0) return 0;
-
-    const workoutDates = new Set(
-      workouts.map((w: any) => w.workouts.workout_date)
-    );
-
-    let consecutiveDays = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    for (let i = 0; i <= 365; i++) {
-      const checkDate = new Date(today);
-      checkDate.setDate(today.getDate() - i);
-      const dateStr = checkDate.toISOString().split('T')[0];
-
-      if (workoutDates.has(dateStr)) {
-        consecutiveDays++;
-      } else if (i > 0) {
-        break;
-      }
-    }
-
-    return consecutiveDays;
-  };
-
-  const loadWeekWorkouts = async (traineeId: string): Promise<WorkoutDay[]> => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const dayOfWeek = today.getDay();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - dayOfWeek);
-
-    const weekDates: WorkoutDay[] = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startOfWeek);
-      date.setDate(startOfWeek.getDate() + i);
-      weekDates.push({
-        date,
-        hasWorkout: false,
-        isToday: date.toDateString() === today.toDateString(),
-      });
-    }
-
-    const startStr = startOfWeek.toISOString().split('T')[0];
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    const endStr = endOfWeek.toISOString().split('T')[0];
-
-    const { data: workouts } = await supabase
-      .from('workout_trainees')
-      .select('workouts!inner(workout_date, is_completed)')
-      .eq('trainee_id', traineeId)
-      .eq('workouts.is_completed', true)
-      .gte('workouts.workout_date', startStr)
-      .lte('workouts.workout_date', endStr);
-
-    if (workouts) {
-      const workoutDates = new Set(
-        workouts.map((w: any) => w.workouts.workout_date)
-      );
-
-      weekDates.forEach((day) => {
-        const dateStr = day.date.toISOString().split('T')[0];
-        day.hasWorkout = workoutDates.has(dateStr);
-      });
-    }
-
-    return weekDates;
-  };
-
-  const getHebrewDate = () => {
-    const options: Intl.DateTimeFormatOptions = {
+  const hebrewDate = useMemo(() => {
+    return new Date().toLocaleDateString('he-IL', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-    };
-    return new Date().toLocaleDateString('he-IL', options);
-  };
+    });
+  }, []);
 
-  const getHebrewDayName = (date: Date) => {
-    const days = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
-    return days[date.getDay()];
-  };
-
-  const getFirstName = (fullName: string) => {
-    return fullName.split(' ')[0];
-  };
+  const firstName = useMemo(() => traineeName.split(' ')[0], [traineeName]);
 
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-400 via-primary-500 to-primary-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
           <Dumbbell className="w-8 h-8 text-white" />
         </div>
       </div>
@@ -335,29 +109,27 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
 
   return (
     <div className="space-y-5 md:space-y-6 pb-4 animate-fade-in">
-      {/* Greeting + date */}
       <div className="premium-card-static p-5 md:p-6 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+        <div className="absolute top-0 left-0 w-40 h-40 bg-primary-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
         <div className="relative">
           <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 text-emerald-400" />
-            <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">דשבורד</span>
+            <Sparkles className="w-4 h-4 text-primary-400" />
+            <span className="text-xs font-semibold text-primary-400 uppercase tracking-wider">דשבורד</span>
           </div>
           <h1 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)] mb-1">
-            שלום, {getFirstName(traineeName)}!
+            שלום, {firstName}!
           </h1>
           <p className="text-[var(--color-text-secondary)] text-xs md:text-sm flex items-center gap-2">
-            <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-glow-sm" />
-            {getHebrewDate()}
+            <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary-400 shadow-glow-sm" />
+            {hebrewDate}
           </p>
         </div>
       </div>
 
-      {/* Today's checklist - what to do today */}
       <div className="premium-card-static p-4 md:p-5">
         <div className="flex items-center gap-2 mb-3">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <CheckCircle2 className="w-4 h-4 text-primary-400" />
           <h2 className="font-bold text-[var(--color-text-primary)] text-sm md:text-base">
             מה הכי חשוב היום?
           </h2>
@@ -390,15 +162,14 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
         </div>
       </div>
 
-      {/* Motivational quote */}
       <div
-        className={`premium-card-static p-4 md:p-5 border-r-2 border-emerald-500 transition-opacity duration-500 ${
+        className={`premium-card-static p-4 md:p-5 border-r-2 border-primary-500 transition-opacity duration-500 ${
           quoteVisible ? 'opacity-100' : 'opacity-0'
         }`}
       >
         <div className="flex items-start gap-3">
-          <div className="p-2.5 rounded-xl bg-emerald-500/15 shadow-glow-sm">
-            <Sparkles className="w-5 h-5 text-emerald-400" />
+          <div className="p-2.5 rounded-xl bg-primary-500/15 shadow-glow-sm">
+            <Sparkles className="w-5 h-5 text-primary-400" />
           </div>
           <p className="text-[var(--color-text-primary)] text-sm md:text-base leading-relaxed font-medium flex-1">
             "{currentQuote}"
@@ -406,19 +177,18 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
         </div>
       </div>
 
-      {/* Quick stats section */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <StatCard
           icon={<Dumbbell className="w-5 h-5" />}
           label="אימונים החודש"
           value={stats.workoutsThisMonth.toString()}
-          color="emerald"
+          color="primary"
         />
         <StatCard
           icon={<Scale className="w-5 h-5" />}
           label="משקל אחרון"
           value={stats.lastWeight ? `${stats.lastWeight} ק"ג` : '-'}
-          color="cyan"
+          color="blue"
         />
         <StatCard
           icon={<Flame className="w-5 h-5" />}
@@ -431,8 +201,8 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
 
       <div className="premium-card-static p-5">
         <div className="flex items-center gap-2 mb-4">
-          <div className="p-2.5 rounded-xl bg-emerald-500/15">
-            <TrendingUp className="w-5 h-5 text-emerald-400" />
+          <div className="p-2.5 rounded-xl bg-primary-500/15">
+            <TrendingUp className="w-5 h-5 text-primary-400" />
           </div>
           <h3 className="font-bold text-[var(--color-text-primary)] text-sm md:text-base">
             ימי אימון השבוע
@@ -442,21 +212,21 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
           {weekDays.map((day, index) => (
             <div key={index} className="flex flex-col items-center">
               <span className="text-xs text-[var(--color-text-muted)] mb-2 font-medium">
-                {getHebrewDayName(day.date)}
+                {HEBREW_DAYS[day.date.getDay()]}
               </span>
               <div
                 className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-semibold transition-all ${
                   day.isToday
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-glow-sm'
+                    ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30 shadow-glow-sm'
                     : day.hasWorkout
-                    ? 'bg-emerald-500/15 text-emerald-400'
+                    ? 'bg-primary-500/15 text-primary-400'
                     : 'bg-[var(--color-bg-surface)] text-[var(--color-text-muted)] border border-[var(--color-border)]'
                 }`}
               >
                 {day.date.getDate()}
               </div>
               {day.hasWorkout && (
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 shadow-glow-sm" />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary-400 mt-2 shadow-glow-sm" />
               )}
             </div>
           ))}
@@ -494,9 +264,9 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
         </div>
       )}
 
-      <div className="premium-card-static p-5 border border-emerald-500/25 bg-gradient-to-br from-emerald-500/12 to-emerald-500/5">
+      <div className="premium-card-static p-5 border border-primary-500/25 bg-gradient-to-br from-primary-500/12 to-primary-500/5">
         <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="w-4 h-4 text-emerald-400" />
+          <Sparkles className="w-4 h-4 text-primary-400" />
           <h3 className="font-bold text-[var(--color-text-primary)] text-sm md:text-base">
             טיפ היום
           </h3>
@@ -508,41 +278,18 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
       </div>
     </div>
   );
-}
+});
 
 interface StatCardProps {
   icon: React.ReactNode;
   label: string;
   value: string;
-  color: 'emerald' | 'cyan' | 'amber' | 'teal';
+  color: 'primary' | 'blue' | 'amber' | 'slate';
   isSmallText?: boolean;
 }
 
-function StatCard({ icon, label, value, color, isSmallText }: StatCardProps) {
-  const colorConfig = {
-    emerald: {
-      bg: 'bg-emerald-500/15',
-      text: 'text-emerald-400',
-      glow: 'shadow-[0_0_15px_rgba(16,185,129,0.15)]',
-    },
-    cyan: {
-      bg: 'bg-cyan-500/15',
-      text: 'text-cyan-400',
-      glow: 'shadow-[0_0_15px_rgba(6,182,212,0.15)]',
-    },
-    amber: {
-      bg: 'bg-amber-500/15',
-      text: 'text-amber-400',
-      glow: 'shadow-[0_0_15px_rgba(245,158,11,0.15)]',
-    },
-    teal: {
-      bg: 'bg-teal-500/15',
-      text: 'text-teal-400',
-      glow: 'shadow-[0_0_15px_rgba(20,184,166,0.15)]',
-    },
-  };
-
-  const config = colorConfig[color];
+const StatCard = memo(function StatCard({ icon, label, value, color, isSmallText }: StatCardProps) {
+  const config = COLOR_CONFIGS[color];
 
   return (
     <div className={`stat-card p-4 md:p-4.5 ${config.glow}`}>
@@ -561,12 +308,7 @@ function StatCard({ icon, label, value, color, isSmallText }: StatCardProps) {
       </p>
     </div>
   );
-}
-
-function truncateGoal(goal: string): string {
-  if (goal.length <= 20) return goal;
-  return goal.substring(0, 18) + '...';
-}
+});
 
 interface TodayTileProps {
   icon: React.ReactNode;
@@ -575,11 +317,11 @@ interface TodayTileProps {
   type: 'workout' | 'weigh' | 'food' | 'habit';
 }
 
-function TodayTile({ icon, label, status, type }: TodayTileProps) {
-  const getStatusLabel = () => {
+const TodayTile = memo(function TodayTile({ icon, label, status, type }: TodayTileProps) {
+  const statusLabel = (() => {
     switch (status) {
       case 'completed':
-        return '✅ הושלם';
+        return 'הושלם';
       case 'in_progress':
         return 'בתהליך';
       case 'planned':
@@ -589,20 +331,16 @@ function TodayTile({ icon, label, status, type }: TodayTileProps) {
       default:
         return 'לא בוצע';
     }
-  };
+  })();
 
-  const getStatusClass = () => {
-    if (status === 'completed') {
-      return 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400';
-    }
-    if (status === 'partial' || status === 'planned') {
-      return 'border-amber-500/30 bg-amber-500/5 text-amber-400';
-    }
-    return 'border-[var(--color-border)] bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)]';
-  };
+  const statusClass = status === 'completed'
+    ? 'border-primary-500/40 bg-primary-500/10 text-primary-400'
+    : (status === 'partial' || status === 'planned')
+      ? 'border-amber-500/30 bg-amber-500/5 text-amber-400'
+      : 'border-[var(--color-border)] bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)]';
 
   return (
-    <div className={`stat-card p-3.5 md:p-4 flex flex-col gap-2 border ${getStatusClass()}`}>
+    <div className={`stat-card p-3.5 md:p-4 flex flex-col gap-2 border ${statusClass}`}>
       <div className="flex items-center gap-2">
         <div className="w-9 h-9 rounded-xl bg-[var(--color-bg-elevated)] flex items-center justify-center">
           {icon}
@@ -612,10 +350,10 @@ function TodayTile({ icon, label, status, type }: TodayTileProps) {
             {label}
           </span>
           <span className="text-[10px] text-[var(--color-text-muted)]">
-            {getStatusLabel()}
+            {statusLabel}
           </span>
         </div>
       </div>
     </div>
   );
-}
+});

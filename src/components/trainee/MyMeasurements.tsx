@@ -14,6 +14,7 @@ import {
   Minus,
   Ruler,
 } from 'lucide-react';
+import { themeColors } from '@/utils/themeColors';
 import {
   LineChart,
   Line,
@@ -166,17 +167,28 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
 
     setSubmitting(true);
 
-    const { error } = await supabase.from('trainee_self_weights').insert({
+    const { error, data } = await supabase.from('trainee_self_weights').insert({
       trainee_id: traineeId,
       weight_kg: parseFloat(newWeight.weight_kg),
       weight_date: newWeight.weight_date,
       notes: newWeight.notes || null,
-    });
+    }).select().single();
 
     if (error) {
       toast.error('שגיאה בשמירת המשקל');
       setSubmitting(false);
       return;
+    }
+
+    // Optimistic update: add the new weight to state immediately
+    if (data) {
+      setSelfWeights((prev) => {
+        const updated = [data, ...prev];
+        // Sort by date descending to maintain order
+        return updated.sort((a, b) => 
+          new Date(b.weight_date).getTime() - new Date(a.weight_date).getTime()
+        );
+      });
     }
 
     if (trainerId) {
@@ -189,6 +201,9 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
       });
     }
 
+    // Wait for data to reload before closing modal
+    await loadData();
+
     toast.success('המשקל נשלח למאמן שלך!');
     setShowAddModal(false);
     setNewWeight({
@@ -196,7 +211,6 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
       weight_date: new Date().toISOString().split('T')[0],
       notes: '',
     });
-    loadData();
     setSubmitting(false);
   };
 
@@ -218,7 +232,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
       <div className="space-y-4 pb-4">
         <Skeleton variant="rounded" height={60} className="w-full" />
         <div className="premium-card-static p-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <Skeleton key={i} variant="rounded" height={80} />
             ))}
@@ -252,7 +266,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
               </span>
             </div>
             <div className="p-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <StatCard
                   icon={Scale}
                   label="משקל"
@@ -294,7 +308,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
                   label="BMI"
                   value={latestMeasurement.bmi}
                   unit=""
-                  color="cyan"
+                  color="blue"
                 />
               </div>
             </div>
@@ -308,10 +322,10 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
             latestMeasurement.left_arm) && (
             <div className="premium-card-static overflow-hidden">
               <div className="bg-[var(--color-bg-surface)] px-4 py-3 border-b border-[var(--color-border)] flex items-center gap-2">
-                <Ruler className="w-5 h-5 text-emerald-400" />
+                <Ruler className="w-5 h-5 text-primary-400" />
                 <h3 className="font-bold text-[var(--color-text-primary)]">היקפים</h3>
               </div>
-              <div className="p-4 grid grid-cols-2 gap-3">
+              <div className="p-3 sm:p-4 grid grid-cols-2 gap-2 sm:gap-3">
                 {latestMeasurement.chest_back && (
                   <CircumferenceItem label="חזה/גב" value={latestMeasurement.chest_back} />
                 )}
@@ -335,9 +349,9 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
           )}
         </>
       ) : (
-        <div className="premium-card-static p-8 text-center">
-          <div className="w-16 h-16 bg-emerald-500/15 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
-            <Scale className="w-8 h-8 text-emerald-400" />
+        <div className="premium-card-static p-5 sm:p-8 text-center">
+          <div className="w-16 h-16 bg-primary-500/15 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary-500/20">
+            <Scale className="w-8 h-8 text-primary-400" />
           </div>
           <h3 className="font-medium text-[var(--color-text-primary)] mb-2">אין מדידות עדיין</h3>
           <p className="text-sm text-[var(--color-text-muted)]">המאמן עדיין לא ביצע מדידות</p>
@@ -356,7 +370,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
                     onClick={() => setChartPeriod(period)}
                     className={`px-3 py-1 text-xs rounded-lg transition-colors ${
                       chartPeriod === period
-                        ? 'bg-emerald-500 text-white'
+                        ? 'bg-primary-500 text-white'
                         : 'bg-[var(--color-bg-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border)]'
                     }`}
                   >
@@ -394,9 +408,9 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
                     yAxisId="weight"
                     type="monotone"
                     dataKey="weight"
-                    stroke="#10b981"
+                    stroke={themeColors.chartPrimary}
                     strokeWidth={2}
-                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4, stroke: '#18181b' }}
+                    dot={{ fill: themeColors.chartPrimary, strokeWidth: 2, r: 4, stroke: themeColors.zinc950 }}
                     connectNulls
                   />
                   <Line
@@ -413,7 +427,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
             </div>
             <div className="flex items-center justify-center gap-4 mt-2 text-xs text-[var(--color-text-muted)]">
               <span className="flex items-center gap-1">
-                <span className="w-3 h-3 bg-emerald-500 rounded-full"></span>
+                <span className="w-3 h-3 bg-primary-500 rounded-full"></span>
                 משקל
               </span>
               <span className="flex items-center gap-1">
@@ -458,7 +472,7 @@ export default function MyMeasurements({ traineeId, trainerId, traineeName }: My
                 </button>
 
                 {expandedMeasurement === m.id && (
-                  <div className="mt-4 pt-4 border-t border-[var(--color-border)] grid grid-cols-2 gap-3 text-sm">
+                  <div className="mt-4 pt-4 border-t border-[var(--color-border)] grid grid-cols-2 gap-2 sm:gap-3 text-sm">
                     {m.weight && (
                       <div>
                         <span className="text-[var(--color-text-muted)]">משקל:</span>{' '}
@@ -651,12 +665,11 @@ interface StatCardProps {
 
 function StatCard({ icon: Icon, label, value, unit, color, trend }: StatCardProps) {
   const colorClasses: Record<string, { bg: string; text: string; icon: string }> = {
-    green: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', icon: 'text-emerald-400' },
+    green: { bg: 'bg-primary-500/15', text: 'text-primary-400', icon: 'text-primary-400' },
     orange: { bg: 'bg-orange-500/15', text: 'text-orange-400', icon: 'text-orange-400' },
     blue: { bg: 'bg-blue-500/15', text: 'text-blue-400', icon: 'text-blue-400' },
     rose: { bg: 'bg-rose-500/15', text: 'text-rose-400', icon: 'text-rose-400' },
     amber: { bg: 'bg-amber-500/15', text: 'text-amber-400', icon: 'text-amber-400' },
-    cyan: { bg: 'bg-cyan-500/15', text: 'text-cyan-400', icon: 'text-cyan-400' },
   };
 
   const colors = colorClasses[color] || colorClasses.green;
@@ -676,7 +689,7 @@ function StatCard({ icon: Icon, label, value, unit, color, trend }: StatCardProp
           <span
             className={`text-xs mr-1 flex items-center ${
               trend.direction === 'down'
-                ? 'text-emerald-400'
+                ? 'text-primary-400'
                 : trend.direction === 'up'
                 ? 'text-red-400'
                 : 'text-[var(--color-text-muted)]'

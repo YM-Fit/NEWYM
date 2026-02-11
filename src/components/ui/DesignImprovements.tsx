@@ -31,8 +31,8 @@ export function FloatingLabelInput({
       <label
         className={`absolute right-3 transition-all duration-300 pointer-events-none ${
           isFloating
-            ? 'top-2 text-xs text-emerald-400 font-semibold'
-            : 'top-4 text-sm text-zinc-400'
+            ? 'top-2 text-xs text-primary font-semibold'
+            : 'top-4 text-sm text-muted'
         }`}
       >
         {label}
@@ -44,18 +44,18 @@ export function FloatingLabelInput({
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         className={`glass-input w-full pt-6 pb-2 px-3 ${
-          error ? 'border-red-500' : ''
+          error ? 'border-danger' : ''
         }`}
         {...props}
       />
       {error && (
-        <p className="absolute left-0 top-full mt-1 text-xs text-red-400 flex items-center gap-1">
+        <p className="absolute left-0 top-full mt-1 text-xs text-danger flex items-center gap-1">
           <X className="w-3 h-3" />
           {error}
         </p>
       )}
       {!error && hasValue && (
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-success">
           <Check className="w-5 h-5" />
         </div>
       )}
@@ -69,13 +69,13 @@ export function AnimatedStatCard({
   label,
   icon: Icon,
   trend,
-  color = 'emerald',
+  color = 'primary',
 }: {
   value: string | number;
   label: string;
   icon: any;
   trend?: number;
-  color?: 'emerald' | 'cyan' | 'amber' | 'rose';
+  color?: 'primary' | 'blue' | 'amber' | 'rose';
 }) {
   const [displayValue, setDisplayValue] = useState(0);
 
@@ -101,10 +101,10 @@ export function AnimatedStatCard({
   }, [value]);
 
   const colorClasses = {
-    emerald: 'from-emerald-500/20 to-emerald-500/5 text-emerald-400',
-    cyan: 'from-cyan-500/20 to-cyan-500/5 text-cyan-400',
-    amber: 'from-amber-500/20 to-amber-500/5 text-amber-400',
-    rose: 'from-rose-500/20 to-rose-500/5 text-rose-400',
+    primary: 'from-primary/20 to-primary/5 text-primary',
+    blue: 'from-info/20 to-info/5 text-info',
+    amber: 'from-warning/20 to-warning/5 text-warning',
+    rose: 'from-danger/20 to-danger/5 text-danger',
   };
 
   return (
@@ -115,7 +115,7 @@ export function AnimatedStatCard({
         </div>
         {trend && (
           <div className={`flex items-center gap-1 text-sm ${
-            trend > 0 ? 'text-emerald-400' : 'text-red-400'
+            trend > 0 ? 'text-success' : 'text-danger'
           }`}>
             <TrendingUp className={`w-4 h-4 ${trend < 0 ? 'rotate-180' : ''}`} />
             <span>{Math.abs(trend)}%</span>
@@ -127,7 +127,7 @@ export function AnimatedStatCard({
       }`}>
         {typeof value === 'number' ? displayValue : value}
       </div>
-      <p className="text-zinc-400 text-sm">{label}</p>
+      <p className="text-muted text-sm">{label}</p>
     </div>
   );
 }
@@ -136,9 +136,9 @@ export function AnimatedStatCard({
 export function SkeletonCard() {
   return (
     <div className="premium-card-static animate-pulse">
-      <div className="h-4 bg-zinc-700 rounded w-3/4 mb-3" />
-      <div className="h-4 bg-zinc-700 rounded w-1/2 mb-4" />
-      <div className="h-20 bg-zinc-700 rounded" />
+      <div className="h-4 bg-surface/70 rounded w-3/4 mb-3" />
+      <div className="h-4 bg-surface/70 rounded w-1/2 mb-4" />
+      <div className="h-20 bg-surface/70 rounded" />
     </div>
   );
 }
@@ -169,11 +169,11 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center mb-6 animate-float-slow">
-        <Icon className="w-12 h-12 text-emerald-400" />
+      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-6 animate-float-slow">
+        <Icon className="w-12 h-12 text-primary" />
       </div>
-      <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
-      <p className="text-zinc-400 text-center max-w-md mb-6">{description}</p>
+      <h3 className="text-xl font-semibold text-foreground mb-2">{title}</h3>
+      <p className="text-muted text-center max-w-md mb-6">{description}</p>
       {action && actionLabel && (
         <button
           onClick={action}
@@ -189,13 +189,13 @@ export function EmptyState({
 // 5. Success Celebration
 export function SuccessCelebration({ message }: { message: string }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/60 backdrop-blur-sm animate-fade-in">
       <div className="premium-card p-8 max-w-md mx-4 text-center animate-scale-in">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mx-auto mb-4 animate-bounce-subtle">
-          <Award className="w-10 h-10 text-white" />
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-info flex items-center justify-center mx-auto mb-4 animate-bounce-subtle">
+          <Award className="w-10 h-10 text-inverse" />
         </div>
-        <h3 className="text-2xl font-bold text-white mb-2">כל הכבוד!</h3>
-        <p className="text-zinc-400">{message}</p>
+        <h3 className="text-2xl font-bold text-foreground mb-2">כל הכבוד!</h3>
+        <p className="text-muted">{message}</p>
       </div>
     </div>
   );
@@ -237,7 +237,7 @@ export function EnhancedButton({
       </span>
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-inverse/30 border-t-inverse rounded-full animate-spin" />
         </div>
       )}
     </button>
@@ -249,12 +249,12 @@ export function AnimatedProgressBar({
   value,
   max = 100,
   label,
-  color = 'emerald',
+  color = 'primary',
 }: {
   value: number;
   max?: number;
   label?: string;
-  color?: 'emerald' | 'cyan' | 'amber' | 'rose';
+  color?: 'primary' | 'blue' | 'amber' | 'rose';
 }) {
   const percentage = Math.min((value / max) * 100, 100);
   const [animatedValue, setAnimatedValue] = useState(0);
@@ -279,21 +279,21 @@ export function AnimatedProgressBar({
   }, [percentage]);
 
   const colorClasses = {
-    emerald: 'from-emerald-500 to-emerald-600',
-    cyan: 'from-cyan-500 to-cyan-600',
-    amber: 'from-amber-500 to-amber-600',
-    rose: 'from-rose-500 to-rose-600',
+    primary: 'from-primary to-primary/80',
+    blue: 'from-info to-info/80',
+    amber: 'from-warning to-warning/80',
+    rose: 'from-danger to-danger/80',
   };
 
   return (
     <div className="w-full">
       {label && (
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm text-zinc-400">{label}</span>
-          <span className="text-sm font-semibold text-white">{Math.round(animatedValue)}%</span>
+          <span className="text-sm text-muted">{label}</span>
+          <span className="text-sm font-semibold text-foreground">{Math.round(animatedValue)}%</span>
         </div>
       )}
-      <div className="w-full h-3 bg-zinc-800 rounded-full overflow-hidden">
+      <div className="w-full h-3 bg-surface rounded-full overflow-hidden">
         <div
           className={`h-full bg-gradient-to-r ${colorClasses[color]} rounded-full transition-all duration-1000 ease-out shadow-glow`}
           style={{ width: `${animatedValue}%` }}
@@ -376,13 +376,13 @@ export function GradientText({
 }: {
   children: React.ReactNode;
   className?: string;
-  gradient?: 'primary' | 'emerald' | 'cyan' | 'amber';
+  gradient?: 'primary' | 'primary' | 'blue' | 'amber';
 }) {
   const gradientClasses = {
     primary: 'text-gradient-primary',
-    emerald: 'bg-gradient-to-r from-emerald-400 to-emerald-600 bg-clip-text text-transparent',
-    cyan: 'bg-gradient-to-r from-cyan-400 to-cyan-600 bg-clip-text text-transparent',
-    amber: 'bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent',
+    primary: 'bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent',
+    blue: 'bg-gradient-to-r from-info to-info/80 bg-clip-text text-transparent',
+    amber: 'bg-gradient-to-r from-warning to-warning/80 bg-clip-text text-transparent',
   };
 
   return (
@@ -400,11 +400,11 @@ export function DesignImprovementsDemo() {
   return (
     <div className="p-8 space-y-8 max-w-4xl mx-auto">
       <div>
-        <h2 className="text-2xl font-bold text-white mb-4">דוגמאות שיפורי עיצוב</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-4">דוגמאות שיפורי עיצוב</h2>
         
         {/* Floating Label Input */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-white mb-4">Floating Label Input</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Floating Label Input</h3>
           <FloatingLabelInput
             label="שם מלא"
             value={inputValue}
@@ -414,21 +414,21 @@ export function DesignImprovementsDemo() {
 
         {/* Animated Stat Cards */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-white mb-4">Animated Stat Cards</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Animated Stat Cards</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <AnimatedStatCard
               value={125}
               label="סה&quot;כ מתאמנים"
               icon={Users}
               trend={12}
-              color="emerald"
+              color="primary"
             />
             <AnimatedStatCard
               value={89}
               label="יעדים הושגו"
               icon={Target}
               trend={5}
-              color="cyan"
+              color="blue"
             />
             <AnimatedStatCard
               value={42}
@@ -442,13 +442,13 @@ export function DesignImprovementsDemo() {
 
         {/* Progress Bar */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-white mb-4">Animated Progress Bar</h3>
-          <AnimatedProgressBar value={75} max={100} label="התקדמות חודשית" color="emerald" />
+          <h3 className="text-lg font-semibold text-foreground mb-4">Animated Progress Bar</h3>
+          <AnimatedProgressBar value={75} max={100} label="התקדמות חודשית" color="primary" />
         </div>
 
         {/* Enhanced Button */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-white mb-4">Enhanced Button</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Enhanced Button</h3>
           <div className="flex gap-4">
             <EnhancedButton icon={Check}>שמור</EnhancedButton>
             <EnhancedButton loading>שומר...</EnhancedButton>
@@ -457,7 +457,7 @@ export function DesignImprovementsDemo() {
 
         {/* Empty State */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-white mb-4">Empty State</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Empty State</h3>
           <div className="premium-card-static">
             <EmptyState
               icon={Users}
@@ -471,7 +471,7 @@ export function DesignImprovementsDemo() {
 
         {/* Gradient Text */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-white mb-4">Gradient Text</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Gradient Text</h3>
           <GradientText className="text-4xl font-bold">כותרת עם Gradient</GradientText>
         </div>
 

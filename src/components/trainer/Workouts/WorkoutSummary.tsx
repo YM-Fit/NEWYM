@@ -4,6 +4,7 @@ import {
   Flame, Target, Star, Share2, CheckCircle, Sparkles
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { themeColors } from '@/utils/themeColors';
 
 interface WorkoutExercise {
   exercise: {
@@ -45,15 +46,15 @@ interface WorkoutSummaryProps {
 }
 
 const MUSCLE_GROUP_COLORS: Record<string, string> = {
-  'chest': '#ef4444',
-  'back': '#3b82f6',
-  'shoulders': '#f59e0b',
-  'biceps': '#10b981',
-  'triceps': '#8b5cf6',
-  'legs': '#ec4899',
-  'glutes': '#f97316',
-  'core': '#06b6d4',
-  'default': '#6b7280',
+  'chest': themeColors.chartRose,
+  'back': themeColors.chartBlue,
+  'shoulders': themeColors.chartAmber,
+  'biceps': themeColors.chartPrimary,
+  'triceps': themeColors.chartBlue,
+  'legs': themeColors.chartPink,
+  'glutes': themeColors.chartOrange,
+  'core': themeColors.chartPrimary,
+  'default': themeColors.zinc500,
 };
 
 export default function WorkoutSummary({
@@ -175,7 +176,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
               <div
                 className="w-3 h-3 rounded-sm"
                 style={{
-                  backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'][Math.floor(Math.random() * 5)],
+                  backgroundColor: [themeColors.chartRose, themeColors.chartAmber, themeColors.chartPrimary, themeColors.chartBlue, themeColors.muted][Math.floor(Math.random() * 5)],
                   transform: `rotate(${Math.random() * 360}deg)`,
                 }}
               />
@@ -184,8 +185,8 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
         </div>
       )}
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-4">
-        <div className="sticky top-0 bg-emerald-500 p-6 rounded-t-2xl">
+      <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-4">
+        <div className="sticky top-0 bg-primary p-6 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 rtl:space-x-reverse">
               <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
@@ -193,7 +194,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">אימון הושלם!</h2>
-                <p className="text-sm text-emerald-100">{traineeName}</p>
+                <p className="text-sm text-primary-100">{traineeName}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -230,16 +231,16 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 {personalRecords.map((pr, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/30"
+                    className="flex items-center justify-between bg-surface rounded-xl p-3 border border-border"
                   >
                     <div className="flex items-center gap-3">
                       <Star className="w-5 h-5 text-amber-500" />
-                      <span className="font-semibold text-white">{pr.exerciseName}</span>
+                      <span className="font-semibold text-foreground">{pr.exerciseName}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-zinc-500 line-through">{pr.oldValue}</span>
-                      <TrendingUp className="w-4 h-4 text-emerald-500" />
-                      <span className="font-bold text-emerald-400">
+                      <span className="text-sm text-muted line-through">{pr.oldValue}</span>
+                      <TrendingUp className="w-4 h-4 text-primary-400" />
+                      <span className="font-bold text-primary-400">
                         {pr.newValue} {pr.type === 'weight' ? 'ק"ג' : pr.type === 'reps' ? 'חזרות' : 'ק"ג'}
                       </span>
                     </div>
@@ -250,28 +251,28 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
           )}
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className={`bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 transition-all duration-500 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div className={`bg-primary/10 border border-primary/30 rounded-xl p-4 transition-all duration-500 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <div className="flex items-center gap-2 mb-2">
-                <Dumbbell className="w-5 h-5 text-emerald-400" />
-                <span className="text-sm font-semibold text-emerald-400">נפח כולל</span>
+                <Dumbbell className="w-5 h-5 text-primary-400" />
+                <span className="text-sm font-semibold text-primary-400">נפח כולל</span>
               </div>
-              <p className="text-2xl font-bold text-white">{totalVolume.toLocaleString()}</p>
-              <p className="text-xs text-emerald-400/70">ק"ג</p>
+              <p className="text-2xl font-bold text-foreground">{totalVolume.toLocaleString()}</p>
+              <p className="text-xs text-primary-400/70">ק"ג</p>
               {volumeChange !== null && (
-                <div className={`flex items-center gap-1 mt-2 text-xs ${volumeChange >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <div className={`flex items-center gap-1 mt-2 text-xs ${volumeChange >= 0 ? 'text-primary-400' : 'text-danger'}`}>
                   {volumeChange >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                   <span>{Math.abs(volumeChange).toFixed(1)}% מהאימון הקודם</span>
                 </div>
               )}
             </div>
 
-            <div className={`bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-4 transition-all duration-500 delay-100 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div className={`bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 transition-all duration-500 delay-100 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <div className="flex items-center gap-2 mb-2">
-                <Target className="w-5 h-5 text-cyan-400" />
-                <span className="text-sm font-semibold text-cyan-400">תרגילים</span>
+                <Target className="w-5 h-5 text-blue-400" />
+                <span className="text-sm font-semibold text-blue-400">תרגילים</span>
               </div>
-              <p className="text-2xl font-bold text-white">{exercises.length}</p>
-              <p className="text-xs text-cyan-400/70">{totalSets} סטים</p>
+              <p className="text-2xl font-bold text-foreground">{exercises.length}</p>
+              <p className="text-xs text-blue-400/70">{totalSets} סטים</p>
             </div>
 
             <div className={`bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 transition-all duration-500 delay-200 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -279,7 +280,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 <Clock className="w-5 h-5 text-amber-400" />
                 <span className="text-sm font-semibold text-amber-400">משך</span>
               </div>
-              <p className="text-2xl font-bold text-white">{formatDuration(duration)}</p>
+              <p className="text-2xl font-bold text-foreground">{formatDuration(duration)}</p>
             </div>
 
             <div className={`bg-red-500/10 border border-red-500/30 rounded-xl p-4 transition-all duration-500 delay-300 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -287,29 +288,57 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 <Flame className="w-5 h-5 text-red-400" />
                 <span className="text-sm font-semibold text-red-400">מאמץ</span>
               </div>
-              <p className="text-2xl font-bold text-white">{effortScore}</p>
+              <p className="text-2xl font-bold text-foreground">{effortScore}</p>
               <p className="text-xs text-red-400/70">{getEffortLabel(effortScore)}</p>
             </div>
           </div>
 
           {chartData.length > 0 && (
-            <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-2xl p-6">
+            <div className="bg-surface/30 border border-border rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 bg-primary/20 border border-primary/30 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-primary-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white">נפח לפי קבוצת שריר</h3>
+                <h3 className="text-lg font-bold text-foreground">נפח לפי קבוצת שריר</h3>
               </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 80, bottom: 5 }}>
-                    <XAxis type="number" tickFormatter={(v) => `${(v / 1000).toFixed(1)}K`} stroke="#71717a" />
-                    <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 12, fill: '#a1a1aa' }} stroke="#71717a" />
+                    <XAxis 
+                      type="number" 
+                      tickFormatter={(v) => `${(v / 1000).toFixed(1)}K`} 
+                      stroke={themeColors.zinc500}
+                      tick={{ fill: themeColors.zinc400 }}
+                      tickLine={false}
+                      axisLine={{ stroke: themeColors.zinc700, strokeOpacity: 0.5 }}
+                    />
+                    <YAxis 
+                      type="category" 
+                      dataKey="name" 
+                      width={70} 
+                      tick={{ fontSize: 12, fill: themeColors.zinc400 }} 
+                      stroke={themeColors.zinc500}
+                      tickLine={false}
+                      axisLine={{ stroke: themeColors.zinc700, strokeOpacity: 0.5 }}
+                    />
                     <Tooltip
                       formatter={(value: number) => [`${value.toLocaleString()} ק"ג`, 'נפח']}
-                      contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: '#27272a', color: '#fff' }}
+                      contentStyle={{ 
+                        borderRadius: '12px', 
+                        border: `1px solid ${themeColors.zinc700}40`, 
+                        backgroundColor: `${themeColors.zinc900}F2`, 
+                        backdropFilter: 'blur(8px)',
+                        color: themeColors.textInverse,
+                        padding: '12px'
+                      }}
+                      cursor={{ fill: `${themeColors.chartPrimary}1A` }}
                     />
-                    <Bar dataKey="volume" radius={[0, 8, 8, 0]}>
+                    <Bar 
+                      dataKey="volume" 
+                      radius={[0, 8, 8, 0]}
+                      animationDuration={1000}
+                      animationEasing="ease-in-out"
+                    >
                       {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
@@ -320,8 +349,8 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
             </div>
           )}
 
-          <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-2xl p-6">
-            <h3 className="font-bold text-white mb-4">סיכום תרגילים</h3>
+          <div className="bg-surface/30 border border-border rounded-2xl p-6">
+            <h3 className="font-bold text-foreground mb-4">סיכום תרגילים</h3>
             <div className="space-y-2">
               {exercises.map((ex, index) => {
                 const exVolume = ex.sets.reduce((t, s) => t + (s.weight * s.reps), 0);
@@ -329,15 +358,15 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 return (
                   <div
                     key={index}
-                    className="flex items-center justify-between bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/30"
+                    className="flex items-center justify-between bg-surface rounded-xl p-3 border border-border"
                   >
                     <div>
-                      <p className="font-semibold text-white">{ex.exercise.name}</p>
-                      <p className="text-xs text-zinc-500">{ex.sets.length} סטים</p>
+                      <p className="font-semibold text-foreground">{ex.exercise.name}</p>
+                      <p className="text-xs text-muted">{ex.sets.length} סטים</p>
                     </div>
                     <div className="text-left">
-                      <p className="font-bold text-emerald-400">{exVolume.toLocaleString()} ק"ג</p>
-                      <p className="text-xs text-zinc-500">מקס: {maxWeight} ק"ג</p>
+                      <p className="font-bold text-primary-400">{exVolume.toLocaleString()} ק"ג</p>
+                      <p className="text-xs text-muted">מקס: {maxWeight} ק"ג</p>
                     </div>
                   </div>
                 );
@@ -346,10 +375,10 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
           </div>
         </div>
 
-        <div className="sticky bottom-0 bg-zinc-800/50 border-t border-zinc-700/30 p-6 rounded-b-2xl">
+        <div className="sticky bottom-0 bg-surface border-t border-border p-6 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all"
+            className="w-full bg-primary-500 hover:bg-primary-600 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all"
           >
             סגור
           </button>

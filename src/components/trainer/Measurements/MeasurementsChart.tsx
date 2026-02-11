@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { BodyMeasurement } from '../../../types';
 import { TrendingUp, TrendingDown, BarChart3, List, Table2, Minus } from 'lucide-react';
+import { themeColors } from '@/utils/themeColors';
 
 interface MeasurementsChartProps {
   measurements: BodyMeasurement[];
@@ -29,12 +30,12 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
 
   const getMetricColor = (metric: string) => {
     switch (metric) {
-      case 'weight': return '#10b981';
-      case 'bodyFat': return '#f59e0b';
-      case 'muscleMass': return '#06b6d4';
-      case 'waterPercentage': return '#3b82f6';
-      case 'metabolicAge': return '#ef4444';
-      default: return '#71717a';
+      case 'weight': return themeColors.chartPrimary;
+      case 'bodyFat': return themeColors.chartAmber;
+      case 'muscleMass': return themeColors.chartBlue;
+      case 'waterPercentage': return themeColors.chartBlue;
+      case 'metabolicAge': return themeColors.chartRose;
+      default: return themeColors.zinc500;
     }
   };
 
@@ -82,26 +83,40 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3 shadow-xl">
-          <p className="text-zinc-400 text-sm mb-2">{label}</p>
+        <div className="bg-card/95 light:bg-white/95 backdrop-blur-sm border border-border light:border-border rounded-xl p-4 shadow-2xl">
+          <p className="text-muted light:text-muted text-xs mb-3 font-medium">{label}</p>
           {isPairWithBothMembers && payload.length > 1 ? (
             <div className="space-y-2">
               {payload.map((entry: any, index: number) => {
                 if (entry.value === null || entry.value === undefined) return null;
                 const memberName = index === 0 ? (trainee?.pairName1 || 'בן זוג 1') : (trainee?.pairName2 || 'בן זוג 2');
-                const color = index === 0 ? '#06b6d4' : '#f59e0b';
+                const color = index === 0 ? themeColors.chartBlue : themeColors.chartAmber;
                 return (
-                  <p key={index} className="text-white font-bold text-base" style={{ color }}>
-                    {memberName}: {entry.value} {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
-                  </p>
+                  <div key={index} className="flex items-baseline gap-2">
+                    <p className="text-xs text-muted light:text-muted font-medium">{memberName}:</p>
+                    <p className="font-bold text-xl" style={{ color }}>
+                      {entry.value}
+                    </p>
+                    <p className="text-xs text-muted light:text-muted font-medium">
+                      {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
+                    </p>
+                  </div>
                 );
               })}
             </div>
           ) : (
-            <p className="text-white font-bold text-lg" style={{ color: getMetricColor(metric) }}>
-              {payload[0].value} {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
-            </p>
+            <div className="flex items-baseline gap-2">
+              <p className="font-bold text-2xl" style={{ color: getMetricColor(metric) }}>
+                {payload[0].value}
+              </p>
+              <p className="text-sm text-muted light:text-muted font-medium">
+                {metric === 'bodyFat' || metric === 'waterPercentage' ? '%' : metric === 'metabolicAge' ? '' : 'ק"ג'}
+              </p>
+            </div>
           )}
+          <div className="mt-2 pt-2 border-t border-border light:border-border">
+            <p className="text-xs text-muted light:text-muted">{getMetricLabel(metric)}</p>
+          </div>
         </div>
       );
     }
@@ -110,9 +125,9 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
 
   if (sortedMeasurements.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-zinc-500">
+      <div className="flex items-center justify-center h-64 text-muted">
         <div className="text-center">
-          <BarChart3 className="w-12 h-12 mx-auto mb-3 text-zinc-600" />
+          <BarChart3 className="w-12 h-12 mx-auto mb-3 text-muted" />
           <p>אין נתונים להצגה עבור {getMetricLabel(metric)}</p>
         </div>
       </div>
@@ -129,7 +144,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
         <div className="flex items-center gap-3">
           {totalChange && (
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-              totalChange.isPositive ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
+              totalChange.isPositive ? 'bg-primary-500/15 text-primary-400' : 'bg-red-500/15 text-red-400'
             }`}>
               {totalChange.isPositive ? (
                 <TrendingUp className="w-4 h-4" />
@@ -141,15 +156,15 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
               </span>
             </div>
           )}
-          <span className="text-xs text-zinc-500">
+          <span className="text-xs text-muted">
             {sortedMeasurements.length} מדידות
           </span>
         </div>
-        <div className="flex gap-1 bg-zinc-800/50 p-1 rounded-xl border border-zinc-700/50">
+        <div className="flex gap-1 bg-surface p-1 rounded-xl border border-border">
           <button
             onClick={() => setViewMode('chart')}
             className={`p-2 rounded-lg transition-all ${
-              viewMode === 'chart' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+              viewMode === 'chart' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
             }`}
             title="גרף"
           >
@@ -158,7 +173,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
           <button
             onClick={() => setViewMode('list')}
             className={`p-2 rounded-lg transition-all ${
-              viewMode === 'list' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+              viewMode === 'list' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
             }`}
             title="רשימה"
           >
@@ -167,7 +182,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
           <button
             onClick={() => setViewMode('table')}
             className={`p-2 rounded-lg transition-all ${
-              viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+              viewMode === 'table' ? 'bg-primary-500/15 text-primary-400' : 'text-muted hover:text-foreground'
             }`}
             title="טבלה"
           >
@@ -179,42 +194,87 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
       {viewMode === 'chart' && (
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={combinedChartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+            <LineChart data={combinedChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+              <CartesianGrid 
+                strokeDasharray="3 3" 
+                stroke={themeColors.zinc700} 
+                strokeOpacity={0.3}
+                vertical={false}
+              />
               <XAxis
                 dataKey="date"
-                stroke="#71717a"
+                stroke={themeColors.zinc500}
                 fontSize={12}
                 tickLine={false}
+                axisLine={{ stroke: themeColors.zinc700, strokeOpacity: 0.5 }}
+                tick={{ fill: themeColors.zinc400 }}
               />
               <YAxis
-                stroke="#71717a"
+                stroke={themeColors.zinc500}
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
+                tick={{ fill: themeColors.zinc400 }}
+                width={45}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip 
+                content={<CustomTooltip />} 
+                cursor={{ 
+                  stroke: isPairWithBothMembers ? themeColors.chartBlue : getMetricColor(metric), 
+                  strokeWidth: 1, 
+                  strokeDasharray: '5 5', 
+                  strokeOpacity: 0.3 
+                }} 
+              />
               {isPairWithBothMembers ? (
                 <>
                   <Line
                     type="monotone"
                     dataKey="value1"
-                    stroke="#06b6d4"
+                    stroke={themeColors.chartBlue}
                     strokeWidth={3}
-                    dot={{ fill: '#06b6d4', strokeWidth: 2, r: 5, stroke: '#18181b' }}
-                    activeDot={{ r: 7, stroke: '#06b6d4', strokeWidth: 2, fill: '#18181b' }}
+                    dot={{ 
+                      fill: themeColors.chartBlue, 
+                      strokeWidth: 3, 
+                      r: 5, 
+                      stroke: themeColors.zinc950,
+                      filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.3))'
+                    }}
+                    activeDot={{ 
+                      r: 8, 
+                      stroke: themeColors.chartBlue, 
+                      strokeWidth: 3, 
+                      fill: themeColors.zinc950,
+                      filter: `drop-shadow(0 0 8px ${themeColors.chartBlue})`
+                    }}
                     name={trainee?.pairName1 || 'בן זוג 1'}
                     connectNulls={false}
+                    animationDuration={1000}
+                    animationEasing="ease-in-out"
                   />
                   <Line
                     type="monotone"
                     dataKey="value2"
-                    stroke="#f59e0b"
+                    stroke={themeColors.chartAmber}
                     strokeWidth={3}
-                    dot={{ fill: '#f59e0b', strokeWidth: 2, r: 5, stroke: '#18181b' }}
-                    activeDot={{ r: 7, stroke: '#f59e0b', strokeWidth: 2, fill: '#18181b' }}
+                    dot={{ 
+                      fill: themeColors.chartAmber, 
+                      strokeWidth: 3, 
+                      r: 5, 
+                      stroke: themeColors.zinc950,
+                      filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.3))'
+                    }}
+                    activeDot={{ 
+                      r: 8, 
+                      stroke: themeColors.chartAmber, 
+                      strokeWidth: 3, 
+                      fill: themeColors.zinc950,
+                      filter: `drop-shadow(0 0 8px ${themeColors.chartAmber})`
+                    }}
                     name={trainee?.pairName2 || 'בן זוג 2'}
                     connectNulls={false}
+                    animationDuration={1000}
+                    animationEasing="ease-in-out"
                   />
                 </>
               ) : (
@@ -223,9 +283,23 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                   dataKey="value"
                   stroke={getMetricColor(metric)}
                   strokeWidth={3}
-                  dot={{ fill: getMetricColor(metric), strokeWidth: 2, r: 5, stroke: '#18181b' }}
-                  activeDot={{ r: 7, stroke: getMetricColor(metric), strokeWidth: 2, fill: '#18181b' }}
+                  dot={{ 
+                    fill: getMetricColor(metric), 
+                    strokeWidth: 3, 
+                    r: 5, 
+                    stroke: themeColors.zinc950,
+                    filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.3))'
+                  }}
+                  activeDot={{ 
+                    r: 8, 
+                    stroke: getMetricColor(metric), 
+                    strokeWidth: 3, 
+                    fill: themeColors.zinc950,
+                    filter: 'drop-shadow(0 0 8px ' + getMetricColor(metric) + ')'
+                  }}
                   name={getMetricLabel(metric)}
+                  animationDuration={1000}
+                  animationEasing="ease-in-out"
                 />
               )}
             </LineChart>
@@ -244,7 +318,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
             return (
               <div
                 key={measurement.id}
-                className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-xl border border-zinc-700/30 hover:border-zinc-600/50 transition-all"
+                className="flex items-center justify-between p-3 bg-surface/30 rounded-xl border border-border/30 hover:border-border-hover transition-all"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -256,14 +330,14 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                     </span>
                   </div>
                   <div>
-                    <p className="text-white font-semibold">
+                    <p className="text-foreground font-semibold">
                       {new Date(measurement.date).toLocaleDateString('he-IL', {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric'
                       })}
                     </p>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-muted">
                       {new Date(measurement.date).toLocaleDateString('he-IL', { weekday: 'long' })}
                     </p>
                   </div>
@@ -271,7 +345,7 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                 <div className="flex items-center gap-4">
                   {change && (
                     <div className={`flex items-center gap-1 text-sm ${
-                      change.isPositive ? 'text-emerald-400' : 'text-red-400'
+                      change.isPositive ? 'text-primary-400' : 'text-red-400'
                     }`}>
                       {change.diff === 0 ? (
                         <Minus className="w-3 h-3" />
@@ -307,14 +381,14 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
       {viewMode === 'table' && (
         <div className="overflow-x-auto max-h-72">
           <table className="w-full">
-            <thead className="sticky top-0 bg-zinc-900">
-              <tr className="border-b border-zinc-700/50">
-                <th className="text-right py-2 px-3 text-xs font-semibold text-zinc-400">#</th>
-                <th className="text-right py-2 px-3 text-xs font-semibold text-zinc-400">תאריך</th>
-                <th className="text-center py-2 px-3 text-xs font-semibold text-zinc-400">{getMetricLabel(metric)}</th>
-                <th className="text-center py-2 px-3 text-xs font-semibold text-zinc-400">שינוי</th>
-                <th className="text-center py-2 px-3 text-xs font-semibold text-zinc-400">שינוי %</th>
-                <th className="text-center py-2 px-3 text-xs font-semibold text-zinc-400">מהתחלה</th>
+            <thead className="sticky top-0 bg-card">
+              <tr className="border-b border-border">
+                <th className="text-right py-2 px-3 text-xs font-semibold text-muted">#</th>
+                <th className="text-right py-2 px-3 text-xs font-semibold text-muted">תאריך</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-muted">{getMetricLabel(metric)}</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-muted">שינוי</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-muted">שינוי %</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-muted">מהתחלה</th>
               </tr>
             </thead>
             <tbody>
@@ -326,10 +400,10 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                 const fromStart = firstValue ? getChange(value, firstValue) : null;
 
                 return (
-                  <tr key={measurement.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-all">
-                    <td className="py-2 px-3 text-zinc-500 text-sm">{arr.length - index}</td>
+                  <tr key={measurement.id} className="border-b border-border/50 hover:bg-surface/30 transition-all">
+                    <td className="py-2 px-3 text-muted text-sm">{arr.length - index}</td>
                     <td className="py-2 px-3">
-                      <span className="text-white text-sm">
+                      <span className="text-foreground text-sm">
                         {new Date(measurement.date).toLocaleDateString('he-IL')}
                       </span>
                     </td>
@@ -344,34 +418,34 @@ export default function MeasurementsChart({ measurements, metric, trainee }: Mea
                     <td className="py-2 px-3 text-center">
                       {change ? (
                         <span className={`text-sm font-medium ${
-                          change.isPositive ? 'text-emerald-400' : 'text-red-400'
+                          change.isPositive ? 'text-primary-400' : 'text-red-400'
                         }`}>
                           {change.diff > 0 ? '+' : ''}{change.diff.toFixed(1)}
                         </span>
                       ) : (
-                        <span className="text-zinc-600">-</span>
+                        <span className="text-muted">-</span>
                       )}
                     </td>
                     <td className="py-2 px-3 text-center">
                       {change ? (
                         <span className={`text-sm ${
-                          change.isPositive ? 'text-emerald-400' : 'text-red-400'
+                          change.isPositive ? 'text-primary-400' : 'text-red-400'
                         }`}>
                           {change.percentage}%
                         </span>
                       ) : (
-                        <span className="text-zinc-600">-</span>
+                        <span className="text-muted">-</span>
                       )}
                     </td>
                     <td className="py-2 px-3 text-center">
                       {fromStart && index < arr.length - 1 ? (
                         <span className={`text-sm font-medium px-2 py-0.5 rounded ${
-                          fromStart.isPositive ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
+                          fromStart.isPositive ? 'bg-primary-500/15 text-primary-400' : 'bg-red-500/15 text-red-400'
                         }`}>
                           {fromStart.diff > 0 ? '+' : ''}{fromStart.diff.toFixed(1)}
                         </span>
                       ) : (
-                        <span className="text-zinc-600">-</span>
+                        <span className="text-muted">-</span>
                       )}
                     </td>
                   </tr>

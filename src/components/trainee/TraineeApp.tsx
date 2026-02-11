@@ -1,58 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState, Suspense, lazy } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { supabase } from '../../lib/supabase';
+import { useTraineeQuery } from '../../hooks/queries/useTraineeQueries';
 import { Home, Dumbbell, Scale, LogOut, ClipboardList, Calendar, Brain, Utensils, Activity, Plus, Sun, Moon } from 'lucide-react';
-import toast from 'react-hot-toast';
-import TraineeDashboard from './TraineeDashboard';
-import MyMeasurements from './MyMeasurements';
-import WorkoutHistory from './WorkoutHistory';
-import MyMealPlan from './MyMealPlan';
-import MyWorkoutPlan from './MyWorkoutPlan';
-import MyMentalTools from './MyMentalTools';
-import FoodDiary from './FoodDiary';
-import SelfWorkoutSession from './SelfWorkoutSession';
-import MyCardio from './MyCardio';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
+import Logo from '../common/Logo';
+import { lazyWithRetry } from '../../utils/lazyWithRetry';
 
-interface Trainee {
-  id: string;
-  full_name: string;
-  trainer_id: string;
-  trainer?: {
-    full_name: string;
-  };
-}
+const TraineeDashboard = lazy(() => import('./TraineeDashboard'));
+const MyMeasurements = lazy(() => import('./MyMeasurements'));
+const WorkoutHistory = lazy(() => import('./WorkoutHistory'));
+const MyMealPlan = lazy(() => import('./MyMealPlan'));
+const MyMentalTools = lazy(() => import('./MyMentalTools'));
+const FoodDiary = lazy(() => import('./FoodDiary'));
+const WorkoutSession = lazy(() => import('../trainer/Workouts/WorkoutSession'));
+const MyCardio = lazy(() => import('./MyCardio'));
+const MyWorkoutPlan = lazyWithRetry(() => import('./MyWorkoutPlan'), 3);
 
 export default function TraineeApp() {
   const { signOut, traineeId } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [trainee, setTrainee] = useState<Trainee | null>(null);
+  const { data: trainee, isLoading: loading } = useTraineeQuery(traineeId ?? null);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [loading, setLoading] = useState(true);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-
-  useEffect(() => {
-    loadTraineeData();
-  }, [traineeId]);
-
-  const loadTraineeData = async () => {
-    if (!traineeId) return;
-
-    const { data, error } = await supabase
-      .from('trainees')
-      .select('*, trainer:trainers(full_name)')
-      .eq('id', traineeId)
-      .maybeSingle();
-
-    if (error) {
-      toast.error('שגיאה בטעינת נתונים');
-    } else if (data) {
-      setTrainee(data);
-    }
-    setLoading(false);
-  };
 
   // Keyboard shortcuts
   useKeyboardShortcut('k', () => {
@@ -83,11 +54,11 @@ export default function TraineeApp() {
       >
         <div className="mx-auto max-w-5xl flex justify-between items-center gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-400 to-teal-500 flex items-center justify-center shadow-glow animate-scale-bounce">
-              <span className="text-white font-bold text-lg md:text-xl">
-                {trainee?.full_name?.charAt(0) || 'U'}
-              </span>
-            </div>
+            <Logo 
+              size="md" 
+              className="drop-shadow-[0_2px_8px_rgba(74,107,42,0.2)]"
+              animated={true}
+            />
             <div>
               <h1 className="text-base md:text-lg font-semibold text-[var(--color-text-primary)]">
                 שלום, {getFirstName(trainee?.full_name || '')}
@@ -186,14 +157,14 @@ export default function TraineeApp() {
                 onClick={() => { setActiveTab('workout-plan'); setShowMoreMenu(false); }}
               />
 
-              <div className="relative -mt-10">
+              <div className="relative -mt-8 sm:-mt-10">
                 <button
                   onClick={() => { setActiveTab('self-workout'); setShowMoreMenu(false); }}
-                  className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow transition-transform hover:scale-105 active:scale-95 border-4 border-[var(--color-bg-base)] focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-primary-400 via-primary-500 to-primary-700 flex items-center justify-center shadow-glow transition-transform hover:scale-105 active:scale-95 border-4 border-[var(--color-bg-base)] focus:outline-none focus:ring-2 focus:ring-primary-500/50"
                   aria-label="התחל אימון חדש"
                   title="אימון חדש"
                 >
-                  <Plus className="w-7 h-7 text-white" aria-hidden="true" />
+                  <Plus className="w-6 h-6 sm:w-7 sm:h-7 text-foreground" aria-hidden="true" />
                 </button>
               </div>
 
@@ -214,11 +185,11 @@ export default function TraineeApp() {
         </div>
       </nav>
 
-      <div className="fixed bottom-24 left-4 z-40">
+      <div className="fixed bottom-[104px] left-3 sm:left-4 z-40">
         <button
           onClick={() => setShowMoreMenu(!showMoreMenu)}
-          className={`glass-card px-4 py-2.5 rounded-xl text-sm font-medium transition-all border shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
-            showMoreMenu ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10 shadow-emerald-500/20' : 'text-[var(--color-text-secondary)] border-[var(--color-border)] hover:border-emerald-500/30 hover:text-emerald-400'
+          className={`glass-card px-3.5 sm:px-4 py-2.5 rounded-xl text-sm font-medium transition-all border shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500/50 active:scale-95 min-h-[44px] ${
+            showMoreMenu ? 'text-primary-400 border-primary-500/30 bg-primary-500/10 shadow-primary-500/20' : 'text-[var(--color-text-secondary)] border-[var(--color-border)] hover:border-primary-500/30 hover:text-primary-400'
           }`}
           aria-label={showMoreMenu ? 'סגור תפריט נוסף' : 'פתח תפריט נוסף'}
           aria-expanded={showMoreMenu}
@@ -228,30 +199,31 @@ export default function TraineeApp() {
         </button>
       </div>
 
-      <main 
+      <main
         id="main-content"
-        className="pb-32 px-4 pt-4"
+        className="pb-36 px-3 sm:px-4 pt-3 sm:pt-4"
         role="main"
         aria-label="תוכן ראשי"
       >
         <div className="mx-auto max-w-5xl space-y-4 md:space-y-6">
+        <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
         {activeTab === 'dashboard' && <TraineeDashboard traineeId={traineeId} traineeName={trainee?.full_name || ''} />}
         {activeTab === 'workout-plan' && <MyWorkoutPlan traineeId={traineeId} />}
-        {activeTab === 'workouts' && <WorkoutHistory traineeId={traineeId} traineeName={trainee?.full_name} trainerId={trainee?.trainer_id} />}
+        {activeTab === 'workouts' && <WorkoutHistory traineeId={traineeId} traineeName={trainee?.full_name} trainerId={trainee?.trainer_id} trainee={trainee} />}
         {activeTab === 'measurements' && <MyMeasurements traineeId={traineeId} trainerId={trainee?.trainer_id} traineeName={trainee?.full_name} />}
         {activeTab === 'menu' && <MyMealPlan traineeId={traineeId} />}
         {activeTab === 'mental' && <MyMentalTools traineeId={traineeId} />}
         {activeTab === 'diary' && <FoodDiary traineeId={traineeId} />}
         {activeTab === 'cardio' && <MyCardio traineeId={traineeId} />}
         {activeTab === 'self-workout' && trainee && (
-          <SelfWorkoutSession
-            traineeId={trainee.id}
-            trainerId={trainee.trainer_id}
-            traineeName={trainee.full_name}
+          <WorkoutSession
+            trainee={trainee}
             onBack={() => setActiveTab('dashboard')}
             onSave={() => setActiveTab('workouts')}
+            isSelfWorkout
           />
         )}
+        </Suspense>
         </div>
       </main>
     </div>
@@ -269,16 +241,16 @@ function TabButton({ icon: Icon, label, active, onClick }: TabButtonProps) {
   return (
     <button
       onClick={onClick}
-      className={`relative flex flex-col items-center py-1.5 px-2.5 rounded-2xl transition-all ${
+      className={`relative flex flex-col items-center min-w-[52px] min-h-[48px] py-2 px-3 rounded-2xl transition-all active:scale-95 ${
         active
-          ? 'text-emerald-400'
+          ? 'text-primary-400'
           : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
       }`}
     >
       {active && (
-        <span className="absolute inset-x-1 bottom-0 h-6 -z-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 shadow-glow-sm" />
+        <span className="absolute inset-x-1 bottom-0 h-7 -z-10 rounded-2xl bg-primary-500/10 border border-primary-500/30 shadow-glow-sm" />
       )}
-      <Icon className={`w-5 h-5 ${active ? 'drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]' : ''}`} />
+      <Icon className={`w-5 h-5 ${active ? 'drop-shadow-[0_0_8px_rgb(var(--color-primary)_/_0.6)]' : ''}`} />
       <span className="text-[10px] mt-1.5 font-medium tracking-wide">{label}</span>
     </button>
   );
@@ -297,11 +269,11 @@ function MoreMenuItem({ icon: Icon, label, active, onClick }: MoreMenuItemProps)
       onClick={onClick}
       className={`flex flex-col items-center p-3.5 rounded-xl transition-all ${
         active
-          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-glow-sm'
-          : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-accent-bg-hover)] hover:text-[var(--color-text-primary)] border border-transparent hover:border-emerald-500/20'
+          ? 'bg-primary-500/15 text-primary-400 border border-primary-500/30 shadow-glow-sm'
+          : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-accent-bg-hover)] hover:text-[var(--color-text-primary)] border border-transparent hover:border-primary-500/20'
       }`}
     >
-      <Icon className={`w-5 h-5 mb-1.5 ${active ? 'drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' : ''}`} />
+      <Icon className={`w-5 h-5 mb-1.5 ${active ? 'drop-shadow-[0_0_8px_rgb(var(--color-primary)_/_0.5)]' : ''}`} />
       <span className="text-xs font-medium">{label}</span>
     </button>
   );

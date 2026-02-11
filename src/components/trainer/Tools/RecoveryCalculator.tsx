@@ -24,8 +24,8 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
   };
 
   const intensityMultipliers = {
-    low: { value: 0.7, label: 'נמוכה', description: 'אימון קל, הרגשה טובה בסוף', color: 'emerald' },
-    moderate: { value: 1.0, label: 'בינונית', description: 'אימון סטנדרטי, עייפות סבירה', color: 'cyan' },
+    low: { value: 0.7, label: 'נמוכה', description: 'אימון קל, הרגשה טובה בסוף', color: 'primary' },
+    moderate: { value: 1.0, label: 'בינונית', description: 'אימון סטנדרטי, עייפות סבירה', color: 'blue' },
     high: { value: 1.3, label: 'גבוהה', description: 'אימון אינטנסיבי, עייפות משמעותית', color: 'amber' },
     extreme: { value: 1.5, label: 'קיצונית', description: 'אימון עד כשל, תשישות', color: 'red' },
   };
@@ -81,15 +81,15 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-emerald-500 p-6 rounded-t-2xl flex items-center justify-between">
+      <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-primary-500 p-6 rounded-t-2xl flex items-center justify-between">
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
             <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
               <Clock className="h-7 w-7 text-white" />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white">מחשבון זמן התאוששות</h2>
-              <p className="text-sm text-emerald-100">כמה מנוחה צריך בין אימונים?</p>
+              <p className="text-sm text-primary-100">כמה מנוחה צריך בין אימונים?</p>
             </div>
           </div>
           <button
@@ -101,21 +101,21 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
         </div>
 
         <div className="p-6 space-y-6">
-          <div className="bg-zinc-800/50 rounded-2xl p-6 border border-zinc-700/50">
+          <div className="bg-surface rounded-2xl p-6 border border-border">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center">
                 <Activity className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-lg font-bold text-white">פרטי האימון</h3>
+              <h3 className="text-lg font-bold text-foreground">פרטי האימון</h3>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-zinc-300 mb-2">קבוצת שריר</label>
+                <label className="block text-sm font-semibold text-foreground mb-2">קבוצת שריר</label>
                 <select
                   value={muscleGroup}
                   onChange={(e) => setMuscleGroup(e.target.value)}
-                  className="w-full px-4 py-3 text-lg font-bold border border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-zinc-800/50 text-white"
+                  className="w-full px-4 py-3 text-lg font-bold border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all bg-surface text-foreground"
                 >
                   {Object.entries(muscleGroups).map(([key, { label }]) => (
                     <option key={key} value={key}>{label}</option>
@@ -124,7 +124,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-zinc-300 mb-2">עצימות האימון</label>
+                <label className="block text-sm font-semibold text-foreground mb-2">עצימות האימון</label>
                 <div className="grid grid-cols-2 gap-2">
                   {Object.entries(intensityMultipliers).map(([key, { label }]) => (
                     <button
@@ -132,8 +132,8 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
                       onClick={() => setIntensity(key as any)}
                       className={`py-3 px-4 rounded-xl font-bold transition-all text-sm ${
                         intensity === key
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-zinc-800 border border-zinc-700/50 text-zinc-300 hover:bg-zinc-700'
+                          ? 'bg-primary-500 text-foreground'
+                          : 'bg-surface border border-border text-foreground hover:bg-elevated'
                       }`}
                     >
                       {label}
@@ -144,22 +144,22 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-zinc-300 mb-2">גיל</label>
+                  <label className="block text-sm font-semibold text-foreground mb-2">גיל</label>
                   <input
                     type="number"
                     value={age}
                     onChange={(e) => setAge(Number(e.target.value))}
-                    className="w-full px-4 py-3 text-lg font-bold text-center border border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-zinc-800/50 text-white"
+                    className="w-full px-4 py-3 text-lg font-bold text-center border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all bg-surface text-foreground"
                     min="15"
                     max="80"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-zinc-300 mb-2">ניסיון</label>
+                  <label className="block text-sm font-semibold text-foreground mb-2">ניסיון</label>
                   <select
                     value={experience}
                     onChange={(e) => setExperience(e.target.value as any)}
-                    className="w-full px-4 py-3 text-lg font-bold border border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-zinc-800/50 text-white"
+                    className="w-full px-4 py-3 text-lg font-bold border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all bg-surface text-foreground"
                   >
                     {Object.entries(experienceMultipliers).map(([key, { label }]) => (
                       <option key={key} value={key}>{label}</option>
@@ -169,7 +169,7 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-zinc-300 mb-2">איכות שינה</label>
+                <label className="block text-sm font-semibold text-foreground mb-2">איכות שינה</label>
                 <div className="flex gap-3">
                   {Object.entries(sleepMultipliers).map(([key, { label }]) => (
                     <button
@@ -177,8 +177,8 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
                       onClick={() => setSleepQuality(key as any)}
                       className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
                         sleepQuality === key
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-zinc-800 border border-zinc-700/50 text-zinc-300 hover:bg-zinc-700'
+                          ? 'bg-primary-500 text-foreground'
+                          : 'bg-surface border border-border text-foreground hover:bg-elevated'
                       }`}
                     >
                       {label}
@@ -190,38 +190,38 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-emerald-500 rounded-2xl p-6 text-center">
+            <div className="bg-primary-500 rounded-2xl p-6 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Clock className="w-4 h-4 text-white" />
+                  <Clock className="w-4 h-4 text-foreground" />
                 </div>
-                <p className="text-sm font-bold text-white/90">זמן התאוששות</p>
+                <p className="text-sm font-bold text-foreground/90">זמן התאוששות</p>
               </div>
-              <p className="text-5xl font-bold text-white">{recoveryDays}</p>
-              <p className="text-lg text-white/80 mt-2 font-medium">ימים</p>
+              <p className="text-5xl font-bold text-foreground">{recoveryDays}</p>
+              <p className="text-lg text-foreground/80 mt-2 font-medium">ימים</p>
             </div>
 
-            <div className="bg-cyan-500 rounded-2xl p-6 text-center">
+            <div className="bg-blue-500 rounded-2xl p-6 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-4 h-4 text-white" />
+                  <Calendar className="w-4 h-4 text-foreground" />
                 </div>
-                <p className="text-sm font-bold text-white/90">אימון הבא</p>
+                <p className="text-sm font-bold text-foreground/90">אימון הבא</p>
               </div>
-              <p className="text-2xl font-bold text-white">{formatDate(nextTrainingDate)}</p>
-              <p className="text-sm text-white/80 mt-2 font-medium">{totalRecoveryHours} שעות</p>
+              <p className="text-2xl font-bold text-foreground">{formatDate(nextTrainingDate)}</p>
+              <p className="text-sm text-foreground/80 mt-2 font-medium">{totalRecoveryHours} שעות</p>
             </div>
           </div>
 
           <div>
-            <h3 className="text-lg font-bold text-white mb-4">זמן התאוששות לכל קבוצת שריר</h3>
-            <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl overflow-hidden">
+            <h3 className="text-lg font-bold text-foreground mb-4">זמן התאוששות לכל קבוצת שריר</h3>
+            <div className="bg-surface border border-border rounded-2xl overflow-hidden">
               <table className="w-full">
-                <thead className="bg-zinc-800">
+                <thead className="bg-surface">
                   <tr>
-                    <th className="px-5 py-4 text-right text-sm font-bold text-zinc-300">קבוצת שריר</th>
-                    <th className="px-5 py-4 text-center text-sm font-bold text-zinc-300">שעות</th>
-                    <th className="px-5 py-4 text-left text-sm font-bold text-zinc-300">ימים</th>
+                    <th className="px-5 py-4 text-right text-sm font-bold text-foreground">קבוצת שריר</th>
+                    <th className="px-5 py-4 text-center text-sm font-bold text-foreground">שעות</th>
+                    <th className="px-5 py-4 text-left text-sm font-bold text-foreground">ימים</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-700/50">
@@ -229,22 +229,22 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
                     <tr
                       key={item.key}
                       className={`transition-all ${
-                        item.key === muscleGroup ? 'bg-emerald-500/10' : 'hover:bg-zinc-800/50'
+                        item.key === muscleGroup ? 'bg-primary-500/10' : 'hover:bg-surface'
                       }`}
                     >
                       <td className="px-5 py-3">
-                        <span className={`font-semibold ${item.key === muscleGroup ? 'text-emerald-400' : 'text-white'}`}>
+                        <span className={`font-semibold ${item.key === muscleGroup ? 'text-primary-400' : 'text-foreground'}`}>
                           {item.label}
                         </span>
                       </td>
                       <td className="px-5 py-3 text-center">
-                        <span className="font-bold text-zinc-400">{item.hours}</span>
+                        <span className="font-bold text-muted">{item.hours}</span>
                       </td>
                       <td className="px-5 py-3 text-left">
                         <span className={`font-bold px-3 py-1 rounded-lg ${
                           item.key === muscleGroup
-                            ? 'text-emerald-400 bg-emerald-500/10'
-                            : 'text-zinc-400 bg-zinc-800'
+                            ? 'text-primary-400 bg-primary-500/10'
+                            : 'text-muted bg-surface'
                         }`}>
                           {item.days}
                         </span>
@@ -260,11 +260,11 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Zap className="w-5 h-5 text-white" />
+                  <Zap className="w-5 h-5 text-foreground" />
                 </div>
                 <div>
                   <p className="font-bold text-amber-400 mb-2">המלצות אישיות</p>
-                  <ul className="text-sm text-zinc-400 leading-relaxed space-y-1">
+                  <ul className="text-sm text-muted leading-relaxed space-y-1">
                     {recoveryTips.map((tip, index) => (
                       <li key={index}>{tip.tip}</li>
                     ))}
@@ -274,14 +274,14 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
             </div>
           )}
 
-          <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-2xl p-5">
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-5">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Info className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Info className="w-5 h-5 text-foreground" />
               </div>
               <div>
-                <p className="font-bold text-cyan-400 mb-1">מה משפיע על התאוששות?</p>
-                <ul className="text-sm text-zinc-400 leading-relaxed space-y-1">
+                <p className="font-bold text-blue-400 mb-1">מה משפיע על התאוששות?</p>
+                <ul className="text-sm text-muted leading-relaxed space-y-1">
                   <li>שינה איכותית - הגורם המשמעותי ביותר</li>
                   <li>תזונה נכונה - חלבון ופחמימות אחרי אימון</li>
                   <li>הידרציה - שתייה מספקת</li>
@@ -292,10 +292,10 @@ export default function RecoveryCalculator({ onClose }: RecoveryCalculatorProps)
           </div>
         </div>
 
-        <div className="sticky bottom-0 bg-zinc-900 border-t border-zinc-800 p-6 rounded-b-2xl">
+        <div className="sticky bottom-0 bg-card border-t border-border p-6 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all"
+            className="w-full bg-primary-500 hover:bg-primary-600 text-foreground px-6 py-4 rounded-xl font-bold text-lg transition-all"
           >
             סגור
           </button>

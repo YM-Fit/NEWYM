@@ -252,17 +252,46 @@ export function useMealPlan(traineeId: string, trainerId: string) {
     return MEAL_NAMES.find((m) => m.value === value)?.label || value;
   }, []);
 
+  const calculateMealTotals = useCallback((meal: Meal) => {
+    // עדיפות: total_* > food_items > 0
+    if (meal.total_calories !== null && meal.total_calories !== undefined) {
+      return {
+        calories: meal.total_calories,
+        protein: meal.total_protein ?? 0,
+        carbs: meal.total_carbs ?? 0,
+        fat: meal.total_fat ?? 0,
+      };
+    }
+    
+    if (meal.food_items && meal.food_items.length > 0) {
+      return meal.food_items.reduce(
+        (acc, item) => ({
+          calories: acc.calories + (item.calories || 0),
+          protein: acc.protein + (item.protein || 0),
+          carbs: acc.carbs + (item.carbs || 0),
+          fat: acc.fat + (item.fat || 0),
+        }),
+        { calories: 0, protein: 0, carbs: 0, fat: 0 }
+      );
+    }
+    
+    return { calories: 0, protein: 0, carbs: 0, fat: 0 };
+  }, []);
+
   const calculateTotalMacros = useCallback(() => {
     return meals.reduce(
-      (acc, meal) => ({
-        calories: acc.calories + (meal.calories || 0),
-        protein: acc.protein + (meal.protein || 0),
-        carbs: acc.carbs + (meal.carbs || 0),
-        fat: acc.fat + (meal.fat || 0),
-      }),
+      (acc, meal) => {
+        const totals = calculateMealTotals(meal);
+        return {
+          calories: acc.calories + totals.calories,
+          protein: acc.protein + totals.protein,
+          carbs: acc.carbs + totals.carbs,
+          fat: acc.fat + totals.fat,
+        };
+      },
       { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
-  }, [meals]);
+  }, [meals, calculateMealTotals]);
 
   useEffect(() => {
     loadPlans();

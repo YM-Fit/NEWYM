@@ -1,5 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { analyticsApi } from '../api/analyticsApi';
+import { getActiveMealPlanWithMeals } from '../api/nutritionApi';
+import { calculateFullCalorieData } from './calorieCalculations';
 import { logger } from './logger';
 
 export interface Recommendation {
@@ -11,6 +13,69 @@ export interface Recommendation {
     label: string;
     onClick: () => void;
   };
+}
+
+/** Get numeric calorie recommendation for weight plateau (14+ days stable, goal = cutting). */
+async function getPlateauNutritionRecommendation(
+  traineeId: string,
+  currentWeight: number,
+  daysBetween: number
+): Promise<string> {
+  try {
+    const { plan, meals } = await getActiveMealPlanWithMeals(traineeId);
+    const currentIntake =
+      (plan as { daily_calories?: number | null })?.daily_calories ??
+      meals.reduce(
+        (sum, m) =>
+          sum +
+          (m.food_items || []).reduce(
+            (s: number, i: { calories?: number | null }) => s + (i.calories || 0),
+            0
+          ),
+        0
+      );
+
+    if (!currentIntake || currentIntake <= 0) {
+      return `המשקל נשאר יציב ב-${daysBetween} הימים האחרונים. כדאי לבדוק את התזונה או התאמת התוכנית.`;
+    }
+
+    const { data: trainee } = await supabase
+      .from('trainees')
+      .select('height, birth_date, gender')
+      .eq('id', traineeId)
+      .maybeSingle();
+
+    const height = Number((trainee as { height?: number })?.height) || 170;
+    const birthDate = (trainee as { birth_date?: string })?.birth_date;
+    const age = birthDate
+      ? Math.floor(
+          (Date.now() - new Date(birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+        )
+      : 30;
+    const g = String((trainee as { gender?: string })?.gender || 'male').toLowerCase();
+    const gender: 'male' | 'female' =
+      g === 'female' || g === 'ז' || g === 'אישה' ? 'female' : 'male';
+
+    const calorieData = calculateFullCalorieData(
+      currentWeight,
+      height,
+      Math.max(14, Math.min(age, 100)),
+      gender,
+      'moderate'
+    );
+    const tdee = calorieData.tdee;
+
+    const deficit = tdee - currentIntake;
+    if (deficit <= 100) {
+      return `המשקל יציב ב-${daysBetween} הימים. הורד 100–200 קלוריות ליום (יעד: ~${Math.max(1200, tdee - 200)} קל') להמשך ירידה.`;
+    }
+    if (currentIntake <= tdee * 0.7) {
+      return `המשקל יציב ב-${daysBetween} הימים. הצריכה כבר נמוכה – כדאי לבדוק עם המאמן, ייתכן צורך בהפסקת דיאטה.`;
+    }
+    return `המשקל יציב ב-${daysBetween} הימים. אולי כדאי לבדוק את התזונה או התאמת התוכנית.`;
+  } catch {
+    return `המשקל נשאר יציב ב-${daysBetween} הימים האחרונים. כדאי לבדוק את התזונה או התאמת התוכנית.`;
+  }
 }
 
 export const smartRecommendations = {
@@ -70,7 +135,67 @@ export const smartRecommendations = {
         }
       }
 
-      // Check weight trend
+      // Check body composition (fat vs muscle) – only when we have body_fat_percentage or muscle_mass
+      const { data: bodyMeasurements } = await supabase
+        .from('measurements')
+        .select('measurement_date, weight, body_fat_percentage, muscle_mass')
+        .eq('trainee_id', traineeId)
+        .order('measurement_date', { ascending: false })
+        .limit(3);
+
+      if (
+        bodyMeasurements &&
+        bodyMeasurements.length >= 2 &&
+        bodyMeasurements.some(
+          (m: { body_fat_percentage?: number | null; muscle_mass?: number | null }) =>
+            (m.body_fat_percentage != null && m.body_fat_percentage > 0) ||
+            (m.muscle_mass != null && m.muscle_mass > 0)
+        )
+      ) {
+        const latest = bodyMeasurements[0] as {
+          weight?: number | null;
+          body_fat_percentage?: number | null;
+          muscle_mass?: number | null;
+          measurement_date: string;
+        };
+        const older = bodyMeasurements[bodyMeasurements.length - 1] as {
+          weight?: number | null;
+          body_fat_percentage?: number | null;
+          muscle_mass?: number | null;
+          measurement_date: string;
+        };
+
+        const weightDiff = (latest.weight ?? 0) - (older.weight ?? 0);
+        const fatDiff =
+          (latest.body_fat_percentage ?? 0) - (older.body_fat_percentage ?? 0);
+        const hasMuscleData =
+          latest.muscle_mass != null &&
+          older.muscle_mass != null &&
+          latest.muscle_mass > 0 &&
+          older.muscle_mass > 0;
+        const muscleDiff = hasMuscleData
+          ? (latest.muscle_mass ?? 0) - (older.muscle_mass ?? 0)
+          : 0;
+
+        if (weightDiff < -0.5 && hasMuscleData && muscleDiff < -0.3) {
+          recommendations.push({
+            type: 'nutrition',
+            priority: 'high',
+            title: 'חשש לאיבוד שריר',
+            description:
+              'יש ירידה במסת השריר. מומלץ להגביר חלבון ל־2.4 גרם/ק"ג – יש חשש לאיבוד שריר.',
+          });
+        } else if (weightDiff < -0.5 && fatDiff < -0.5 && (muscleDiff >= -0.3 || muscleDiff === 0)) {
+          recommendations.push({
+            type: 'nutrition',
+            priority: 'low',
+            title: 'ירידה איכותית',
+            description: 'הירידה במשקל כוללת בעיקר שומן. המשך כך – ירידה איכותית.',
+          });
+        }
+      }
+
+      // Check weight trend – plateau with numeric calorie recommendation
       const { data: recentMeasurements } = await supabase
         .from('measurements')
         .select('measurement_date, weight')
@@ -90,11 +215,16 @@ export const smartRecommendations = {
           );
 
           if (daysBetween >= 14 && Math.abs(trend) < 0.5) {
+            const plateauDesc = await getPlateauNutritionRecommendation(
+              traineeId,
+              weights[0],
+              daysBetween
+            );
             recommendations.push({
               type: 'nutrition',
               priority: 'medium',
               title: 'משקל יציב',
-              description: `המשקל נשאר יציב ב-${daysBetween} הימים האחרונים. אולי כדאי לבדוק את התזונה או התאמת התוכנית.`,
+              description: plateauDesc,
             });
           }
         }

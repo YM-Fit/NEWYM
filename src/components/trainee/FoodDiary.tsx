@@ -518,9 +518,12 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
-          <Utensils className="w-8 h-8 text-white" />
+      <div className="flex justify-center items-center py-12 min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg animate-pulse border-2 border-primary-400/30">
+            <Utensils className="w-8 h-8 text-white" />
+          </div>
+          <span className="text-sm font-medium text-[var(--color-text-muted)]">טוען יומן אכילה...</span>
         </div>
       </div>
     );
@@ -544,7 +547,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       <div
         key={dateStr}
         className={`premium-card-static overflow-hidden transition-all duration-300 hover:shadow-card-hover ${
-          isToday(currentDate) ? 'ring-2 ring-emerald-500/50' : ''
+          isToday(currentDate) ? 'ring-2 ring-primary-500/50' : ''
         } ${isCompleted ? 'opacity-75' : ''}`}
       >
         {renderDayContent(currentDate, dateStr, dayMeals, waterAmount, waterGoal, waterProgress, isCompleted)}
@@ -554,13 +557,13 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
 
   const renderMonthView = () => {
     return (
-      <div className="premium-card-static p-4">
+      <div className="premium-card-static bg-white p-4">
         <div className="grid grid-cols-7 gap-2">
           {/* Week days header */}
           {weekDays.map((day, index) => (
             <div
               key={index}
-              className="text-center text-sm font-semibold text-[var(--color-text-muted)] py-2"
+              className="text-center text-sm font-semibold text-muted600 py-2"
             >
               {day}
             </div>
@@ -583,28 +586,28 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               <div
                 key={index}
                 onClick={() => handleDateClick(date)}
-                className={`min-h-[80px] p-2 border border-[var(--color-border)] rounded-lg cursor-pointer transition-all hover:border-emerald-500/50 ${
+                className={`min-h-[80px] p-2 border border-border200 rounded-lg cursor-pointer transition-all hover:border-primary-500/50 ${
                   isCurrentDay
-                    ? 'bg-emerald-500/10 border-emerald-500/30'
+                    ? 'bg-primary-500/10 border-primary-500/30'
                     : hasMeals
-                    ? 'bg-zinc-800/30'
+                    ? 'bg-surface50'
                     : 'bg-transparent'
                 }`}
               >
                 <div
                   className={`text-sm font-semibold mb-1 ${
-                    isCurrentDay ? 'text-emerald-400' : 'text-[var(--color-text-primary)]'
+                    isCurrentDay ? 'text-primary-600' : 'text-muted900'
                   }`}
                 >
                   {date.getDate()}
                 </div>
                 {hasMeals && (
                   <div className="space-y-1">
-                    <div className="text-xs bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded truncate">
+                    <div className="text-xs bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded truncate">
                       {dayMeals.length} ארוחות
                     </div>
                     {isCompleted && (
-                      <div className="text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded">
+                      <div className="text-xs bg-primary-500 text-white px-1.5 py-0.5 rounded">
                         ✓
                       </div>
                     )}
@@ -630,20 +633,34 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
     return (
       <>
         <div
-          className={`px-4 py-4 ${
-            isToday(date) ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white' : isCompleted ? 'bg-emerald-500/10' : 'bg-[var(--color-bg-surface)]'
+          className={`px-4 py-4 rounded-t-2xl transition-all duration-300 ${
+            isToday(date) 
+              ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-lg'
+              : isCompleted
+              ? 'bg-gradient-to-br from-primary-50 to-primary-100 border-b border-primary-200' 
+              : 'bg-gradient-to-br from-gray-50 to-gray-100 border-b border-border200'
           }`}
         >
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               {isCompleted && (
-                <div className="bg-emerald-500 text-white rounded-full p-1 shadow-md">
-                  <Check className="w-4 h-4" />
+                <div className={`rounded-full p-1 shadow-md transition-all duration-300 ${
+                  isToday(date) ? 'bg-white/20' : 'bg-primary-500'
+                }`}>
+                  <Check className="w-4 h-4 text-white" />
                 </div>
               )}
               <div>
-                <span className="font-bold text-lg">יום {getHebrewDayName(date)}</span>
-                <span className="text-sm mr-2 opacity-80">{formatDate(date)}</span>
+                <span className={`font-bold text-lg ${
+                  isToday(date) ? 'text-white' : 'text-muted900'
+                }`}>
+                  יום {getHebrewDayName(date)}
+                </span>
+                <span className={`text-sm mr-2 ${
+                  isToday(date) ? 'text-white/90' : 'text-muted600'
+                }`}>
+                  {formatDate(date)}
+                </span>
                 {isToday(date) && (
                   <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full mr-2 font-medium">
                     היום
@@ -651,7 +668,9 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 )}
                 {isCompleted && (
                   <span className={`text-xs px-2 py-0.5 rounded-full mr-2 font-medium ${
-                    isToday(date) ? 'bg-white/20' : 'bg-emerald-500 text-white'
+                    isToday(date) 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-primary-500 text-white shadow-sm'
                   }`}>
                     הושלם
                   </span>
@@ -665,7 +684,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                   className={`px-4 py-2 rounded-xl transition-all duration-300 text-sm font-medium flex items-center gap-1 shadow-md hover:shadow-lg ${
                     isToday(date)
                       ? 'bg-white/20 hover:bg-white/30 text-white'
-                      : 'bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white'
+                      : 'bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white'
                   }`}
                 >
                   <Check className="w-4 h-4" />
@@ -677,10 +696,10 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 disabled={isCompleted}
                 className={`p-2 rounded-xl transition-all duration-300 ${
                   isCompleted
-                    ? 'opacity-50 cursor-not-allowed bg-[var(--color-bg-surface)] text-[var(--color-text-muted)]'
+                    ? 'opacity-50 cursor-not-allowed bg-surface100 text-muted400'
                     : isToday(date)
                     ? 'bg-white/20 hover:bg-white/30 text-white'
-                    : 'bg-emerald-500/15 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-md hover:shadow-lg'
+                    : 'bg-primary-500/15 hover:bg-primary-500/20 text-primary-600 border border-primary-500/30 shadow-md hover:shadow-lg'
                 }`}
               >
                 <Plus className="w-5 h-5" />
@@ -689,34 +708,34 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
           </div>
         </div>
 
-        <div className="p-4 border-b bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-[var(--color-border)]">
+        <div className="p-4 border-b bg-gradient-to-br from-blue-50/80 to-blue-100/80 border-border200">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
               <Droplets className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <span className="text-sm font-bold text-[var(--color-text-primary)]">מעקב מים</span>
-              <p className="text-sm text-[var(--color-text-muted)]">
+            <div className="flex-1 min-w-0">
+              <span className="text-sm font-bold text-muted900 block">מעקב מים</span>
+              <p className="text-sm text-muted600">
                 {waterAmount} / {waterGoal} מ"ל
               </p>
             </div>
           </div>
-          <div className="h-3 bg-[var(--color-bg-surface)] rounded-full overflow-hidden mb-4 shadow-inner border border-[var(--color-border)]">
+          <div className="h-3 bg-surface200 rounded-full overflow-hidden mb-4 shadow-inner border border-border300">
             <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500 ease-out rounded-full"
+              className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500 ease-out rounded-full shadow-sm"
               style={{ width: `${waterProgress}%` }}
             />
           </div>
           <div className="flex gap-3">
             <button
               onClick={() => addWater(dateStr, 250)}
-              className="flex-1 py-3 text-sm bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 rounded-xl hover:bg-cyan-500/20 transition-all duration-300 font-medium shadow-sm hover:shadow-md hover:scale-[1.02]"
+              className="flex-1 py-3 text-sm bg-blue-500/15 text-blue-700 border border-blue-500/30 rounded-xl hover:bg-blue-500/25 transition-all duration-300 font-medium shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
             >
               +250 מ"ל
             </button>
             <button
               onClick={() => addWater(dateStr, 500)}
-              className="flex-1 py-3 text-sm bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 rounded-xl hover:bg-cyan-500/20 transition-all duration-300 font-medium shadow-sm hover:shadow-md hover:scale-[1.02]"
+              className="flex-1 py-3 text-sm bg-blue-500/15 text-blue-700 border border-blue-500/30 rounded-xl hover:bg-blue-500/25 transition-all duration-300 font-medium shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
             >
               +500 מ"ל
             </button>
@@ -724,43 +743,48 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
         </div>
 
         {dayMeals.length > 0 && (
-          <div className="px-4 py-3 border-b border-[var(--color-border)] bg-gradient-to-br from-emerald-500/5 to-teal-500/5">
+          <div className="px-4 py-3 border-b border-border200 bg-gradient-to-br from-primary-50/50 to-primary-100/50">
             <button
               onClick={() => toggleDailySummary(dateStr)}
-              className="w-full flex items-center justify-between"
+              className="w-full flex items-center justify-between hover:bg-primary-50/50 rounded-lg p-2 -m-2 transition-colors duration-200"
             >
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-emerald-400" />
-                <span className="text-sm font-bold text-[var(--color-text-primary)]">סיכום יומי</span>
+                <BarChart3 className="w-4 h-4 text-primary-600" />
+                <span className="text-sm font-bold text-muted900">סיכום יומי</span>
               </div>
               {showDailySummary.has(dateStr) ? (
-                <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
+                <ChevronUp className="w-4 h-4 text-muted600" />
               ) : (
-                <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
+                <ChevronDown className="w-4 h-4 text-muted600" />
               )}
             </button>
             {showDailySummary.has(dateStr) && (
-              <DailySummaryCard
-                dateStr={dateStr}
-                totals={calculateDailyTotals(dateStr)}
-                mealPlan={mealPlan}
-                waterAmount={waterAmount}
-              />
+              <div className="mt-3 animate-fade-in">
+                <DailySummaryCard
+                  dateStr={dateStr}
+                  totals={calculateDailyTotals(dateStr)}
+                  mealPlan={mealPlan}
+                  waterAmount={waterAmount}
+                />
+              </div>
             )}
           </div>
         )}
 
-        <div className="p-4">
+        <div className="p-4 bg-white">
           {dayMeals.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-[var(--color-text-muted)] text-sm mb-4">לא נרשמו ארוחות</p>
+            <div className="text-center py-8">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-surface100 flex items-center justify-center">
+                <Utensils className="w-8 h-8 text-muted400" />
+              </div>
+              <p className="text-muted600 text-sm mb-4">לא נרשמו ארוחות</p>
               {mealPlanMeals.length > 0 && (
                 <button
                   onClick={() => {
                     setSelectedDate(dateStr);
                     setShowMealPlanCopy(true);
                   }}
-                  className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center gap-1 mx-auto font-medium"
+                  className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1 mx-auto font-medium transition-colors duration-200"
                 >
                   <Copy className="w-4 h-4" />
                   העתק מתפריט
@@ -780,7 +804,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 return (
                   <div
                     key={meal.id}
-                    className="border-2 border-[var(--color-border)] rounded-xl p-4 hover:border-emerald-500/50 transition-all duration-300 hover:shadow-lg bg-[var(--color-bg-base)]"
+                    className="border-2 border-border200 rounded-xl p-4 hover:border-primary-500/50 transition-all duration-300 hover:shadow-lg bg-white shadow-sm"
                   >
                     <div className="flex items-start gap-3">
                       <div className={`p-2.5 rounded-xl ${typeInfo.color} shadow-md`}>
@@ -788,11 +812,11 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="font-bold text-sm text-[var(--color-text-primary)]">
+                          <span className="font-bold text-sm text-muted900">
                             {typeInfo.label}
                           </span>
                           {meal.meal_time && (
-                            <span className="text-xs text-[var(--color-text-muted)] flex items-center gap-1 bg-[var(--color-bg-surface)] px-2 py-0.5 rounded-full border border-[var(--color-border)]">
+                            <span className="text-xs text-muted600 flex items-center gap-1 bg-surface100 px-2 py-0.5 rounded-full border border-border300">
                               <Clock className="w-3 h-3" />
                               {meal.meal_time.slice(0, 5)}
                             </span>
@@ -827,7 +851,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                           )}
                         </div>
                         <p
-                          className={`text-sm text-[var(--color-text-secondary)] leading-relaxed ${
+                          className={`text-sm text-muted700 leading-relaxed ${
                             !isExpanded && shouldTruncate ? 'line-clamp-2' : ''
                           }`}
                         >
@@ -855,7 +879,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                         {shouldTruncate && (
                           <button
                             onClick={() => toggleMealExpand(meal.id)}
-                            className="text-xs text-emerald-400 flex items-center gap-1 mt-2 font-medium hover:text-emerald-300 transition-colors"
+                            className="text-xs text-primary-600 flex items-center gap-1 mt-2 font-medium hover:text-primary-700 transition-colors"
                           >
                             {isExpanded ? (
                               <>
@@ -875,7 +899,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                         <div className="flex gap-1">
                           <button
                             onClick={() => openEditMeal(meal)}
-                            className="p-2 text-[var(--color-text-muted)] hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all duration-300"
+                            className="p-2 text-muted600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-300"
                           >
                             <svg
                               className="w-4 h-4"
@@ -893,7 +917,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                           </button>
                           <button
                             onClick={() => deleteMeal(meal.id)}
-                            className="p-2 text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-300"
+                            className="p-2 text-muted600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -912,22 +936,22 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 shadow-xl sticky top-0 z-10">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
+      <div className="premium-card-static rounded-2xl p-4 sm:p-6 shadow-xl sticky top-0 z-10 bg-gradient-to-br from-primary-500 to-primary-700">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <div className="flex items-center gap-2 w-full">
             <button
               onClick={() => {
                 if (viewMode === 'day') navigateDay('next');
                 else if (viewMode === 'week') navigateWeek('next');
                 else navigateMonth('next');
               }}
-              className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-white"
+              className="p-2.5 hover:bg-white/20 rounded-xl transition-all duration-300 text-white flex-shrink-0 active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <div className="text-center text-white flex-1">
-              <h2 className="text-2xl font-bold">יומן אכילה</h2>
-              <p className="text-sm text-emerald-100 mt-1">{getViewTitle()}</p>
+            <div className="text-center text-white flex-1 min-w-0">
+              <h2 className="text-xl sm:text-2xl font-bold">יומן אכילה</h2>
+              <p className="text-xs sm:text-sm text-white/90 mt-1 truncate">{getViewTitle()}</p>
             </div>
             <button
               onClick={() => {
@@ -935,17 +959,17 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 else if (viewMode === 'week') navigateWeek('prev');
                 else navigateMonth('prev');
               }}
-              className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-white"
+              className="p-2.5 hover:bg-white/20 rounded-xl transition-all duration-300 text-white flex-shrink-0 active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
         {/* View Mode Selector */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-1.5 sm:gap-2 mt-3 sm:mt-4">
           <button
             onClick={() => setViewMode('day')}
-            className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 min-h-[44px] active:scale-95 ${
               viewMode === 'day'
                 ? 'bg-white/20 text-white shadow-lg'
                 : 'bg-white/10 text-white/80 hover:bg-white/15'
@@ -956,7 +980,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
           </button>
           <button
             onClick={() => setViewMode('week')}
-            className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 min-h-[44px] active:scale-95 ${
               viewMode === 'week'
                 ? 'bg-white/20 text-white shadow-lg'
                 : 'bg-white/10 text-white/80 hover:bg-white/15'
@@ -967,7 +991,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
           </button>
           <button
             onClick={() => setViewMode('month')}
-            className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 min-h-[44px] active:scale-95 ${
               viewMode === 'month'
                 ? 'bg-white/20 text-white shadow-lg'
                 : 'bg-white/10 text-white/80 hover:bg-white/15'
@@ -997,7 +1021,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               <div
                 key={dateStr}
                 className={`premium-card-static overflow-hidden transition-all duration-300 hover:shadow-card-hover ${
-                  isToday(date) ? 'ring-2 ring-emerald-500/50' : ''
+                  isToday(date) ? 'ring-2 ring-primary-500/50' : ''
                 } ${isCompleted ? 'opacity-75' : ''}`}
               >
                 {renderDayContent(date, dateStr, dayMeals, waterAmount, waterGoal, waterProgress, isCompleted)}
@@ -1008,308 +1032,10 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       )}
       {viewMode === 'month' && renderMonthView()}
 
-      {weekDates.map((date) => {
-        const dateStr = date.toISOString().split('T')[0];
-        const dayMeals = meals.get(dateStr) || [];
-        const dayWater = waterLogs.get(dateStr);
-        const waterAmount = dayWater?.water_ml || 0;
-        const waterGoal = mealPlan?.daily_water_ml || WATER_GOAL;
-        const waterProgress = Math.min((waterAmount / waterGoal) * 100, 100);
-        const diaryEntry = diaryEntries.get(dateStr);
-        const isCompleted = diaryEntry?.completed || false;
-
-        return (
-          <div
-            key={dateStr}
-            className={`premium-card-static overflow-hidden transition-all duration-300 hover:shadow-card-hover ${
-              isToday(date) ? 'ring-2 ring-emerald-500/50' : ''
-            } ${isCompleted ? 'opacity-75' : ''}`}
-          >
-            <div
-              className={`px-4 py-4 ${
-                isToday(date) ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white' : isCompleted ? 'bg-emerald-500/10' : 'bg-[var(--color-bg-surface)]'
-              }`}
-            >
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  {isCompleted && (
-                    <div className="bg-emerald-500 text-white rounded-full p-1 shadow-md">
-                      <Check className="w-4 h-4" />
-                    </div>
-                  )}
-                  <div>
-                    <span className="font-bold text-lg">יום {getHebrewDayName(date)}</span>
-                    <span className="text-sm mr-2 opacity-80">{formatDate(date)}</span>
-                    {isToday(date) && (
-                      <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full mr-2 font-medium">
-                        היום
-                      </span>
-                    )}
-                    {isCompleted && (
-                      <span className={`text-xs px-2 py-0.5 rounded-full mr-2 font-medium ${
-                        isToday(date) ? 'bg-white/20' : 'bg-emerald-500 text-white'
-                      }`}>
-                        הושלם
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  {!isCompleted && dayMeals.length > 0 && (
-                    <button
-                      onClick={() => completeDay(dateStr)}
-                      className={`px-4 py-2 rounded-xl transition-all duration-300 text-sm font-medium flex items-center gap-1 shadow-md hover:shadow-lg ${
-                        isToday(date)
-                          ? 'bg-white/20 hover:bg-white/30 text-white'
-                          : 'bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white'
-                      }`}
-                    >
-                      <Check className="w-4 h-4" />
-                      סיים יום
-                    </button>
-                  )}
-                  <button
-                    onClick={() => openAddMeal(dateStr)}
-                    disabled={isCompleted}
-                    className={`p-2 rounded-xl transition-all duration-300 ${
-                      isCompleted
-                        ? 'opacity-50 cursor-not-allowed bg-[var(--color-bg-surface)] text-[var(--color-text-muted)]'
-                        : isToday(date)
-                        ? 'bg-white/20 hover:bg-white/30 text-white'
-                        : 'bg-emerald-500/15 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-md hover:shadow-lg'
-                    }`}
-                  >
-                    <Plus className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 border-b bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-[var(--color-border)]">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center shadow-md">
-                  <Droplets className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <span className="text-sm font-bold text-[var(--color-text-primary)]">מעקב מים</span>
-                  <p className="text-sm text-[var(--color-text-muted)]">
-                    {waterAmount} / {waterGoal} מ"ל
-                  </p>
-                </div>
-              </div>
-              <div className="h-3 bg-[var(--color-bg-surface)] rounded-full overflow-hidden mb-4 shadow-inner border border-[var(--color-border)]">
-                <div
-                  className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500 ease-out rounded-full"
-                  style={{ width: `${waterProgress}%` }}
-                />
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => addWater(dateStr, 250)}
-                  className="flex-1 py-3 text-sm bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 rounded-xl hover:bg-cyan-500/20 transition-all duration-300 font-medium shadow-sm hover:shadow-md hover:scale-[1.02]"
-                >
-                  +250 מ"ל
-                </button>
-                <button
-                  onClick={() => addWater(dateStr, 500)}
-                  className="flex-1 py-3 text-sm bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 rounded-xl hover:bg-cyan-500/20 transition-all duration-300 font-medium shadow-sm hover:shadow-md hover:scale-[1.02]"
-                >
-                  +500 מ"ל
-                </button>
-              </div>
-            </div>
-
-            {dayMeals.length > 0 && (
-              <div className="px-4 py-3 border-b border-[var(--color-border)] bg-gradient-to-br from-emerald-500/5 to-teal-500/5">
-                <button
-                  onClick={() => toggleDailySummary(dateStr)}
-                  className="w-full flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4 text-emerald-400" />
-                    <span className="text-sm font-bold text-[var(--color-text-primary)]">סיכום יומי</span>
-                  </div>
-                  {showDailySummary.has(dateStr) ? (
-                    <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
-                  )}
-                </button>
-                {showDailySummary.has(dateStr) && (
-                  <DailySummaryCard
-                    dateStr={dateStr}
-                    totals={calculateDailyTotals(dateStr)}
-                    mealPlan={mealPlan}
-                    waterAmount={waterAmount}
-                  />
-                )}
-              </div>
-            )}
-
-            <div className="p-4">
-              {dayMeals.length === 0 ? (
-                <div className="text-center py-6">
-                  <p className="text-[var(--color-text-muted)] text-sm mb-4">לא נרשמו ארוחות</p>
-                  {mealPlanMeals.length > 0 && (
-                    <button
-                      onClick={() => {
-                        setSelectedDate(dateStr);
-                        setShowMealPlanCopy(true);
-                      }}
-                      className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center gap-1 mx-auto font-medium"
-                    >
-                      <Copy className="w-4 h-4" />
-                      העתק מתפריט
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {dayMeals.map((meal) => {
-                    const typeInfo = getMealTypeInfo(meal.meal_type);
-                    const Icon = typeInfo.icon;
-                    const isExpanded = expandedMeals.has(meal.id);
-                    const description = meal.description || '';
-                    const shouldTruncate = description.length > 60;
-                    const hasNutrition = meal.calories || meal.protein || meal.carbs || meal.fat;
-
-                    return (
-                      <div
-                        key={meal.id}
-                        className="border-2 border-[var(--color-border)] rounded-xl p-4 hover:border-emerald-500/50 transition-all duration-300 hover:shadow-lg bg-[var(--color-bg-base)]"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className={`p-2.5 rounded-xl ${typeInfo.color} shadow-md`}>
-                            <Icon className="w-5 h-5" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span className="font-bold text-sm text-[var(--color-text-primary)]">
-                                {typeInfo.label}
-                              </span>
-                              {meal.meal_time && (
-                                <span className="text-xs text-[var(--color-text-muted)] flex items-center gap-1 bg-[var(--color-bg-surface)] px-2 py-0.5 rounded-full border border-[var(--color-border)]">
-                                  <Clock className="w-3 h-3" />
-                                  {meal.meal_time.slice(0, 5)}
-                                </span>
-                              )}
-                              {hasNutrition && (
-                                <div className="flex items-center gap-1 flex-wrap">
-                                  {meal.calories && (
-                                    <span className="text-xs text-amber-500 flex items-center gap-1 bg-amber-500/15 px-2 py-0.5 rounded-full border border-amber-500/30">
-                                      <Flame className="w-3 h-3" />
-                                      {meal.calories} קל'
-                                    </span>
-                                  )}
-                                  {meal.protein && (
-                                    <span className="text-xs text-red-500 flex items-center gap-1 bg-red-500/15 px-2 py-0.5 rounded-full border border-red-500/30">
-                                      <Beef className="w-3 h-3" />
-                                      {meal.protein}ג'
-                                    </span>
-                                  )}
-                                  {meal.carbs && (
-                                    <span className="text-xs text-amber-500 flex items-center gap-1 bg-amber-500/15 px-2 py-0.5 rounded-full border border-amber-500/30">
-                                      <Wheat className="w-3 h-3" />
-                                      {meal.carbs}ג'
-                                    </span>
-                                  )}
-                                  {meal.fat && (
-                                    <span className="text-xs text-blue-500 flex items-center gap-1 bg-blue-500/15 px-2 py-0.5 rounded-full border border-blue-500/30">
-                                      <Droplet className="w-3 h-3" />
-                                      {meal.fat}ג'
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                            <p
-                              className={`text-sm text-[var(--color-text-secondary)] leading-relaxed ${
-                                !isExpanded && shouldTruncate ? 'line-clamp-2' : ''
-                              }`}
-                            >
-                              {description}
-                            </p>
-                            {isExpanded && hasNutrition && (
-                              <div className="flex gap-2 flex-wrap mt-2">
-                                {meal.protein && (
-                                  <span className="text-xs text-red-500 bg-red-500/15 px-2 py-1 rounded-lg border border-red-500/30">
-                                    חלבון: {meal.protein}ג'
-                                  </span>
-                                )}
-                                {meal.carbs && (
-                                  <span className="text-xs text-amber-500 bg-amber-500/15 px-2 py-1 rounded-lg border border-amber-500/30">
-                                    פחמימות: {meal.carbs}ג'
-                                  </span>
-                                )}
-                                {meal.fat && (
-                                  <span className="text-xs text-blue-500 bg-blue-500/15 px-2 py-1 rounded-lg border border-blue-500/30">
-                                    שומן: {meal.fat}ג'
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                            {shouldTruncate && (
-                              <button
-                                onClick={() => toggleMealExpand(meal.id)}
-                                className="text-xs text-emerald-400 flex items-center gap-1 mt-2 font-medium hover:text-emerald-300 transition-colors"
-                              >
-                                {isExpanded ? (
-                                  <>
-                                    <ChevronUp className="w-3 h-3" />
-                                    הצג פחות
-                                  </>
-                                ) : (
-                                  <>
-                                    <ChevronDown className="w-3 h-3" />
-                                    הצג עוד
-                                  </>
-                                )}
-                              </button>
-                            )}
-                          </div>
-                          {!isCompleted && (
-                            <div className="flex gap-1">
-                              <button
-                                onClick={() => openEditMeal(meal)}
-                                className="p-2 text-[var(--color-text-muted)] hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all duration-300"
-                              >
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                  />
-                                </svg>
-                              </button>
-                              <button
-                                onClick={() => deleteMeal(meal.id)}
-                                className="p-2 text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-300"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
-
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="premium-card-static w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gradient-to-br from-emerald-500 to-teal-600 p-4 flex items-center justify-between rounded-t-2xl">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="premium-card-static w-full max-w-md max-h-[90vh] overflow-y-auto bg-white shadow-2xl animate-scale-in">
+            <div className="sticky top-0 bg-gradient-to-br from-primary-500 to-primary-700 p-4 flex items-center justify-between rounded-t-2xl z-10">
               <h3 className="text-lg font-bold text-white">
                 {editingMeal ? 'עריכת ארוחה' : 'הוספת ארוחה'}
               </h3>
@@ -1321,10 +1047,10 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 bg-white">
               {mealPlanMeals.length > 0 && !editingMeal && (
                 <div>
-                  <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-2">
+                  <label className="block text-sm font-bold text-muted900 mb-2">
                     העתק מתפריט
                   </label>
                   <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
@@ -1332,18 +1058,18 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                       <button
                         key={planMeal.id}
                         onClick={() => copyMealFromPlan(planMeal)}
-                        className="p-3 rounded-xl border-2 border-emerald-500/30 hover:border-emerald-500/50 bg-emerald-500/10 hover:bg-emerald-500/15 transition-all text-right"
+                        className="p-3 rounded-xl border-2 border-primary-500/30 hover:border-primary-500/50 bg-primary-50 hover:bg-primary-100 transition-all text-right"
                       >
-                        <div className="text-sm font-bold text-[var(--color-text-primary)]">
+                        <div className="text-sm font-bold text-muted900">
                           {planMeal.meal_name === 'breakfast' ? 'ארוחת בוקר' :
                            planMeal.meal_name === 'lunch' ? 'ארוחת צהריים' :
                            planMeal.meal_name === 'dinner' ? 'ארוחת ערב' : planMeal.meal_name}
                         </div>
-                        <div className="text-xs text-[var(--color-text-muted)] line-clamp-1">
+                        <div className="text-xs text-muted600 line-clamp-1">
                           {planMeal.description}
                         </div>
                         {planMeal.total_calories && (
-                          <div className="text-xs text-amber-500 mt-1">
+                          <div className="text-xs text-amber-600 mt-1">
                             {planMeal.total_calories} קלוריות
                           </div>
                         )}
@@ -1354,7 +1080,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               )}
 
               <div>
-                <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-2">
+                <label className="block text-sm font-bold text-muted900 mb-2">
                   שעה
                 </label>
                 <input
@@ -1368,7 +1094,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-2">
+                <label className="block text-sm font-bold text-muted900 mb-2">
                   סוג ארוחה
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -1382,14 +1108,14 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                         }
                         className={`p-4 rounded-xl border-2 flex items-center gap-2 transition-all duration-300 ${
                           mealForm.meal_type === type.value
-                            ? 'border-emerald-500 bg-emerald-500/15 shadow-md'
-                            : 'border-[var(--color-border)] hover:border-emerald-500/50 hover:shadow-md bg-[var(--color-bg-base)]'
+                            ? 'border-primary-500 bg-primary-50 shadow-md'
+                            : 'border-border300 hover:border-primary-500/50 hover:shadow-md bg-white'
                         }`}
                       >
                         <div className={`p-2 rounded-xl ${type.color} shadow-sm`}>
                           <Icon className="w-4 h-4" />
                         </div>
-                        <span className="text-sm font-bold text-[var(--color-text-primary)]">{type.label}</span>
+                        <span className="text-sm font-bold text-muted900">{type.label}</span>
                       </button>
                     );
                   })}
@@ -1397,7 +1123,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-2">
+                <label className="block text-sm font-bold text-muted900 mb-2">
                   תיאור האוכל
                 </label>
                 <textarea
@@ -1412,12 +1138,12 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-[var(--color-text-secondary)] mb-3">
+                <label className="block text-sm font-bold text-muted900 mb-3">
                   ערכים תזונתיים (אופציונלי)
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">
+                    <label className="block text-xs text-muted600 mb-1">
                       <Flame className="w-3 h-3 inline ml-1" />
                       קלוריות
                     </label>
@@ -1432,7 +1158,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">
+                    <label className="block text-xs text-muted600 mb-1">
                       <Beef className="w-3 h-3 inline ml-1" />
                       חלבון (גרם)
                     </label>
@@ -1447,7 +1173,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">
+                    <label className="block text-xs text-muted600 mb-1">
                       <Wheat className="w-3 h-3 inline ml-1" />
                       פחמימות (גרם)
                     </label>
@@ -1462,7 +1188,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">
+                    <label className="block text-xs text-muted600 mb-1">
                       <Droplet className="w-3 h-3 inline ml-1" />
                       שומן (גרם)
                     </label>
@@ -1480,7 +1206,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
               </div>
             </div>
 
-            <div className="sticky bottom-0 bg-[var(--color-bg-base)] p-4 border-t border-[var(--color-border)] flex gap-3">
+            <div className="sticky bottom-0 bg-white p-4 border-t border-border200 flex gap-3">
               <button
                 onClick={() => setShowModal(false)}
                 className="flex-1 py-4 btn-secondary rounded-xl font-bold"
@@ -1499,9 +1225,9 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
       )}
 
       {showMealPlanCopy && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="premium-card-static w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gradient-to-br from-emerald-500 to-teal-600 p-4 flex items-center justify-between rounded-t-2xl">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="premium-card-static w-full max-w-md max-h-[90vh] overflow-y-auto bg-white shadow-2xl animate-scale-in">
+            <div className="sticky top-0 bg-gradient-to-br from-primary-500 to-primary-700 p-4 flex items-center justify-between rounded-t-2xl z-10">
               <h3 className="text-lg font-bold text-white">העתק מתפריט</h3>
               <button
                 onClick={() => {
@@ -1513,7 +1239,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6 space-y-3">
+            <div className="p-6 space-y-3 bg-white">
               {mealPlanMeals.map((planMeal) => (
                 <button
                   key={planMeal.id}
@@ -1522,40 +1248,40 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                     setShowMealPlanCopy(false);
                     setShowModal(true);
                   }}
-                  className="w-full p-4 rounded-xl border-2 border-emerald-500/30 hover:border-emerald-500/50 bg-emerald-500/10 hover:bg-emerald-500/15 transition-all text-right"
+                  className="w-full p-4 rounded-xl border-2 border-primary-500/30 hover:border-primary-500/50 bg-primary-50 hover:bg-primary-100 transition-all text-right"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm font-bold text-[var(--color-text-primary)]">
+                    <div className="text-sm font-bold text-muted900">
                       {planMeal.meal_name === 'breakfast' ? 'ארוחת בוקר' :
                        planMeal.meal_name === 'lunch' ? 'ארוחת צהריים' :
                        planMeal.meal_name === 'dinner' ? 'ארוחת ערב' : planMeal.meal_name}
                     </div>
-                    <span className="text-xs text-[var(--color-text-muted)]">
+                    <span className="text-xs text-muted600">
                       {planMeal.meal_time}
                     </span>
                   </div>
-                  <div className="text-xs text-[var(--color-text-secondary)] mb-2">
+                  <div className="text-xs text-muted700 mb-2">
                     {planMeal.description}
                   </div>
                   {(planMeal.total_calories || planMeal.total_protein || planMeal.total_carbs || planMeal.total_fat) && (
                     <div className="flex gap-2 flex-wrap">
                       {planMeal.total_calories && (
-                        <span className="text-xs text-amber-500 bg-amber-500/15 px-2 py-1 rounded-lg">
+                        <span className="text-xs text-amber-700 bg-amber-100 px-2 py-1 rounded-lg">
                           {planMeal.total_calories} קל'
                         </span>
                       )}
                       {planMeal.total_protein && (
-                        <span className="text-xs text-red-500 bg-red-500/15 px-2 py-1 rounded-lg">
+                        <span className="text-xs text-red-700 bg-red-100 px-2 py-1 rounded-lg">
                           {planMeal.total_protein}ג' חלבון
                         </span>
                       )}
                       {planMeal.total_carbs && (
-                        <span className="text-xs text-amber-500 bg-amber-500/15 px-2 py-1 rounded-lg">
+                        <span className="text-xs text-amber-700 bg-amber-100 px-2 py-1 rounded-lg">
                           {planMeal.total_carbs}ג' פחמימות
                         </span>
                       )}
                       {planMeal.total_fat && (
-                        <span className="text-xs text-blue-500 bg-blue-500/15 px-2 py-1 rounded-lg">
+                        <span className="text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded-lg">
                           {planMeal.total_fat}ג' שומן
                         </span>
                       )}
@@ -1564,7 +1290,7 @@ export default function FoodDiary({ traineeId }: FoodDiaryProps) {
                 </button>
               ))}
             </div>
-            <div className="sticky bottom-0 bg-[var(--color-bg-base)] p-4 border-t border-[var(--color-border)]">
+            <div className="sticky bottom-0 bg-white p-4 border-t border-border200">
               <button
                 onClick={() => {
                   setShowMealPlanCopy(false);
@@ -1596,59 +1322,59 @@ function DailySummaryCard({
   const waterGoal = mealPlan?.daily_water_ml || WATER_GOAL;
 
   return (
-    <div className="mt-4 space-y-3">
+    <div className="mt-4 space-y-3 animate-fade-in">
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-amber-500/15 border border-amber-500/30 rounded-lg p-3 text-center">
-          <Flame className="w-5 h-5 text-amber-500 mx-auto mb-1" />
-          <p className="text-lg font-bold text-[var(--color-text-primary)]">{totals.calories}</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">קלוריות</p>
+        <div className="bg-amber-100 border border-amber-300 rounded-lg p-3 text-center shadow-sm">
+          <Flame className="w-5 h-5 text-amber-600 mx-auto mb-1" />
+          <p className="text-lg font-bold text-muted900">{totals.calories}</p>
+          <p className="text-xs text-muted700">קלוריות</p>
           {mealPlan?.daily_calories && (
-            <p className={`text-xs mt-1 ${totals.calories <= mealPlan.daily_calories ? 'text-emerald-500' : 'text-red-500'}`}>
+            <p className={`text-xs mt-1 ${totals.calories <= mealPlan.daily_calories ? 'text-primary-600' : 'text-red-600'}`}>
               מתוך {mealPlan.daily_calories}
             </p>
           )}
         </div>
-        <div className="bg-red-500/15 border border-red-500/30 rounded-lg p-3 text-center">
-          <Beef className="w-5 h-5 text-red-500 mx-auto mb-1" />
-          <p className="text-lg font-bold text-[var(--color-text-primary)]">{totals.protein}ג'</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">חלבון</p>
+        <div className="bg-red-100 border border-red-300 rounded-lg p-3 text-center shadow-sm">
+          <Beef className="w-5 h-5 text-red-600 mx-auto mb-1" />
+          <p className="text-lg font-bold text-muted900">{totals.protein}ג'</p>
+          <p className="text-xs text-muted700">חלבון</p>
           {mealPlan?.protein_grams && (
-            <p className={`text-xs mt-1 ${totals.protein >= mealPlan.protein_grams ? 'text-emerald-500' : 'text-orange-500'}`}>
+            <p className={`text-xs mt-1 ${totals.protein >= mealPlan.protein_grams ? 'text-primary-600' : 'text-orange-600'}`}>
               מתוך {mealPlan.protein_grams}ג'
             </p>
           )}
         </div>
-        <div className="bg-amber-500/15 border border-amber-500/30 rounded-lg p-3 text-center">
-          <Wheat className="w-5 h-5 text-amber-500 mx-auto mb-1" />
-          <p className="text-lg font-bold text-[var(--color-text-primary)]">{totals.carbs}ג'</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">פחמימות</p>
+        <div className="bg-amber-100 border border-amber-300 rounded-lg p-3 text-center shadow-sm">
+          <Wheat className="w-5 h-5 text-amber-600 mx-auto mb-1" />
+          <p className="text-lg font-bold text-muted900">{totals.carbs}ג'</p>
+          <p className="text-xs text-muted700">פחמימות</p>
           {mealPlan?.carbs_grams && (
-            <p className="text-xs text-[var(--color-text-muted)] mt-1">מתוך {mealPlan.carbs_grams}ג'</p>
+            <p className="text-xs text-muted600 mt-1">מתוך {mealPlan.carbs_grams}ג'</p>
           )}
         </div>
-        <div className="bg-blue-500/15 border border-blue-500/30 rounded-lg p-3 text-center">
-          <Droplet className="w-5 h-5 text-blue-500 mx-auto mb-1" />
-          <p className="text-lg font-bold text-[var(--color-text-primary)]">{totals.fat}ג'</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">שומן</p>
+        <div className="bg-blue-100 border border-blue-300 rounded-lg p-3 text-center shadow-sm">
+          <Droplet className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+          <p className="text-lg font-bold text-muted900">{totals.fat}ג'</p>
+          <p className="text-xs text-muted700">שומן</p>
           {mealPlan?.fat_grams && (
-            <p className="text-xs text-[var(--color-text-muted)] mt-1">מתוך {mealPlan.fat_grams}ג'</p>
+            <p className="text-xs text-muted600 mt-1">מתוך {mealPlan.fat_grams}ג'</p>
           )}
         </div>
       </div>
       {mealPlan && (
-        <div className="bg-cyan-500/15 border border-cyan-500/30 rounded-lg p-3">
+        <div className="bg-blue-100 border border-blue-300 rounded-lg p-3 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Droplets className="w-5 h-5 text-cyan-500" />
-              <span className="font-medium text-cyan-600 dark:text-cyan-400">מים</span>
+              <Droplets className="w-5 h-5 text-blue-600" />
+              <span className="font-medium text-blue-700">מים</span>
             </div>
-            <span className="text-lg font-bold text-cyan-600 dark:text-cyan-400">
+            <span className="text-lg font-bold text-blue-700">
               {waterAmount} / {waterGoal} מ"ל
             </span>
           </div>
-          <div className="h-2 bg-cyan-500/20 rounded-full overflow-hidden mt-2">
+          <div className="h-2 bg-blue-200 rounded-full overflow-hidden mt-2">
             <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500"
               style={{ width: `${Math.min((waterAmount / waterGoal) * 100, 100)}%` }}
             />
           </div>

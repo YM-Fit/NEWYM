@@ -15,16 +15,16 @@ export function SaveTemplateModal({ templateName, saving, onNameChange, onSave, 
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">Save as Template</h2>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-all duration-300">
-            <X className="h-5 w-5 text-gray-400" />
+            <X className="h-5 w-5 text-muted400" />
           </button>
         </div>
         <div className="p-6">
-          <label className="block text-sm font-semibold text-gray-300 mb-2">Template Name</label>
+          <label className="block text-sm font-semibold text-muted300 mb-2">Template Name</label>
           <input
             type="text"
             value={templateName}
             onChange={(e) => onNameChange(e.target.value)}
-            className="w-full px-4 py-3 bg-gray-800/80 border-2 border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
+            className="w-full px-4 py-3 bg-surface800/80 border-2 border-border700/50 rounded-xl text-foreground focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all duration-300"
             placeholder="e.g., 1800 calorie plan"
           />
         </div>
@@ -32,11 +32,11 @@ export function SaveTemplateModal({ templateName, saving, onNameChange, onSave, 
           <button
             onClick={onSave}
             disabled={saving}
-            className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-emerald-500/25"
+            className="flex-1 bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 disabled:opacity-50 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-primary-500/25"
           >
             {saving ? 'Saving...' : 'Save Template'}
           </button>
-          <button onClick={onClose} className="flex-1 bg-gray-700/50 hover:bg-gray-700 text-gray-300 py-3.5 rounded-xl font-semibold transition-all duration-300">
+          <button onClick={onClose} className="flex-1 bg-surface700/50 hover:bg-surface700 text-muted300 py-3.5 rounded-xl font-semibold transition-all duration-300">
             Cancel
           </button>
         </div>

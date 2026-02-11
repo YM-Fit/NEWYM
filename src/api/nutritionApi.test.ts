@@ -3,6 +3,7 @@ import {
   getActiveMealPlanWithMeals,
   createFoodItem,
   updateFoodItem,
+  copyMealPlanToTrainee,
 } from './nutritionApi';
 import { supabase } from '../lib/supabase';
 
@@ -152,6 +153,43 @@ describe('nutritionApi', () => {
       });
 
       expect(result).toEqual(mockFoodItem);
+    });
+  });
+
+  describe('copyMealPlanToTrainee', () => {
+    it('should copy plan successfully', async () => {
+      const mockPlan = { id: 'plan-1', name: 'Test', trainee_id: 'trainee-1' };
+      const mockMeals = [{ id: 'meal-1', plan_id: 'plan-1' }];
+      const mockFoodItems = [{ id: 'food-1', meal_id: 'meal-1' }];
+
+      (supabase.from as any)
+        .mockReturnValueOnce({
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn().mockResolvedValue({ data: mockPlan, error: null }),
+        })
+        .mockReturnValueOnce({
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          order: vi.fn().mockResolvedValue({ data: mockMeals, error: null }),
+        })
+        .mockReturnValueOnce({
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          order: vi.fn().mockResolvedValue({ data: mockFoodItems, error: null }),
+        })
+        .mockReturnValue({
+          insert: vi.fn().mockReturnThis(),
+          select: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({
+            data: { ...mockPlan, id: 'plan-2', trainee_id: 'trainee-2' },
+            error: null,
+          }),
+        });
+
+      const result = await copyMealPlanToTrainee('plan-1', 'trainee-2', 'trainer-1');
+      expect(result).toBeDefined();
+      expect(result?.trainee_id).toBe('trainee-2');
     });
   });
 });

@@ -10,7 +10,7 @@ describe('Card', () => {
 
   it('should render different variants', () => {
     const { rerender, container } = render(<Card variant="default">Content</Card>);
-    expect(container.firstChild).toHaveClass('bg-zinc-900');
+    expect(container.firstChild).toHaveClass('bg-card');
 
     rerender(<Card variant="glass">Content</Card>);
     expect(container.firstChild).toHaveClass('glass-card');

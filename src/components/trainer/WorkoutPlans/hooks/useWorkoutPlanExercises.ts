@@ -48,9 +48,18 @@ export function useWorkoutPlanExercises(
     setSelectedDay(updatedDay);
   }, [selectedDay, days, setDays, setSelectedDay]);
 
+  const updateAllExercises = useCallback((updatedExercises: PlanExercise[]) => {
+    if (!selectedDay) return;
+
+    const updatedDay = { ...selectedDay, exercises: updatedExercises };
+    setDays(days.map(d => d.tempId === selectedDay.tempId ? updatedDay : d));
+    setSelectedDay(updatedDay);
+  }, [selectedDay, days, setDays, setSelectedDay]);
+
   return {
     addExercise,
     removeExercise,
     updateExercise,
+    updateAllExercises,
   };
 }

@@ -1,4 +1,4 @@
-import { Home, Users, Calculator, BarChart3, X, Sparkles, Search, ChevronRight, LucideIcon, Calendar, Briefcase, TrendingUp, FileText } from 'lucide-react';
+import { Home, Users, Calculator, BarChart3, X, Sparkles, Search, ChevronRight, LucideIcon, Calendar, FileSpreadsheet } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 
 interface MobileSidebarProps {
@@ -53,6 +53,7 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
     // Tools & Analytics
     { id: 'tools', label: 'כלים', icon: Calculator, description: 'מחשבונים וכלים', category: 'tools' },
     { id: 'reports', label: 'דוחות', icon: BarChart3, description: 'סטטיסטיקות ונתונים', category: 'tools' },
+    { id: 'smart-report', label: 'דוח חכם', icon: FileSpreadsheet, description: 'ניהול תשלומים חודשי', category: 'tools' },
   ], []);
 
   const categories = useMemo(() => [
@@ -116,14 +117,14 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
         aria-label="תפריט ניווט"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-zinc-800/50">
+        <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-emerald-400" />
-            <span className="text-lg font-bold text-white">YM Coach</span>
+            <Sparkles className="h-5 w-5 text-primary-600" />
+            <span className="text-lg font-bold text-foreground">YM Coach</span>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all"
+            className="p-2.5 rounded-xl text-muted hover:text-foreground hover:bg-surface transition-all min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
             aria-label="סגור תפריט"
           >
             <X className="h-5 w-5" />
@@ -131,15 +132,15 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b border-zinc-800/50">
+        <div className="p-4 border-b border-border">
           <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
             <input
               type="text"
               placeholder="חפש בתפריט..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pr-10 pl-4 py-2.5 text-sm bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+              className="w-full pr-10 pl-4 py-2.5 text-sm bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary-700/50 focus:border-primary-700/50 transition-all"
             />
           </div>
         </div>
@@ -162,7 +163,7 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
                 {category.id !== 'main' && (
                   <button
                     onClick={() => toggleCategory(category.id)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold text-zinc-500 uppercase tracking-wider hover:text-zinc-400 hover:bg-zinc-800/30 transition-all"
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold text-muted uppercase tracking-wider hover:text-foreground hover:bg-surface transition-all"
                     aria-expanded={isExpanded}
                     aria-controls={`mobile-sidebar-category-${category.id}`}
                   >
@@ -189,33 +190,33 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
                           onClick={() => handleItemClick(id)}
                           className={`w-full flex items-center px-4 py-4 rounded-xl transition-all duration-200 group relative ${
                             isActive
-                              ? 'bg-gradient-to-r from-emerald-500/15 to-emerald-500/5 text-emerald-400'
-                              : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white active:bg-zinc-800/70'
+                              ? 'bg-gradient-to-r from-primary-700/15 to-primary-700/5 text-primary-600'
+                              : 'text-muted hover:bg-surface hover:text-foreground active:bg-elevated'
                           }`}
                           aria-current={isActive ? 'page' : undefined}
                         >
                           {isActive && (
-                            <div className="absolute right-0 w-1 h-12 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-l-full" />
+                            <div className="absolute right-0 w-1 h-12 bg-gradient-to-b from-primary-600 to-primary-800 rounded-l-full" />
                           )}
 
                           <div className="relative">
                             <Icon className={`h-6 w-6 transition-all ${
-                              isActive ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' : ''
+                              isActive ? 'text-primary-600 drop-shadow-[0_0_8px_rgba(74,107,42,0.4)]' : ''
                             }`} />
                           </div>
 
-                          <div className="flex-1 text-right mr-4">
+                            <div className="flex-1 text-right mr-4">
                             <div className="flex items-center justify-end gap-2">
-                              <span className={`block text-base font-medium ${isActive ? 'text-white' : ''}`}>
+                              <span className={`block text-base font-medium ${isActive ? 'text-foreground' : ''}`}>
                                 {label}
                               </span>
                               {badge && (
-                                <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-500/20 text-emerald-400 rounded-full">
+                                <span className="px-2 py-0.5 text-xs font-semibold bg-primary-700/20 text-primary-600 rounded-full">
                                   {badge}
                                 </span>
                               )}
                             </div>
-                            <span className="block text-xs text-zinc-500 mt-0.5">
+                            <span className="block text-xs text-muted mt-0.5">
                               {description}
                             </span>
                           </div>
@@ -230,15 +231,15 @@ export default function MobileSidebar({ isOpen, onClose, activeView, onViewChang
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-zinc-800/50">
-          <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
+        <div className="p-4 border-t border-border">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-primary-700/10 to-primary-800/5 border border-primary-700/20">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                <Sparkles className="h-4 w-4 text-emerald-400" />
+              <div className="w-8 h-8 rounded-lg bg-primary-700/20 flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-primary-600" />
               </div>
-              <span className="text-sm font-semibold text-white">YM Coach Pro</span>
+              <span className="text-sm font-semibold text-foreground">YM Coach Pro</span>
             </div>
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               מערכת ניהול מתאמנים מתקדמת
             </p>
           </div>

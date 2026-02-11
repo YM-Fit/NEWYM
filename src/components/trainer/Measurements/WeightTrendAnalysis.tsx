@@ -161,7 +161,7 @@ export default function WeightTrendAnalysis({
     return (
       <div className="premium-card-static p-8">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 text-teal-400 animate-spin" />
+          <Loader2 className="h-8 w-8 text-primary-400 animate-spin" />
         </div>
       </div>
     );
@@ -171,9 +171,9 @@ export default function WeightTrendAnalysis({
     return (
       <div className="premium-card-static p-6">
         <div className="text-center py-12">
-          <BarChart3 className="h-16 w-16 mx-auto text-gray-600 mb-4" />
-          <p className="text-gray-400 font-medium">אין מספיק נתונים לניתוח</p>
-          <p className="text-sm text-gray-500 mt-2">נדרשות לפחות 2 שקילות</p>
+          <BarChart3 className="h-16 w-16 mx-auto text-muted600 mb-4" />
+          <p className="text-theme-secondary font-medium">אין מספיק נתונים לניתוח</p>
+          <p className="text-sm text-theme-muted mt-2">נדרשות לפחות 2 שקילות</p>
         </div>
       </div>
     );
@@ -186,9 +186,9 @@ export default function WeightTrendAnalysis({
       case 'up':
         return <TrendingUp className="h-6 w-6 text-red-400" />;
       case 'down':
-        return <TrendingDown className="h-6 w-6 text-emerald-400" />;
+        return <TrendingDown className="h-6 w-6 text-primary-400" />;
       default:
-        return <Minus className="h-6 w-6 text-gray-400" />;
+        return <Minus className="h-6 w-6 text-muted400" />;
     }
   };
 
@@ -197,9 +197,9 @@ export default function WeightTrendAnalysis({
       case 'up':
         return 'text-red-400 bg-red-500/20 border-red-500/30';
       case 'down':
-        return 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30';
+        return 'text-primary-400 bg-primary-500/20 border-primary-500/30';
       default:
-        return 'text-gray-400 bg-gray-500/20 border-gray-500/30';
+        return 'text-muted400 bg-surface500/20 border-border500/30';
     }
   };
 
@@ -218,18 +218,18 @@ export default function WeightTrendAnalysis({
     <div className="premium-card-static p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500/30 to-blue-500/30">
-            <BarChart3 className="h-6 w-6 text-cyan-400" />
+          <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/30 to-blue-500/30">
+            <BarChart3 className="h-6 w-6 text-blue-400" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">ניתוח מגמות</h3>
-            <p className="text-sm text-gray-400">{traineeName}</p>
+            <h3 className="text-lg font-bold text-theme-primary">ניתוח מגמות</h3>
+            <p className="text-sm text-theme-muted">{traineeName}</p>
           </div>
         </div>
         <select
           value={selectedPeriod}
           onChange={(e) => setSelectedPeriod(e.target.value as any)}
-          className="px-4 py-2 rounded-xl bg-gray-800/50 border border-gray-700/50 text-white text-sm focus:ring-2 focus:ring-teal-500/50"
+          className="px-4 py-2 rounded-xl bg-surface800/50 border border-border700/50 text-foreground text-sm focus:ring-2 focus:ring-primary-600/50"
         >
           <option value="1m">חודש אחרון</option>
           <option value="3m">3 חודשים</option>
@@ -276,36 +276,36 @@ export default function WeightTrendAnalysis({
 
       {/* Statistics Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700/50">
+        <div className="p-4 rounded-xl bg-surface800/50 border border-border700/50">
           <div className="flex items-center gap-2 mb-2">
-            <Target className="h-4 w-4 text-cyan-400" />
-            <p className="text-xs text-gray-400">ממוצע</p>
+            <Target className="h-4 w-4 text-blue-400" />
+            <p className="text-xs text-muted400">ממוצע</p>
           </div>
-          <p className="text-xl font-bold text-white">{analysis.averageWeight.toFixed(1)} ק״ג</p>
+          <p className="text-xl font-bold text-foreground">{analysis.averageWeight.toFixed(1)} ק״ג</p>
         </div>
 
-        <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700/50">
+        <div className="p-4 rounded-xl bg-surface800/50 border border-border700/50">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="h-4 w-4 text-emerald-400" />
-            <p className="text-xs text-gray-400">מקסימום</p>
+            <TrendingUp className="h-4 w-4 text-primary-400" />
+            <p className="text-xs text-muted400">מקסימום</p>
           </div>
-          <p className="text-xl font-bold text-white">{analysis.maxWeight.toFixed(1)} ק״ג</p>
+          <p className="text-xl font-bold text-foreground">{analysis.maxWeight.toFixed(1)} ק״ג</p>
         </div>
 
-        <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700/50">
+        <div className="p-4 rounded-xl bg-surface800/50 border border-border700/50">
           <div className="flex items-center gap-2 mb-2">
             <TrendingDown className="h-4 w-4 text-red-400" />
-            <p className="text-xs text-gray-400">מינימום</p>
+            <p className="text-xs text-muted400">מינימום</p>
           </div>
-          <p className="text-xl font-bold text-white">{analysis.minWeight.toFixed(1)} ק״ג</p>
+          <p className="text-xl font-bold text-foreground">{analysis.minWeight.toFixed(1)} ק״ג</p>
         </div>
 
-        <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700/50">
+        <div className="p-4 rounded-xl bg-surface800/50 border border-border700/50">
           <div className="flex items-center gap-2 mb-2">
             <Calculator className="h-4 w-4 text-amber-400" />
-            <p className="text-xs text-gray-400">טווח</p>
+            <p className="text-xs text-muted400">טווח</p>
           </div>
-          <p className="text-xl font-bold text-white">
+          <p className="text-xl font-bold text-foreground">
             {(analysis.maxWeight - analysis.minWeight).toFixed(1)} ק״ג
           </p>
         </div>
@@ -313,38 +313,38 @@ export default function WeightTrendAnalysis({
 
       {/* Projections */}
       {(analysis.projectedWeight30Days || analysis.projectedWeight90Days) && (
-        <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30">
+        <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-500/10 border border-blue-500/30">
           <div className="flex items-center gap-2 mb-4">
             <Calendar className="h-5 w-5 text-blue-400" />
-            <h4 className="font-bold text-white">תחזיות</h4>
+            <h4 className="font-bold text-foreground">תחזיות</h4>
           </div>
           <div className="grid grid-cols-2 gap-4">
             {analysis.projectedWeight30Days && (
               <div>
-                <p className="text-sm text-gray-400 mb-1">תוך 30 ימים</p>
-                <p className="text-xl font-bold text-white">
+                <p className="text-sm text-muted400 mb-1">תוך 30 ימים</p>
+                <p className="text-xl font-bold text-foreground">
                   {analysis.projectedWeight30Days.toFixed(1)} ק״ג
                 </p>
               </div>
             )}
             {analysis.projectedWeight90Days && (
               <div>
-                <p className="text-sm text-gray-400 mb-1">תוך 90 ימים</p>
-                <p className="text-xl font-bold text-white">
+                <p className="text-sm text-muted400 mb-1">תוך 90 ימים</p>
+                <p className="text-xl font-bold text-foreground">
                   {analysis.projectedWeight90Days.toFixed(1)} ק״ג
                 </p>
               </div>
             )}
           </div>
-          <p className="text-xs text-gray-500 mt-4">
+          <p className="text-xs text-muted500 mt-4">
             * התחזיות מבוססות על המגמה הנוכחית ואינן מהוות המלצה רפואית
           </p>
         </div>
       )}
 
       {/* Data Points Summary */}
-      <div className="mt-6 pt-6 border-t border-gray-700/50">
-        <div className="flex items-center justify-between text-sm text-gray-400">
+      <div className="mt-6 pt-6 border-t border-border700/50">
+        <div className="flex items-center justify-between text-sm text-muted400">
           <span>סה״כ נקודות נתונים: {weightData.length}</span>
           <span>
             {weightData.filter(d => d.source === 'measurement').length} מדידות,{' '}

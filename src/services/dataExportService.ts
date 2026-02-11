@@ -7,7 +7,6 @@
  * interactions, and reports. Supports CSV, JSON, and Excel formats.
  */
 
-import * as XLSX from 'xlsx';
 import { logger } from '../utils/logger';
 import type { ApiResponse } from '../api/types';
 import { supabase } from '../lib/supabase';
@@ -218,7 +217,7 @@ export class DataExportService {
     }
 
     try {
-      // Convert data to worksheet format
+      const XLSX = await import('xlsx');
       const worksheet = XLSX.utils.json_to_sheet(data);
 
       // Auto-size columns (basic implementation)
@@ -329,7 +328,16 @@ export class DataExportService {
     link.download = filename;
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    // Safely remove the element if it's still in the DOM
+    setTimeout(() => {
+      try {
+        if (link.parentNode) {
+          link.parentNode.removeChild(link);
+        }
+      } catch (e) {
+        // Element may have already been removed, ignore
+      }
+    }, 0);
     URL.revokeObjectURL(url);
   }
 

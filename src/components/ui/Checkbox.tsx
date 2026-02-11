@@ -25,21 +25,21 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
               className="sr-only peer"
               {...props}
             />
-            <div className="w-5 h-5 rounded border-2 border-zinc-700 bg-zinc-800/50 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition-all flex items-center justify-center peer-focus:ring-2 peer-focus:ring-emerald-500/50 peer-focus:outline-none">
-              <Check className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" aria-hidden="true" />
+            <div className="w-5 h-5 rounded border-2 border-border/30 bg-surface/60 peer-checked:bg-primary peer-checked:border-primary transition-all flex items-center justify-center peer-focus:ring-2 peer-focus:ring-primary/50 peer-focus:outline-none">
+              <Check className="w-3 h-3 text-primary-foreground opacity-0 peer-checked:opacity-100 transition-opacity" aria-hidden="true" />
             </div>
           </div>
           {label && (
             <label
               htmlFor={checkboxId}
-              className="text-sm text-zinc-300 cursor-pointer select-none"
+              className="text-sm text-secondary cursor-pointer select-none"
             >
               {label}
             </label>
           )}
         </div>
         {error && (
-          <p id={errorId} className="text-sm text-red-400 ml-8" role="alert">
+          <p id={errorId} className="text-sm text-danger ml-8" role="alert">
             {error}
           </p>
         )}

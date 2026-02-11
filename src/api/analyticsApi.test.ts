@@ -1,8 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { analyticsApi } from './analyticsApi';
 import { supabase } from '../lib/supabase';
-import { handleApiError } from './config';
-import { logger } from '../utils/logger';
 
 vi.mock('../lib/supabase', () => ({
   supabase: {
@@ -10,15 +8,7 @@ vi.mock('../lib/supabase', () => ({
   },
 }));
 
-vi.mock('./config', () => ({
-  handleApiError: vi.fn((error, message) => new Error(message)),
-}));
-
-vi.mock('../utils/logger', () => ({
-  logger: {
-    error: vi.fn(),
-  },
-}));
+// Mocks are not needed for these tests
 
 describe('analyticsApi', () => {
   beforeEach(() => {
@@ -88,9 +78,9 @@ describe('analyticsApi', () => {
         const result = await analyticsApi.getTraineeAdherence('trainer-1');
         expect(result).toBeDefined();
         expect(Array.isArray(result)).toBe(true);
-      } catch (error) {
+      } catch (_error) {
         // If error occurs, it's likely due to mock setup - skip for now
-        expect(error).toBeDefined();
+        expect(_error).toBeDefined();
       } finally {
         // Restore original
         analyticsApi.calculateStreak = originalCalculateStreak;
@@ -166,9 +156,9 @@ describe('analyticsApi', () => {
         const result = await analyticsApi.getTraineeAnalytics('trainee-1');
         expect(result).toBeDefined();
         expect(result.trainee_id).toBe('trainee-1');
-      } catch (error) {
+      } catch (_error) {
         // If error occurs, it's likely due to mock setup - skip for now
-        expect(error).toBeDefined();
+        expect(_error).toBeDefined();
       } finally {
         // Restore original
         analyticsApi.calculateStreak = originalCalculateStreak;

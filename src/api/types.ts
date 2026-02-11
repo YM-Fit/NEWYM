@@ -63,6 +63,8 @@ export interface SaveWorkoutRequest {
   }>;
   pair_member?: 'member_1' | 'member_2' | null;
   workout_id?: string;
+  is_auto_save?: boolean;
+  is_prepared?: boolean;
 }
 
 export interface SaveWorkoutResponse {

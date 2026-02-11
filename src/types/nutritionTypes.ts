@@ -20,12 +20,17 @@ export interface NutritionFoodItem {
   meal_id: string;
   food_name: string;
   quantity: number;
-  unit: string; // 'g' (גרם), 'unit' (יחידות), 'ml' (מיליליטר), 'cup' (כוס), etc.
+  unit: string;
   calories: number | null;
   protein: number | null;
   carbs: number | null;
   fat: number | null;
   order_index: number;
+  category?: string | null;
+  calories_per_100g?: number | null;
+  protein_per_100g?: number | null;
+  carbs_per_100g?: number | null;
+  fat_per_100g?: number | null;
   created_at?: string;
 }
 

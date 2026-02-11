@@ -442,7 +442,6 @@ export async function getGoogleCalendarEvents(
   dateRange: { start: Date; end: Date },
   options?: { useCache?: boolean; forceRefresh?: boolean }
 ): Promise<ApiResponse<GoogleCalendarEvent[]>> {
-  // Rate limiting: 60 requests per minute per trainer
   const rateLimitKey = `getGoogleCalendarEvents:${trainerId}`;
   const rateLimitResult = rateLimiter.check(rateLimitKey, 60, 60000);
   if (!rateLimitResult.allowed) {
@@ -450,7 +449,6 @@ export async function getGoogleCalendarEvents(
   }
 
   try {
-    // Validate inputs
     if (!trainerId || typeof trainerId !== 'string') {
       return { error: 'מזהה מאמן לא תקין' };
     }
@@ -463,100 +461,6 @@ export async function getGoogleCalendarEvents(
       return { error: 'תאריך התחלה חייב להיות לפני תאריך סיום' };
     }
 
-    const useCache = options?.useCache !== false; // Default to true
-    const forceRefresh = options?.forceRefresh === true;
-
-    // First, try to get events from cached sync table (much faster)
-    if (useCache && !forceRefresh) {
-      try {
-        // Query for events that might overlap with the date range
-        // We query a wider range and filter client-side for accuracy
-        const queryStart = new Date(dateRange.start);
-        queryStart.setDate(queryStart.getDate() - 1); // Include events that might start before but end in range
-        
-        // Type for the cached events query result
-        type CachedEventRow = {
-          google_event_id: string;
-          event_start_time: string;
-          event_end_time: string | null;
-          event_summary: string | null;
-          event_description: string | null;
-          sync_status: string;
-          trainees: { full_name: string; email: string | null } | { full_name: string; email: string | null }[] | null;
-        };
-        
-        const { data: cachedEvents, error: cacheError } = await supabase
-          .from('google_calendar_sync')
-          .select(`
-            google_event_id,
-            event_start_time,
-            event_end_time,
-            event_summary,
-            event_description,
-            sync_status,
-            trainees:trainee_id(full_name, email)
-          `)
-          .eq('trainer_id', trainerId)
-          .eq('sync_status', 'synced')
-          .gte('event_start_time', queryStart.toISOString())
-          .lte('event_start_time', dateRange.end.toISOString())
-          .order('event_start_time', { ascending: true }) as { data: CachedEventRow[] | null; error: { message: string } | null };
-
-        // If we have cached data and no error, use it
-        if (!cacheError && cachedEvents && cachedEvents.length > 0) {
-          // Filter events to ensure they actually overlap with the date range
-          const filteredEvents = cachedEvents.filter((cached) => {
-            const startTime = new Date(cached.event_start_time);
-            const endTime = cached.event_end_time ? new Date(cached.event_end_time) : startTime;
-            
-            // Event overlaps with range if:
-            // - starts before range end AND ends after range start
-            return startTime <= dateRange.end && endTime >= dateRange.start;
-          });
-
-          if (filteredEvents.length > 0) {
-            // Convert cached events to GoogleCalendarEvent format
-            const events: GoogleCalendarEvent[] = filteredEvents.map((cached) => {
-              const trainee = Array.isArray(cached.trainees) ? cached.trainees[0] : cached.trainees;
-              const startTime = new Date(cached.event_start_time);
-              const endTime = cached.event_end_time ? new Date(cached.event_end_time) : new Date(startTime.getTime() + 60 * 60 * 1000); // Default 1 hour if no end time
-              
-              return {
-                id: cached.google_event_id,
-                summary: cached.event_summary || `אימון${trainee ? ` - ${trainee.full_name}` : ''}`,
-                description: cached.event_description || undefined,
-                start: {
-                  dateTime: startTime.toISOString(),
-                  timeZone: 'Asia/Jerusalem',
-                },
-                end: {
-                  dateTime: endTime.toISOString(),
-                  timeZone: 'Asia/Jerusalem',
-                },
-                attendees: trainee?.email ? [{
-                  email: trainee.email,
-                  displayName: trainee.full_name || undefined,
-                }] : undefined,
-              };
-            });
-
-            return { data: events, success: true };
-          }
-        }
-        
-        // If cache error occurred but we have data, log it but continue to fallback
-        if (cacheError) {
-          const { logger } = await import('../utils/logger');
-          logger.warn('Cache query error (falling back to API)', cacheError, 'getGoogleCalendarEvents');
-        }
-      } catch (cacheErr: unknown) {
-        // Log cache errors but continue to Google API fallback
-        const { logger } = await import('../utils/logger');
-        logger.warn('Cache query exception (falling back to API)', cacheErr, 'getGoogleCalendarEvents');
-      }
-    }
-
-    // Fallback to Google API if cache miss or force refresh requested
     const { data: credentials, error: credError } = await supabase
       .from('trainer_google_credentials')
       .select('access_token, refresh_token, token_expires_at, default_calendar_id')
@@ -567,84 +471,210 @@ export async function getGoogleCalendarEvents(
       return { error: 'Google Calendar לא מחובר' };
     }
 
-    // Check if token needs refresh and refresh if needed
     const { OAuthTokenService } = await import('../services/oauthTokenService');
     const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
-    
+
     if (!tokenResult.success || !tokenResult.data) {
       return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
     }
-    
-    const accessToken = tokenResult.data;
 
+    const accessToken = tokenResult.data;
     const calendarId = credentials.default_calendar_id || 'primary';
     const timeMin = dateRange.start.toISOString();
     const timeMax = dateRange.end.toISOString();
-    
-    // Build query string properly
+
     const queryParams = new URLSearchParams({
       timeMin,
       timeMax,
       singleEvents: 'true',
       orderBy: 'startTime',
-      maxResults: '2500', // Increased from default 250
+      maxResults: '2500',
     });
-    
-    const response = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${queryParams.toString()}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      }
-    );
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      
-      // Handle 401 - Token expired or invalid
-      if (response.status === 401) {
-        // Try to refresh token and retry once
-        const { OAuthTokenService } = await import('../services/oauthTokenService');
-        const refreshResult = await OAuthTokenService.refreshAccessToken(
-          trainerId, 
-          credentials.refresh_token
-        );
-        
-        if (refreshResult.success && refreshResult.data?.access_token) {
-          // Retry with new token
-          const retryResponse = await fetch(
-            `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${queryParams.toString()}`,
-            {
-              headers: {
-                'Authorization': `Bearer ${refreshResult.data.access_token}`,
-              },
-            }
-          );
-          
-          if (retryResponse.ok) {
-            const data = await retryResponse.json();
-            return { data: data.items || [], success: true };
-          }
-        }
-        
-        // If refresh failed or retry failed, ask user to reconnect
+    const fetchFromGoogle = async (token: string): Promise<Response> => {
+      return fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${queryParams.toString()}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+    };
+
+    let response = await fetchFromGoogle(accessToken);
+
+    if (response.status === 401) {
+      const refreshResult = await OAuthTokenService.refreshAccessToken(trainerId);
+      if (refreshResult.success && refreshResult.data?.access_token) {
+        response = await fetchFromGoogle(refreshResult.data.access_token);
+      }
+      if (!response.ok) {
         return { error: 'הרשאת Google Calendar פגה - נדרש חיבור מחדש בהגדרות' };
       }
-      
-      const errorMessage = errorData?.error?.message || 'שגיאה בטעינת אירועים מ-Google Calendar';
-      return { error: errorMessage };
     }
 
-    const data = await response.json();
-    return { data: data.items || [], success: true };
+    if (response.ok) {
+      const data = await response.json();
+      const validEvents: GoogleCalendarEvent[] = (data.items || [])
+        .filter((e: any) => e.status !== 'cancelled')
+        .map((e: any) => ({
+          id: e.id,
+          summary: e.summary || '',
+          description: e.description,
+          start: {
+            dateTime: e.start.dateTime,
+            date: e.start.date,
+            timeZone: e.start.timeZone,
+          },
+          end: {
+            dateTime: e.end.dateTime,
+            date: e.end.date,
+            timeZone: e.end.timeZone,
+          },
+          attendees: e.attendees?.map((a: any) => ({
+            email: a.email,
+            displayName: a.displayName,
+          })),
+          location: e.location,
+        }));
+
+      cleanupStaleSyncRecords(trainerId, dateRange, validEvents).catch(() => {});
+
+      return { data: validEvents, success: true };
+    }
+
+    const errorData = await response.json().catch(() => ({}));
+    const apiErrorMsg = errorData?.error?.message || '';
+
+    const { logger } = await import('../utils/logger');
+    logger.warn('Google Calendar API failed, falling back to DB cache', { status: response.status, apiErrorMsg }, 'getGoogleCalendarEvents');
+
+    return await getEventsFromSyncTable(trainerId, dateRange);
   } catch (err: unknown) {
-    const errorMessage = handleApiError(err, {
-      defaultMessage: 'שגיאה בטעינת אירועים מ-Google Calendar',
-      context: 'getGoogleCalendarEvents',
-      additionalInfo: { trainerId },
+    const { logger } = await import('../utils/logger');
+    logger.warn('Google Calendar fetch exception, falling back to DB cache', err, 'getGoogleCalendarEvents');
+
+    try {
+      return await getEventsFromSyncTable(trainerId, dateRange);
+    } catch {
+      const errorMessage = handleApiError(err, {
+        defaultMessage: 'שגיאה בטעינת אירועים מ-Google Calendar',
+        context: 'getGoogleCalendarEvents',
+        additionalInfo: { trainerId },
+      });
+      return { error: errorMessage };
+    }
+  }
+}
+
+async function getEventsFromSyncTable(
+  trainerId: string,
+  dateRange: { start: Date; end: Date }
+): Promise<ApiResponse<GoogleCalendarEvent[]>> {
+  type CachedEventRow = {
+    google_event_id: string;
+    event_start_time: string;
+    event_end_time: string | null;
+    event_summary: string | null;
+    event_description: string | null;
+    sync_status: string;
+    trainees: { full_name: string; email: string | null } | { full_name: string; email: string | null }[] | null;
+  };
+
+  const queryStart = new Date(dateRange.start);
+  queryStart.setDate(queryStart.getDate() - 1);
+
+  const { data: cachedEvents, error: cacheError } = await supabase
+    .from('google_calendar_sync')
+    .select(`
+      google_event_id,
+      event_start_time,
+      event_end_time,
+      event_summary,
+      event_description,
+      sync_status,
+      trainees:trainee_id(full_name, email)
+    `)
+    .eq('trainer_id', trainerId)
+    .eq('sync_status', 'synced')
+    .gte('event_start_time', queryStart.toISOString())
+    .lte('event_start_time', dateRange.end.toISOString())
+    .order('event_start_time', { ascending: true }) as { data: CachedEventRow[] | null; error: { message: string } | null };
+
+  if (cacheError || !cachedEvents || cachedEvents.length === 0) {
+    return { data: [], success: true };
+  }
+
+  const events: GoogleCalendarEvent[] = cachedEvents
+    .filter((cached) => {
+      const startTime = new Date(cached.event_start_time);
+      const endTime = cached.event_end_time ? new Date(cached.event_end_time) : startTime;
+      return startTime <= dateRange.end && endTime >= dateRange.start;
+    })
+    .map((cached) => {
+      const trainee = Array.isArray(cached.trainees) ? cached.trainees[0] : cached.trainees;
+      const startTime = new Date(cached.event_start_time);
+      const endTime = cached.event_end_time ? new Date(cached.event_end_time) : new Date(startTime.getTime() + 60 * 60 * 1000);
+
+      return {
+        id: cached.google_event_id,
+        summary: cached.event_summary || `אימון${trainee ? ` - ${trainee.full_name}` : ''}`,
+        description: cached.event_description || undefined,
+        start: {
+          dateTime: startTime.toISOString(),
+          timeZone: 'Asia/Jerusalem',
+        },
+        end: {
+          dateTime: endTime.toISOString(),
+          timeZone: 'Asia/Jerusalem',
+        },
+        attendees: trainee?.email ? [{
+          email: trainee.email,
+          displayName: trainee.full_name || undefined,
+        }] : undefined,
+      };
     });
-    return { error: errorMessage };
+
+  return { data: events, success: true };
+}
+
+async function cleanupStaleSyncRecords(
+  trainerId: string,
+  dateRange: { start: Date; end: Date },
+  googleEvents: GoogleCalendarEvent[]
+): Promise<void> {
+  const existingEventIds = new Set(googleEvents.map((e) => e.id));
+
+  const { data: allSyncRecords } = await supabase
+    .from('google_calendar_sync')
+    .select('id, google_event_id, workout_id, sync_direction')
+    .eq('trainer_id', trainerId)
+    .eq('sync_status', 'synced')
+    .gte('event_start_time', dateRange.start.toISOString())
+    .lte('event_start_time', dateRange.end.toISOString()) as { data: { id: string; google_event_id: string; workout_id: string | null; sync_direction: string }[] | null };
+
+  if (!allSyncRecords) return;
+
+  const deletedWorkoutIds: string[] = [];
+  for (const syncRecord of allSyncRecords) {
+    if (!existingEventIds.has(syncRecord.google_event_id)) {
+      if (syncRecord.workout_id && syncRecord.sync_direction !== 'to_google') {
+        await supabase
+          .from('workouts')
+          .delete()
+          .eq('id', syncRecord.workout_id)
+          .eq('trainer_id', trainerId);
+        deletedWorkoutIds.push(syncRecord.workout_id);
+      }
+
+      await supabase
+        .from('google_calendar_sync')
+        .delete()
+        .eq('id', syncRecord.id);
+    }
+  }
+
+  if (deletedWorkoutIds.length > 0 && typeof window !== 'undefined') {
+    for (const workoutId of deletedWorkoutIds) {
+      window.dispatchEvent(new CustomEvent('workout-deleted', { detail: { workoutId } }));
+    }
   }
 }
 
@@ -653,8 +683,7 @@ export async function getGoogleCalendarEvents(
  */
 export async function createGoogleCalendarEvent(
   trainerId: string,
-  eventData: CreateEventData,
-  accessToken: string
+  eventData: CreateEventData
 ): Promise<ApiResponse<string>> {
   // Rate limiting: 50 create requests per minute per trainer
   const rateLimitKey = `createGoogleCalendarEvent:${trainerId}`;
@@ -675,7 +704,8 @@ export async function createGoogleCalendarEvent(
       return { error: 'Google Calendar לא מחובר' };
     }
 
-    // Get valid access token (refresh if needed)
+    // Get valid Google OAuth access token (refresh if needed)
+    // IMPORTANT: Always use the token from OAuthTokenService, not the passed Supabase token
     const { OAuthTokenService } = await import('../services/oauthTokenService');
     const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
     
@@ -683,7 +713,8 @@ export async function createGoogleCalendarEvent(
       return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
     }
     
-    const accessTokenToUse = accessToken || tokenResult.data;
+    // Always use the Google OAuth token from the service
+    const accessTokenToUse = tokenResult.data;
 
     const calendarId = credentials.default_calendar_id || 'primary';
     
@@ -754,8 +785,7 @@ export async function createGoogleCalendarEvent(
 export async function updateGoogleCalendarEvent(
   trainerId: string,
   eventId: string,
-  updates: Partial<CreateEventData>,
-  _accessToken?: string // Not used - we always get fresh token from service
+  updates: Partial<CreateEventData>
 ): Promise<ApiResponse> {
   // Rate limiting: 50 update requests per minute per trainer
   const rateLimitKey = `updateGoogleCalendarEvent:${trainerId}`;
@@ -788,7 +818,7 @@ export async function updateGoogleCalendarEvent(
     let currentToken = tokenResult.data;
 
     // Helper function to perform the update
-    const performUpdate = async (token: string): Promise<{ success: boolean; error?: string; needsRetry?: boolean }> => {
+    const performUpdate = async (token: string): Promise<{ success: boolean; error?: string; needsRetry?: boolean; eventDeleted?: boolean }> => {
       // Get existing event first
       const getResponse = await fetch(
         `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`,
@@ -804,7 +834,9 @@ export async function updateGoogleCalendarEvent(
           return { success: false, needsRetry: true };
         }
         if (getResponse.status === 404 || getResponse.status === 410) {
-          return { success: false, error: 'האירוע לא נמצא ב-Google Calendar' };
+          // Event was deleted from Google Calendar
+          // Return special error code to indicate deletion
+          return { success: false, error: 'האירוע לא נמצא ב-Google Calendar (נמחק)', eventDeleted: true };
         }
         return { success: false, error: 'שגיאה בטעינת אירוע מ-Google Calendar' };
       }
@@ -896,8 +928,7 @@ export async function updateGoogleCalendarEvent(
  */
 export async function deleteGoogleCalendarEvent(
   trainerId: string,
-  eventId: string,
-  accessToken: string
+  eventId: string
 ): Promise<ApiResponse> {
   // Rate limiting: 30 delete requests per minute per trainer
   const rateLimitKey = `deleteGoogleCalendarEvent:${trainerId}`;
@@ -919,7 +950,8 @@ export async function deleteGoogleCalendarEvent(
 
     const calendarId = credentials.default_calendar_id || 'primary';
     
-    // Get valid access token (refresh if needed)
+    // Get valid Google OAuth access token (refresh if needed)
+    // IMPORTANT: Always use the token from OAuthTokenService, not the passed Supabase token
     const { OAuthTokenService } = await import('../services/oauthTokenService');
     const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
     
@@ -927,7 +959,8 @@ export async function deleteGoogleCalendarEvent(
       return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
     }
     
-    const accessTokenToUse = accessToken || tokenResult.data;
+    // Always use the Google OAuth token from the service
+    const accessTokenToUse = tokenResult.data;
 
     const response = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`,
@@ -950,10 +983,7 @@ export async function deleteGoogleCalendarEvent(
           .single() as { data: { refresh_token: string } | null; error: unknown };
         
         if (fullCreds?.refresh_token) {
-          const refreshResult = await OAuthTokenService.refreshAccessToken(
-            trainerId, 
-            fullCreds.refresh_token
-          );
+          const refreshResult = await OAuthTokenService.refreshAccessToken(trainerId);
           
           if (refreshResult.success && refreshResult.data?.access_token) {
             // Retry with new token
@@ -1087,8 +1117,7 @@ export async function updateCalendarEventBidirectional(
           endTime: updates.endTime,
           summary: updates.summary,
           description: updates.description,
-        },
-        accessToken
+        }
       );
 
       if (updateResult.error) {
@@ -1101,7 +1130,8 @@ export async function updateCalendarEventBidirectional(
       const workoutUpdates: { workout_date?: string; notes?: string | null } = {};
       
       if (updates.startTime) {
-        workoutUpdates.workout_date = updates.startTime.toISOString().split('T')[0];
+        // IMPORTANT: workout_date is TIMESTAMPTZ, so we need to preserve the full timestamp including time
+        workoutUpdates.workout_date = updates.startTime.toISOString();
       }
       if (updates.description !== undefined) {
         workoutUpdates.notes = updates.description || null;
@@ -1185,13 +1215,13 @@ export async function deleteCalendarEventBidirectional(
     // Find sync record to check if we need to delete workout
     const { data: syncRecord } = await supabase
       .from('google_calendar_sync')
-      .select('workout_id, sync_direction')
+      .select('workout_id, sync_direction, trainee_id')
       .eq('trainer_id', trainerId)
       .eq('google_event_id', eventId)
-      .maybeSingle() as { data: Pick<GoogleCalendarSyncRow, 'workout_id' | 'sync_direction'> | null; error: { message: string } | null };
+      .maybeSingle() as { data: Pick<GoogleCalendarSyncRow, 'workout_id' | 'sync_direction' | 'trainee_id'> | null; error: { message: string } | null };
 
     // Delete from Google Calendar
-    const deleteResult = await deleteGoogleCalendarEvent(trainerId, eventId, accessToken);
+    const deleteResult = await deleteGoogleCalendarEvent(trainerId, eventId);
     if (deleteResult.error) {
       return deleteResult;
     }
@@ -1211,12 +1241,37 @@ export async function deleteCalendarEventBidirectional(
       }
     }
 
+    // Get trainee_id before deleting sync record (for numbering update)
+    const traineeId = syncRecord?.trainee_id || null;
+    
     // Delete sync record
     await supabase
       .from('google_calendar_sync')
       .delete()
       .eq('trainer_id', trainerId)
       .eq('google_event_id', eventId);
+
+    // Sync remaining events for this trainee to update numbering
+    // This ensures that when an workout is deleted, all remaining workouts get renumbered correctly
+    if (traineeId && trainerId) {
+      // Do this in the background (non-blocking)
+      import('../services/traineeCalendarSyncService').then(({ syncTraineeEventsToCalendar }) => {
+        return import('../utils/logger').then(({ logger }) => {
+          return syncTraineeEventsToCalendar(traineeId, trainerId, 'current_month_and_future')
+            .then(result => {
+              if (result.data && result.data.updated > 0) {
+                logger.info(`Calendar sync after delete: updated ${result.data.updated} events`, {}, 'deleteCalendarEventBidirectional');
+              }
+            })
+            .catch(err => {
+              logger.error('Calendar sync after delete failed', err, 'deleteCalendarEventBidirectional');
+            });
+        });
+      }).catch(err => {
+        // Log error if import fails
+        console.error('Failed to load calendar sync service', err);
+      });
+    }
 
     return { success: true };
   } catch (err: unknown) {
@@ -1254,6 +1309,160 @@ export async function getSyncRecordForEvent(
       defaultMessage: 'שגיאה בטעינת רשומת סנכרון',
       context: 'getSyncRecordForEvent',
       additionalInfo: { trainerId, eventId },
+    });
+    return { error: errorMessage };
+  }
+}
+
+/**
+ * Bulk update Google Calendar events for a trainee
+ * Used when trainee name or session numbers need to be updated across multiple events
+ */
+export async function bulkUpdateCalendarEvents(
+  traineeId: string,
+  trainerId: string,
+  updates: {
+    summary?: string;
+    dateRange?: { start: Date; end: Date };
+  }
+): Promise<ApiResponse<{ updated: number; failed: number; errors: string[] }>> {
+  // Rate limiting: 5 bulk update requests per minute per trainer (expensive operation)
+  const rateLimitKey = `bulkUpdateCalendarEvents:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 5, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
+  try {
+    // Get all synced events for this trainee
+    let query = supabase
+      .from('google_calendar_sync')
+      .select('id, google_event_id, google_calendar_id, event_start_time, event_end_time, workout_id')
+      .eq('trainer_id', trainerId)
+      .eq('trainee_id', traineeId)
+      .eq('sync_status', 'synced');
+
+    // Apply date range filter if provided
+    if (updates.dateRange) {
+      query = query
+        .gte('event_start_time', updates.dateRange.start.toISOString())
+        .lte('event_start_time', updates.dateRange.end.toISOString());
+    }
+
+    const { data: syncRecords, error: syncError } = await query;
+
+    if (syncError) {
+      return { error: syncError.message };
+    }
+
+    if (!syncRecords || syncRecords.length === 0) {
+      return { data: { updated: 0, failed: 0, errors: [] }, success: true };
+    }
+
+    // Get trainer credentials
+    const { data: credentials, error: credError } = await supabase
+      .from('trainer_google_credentials')
+      .select('access_token, default_calendar_id')
+      .eq('trainer_id', trainerId)
+      .single() as { data: Pick<GoogleCredentialsRow, 'access_token' | 'default_calendar_id'> | null; error: { message: string } | null };
+
+    if (credError || !credentials) {
+      return { error: 'Google Calendar לא מחובר' };
+    }
+
+    // Get valid access token (refresh if needed)
+    const { OAuthTokenService } = await import('../services/oauthTokenService');
+    const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
+    
+    if (!tokenResult.success || !tokenResult.data) {
+      return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
+    }
+    
+    const accessToken = tokenResult.data;
+
+    let updated = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    // Update each event (with rate limiting delay between calls)
+    for (const record of syncRecords) {
+      try {
+        // Small delay to respect rate limits (100ms between calls)
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        const updateResult = await updateGoogleCalendarEvent(
+          trainerId,
+          (record as any).google_event_id,
+          { summary: updates.summary }
+        );
+
+        if (updateResult.error) {
+          // Check if event was deleted (404/410) - if so, delete sync record
+          if (updateResult.error.includes('לא נמצא') || updateResult.error.includes('נמחק')) {
+            // Get sync record info before deleting (to check sync_direction)
+            const { data: syncRecord } = await supabase
+              .from('google_calendar_sync')
+              .select('workout_id, sync_direction')
+              .eq('id', (record as any).id)
+              .maybeSingle() as { data: { workout_id: string | null; sync_direction: string } | null };
+
+            // Delete workout if exists and sync direction allows it
+            if (syncRecord?.workout_id && syncRecord.sync_direction !== 'to_google') {
+              await supabase
+                .from('workouts')
+                .delete()
+                .eq('id', syncRecord.workout_id)
+                .eq('trainer_id', trainerId);
+            }
+            
+            // Delete sync record
+            await supabase
+              .from('google_calendar_sync')
+              .delete()
+              .eq('id', (record as any).id);
+            
+            logger.info('Deleted sync record for event that no longer exists in Google Calendar', 
+              { eventId: (record as any).google_event_id }, 'bulkUpdateCalendarEvents');
+          } else {
+            failed++;
+            errors.push(`Event ${(record as any).google_event_id}: ${updateResult.error}`);
+            
+            // Update sync status to failed
+            await supabase
+              .from('google_calendar_sync')
+              .update({ sync_status: 'failed' } as never)
+              .eq('id', (record as any).id);
+          }
+        } else {
+          updated++;
+          
+          // Update sync record with new summary
+          await supabase
+            .from('google_calendar_sync')
+            .update({
+              event_summary: updates.summary,
+              last_synced_at: new Date().toISOString(),
+              sync_status: 'synced'
+            } as never)
+            .eq('id', (record as any).id);
+        }
+      } catch (err: unknown) {
+        failed++;
+        const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+        errors.push(`Event ${(record as any).google_event_id}: ${errorMsg}`);
+        logger.error('Error updating calendar event in bulk', err, 'bulkUpdateCalendarEvents');
+      }
+    }
+
+    return {
+      data: { updated, failed, errors },
+      success: true
+    };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בעדכון אירועי יומן',
+      context: 'bulkUpdateCalendarEvents',
+      additionalInfo: { trainerId, traineeId },
     });
     return { error: errorMessage };
   }

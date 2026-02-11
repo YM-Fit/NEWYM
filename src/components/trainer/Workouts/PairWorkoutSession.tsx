@@ -1,8 +1,9 @@
 import { ArrowRight, Check, X, Plus, Copy, Trash2, Users, ArrowLeftRight } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { logger } from '../../../utils/logger';
+import toast from 'react-hot-toast';
 import ExerciseSelector from './ExerciseSelector';
 import QuickNumericPad from './QuickNumericPad';
 import EquipmentSelector from '../Equipment/EquipmentSelector';
@@ -52,12 +53,14 @@ interface PairWorkoutSessionProps {
   trainee: any;
   onBack: () => void;
   onComplete: (workoutData: any) => void;
+  isTablet?: boolean;
 }
 
 export default function PairWorkoutSession({
   trainee,
   onBack,
-  onComplete
+  onComplete,
+  isTablet
 }: PairWorkoutSessionProps) {
   const { user } = useAuth();
   const [member1Exercises, setMember1Exercises] = useState<WorkoutExercise[]>([]);
@@ -114,7 +117,7 @@ export default function PairWorkoutSession({
   const [collapsedSets1, setCollapsedSets1] = useState<string[]>([]);
   const [collapsedSets2, setCollapsedSets2] = useState<string[]>([]);
 
-  const addExercise = (exercise: Exercise, member: 'member_1' | 'member_2') => {
+  const addExercise = useCallback((exercise: Exercise, member: 'member_1' | 'member_2') => {
     const newExercise: WorkoutExercise = {
       tempId: Date.now().toString(),
       exercise,
@@ -122,135 +125,170 @@ export default function PairWorkoutSession({
     };
 
     if (member === 'member_1') {
-      setMember1Exercises([...member1Exercises, newExercise]);
+      setMember1Exercises(prev => [...prev, newExercise]);
     } else {
-      setMember2Exercises([...member2Exercises, newExercise]);
+      setMember2Exercises(prev => [...prev, newExercise]);
     }
     setShowExerciseSelector(null);
-  };
+  }, []);
 
-  const addSet = (exerciseIndex: number, member: 'member_1' | 'member_2') => {
+  const addSet = useCallback((exerciseIndex: number, member: 'member_1' | 'member_2') => {
     if (member === 'member_1') {
-      const updated = [...member1Exercises];
-      const exercise = updated[exerciseIndex];
-      // Collapse all existing sets
-      const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
-      setCollapsedSets1(prev => [...prev, ...existingSetIds.filter(id => !prev.includes(id))]);
-      
-      const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
-      exercise.sets.push({ id: newSetId, weight: 0, reps: 0, rpe: null, set_type: 'regular', failure: false });
-      setMember1Exercises(updated);
+      setMember1Exercises(prev => {
+        const updated = [...prev];
+        const exercise = updated[exerciseIndex];
+        // Collapse all existing sets
+        const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
+        setCollapsedSets1(collapsed => [...collapsed, ...existingSetIds.filter(id => !collapsed.includes(id))]);
+        
+        const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
+        exercise.sets.push({ id: newSetId, weight: 0, reps: 0, rpe: null, set_type: 'regular', failure: false });
+        return updated;
+      });
     } else {
-      const updated = [...member2Exercises];
-      const exercise = updated[exerciseIndex];
-      // Collapse all existing sets
-      const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
-      setCollapsedSets2(prev => [...prev, ...existingSetIds.filter(id => !prev.includes(id))]);
-      
-      const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
-      exercise.sets.push({ id: newSetId, weight: 0, reps: 0, rpe: null, set_type: 'regular', failure: false });
-      setMember2Exercises(updated);
+      setMember2Exercises(prev => {
+        const updated = [...prev];
+        const exercise = updated[exerciseIndex];
+        // Collapse all existing sets
+        const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
+        setCollapsedSets2(collapsed => [...collapsed, ...existingSetIds.filter(id => !collapsed.includes(id))]);
+        
+        const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
+        exercise.sets.push({ id: newSetId, weight: 0, reps: 0, rpe: null, set_type: 'regular', failure: false });
+        return updated;
+      });
     }
-  };
+  }, []);
 
-  const duplicateSet = (exerciseIndex: number, setIndex: number, member: 'member_1' | 'member_2') => {
+  const duplicateSet = useCallback((exerciseIndex: number, setIndex: number, member: 'member_1' | 'member_2') => {
     if (member === 'member_1') {
-      const updated = [...member1Exercises];
-      const exercise = updated[exerciseIndex];
-      const setToCopy = { ...exercise.sets[setIndex] };
-      // Collapse all existing sets
-      const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
-      setCollapsedSets1(prev => [...prev, ...existingSetIds.filter(id => !prev.includes(id))]);
-      
-      const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
-      setToCopy.id = newSetId;
-      exercise.sets.push(setToCopy);
-      setMember1Exercises(updated);
+      setMember1Exercises(prev => {
+        const updated = [...prev];
+        const exercise = updated[exerciseIndex];
+        const setToCopy = { ...exercise.sets[setIndex] };
+        // Collapse all existing sets
+        const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
+        setCollapsedSets1(collapsed => [...collapsed, ...existingSetIds.filter(id => !collapsed.includes(id))]);
+        
+        const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
+        setToCopy.id = newSetId;
+        exercise.sets.push(setToCopy);
+        return updated;
+      });
     } else {
-      const updated = [...member2Exercises];
-      const exercise = updated[exerciseIndex];
-      const setToCopy = { ...exercise.sets[setIndex] };
-      // Collapse all existing sets
-      const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
-      setCollapsedSets2(prev => [...prev, ...existingSetIds.filter(id => !prev.includes(id))]);
-      
-      const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
-      setToCopy.id = newSetId;
-      exercise.sets.push(setToCopy);
-      setMember2Exercises(updated);
+      setMember2Exercises(prev => {
+        const updated = [...prev];
+        const exercise = updated[exerciseIndex];
+        const setToCopy = { ...exercise.sets[setIndex] };
+        // Collapse all existing sets
+        const existingSetIds = exercise.sets.map(s => s.id).filter(Boolean) as string[];
+        setCollapsedSets2(collapsed => [...collapsed, ...existingSetIds.filter(id => !collapsed.includes(id))]);
+        
+        const newSetId = `temp-${Date.now()}-${exercise.sets.length + 1}`;
+        setToCopy.id = newSetId;
+        exercise.sets.push(setToCopy);
+        return updated;
+      });
     }
-  };
+  }, []);
 
-  const updateSet = (exerciseIndex: number, setIndex: number, field: keyof SetData, value: any, member: 'member_1' | 'member_2') => {
+  const updateSet = useCallback((exerciseIndex: number, setIndex: number, field: keyof SetData, value: any, member: 'member_1' | 'member_2') => {
     if (member === 'member_1') {
-      const updated = [...member1Exercises];
-      updated[exerciseIndex].sets[setIndex] = {
-        ...updated[exerciseIndex].sets[setIndex],
-        [field]: value,
-      };
-      setMember1Exercises(updated);
+      setMember1Exercises(prev => {
+        const updated = [...prev];
+        updated[exerciseIndex].sets[setIndex] = {
+          ...updated[exerciseIndex].sets[setIndex],
+          [field]: value,
+        };
+        return updated;
+      });
     } else {
-      const updated = [...member2Exercises];
-      updated[exerciseIndex].sets[setIndex] = {
-        ...updated[exerciseIndex].sets[setIndex],
-        [field]: value,
-      };
-      setMember2Exercises(updated);
+      setMember2Exercises(prev => {
+        const updated = [...prev];
+        updated[exerciseIndex].sets[setIndex] = {
+          ...updated[exerciseIndex].sets[setIndex],
+          [field]: value,
+        };
+        return updated;
+      });
     }
-  };
+  }, []);
 
-  const removeSet = (exerciseIndex: number, setIndex: number, member: 'member_1' | 'member_2') => {
+  const removeSet = useCallback((exerciseIndex: number, setIndex: number, member: 'member_1' | 'member_2') => {
     if (member === 'member_1') {
-      const updated = [...member1Exercises];
-      updated[exerciseIndex].sets.splice(setIndex, 1);
-      setMember1Exercises(updated);
+      setMember1Exercises(prev => {
+        const updated = [...prev];
+        updated[exerciseIndex].sets.splice(setIndex, 1);
+        return updated;
+      });
     } else {
-      const updated = [...member2Exercises];
-      updated[exerciseIndex].sets.splice(setIndex, 1);
-      setMember2Exercises(updated);
+      setMember2Exercises(prev => {
+        const updated = [...prev];
+        updated[exerciseIndex].sets.splice(setIndex, 1);
+        return updated;
+      });
     }
-  };
+  }, []);
 
-  const removeExercise = (exerciseIndex: number, member: 'member_1' | 'member_2') => {
+  const removeExercise = useCallback((exerciseIndex: number, member: 'member_1' | 'member_2') => {
     if (member === 'member_1') {
-      const updated = [...member1Exercises];
-      updated.splice(exerciseIndex, 1);
-      setMember1Exercises(updated);
+      setMember1Exercises(prev => {
+        const updated = [...prev];
+        updated.splice(exerciseIndex, 1);
+        return updated;
+      });
     } else {
-      const updated = [...member2Exercises];
-      updated.splice(exerciseIndex, 1);
-      setMember2Exercises(updated);
+      setMember2Exercises(prev => {
+        const updated = [...prev];
+        updated.splice(exerciseIndex, 1);
+        return updated;
+      });
     }
-  };
+  }, []);
 
-  const copyExerciseToOtherMember = (exerciseIndex: number, fromMember: 'member_1' | 'member_2') => {
-    const sourceExercises = fromMember === 'member_1' ? member1Exercises : member2Exercises;
-    const targetExercises = fromMember === 'member_1' ? member2Exercises : member1Exercises;
-    
-    const exerciseToCopy = {
-      ...sourceExercises[exerciseIndex],
-      tempId: Date.now().toString() + Math.random(),
-      sets: sourceExercises[exerciseIndex].sets.map((set, idx) => ({
-        ...set,
-        id: `temp-${Date.now()}-${idx + 1}`,
-      })),
-    };
-
+  const copyExerciseToOtherMember = useCallback((exerciseIndex: number, fromMember: 'member_1' | 'member_2') => {
     if (fromMember === 'member_1') {
-      setMember2Exercises([...targetExercises, exerciseToCopy]);
+      setMember2Exercises(prev => {
+        const sourceExercise = member1Exercises[exerciseIndex];
+        if (!sourceExercise) return prev;
+        
+        const exerciseToCopy = {
+          ...sourceExercise,
+          tempId: Date.now().toString() + Math.random(),
+          sets: sourceExercise.sets.map((set, idx) => ({
+            ...set,
+            id: `temp-${Date.now()}-${idx + 1}`,
+          })),
+        };
+        return [...prev, exerciseToCopy];
+      });
     } else {
-      setMember1Exercises([...targetExercises, exerciseToCopy]);
+      setMember1Exercises(prev => {
+        const sourceExercise = member2Exercises[exerciseIndex];
+        if (!sourceExercise) return prev;
+        
+        const exerciseToCopy = {
+          ...sourceExercise,
+          tempId: Date.now().toString() + Math.random(),
+          sets: sourceExercise.sets.map((set, idx) => ({
+            ...set,
+            id: `temp-${Date.now()}-${idx + 1}`,
+          })),
+        };
+        return [...prev, exerciseToCopy];
+      });
     }
-  };
+  }, [member1Exercises, member2Exercises]);
 
-  const openNumericPad = (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe', member: 'member_1' | 'member_2') => {
+  const openNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'rpe', member: 'member_1' | 'member_2') => {
     const exercises = member === 'member_1' ? member1Exercises : member2Exercises;
+    if (!exercises[exerciseIndex] || !exercises[exerciseIndex].sets[setIndex]) return;
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     const label = field === 'weight' ? 'משקל (ק״ג)' : field === 'reps' ? 'חזרות' : 'RPE (1-10)';
     setNumericPad({ exerciseIndex, setIndex, field, member, value: currentValue as number, label });
-  };
+  }, [member1Exercises, member2Exercises]);
 
-  const handleNumericPadConfirm = (value: number) => {
+  const handleNumericPadConfirm = useCallback((value: number) => {
     if (numericPad) {
       updateSet(numericPad.exerciseIndex, numericPad.setIndex, numericPad.field, value, numericPad.member);
       
@@ -261,84 +299,89 @@ export default function PairWorkoutSession({
       // מצא תרגיל תואם (אותו שם תרגיל) אצל בן הזוג השני
       const currentExercises = numericPad.member === 'member_1' ? member1Exercises : member2Exercises;
       const currentExercise = currentExercises[numericPad.exerciseIndex];
-      const matchingExerciseIndex = otherExercises.findIndex(ex => ex.exercise.id === currentExercise.exercise.id);
-      
-      if (matchingExerciseIndex !== -1 && otherExercises[matchingExerciseIndex].sets.length > numericPad.setIndex) {
-        updateSet(matchingExerciseIndex, numericPad.setIndex, numericPad.field, value, otherMember);
+      if (currentExercise) {
+        const matchingExerciseIndex = otherExercises.findIndex(ex => ex.exercise.id === currentExercise.exercise.id);
+        
+        if (matchingExerciseIndex !== -1 && otherExercises[matchingExerciseIndex].sets.length > numericPad.setIndex) {
+          updateSet(matchingExerciseIndex, numericPad.setIndex, numericPad.field, value, otherMember);
+        }
       }
       
       setNumericPad(null);
     }
-  };
+  }, [numericPad, member1Exercises, member2Exercises, updateSet]);
 
-  const handleEquipmentSelect = (equipment: Equipment | null) => {
+  const handleEquipmentSelect = useCallback((equipment: Equipment | null) => {
     if (equipmentSelector) {
       updateSet(equipmentSelector.exerciseIndex, equipmentSelector.setIndex, 'equipment_id', equipment?.id || null, equipmentSelector.member);
       updateSet(equipmentSelector.exerciseIndex, equipmentSelector.setIndex, 'equipment', equipment || null, equipmentSelector.member);
       setEquipmentSelector(null);
     }
-  };
+  }, [equipmentSelector, updateSet]);
 
-  const handleSupersetExerciseSelect = (exercise: Exercise) => {
+  const handleSupersetExerciseSelect = useCallback((exercise: Exercise) => {
     if (supersetSelector) {
       updateSet(supersetSelector.exerciseIndex, supersetSelector.setIndex, 'set_type', 'superset', supersetSelector.member);
       updateSet(supersetSelector.exerciseIndex, supersetSelector.setIndex, 'superset_exercise_id', exercise.id, supersetSelector.member);
       updateSet(supersetSelector.exerciseIndex, supersetSelector.setIndex, 'superset_exercise_name', exercise.name, supersetSelector.member);
       setSupersetSelector(null);
     }
-  };
+  }, [supersetSelector, updateSet]);
 
-  const openSupersetNumericPad = (exerciseIndex: number, setIndex: number, field: 'superset_weight' | 'superset_reps' | 'superset_rpe', member: 'member_1' | 'member_2') => {
+  const openSupersetNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'superset_weight' | 'superset_reps' | 'superset_rpe', member: 'member_1' | 'member_2') => {
     const exercises = member === 'member_1' ? member1Exercises : member2Exercises;
+    if (!exercises[exerciseIndex] || !exercises[exerciseIndex].sets[setIndex]) return;
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     const label = field === 'superset_weight' ? 'משקל סופר-סט (ק״ג)' : field === 'superset_reps' ? 'חזרות סופר-סט' : 'RPE סופר-סט (1-10)';
     setSupersetNumericPad({ exerciseIndex, setIndex, field, member, value: currentValue as number, label });
-  };
+  }, [member1Exercises, member2Exercises]);
 
-  const handleSupersetNumericPadConfirm = (value: number) => {
+  const handleSupersetNumericPadConfirm = useCallback((value: number) => {
     if (supersetNumericPad) {
       updateSet(supersetNumericPad.exerciseIndex, supersetNumericPad.setIndex, supersetNumericPad.field, value, supersetNumericPad.member);
       setSupersetNumericPad(null);
     }
-  };
+  }, [supersetNumericPad, updateSet]);
 
-  const handleSupersetEquipmentSelect = (equipment: Equipment | null) => {
+  const handleSupersetEquipmentSelect = useCallback((equipment: Equipment | null) => {
     if (supersetEquipmentSelector) {
       updateSet(supersetEquipmentSelector.exerciseIndex, supersetEquipmentSelector.setIndex, 'superset_equipment_id', equipment?.id || null, supersetEquipmentSelector.member);
       updateSet(supersetEquipmentSelector.exerciseIndex, supersetEquipmentSelector.setIndex, 'superset_equipment', equipment || null, supersetEquipmentSelector.member);
       setSupersetEquipmentSelector(null);
     }
-  };
+  }, [supersetEquipmentSelector, updateSet]);
 
-  const openDropsetNumericPad = (exerciseIndex: number, setIndex: number, field: 'dropset_weight' | 'dropset_reps', member: 'member_1' | 'member_2') => {
+  const openDropsetNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'dropset_weight' | 'dropset_reps', member: 'member_1' | 'member_2') => {
     const exercises = member === 'member_1' ? member1Exercises : member2Exercises;
+    if (!exercises[exerciseIndex] || !exercises[exerciseIndex].sets[setIndex]) return;
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     const label = field === 'dropset_weight' ? 'משקל דרופ-סט (ק״ג)' : 'חזרות דרופ-סט';
     setDropsetNumericPad({ exerciseIndex, setIndex, field, member, value: currentValue as number, label });
-  };
+  }, [member1Exercises, member2Exercises]);
 
-  const handleDropsetNumericPadConfirm = (value: number) => {
+  const handleDropsetNumericPadConfirm = useCallback((value: number) => {
     if (dropsetNumericPad) {
       updateSet(dropsetNumericPad.exerciseIndex, dropsetNumericPad.setIndex, dropsetNumericPad.field, value, dropsetNumericPad.member);
       setDropsetNumericPad(null);
     }
-  };
+  }, [dropsetNumericPad, updateSet]);
 
-  const openSupersetDropsetNumericPad = (exerciseIndex: number, setIndex: number, field: 'superset_dropset_weight' | 'superset_dropset_reps', member: 'member_1' | 'member_2') => {
+  const openSupersetDropsetNumericPad = useCallback((exerciseIndex: number, setIndex: number, field: 'superset_dropset_weight' | 'superset_dropset_reps', member: 'member_1' | 'member_2') => {
     const exercises = member === 'member_1' ? member1Exercises : member2Exercises;
+    if (!exercises[exerciseIndex] || !exercises[exerciseIndex].sets[setIndex]) return;
     const currentValue = exercises[exerciseIndex].sets[setIndex][field] || 0;
     const label = field === 'superset_dropset_weight' ? 'משקל דרופ-סט סופר-סט (ק״ג)' : 'חזרות דרופ-סט סופר-סט';
     setSupersetDropsetNumericPad({ exerciseIndex, setIndex, field, member, value: currentValue as number, label });
-  };
+  }, [member1Exercises, member2Exercises]);
 
-  const handleSupersetDropsetNumericPadConfirm = (value: number) => {
+  const handleSupersetDropsetNumericPadConfirm = useCallback((value: number) => {
     if (supersetDropsetNumericPad) {
       updateSet(supersetDropsetNumericPad.exerciseIndex, supersetDropsetNumericPad.setIndex, supersetDropsetNumericPad.field, value, supersetDropsetNumericPad.member);
       setSupersetDropsetNumericPad(null);
     }
-  };
+  }, [supersetDropsetNumericPad, updateSet]);
 
-  const toggleCollapseSet = (setId: string, member: 'member_1' | 'member_2') => {
+  const toggleCollapseSet = useCallback((setId: string, member: 'member_1' | 'member_2') => {
     if (member === 'member_1') {
       setCollapsedSets1(prev => {
         if (prev.includes(setId)) {
@@ -356,9 +399,9 @@ export default function PairWorkoutSession({
         }
       });
     }
-  };
+  }, []);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!user) return;
 
     if (member1Exercises.length === 0 && member2Exercises.length === 0) {
@@ -374,7 +417,8 @@ export default function PairWorkoutSession({
         .insert([
           {
             trainer_id: user.id,
-            workout_date: new Date().toISOString().split('T')[0],
+            // Use full timestamp for TIMESTAMPTZ field
+            workout_date: new Date().toISOString(),
             workout_type: 'pair',
             is_completed: true,
           },
@@ -439,24 +483,35 @@ export default function PairWorkoutSession({
         }
       }
 
+      toast.success('האימון נשמר בהצלחה');
       setSaving(false);
       onComplete({ member1: member1Exercises, member2: member2Exercises });
     } catch (error) {
       logger.error('Error saving workout:', error, 'PairWorkoutSession');
-      alert('שגיאה בשמירת האימון');
+      toast.error('שגיאה בשמירת האימון');
       setSaving(false);
     }
-  };
+  }, [member1Exercises, member2Exercises, user, saving, onComplete]);
 
-  const renderExerciseColumn = (exercises: WorkoutExercise[], member: 'member_1' | 'member_2', name: string, isBlue: boolean) => {
-    const totalVolume = exercises.reduce((sum, ex) => 
+  const totalVolume1 = useMemo(() => 
+    member1Exercises.reduce((sum, ex) => 
       sum + ex.sets.reduce((setSum, set) => setSum + (set.weight * set.reps), 0), 0
-    );
+    ), [member1Exercises]
+  );
+
+  const totalVolume2 = useMemo(() => 
+    member2Exercises.reduce((sum, ex) => 
+      sum + ex.sets.reduce((setSum, set) => setSum + (set.weight * set.reps), 0), 0
+    ), [member2Exercises]
+  );
+
+  const renderExerciseColumn = useCallback((exercises: WorkoutExercise[], member: 'member_1' | 'member_2', name: string, isBlue: boolean) => {
+    const totalVolume = member === 'member_1' ? totalVolume1 : totalVolume2;
     const collapsedSets = member === 'member_1' ? collapsedSets1 : collapsedSets2;
     
     return (
-    <div className={`bg-zinc-900 rounded-2xl border ${isBlue ? 'border-cyan-500/30' : 'border-emerald-500/30'} overflow-hidden`}>
-      <div className={`${isBlue ? 'bg-cyan-500' : 'bg-emerald-500'} p-5`}>
+    <div className={`bg-card rounded-2xl border ${isBlue ? 'border-blue-500/30' : 'border-primary-500/30'} overflow-hidden`}>
+      <div className={`${isBlue ? 'bg-blue-500' : 'bg-primary-500'} p-5`}>
         <h2 className="text-xl font-bold text-white text-center tracking-wide">
           {name}
         </h2>
@@ -473,19 +528,19 @@ export default function PairWorkoutSession({
       </div>
       <div className="p-5 space-y-4">
         {exercises.length === 0 ? (
-          <div className="text-center text-zinc-500 py-12 bg-zinc-800/50 rounded-xl border-2 border-dashed border-zinc-700">
+          <div className="text-center text-muted py-12 bg-surface rounded-xl border-2 border-dashed border-border">
             <p className="text-base mb-2 font-medium">עדיין לא נוספו תרגילים</p>
-            <p className="text-sm text-zinc-500">לחץ על הכפתור למטה להוספה</p>
+            <p className="text-sm text-muted">לחץ על הכפתור למטה להוספה</p>
           </div>
         ) : (
           exercises.map((exercise, exIdx) => (
-            <div key={exercise.tempId} className="bg-zinc-800/50 rounded-2xl p-5 border border-zinc-700/50">
+            <div key={exercise.tempId} className="bg-surface rounded-2xl p-5 border border-border">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-white text-lg">{exercise.exercise.name}</h3>
+                <h3 className="font-bold text-foreground text-lg">{exercise.exercise.name}</h3>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => copyExerciseToOtherMember(exIdx, member)}
-                    className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 p-2 rounded-xl transition-all"
+                    className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 p-2 rounded-xl transition-all"
                     title="העתק לבן הזוג השני"
                   >
                     <ArrowLeftRight className="h-5 w-5" />
@@ -510,44 +565,44 @@ export default function PairWorkoutSession({
                       <div
                         key={setId}
                         onClick={() => toggleCollapseSet(setId, member)}
-                        className="bg-zinc-800/30 rounded-xl p-3 border border-zinc-700/30 cursor-pointer hover:border-emerald-500/30 hover:bg-zinc-800/50 transition-all"
+                        className="bg-surface/30 rounded-xl p-3 border border-border/30 cursor-pointer hover:border-primary-500/30 hover:bg-surface transition-all"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <span className={`font-bold text-sm ${isBlue ? 'text-cyan-400 bg-cyan-500/10' : 'text-emerald-400 bg-emerald-500/10'} px-3 py-1.5 rounded-lg`}>
+                            <span className={`font-bold text-sm ${isBlue ? 'text-blue-400 bg-blue-500/10' : 'text-primary-400 bg-primary-500/10'} px-3 py-1.5 rounded-lg`}>
                               סט #{setIdx + 1}
                             </span>
-                            <span className="text-zinc-300 font-medium">{set.weight} ק״ג</span>
-                            <span className="text-zinc-500">x</span>
-                            <span className="text-zinc-300 font-medium">{set.reps} חזרות</span>
+                            <span className="text-foreground font-medium">{set.weight} ק״ג</span>
+                            <span className="text-muted">x</span>
+                            <span className="text-foreground font-medium">{set.reps} חזרות</span>
                             {set.rpe && <span className="text-amber-400 text-sm">RPE {set.rpe}</span>}
                             {set.set_type !== 'regular' && (
                               <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                set.set_type === 'superset' ? 'bg-cyan-500/15 text-cyan-400' : 'bg-amber-500/15 text-amber-400'
+                                set.set_type === 'superset' ? 'bg-blue-500/15 text-blue-400' : 'bg-amber-500/15 text-amber-400'
                               }`}>
                                 {set.set_type === 'superset' ? 'סופר-סט' : 'דרופ-סט'}
                               </span>
                             )}
                           </div>
-                          <span className="text-xs text-emerald-400 font-medium">לחץ לעריכה</span>
+                          <span className="text-xs text-primary-400 font-medium">לחץ לעריכה</span>
                         </div>
                       </div>
                     );
                   }
                   
                   return (
-                  <div key={setId} className="bg-zinc-900/50 rounded-xl p-4 border border-zinc-700/30 space-y-3">
+                  <div key={setId} className="bg-card/50 rounded-xl p-4 border border-border/30 space-y-3">
                     <div className="flex items-center justify-between">
                       <span 
                         onClick={() => toggleCollapseSet(setId, member)}
-                        className={`text-sm font-bold ${isBlue ? 'text-cyan-400 bg-cyan-500/10' : 'text-emerald-400 bg-emerald-500/10'} px-3 py-1.5 rounded-lg cursor-pointer hover:opacity-80 transition-all`}
+                        className={`text-sm font-bold ${isBlue ? 'text-blue-400 bg-blue-500/10' : 'text-primary-400 bg-primary-500/10'} px-3 py-1.5 rounded-lg cursor-pointer hover:opacity-80 transition-all`}
                       >
                         סט #{setIdx + 1}
                       </span>
                       <div className="flex gap-2">
                         <button
                           onClick={() => duplicateSet(exIdx, setIdx, member)}
-                          className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 p-2 rounded-xl transition-all"
+                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 p-2 rounded-xl transition-all"
                           title="שכפל סט"
                         >
                           <Copy className="h-4 w-4" />
@@ -569,22 +624,22 @@ export default function PairWorkoutSession({
                         <button
                           type="button"
                           onClick={() => openNumericPad(exIdx, setIdx, 'weight', member)}
-                          className="w-full p-3 border border-emerald-500/30 rounded-xl text-center font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all cursor-pointer"
+                          className="w-full p-3 border border-primary-500/30 rounded-xl text-center font-bold text-primary-400 bg-primary-500/10 hover:bg-primary-500/20 transition-all cursor-pointer"
                         >
                           {set.weight || '0'}
                         </button>
-                        <span className="text-xs text-zinc-500 block text-center mt-1">ק״ג</span>
+                        <span className="text-xs text-muted block text-center mt-1">ק״ג</span>
                       </div>
 
                       <div>
                         <button
                           type="button"
                           onClick={() => openNumericPad(exIdx, setIdx, 'reps', member)}
-                          className="w-full p-3 border border-cyan-500/30 rounded-xl text-center font-bold text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 transition-all cursor-pointer"
+                          className="w-full p-3 border border-blue-500/30 rounded-xl text-center font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-all cursor-pointer"
                         >
                           {set.reps || '0'}
                         </button>
-                        <span className="text-xs text-zinc-500 block text-center mt-1">חזרות</span>
+                        <span className="text-xs text-muted block text-center mt-1">חזרות</span>
                       </div>
 
                       <div>
@@ -595,7 +650,7 @@ export default function PairWorkoutSession({
                         >
                           {set.rpe || '-'}
                         </button>
-                        <span className="text-xs text-zinc-500 block text-center mt-1">RPE</span>
+                        <span className="text-xs text-muted block text-center mt-1">RPE</span>
                       </div>
                     </div>
 
@@ -605,8 +660,8 @@ export default function PairWorkoutSession({
                         onClick={() => setEquipmentSelector({ exerciseIndex: exIdx, setIndex: setIdx, member })}
                         className={`py-2 px-3 rounded-xl border text-sm transition-all ${
                           set.equipment
-                            ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400'
-                            : 'border-zinc-700/50 hover:border-cyan-500/30 bg-zinc-800/30 hover:bg-cyan-500/10 text-zinc-400'
+                            ? 'border-blue-500/50 bg-blue-500/10 text-blue-400'
+                            : 'border-border hover:border-blue-500/30 bg-surface/30 hover:bg-blue-500/10 text-muted'
                         }`}
                       >
                         {set.equipment?.emoji || '🎒'} {set.equipment?.name || 'ציוד'}
@@ -618,7 +673,7 @@ export default function PairWorkoutSession({
                         className={`py-2 px-3 rounded-xl border text-sm transition-all ${
                           set.failure
                             ? 'border-red-500/50 bg-red-500/10 text-red-400'
-                            : 'border-zinc-700/50 hover:border-red-500/30 bg-zinc-800/30 hover:bg-red-500/10 text-zinc-400'
+                            : 'border-border hover:border-red-500/30 bg-surface/30 hover:bg-red-500/10 text-muted'
                         }`}
                       >
                         {set.failure ? '✓ כשל' : 'כשל'}
@@ -639,8 +694,8 @@ export default function PairWorkoutSession({
                         }}
                         className={`py-2 px-3 rounded-xl border text-sm transition-all ${
                           set.set_type === 'superset'
-                            ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400'
-                            : 'border-zinc-700/50 hover:border-cyan-500/30 bg-zinc-800/30 hover:bg-cyan-500/10 text-zinc-400'
+                            ? 'border-blue-500/50 bg-blue-500/10 text-blue-400'
+                            : 'border-border hover:border-blue-500/30 bg-surface/30 hover:bg-blue-500/10 text-muted'
                         }`}
                       >
                         {set.set_type === 'superset' ? `✓ סופר-סט${set.superset_exercise_name ? `: ${set.superset_exercise_name}` : ''}` : 'סופר-סט'}
@@ -660,7 +715,7 @@ export default function PairWorkoutSession({
                         className={`py-2 px-3 rounded-xl border text-sm transition-all ${
                           set.set_type === 'dropset'
                             ? 'border-amber-500/50 bg-amber-500/10 text-amber-400'
-                            : 'border-zinc-700/50 hover:border-amber-500/30 bg-zinc-800/30 hover:bg-amber-500/10 text-zinc-400'
+                            : 'border-border hover:border-amber-500/30 bg-surface/30 hover:bg-amber-500/10 text-muted'
                         }`}
                       >
                         {set.set_type === 'dropset' ? '✓ דרופ-סט' : 'דרופ-סט'}
@@ -668,38 +723,38 @@ export default function PairWorkoutSession({
                     </div>
 
                     {set.set_type === 'superset' && (
-                      <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-3 space-y-2">
-                        <div className="text-xs font-semibold text-cyan-400 mb-2">סופר-סט: {set.superset_exercise_name || 'לא נבחר'}</div>
+                      <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-3 space-y-2">
+                        <div className="text-xs font-semibold text-blue-400 mb-2">סופר-סט: {set.superset_exercise_name || 'לא נבחר'}</div>
                         <div className="grid grid-cols-3 gap-2">
                           <div>
                             <button
                               type="button"
                               onClick={() => openSupersetNumericPad(exIdx, setIdx, 'superset_weight', member)}
-                              className="w-full p-2 border border-cyan-500/30 rounded-lg text-center text-sm font-bold text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 transition-all cursor-pointer"
+                              className="w-full p-2 border border-blue-500/30 rounded-lg text-center text-sm font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-all cursor-pointer"
                             >
                               {set.superset_weight || '0'}
                             </button>
-                            <span className="text-xs text-zinc-500 block text-center mt-1">ק״ג</span>
+                            <span className="text-xs text-muted block text-center mt-1">ק״ג</span>
                           </div>
                           <div>
                             <button
                               type="button"
                               onClick={() => openSupersetNumericPad(exIdx, setIdx, 'superset_reps', member)}
-                              className="w-full p-2 border border-cyan-500/30 rounded-lg text-center text-sm font-bold text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 transition-all cursor-pointer"
+                              className="w-full p-2 border border-blue-500/30 rounded-lg text-center text-sm font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-all cursor-pointer"
                             >
                               {set.superset_reps || '0'}
                             </button>
-                            <span className="text-xs text-zinc-500 block text-center mt-1">חזרות</span>
+                            <span className="text-xs text-muted block text-center mt-1">חזרות</span>
                           </div>
                           <div>
                             <button
                               type="button"
                               onClick={() => openSupersetNumericPad(exIdx, setIdx, 'superset_rpe', member)}
-                              className="w-full p-2 border border-cyan-500/30 rounded-lg text-center text-sm font-bold text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 transition-all cursor-pointer"
+                              className="w-full p-2 border border-blue-500/30 rounded-lg text-center text-sm font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-all cursor-pointer"
                             >
                               {set.superset_rpe || '-'}
                             </button>
-                            <span className="text-xs text-zinc-500 block text-center mt-1">RPE</span>
+                            <span className="text-xs text-muted block text-center mt-1">RPE</span>
                           </div>
                         </div>
                         <button
@@ -707,14 +762,14 @@ export default function PairWorkoutSession({
                           onClick={() => setSupersetEquipmentSelector({ exerciseIndex: exIdx, setIndex: setIdx, member })}
                           className={`w-full py-2 px-3 rounded-lg border text-sm transition-all ${
                             set.superset_equipment
-                              ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400'
-                              : 'border-zinc-700/50 hover:border-cyan-500/30 bg-zinc-800/30 hover:bg-cyan-500/10 text-zinc-400'
+                              ? 'border-blue-500/50 bg-blue-500/10 text-blue-400'
+                              : 'border-border hover:border-blue-500/30 bg-surface/30 hover:bg-blue-500/10 text-muted'
                           }`}
                         >
                           {set.superset_equipment?.emoji || '🎒'} {set.superset_equipment?.name || 'ציוד סופר-סט'}
                         </button>
                         {(set.superset_dropset_weight || set.superset_dropset_reps) ? (
-                          <div className="mt-2 pt-2 border-t border-cyan-500/20">
+                          <div className="mt-2 pt-2 border-t border-blue-500/20">
                             <div className="flex items-center justify-between mb-2">
                               <div className="text-xs font-semibold text-amber-400">דרופ-סט סופר-סט</div>
                               <button
@@ -737,7 +792,7 @@ export default function PairWorkoutSession({
                                 >
                                   {set.superset_dropset_weight || '0'}
                                 </button>
-                                <span className="text-xs text-zinc-500 block text-center mt-1">ק״ג</span>
+                                <span className="text-xs text-muted block text-center mt-1">ק״ג</span>
                               </div>
                               <div>
                                 <button
@@ -747,7 +802,7 @@ export default function PairWorkoutSession({
                                 >
                                   {set.superset_dropset_reps || '0'}
                                 </button>
-                                <span className="text-xs text-zinc-500 block text-center mt-1">חזרות</span>
+                                <span className="text-xs text-muted block text-center mt-1">חזרות</span>
                               </div>
                             </div>
                           </div>
@@ -790,7 +845,7 @@ export default function PairWorkoutSession({
                             >
                               {set.dropset_weight || '0'}
                             </button>
-                            <span className="text-xs text-zinc-500 block text-center mt-1">ק״ג</span>
+                            <span className="text-xs text-muted block text-center mt-1">ק״ג</span>
                           </div>
                           <div>
                             <button
@@ -800,7 +855,7 @@ export default function PairWorkoutSession({
                             >
                               {set.dropset_reps || '0'}
                             </button>
-                            <span className="text-xs text-zinc-500 block text-center mt-1">חזרות</span>
+                            <span className="text-xs text-muted block text-center mt-1">חזרות</span>
                           </div>
                         </div>
                       </div>
@@ -812,7 +867,7 @@ export default function PairWorkoutSession({
 
               <button
                 onClick={() => addSet(exIdx, member)}
-                className={`mt-4 w-full text-sm ${isBlue ? 'text-cyan-400 hover:text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/10' : 'text-emerald-400 hover:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/10'} py-3 border-2 border-dashed rounded-xl transition-all font-medium`}
+                className={`mt-4 w-full text-sm ${isBlue ? 'text-blue-400 hover:text-blue-300 border-blue-500/30 hover:bg-blue-500/10' : 'text-primary-400 hover:text-primary-300 border-primary-500/30 hover:bg-primary-500/10'} py-3 border-2 border-dashed rounded-xl transition-all font-medium`}
               >
                 + הוסף סט
               </button>
@@ -822,7 +877,7 @@ export default function PairWorkoutSession({
 
         <button
           onClick={() => setShowExerciseSelector(member)}
-          className={`w-full ${isBlue ? 'bg-cyan-500 hover:bg-cyan-600' : 'bg-emerald-500 hover:bg-emerald-600'} text-white py-4 px-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold`}
+          className={`w-full ${isBlue ? 'bg-blue-500 hover:bg-blue-600' : 'bg-primary-500 hover:bg-primary-600'} text-white py-4 px-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold`}
         >
           <Plus className="h-5 w-5" />
           <span>הוסף תרגיל</span>
@@ -830,27 +885,27 @@ export default function PairWorkoutSession({
       </div>
     </div>
     );
-  };
+  }, [totalVolume1, totalVolume2, collapsedSets1, collapsedSets2, addSet, removeExercise, copyExerciseToOtherMember, toggleCollapseSet, duplicateSet, removeSet, openNumericPad, openSupersetNumericPad, openDropsetNumericPad, openSupersetDropsetNumericPad, setShowExerciseSelector]);
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-base)] transition-colors duration-300">
-      <div className="sticky top-0 z-10 bg-zinc-900 border-b border-zinc-800">
+      <div className="sticky top-0 z-10 bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 rtl:space-x-reverse">
               <button
                 onClick={onBack}
-                className="p-3 hover:bg-zinc-800 rounded-xl transition-all text-zinc-400 hover:text-white"
+                className="p-3 hover:bg-surface rounded-xl transition-all text-muted hover:text-foreground"
               >
                 <ArrowRight className="h-6 w-6" />
               </button>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                  <Users className="h-6 w-6 text-emerald-400" />
+                <div className="w-12 h-12 bg-primary-500/20 rounded-xl flex items-center justify-center">
+                  <Users className="h-6 w-6 text-primary-400" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-white">אימון זוגי</h1>
-                  <p className="text-sm text-zinc-400">{trainee.pairName1 || ''} (1) ו{trainee.pairName2 || ''} (2)</p>
+                  <h1 className="text-xl font-bold text-foreground">אימון זוגי</h1>
+                  <p className="text-sm text-muted">{trainee.pairName1 || ''} (1) ו{trainee.pairName2 || ''} (2)</p>
                 </div>
               </div>
             </div>
@@ -858,7 +913,7 @@ export default function PairWorkoutSession({
             <div className="flex space-x-3 rtl:space-x-reverse">
               <button
                 onClick={onBack}
-                className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-5 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all font-medium border border-zinc-700"
+                className="bg-surface hover:bg-elevated text-foreground px-5 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all font-medium border border-border"
               >
                 <X className="h-5 w-5" />
                 <span>ביטול</span>
@@ -866,7 +921,7 @@ export default function PairWorkoutSession({
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all disabled:opacity-50 font-bold"
+                className="bg-primary-500 hover:bg-primary-600 text-foreground px-6 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all disabled:opacity-50 font-bold"
               >
                 <Check className="h-5 w-5" />
                 <span>{saving ? 'שומר...' : 'סיים אימון'}</span>
@@ -900,6 +955,7 @@ export default function PairWorkoutSession({
           minValue={numericPad.field === 'rpe' ? 1 : undefined}
           maxValue={numericPad.field === 'rpe' ? 10 : undefined}
           compact={true}
+          isTablet={isTablet}
         />
       )}
 
@@ -931,6 +987,7 @@ export default function PairWorkoutSession({
           minValue={supersetNumericPad.field === 'superset_rpe' ? 1 : undefined}
           maxValue={supersetNumericPad.field === 'superset_rpe' ? 10 : undefined}
           compact={true}
+          isTablet={isTablet}
         />
       )}
 
@@ -953,6 +1010,7 @@ export default function PairWorkoutSession({
           onClose={() => setDropsetNumericPad(null)}
           allowDecimal={dropsetNumericPad.field === 'dropset_weight'}
           compact={true}
+          isTablet={isTablet}
         />
       )}
 
@@ -964,6 +1022,7 @@ export default function PairWorkoutSession({
           onClose={() => setSupersetDropsetNumericPad(null)}
           allowDecimal={supersetDropsetNumericPad.field === 'superset_dropset_weight'}
           compact={true}
+          isTablet={isTablet}
         />
       )}
     </div>

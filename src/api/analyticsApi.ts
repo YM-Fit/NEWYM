@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { handleApiError } from './config';
+import { handleApiError } from '../utils/apiErrorHandler';
 import { logger } from '../utils/logger';
 import { rateLimiter } from '../utils/rateLimiter';
 
@@ -54,7 +54,8 @@ export const analyticsApi = {
 
       const now = new Date();
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const weekAgoStr = weekAgo.toISOString().split('T')[0];
+      // Use ISO timestamp for TIMESTAMPTZ field comparison
+      const weekAgoStr = weekAgo.toISOString();
 
       const metrics: AdherenceMetrics[] = [];
 
@@ -157,8 +158,9 @@ export const analyticsApi = {
       startOfWeek.setDate(now.getDate() - now.getDay());
       startOfWeek.setHours(0, 0, 0, 0);
 
-      const startOfMonthStr = startOfMonth.toISOString().split('T')[0];
-      const startOfWeekStr = startOfWeek.toISOString().split('T')[0];
+      // Use ISO timestamps for TIMESTAMPTZ field comparison
+      const startOfMonthStr = startOfMonth.toISOString();
+      const startOfWeekStr = startOfWeek.toISOString();
 
       // Total workouts
       const { count: totalWorkouts } = await supabase
@@ -237,7 +239,8 @@ export const analyticsApi = {
       
       // Calculate average weekly workouts (last 4 weeks)
       const fourWeeksAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000);
-      const fourWeeksAgoStr = fourWeeksAgo.toISOString().split('T')[0];
+      // Use ISO timestamp for TIMESTAMPTZ field comparison
+      const fourWeeksAgoStr = fourWeeksAgo.toISOString();
 
       const { data: recentWorkouts } = await supabase
         .from('workout_trainees')

@@ -37,16 +37,16 @@ export default function WorkoutSetEditor({
   onOpenSupersetDropsetNumericPad,
 }: WorkoutSetEditorProps) {
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border-2 border-gray-200 transition-all duration-300 hover:shadow-md">
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border-2 border-border200 transition-all duration-300 hover:shadow-md">
       <div className="flex items-center justify-between mb-3">
-        <span className="font-bold text-base lg:text-lg text-gray-700 bg-white px-3 py-1 rounded-lg shadow-sm">סט {set.set_number}</span>
+        <span className="font-bold text-base lg:text-lg text-muted700 bg-white px-3 py-1 rounded-lg shadow-sm">סט {set.set_number}</span>
         <div className="flex space-x-2 rtl:space-x-reverse">
           <button
             onClick={() => onDuplicateSet(exerciseIndex, setIndex)}
             className="p-2 lg:p-3 hover:bg-white rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
             title="שכפל סט"
           >
-            <Copy className="h-4 w-4 lg:h-5 lg:w-5 text-gray-600" />
+            <Copy className="h-4 w-4 lg:h-5 lg:w-5 text-muted600" />
           </button>
           {setsCount > 1 && (
             <button
@@ -61,17 +61,17 @@ export default function WorkoutSetEditor({
 
       <div className="grid grid-cols-3 gap-3 lg:gap-4 mb-3">
         <div>
-          <label className="block text-sm lg:text-base font-semibold text-gray-700 mb-2">משקל (ק״ג)</label>
+          <label className="block text-sm lg:text-base font-semibold text-muted700 mb-2">משקל (ק״ג)</label>
           <button
             onClick={() => onOpenNumericPad(exerciseIndex, setIndex, 'weight', 'משקל (ק״ג)')}
-            className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-emerald-500 bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-700 rounded-xl hover:from-emerald-100 hover:to-teal-100 transition-all duration-300 shadow-md hover:shadow-lg"
+            className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-primary-500 bg-gradient-to-br from-primary-100 to-primary-100 text-primary-700 rounded-xl hover:from-primary-100 hover:to-primary-200 transition-all duration-300 shadow-md hover:shadow-lg"
           >
             {set.weight || '0'}
           </button>
         </div>
 
         <div>
-          <label className="block text-sm lg:text-base font-semibold text-gray-700 mb-2">חזרות</label>
+          <label className="block text-sm lg:text-base font-semibold text-muted700 mb-2">חזרות</label>
           <button
             onClick={() => onOpenNumericPad(exerciseIndex, setIndex, 'reps', 'חזרות')}
             className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-sky-50 text-blue-700 rounded-xl hover:from-blue-100 hover:to-sky-100 transition-all duration-300 shadow-md hover:shadow-lg"
@@ -81,7 +81,7 @@ export default function WorkoutSetEditor({
         </div>
 
         <div>
-          <label className="block text-sm lg:text-base font-semibold text-gray-700 mb-2">RPE</label>
+          <label className="block text-sm lg:text-base font-semibold text-muted700 mb-2">RPE</label>
           <button
             onClick={() => onOpenNumericPad(exerciseIndex, setIndex, 'rpe', 'RPE (1-10)')}
             className="w-full px-3 py-3 lg:py-5 text-xl lg:text-3xl font-bold border-2 border-amber-500 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 rounded-xl hover:from-amber-100 hover:to-orange-100 transition-all duration-300 shadow-md hover:shadow-lg"
@@ -97,7 +97,7 @@ export default function WorkoutSetEditor({
           className={`py-3 lg:py-4 px-3 rounded-xl border-2 transition-all duration-300 text-right shadow-sm hover:shadow-md ${
             set.equipment
               ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-sky-50'
-              : 'border-gray-300 hover:border-blue-400 bg-white'
+              : 'border-border300 hover:border-blue-400 bg-white'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -129,7 +129,7 @@ export default function WorkoutSetEditor({
           className={`py-3 lg:py-4 px-3 rounded-xl border-2 transition-all duration-300 shadow-sm hover:shadow-md ${
             set.failure
               ? 'border-red-500 bg-gradient-to-br from-red-50 to-rose-50 text-red-700'
-              : 'border-gray-300 hover:border-red-400 bg-white text-gray-700'
+              : 'border-border300 hover:border-red-400 bg-white text-muted700'
           }`}
         >
           <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse">
@@ -148,8 +148,8 @@ export default function WorkoutSetEditor({
           onClick={() => onUpdateSet(exerciseIndex, setIndex, 'set_type', 'regular')}
           className={`flex-1 py-3 px-3 rounded-xl text-sm font-bold transition-all duration-300 ${
             set.set_type === 'regular'
-              ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg'
-              : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+              ? 'bg-gradient-to-br from-primary-700 to-primary-800 text-white shadow-lg'
+              : 'bg-white border-2 border-border300 text-muted700 hover:bg-surface50'
           }`}
         >
           רגיל
@@ -162,8 +162,8 @@ export default function WorkoutSetEditor({
           }}
           className={`flex-1 py-3 px-3 rounded-xl text-sm font-bold transition-all duration-300 ${
             set.set_type === 'superset'
-              ? 'bg-gradient-to-br from-blue-500 to-sky-600 text-white shadow-lg'
-              : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+              ? 'bg-gradient-to-br from-blue-500 to-sky-600 text-foreground shadow-lg'
+              : 'bg-white border-2 border-border300 text-muted700 hover:bg-surface50'
           }`}
         >
           סופר-סט
@@ -172,8 +172,8 @@ export default function WorkoutSetEditor({
           onClick={() => onUpdateSet(exerciseIndex, setIndex, 'set_type', 'dropset')}
           className={`flex-1 py-3 px-3 rounded-xl text-sm font-bold transition-all duration-300 ${
             set.set_type === 'dropset'
-              ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg'
-              : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+              ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-foreground shadow-lg'
+              : 'bg-white border-2 border-border300 text-muted700 hover:bg-surface50'
           }`}
         >
           דרופ-סט

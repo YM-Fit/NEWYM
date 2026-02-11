@@ -105,21 +105,21 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="bg-zinc-800/50 border-b border-zinc-700/50 p-6">
+      <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-surface border-b border-border p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-amber-500/15">
                 <BookMarked className="h-7 w-7 text-amber-400" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white mb-1">תבניות אימון</h2>
-                <p className="text-zinc-500">בחר תבנית קיימת או התחל אימון ריק</p>
+                <h2 className="text-2xl font-bold text-foreground mb-1">תבניות אימון</h2>
+                <p className="text-muted">בחר תבנית קיימת או התחל אימון ריק</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="text-zinc-400 hover:bg-zinc-800 p-3 rounded-xl transition-all"
+              className="text-muted hover:bg-surface p-3 rounded-xl transition-all"
             >
               <X className="h-6 w-6" />
             </button>
@@ -129,40 +129,40 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+              <div className="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
             </div>
           ) : templates.length === 0 ? (
-            <div className="text-center py-12 bg-zinc-800/30 rounded-2xl border border-zinc-700/30">
-              <div className="w-16 h-16 bg-zinc-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Calendar className="h-8 w-8 text-zinc-600" />
+            <div className="text-center py-12 bg-surface/30 rounded-2xl border border-border">
+              <div className="w-16 h-16 bg-surface rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Calendar className="h-8 w-8 text-muted" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">אין תבניות שמורות</h3>
-              <p className="text-zinc-500">שמור אימונים כתבניות לשימוש מהיר בעתיד</p>
+              <h3 className="text-lg font-bold text-foreground mb-2">אין תבניות שמורות</h3>
+              <p className="text-muted">שמור אימונים כתבניות לשימוש מהיר בעתיד</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {templates.map(template => (
                 <div
                   key={template.id}
-                  className="bg-zinc-800/30 rounded-2xl p-5 border border-zinc-700/30 hover:border-emerald-500/30 transition-all group"
+                  className="bg-surface/30 rounded-2xl p-5 border border-border hover:border-primary-500/30 transition-all group"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-white mb-1 group-hover:text-emerald-400 transition-all">{template.name}</h3>
+                      <h3 className="text-lg font-bold text-foreground mb-1 group-hover:text-primary-400 transition-all">{template.name}</h3>
                       {template.description && (
-                        <p className="text-sm text-zinc-500 mb-2">{template.description}</p>
+                        <p className="text-sm text-muted mb-2">{template.description}</p>
                       )}
                       <div className="flex items-center gap-3 text-sm flex-wrap">
-                        <span className="flex items-center bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded-lg">
+                        <span className="flex items-center bg-blue-500/10 text-blue-400 px-2 py-1 rounded-lg">
                           <Copy className="h-4 w-4 ml-1" />
                           {template.exercises.length} תרגילים
                         </span>
-                        <span className="flex items-center bg-zinc-700/50 text-zinc-400 px-2 py-1 rounded-lg">
+                        <span className="flex items-center bg-elevated/50 text-muted px-2 py-1 rounded-lg">
                           <Calendar className="h-4 w-4 ml-1" />
                           {new Date(template.createdAt).toLocaleDateString('he-IL')}
                         </span>
                         {template.traineeName && (
-                          <span className="flex items-center bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-lg text-xs">
+                          <span className="flex items-center bg-primary-500/10 text-primary-400 px-2 py-1 rounded-lg text-xs">
                             מתאמן: {template.traineeName}
                           </span>
                         )}
@@ -173,15 +173,15 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
                     </div>
                   </div>
 
-                  <div className="bg-zinc-800/50 rounded-xl p-3 mb-3 max-h-32 overflow-y-auto border border-zinc-700/30">
+                  <div className="bg-surface rounded-xl p-3 mb-3 max-h-32 overflow-y-auto border border-border">
                     <ul className="space-y-1 text-sm">
                       {template.exercises.map((exercise, idx) => (
-                        <li key={idx} className="text-zinc-400 flex items-center">
-                          <span className="w-6 h-6 bg-emerald-500 text-white rounded-lg flex items-center justify-center text-xs font-bold ml-2">
+                        <li key={idx} className="text-muted flex items-center">
+                          <span className="w-6 h-6 bg-primary-500 text-foreground rounded-lg flex items-center justify-center text-xs font-bold ml-2">
                             {idx + 1}
                           </span>
-                          <span className="flex-1 font-medium text-zinc-300">{exercise.exerciseName}</span>
-                          <span className="text-emerald-400 text-xs bg-emerald-500/10 px-2 py-0.5 rounded-lg">
+                          <span className="flex-1 font-medium text-foreground">{exercise.exerciseName}</span>
+                          <span className="text-primary-400 text-xs bg-primary-500/10 px-2 py-0.5 rounded-lg">
                             {exercise.setsCount} סטים
                           </span>
                         </li>
@@ -192,14 +192,14 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleSelectTemplate(template)}
-                      className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 rounded-xl font-semibold transition-all flex items-center justify-center"
+                      className="flex-1 bg-primary-500 hover:bg-primary-600 text-foreground px-4 py-3 rounded-xl font-semibold transition-all flex items-center justify-center"
                     >
                       <Plus className="h-4 w-4 ml-1" />
                       השתמש בתבנית
                     </button>
                     <button
                       onClick={() => handleEditTemplate(template)}
-                      className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 p-3 rounded-xl transition-all"
+                      className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 p-3 rounded-xl transition-all"
                     >
                       <Edit className="h-5 w-5" />
                     </button>
@@ -216,10 +216,10 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
           )}
         </div>
 
-        <div className="border-t border-zinc-700/50 p-4 bg-zinc-800/30">
+        <div className="border-t border-border p-4 bg-surface/30">
           <button
             onClick={onClose}
-            className="w-full bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 text-zinc-300 px-6 py-4 rounded-xl font-semibold transition-all"
+            className="w-full bg-surface hover:bg-surface border border-border text-foreground px-6 py-4 rounded-xl font-semibold transition-all"
           >
             התחל אימון ריק
           </button>
@@ -228,36 +228,36 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
 
       {editingTemplate && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-[60] p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 rounded-xl bg-cyan-500/15">
-                <Edit className="h-6 w-6 text-cyan-400" />
+              <div className="p-3 rounded-xl bg-blue-500/15">
+                <Edit className="h-6 w-6 text-blue-400" />
               </div>
-              <h3 className="text-xl font-bold text-white">ערוך תבנית</h3>
+              <h3 className="text-xl font-bold text-foreground">ערוך תבנית</h3>
             </div>
 
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                <label className="block text-sm font-medium text-muted mb-2">
                   שם התבנית *
                 </label>
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="למשל: אימון רגליים מלא"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                <label className="block text-sm font-medium text-muted mb-2">
                   תיאור (אופציונלי)
                 </label>
                 <textarea
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="הוסף תיאור..."
                   rows={3}
                 />
@@ -268,7 +268,7 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
               <button
                 onClick={handleSaveEdit}
                 disabled={!editName.trim()}
-                className="flex-1 bg-cyan-500 hover:bg-cyan-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-6 py-3 rounded-xl font-semibold transition-all disabled:cursor-not-allowed"
+                className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-elevated disabled:text-muted text-white px-6 py-3 rounded-xl font-semibold transition-all disabled:cursor-not-allowed"
               >
                 שמור
               </button>
@@ -278,7 +278,7 @@ export default function WorkoutTemplates({ onSelectTemplate, onClose }: WorkoutT
                   setEditName('');
                   setEditDescription('');
                 }}
-                className="flex-1 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 text-zinc-300 px-6 py-3 rounded-xl font-semibold transition-all"
+                className="flex-1 bg-surface hover:bg-surface border border-border text-foreground px-6 py-3 rounded-xl font-semibold transition-all"
               >
                 ביטול
               </button>

@@ -72,11 +72,18 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      // Find trainer by calendar ID
+      let extractedCalendarId = "";
+      if (resourceUri) {
+        const match = resourceUri.match(/\/calendars\/([^/]+)/);
+        if (match) {
+          extractedCalendarId = decodeURIComponent(match[1]);
+        }
+      }
+
       const { data: credentials, error: credError } = await supabase
         .from("trainer_google_credentials")
         .select("trainer_id, default_calendar_id")
-        .eq("default_calendar_id", resourceUri?.split("/")?.pop() || "")
+        .eq("default_calendar_id", extractedCalendarId)
         .maybeSingle();
 
       if (credError || !credentials) {
@@ -99,22 +106,9 @@ Deno.serve(async (req: Request) => {
           .eq("trainer_id", credentials.trainer_id)
           .single();
 
-        // Only sync from Google if sync_direction is 'from_google' or 'bidirectional' and auto_sync is enabled
-        if (creds && creds.auto_sync_enabled) {
-          const shouldSyncFromGoogle = creds.sync_direction === 'from_google' || 
-                                      creds.sync_direction === 'bidirectional';
-          
-          if (!shouldSyncFromGoogle) {
-            // If sync direction is 'to_google' only, don't process webhook events from Google
-            return new Response(
-              JSON.stringify({ success: true, message: "Sync direction set to 'to_google' only, skipping webhook" }),
-              {
-                status: 200,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-              }
-            );
-          }
-        }
+        // For sync_direction 'to_google': still process DELETIONS (if user deleted in Google, delete locally)
+        // For create/update: only process when sync_direction is 'from_google' or 'bidirectional'
+        // Early return removed - we always process to handle deletions
 
         if (fetchCredError || !creds) {
           return new Response(
@@ -155,17 +149,18 @@ Deno.serve(async (req: Request) => {
           }
         }
 
-        // Fetch events from calendar
+        // Fetch events from calendar - 30 days back and 30 days forward
         const timeMin = new Date();
-        timeMin.setDate(timeMin.getDate() - 7);
+        timeMin.setDate(timeMin.getDate() - 30);
         const timeMax = new Date();
-        timeMax.setDate(timeMax.getDate() + 7);
+        timeMax.setDate(timeMax.getDate() + 30);
 
         const eventsResponse = await fetch(
-          `https://www.googleapis.com/calendar/v3/calendars/${creds.default_calendar_id}/events?` +
+          `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(creds.default_calendar_id)}/events?` +
           `timeMin=${timeMin.toISOString()}&` +
           `timeMax=${timeMax.toISOString()}&` +
           `singleEvents=true&` +
+          `showDeleted=true&` +
           `orderBy=startTime`,
           {
             headers: {
@@ -222,11 +217,54 @@ async function processCalendarEvents(
   supabase: any,
   syncDirection: 'to_google' | 'from_google' | 'bidirectional' = 'bidirectional'
 ) {
+  // Track which event IDs exist in Google Calendar (for cleanup)
+  const existingEventIds = new Set<string>();
+  const calendarId = events.length > 0 ? (events[0].organizer?.email || "primary") : "primary";
+  
+  // Calculate time window for cleanup - 30 days back and 30 days forward
+  const timeMin = new Date();
+  timeMin.setDate(timeMin.getDate() - 30);
+  const timeMax = new Date();
+  timeMax.setDate(timeMax.getDate() + 30);
+  
   for (const event of events) {
+    // Handle cancelled events - delete their sync records
+    if (event.status === "cancelled") {
+      const { data: cancelledSync } = await supabase
+        .from("google_calendar_sync")
+        .select("id, workout_id, sync_direction")
+        .eq("google_event_id", event.id)
+        .eq("google_calendar_id", event.organizer?.email || "primary")
+        .maybeSingle();
+      
+      if (cancelledSync) {
+        // Always delete workout when deleted from Google - no need to keep if user deleted there
+        if (cancelledSync.workout_id) {
+          await supabase
+            .from("workouts")
+            .delete()
+            .eq("id", cancelledSync.workout_id)
+            .eq("trainer_id", trainerId);
+        }
+        
+        // Delete sync record
+        await supabase
+          .from("google_calendar_sync")
+          .delete()
+          .eq("id", cancelledSync.id);
+        
+        console.log(`Deleted sync record for cancelled event: ${event.id}`);
+      }
+      continue;
+    }
+    
+    // Track this event as existing
+    existingEventIds.add(event.id);
+    
     // Check if event is already synced
     const { data: existingSync } = await supabase
       .from("google_calendar_sync")
-      .select("workout_id, trainee_id")
+      .select("id, workout_id, trainee_id")
       .eq("google_event_id", event.id)
       .eq("google_calendar_id", event.organizer?.email || "primary")
       .maybeSingle();
@@ -255,40 +293,37 @@ async function processCalendarEvents(
       }
     }
     
-    // If no email match, try name matching
-    if (!traineeId && traineeName) {
-      // First try exact match (case insensitive)
-      const { data: exactMatch } = await supabase
-        .from("trainees")
-        .select("id")
-        .eq("trainer_id", trainerId)
-        .ilike("full_name", traineeName)
-        .maybeSingle();
-      
-      if (exactMatch) {
-        traineeId = exactMatch.id;
-        console.log(`Matched trainee by exact name: ${traineeName} -> ${traineeId}`);
-      } else {
-        // Try partial match, but check for multiple matches
-        const { data: partialMatches } = await supabase
+    // If no email match, try name matching (supports "משה ורינה" - multiple names)
+    const traineeIdsToUse: string[] = [];
+    if (traineeId) {
+      traineeIdsToUse.push(traineeId);
+    } else if (traineeName) {
+      // Split by " ו " or "ו" or "," for multiple names (e.g. "משה ורינה" -> ["משה", "רינה"])
+      const nameParts = traineeName.split(/\s+ו\s+|\s*ו\s*|\s*,\s*/).map((n: string) => n.trim()).filter(Boolean);
+      for (const part of nameParts) {
+        const { data: exactMatch } = await supabase
           .from("trainees")
-          .select("id, full_name")
+          .select("id")
           .eq("trainer_id", trainerId)
-          .ilike("full_name", `%${traineeName}%`);
-        
-        if (partialMatches && partialMatches.length === 1) {
-          traineeId = partialMatches[0].id;
-          console.log(`Matched trainee by partial name: ${traineeName} -> ${traineeId}`);
-        } else if (partialMatches && partialMatches.length > 1) {
-          // Multiple matches found - don't auto-associate to avoid wrong match
-          console.warn(
-            `Multiple trainees found for name "${traineeName}": ${partialMatches.map(t => t.full_name).join(", ")}. ` +
-            `Skipping auto-association to prevent incorrect matching.`
-          );
-          continue; // Skip this event to avoid wrong association
+          .ilike("full_name", part)
+          .maybeSingle();
+        if (exactMatch) {
+          if (!traineeIdsToUse.includes(exactMatch.id)) traineeIdsToUse.push(exactMatch.id);
+        } else {
+          const { data: partialMatches } = await supabase
+            .from("trainees")
+            .select("id, full_name")
+            .eq("trainer_id", trainerId)
+            .ilike("full_name", `%${part}%`);
+          if (partialMatches && partialMatches.length === 1 && !traineeIdsToUse.includes(partialMatches[0].id)) {
+            traineeIdsToUse.push(partialMatches[0].id);
+          } else if (partialMatches && partialMatches.length > 1) {
+            console.warn(`Multiple trainees for "${part}", skipping`);
+          }
         }
       }
     }
+    const effectiveTraineeIds = traineeIdsToUse.length > 0 ? traineeIdsToUse : (traineeId ? [traineeId] : []);
 
     const startTime = new Date(event.start.dateTime || event.start.date);
     const endTime = new Date(event.end.dateTime || event.end.date);
@@ -296,10 +331,12 @@ async function processCalendarEvents(
     if (existingSync) {
       // Update existing workout
       if (existingSync.workout_id) {
+        // IMPORTANT: workout_date is timestamptz, so we need to preserve the full timestamp
+        // Use the exact startTime from Google Calendar event to maintain consistency
         await supabase
           .from("workouts")
           .update({
-            workout_date: startTime.toISOString().split("T")[0],
+            workout_date: startTime.toISOString(), // Full timestamp, not just date
             notes: event.description || null,
           })
           .eq("id", existingSync.workout_id);
@@ -314,41 +351,73 @@ async function processCalendarEvents(
             sync_status: "synced",
             last_synced_at: new Date().toISOString(),
           })
-          .eq("id", existingSync.workout_id);
+          .eq("id", existingSync.id);
       }
     } else if (!event.status || event.status !== "cancelled") {
-      // Create new workout
-      if (traineeId) {
-        const { data: newWorkout } = await supabase
+      // Create new workout (supports multiple trainees per event, e.g. "משה ורינה")
+      if (effectiveTraineeIds.length > 0) {
+        // Re-check for existing sync before create (prevents race with sync-google-calendar or another webhook)
+        const { data: recheckSync } = await supabase
+          .from("google_calendar_sync")
+          .select("id, workout_id, trainee_id")
+          .eq("google_event_id", event.id)
+          .eq("google_calendar_id", event.organizer?.email || "primary")
+          .maybeSingle();
+        if (recheckSync) {
+          await supabase
+            .from("google_calendar_sync")
+            .update({
+              event_start_time: startTime.toISOString(),
+              event_end_time: endTime.toISOString(),
+              event_summary: event.summary,
+              event_description: event.description,
+              sync_status: "synced",
+              last_synced_at: new Date().toISOString(),
+            })
+            .eq("id", recheckSync.id);
+          if (recheckSync.workout_id) {
+            await supabase
+              .from("workouts")
+              .update({
+                workout_date: startTime.toISOString(),
+                notes: event.description || null,
+              })
+              .eq("id", recheckSync.workout_id);
+          }
+          continue;
+        }
+
+        const { data: newWorkout, error: workoutError } = await supabase
           .from("workouts")
           .insert({
             trainer_id: trainerId,
             workout_type: "personal",
-            workout_date: startTime.toISOString().split("T")[0],
+            workout_date: startTime.toISOString(),
             notes: event.description || null,
             is_completed: false,
+            is_prepared: false,
           })
           .select()
           .single();
 
+        if (workoutError) {
+          console.warn("google-webhook: workout insert failed", workoutError.message);
+          continue;
+        }
         if (newWorkout) {
-          await supabase
-            .from("workout_trainees")
-            .insert({
-              workout_id: newWorkout.id,
-              trainee_id: traineeId,
-            });
+          for (const tid of effectiveTraineeIds) {
+            await supabase
+              .from("workout_trainees")
+              .insert({ workout_id: newWorkout.id, trainee_id: tid });
+          }
 
-          // Use user's preferred sync direction
-          const recordSyncDirection = syncDirection === 'bidirectional' 
-            ? 'bidirectional' 
-            : 'from_google';
-          
-          await supabase
+          const recordSyncDirection = syncDirection === 'bidirectional' ? 'bidirectional' : 'from_google';
+          const primaryTraineeId = effectiveTraineeIds[0];
+          const { error: syncInsertError } = await supabase
             .from("google_calendar_sync")
             .insert({
               trainer_id: trainerId,
-              trainee_id: traineeId,
+              trainee_id: primaryTraineeId,
               workout_id: newWorkout.id,
               google_event_id: event.id,
               google_calendar_id: event.organizer?.email || "primary",
@@ -360,10 +429,50 @@ async function processCalendarEvents(
               event_description: event.description,
               last_synced_at: new Date().toISOString(),
             });
-
-          // Update or create calendar client
-          await updateCalendarClient(trainerId, traineeId, event, supabase);
+          if (syncInsertError) {
+            if (syncInsertError.code === "23505") {
+              console.log("google-webhook: sync record already exists for event (race), skipping");
+            } else {
+              console.warn("google-webhook: sync insert failed", syncInsertError.message);
+            }
+          } else {
+            await updateCalendarClient(trainerId, primaryTraineeId, event, supabase);
+          }
         }
+      }
+    }
+  }
+  
+  // Cleanup: Delete sync records for events that no longer exist in Google Calendar
+  // (within the time window we're syncing)
+  const { data: allSyncRecords } = await supabase
+    .from("google_calendar_sync")
+    .select("id, google_event_id, workout_id, sync_direction")
+    .eq("trainer_id", trainerId)
+    .eq("google_calendar_id", calendarId)
+    .gte("event_start_time", timeMin.toISOString())
+    .lte("event_start_time", timeMax.toISOString());
+
+  if (allSyncRecords) {
+    for (const syncRecord of allSyncRecords) {
+      // If this sync record's event doesn't exist in Google Calendar, delete it
+      if (!existingEventIds.has(syncRecord.google_event_id)) {
+        console.log(`Deleting sync record for event that no longer exists: ${syncRecord.google_event_id}`);
+        
+        // Always delete workout when deleted from Google - no need to keep if user deleted there
+        if (syncRecord.workout_id) {
+          await supabase
+            .from("workouts")
+            .delete()
+            .eq("id", syncRecord.workout_id)
+            .eq("trainer_id", trainerId);
+        }
+        
+        // Delete sync record
+        await supabase
+          .from("google_calendar_sync")
+          .delete()
+          .eq("id", syncRecord.id);
       }
     }
   }

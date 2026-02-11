@@ -3,6 +3,7 @@ import { Activity, TrendingUp, Timer, Calendar, Target, BarChart3, Footprints, C
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
 import toast from 'react-hot-toast';
 import { cardioApi, type CardioActivity } from '../../api/cardioApi';
+import { themeColors } from '@/utils/themeColors';
 
 interface MyCardioProps {
   traineeId: string | null;
@@ -103,10 +104,10 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
       ) : (
         <>
           {latestActivity && (
-            <div className="premium-card-static p-6">
+            <div className="premium-card-static p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
-                  <Target className="h-5 w-5 text-emerald-400" />
+                  <Target className="h-5 w-5 text-primary-400" />
                   היעד השבועי שלי
                 </h3>
                 <span className="px-3 py-1 bg-sky-500/15 text-sky-400 rounded-lg text-sm font-medium">
@@ -127,7 +128,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
                   </div>
                   <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ${
                     progressPercentage >= 100
-                      ? 'bg-emerald-500/15 text-emerald-400'
+                      ? 'bg-primary-500/15 text-primary-400'
                       : progressPercentage >= 80
                         ? 'bg-amber-500/15 text-amber-400'
                         : 'bg-red-500/15 text-red-400'
@@ -145,7 +146,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
                   <div
                     className={`h-full rounded-full transition-all duration-1000 ${
                       progressPercentage >= 100
-                        ? 'bg-gradient-to-r from-emerald-500 to-emerald-400'
+                        ? 'bg-gradient-to-r from-primary-500 to-primary-400'
                         : progressPercentage >= 80
                           ? 'bg-gradient-to-r from-amber-500 to-amber-400'
                           : 'bg-gradient-to-r from-red-500 to-red-400'
@@ -161,7 +162,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[var(--color-border)]">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-4 border-t border-[var(--color-border)]">
                 {latestActivity.frequency > 0 && (
                   <div className="text-center p-3 bg-[var(--color-bg-surface)] rounded-xl border border-[var(--color-border)]">
                     <Calendar className="h-5 w-5 text-sky-400 mx-auto mb-2" />
@@ -178,7 +179,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
                 )}
                 {latestActivity.distance > 0 && (
                   <div className="text-center p-3 bg-[var(--color-bg-surface)] rounded-xl border border-[var(--color-border)]">
-                    <TrendingUp className="h-5 w-5 text-cyan-400 mx-auto mb-2" />
+                    <TrendingUp className="h-5 w-5 text-blue-400 mx-auto mb-2" />
                     <p className="text-xs text-[var(--color-text-muted)] mb-1">מרחק</p>
                     <p className="text-lg font-bold text-[var(--color-text-primary)]">{latestActivity.distance} ק"מ</p>
                   </div>
@@ -194,7 +195,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
           )}
 
           {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
               <div className="stat-card p-5 bg-gradient-to-br from-sky-500/20 to-sky-500/5">
                 <div className="flex items-start justify-between mb-2">
                   <div>
@@ -206,20 +207,20 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
                   </div>
                 </div>
                 {stats.stepsChange !== 0 && (
-                  <p className={`text-xs ${stats.stepsChange > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <p className={`text-xs ${stats.stepsChange > 0 ? 'text-primary-400' : 'text-red-400'}`}>
                     {stats.stepsChange > 0 ? '+' : ''}{stats.stepsChange.toLocaleString()} מהשבוע הקודם
                   </p>
                 )}
               </div>
 
-              <div className="stat-card p-5 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5">
+              <div className="stat-card p-5 bg-gradient-to-br from-primary-500/20 to-primary-500/5">
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">אחוז הצלחה</p>
-                    <p className="text-2xl font-bold text-emerald-400">{stats.successRate}%</p>
+                    <p className="text-2xl font-bold text-primary-400">{stats.successRate}%</p>
                   </div>
-                  <div className="p-2.5 rounded-lg bg-emerald-500/20">
-                    <CheckCircle className="h-5 w-5 text-emerald-400" />
+                  <div className="p-2.5 rounded-lg bg-primary-500/20">
+                    <CheckCircle className="h-5 w-5 text-primary-400" />
                   </div>
                 </div>
                 <p className="text-xs text-[var(--color-text-muted)]">שבועות שעמדת ביעד</p>
@@ -244,14 +245,14 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
               )}
 
               {stats.longestStreak > 0 && stats.longestStreak !== stats.currentStreak && (
-                <div className="stat-card p-5 bg-gradient-to-br from-purple-500/20 to-purple-500/5">
+                <div className="stat-card p-5 bg-gradient-to-br from-amber-500/20 to-amber-500/5">
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">שיא אישי</p>
-                      <p className="text-2xl font-bold text-purple-400">{stats.longestStreak}</p>
+                      <p className="text-2xl font-bold text-amber-400">{stats.longestStreak}</p>
                     </div>
-                    <div className="p-2.5 rounded-lg bg-purple-500/20">
-                      <Target className="h-5 w-5 text-purple-400" />
+                    <div className="p-2.5 rounded-lg bg-amber-500/20">
+                      <Target className="h-5 w-5 text-amber-400" />
                     </div>
                   </div>
                   <p className="text-xs text-[var(--color-text-muted)]">שבועות רצופים</p>
@@ -261,7 +262,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
           )}
 
           {activities.length >= 2 && (
-            <div className="premium-card-static p-6">
+            <div className="premium-card-static p-4 sm:p-6">
               <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-sky-400" />
                 התקדמות לאורך זמן
@@ -281,10 +282,10 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
                       }}
                     />
                     <Legend />
-                    <Bar dataKey="יעד" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="יעד" fill={themeColors.chartPrimary} radius={[4, 4, 0, 0]} />
                     <Bar dataKey="בוצע" radius={[4, 4, 0, 0]}>
                       {getChartData().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.achieved ? '#0ea5e9' : '#f59e0b'} />
+                        <Cell key={`cell-${index}`} fill={entry.achieved ? themeColors.chartBlue : themeColors.chartAmber} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -293,7 +294,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
             </div>
           )}
 
-          <div className="premium-card-static p-6">
+          <div className="premium-card-static p-4 sm:p-6">
             <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
               <Calendar className="h-5 w-5 text-sky-400" />
               היסטוריית שבועות
@@ -311,14 +312,14 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
                     key={activity.id}
                     className={`p-4 rounded-xl border transition-all ${
                       achieved
-                        ? 'bg-emerald-500/10 border-emerald-500/30'
+                        ? 'bg-primary-500/10 border-primary-500/30'
                         : 'bg-[var(--color-bg-surface)] border-[var(--color-border)]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-3">
                         {achieved ? (
-                          <CheckCircle className="h-5 w-5 text-emerald-400" />
+                          <CheckCircle className="h-5 w-5 text-primary-400" />
                         ) : (
                           <AlertCircle className="h-5 w-5 text-amber-400" />
                         )}
@@ -334,7 +335,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
                         </div>
                       </div>
                       <div className="text-left">
-                        <p className={`text-lg font-bold ${achieved ? 'text-emerald-400' : 'text-amber-400'}`}>
+                        <p className={`text-lg font-bold ${achieved ? 'text-primary-400' : 'text-amber-400'}`}>
                           {percentage}%
                         </p>
                         <p className="text-xs text-[var(--color-text-muted)]">
@@ -346,7 +347,7 @@ export default function MyCardio({ traineeId }: MyCardioProps) {
                     <div className="h-2 bg-[var(--color-bg-elevated)] rounded-full overflow-hidden border border-[var(--color-border)]">
                       <div
                         className={`h-full rounded-full ${
-                          achieved ? 'bg-emerald-500' : 'bg-amber-500'
+                          achieved ? 'bg-primary-500' : 'bg-amber-500'
                         }`}
                         style={{ width: `${Math.min(100, percentage)}%` }}
                       />

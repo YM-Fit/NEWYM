@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { BarChart3, Calendar, Users, TrendingUp, ChevronLeft, ChevronRight, Dumbbell, Scale, Trophy, Sparkles } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
+import { logger } from '../../../utils/logger';
+import toast from 'react-hot-toast';
 import MonthlyReport from './MonthlyReport';
 import TraineesProgressChart from './TraineesProgressChart';
 
@@ -21,90 +23,116 @@ export default function ReportsView() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'progress'>('overview');
 
-  useEffect(() => {
-    if (user) loadStats();
-  }, [user, selectedMonth]);
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     if (!user) return;
     setLoading(true);
 
-    const startOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
-    const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0, 23, 59, 59);
+    try {
+      const startOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+      const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0, 23, 59, 59);
 
-    const { data: workouts } = await supabase
-      .from('workouts')
-      .select('id, workout_date, workout_exercises(exercise_sets(weight, reps))')
-      .eq('trainer_id', user.id)
-      .gte('workout_date', startOfMonth.toISOString())
-      .lte('workout_date', endOfMonth.toISOString());
+      const { data: workouts, error: workoutsError } = await supabase
+        .from('workouts')
+        .select('id, workout_date, workout_exercises(exercise_sets(weight, reps))')
+        .eq('trainer_id', user.id)
+        .eq('is_completed', true)
+        .gte('workout_date', startOfMonth.toISOString())
+        .lte('workout_date', endOfMonth.toISOString());
 
-    const { data: trainees } = await supabase
-      .from('trainees')
-      .select('id, status, created_at')
-      .eq('trainer_id', user.id);
+      if (workoutsError) {
+        logger.error('Error loading workouts', workoutsError, 'ReportsView');
+        toast.error('שגיאה בטעינת אימונים');
+        setLoading(false);
+        return;
+      }
 
-    const { data: prs } = await supabase
-      .from('personal_records')
-      .select('id')
-      .gte('achieved_at', startOfMonth.toISOString())
-      .lte('achieved_at', endOfMonth.toISOString());
+      const { data: trainees, error: traineesError } = await supabase
+        .from('trainees')
+        .select('id, status, created_at')
+        .eq('trainer_id', user.id);
 
-    const newTrainees = trainees?.filter(t => {
-      const createdAt = new Date(t.created_at);
-      return createdAt >= startOfMonth && createdAt <= endOfMonth;
-    }).length || 0;
+      if (traineesError) {
+        logger.error('Error loading trainees', traineesError, 'ReportsView');
+        toast.error('שגיאה בטעינת מתאמנים');
+        setLoading(false);
+        return;
+      }
 
-    const totalTrainees = trainees?.length || 0;
+      const { data: prs, error: prsError } = await supabase
+        .from('personal_records')
+        .select('id')
+        .gte('achieved_at', startOfMonth.toISOString())
+        .lte('achieved_at', endOfMonth.toISOString());
 
-    let totalVolume = 0;
-    workouts?.forEach(w => {
-      w.workout_exercises?.forEach((we: any) => {
-        we.exercise_sets?.forEach((es: any) => {
-          totalVolume += (es.weight || 0) * (es.reps || 0);
+      if (prsError) {
+        logger.error('Error loading personal records', prsError, 'ReportsView');
+      }
+
+      const newTrainees = trainees?.filter(t => {
+        const createdAt = new Date(t.created_at);
+        return createdAt >= startOfMonth && createdAt <= endOfMonth;
+      }).length || 0;
+
+      const totalTrainees = trainees?.length || 0;
+
+      let totalVolume = 0;
+      workouts?.forEach(w => {
+        w.workout_exercises?.forEach((we: any) => {
+          we.exercise_sets?.forEach((es: any) => {
+            totalVolume += (es.weight || 0) * (es.reps || 0);
+          });
         });
       });
-    });
 
-    setStats({
-      totalWorkouts: workouts?.length || 0,
-      activeTrainees: totalTrainees,
-      newTrainees,
-      averageWorkoutsPerTrainee: totalTrainees > 0 ? Math.round((workouts?.length || 0) / totalTrainees * 10) / 10 : 0,
-      totalVolume: Math.round(totalVolume),
-      personalRecords: prs?.length || 0,
-    });
+      setStats({
+        totalWorkouts: workouts?.length || 0,
+        activeTrainees: totalTrainees,
+        newTrainees,
+        averageWorkoutsPerTrainee: totalTrainees > 0 ? Math.round((workouts?.length || 0) / totalTrainees * 10) / 10 : 0,
+        totalVolume: Math.round(totalVolume),
+        personalRecords: prs?.length || 0,
+      });
+    } catch (error) {
+      logger.error('Error loading stats', error, 'ReportsView');
+      toast.error('שגיאה בטעינת נתונים');
+    } finally {
+      setLoading(false);
+    }
+  }, [user, selectedMonth]);
 
-    setLoading(false);
-  };
+  useEffect(() => {
+    if (user) loadStats();
+  }, [user, loadStats]);
 
-  const navigateMonth = (direction: 'prev' | 'next') => {
+  const navigateMonth = useCallback((direction: 'prev' | 'next') => {
     setSelectedMonth(prev => {
       const newDate = new Date(prev);
       newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
       return newDate;
     });
-  };
+  }, []);
 
-  const formatMonth = (date: Date) => {
+  const formatMonth = useCallback((date: Date) => {
     return date.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
-  };
+  }, []);
+
+  const formattedMonth = useMemo(() => formatMonth(selectedMonth), [selectedMonth, formatMonth]);
 
   return (
     <div className="max-w-7xl mx-auto">
       <div className="premium-card-static p-8 mb-8 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-0 left-0 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="relative flex items-center gap-4">
-          <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30">
-            <BarChart3 className="w-8 h-8 text-emerald-400" />
+          <div className="p-4 rounded-2xl bg-primary-500/15 border border-primary-500/30">
+            <BarChart3 className="w-8 h-8 text-primary-400" />
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">סטטיסטיקות</span>
+              <Sparkles className="w-4 h-4 text-primary-400" />
+              <span className="text-xs font-semibold text-primary-400 uppercase tracking-wider">סטטיסטיקות</span>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-1">דוחות וסטטיסטיקות</h1>
-            <p className="text-zinc-400 text-lg">נתונים ותובנות על הסטודיו שלך</p>
+            <h1 className="text-3xl font-bold text-foreground mb-1">דוחות וסטטיסטיקות</h1>
+            <p className="text-muted text-lg">נתונים ותובנות על הסטודיו שלך</p>
           </div>
         </div>
       </div>
@@ -116,8 +144,8 @@ export default function ReportsView() {
               onClick={() => setActiveTab('overview')}
               className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                 activeTab === 'overview'
-                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:text-white hover:border-zinc-600/50'
+                  ? 'bg-primary-500/15 text-primary-400 border border-primary-500/30'
+                  : 'bg-surface text-muted border border-border hover:text-foreground hover:border-border-hover'
               }`}
             >
               סקירה חודשית
@@ -126,8 +154,8 @@ export default function ReportsView() {
               onClick={() => setActiveTab('progress')}
               className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                 activeTab === 'progress'
-                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:text-white hover:border-zinc-600/50'
+                  ? 'bg-primary-500/15 text-primary-400 border border-primary-500/30'
+                  : 'bg-surface text-muted border border-border hover:text-foreground hover:border-border-hover'
               }`}
             >
               התקדמות מתאמנים
@@ -137,17 +165,17 @@ export default function ReportsView() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigateMonth('prev')}
-              className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-zinc-400 hover:text-white"
+              className="p-2 bg-surface hover:bg-elevated/50 rounded-xl transition-all text-muted hover:text-foreground"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700/50">
-              <Calendar className="w-5 h-5 text-emerald-400" />
-              <span className="font-semibold text-white">{formatMonth(selectedMonth)}</span>
+            <div className="flex items-center gap-2 px-4 py-2 bg-surface rounded-xl border border-border">
+              <Calendar className="w-5 h-5 text-primary-400" />
+              <span className="font-semibold text-foreground">{formattedMonth}</span>
             </div>
             <button
               onClick={() => navigateMonth('next')}
-              className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition-all text-zinc-400 hover:text-white disabled:opacity-50"
+              className="p-2 bg-surface hover:bg-elevated/50 rounded-xl transition-all text-muted hover:text-foreground disabled:opacity-50"
               disabled={selectedMonth >= new Date()}
             >
               <ChevronLeft className="w-5 h-5" />
@@ -160,69 +188,69 @@ export default function ReportsView() {
         <>
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+              <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
             </div>
           ) : stats && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="premium-card-static p-6 group hover:border-zinc-600/50 transition-all">
+                <div className="premium-card-static p-6 group hover:border-border-hover transition-all">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
-                      <Dumbbell className="w-6 h-6 text-emerald-400" />
+                    <div className="p-3 rounded-xl bg-primary-500/15 border border-primary-500/30">
+                      <Dumbbell className="w-6 h-6 text-primary-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-zinc-500 font-medium">אימונים החודש</p>
-                      <p className="text-3xl font-bold text-white">{stats.totalWorkouts}</p>
+                      <p className="text-sm text-muted font-medium">אימונים החודש</p>
+                      <p className="text-3xl font-bold text-foreground">{stats.totalWorkouts}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="text-zinc-500">ממוצע למתאמן:</span>
-                    <span className="font-semibold text-emerald-400">{stats.averageWorkoutsPerTrainee}</span>
+                    <span className="text-muted">ממוצע למתאמן:</span>
+                    <span className="font-semibold text-primary-400">{stats.averageWorkoutsPerTrainee}</span>
                   </div>
                 </div>
 
-                <div className="premium-card-static p-6 group hover:border-zinc-600/50 transition-all">
+                <div className="premium-card-static p-6 group hover:border-border-hover transition-all">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="p-3 rounded-xl bg-cyan-500/15 border border-cyan-500/30">
-                      <Users className="w-6 h-6 text-cyan-400" />
+                    <div className="p-3 rounded-xl bg-blue-500/15 border border-blue-500/30">
+                      <Users className="w-6 h-6 text-blue-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-zinc-500 font-medium">מתאמנים פעילים</p>
-                      <p className="text-3xl font-bold text-white">{stats.activeTrainees}</p>
+                      <p className="text-sm text-muted font-medium">מתאמנים פעילים</p>
+                      <p className="text-3xl font-bold text-foreground">{stats.activeTrainees}</p>
                     </div>
                   </div>
                   {stats.newTrainees > 0 && (
                     <div className="flex items-center gap-2 text-sm">
-                      <TrendingUp className="w-4 h-4 text-emerald-400" />
-                      <span className="text-emerald-400 font-semibold">+{stats.newTrainees} חדשים החודש</span>
+                      <TrendingUp className="w-4 h-4 text-primary-400" />
+                      <span className="text-primary-400 font-semibold">+{stats.newTrainees} חדשים החודש</span>
                     </div>
                   )}
                 </div>
 
-                <div className="premium-card-static p-6 group hover:border-zinc-600/50 transition-all">
+                <div className="premium-card-static p-6 group hover:border-border-hover transition-all">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/30">
                       <Scale className="w-6 h-6 text-amber-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-zinc-500 font-medium">נפח כולל</p>
-                      <p className="text-3xl font-bold text-white">{(stats.totalVolume / 1000).toFixed(1)}K</p>
+                      <p className="text-sm text-muted font-medium">נפח כולל</p>
+                      <p className="text-3xl font-bold text-foreground">{(stats.totalVolume / 1000).toFixed(1)}K</p>
                     </div>
                   </div>
-                  <p className="text-sm text-zinc-500">ק"ג הורמו החודש</p>
+                  <p className="text-sm text-muted">ק"ג הורמו החודש</p>
                 </div>
 
-                <div className="premium-card-static p-6 group hover:border-zinc-600/50 transition-all">
+                <div className="premium-card-static p-6 group hover:border-border-hover transition-all">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="p-3 rounded-xl bg-yellow-500/15 border border-yellow-500/30">
                       <Trophy className="w-6 h-6 text-yellow-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-zinc-500 font-medium">שיאים אישיים</p>
-                      <p className="text-3xl font-bold text-white">{stats.personalRecords}</p>
+                      <p className="text-sm text-muted font-medium">שיאים אישיים</p>
+                      <p className="text-3xl font-bold text-foreground">{stats.personalRecords}</p>
                     </div>
                   </div>
-                  <p className="text-sm text-zinc-500">PR נשברו החודש</p>
+                  <p className="text-sm text-muted">PR נשברו החודש</p>
                 </div>
               </div>
 

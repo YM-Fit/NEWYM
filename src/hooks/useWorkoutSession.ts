@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 
 interface Exercise {
   id: string;
@@ -51,9 +51,49 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
   const [exercises, setExercises] = useState<WorkoutExercise[]>(options.initialExercises || []);
   const [minimizedExercises, setMinimizedExercises] = useState<string[]>([]);
   const [collapsedSets, setCollapsedSets] = useState<string[]>([]);
+  
+  // Track if initialExercises have been loaded to prevent re-initialization
+  const initializedRef = useRef(false);
+  // Store the workout ID to detect when we switch to a different workout
+  const previousWorkoutIdRef = useRef<string | undefined>(undefined);
+  
+  // Update exercises ONLY on initial load or when switching to a completely different workout
+  // This prevents overwriting user's changes (like deleted exercises) during the same session
+  useEffect(() => {
+    // Extract workout ID from first exercise's tempId (if it's a DB id, not temp-*)
+    const getWorkoutIndicator = (exercises: WorkoutExercise[] | undefined) => {
+      if (!exercises || exercises.length === 0) return undefined;
+      const firstTempId = exercises[0]?.tempId;
+      // If tempId doesn't start with 'temp-', it's a DB id (workout_exercise.id)
+      return firstTempId && !firstTempId.startsWith('temp-') ? firstTempId.substring(0, 8) : undefined;
+    };
+    
+    const currentWorkoutIndicator = getWorkoutIndicator(options.initialExercises);
+    
+    // Only initialize exercises if:
+    // 1. We haven't initialized yet, OR
+    // 2. We switched to a different workout (different workout indicator)
+    if (options.initialExercises && options.initialExercises.length > 0) {
+      const shouldInitialize = !initializedRef.current || 
+        (currentWorkoutIndicator && previousWorkoutIdRef.current !== currentWorkoutIndicator);
+      
+      if (shouldInitialize) {
+        console.log('[useWorkoutSession] Initializing exercises from initialExercises', {
+          current: exercises.length,
+          new: options.initialExercises.length,
+          initialized: initializedRef.current,
+          previousWorkoutId: previousWorkoutIdRef.current,
+          currentWorkoutId: currentWorkoutIndicator
+        });
+        setExercises(options.initialExercises);
+        initializedRef.current = true;
+        previousWorkoutIdRef.current = currentWorkoutIndicator;
+      }
+    }
+  }, [options.initialExercises]);
 
   const createEmptySet = (setNumber: number): SetData => ({
-    id: `temp-${Date.now()}-${setNumber}`,
+    id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${setNumber}`,
     set_number: setNumber,
     weight: 0,
     reps: 0,
@@ -66,7 +106,7 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
 
   const createSetFromPrevious = (setNumber: number, previousSet: SetData): SetData => {
     return {
-      id: `temp-${Date.now()}-${setNumber}`,
+      id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${setNumber}`,
       set_number: setNumber,
       // Auto-fill from previous set
       weight: previousSet.weight,
@@ -94,19 +134,41 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
   };
 
   const addExercise = (exercise: Exercise) => {
-    if (exercises.length > 0) {
-      const lastExercise = exercises[exercises.length - 1];
-      if (!minimizedExercises.includes(lastExercise.tempId)) {
-        setMinimizedExercises(prev => [...prev, lastExercise.tempId]);
-      }
+    // CRITICAL FIX: Check if exercise already exists to prevent duplicates
+    const exerciseExists = exercises.some(ex => ex.exercise.id === exercise.id);
+    if (exerciseExists) {
+      console.warn('[useWorkoutSession] Exercise already exists, skipping addition', {
+        exerciseId: exercise.id,
+        exerciseName: exercise.name
+      });
+      return; // Don't add duplicate
     }
 
+    // Collapse all sets of previous exercises when adding new exercise
+    exercises.forEach(ex => {
+      const setIds = ex.sets.map(s => s.id);
+      setCollapsedSets(prev => {
+        const newCollapsed = [...prev];
+        setIds.forEach(id => {
+          if (!newCollapsed.includes(id)) {
+            newCollapsed.push(id);
+          }
+        });
+        return newCollapsed;
+      });
+    });
+
+    // Generate unique tempId with additional randomness to prevent duplicates
+    // This ensures uniqueness even if called in rapid succession
     const newExercise: WorkoutExercise = {
-      tempId: Date.now().toString(),
+      tempId: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       exercise,
       sets: [createEmptySet(1)],
     };
     setExercises([...exercises, newExercise]);
+    
+    // Return the new exercise tempId for scrolling
+    return newExercise.tempId;
   };
 
   const removeExercise = (exerciseIndex: number) => {
@@ -201,7 +263,7 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     const exercise = updatedExercises[exerciseIndex];
     const setToCopy = { ...exercise.sets[setIndex] };
     const newSetNumber = exercise.sets.length + 1;
-    setToCopy.id = `temp-${Date.now()}-${newSetNumber}`;
+    setToCopy.id = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${newSetNumber}`;
     setToCopy.set_number = newSetNumber;
     exercise.sets.push(setToCopy);
     setExercises(updatedExercises);
@@ -259,6 +321,30 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     });
   };
 
+  const toggleExerciseCollapse = (exerciseIndex: number) => {
+    const exercise = exercises[exerciseIndex];
+    if (!exercise) return;
+    
+    const setIds = exercise.sets.map(s => s.id);
+    const allCollapsed = setIds.every(id => collapsedSets.includes(id));
+    
+    setCollapsedSets(prev => {
+      if (allCollapsed) {
+        // Open all sets - remove from collapsed
+        return prev.filter(id => !setIds.includes(id));
+      } else {
+        // Close all sets - add to collapsed
+        const newCollapsed = [...prev];
+        setIds.forEach(id => {
+          if (!newCollapsed.includes(id)) {
+            newCollapsed.push(id);
+          }
+        });
+        return newCollapsed;
+      }
+    });
+  };
+
   const completeExercise = (exerciseId: string) => {
     if (!minimizedExercises.includes(exerciseId)) {
       setMinimizedExercises(prev => [...prev, exerciseId]);
@@ -291,5 +377,6 @@ export function useWorkoutSession(options: UseWorkoutSessionOptions = {}) {
     toggleCollapseSet,
     expandAllSets,
     completeSetAndMoveNext,
+    toggleExerciseCollapse,
   };
 }

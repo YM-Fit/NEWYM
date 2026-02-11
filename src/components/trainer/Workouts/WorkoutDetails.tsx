@@ -1,7 +1,8 @@
-import { ArrowRight, Dumbbell, Edit2, Copy, Trash2, TrendingUp, Target, Info } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ArrowRight, Dumbbell, Edit2, Copy, Trash2, TrendingUp, Target, Info, Calendar, Clock } from 'lucide-react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { logger } from '../../../utils/logger';
+import toast from 'react-hot-toast';
 import ExerciseInstructionsModal from '../../common/ExerciseInstructionsModal';
 
 interface WorkoutDetailsProps {
@@ -55,6 +56,7 @@ export default function WorkoutDetails({
   const [workout, setWorkout] = useState<any>(null);
   const [exercises, setExercises] = useState<ExerciseWithSets[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [instructionsExercise, setInstructionsExercise] = useState<{
     name: string;
     instructions: string | null | undefined;
@@ -66,7 +68,7 @@ export default function WorkoutDetails({
     }
   }, [workoutId]);
 
-  const loadWorkoutDetails = async () => {
+  const loadWorkoutDetails = useCallback(async () => {
     if (!workoutId) return;
     
     const { data: workoutData, error: workoutError } = await supabase
@@ -77,6 +79,9 @@ export default function WorkoutDetails({
     
     if (workoutError) {
       logger.error('Error loading workout', workoutError, 'WorkoutDetails');
+      setError('שגיאה בטעינת האימון');
+      toast.error('שגיאה בטעינת האימון');
+      setLoading(false);
       return;
     }
 
@@ -127,6 +132,9 @@ export default function WorkoutDetails({
     
     if (exercisesError) {
       logger.error('Error loading workout exercises', exercisesError, 'WorkoutDetails');
+      setError('שגיאה בטעינת התרגילים');
+      toast.error('שגיאה בטעינת התרגילים');
+      setLoading(false);
       return;
     }
 
@@ -168,9 +176,10 @@ export default function WorkoutDetails({
     }
 
     setLoading(false);
-  };
+    setError(null);
+  }, [workoutId]);
 
-  const getTotalVolume = () => {
+  const getTotalVolume = useMemo(() => {
     return exercises.reduce((total, ex) => {
       return total + ex.sets.reduce((sum, set) => {
         let setVolume = set.weight * set.reps;
@@ -193,122 +202,155 @@ export default function WorkoutDetails({
         return sum + setVolume;
       }, 0);
     }, 0);
-  };
+  }, [exercises]);
 
-  const getTotalSets = () => {
+  const getTotalSets = useMemo(() => {
     return exercises.reduce((total, ex) => total + ex.sets.length, 0);
-  };
+  }, [exercises]);
+
+  const handleInstructionsClick = useCallback((exercise: ExerciseWithSets) => {
+    setInstructionsExercise({
+      name: exercise.name,
+      instructions: exercise.instructions,
+    });
+  }, []);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading workout...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+          <p className="text-muted">טוען אימון...</p>
         </div>
       </div>
     );
   }
 
-  if (!workout) {
+  if (error || !workout) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-600">Workout not found</p>
-        <button onClick={onBack} className="mt-4 text-emerald-600 hover:text-emerald-700 font-medium">
-          Go back
+      <div className="text-center py-12 premium-card-static">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-red-500/15 flex items-center justify-center">
+          <Trash2 className="h-8 w-8 text-red-400" />
+        </div>
+        <h3 className="text-lg font-medium text-foreground mb-2">
+          {error || 'האימון לא נמצא'}
+        </h3>
+        <p className="text-muted mb-6">
+          {error || 'האימון שביקשת לא קיים או נמחק'}
+        </p>
+        <button 
+          onClick={onBack} 
+          className="btn-primary px-6 py-3 rounded-xl font-medium"
+        >
+          חזור
         </button>
       </div>
     );
   }
 
+  const workoutDate = useMemo(() => {
+    return new Date(workout.workout_date);
+  }, [workout.workout_date]);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in">
       {/* Premium Header */}
-      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 shadow-xl">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
+      <div className="premium-card-static p-4 sm:p-6 relative overflow-hidden bg-gradient-to-br from-primary-500 to-primary-700">
+        <div className="absolute top-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
             <button
               onClick={onBack}
-              className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300"
+              className="p-2 sm:p-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all flex-shrink-0"
+              aria-label="חזור"
             >
-              <ArrowRight className="h-5 w-5 text-white" />
+              <ArrowRight className="h-5 w-5" />
             </button>
-            <div>
-              <h1 className="text-2xl font-bold text-white">
-                Workout from {new Date(workout.workout_date).toLocaleDateString('he-IL')}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <Calendar className="w-4 h-4 text-primary-100" />
+                <span className="text-xs font-semibold text-primary-100 uppercase tracking-wider">אימון</span>
+              </div>
+              <h1 className="text-xl sm:text-2xl font-bold text-white truncate">
+                {workoutDate.toLocaleDateString('he-IL', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
               </h1>
-              <p className="text-emerald-100">{trainee.name}</p>
+              <p className="text-primary-100 text-sm sm:text-base">{trainee.name || trainee.full_name}</p>
             </div>
           </div>
 
-          <div className="flex space-x-2 rtl:space-x-reverse">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={onDuplicate}
-              className="bg-blue-500/20 hover:bg-blue-500/30 text-white px-4 py-2 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 backdrop-blur-sm"
+              className="bg-blue-500/20 hover:bg-blue-500/30 text-white px-3 sm:px-4 py-2 rounded-xl flex items-center gap-2 transition-all backdrop-blur-sm text-sm sm:text-base"
+              title="שכפל אימון"
             >
               <Copy className="h-4 w-4" />
-              <span>Duplicate</span>
+              <span className="hidden sm:inline">שכפל</span>
             </button>
             <button
               onClick={onEdit}
-              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 backdrop-blur-sm"
+              className="bg-white/20 hover:bg-white/30 text-white px-3 sm:px-4 py-2 rounded-xl flex items-center gap-2 transition-all backdrop-blur-sm text-sm sm:text-base"
+              title="ערוך אימון"
             >
               <Edit2 className="h-4 w-4" />
-              <span>Edit</span>
+              <span className="hidden sm:inline">ערוך</span>
             </button>
             <button
               onClick={onDelete}
-              className="bg-red-500/20 hover:bg-red-500/30 text-white px-4 py-2 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 backdrop-blur-sm"
+              className="bg-red-500/20 hover:bg-red-500/30 text-white px-3 sm:px-4 py-2 rounded-xl flex items-center gap-2 transition-all backdrop-blur-sm text-sm sm:text-base"
+              title="מחק אימון"
             >
               <Trash2 className="h-4 w-4" />
-              <span>Delete</span>
+              <span className="hidden sm:inline">מחק</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-xl hover:shadow-2xl transition-all duration-300">
-          <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <Dumbbell className="h-6 w-6 text-emerald-600" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="premium-card-static p-4 sm:p-6 text-center hover:shadow-lg transition-all">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-500/15 to-primary-600/15 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <Dumbbell className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400" />
           </div>
-          <p className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{exercises.length}</p>
-          <p className="text-sm text-gray-600 font-medium">Exercises</p>
+          <p className="text-2xl sm:text-3xl font-bold text-primary-400">{exercises.length}</p>
+          <p className="text-xs sm:text-sm text-muted font-medium">תרגילים</p>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-xl hover:shadow-2xl transition-all duration-300">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <Target className="h-6 w-6 text-blue-600" />
+        <div className="premium-card-static p-4 sm:p-6 text-center hover:shadow-lg transition-all">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500/15 to-blue-600/15 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <Target className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400" />
           </div>
-          <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">{getTotalSets()}</p>
-          <p className="text-sm text-gray-600 font-medium">Sets</p>
+          <p className="text-2xl sm:text-3xl font-bold text-blue-400">{getTotalSets}</p>
+          <p className="text-xs sm:text-sm text-muted font-medium">סטים</p>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-xl hover:shadow-2xl transition-all duration-300">
-          <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <TrendingUp className="h-6 w-6 text-amber-600" />
+        <div className="premium-card-static p-4 sm:p-6 text-center hover:shadow-lg transition-all">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-500/15 to-amber-600/15 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-amber-400" />
           </div>
-          <p className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-amber-700 bg-clip-text text-transparent">{getTotalVolume().toLocaleString()}</p>
-          <p className="text-sm text-gray-600 font-medium">kg Total Volume</p>
+          <p className="text-2xl sm:text-3xl font-bold text-amber-400">{getTotalVolume.toLocaleString()}</p>
+          <p className="text-xs sm:text-sm text-muted font-medium">ק״ג נפח כולל</p>
         </div>
       </div>
 
       {/* Exercise Cards */}
       <div className="space-y-4">
         {exercises.map((exercise, idx) => (
-          <div key={exercise.id} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <div key={exercise.id} className="premium-card-static p-4 sm:p-6 hover:shadow-lg transition-all">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                <div className="bg-gradient-to-br from-emerald-500 to-teal-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="bg-gradient-to-br from-primary-500 to-primary-700 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
                   <span className="text-white font-bold text-sm">{idx + 1}</span>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900">{exercise.name}</h3>
+                <h3 className="text-lg font-bold text-muted900">{exercise.name}</h3>
               </div>
               <button
-                onClick={() => setInstructionsExercise({
-                  name: exercise.name,
-                  instructions: exercise.instructions,
-                })}
-                className="p-2 hover:bg-cyan-50 text-cyan-600 rounded-xl transition-all"
+                onClick={() => handleInstructionsClick(exercise)}
+                className="p-2 hover:bg-blue-500/15 text-blue-400 rounded-xl transition-all"
                 aria-label="איך לבצע"
                 title="איך לבצע"
               >
@@ -317,69 +359,69 @@ export default function WorkoutDetails({
             </div>
 
             <div className="space-y-2">
-              <div className="grid grid-cols-5 gap-2 text-sm font-semibold text-gray-500 pb-2 border-b border-gray-100">
-                <div>Set</div>
-                <div>Weight</div>
-                <div>Reps</div>
+              <div className="grid grid-cols-5 gap-2 text-xs sm:text-sm font-semibold text-muted pb-2 border-b border-border">
+                <div>סט</div>
+                <div>משקל</div>
+                <div>חזרות</div>
                 <div>RPE</div>
-                <div>Equipment</div>
+                <div>ציוד</div>
               </div>
 
               {exercise.sets.map((set) => (
                 <div key={set.set_number} className="py-2">
-                  <div className="grid grid-cols-5 gap-2 text-sm hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 rounded-xl py-3 px-2 transition-all duration-300">
-                    <div className="font-semibold text-gray-900 flex items-center gap-1 flex-wrap">
+                  <div className="grid grid-cols-5 gap-2 text-xs sm:text-sm hover:bg-surface/50 rounded-xl py-2 sm:py-3 px-2 transition-all">
+                    <div className="font-semibold text-foreground flex items-center gap-1 flex-wrap">
                       #{set.set_number}
                       {set.set_type === 'superset' && (
-                        <span className="text-xs bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 px-2 py-0.5 rounded-lg font-medium">Super</span>
+                        <span className="text-[10px] sm:text-xs bg-blue-500/15 text-blue-400 px-1.5 sm:px-2 py-0.5 rounded-lg font-medium border border-blue-500/30">סופר</span>
                       )}
                       {set.set_type === 'dropset' && (
-                        <span className="text-xs bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 px-2 py-0.5 rounded-lg font-medium">Drop</span>
+                        <span className="text-[10px] sm:text-xs bg-amber-500/15 text-amber-400 px-1.5 sm:px-2 py-0.5 rounded-lg font-medium border border-amber-500/30">דרופ</span>
                       )}
                       {set.failure && (
-                        <span className="text-xs bg-gradient-to-r from-red-100 to-red-200 text-red-700 px-2 py-0.5 rounded-lg font-medium">Failure</span>
+                        <span className="text-[10px] sm:text-xs bg-red-500/15 text-red-400 px-1.5 sm:px-2 py-0.5 rounded-lg font-medium border border-red-500/30">כשל</span>
                       )}
                     </div>
-                    <div className="text-gray-900 font-medium">{set.weight} kg</div>
-                    <div className="text-gray-900 font-medium">{set.reps} reps</div>
-                    <div className="text-gray-700">{set.rpe || '-'}</div>
-                    <div className="flex items-center space-x-1 rtl:space-x-reverse">
+                    <div className="text-foreground font-medium">{set.weight} ק״ג</div>
+                    <div className="text-foreground font-medium">{set.reps}</div>
+                    <div className="text-muted">{set.rpe || '-'}</div>
+                    <div className="flex items-center gap-1">
                       {set.equipment ? (
                         <>
-                          <span>{set.equipment.emoji}</span>
-                          <span className="text-gray-700">{set.equipment.name}</span>
+                          <span className="text-sm">{set.equipment.emoji}</span>
+                          <span className="text-muted text-xs truncate">{set.equipment.name}</span>
                         </>
                       ) : (
-                        <span className="text-gray-400">-</span>
+                        <span className="text-muted">-</span>
                       )}
                     </div>
                   </div>
 
                   {set.set_type === 'superset' && set.superset_exercise_name && (
-                    <div className="mr-8 mt-2 p-4 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl text-sm space-y-2 shadow-sm">
-                      <div className="flex items-center justify-between">
+                    <div className="mr-4 sm:mr-8 mt-2 p-3 sm:p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl text-xs sm:text-sm space-y-2">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                         <div>
-                          <span className="font-semibold text-blue-900">Superset: {set.superset_exercise_name}</span>
+                          <span className="font-semibold text-blue-400">סופר-סט: {set.superset_exercise_name}</span>
                         </div>
-                        <div className="text-blue-700 font-medium">
-                          {set.superset_weight || 0} kg x {set.superset_reps || 0} reps
+                        <div className="text-blue-300 font-medium">
+                          {set.superset_weight || 0} ק״ג × {set.superset_reps || 0}
                           {set.superset_rpe && (
                             <span className="mr-2">| RPE: {set.superset_rpe}</span>
                           )}
                         </div>
                       </div>
                       {set.superset_equipment && (
-                        <div className="flex items-center space-x-1 rtl:space-x-reverse text-xs text-blue-700">
+                        <div className="flex items-center gap-1 text-xs text-blue-300">
                           <span>{set.superset_equipment.emoji}</span>
-                          <span>Equipment: {set.superset_equipment.name}</span>
+                          <span>ציוד: {set.superset_equipment.name}</span>
                         </div>
                       )}
                       {set.superset_dropset_weight && (
-                        <div className="pt-2 border-t border-blue-300">
+                        <div className="pt-2 border-t border-blue-500/30">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="font-semibold text-amber-700">Dropset:</span>
-                            <span className="text-amber-700 font-medium">
-                              {set.superset_dropset_weight} kg x {set.superset_dropset_reps || 0} reps
+                            <span className="font-semibold text-amber-400">דרופ-סט:</span>
+                            <span className="text-amber-300 font-medium">
+                              {set.superset_dropset_weight} ק״ג × {set.superset_dropset_reps || 0}
                             </span>
                           </div>
                         </div>
@@ -388,11 +430,11 @@ export default function WorkoutDetails({
                   )}
 
                   {set.set_type === 'dropset' && set.dropset_weight && (
-                    <div className="mr-8 mt-2 p-3 bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-xl text-sm shadow-sm">
+                    <div className="mr-4 sm:mr-8 mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs sm:text-sm">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-amber-900">Dropset</span>
-                        <div className="text-amber-700 font-medium">
-                          {set.dropset_weight || 0} kg x {set.dropset_reps || 0} reps
+                        <span className="font-semibold text-amber-400">דרופ-סט</span>
+                        <div className="text-amber-300 font-medium">
+                          {set.dropset_weight || 0} ק״ג × {set.dropset_reps || 0}
                         </div>
                       </div>
                     </div>
@@ -400,10 +442,10 @@ export default function WorkoutDetails({
                 </div>
               ))}
 
-              <div className="pt-3 border-t border-gray-100 mt-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Exercise Volume:</span>
-                  <span className="font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              <div className="pt-3 border-t border-border mt-3">
+                <div className="flex justify-between text-xs sm:text-sm">
+                  <span className="text-muted">נפח תרגיל:</span>
+                  <span className="font-bold text-primary-400">
                     {exercise.sets.reduce((sum, set) => {
                       let setVolume = set.weight * set.reps;
 
@@ -420,7 +462,7 @@ export default function WorkoutDetails({
                       }
 
                       return sum + setVolume;
-                    }, 0).toLocaleString()} kg
+                    }, 0).toLocaleString()} ק״ג
                   </span>
                 </div>
               </div>

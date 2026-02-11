@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import { ArrowRight, History, UtensilsCrossed } from 'lucide-react';
+import { ArrowRight, History, UtensilsCrossed, CalendarDays } from 'lucide-react';
 import type { MealPlanBuilderProps } from './types/mealPlanTypes';
 import type { MealPlanTemplate, NoteTemplate } from './types/mealPlanTypes';
 import { useMealPlan } from './hooks/useMealPlan';
@@ -10,6 +10,7 @@ import { useMealPlanFoodItems } from './hooks/useMealPlanFoodItems';
 import { PlanListView } from './components/PlanListView';
 import { PlanEditorView } from './components/PlanEditorView';
 import { HistoryView } from './components/HistoryView';
+import { WeeklyPlanView } from './components/WeeklyPlanView';
 import { CreatePlanModal } from './components/CreatePlanModal';
 import { SaveTemplateModal } from './components/SaveTemplateModal';
 import { LoadTemplateModal } from './components/LoadTemplateModal';
@@ -22,7 +23,7 @@ export default function MealPlanBuilder({
   trainerId,
   onBack,
 }: MealPlanBuilderProps) {
-  const [view, setView] = useState<'list' | 'editor' | 'history'>('list');
+  const [view, setView] = useState<'list' | 'editor' | 'history' | 'weekly'>('list');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showLoadTemplateModal, setShowLoadTemplateModal] = useState(false);
   const [showNoteTemplateModal, setShowNoteTemplateModal] = useState(false);
@@ -61,7 +62,6 @@ export default function MealPlanBuilder({
     updateMeal,
     deleteMeal,
     saveMeals,
-    getMealLabel,
     calculateTotalMacros,
   } = useMealPlan(traineeId, trainerId);
 
@@ -91,7 +91,7 @@ export default function MealPlanBuilder({
     loadData();
   }, [traineeId, loadPlans, loadTemplates, loadNoteTemplates, setLoading]);
 
-  const handleCreatePlan = async () => {
+  const handleCreatePlan = useCallback(async () => {
     if (!newPlanData.name.trim()) {
       toast.error('נא להזין שם לתפריט');
       return;
@@ -123,9 +123,9 @@ export default function MealPlanBuilder({
       });
       setView('editor');
     }
-  };
+  }, [newPlanData, createPlan]);
 
-  const handleSaveMeals = async () => {
+  const handleSaveMeals = useCallback(async () => {
     if (!activePlan) return;
 
     const saved = await saveMeals(activePlan.id, async (description: string) => {
@@ -137,91 +137,111 @@ export default function MealPlanBuilder({
     });
 
     if (saved) {
-      // Meals already saved and reloaded in saveMeals
+      toast.success('התפריט נשמר בהצלחה');
     }
-  };
+  }, [activePlan, meals, saveMeals, saveToHistory]);
 
-  const handleSaveAsTemplate = async () => {
+  const handleSaveAsTemplate = useCallback(async () => {
     if (!activePlan) return;
+    
+    if (!templateName.trim()) {
+      toast.error('נא להזין שם לתבנית');
+      return;
+    }
 
     const saved = await saveTemplate(templateName, activePlan, meals);
     if (saved) {
       setShowTemplateModal(false);
       setTemplateName('');
+      toast.success('התבנית נשמרה בהצלחה');
     }
-  };
+  }, [activePlan, templateName, meals, saveTemplate]);
 
-  const handleLoadFromTemplate = async (template: MealPlanTemplate) => {
+  const handleLoadFromTemplate = useCallback(async (template: MealPlanTemplate) => {
     if (!activePlan) return;
 
-    await updatePlan(activePlan.id, {
-      daily_calories: template.daily_calories,
-      daily_water_ml: template.daily_water_ml,
-      protein_grams: template.protein_grams,
-      carbs_grams: template.carbs_grams,
-      fat_grams: template.fat_grams,
-    });
+    try {
+      await updatePlan(activePlan.id, {
+        daily_calories: template.daily_calories,
+        daily_water_ml: template.daily_water_ml,
+        protein_grams: template.protein_grams,
+        carbs_grams: template.carbs_grams,
+        fat_grams: template.fat_grams,
+      });
 
-    const loadedMeals = (template.meals || []).map((m, i) => ({
-      ...m,
-      id: undefined,
-      plan_id: activePlan.id,
-      order_index: i,
-    }));
+      const loadedMeals = (template.meals || []).map((m, i) => ({
+        ...m,
+        id: undefined,
+        plan_id: activePlan.id,
+        order_index: i,
+      }));
 
-    setMeals(loadedMeals);
-    setShowLoadTemplateModal(false);
-    toast.success('Template loaded successfully');
-  };
+      setMeals(loadedMeals);
+      setShowLoadTemplateModal(false);
+      toast.success('התבנית נטענה בהצלחה');
+    } catch (error) {
+      toast.error('שגיאה בטעינת התבנית');
+    }
+  }, [activePlan, updatePlan, setMeals]);
 
-  const handleAddNoteFromTemplate = (template: NoteTemplate) => {
+  const handleAddNoteFromTemplate = useCallback((template: NoteTemplate) => {
     if (!activePlan) return;
 
     const currentNotes = activePlan.notes || '';
     const newNotes = currentNotes ? `${currentNotes}\n${template.content}` : template.content;
     updatePlan(activePlan.id, { notes: newNotes });
     setShowNoteTemplateModal(false);
-    toast.success('Note added');
-  };
+    toast.success('הערה נוספה בהצלחה');
+  }, [activePlan, updatePlan]);
 
-  const handleCreateNoteTemplate = async () => {
+  const handleCreateNoteTemplate = useCallback(async () => {
+    if (!newNoteTemplate.title.trim() || !newNoteTemplate.content.trim()) {
+      toast.error('נא למלא את כל השדות');
+      return;
+    }
+    
     const created = await createNoteTemplate(newNoteTemplate.title, newNoteTemplate.content);
     if (created) {
       setShowNewNoteTemplateModal(false);
       setNewNoteTemplate({ title: '', content: '' });
+      toast.success('תבנית הערה נוצרה בהצלחה');
     }
-  };
+  }, [newNoteTemplate, createNoteTemplate]);
 
-  const toggleMealExpanded = (index: number) => {
-    const newExpanded = new Set(expandedMeals);
-    if (newExpanded.has(index)) {
-      newExpanded.delete(index);
-    } else {
-      newExpanded.add(index);
-    }
-    setExpandedMeals(newExpanded);
-  };
+  const toggleMealExpanded = useCallback((index: number) => {
+    setExpandedMeals(prev => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(index)) {
+        newExpanded.delete(index);
+      } else {
+        newExpanded.add(index);
+      }
+      return newExpanded;
+    });
+  }, []);
 
-  const handleDragStart = (index: number) => {
+  const handleDragStart = useCallback((index: number) => {
     setDraggedMealIndex(index);
-  };
+  }, []);
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
     e.preventDefault();
     if (draggedMealIndex === null || draggedMealIndex === index) return;
 
-    const updated = [...meals];
-    const dragged = updated[draggedMealIndex];
-    updated.splice(draggedMealIndex, 1);
-    updated.splice(index, 0, dragged);
-    updated.forEach((meal, i) => (meal.order_index = i));
-    setMeals(updated);
+    setMeals(prev => {
+      const updated = [...prev];
+      const dragged = updated[draggedMealIndex];
+      updated.splice(draggedMealIndex, 1);
+      updated.splice(index, 0, dragged);
+      updated.forEach((meal, i) => (meal.order_index = i));
+      return updated;
+    });
     setDraggedMealIndex(index);
-  };
+  }, [draggedMealIndex, setMeals]);
 
-  const handleDragEnd = () => {
+  const handleDragEnd = useCallback(() => {
     setDraggedMealIndex(null);
-  };
+  }, []);
 
   const handleActivatePlan = async (planId: string) => {
     await activatePlan(planId);
@@ -244,7 +264,7 @@ export default function MealPlanBuilder({
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
       </div>
     );
   }
@@ -262,8 +282,8 @@ export default function MealPlanBuilder({
               <ArrowRight className="h-5 w-5" />
             </button>
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-emerald-500/30 to-teal-500/30 rounded-2xl shadow-lg">
-                <UtensilsCrossed className="h-6 w-6 text-emerald-400" />
+              <div className="p-3 bg-gradient-to-br from-primary-500/30 to-primary-600/30 rounded-2xl shadow-lg">
+                <UtensilsCrossed className="h-6 w-6 text-primary-400" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">תפריט תזונה</h1>
@@ -272,12 +292,12 @@ export default function MealPlanBuilder({
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               onClick={() => setView('list')}
               className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
                 view === 'list'
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
+                  ? 'bg-gradient-to-r from-primary-500 to-primary-700 text-white shadow-lg shadow-primary-500/25'
                   : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
               }`}
             >
@@ -289,7 +309,7 @@ export default function MealPlanBuilder({
                   onClick={() => setView('editor')}
                   className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
                     view === 'editor'
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
+                      ? 'bg-gradient-to-r from-primary-500 to-primary-700 text-white shadow-lg shadow-primary-500/25'
                       : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
                   }`}
                 >
@@ -302,11 +322,23 @@ export default function MealPlanBuilder({
                   }}
                   className={`p-2.5 rounded-xl font-semibold transition-all duration-300 ${
                     view === 'history'
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
+                      ? 'bg-gradient-to-r from-primary-500 to-primary-700 text-white shadow-lg shadow-primary-500/25'
+                      : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
+                  }`}
+                  title="היסטוריה"
+                >
+                  <History className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => setView('weekly')}
+                  className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${
+                    view === 'weekly'
+                      ? 'bg-gradient-to-r from-primary-500 to-primary-700 text-white shadow-lg shadow-primary-500/25'
                       : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
                   }`}
                 >
-                  <History className="h-5 w-5" />
+                  <CalendarDays className="h-4 w-4" />
+                  שבוע
                 </button>
               </>
             )}
@@ -331,6 +363,8 @@ export default function MealPlanBuilder({
           meals={meals}
           expandedMeals={expandedMeals}
           saving={false}
+          trainerId={trainerId}
+          traineeId={traineeId}
           onUpdatePlan={(updates) => updatePlan(activePlan.id, updates)}
           onAddMeal={addMeal}
           onUpdateMeal={updateMeal}
@@ -343,7 +377,6 @@ export default function MealPlanBuilder({
           onSaveAsTemplate={() => setShowTemplateModal(true)}
           onLoadTemplate={() => setShowLoadTemplateModal(true)}
           onAddNote={() => setShowNoteTemplateModal(true)}
-          getMealLabel={getMealLabel}
           calculateTotalMacros={calculateTotalMacros}
           setMeals={setMeals}
           debouncedUpdateFoodItem={debouncedUpdateFoodItem}
@@ -363,13 +396,30 @@ export default function MealPlanBuilder({
         />
       )}
 
+      {view === 'weekly' && activePlan && (
+        <WeeklyPlanView plan={activePlan} meals={meals} />
+      )}
+
       {showCreateForm && (
         <CreatePlanModal
           data={newPlanData}
           saving={false}
+          traineeId={traineeId}
           onChange={setNewPlanData}
           onSave={handleCreatePlan}
-          onClose={() => setShowCreateForm(false)}
+          onClose={() => {
+            setShowCreateForm(false);
+            setNewPlanData({
+              name: '',
+              description: '',
+              daily_calories: '',
+              daily_water_ml: '',
+              protein_grams: '',
+              carbs_grams: '',
+              fat_grams: '',
+              notes: '',
+            });
+          }}
         />
       )}
 

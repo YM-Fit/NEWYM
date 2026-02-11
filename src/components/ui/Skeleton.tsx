@@ -13,7 +13,7 @@ export function Skeleton({
   height,
   animation = 'pulse'
 }: SkeletonProps) {
-  const baseClasses = 'bg-zinc-800/50 relative overflow-hidden';
+  const baseClasses = 'bg-surface/60 relative overflow-hidden';
   
   const variantClasses = {
     text: 'rounded',
@@ -43,7 +43,7 @@ export function Skeleton({
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
       )}
       {animation === 'pulse' && (
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-700/30 to-transparent animate-shimmer" style={{ animationDuration: '2s' }} />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-surface/40 to-transparent animate-shimmer" style={{ animationDuration: '2s' }} />
       )}
     </div>
   );

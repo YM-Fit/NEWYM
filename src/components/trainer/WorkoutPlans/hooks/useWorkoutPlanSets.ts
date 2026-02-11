@@ -56,22 +56,19 @@ export function useWorkoutPlanSets(
   }, [selectedDay, days, setDays, setSelectedDay]);
 
   const updateSet = useCallback((exerciseIndex: number, setIndex: number, field: string, value: any) => {
-    if (!selectedDay) return;
-
-    const exercise = selectedDay.exercises[exerciseIndex];
-    const updatedSets = [...exercise.sets];
-    updatedSets[setIndex] = { ...updatedSets[setIndex], [field]: value };
-
-    const updatedExercises = [...selectedDay.exercises];
-    updatedExercises[exerciseIndex] = {
-      ...exercise,
-      sets: updatedSets,
-    };
-
-    const updatedDay = { ...selectedDay, exercises: updatedExercises };
-    setDays(days.map(d => d.tempId === selectedDay.tempId ? updatedDay : d));
-    setSelectedDay(updatedDay);
-  }, [selectedDay, days, setDays, setSelectedDay]);
+    setSelectedDay(prev => {
+      if (!prev) return prev;
+      const exercise = prev.exercises[exerciseIndex];
+      if (!exercise) return prev;
+      const updatedSets = [...exercise.sets];
+      updatedSets[setIndex] = { ...updatedSets[setIndex], [field]: value };
+      const updatedExercises = [...prev.exercises];
+      updatedExercises[exerciseIndex] = { ...exercise, sets: updatedSets };
+      const updatedDay = { ...prev, exercises: updatedExercises };
+      setDays(prevDays => prevDays.map(d => d.tempId === prev.tempId ? updatedDay : d));
+      return updatedDay;
+    });
+  }, [setDays, setSelectedDay]);
 
   const duplicateSet = useCallback((exerciseIndex: number, setIndex: number) => {
     if (!selectedDay) return;
