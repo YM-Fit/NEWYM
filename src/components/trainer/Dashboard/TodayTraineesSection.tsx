@@ -188,17 +188,28 @@ export default function TodayTraineesSection({
         ].filter(Boolean) as string[])
       ];
       
-      // Batch load last workout dates
+      // Batch load last workout dates (chunk to avoid 400 when many trainees)
       const lastWorkoutDatesMap = new Map<string, string | null>();
+      const CHUNK_SIZE = 15;
+      const lastWorkoutChunks: string[][] = [];
+      for (let i = 0; i < allTraineeIds.length; i += CHUNK_SIZE) {
+        lastWorkoutChunks.push(allTraineeIds.slice(i, i + CHUNK_SIZE));
+      }
+
       if (allTraineeIds.length > 0) {
         try {
-          const { data: lastWorkoutsData } = await supabase
-            .from('workout_trainees')
-            .select('trainee_id, workouts!inner(workout_date, is_completed)')
-            .in('trainee_id', allTraineeIds)
-            .eq('workouts.is_completed', true);
+          const results = await Promise.all(
+            lastWorkoutChunks.map((ids) =>
+              supabase
+                .from('workout_trainees')
+                .select('trainee_id, workouts!inner(workout_date, is_completed)')
+                .in('trainee_id', ids)
+                .eq('workouts.is_completed', true)
+            )
+          );
+          const lastWorkoutsData = results.flatMap((r) => r.data || []);
           
-          if (lastWorkoutsData) {
+          if (lastWorkoutsData.length > 0) {
             // Group by trainee_id and get the most recent
             const traineeLastWorkouts = new Map<string, string>();
             lastWorkoutsData.forEach((wt: any) => {
@@ -218,17 +229,26 @@ export default function TodayTraineesSection({
         }
       }
       
-      // Batch load unseen weights counts
+      // Batch load unseen weights counts (chunk to avoid 400 when many trainees)
       const unseenWeightsCountMap = new Map<string, number>();
+      const weightChunks: string[][] = [];
+      for (let i = 0; i < allTraineeIds.length; i += CHUNK_SIZE) {
+        weightChunks.push(allTraineeIds.slice(i, i + CHUNK_SIZE));
+      }
       if (allTraineeIds.length > 0) {
         try {
-          const { data: weightsData } = await supabase
-            .from('trainee_self_weights')
-            .select('trainee_id')
-            .in('trainee_id', allTraineeIds)
-            .eq('is_seen_by_trainer', false);
+          const weightResults = await Promise.all(
+            weightChunks.map((ids) =>
+              supabase
+                .from('trainee_self_weights')
+                .select('trainee_id')
+                .in('trainee_id', ids)
+                .eq('is_seen_by_trainer', false)
+            )
+          );
+          const weightsData = weightResults.flatMap((r) => r.data || []);
           
-          if (weightsData) {
+          if (weightsData.length > 0) {
             weightsData.forEach((w: any) => {
               if (w.trainee_id) {
                 unseenWeightsCountMap.set(w.trainee_id, (unseenWeightsCountMap.get(w.trainee_id) || 0) + 1);

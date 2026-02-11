@@ -18,23 +18,48 @@ export function useDashboardStatsQuery(trainerId: string | null, traineeIds: str
         return { todayWorkouts: 0, recentMeasurements: 0 };
       }
 
-      // Optimized: Direct count query using join
-      const { count: todayWorkouts } = await supabase
-        .from('workout_trainees')
-        .select('workout_id', { count: 'exact', head: true })
-        .in('trainee_id', traineeIds)
-        .gte('workouts!inner.workout_date', todayStr)
-        .lt('workouts!inner.workout_date', tomorrowStr);
+      // Chunk traineeIds to avoid URL length limit (400) when many trainees
+      const CHUNK_SIZE = 15;
+      const traineeChunks: string[][] = [];
+      for (let i = 0; i < traineeIds.length; i += CHUNK_SIZE) {
+        traineeChunks.push(traineeIds.slice(i, i + CHUNK_SIZE));
+      }
+
+      // Query workout_trainees in chunks (avoids 400 when trainee_id IN (...30+ ids))
+      let todayWorkouts = 0;
+      const workoutCounts = await Promise.all(
+        traineeChunks.map((ids) =>
+          supabase
+            .from('workout_trainees')
+            .select('workout_id', { count: 'exact', head: true })
+            .in('trainee_id', ids)
+            .gte('workouts!inner.workout_date', todayStr)
+            .lt('workouts!inner.workout_date', tomorrowStr)
+        )
+      );
+      workoutCounts.forEach((r) => {
+        if (r.count != null) todayWorkouts += r.count;
+      });
 
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const { count: recentMeasurements } = await supabase
-        .from('measurements')
-        .select('*', { count: 'exact', head: true })
-        .in('trainee_id', traineeIds)
-        .gte('measurement_date', sevenDaysAgo.toISOString().split('T')[0]);
+      const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
 
-      return { todayWorkouts: todayWorkouts || 0, recentMeasurements: recentMeasurements || 0 };
+      let recentMeasurements = 0;
+      const measurementCounts = await Promise.all(
+        traineeChunks.map((ids) =>
+          supabase
+            .from('measurements')
+            .select('*', { count: 'exact', head: true })
+            .in('trainee_id', ids)
+            .gte('measurement_date', sevenDaysAgoStr)
+        )
+      );
+      measurementCounts.forEach((r) => {
+        if (r.count != null) recentMeasurements += r.count;
+      });
+
+      return { todayWorkouts, recentMeasurements };
     },
     enabled: !!trainerId && traineeIds.length > 0,
     staleTime: 60_000,

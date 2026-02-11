@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { Search, X, Beef, Wheat, Droplet, Flame, Filter } from 'lucide-react';
-import { FOOD_CATALOG } from '../../../../data/foodCatalog';
+import { FOOD_CATALOG, FOOD_CATEGORIES } from '../../../../data/foodCatalog';
 import type { FoodCatalogItem } from '../../../../data/foodCatalog';
 import { useFoodSearch } from '../hooks/useFoodSearch';
 
