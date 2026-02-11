@@ -20,6 +20,7 @@ export interface FoodItemRowProps {
   showAlternatives: boolean;
   onToggleAlternatives: () => void;
   handleQuantityChange: (item: NutritionFoodItem, qty: number, di: number, ii: number) => void;
+  handleUnitChange: (item: NutritionFoodItem, newUnit: string, di: number, ii: number) => void;
   handleSwapFood: (
     item: NutritionFoodItem,
     cat: FoodCatalogItem,
@@ -38,14 +39,15 @@ export function FoodItemRow({
   showAlternatives,
   onToggleAlternatives,
   handleQuantityChange,
+  handleUnitChange,
   handleSwapFood,
 }: FoodItemRowProps) {
   const hasCatalogData = !!item.calories_per_100g;
 
   return (
-    <div className="bg-[var(--color-bg-surface)] rounded-xl p-4 border border-[var(--color-border)] overflow-x-auto">
-      <div className="grid grid-cols-12 gap-2 sm:gap-3 items-end min-w-[480px]">
-        <div className="col-span-3">
+    <div className="bg-[var(--color-bg-surface)] rounded-xl p-4 border border-[var(--color-border)]">
+      <div className="grid grid-cols-12 gap-2 sm:gap-3 items-end">
+        <div className="col-span-12 sm:col-span-3">
           <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">שם מזון</label>
           <input
             type="text"
@@ -57,7 +59,7 @@ export function FoodItemRow({
             placeholder="לדוגמה: ביצה"
           />
         </div>
-        <div className="col-span-1">
+        <div className="col-span-4 sm:col-span-1">
           <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">כמות</label>
           <input
             type="number"
@@ -69,12 +71,13 @@ export function FoodItemRow({
             className="glass-input w-full px-2 py-2 text-sm text-[var(--color-text-primary)]"
           />
         </div>
-        <div className="col-span-1">
+        <div className="col-span-4 sm:col-span-1">
           <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">יחידה</label>
           <select
             value={item.unit}
             onChange={(e) => {
-              debouncedUpdateFoodItem(item.id, { unit: e.target.value }, displayIndex, itemIndex);
+              const newUnit = e.target.value;
+              handleUnitChange(item, newUnit, displayIndex, itemIndex);
             }}
             className="glass-input w-full px-1 py-2 text-sm text-[var(--color-text-primary)]"
           >
@@ -86,7 +89,7 @@ export function FoodItemRow({
             <option value="tsp">כפית</option>
           </select>
         </div>
-        <div className="col-span-6 grid grid-cols-4 gap-2">
+        <div className="col-span-12 sm:col-span-6 grid grid-cols-2 sm:grid-cols-4 gap-2">
           <div>
             <label className="block text-xs font-semibold text-primary-500 mb-1">קל'</label>
             <input
@@ -101,7 +104,7 @@ export function FoodItemRow({
                 );
               }}
               className="glass-input w-full px-2 py-2 text-xs text-[var(--color-text-primary)]"
-              readOnly={hasCatalogData && item.unit === 'g'}
+              readOnly={hasCatalogData}
             />
           </div>
           <div>
@@ -118,7 +121,7 @@ export function FoodItemRow({
                 );
               }}
               className="glass-input w-full px-2 py-2 text-xs text-[var(--color-text-primary)]"
-              readOnly={hasCatalogData && item.unit === 'g'}
+              readOnly={hasCatalogData}
             />
           </div>
           <div>
@@ -135,7 +138,7 @@ export function FoodItemRow({
                 );
               }}
               className="glass-input w-full px-2 py-2 text-xs text-[var(--color-text-primary)]"
-              readOnly={hasCatalogData && item.unit === 'g'}
+              readOnly={hasCatalogData}
             />
           </div>
           <div>
@@ -152,11 +155,11 @@ export function FoodItemRow({
                 );
               }}
               className="glass-input w-full px-2 py-2 text-xs text-[var(--color-text-primary)]"
-              readOnly={hasCatalogData && item.unit === 'g'}
+              readOnly={hasCatalogData}
             />
           </div>
         </div>
-        <div className="col-span-1 flex gap-1">
+        <div className="col-span-12 sm:col-span-1 flex gap-1 justify-end sm:justify-start">
           {item.category && (
             <button
               onClick={onToggleAlternatives}
@@ -190,9 +193,9 @@ export function FoodItemRow({
         </div>
       </div>
 
-      {hasCatalogData && item.unit === 'g' && (
+      {hasCatalogData && (
         <p className="text-[10px] text-[var(--color-text-muted)] mt-1">
-          ערכים מחושבים אוטומטית לפי {item.quantity} גרם (בסיס: {item.calories_per_100g} קל' ל-100 גרם)
+          ערכים מחושבים אוטומטית לפי {item.quantity} {item.unit === 'g' ? 'גרם' : item.unit === 'tbsp' ? 'כף' : item.unit === 'tsp' ? 'כפית' : item.unit === 'cup' ? 'כוס' : item.unit} (בסיס: {item.calories_per_100g} קל׳ ל-100 גרם)
         </p>
       )}
 

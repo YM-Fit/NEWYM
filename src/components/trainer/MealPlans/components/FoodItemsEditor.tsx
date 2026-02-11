@@ -21,6 +21,7 @@ export interface FoodItemsEditorProps {
   showAlternatives: Record<string, boolean>;
   setShowAlternatives: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   handleQuantityChange: (item: NutritionFoodItem, qty: number, di: number, ii: number) => void;
+  handleUnitChange: (item: NutritionFoodItem, newUnit: string, di: number, ii: number) => void;
   handleSwapFood: (
     item: NutritionFoodItem,
     cat: FoodCatalogItem,
@@ -39,6 +40,7 @@ export function FoodItemsEditor({
   showAlternatives,
   setShowAlternatives,
   handleQuantityChange,
+  handleUnitChange,
   handleSwapFood,
 }: FoodItemsEditorProps) {
   return (
@@ -110,6 +112,7 @@ export function FoodItemsEditor({
                 setShowAlternatives((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
               }}
               handleQuantityChange={handleQuantityChange}
+              handleUnitChange={handleUnitChange}
               handleSwapFood={handleSwapFood}
             />
           ))}

@@ -1,5 +1,26 @@
 import type { FoodCatalogItem } from '../../../../data/foodCatalog';
 
+/** Grams per one unit (for volume/count conversions). ml ≈ 1g for water. */
+export const UNIT_TO_GRAMS: Record<string, number> = {
+  g: 1,
+  ml: 1,
+  cup: 240,
+  tbsp: 15,
+  tsp: 5,
+  unit: 1, // no standard conversion
+};
+
+export function quantityToGrams(quantity: number, unit: string): number {
+  const factor = UNIT_TO_GRAMS[unit] ?? 1;
+  return quantity * factor;
+}
+
+export function gramsToQuantity(grams: number, unit: string): number {
+  const factor = UNIT_TO_GRAMS[unit] ?? 1;
+  if (factor === 0) return grams;
+  return Math.round((grams / factor) * 10) / 10;
+}
+
 export function calculateNutrition(item: FoodCatalogItem, quantityGrams: number) {
   const ratio = quantityGrams / 100;
   return {

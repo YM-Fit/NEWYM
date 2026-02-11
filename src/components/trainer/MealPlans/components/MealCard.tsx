@@ -24,6 +24,7 @@ export interface MealCardProps {
   showAlternatives: Record<string, boolean>;
   setShowAlternatives: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   handleQuantityChange: (item: NutritionFoodItem, qty: number, di: number, ii: number) => void;
+  handleUnitChange: (item: NutritionFoodItem, newUnit: string, di: number, ii: number) => void;
   handleSwapFood: (
     item: NutritionFoodItem,
     cat: FoodCatalogItem,
@@ -46,6 +47,7 @@ export function MealCard({
   showAlternatives,
   setShowAlternatives,
   handleQuantityChange,
+  handleUnitChange,
   handleSwapFood,
 }: MealCardProps) {
   const mealCalories =
@@ -54,7 +56,7 @@ export function MealCard({
     meal.food_items?.reduce((s, i) => s + (i.protein || 0), 0) || meal.total_protein || 0;
 
   return (
-    <div className="p-5 hover:bg-[var(--color-accent-bg)] transition-all duration-300">
+    <div className="p-4 sm:p-5 hover:bg-[var(--color-accent-bg)] transition-all duration-300 rounded-xl">
       <div
         className="flex items-center justify-between cursor-pointer"
         onClick={() => onToggleMeal(displayIndex)}
@@ -114,8 +116,8 @@ export function MealCard({
       </div>
 
       {expanded && (
-        <div className="mt-6 space-y-5 pr-10">
-          <div className="grid grid-cols-2 gap-5">
+        <div className="mt-6 space-y-5 pr-0 sm:pr-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
                 שעה
@@ -155,6 +157,7 @@ export function MealCard({
             showAlternatives={showAlternatives}
             setShowAlternatives={setShowAlternatives}
             handleQuantityChange={handleQuantityChange}
+            handleUnitChange={handleUnitChange}
             handleSwapFood={handleSwapFood}
           />
 

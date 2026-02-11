@@ -52,7 +52,7 @@ function ProgressBar({
 
 export function GoalsSummaryCard({ plan, totals, onCalculateTdee }: GoalsSummaryCardProps) {
   return (
-    <div className="premium-card-static p-5 bg-gradient-to-r from-primary-500/10 to-primary-600/10">
+    <div className="premium-card-static p-5 rounded-2xl border border-[var(--color-border)] shadow-sm bg-gradient-to-r from-primary-500/10 to-primary-600/10">
       <div className="flex items-center justify-between mb-4">
         <span className="font-semibold text-[var(--color-text-primary)]">סיכום יומי כולל</span>
         <div className="flex flex-wrap gap-3 sm:gap-6 text-sm">

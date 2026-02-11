@@ -35,6 +35,7 @@ export interface MealsTimelineProps {
   showAlternatives: Record<string, boolean>;
   setShowAlternatives: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   handleQuantityChange: (item: NutritionFoodItem, qty: number, di: number, ii: number) => void;
+  handleUnitChange: (item: NutritionFoodItem, newUnit: string, di: number, ii: number) => void;
   handleSwapFood: (
     item: NutritionFoodItem,
     cat: FoodCatalogItem,
@@ -59,12 +60,13 @@ export function MealsTimeline({
   showAlternatives,
   setShowAlternatives,
   handleQuantityChange,
+  handleUnitChange,
   handleSwapFood,
   onCalculateTdee,
 }: MealsTimelineProps) {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h3 className="font-bold text-[var(--color-text-primary)] text-xl">ארוחות יומיות</h3>
         <button
           onClick={onAddMeal}
@@ -111,7 +113,7 @@ export function MealsTimeline({
           );
 
           return (
-            <div key={mealType.value} className="premium-card-static overflow-hidden">
+            <div key={mealType.value} className="premium-card-static overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-sm">
               <MealTypeHeader
                 mealType={mealType}
                 mealsCount={mealsForType.length}
@@ -152,6 +154,7 @@ export function MealsTimeline({
                         showAlternatives={showAlternatives}
                         setShowAlternatives={setShowAlternatives}
                         handleQuantityChange={handleQuantityChange}
+                        handleUnitChange={handleUnitChange}
                         handleSwapFood={handleSwapFood}
                       />
                     );

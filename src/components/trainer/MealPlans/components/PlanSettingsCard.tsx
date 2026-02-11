@@ -30,8 +30,8 @@ export function PlanSettingsCard({
   const [showCopyModal, setShowCopyModal] = useState(false);
 
   return (
-    <div className="premium-card-static p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="premium-card-static p-5 sm:p-8 rounded-2xl border border-[var(--color-border)] shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <h3 className="font-bold text-[var(--color-text-primary)] text-xl">הגדרות תפריט</h3>
         <div className="flex flex-wrap gap-2 sm:gap-3">
           {trainerId && traineeId && plan.id && (
@@ -82,7 +82,7 @@ export function PlanSettingsCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
         <div>
           <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
             <Flame className="h-4 w-4 inline ml-1 text-amber-400" />

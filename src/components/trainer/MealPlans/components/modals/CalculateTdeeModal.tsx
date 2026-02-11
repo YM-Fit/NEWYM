@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Calculator, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import {
   useTraineeForMacros,
   calculatePlanMacros,
@@ -41,6 +42,11 @@ export function CalculateTdeeModal({
   const { data, loading, error } = useTraineeForMacros(traineeId);
   const [goal, setGoal] = useState<Goal>('maintenance');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
+  const [editableCalories, setEditableCalories] = useState<string>('');
+  const [editableProtein, setEditableProtein] = useState<string>('');
+  const [editableCarbs, setEditableCarbs] = useState<string>('');
+  const [editableFat, setEditableFat] = useState<string>('');
+  const [editableWater, setEditableWater] = useState<string>('');
 
   useEffect(() => {
     if (data) {
@@ -55,10 +61,34 @@ export function CalculateTdeeModal({
 
   const calculated = effectiveData ? calculatePlanMacros(effectiveData) : null;
 
-  const handleApply = () => {
+  useEffect(() => {
     if (calculated) {
-      onApply(calculated);
+      setEditableCalories(String(calculated.daily_calories));
+      setEditableProtein(String(calculated.protein_grams));
+      setEditableCarbs(String(calculated.carbs_grams));
+      setEditableFat(String(calculated.fat_grams));
+      setEditableWater(String(calculated.daily_water_ml));
+    }
+  }, [calculated]);
+
+  const handleApply = () => {
+    const calories = parseInt(editableCalories, 10);
+    const protein = parseInt(editableProtein, 10);
+    const carbs = parseInt(editableCarbs, 10);
+    const fat = parseInt(editableFat, 10);
+    const water = parseInt(editableWater, 10);
+    if (!Number.isNaN(calories) && calories > 0 && !Number.isNaN(protein) && protein >= 0 &&
+        !Number.isNaN(carbs) && carbs >= 0 && !Number.isNaN(fat) && fat >= 0 && !Number.isNaN(water) && water >= 0) {
+      onApply({
+        daily_calories: calories,
+        protein_grams: protein,
+        carbs_grams: carbs,
+        fat_grams: fat,
+        daily_water_ml: water,
+      });
       onClose();
+    } else {
+      toast.error('נא למלא קלוריות (מעל 0) וערכי מאקרו תקינים');
     }
   };
 
@@ -131,31 +161,51 @@ export function CalculateTdeeModal({
               </select>
             </div>
 
-            <div className="p-4 bg-primary-500/10 rounded-xl border border-primary-500/20">
-              <p className="text-sm font-semibold text-[var(--color-text-primary)] mb-3">
-                המלצות מחושבות:
+            <div className="p-4 bg-primary-500/10 rounded-xl border border-primary-500/20 space-y-3">
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                ערכי יעד (ניתן לעריכה):
               </p>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <span className="text-[var(--color-text-muted)]">קלוריות:</span>
-                <span className="font-semibold text-primary-500">
-                  {calculated.daily_calories}
-                </span>
-                <span className="text-[var(--color-text-muted)]">חלבון:</span>
-                <span className="font-semibold text-red-500">
-                  {calculated.protein_grams} גרם
-                </span>
-                <span className="text-[var(--color-text-muted)]">פחמימות:</span>
-                <span className="font-semibold text-blue-500">
-                  {calculated.carbs_grams} גרם
-                </span>
-                <span className="text-[var(--color-text-muted)]">שומן:</span>
-                <span className="font-semibold text-amber-600">
-                  {calculated.fat_grams} גרם
-                </span>
-                <span className="text-[var(--color-text-muted)]">מים:</span>
-                <span className="font-semibold">
-                  {calculated.daily_water_ml} מ"ל
-                </span>
+              <div className="grid grid-cols-2 gap-3 text-sm items-center">
+                <label className="text-[var(--color-text-muted)]">קלוריות</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={editableCalories}
+                  onChange={(e) => setEditableCalories(e.target.value)}
+                  className="glass-input w-full px-3 py-2 text-[var(--color-text-primary)] font-semibold text-primary-500"
+                />
+                <label className="text-[var(--color-text-muted)]">חלבון (גרם)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={editableProtein}
+                  onChange={(e) => setEditableProtein(e.target.value)}
+                  className="glass-input w-full px-3 py-2 text-[var(--color-text-primary)] font-semibold text-red-500"
+                />
+                <label className="text-[var(--color-text-muted)]">פחמימות (גרם)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={editableCarbs}
+                  onChange={(e) => setEditableCarbs(e.target.value)}
+                  className="glass-input w-full px-3 py-2 text-[var(--color-text-primary)] font-semibold text-blue-500"
+                />
+                <label className="text-[var(--color-text-muted)]">שומן (גרם)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={editableFat}
+                  onChange={(e) => setEditableFat(e.target.value)}
+                  className="glass-input w-full px-3 py-2 text-[var(--color-text-primary)] font-semibold text-amber-600"
+                />
+                <label className="text-[var(--color-text-muted)]">מים (מ״ל)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={editableWater}
+                  onChange={(e) => setEditableWater(e.target.value)}
+                  className="glass-input w-full px-3 py-2 text-[var(--color-text-primary)] font-semibold"
+                />
               </div>
             </div>
 

@@ -5,7 +5,7 @@ import { createFoodItem } from '../../../../api/nutritionApi';
 import type { NutritionFoodItem } from '../../../../types/nutritionTypes';
 import type { Meal, MealPlan } from '../types/mealPlanTypes';
 import type { FoodCatalogItem } from '../../../../data/foodCatalog';
-import { calculateNutrition, recalculateFromPer100g } from '../utils/nutritionCalculator';
+import { calculateNutrition, recalculateFromPer100g, quantityToGrams, gramsToQuantity } from '../utils/nutritionCalculator';
 import FoodCatalogSelector from './FoodCatalogSelector';
 import { PlanSettingsCard } from './PlanSettingsCard';
 import { QuickAddFoodBar } from './QuickAddFoodBar';
@@ -34,6 +34,10 @@ interface PlanEditorViewProps {
   calculateTotalMacros: () => { calories: number; protein: number; carbs: number; fat: number };
   setMeals: React.Dispatch<React.SetStateAction<Meal[]>>;
   debouncedUpdateFoodItem: (foodItemId: string, updates: Partial<NutritionFoodItem>, displayIndex: number, itemIndex: number) => void;
+}
+
+function hasPer100g(item: NutritionFoodItem): boolean {
+  return item.calories_per_100g != null && item.calories_per_100g !== undefined;
 }
 
 export function PlanEditorView({
@@ -158,14 +162,15 @@ export function PlanEditorView({
       return;
     }
 
-    // אם יש ערכים per_100g ויחידה היא גרם, חשב לפי 100ג
-    if (item.calories_per_100g !== null && item.calories_per_100g !== undefined && item.unit === 'g') {
+    // אם יש ערכים per_100g – חשב לפי גרם מקביל (תומך ב־g, tbsp, tsp, cup, ml)
+    if (hasPer100g(item)) {
+      const gramsEquivalent = quantityToGrams(newQuantity, item.unit);
       const recalc = recalculateFromPer100g(
         item.calories_per_100g,
         item.protein_per_100g,
         item.carbs_per_100g,
         item.fat_per_100g,
-        newQuantity
+        gramsEquivalent
       );
       debouncedUpdateFoodItem(item.id, {
         quantity: newQuantity,
@@ -174,24 +179,6 @@ export function PlanEditorView({
         carbs: recalc.carbs,
         fat: recalc.fat,
       }, displayIndex, itemIndex);
-    } 
-    // אם יש ערכים per_100g אבל יחידה אחרת, חשב פרופורציונלית מהערכים הקיימים
-    // (כי per_100g מיועד לגרמים בלבד)
-    else if (item.calories_per_100g !== null && item.calories_per_100g !== undefined && item.unit !== 'g') {
-      // חשב פרופורציונלית מהערכים הקיימים
-      if (item.quantity > 0) {
-        const ratio = newQuantity / item.quantity;
-        debouncedUpdateFoodItem(item.id, {
-          quantity: newQuantity,
-          calories: item.calories !== null ? Math.round(item.calories * ratio) : null,
-          protein: item.protein !== null ? Math.round(item.protein * ratio) : null,
-          carbs: item.carbs !== null ? Math.round(item.carbs * ratio) : null,
-          fat: item.fat !== null ? Math.round(item.fat * ratio) : null,
-        }, displayIndex, itemIndex);
-      } else {
-        // אם אין כמות קיימת, עדכן רק את הכמות
-        debouncedUpdateFoodItem(item.id, { quantity: newQuantity }, displayIndex, itemIndex);
-      }
     }
     // אם אין per_100g אבל יש ערכים תזונתיים קיימים וכמות קיימת, חשב פרופורציונלית
     else if (item.quantity > 0 && (item.calories !== null || item.protein !== null || item.carbs !== null || item.fat !== null)) {
@@ -207,6 +194,38 @@ export function PlanEditorView({
     // אחרת, עדכן רק את הכמות
     else {
       debouncedUpdateFoodItem(item.id, { quantity: newQuantity }, displayIndex, itemIndex);
+    }
+  };
+
+  const handleUnitChange = (
+    item: NutritionFoodItem,
+    newUnit: string,
+    displayIndex: number,
+    itemIndex: number
+  ) => {
+    const oldUnit = item.unit;
+    const currentQty = item.quantity;
+    const gramsEq = quantityToGrams(currentQty, oldUnit);
+    const newQuantity = gramsToQuantity(gramsEq, newUnit);
+    if (hasPer100g(item)) {
+      const gramsForNewUnit = quantityToGrams(newQuantity, newUnit);
+      const recalc = recalculateFromPer100g(
+        item.calories_per_100g,
+        item.protein_per_100g,
+        item.carbs_per_100g,
+        item.fat_per_100g,
+        gramsForNewUnit
+      );
+      debouncedUpdateFoodItem(item.id, {
+        unit: newUnit,
+        quantity: newQuantity,
+        calories: recalc.calories,
+        protein: recalc.protein,
+        carbs: recalc.carbs,
+        fat: recalc.fat,
+      }, displayIndex, itemIndex);
+    } else {
+      debouncedUpdateFoodItem(item.id, { unit: newUnit, quantity: newQuantity }, displayIndex, itemIndex);
     }
   };
 
@@ -236,7 +255,7 @@ export function PlanEditorView({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 overflow-x-hidden">
       {/* אזהרות */}
       {(warnings.exceedsDailyGoal || warnings.inconsistentValues || warnings.missingData || 
         warnings.exceedsProtein || warnings.exceedsCarbs || warnings.exceedsFat) && (
@@ -270,6 +289,10 @@ export function PlanEditorView({
         </div>
       )}
 
+      {meals.some((m) => m.id) && (
+        <QuickAddFoodBar meals={meals} onAdd={handleQuickAdd} />
+      )}
+
       <PlanSettingsCard
         plan={plan}
         onUpdatePlan={onUpdatePlan}
@@ -279,10 +302,6 @@ export function PlanEditorView({
         trainerId={trainerId}
         traineeId={traineeId}
       />
-
-      {meals.some((m) => m.id) && (
-        <QuickAddFoodBar meals={meals} onAdd={handleQuickAdd} />
-      )}
 
       <MealsTimeline
         plan={plan}
@@ -299,6 +318,7 @@ export function PlanEditorView({
         showAlternatives={showAlternatives}
         setShowAlternatives={setShowAlternatives}
         handleQuantityChange={handleQuantityChange}
+        handleUnitChange={handleUnitChange}
         handleSwapFood={handleSwapFood}
         onCalculateTdee={() => setShowTdeeModal(true)}
       />

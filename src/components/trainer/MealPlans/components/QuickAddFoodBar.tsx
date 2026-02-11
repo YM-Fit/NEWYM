@@ -31,7 +31,7 @@ export function QuickAddFoodBar({ meals, onAdd, onClose }: QuickAddFoodBarProps)
     filteredItems,
     categoryLabel,
     totalCount,
-  } = useFoodSearch({ limit: 15 });
+  } = useFoodSearch({ limit: 25 });
 
   const mealsWithId = meals.filter((m) => m.id);
   const defaultMealId = mealsWithId[0]?.id ?? null;
@@ -68,7 +68,7 @@ export function QuickAddFoodBar({ meals, onAdd, onClose }: QuickAddFoodBarProps)
 
   return (
     <div ref={containerRef} className="relative">
-      <div className="premium-card-static p-4 space-y-3">
+      <div className="premium-card-static p-4 space-y-3 rounded-2xl border border-[var(--color-border)] shadow-sm">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:flex-wrap">
           <div className="relative flex-1 min-w-0 sm:min-w-[200px] w-full">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
@@ -81,7 +81,7 @@ export function QuickAddFoodBar({ meals, onAdd, onClose }: QuickAddFoodBarProps)
               }}
               onFocus={() => setShowResults(true)}
               className="glass-input w-full pr-10 pl-4 py-2.5 text-[var(--color-text-primary)]"
-              placeholder="חפש מזון להוספה מהירה..."
+              placeholder="הקלד מזון, למשל: ביצה..."
             />
             {search && (
               <button
@@ -159,9 +159,12 @@ export function QuickAddFoodBar({ meals, onAdd, onClose }: QuickAddFoodBarProps)
       </div>
 
       {showResults && (search.trim() || filteredItems.length > 0) && (
-        <div className="absolute top-full left-0 right-0 mt-2 max-h-64 overflow-y-auto premium-card-static py-2 z-40">
+        <div className="absolute top-full left-0 right-0 mt-2 max-h-72 overflow-y-auto premium-card-static py-2 z-40">
           {filteredItems.length === 0 ? (
-            <div className="p-6 text-center text-[var(--color-text-muted)]">לא נמצאו פריטים</div>
+            <div className="p-4 text-center">
+              <p className="text-[var(--color-text-muted)]">לא נמצא בקטלוג</p>
+              <p className="text-xs text-[var(--color-text-muted)] mt-1">הוסף פריט ידנית מתוך ארוחה למטה</p>
+            </div>
           ) : (
             <div className="divide-y divide-[var(--color-border)]">
               {filteredItems.map((item) => {
