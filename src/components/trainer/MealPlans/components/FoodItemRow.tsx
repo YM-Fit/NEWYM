@@ -1,8 +1,10 @@
-import { ArrowLeftRight, Trash2 } from 'lucide-react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { ArrowLeftRight, Trash2, Flame, Beef, Wheat, Droplet } from 'lucide-react';
 import { deleteFoodItem } from '../../../../api/nutritionApi';
 import type { NutritionFoodItem } from '../../../../types/nutritionTypes';
 import type { Meal } from '../types/mealPlanTypes';
 import type { FoodCatalogItem } from '../../../../data/foodCatalog';
+import { FOOD_CATALOG } from '../../../../data/foodCatalog';
 import FoodAlternativesPanel from './FoodAlternativesPanel';
 
 export interface FoodItemRowProps {
@@ -43,21 +45,72 @@ export function FoodItemRow({
   handleSwapFood,
 }: FoodItemRowProps) {
   const hasCatalogData = !!item.calories_per_100g;
+  const [showNameSuggestions, setShowNameSuggestions] = useState(false);
+  const nameInputRef = useRef<HTMLDivElement>(null);
+
+  const nameSuggestions = useMemo(() => {
+    const q = (item.food_name || '').trim().toLowerCase();
+    if (!q || q.length < 1) return [];
+    return FOOD_CATALOG.filter((c) => {
+      const nameLower = c.name.toLowerCase();
+      const brandLower = (c.brand || '').toLowerCase();
+      if (nameLower.startsWith(q) || brandLower.startsWith(q)) return true;
+      if (nameLower.includes(q) || brandLower.includes(q)) return true;
+      const words = nameLower.split(/\s+/);
+      if (words.some((w) => w.startsWith(q))) return true;
+      return false;
+    }).slice(0, 8);
+  }, [item.food_name]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (nameInputRef.current && !nameInputRef.current.contains(e.target as Node)) {
+        setShowNameSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div className="bg-[var(--color-bg-surface)] rounded-xl p-4 border border-[var(--color-border)]">
       <div className="grid grid-cols-12 gap-2 sm:gap-3 items-end">
-        <div className="col-span-12 sm:col-span-3">
+        <div className="col-span-12 sm:col-span-3 relative" ref={nameInputRef}>
           <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">שם מזון</label>
           <input
             type="text"
             value={item.food_name}
             onChange={(e) => {
               debouncedUpdateFoodItem(item.id, { food_name: e.target.value }, displayIndex, itemIndex);
+              setShowNameSuggestions(true);
             }}
+            onFocus={() => setShowNameSuggestions(true)}
             className="glass-input w-full px-3 py-2 text-sm text-[var(--color-text-primary)]"
             placeholder="לדוגמה: ביצה"
           />
+          {showNameSuggestions && nameSuggestions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto z-50 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] shadow-lg py-1">
+              {nameSuggestions.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => {
+                    handleSwapFood(item, c, displayIndex, itemIndex);
+                    setShowNameSuggestions(false);
+                  }}
+                  className="w-full text-right px-3 py-2 hover:bg-[var(--color-accent-bg)] flex items-center justify-between gap-2 text-sm"
+                >
+                  <span className="font-medium text-[var(--color-text-primary)] truncate">{c.name}</span>
+                  <span className="text-[10px] text-[var(--color-text-muted)] shrink-0 flex items-center gap-1">
+                    <Flame className="w-3 h-3 text-primary-500" />
+                    {c.calories_per_100g}
+                    <Beef className="w-3 h-3 text-red-500" />
+                    {c.protein_per_100g}ג
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div className="col-span-4 sm:col-span-1">
           <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">כמות</label>

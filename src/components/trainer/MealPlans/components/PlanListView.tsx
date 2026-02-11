@@ -15,7 +15,7 @@ export function PlanListView({ plans, activePlan, onActivate, onEdit, onDelete, 
     <div className="space-y-6">
       <button
         onClick={onCreateNew}
-        className="w-full bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white py-4 rounded-2xl flex items-center justify-center gap-3 font-semibold transition-all duration-300 shadow-xl shadow-primary-500/25 hover:shadow-2xl hover:shadow-primary-500/30 hover:scale-[1.01]"
+        className="btn-primary w-full py-4 rounded-2xl flex items-center justify-center gap-3 font-semibold transition-all duration-300 hover:scale-[1.01]"
       >
         <Plus className="h-5 w-5" />
         צור תפריט חדש
