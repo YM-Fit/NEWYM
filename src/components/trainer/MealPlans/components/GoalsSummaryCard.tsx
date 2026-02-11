@@ -75,7 +75,7 @@ export function GoalsSummaryCard({ plan, totals, onCalculateTdee }: GoalsSummary
         </div>
       </div>
 
-      {hasGoals && (plan.daily_calories || plan.protein_grams || plan.carbs_grams || plan.fat_grams) && (
+      {(plan.daily_calories || plan.protein_grams || plan.carbs_grams || plan.fat_grams) && (
         <div className="space-y-3">
           {plan.daily_calories && (
             <ProgressBar
