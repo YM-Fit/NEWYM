@@ -1,7 +1,8 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import { Search, X, Beef, Wheat, Droplet, Flame, Filter } from 'lucide-react';
-import { FOOD_CATALOG, FOOD_CATEGORIES } from '../../../../data/foodCatalog';
+import { FOOD_CATALOG } from '../../../../data/foodCatalog';
 import type { FoodCatalogItem } from '../../../../data/foodCatalog';
+import { useFoodSearch } from '../hooks/useFoodSearch';
 
 interface FoodCatalogSelectorProps {
   onSelect: (item: FoodCatalogItem) => void;
@@ -15,59 +16,24 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string
 };
 
 export default function FoodCatalogSelector({ onSelect, onClose }: FoodCatalogSelectorProps) {
-  const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [proteinEnrichedOnly, setProteinEnrichedOnly] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+
+  const {
+    search,
+    setSearch,
+    activeCategory,
+    setActiveCategory,
+    proteinEnrichedOnly,
+    setProteinEnrichedOnly,
+    filteredItems,
+    categoryLabel,
+    totalCount,
+  } = useFoodSearch();
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
-
-  const filteredItems = useMemo(() => {
-    let items = FOOD_CATALOG;
-
-    if (activeCategory) {
-      items = items.filter(item => item.category === activeCategory);
-    }
-
-    if (proteinEnrichedOnly) {
-      items = items.filter(item => item.protein_enriched);
-    }
-
-    if (search.trim()) {
-      const query = search.trim().toLowerCase();
-      items = items.filter(item => {
-        const nameLower = item.name.toLowerCase();
-        const brandLower = item.brand.toLowerCase();
-        
-        // חיפוש לפי תחילית - עדיפות גבוהה
-        if (nameLower.startsWith(query) || brandLower.startsWith(query)) {
-          return true;
-        }
-        
-        // חיפוש לפי כל מילה בשם
-        const nameWords = nameLower.split(/\s+/);
-        if (nameWords.some(word => word.startsWith(query))) {
-          return true;
-        }
-        
-        // חיפוש כללי - כולל
-        if (nameLower.includes(query) || brandLower.includes(query)) {
-          return true;
-        }
-        
-        return false;
-      });
-    }
-
-    return items;
-  }, [search, activeCategory, proteinEnrichedOnly]);
-
-  const categoryLabel = (cat: string) => {
-    return FOOD_CATEGORIES.find(c => c.value === cat)?.label || cat;
-  };
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50 p-4">
@@ -113,10 +79,10 @@ export default function FoodCatalogSelector({ onSelect, onClose }: FoodCatalogSe
                   : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-bg-elevated)]'
               }`}
             >
-              הכל ({FOOD_CATALOG.length})
+              הכל ({totalCount})
             </button>
             {FOOD_CATEGORIES.map(cat => {
-              const count = FOOD_CATALOG.filter(i => i.category === cat.value).length;
+              const count = FOOD_CATALOG.filter((i) => i.category === cat.value).length;
               const colors = CATEGORY_COLORS[cat.value];
               return (
                 <button

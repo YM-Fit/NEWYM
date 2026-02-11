@@ -197,3 +197,149 @@ export async function getWeekDiaryData(
   };
 }
 
+/**
+ * Get plan by ID with all meals and food items (for copying)
+ */
+export async function getMealPlanById(
+  planId: string
+): Promise<{
+  plan: MealPlan | null;
+  meals: Array<MealPlanMeal & { food_items?: NutritionFoodItem[] }>;
+} | null> {
+  const rateLimitKey = `getMealPlanById:${planId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 50, 60000);
+  if (!rateLimitResult.allowed) {
+    throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+  }
+
+  const { data: plan, error: planError } = await supabase
+    .from('meal_plans')
+    .select('*')
+    .eq('id', planId)
+    .maybeSingle();
+
+  if (planError || !plan) {
+    return null;
+  }
+
+  const { data: meals, error: mealsError } = await supabase
+    .from('meal_plan_meals')
+    .select('*')
+    .eq('plan_id', planId)
+    .order('order_index', { ascending: true });
+
+  if (mealsError) {
+    return { plan, meals: [] };
+  }
+
+  const mealsWithFoodItems = await Promise.all(
+    (meals || []).map(async (meal) => {
+      const { data: foodItems } = await supabase
+        .from('meal_plan_food_items')
+        .select('*')
+        .eq('meal_id', meal.id)
+        .order('order_index', { ascending: true });
+
+      return {
+        ...meal,
+        food_items: foodItems || [],
+      };
+    })
+  );
+
+  return { plan, meals: mealsWithFoodItems };
+}
+
+/**
+ * Copy meal plan to another trainee
+ */
+export async function copyMealPlanToTrainee(
+  planId: string,
+  targetTraineeId: string,
+  trainerId: string,
+  newName?: string
+): Promise<MealPlan | null> {
+  const rateLimitKey = `copyMealPlan:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 20, 60000);
+  if (!rateLimitResult.allowed) {
+    throw new Error('יותר מדי בקשות. נסה שוב מאוחר יותר.');
+  }
+
+  const data = await getMealPlanById(planId);
+  if (!data || !data.plan) {
+    return null;
+  }
+
+  const { plan: sourcePlan, meals: sourceMeals } = data;
+
+  const { data: newPlan, error: planError } = await supabase
+    .from('meal_plans')
+    .insert({
+      trainer_id: trainerId,
+      trainee_id: targetTraineeId,
+      name: newName || `${sourcePlan.name} (עותק)`,
+      description: sourcePlan.description,
+      is_active: false,
+      daily_calories: sourcePlan.daily_calories,
+      daily_water_ml: sourcePlan.daily_water_ml,
+      protein_grams: sourcePlan.protein_grams,
+      carbs_grams: sourcePlan.carbs_grams,
+      fat_grams: sourcePlan.fat_grams,
+      notes: sourcePlan.notes,
+    } as never)
+    .select()
+    .single();
+
+  if (planError || !newPlan) {
+    console.error('Error creating copied plan:', planError);
+    return null;
+  }
+
+  for (const meal of sourceMeals) {
+    const { data: newMeal, error: mealError } = await supabase
+      .from('meal_plan_meals')
+      .insert({
+        plan_id: newPlan.id,
+        meal_time: meal.meal_time,
+        meal_name: meal.meal_name,
+        description: meal.description || '',
+        alternatives: meal.alternatives || '',
+        calories: meal.calories,
+        protein: meal.protein,
+        carbs: meal.carbs,
+        fat: meal.fat,
+        notes: meal.notes || '',
+        order_index: meal.order_index,
+      } as never)
+      .select()
+      .single();
+
+    if (mealError || !newMeal) {
+      console.error('Error copying meal:', mealError);
+      continue;
+    }
+
+    const foodItems = meal.food_items || [];
+    for (const item of foodItems) {
+      await supabase.from('meal_plan_food_items').insert({
+        meal_id: newMeal.id,
+        food_name: item.food_name,
+        quantity: item.quantity,
+        unit: item.unit,
+        calories: item.calories,
+        protein: item.protein,
+        carbs: item.carbs,
+        fat: item.fat,
+        order_index: item.order_index,
+        category: item.category,
+        calories_per_100g: item.calories_per_100g,
+        protein_per_100g: item.protein_per_100g,
+        carbs_per_100g: item.carbs_per_100g,
+        fat_per_100g: item.fat_per_100g,
+      } as never);
+    }
+  }
+
+  return newPlan;
+}
+

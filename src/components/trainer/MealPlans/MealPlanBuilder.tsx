@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import { ArrowRight, History, UtensilsCrossed } from 'lucide-react';
+import { ArrowRight, History, UtensilsCrossed, CalendarDays } from 'lucide-react';
 import type { MealPlanBuilderProps } from './types/mealPlanTypes';
 import type { MealPlanTemplate, NoteTemplate } from './types/mealPlanTypes';
 import { useMealPlan } from './hooks/useMealPlan';
@@ -10,6 +10,7 @@ import { useMealPlanFoodItems } from './hooks/useMealPlanFoodItems';
 import { PlanListView } from './components/PlanListView';
 import { PlanEditorView } from './components/PlanEditorView';
 import { HistoryView } from './components/HistoryView';
+import { WeeklyPlanView } from './components/WeeklyPlanView';
 import { CreatePlanModal } from './components/CreatePlanModal';
 import { SaveTemplateModal } from './components/SaveTemplateModal';
 import { LoadTemplateModal } from './components/LoadTemplateModal';
@@ -22,7 +23,7 @@ export default function MealPlanBuilder({
   trainerId,
   onBack,
 }: MealPlanBuilderProps) {
-  const [view, setView] = useState<'list' | 'editor' | 'history'>('list');
+  const [view, setView] = useState<'list' | 'editor' | 'history' | 'weekly'>('list');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showLoadTemplateModal, setShowLoadTemplateModal] = useState(false);
   const [showNoteTemplateModal, setShowNoteTemplateModal] = useState(false);
@@ -61,7 +62,6 @@ export default function MealPlanBuilder({
     updateMeal,
     deleteMeal,
     saveMeals,
-    getMealLabel,
     calculateTotalMacros,
   } = useMealPlan(traineeId, trainerId);
 
@@ -292,7 +292,7 @@ export default function MealPlanBuilder({
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               onClick={() => setView('list')}
               className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
@@ -325,8 +325,20 @@ export default function MealPlanBuilder({
                       ? 'bg-gradient-to-r from-primary-500 to-primary-700 text-white shadow-lg shadow-primary-500/25'
                       : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
                   }`}
+                  title="היסטוריה"
                 >
                   <History className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => setView('weekly')}
+                  className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${
+                    view === 'weekly'
+                      ? 'bg-gradient-to-r from-primary-500 to-primary-700 text-white shadow-lg shadow-primary-500/25'
+                      : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
+                  }`}
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  שבוע
                 </button>
               </>
             )}
@@ -351,6 +363,8 @@ export default function MealPlanBuilder({
           meals={meals}
           expandedMeals={expandedMeals}
           saving={false}
+          trainerId={trainerId}
+          traineeId={traineeId}
           onUpdatePlan={(updates) => updatePlan(activePlan.id, updates)}
           onAddMeal={addMeal}
           onUpdateMeal={updateMeal}
@@ -363,7 +377,6 @@ export default function MealPlanBuilder({
           onSaveAsTemplate={() => setShowTemplateModal(true)}
           onLoadTemplate={() => setShowLoadTemplateModal(true)}
           onAddNote={() => setShowNoteTemplateModal(true)}
-          getMealLabel={getMealLabel}
           calculateTotalMacros={calculateTotalMacros}
           setMeals={setMeals}
           debouncedUpdateFoodItem={debouncedUpdateFoodItem}
@@ -381,6 +394,10 @@ export default function MealPlanBuilder({
             }
           }}
         />
+      )}
+
+      {view === 'weekly' && activePlan && (
+        <WeeklyPlanView plan={activePlan} meals={meals} />
       )}
 
       {showCreateForm && (

@@ -1,4 +1,4 @@
-import { Plus, Trash2, Flame, Beef, Wheat, Droplet, Droplets } from 'lucide-react';
+import { Plus, Trash2, Flame, Beef, Wheat, Droplet, Droplets, UtensilsCrossed } from 'lucide-react';
 import type { MealPlan } from '../types/mealPlanTypes';
 
 interface PlanListViewProps {
@@ -84,7 +84,13 @@ export function PlanListView({ plans, activePlan, onActivate, onEdit, onDelete, 
           <h3 className="font-bold text-[var(--color-text-primary)] text-lg">היסטוריית תפריטים</h3>
         </div>
         <div className="divide-y divide-[var(--color-border)]">
-          {plans.filter((p) => p.id !== activePlan?.id).length === 0 ? (
+          {plans.length === 0 ? (
+            <div className="p-12 text-center">
+              <UtensilsCrossed className="w-12 h-12 mx-auto mb-4 text-[var(--color-text-muted)] opacity-60" />
+              <p className="font-medium text-[var(--color-text-secondary)]">עדיין לא נוצרו תפריטים</p>
+              <p className="text-sm text-[var(--color-text-muted)] mt-1">לחץ על &quot;צור תפריט חדש&quot; כדי להתחיל</p>
+            </div>
+          ) : plans.filter((p) => p.id !== activePlan?.id).length === 0 ? (
             <div className="p-12 text-center text-[var(--color-text-muted)]">אין תפריטים נוספים</div>
           ) : (
             plans
