@@ -856,12 +856,34 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
 
     // Deduplicate by (trainee_id, workout_id) to prevent duplicate rows from appearing in dashboard
     const seen = new Set<string>();
-    const allWorkoutsDeduped = allWorkouts.filter(item => {
+    const allWorkoutsDedupedById = allWorkouts.filter(item => {
       const key = `${item.trainee.id}:${item.workout.id}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
+
+    // Deduplicate by (trainee_id, date) - keep one workout per trainee per day
+    // When multiple workouts exist for same trainee on same day (DB duplicates), prefer:
+    // 1) workout with sync record (from Google), 2) not completed, 3) smaller workout_id
+    type WorkoutItem = (typeof allWorkoutsDedupedById)[0];
+    const shouldKeep = (newItem: WorkoutItem, existing: WorkoutItem): boolean => {
+      if (newItem.workout.isFromGoogle && !existing.workout.isFromGoogle) return true;
+      if (!newItem.workout.isFromGoogle && existing.workout.isFromGoogle) return false;
+      if (!newItem.workout.is_completed && existing.workout.is_completed) return true;
+      if (newItem.workout.is_completed && !existing.workout.is_completed) return false;
+      return newItem.workout.id < existing.workout.id;
+    };
+    const seenByTraineeDate = new Map<string, WorkoutItem>();
+    allWorkoutsDedupedById.forEach(item => {
+      const dateStr = `${item.workoutDate.getFullYear()}-${String(item.workoutDate.getMonth() + 1).padStart(2, '0')}-${String(item.workoutDate.getDate()).padStart(2, '0')}`;
+      const key = `${item.trainee.id}:${dateStr}`;
+      const existing = seenByTraineeDate.get(key);
+      if (!existing || shouldKeep(item, existing)) {
+        seenByTraineeDate.set(key, item);
+      }
+    });
+    const allWorkoutsDeduped = Array.from(seenByTraineeDate.values());
 
     // Separate into today and tomorrow, and sort by time
     // Use the 'now' variable that was already declared at the beginning of the function

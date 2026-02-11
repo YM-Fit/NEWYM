@@ -524,9 +524,12 @@ export async function calculateMonthlyPositionsFromDb(
         traineeHistoricalDates.get(link.trainee_id)!.push(date);
       }
     });
-    // Sort historical dates for each trainee
-    traineeHistoricalDates.forEach((dates) => {
-      dates.sort();
+    // Sort and deduplicate historical dates per trainee (same date from duplicates = count once)
+    traineeHistoricalDates.forEach((dates, traineeId) => {
+      const dateSet = new Set<string>();
+      dates.forEach(d => dateSet.add(d.slice(0, 10))); // YYYY-MM-DD
+      const uniqueDates = [...dateSet].sort();
+      traineeHistoricalDates.set(traineeId, uniqueDates);
     });
 
     // Create a map of trainee ID to their workouts in this month (sorted by date)
@@ -546,9 +549,17 @@ export async function calculateMonthlyPositionsFromDb(
       }
     });
 
-    // Sort each trainee's workouts by date
-    traineeWorkouts.forEach((workoutList) => {
-      workoutList.sort((a, b) => a.date.getTime() - b.date.getTime());
+    // Deduplicate by date per trainee (same date = keep one, smallest workoutId) and sort
+    traineeWorkouts.forEach((workoutList, traineeId) => {
+      const uniqueByDate = new Map<string, typeof workoutList[0]>();
+      workoutList.forEach(w => {
+        const d = w.dateStr.slice(0, 10); // YYYY-MM-DD
+        const existing = uniqueByDate.get(d);
+        if (!existing || w.workoutId < existing.workoutId) {
+          uniqueByDate.set(d, w);
+        }
+      });
+      traineeWorkouts.set(traineeId, [...uniqueByDate.values()].sort((a, b) => a.date.getTime() - b.date.getTime()));
     });
     
     // Create a map of trainee ID to name (reverse lookup)
@@ -821,7 +832,15 @@ export async function generateGoogleCalendarEventTitle(
           workoutIds
         );
         const traineeWorkoutIds = new Set((links || []).map(l => l.workout_id));
-        const traineeWorkouts = (allWorkouts || []).filter(w => traineeWorkoutIds.has((w as any).id));
+        let traineeWorkouts = (allWorkouts || []).filter(w => traineeWorkoutIds.has((w as any).id));
+        // Deduplicate by date - same trainee, same date -> keep one (smallest id) for correct numbering
+        const uniqueByDate = new Map<string, typeof traineeWorkouts[0]>();
+        traineeWorkouts.forEach(w => {
+          const d = (w as any).workout_date.slice(0, 10); // YYYY-MM-DD
+          if (!uniqueByDate.has(d)) uniqueByDate.set(d, w);
+          else if ((w as any).id < (uniqueByDate.get(d) as any).id) uniqueByDate.set(d, w);
+        });
+        traineeWorkouts = [...uniqueByDate.values()];
         // Sort by (workout_date, id) for stable numbering when multiple workouts share the same date
         traineeWorkouts.sort((a, b) => {
           const cmp = (a as any).workout_date.localeCompare((b as any).workout_date);
@@ -872,7 +891,15 @@ export async function generateGoogleCalendarEventTitle(
         );
 
         const traineeWorkoutIds = new Set((links || []).map(l => l.workout_id));
-        const traineeWorkouts = workouts.filter(w => traineeWorkoutIds.has((w as any).id));
+        let traineeWorkouts = workouts.filter(w => traineeWorkoutIds.has((w as any).id));
+        // Deduplicate by date - same trainee, same date -> keep one (smallest id) for correct numbering
+        const uniqueByDateMonthly = new Map<string, typeof traineeWorkouts[0]>();
+        traineeWorkouts.forEach(w => {
+          const d = (w as any).workout_date.slice(0, 10); // YYYY-MM-DD
+          if (!uniqueByDateMonthly.has(d)) uniqueByDateMonthly.set(d, w);
+          else if ((w as any).id < (uniqueByDateMonthly.get(d) as any).id) uniqueByDateMonthly.set(d, w);
+        });
+        traineeWorkouts = [...uniqueByDateMonthly.values()];
 
         // Sort by (workout_date, id) for stable numbering when multiple workouts share the same date
         traineeWorkouts.sort((a, b) => {

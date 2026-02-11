@@ -229,34 +229,40 @@ export function PlanEditorView({
     }
   };
 
-  const SUPPLEMENTS = [
-    'מולטי ויטמין',
-    'אומגה 3',
-    'ויטמין D',
-    'מגנזיום',
-    'ברזל',
-    'ויטמין B12',
-    'קולגן',
-    'פרוביוטיקה',
-    'תוסף אחר',
+  const SUPPLEMENTS: { name: string; whenToTake: string; targetMeal?: string }[] = [
+    { name: 'מולטי ויטמין', whenToTake: 'עם ארוחת בוקר', targetMeal: 'breakfast' },
+    { name: 'אומגה 3', whenToTake: 'עם הארוחה', targetMeal: 'lunch' },
+    { name: 'ויטמין D', whenToTake: 'עם ארוחה שמכילה שומן', targetMeal: 'lunch' },
+    { name: 'מגנזיום', whenToTake: 'לפני השינה', targetMeal: 'evening_snack' },
+    { name: 'ברזל', whenToTake: 'על קיבה ריקה (בוקר)', targetMeal: 'breakfast' },
+    { name: 'ויטמין B12', whenToTake: 'עם ארוחת בוקר', targetMeal: 'breakfast' },
+    { name: 'קולגן', whenToTake: 'עם הארוחה', targetMeal: 'lunch' },
+    { name: 'פרוביוטיקה', whenToTake: 'עם ארוחת בוקר', targetMeal: 'breakfast' },
+    { name: 'תוסף אחר', whenToTake: '', targetMeal: undefined },
   ];
 
-  const handleAddSupplement = async (name: string) => {
-    const firstMealWithId = meals.find((m) => m.id);
-    if (!firstMealWithId?.id) {
+  const handleAddSupplement = async (supp: { name: string; whenToTake: string; targetMeal?: string }) => {
+    const targetMeal = supp.targetMeal
+      ? meals.find((m) => m.meal_name === supp.targetMeal && m.id)
+      : meals.find((m) => m.id);
+    const mealToUse = targetMeal || meals.find((m) => m.id);
+    if (!mealToUse?.id) {
       toast.error('הוסף לפחות ארוחה אחת לפני הוספת תוספים');
       return;
     }
-    const displayIndex = meals.findIndex((m) => m.id === firstMealWithId.id);
-    const newItem = await createFoodItem(firstMealWithId.id, {
-      food_name: name,
+    const displayIndex = meals.findIndex((m) => m.id === mealToUse.id);
+    const foodName = supp.whenToTake
+      ? `${supp.name} – ${supp.whenToTake}`
+      : supp.name;
+    const newItem = await createFoodItem(mealToUse.id, {
+      food_name: foodName,
       quantity: 1,
       unit: 'unit',
       calories: 0,
       protein: 0,
       carbs: 0,
       fat: 0,
-      order_index: (firstMealWithId.food_items?.length || 0),
+      order_index: (mealToUse.food_items?.length || 0),
     });
     if (newItem) {
       const updatedMeals = [...meals];
@@ -265,7 +271,7 @@ export function PlanEditorView({
         food_items: [...(updatedMeals[displayIndex].food_items || []), newItem],
       };
       setMeals(updatedMeals);
-      toast.success(`${name} נוסף`);
+      toast.success(`${supp.name} נוסף`);
     }
   };
 
@@ -335,16 +341,23 @@ export function PlanEditorView({
 
       {meals.some((m) => m.id) && (
         <div className="premium-card-static p-4 rounded-2xl border border-[var(--color-border)] shadow-sm">
-          <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-3">תוספי תזונה</h3>
+          <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-1">תוספי תזונה</h3>
+          <p className="text-xs text-[var(--color-text-muted)] mb-3">לחיצה מוסיפה לארוחה המתאימה עם הכוונה מתי לקחת</p>
           <div className="flex flex-wrap gap-2">
-            {SUPPLEMENTS.map((name) => (
+            {SUPPLEMENTS.map((supp) => (
               <button
-                key={name}
+                key={supp.name}
                 type="button"
-                onClick={() => handleAddSupplement(name)}
-                className="px-4 py-2 rounded-xl text-sm font-medium bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] transition-all"
+                onClick={() => handleAddSupplement(supp)}
+                title={supp.whenToTake || undefined}
+                className="flex flex-col items-center gap-0.5 px-4 py-2.5 rounded-xl text-sm font-medium bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] hover:border-primary-500/30 transition-all"
               >
-                {name}
+                <span>{supp.name}</span>
+                {supp.whenToTake && (
+                  <span className="text-[10px] text-[var(--color-text-muted)] font-normal">
+                    {supp.whenToTake}
+                  </span>
+                )}
               </button>
             ))}
           </div>

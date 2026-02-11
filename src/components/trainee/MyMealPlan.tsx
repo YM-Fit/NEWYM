@@ -17,10 +17,12 @@ import {
   Search,
   Filter,
   X,
+  Pill,
 } from 'lucide-react';
 import { getActiveMealPlanWithMeals } from '../../api';
 import type { MealPlan, MealPlanMeal, NutritionFoodItem } from '../../types/nutritionTypes';
 import { FOOD_CATALOG, FOOD_CATEGORIES } from '../../data/foodCatalog';
+import { quantityToGrams } from '../trainer/MealPlans/utils/nutritionCalculator';
 
 interface MyMealPlanProps {
   traineeId: string | null;
@@ -581,13 +583,23 @@ function FoodItemCard({
 }) {
   const hasCatalogData = !!item.category && !!item.calories_per_100g;
   const catColors = item.category ? CATEGORY_COLORS[item.category] : null;
+  const supplementParts = item.food_name?.includes(' – ') ? item.food_name.split(' – ') : null;
+  const isSupplement = !!supplementParts;
 
   return (
-    <div className="bg-surface-light border border-border-light rounded-xl p-3 hover:border-border-medium transition-all duration-200">
+    <div className={`bg-surface-light border rounded-xl p-3 hover:border-border-medium transition-all duration-200 ${isSupplement ? 'border-primary-300/50 bg-primary-50/30' : 'border-border-light'}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-semibold text-foreground">{item.food_name}</p>
+            {isSupplement && <Pill className="w-4 h-4 text-primary-600 shrink-0" />}
+            <div>
+              <p className="font-semibold text-foreground">{supplementParts ? supplementParts[0] : item.food_name}</p>
+              {supplementParts && supplementParts[1] && (
+                <p className="text-xs text-primary-600 font-medium mt-0.5 flex items-center gap-1">
+                  מתי לקחת: {supplementParts[1]}
+                </p>
+              )}
+            </div>
             {catColors && (
               <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${catColors.bg} ${catColors.text} border ${catColors.border}`}>
                 {catColors.label}
@@ -597,10 +609,10 @@ function FoodItemCard({
           <p className="text-sm text-secondary mt-1">
             {item.quantity} {formatUnit(item.unit)}
           </p>
-          {hasCatalogData && item.unit === 'g' && (
+          {hasCatalogData && (item.unit === 'g' || ['tbsp', 'tsp', 'cup', 'ml'].includes(item.unit)) && (
             <p className="text-[10px] text-muted mt-1 flex items-center gap-1">
               <Info className="w-2.5 h-2.5" />
-              חישוב אוטומטי ל-{item.quantity} גרם (בסיס: {item.calories_per_100g} קל' ל-100 גרם)
+              ערכים מחושבים ל-{item.quantity} {formatUnit(item.unit)} (בסיס: {item.calories_per_100g} קל' ל-100 גרם)
             </p>
           )}
         </div>
@@ -700,8 +712,8 @@ function TraineeAlternativesPanel({
   }
 
   const categoryLabel = FOOD_CATEGORIES.find(c => c.value === category)?.label || '';
-  const isGrams = unit === 'g';
-  const ratio = isGrams ? quantity / 100 : 1;
+  const gramsEquivalent = quantityToGrams(quantity, unit);
+  const ratio = gramsEquivalent / 100;
 
   return (
     <div className="mt-2 p-3 bg-elevated rounded-xl border border-dashed border-primary-300">
@@ -710,11 +722,9 @@ function TraineeAlternativesPanel({
         <span className="text-xs font-semibold text-primary-600">
           חלופות ({categoryLabel})
         </span>
-        {isGrams && (
-          <span className="text-[10px] text-muted mr-auto">
-            ערכים ל-{quantity} גרם
-          </span>
-        )}
+        <span className="text-[10px] text-muted mr-auto">
+          ערכים שווי ערך ל-{gramsEquivalent} גרם
+        </span>
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-transparent">
         {alternatives.map((alt) => (
@@ -729,24 +739,21 @@ function TraineeAlternativesPanel({
             <div className="grid grid-cols-2 gap-1 text-[10px]">
               <span className="flex items-center gap-0.5 text-primary-600 font-semibold">
                 <Flame className="w-2.5 h-2.5" />
-                {isGrams ? Math.round(alt.calories_per_100g * ratio) : alt.calories_per_100g}
+                {Math.round(alt.calories_per_100g * ratio)}
               </span>
               <span className="flex items-center gap-0.5 text-red-600 font-semibold">
                 <Beef className="w-2.5 h-2.5" />
-                {isGrams ? Math.round(alt.protein_per_100g * ratio) : alt.protein_per_100g}ג
+                {Math.round(alt.protein_per_100g * ratio)}ג
               </span>
               <span className="flex items-center gap-0.5 text-blue-600 font-semibold">
                 <Wheat className="w-2.5 h-2.5" />
-                {isGrams ? Math.round(alt.carbs_per_100g * ratio) : alt.carbs_per_100g}ג
+                {Math.round(alt.carbs_per_100g * ratio)}ג
               </span>
               <span className="flex items-center gap-0.5 text-amber-600 font-semibold">
                 <Droplet className="w-2.5 h-2.5" />
-                {isGrams ? Math.round(alt.fat_per_100g * ratio) : alt.fat_per_100g}ג
+                {Math.round(alt.fat_per_100g * ratio)}ג
               </span>
             </div>
-            {!isGrams && (
-              <p className="text-[9px] text-muted mt-1">ל-100 גרם</p>
-            )}
           </div>
         ))}
       </div>
