@@ -854,11 +854,20 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
 
+    // Deduplicate by (trainee_id, workout_id) to prevent duplicate rows from appearing in dashboard
+    const seen = new Set<string>();
+    const allWorkoutsDeduped = allWorkouts.filter(item => {
+      const key = `${item.trainee.id}:${item.workout.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
     // Separate into today and tomorrow, and sort by time
     // Use the 'now' variable that was already declared at the beginning of the function
     // Group by trainee to handle multiple workouts per trainee per day
-    const workoutsByTrainee = new Map<string, typeof allWorkouts>();
-    allWorkouts.forEach(item => {
+    const workoutsByTrainee = new Map<string, typeof allWorkoutsDeduped>();
+    allWorkoutsDeduped.forEach(item => {
       const key = item.trainee.id;
       if (!workoutsByTrainee.has(key)) {
         workoutsByTrainee.set(key, []);
@@ -866,7 +875,7 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
       workoutsByTrainee.get(key)!.push(item);
     });
     
-    const todayWorkouts = allWorkouts
+    const todayWorkouts = allWorkoutsDeduped
       .filter(item => {
         // CRITICAL: For workouts synced FROM Google, use eventStartTime (which is event_start_time)
         // For other workouts, use workoutDate (which is workout_date)
@@ -916,7 +925,7 @@ export async function getScheduledWorkoutsForTodayAndTomorrow(
         isFromGoogle: item.isFromGoogle
       }));
 
-    const tomorrowWorkouts = allWorkouts
+    const tomorrowWorkouts = allWorkoutsDeduped
       .filter(item => {
         // Compare dates by converting to date strings (YYYY-MM-DD) to avoid timezone issues
         // workoutDate is a Date object, so we need to compare the date part only

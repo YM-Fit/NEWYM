@@ -1,14 +1,39 @@
+import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+import { useTraineeForMacros, calculatePlanMacros } from '../../hooks/useTraineeForMacros';
 
 interface CreatePlanModalProps {
   data: any;
   saving: boolean;
+  traineeId?: string | null;
   onChange: (data: any) => void;
   onSave: () => void;
   onClose: () => void;
 }
 
-export function CreatePlanModal({ data, saving, onChange, onSave, onClose }: CreatePlanModalProps) {
+export function CreatePlanModal({ data, saving, traineeId, onChange, onSave, onClose }: CreatePlanModalProps) {
+  const { data: traineeData } = useTraineeForMacros(traineeId ?? null);
+  const appliedTdeeRef = useRef(false);
+
+  useEffect(() => {
+    if (!traineeId || !traineeData || appliedTdeeRef.current) return;
+    const isEmpty =
+      (data.daily_calories === '' || data.daily_calories === undefined) &&
+      (data.protein_grams === '' || data.protein_grams === undefined);
+    if (!isEmpty) return;
+
+    const calculated = calculatePlanMacros(traineeData);
+    onChange({
+      ...data,
+      daily_calories: String(calculated.daily_calories),
+      daily_water_ml: String(calculated.daily_water_ml),
+      protein_grams: String(calculated.protein_grams),
+      carbs_grams: String(calculated.carbs_grams),
+      fat_grams: String(calculated.fat_grams),
+    });
+    appliedTdeeRef.current = true;
+  }, [traineeId, traineeData, data, onChange]);
+
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center p-4 z-50">
       <div className="premium-card-static rounded-2xl border border-[var(--color-border)] shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">

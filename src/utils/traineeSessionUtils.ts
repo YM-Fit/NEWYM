@@ -822,6 +822,11 @@ export async function generateGoogleCalendarEventTitle(
         );
         const traineeWorkoutIds = new Set((links || []).map(l => l.workout_id));
         const traineeWorkouts = (allWorkouts || []).filter(w => traineeWorkoutIds.has((w as any).id));
+        // Sort by (workout_date, id) for stable numbering when multiple workouts share the same date
+        traineeWorkouts.sort((a, b) => {
+          const cmp = (a as any).workout_date.localeCompare((b as any).workout_date);
+          return cmp !== 0 ? cmp : (a as any).id.localeCompare((b as any).id);
+        });
         if (workoutId) {
           const idx = traineeWorkouts.findIndex(w => (w as any).id === workoutId);
           position = idx >= 0 ? idx + 1 : traineeWorkouts.length + 1;
@@ -869,10 +874,11 @@ export async function generateGoogleCalendarEventTitle(
         const traineeWorkoutIds = new Set((links || []).map(l => l.workout_id));
         const traineeWorkouts = workouts.filter(w => traineeWorkoutIds.has((w as any).id));
 
-        // Sort workouts by date to ensure correct order
-        traineeWorkouts.sort((a, b) => 
-          new Date((a as any).workout_date).getTime() - new Date((b as any).workout_date).getTime()
-        );
+        // Sort by (workout_date, id) for stable numbering when multiple workouts share the same date
+        traineeWorkouts.sort((a, b) => {
+          const cmp = (a as any).workout_date.localeCompare((b as any).workout_date);
+          return cmp !== 0 ? cmp : (a as any).id.localeCompare((b as any).id);
+        });
 
         let position = 1;
         let totalInMonth = traineeWorkouts.length;

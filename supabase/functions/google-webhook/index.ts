@@ -356,8 +356,38 @@ async function processCalendarEvents(
     } else if (!event.status || event.status !== "cancelled") {
       // Create new workout (supports multiple trainees per event, e.g. "משה ורינה")
       if (effectiveTraineeIds.length > 0) {
-        // IMPORTANT: workout_date is timestamptz, so we need to preserve the full timestamp
-        const { data: newWorkout } = await supabase
+        // Re-check for existing sync before create (prevents race with sync-google-calendar or another webhook)
+        const { data: recheckSync } = await supabase
+          .from("google_calendar_sync")
+          .select("id, workout_id, trainee_id")
+          .eq("google_event_id", event.id)
+          .eq("google_calendar_id", event.organizer?.email || "primary")
+          .maybeSingle();
+        if (recheckSync) {
+          await supabase
+            .from("google_calendar_sync")
+            .update({
+              event_start_time: startTime.toISOString(),
+              event_end_time: endTime.toISOString(),
+              event_summary: event.summary,
+              event_description: event.description,
+              sync_status: "synced",
+              last_synced_at: new Date().toISOString(),
+            })
+            .eq("id", recheckSync.id);
+          if (recheckSync.workout_id) {
+            await supabase
+              .from("workouts")
+              .update({
+                workout_date: startTime.toISOString(),
+                notes: event.description || null,
+              })
+              .eq("id", recheckSync.workout_id);
+          }
+          continue;
+        }
+
+        const { data: newWorkout, error: workoutError } = await supabase
           .from("workouts")
           .insert({
             trainer_id: trainerId,
@@ -370,6 +400,10 @@ async function processCalendarEvents(
           .select()
           .single();
 
+        if (workoutError) {
+          console.warn("google-webhook: workout insert failed", workoutError.message);
+          continue;
+        }
         if (newWorkout) {
           for (const tid of effectiveTraineeIds) {
             await supabase
@@ -378,9 +412,8 @@ async function processCalendarEvents(
           }
 
           const recordSyncDirection = syncDirection === 'bidirectional' ? 'bidirectional' : 'from_google';
-          // One sync record per trainee (google_calendar_sync has UNIQUE(workout_id) - need to check)
           const primaryTraineeId = effectiveTraineeIds[0];
-          await supabase
+          const { error: syncInsertError } = await supabase
             .from("google_calendar_sync")
             .insert({
               trainer_id: trainerId,
@@ -396,8 +429,15 @@ async function processCalendarEvents(
               event_description: event.description,
               last_synced_at: new Date().toISOString(),
             });
-
-          await updateCalendarClient(trainerId, primaryTraineeId, event, supabase);
+          if (syncInsertError) {
+            if (syncInsertError.code === "23505") {
+              console.log("google-webhook: sync record already exists for event (race), skipping");
+            } else {
+              console.warn("google-webhook: sync insert failed", syncInsertError.message);
+            }
+          } else {
+            await updateCalendarClient(trainerId, primaryTraineeId, event, supabase);
+          }
         }
       }
     }

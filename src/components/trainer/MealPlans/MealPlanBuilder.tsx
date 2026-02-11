@@ -404,6 +404,7 @@ export default function MealPlanBuilder({
         <CreatePlanModal
           data={newPlanData}
           saving={false}
+          traineeId={traineeId}
           onChange={setNewPlanData}
           onSave={handleCreatePlan}
           onClose={() => setShowCreateForm(false)}

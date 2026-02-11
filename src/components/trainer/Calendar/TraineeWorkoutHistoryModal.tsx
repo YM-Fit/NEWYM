@@ -220,26 +220,28 @@ export default function TraineeWorkoutHistoryModal({
       const traineeMonthWorkoutIds = new Set((monthLinksResult.data || []).map(l => l.workout_id));
       const traineeAllWorkoutIds = new Set((allLinksResult.data || []).map(l => l.workout_id));
 
-      // Build historical dates list for this trainee (sorted)
-      const allHistoricalDates = allWorkoutsData
+      // Sort by (workout_date, id) for stable numbering when multiple workouts share the same date
+      const traineeWorkoutsSorted = allWorkoutsData
         .filter(w => traineeAllWorkoutIds.has(w.id))
-        .map(w => w.workout_date)
-        .sort();
+        .map(w => ({ id: w.id, workout_date: w.workout_date }))
+        .sort((a, b) => {
+          const cmp = a.workout_date.localeCompare(b.workout_date);
+          return cmp !== 0 ? cmp : a.id.localeCompare(b.id);
+        });
 
-      // Filter and map workouts for this month with historical numbering
+      // Filter and map workouts for this month with historical numbering (index + 1 in sorted list)
       const traineeWorkouts = workoutsData
         .filter(w => traineeMonthWorkoutIds.has(w.id))
         .map((w) => {
           const date = new Date(w.workout_date);
-          // Calculate historical workout number (position in all-time history)
-          const workoutNumber = allHistoricalDates.filter(d => d <= w.workout_date).length;
+          const workoutNumber = traineeWorkoutsSorted.findIndex(x => x.id === w.id) + 1;
           return {
             id: w.id,
             googleEventId: w.google_event_id || '',
             workoutDate: w.workout_date,
             startTime: date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
             endTime: new Date(date.getTime() + 60 * 60 * 1000).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-            workoutNumber,
+            workoutNumber: workoutNumber > 0 ? workoutNumber : traineeWorkoutsSorted.length,
           };
         });
 
@@ -432,7 +434,7 @@ export default function TraineeWorkoutHistoryModal({
     setActionLoading(selectedWorkout.id);
     try {
       // Get the workout date for session number calculation
-      const workoutDate = new Date(selectedWorkout.date);
+      const workoutDate = new Date(selectedWorkout.workoutDate);
       
       // Generate event summary with correct session number
       const newEventSummary = await generateGoogleCalendarEventTitle(

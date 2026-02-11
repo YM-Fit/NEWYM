@@ -272,21 +272,55 @@ async function syncTrainerCalendar(
           .eq("id", existingSync.workout_id);
       }
     } else {
+      // Re-check for existing sync before create (prevents race with webhook or another sync)
+      const { data: recheckSync } = await supabase
+        .from("google_calendar_sync")
+        .select("id, workout_id, trainee_id")
+        .eq("google_event_id", event.id)
+        .eq("google_calendar_id", calendarId)
+        .maybeSingle();
+      if (recheckSync) {
+        // Another process created it - treat as update
+        await supabase
+          .from("google_calendar_sync")
+          .update({
+            event_start_time: startTime.toISOString(),
+            event_end_time: endTime.toISOString(),
+            event_summary: event.summary,
+            event_description: event.description,
+            sync_status: "synced",
+            last_synced_at: new Date().toISOString(),
+          })
+          .eq("id", recheckSync.id);
+        if (recheckSync.workout_id) {
+          await supabase
+            .from("workouts")
+            .update({
+              workout_date: startTime.toISOString(),
+              notes: event.description || null,
+            })
+            .eq("id", recheckSync.workout_id);
+        }
+        continue;
+      }
+
       // Create new workout and sync record
-      // IMPORTANT: workout_date is timestamptz, so we need to preserve the full timestamp
-      // Use the exact startTime from Google Calendar event to maintain consistency
-      const { data: newWorkout } = await supabase
+      const { data: newWorkout, error: workoutError } = await supabase
         .from("workouts")
         .insert({
           trainer_id: trainerId,
           workout_type: "personal",
-          workout_date: startTime.toISOString(), // Full timestamp, not just date
+          workout_date: startTime.toISOString(),
           notes: event.description || null,
           is_completed: false,
         })
         .select()
         .single();
 
+      if (workoutError) {
+        console.warn("sync-google-calendar: workout insert failed", workoutError.message);
+        continue;
+      }
       if (newWorkout) {
         for (const tid of traineeIdsToUse) {
           await supabase
@@ -295,8 +329,7 @@ async function syncTrainerCalendar(
         }
 
         const syncDirection = credentials.sync_direction === 'bidirectional' ? 'bidirectional' : 'from_google';
-        
-        await supabase
+        const { error: syncInsertError } = await supabase
           .from("google_calendar_sync")
           .insert({
             trainer_id: trainerId,
@@ -312,8 +345,15 @@ async function syncTrainerCalendar(
             event_description: event.description,
             last_synced_at: new Date().toISOString(),
           });
-
-        await updateCalendarClientStats(trainerId, primaryTrainee.id, event, supabase);
+        if (syncInsertError) {
+          if (syncInsertError.code === "23505") {
+            console.log("sync-google-calendar: sync record already exists for event (race), skipping");
+          } else {
+            console.warn("sync-google-calendar: sync insert failed", syncInsertError.message);
+          }
+        } else {
+          await updateCalendarClientStats(trainerId, primaryTrainee.id, event, supabase);
+        }
       }
     }
   }

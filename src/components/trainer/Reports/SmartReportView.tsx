@@ -71,8 +71,9 @@ interface TraineeReportRow {
   card_sessions_used: number;
   workouts_this_month: number;
   total_due: number;
-  workout_dates: string[]; // All workout dates for this trainee in the month
-  workout_numbers: Map<string, number>; // Map of workout_date to workout number
+  workout_dates: string[]; // All workout dates for this trainee in the month (derived from workout_items for compat)
+  workout_items: { date: string; workout_id: string }[]; // Date and id per workout for stable numbering
+  workout_numbers: Map<string, number>; // Map of workout_id to workout number (1-based position in history)
   // Card-specific fields
   active_card: TraineeCard | null; // Current active card
   card_purchased_this_month: boolean; // Whether card was purchased in selected month
@@ -209,6 +210,7 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
       const serializableReport = reportData.map(row => ({
         ...row,
         workout_numbers: Object.fromEntries(row.workout_numbers),
+        workout_items: row.workout_items,
       }));
       
       const reportDataToSave = {
@@ -240,24 +242,20 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
     }
   }, [user, monthlyReport, selectedMonth, incomeGoal, reportData]);
 
-  // Calculate workout numbers locally for a trainee based on all their historical workouts
-  // This is much faster than making RPC calls for each workout date
+  // Calculate workout numbers locally: sort by (date, workout_id) for stable numbering when dates repeat
   const calculateWorkoutNumbersLocally = useCallback((
-    traineeWorkoutDates: string[],
-    allHistoricalDates: string[]
+    items: { date: string; workout_id: string }[],
+    historicalItems: { date: string; workout_id: string }[]
   ): Map<string, number> => {
     const result = new Map<string, number>();
-    
-    // Sort all historical dates
-    const sortedHistoricalDates = [...allHistoricalDates].sort();
-    
-    // For each workout date in this month, find its position in the historical list
-    for (const date of traineeWorkoutDates) {
-      // Count how many workouts happened before this date + 1
-      const position = sortedHistoricalDates.filter(d => d <= date).length;
-      result.set(date, position);
+    const sorted = [...historicalItems].sort((a, b) => {
+      const cmp = a.date.localeCompare(b.date);
+      return cmp !== 0 ? cmp : a.workout_id.localeCompare(b.workout_id);
+    });
+    for (const item of items) {
+      const idx = sorted.findIndex(h => h.workout_id === item.workout_id);
+      result.set(item.workout_id, idx >= 0 ? idx + 1 : sorted.length + 1);
     }
-    
     return result;
   }, []);
 
@@ -386,38 +384,38 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
         workout_date: workoutDateMap.get(link.workout_id) || '',
       }));
 
-      // Map ALL workout dates for historical numbering
+      // Map ALL workout dates for historical numbering (with workout_id for stable sort)
       const allWorkoutDateMap = new Map(allWorkoutsData?.map(w => [w.id, w.workout_date]) || []);
       
-      // Build historical workout dates per trainee (for workout numbering)
-      const traineeHistoricalDates = new Map<string, string[]>();
+      // Build historical (date, workout_id) per trainee for stable numbering
+      const traineeHistoricalItems = new Map<string, { date: string; workout_id: string }[]>();
       (allLinksResult.data || []).forEach(link => {
-        if (!traineeHistoricalDates.has(link.trainee_id)) {
-          traineeHistoricalDates.set(link.trainee_id, []);
+        if (!traineeHistoricalItems.has(link.trainee_id)) {
+          traineeHistoricalItems.set(link.trainee_id, []);
         }
         const date = allWorkoutDateMap.get(link.workout_id);
         if (date) {
-          traineeHistoricalDates.get(link.trainee_id)!.push(date);
+          traineeHistoricalItems.get(link.trainee_id)!.push({ date, workout_id: link.workout_id });
         }
       });
 
-      // Group workouts by trainee for this month
-      const traineeWorkouts = new Map<string, { dates: string[]; numbers: Map<string, number> }>();
+      // Group workouts by trainee for this month (keep one entry per workout for correct numbering)
+      const traineeWorkouts = new Map<string, { items: { date: string; workout_id: string }[]; numbers: Map<string, number> }>();
       
       for (const workout of workoutData) {
         if (!traineeWorkouts.has(workout.trainee_id)) {
-          traineeWorkouts.set(workout.trainee_id, { dates: [], numbers: new Map() });
+          traineeWorkouts.set(workout.trainee_id, { items: [], numbers: new Map() });
         }
-        const traineeData = traineeWorkouts.get(workout.trainee_id)!;
-        if (!traineeData.dates.includes(workout.workout_date)) {
-          traineeData.dates.push(workout.workout_date);
-        }
+        traineeWorkouts.get(workout.trainee_id)!.items.push({
+          date: workout.workout_date,
+          workout_id: workout.workout_id,
+        });
       }
 
-      // OPTIMIZATION: Calculate workout numbers locally instead of making RPC calls
+      // OPTIMIZATION: Calculate workout numbers locally (sort by date, id for stable numbering)
       for (const [traineeId, data] of traineeWorkouts.entries()) {
-        const historicalDates = traineeHistoricalDates.get(traineeId) || [];
-        const numbers = calculateWorkoutNumbersLocally(data.dates, historicalDates);
+        const historicalItems = traineeHistoricalItems.get(traineeId) || [];
+        const numbers = calculateWorkoutNumbersLocally(data.items, historicalItems);
         data.numbers = numbers;
       }
 
@@ -429,8 +427,8 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
 
       // Build report data
       const report: TraineeReportRow[] = trainees.map((trainee) => {
-        const traineeWorkoutData = traineeWorkouts.get(trainee.id) || { dates: [], numbers: new Map() };
-        const workoutsThisMonth = traineeWorkoutData.dates.length;
+        const traineeWorkoutData = traineeWorkouts.get(trainee.id) || { items: [], numbers: new Map() };
+        const workoutsThisMonth = traineeWorkoutData.items.length;
         const paymentMethod = (trainee as { payment_method?: PaymentMethod }).payment_method || null;
         const countingMethod = (trainee as { counting_method?: CountingMethod }).counting_method || null;
         const monthlyPrice = (trainee as { monthly_price?: number }).monthly_price || 0;
@@ -499,7 +497,8 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
           card_purchased_this_month: cardPurchasedThisMonth,
           card_remaining: cardRemaining,
           card_forecast_weeks: cardForecastWeeks,
-          workout_dates: traineeWorkoutData.dates.sort(),
+          workout_dates: traineeWorkoutData.items.map(i => i.date).sort(),
+          workout_items: traineeWorkoutData.items.sort((a, b) => a.date.localeCompare(b.date) || a.workout_id.localeCompare(b.workout_id)),
           workout_numbers: traineeWorkoutData.numbers,
         };
       });
@@ -580,7 +579,8 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
         const reportMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
         const serializableReport = report.map(row => ({
           ...row,
-          workout_numbers: Object.fromEntries(row.workout_numbers), // Convert Map to object
+          workout_numbers: Object.fromEntries(row.workout_numbers),
+          workout_items: row.workout_items,
         }));
         const reportDataToSave = {
           trainer_id: user.id,
@@ -1196,14 +1196,14 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
               </button>
             </div>
             <div className="space-y-2">
-              {selectedTraineeData.workout_dates.length === 0 ? (
+              {selectedTraineeData.workout_items.length === 0 ? (
                 <div className="text-center text-muted py-8">אין אימונים בחודש זה</div>
               ) : (
-                selectedTraineeData.workout_dates.map((date, index) => {
-                  const workoutNumber = selectedTraineeData.workout_numbers.get(date) || index + 1;
+                selectedTraineeData.workout_items.map((item, index) => {
+                  const workoutNumber = selectedTraineeData.workout_numbers.get(item.workout_id) ?? index + 1;
                   return (
                     <div
-                      key={date}
+                      key={item.workout_id}
                       className="flex items-center justify-between p-3 bg-surface rounded-lg"
                     >
                       <div className="flex items-center gap-3">
@@ -1214,7 +1214,7 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
                           <div className="text-foreground font-medium">
                             {selectedTraineeData.full_name} {workoutNumber}
                           </div>
-                          <div className="text-sm text-muted">{formatDate(date)}</div>
+                          <div className="text-sm text-muted">{formatDate(item.date)}</div>
                         </div>
                       </div>
                     </div>

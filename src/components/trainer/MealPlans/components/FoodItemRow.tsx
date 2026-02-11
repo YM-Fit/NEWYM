@@ -89,7 +89,7 @@ export function FoodItemRow({
             placeholder="לדוגמה: ביצה"
           />
           {showNameSuggestions && nameSuggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto z-50 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] shadow-lg py-1">
+            <div className="absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto z-50 rounded-xl border border-[var(--color-border)] shadow-lg py-1" style={{ background: 'rgb(var(--color-bg-elevated))' }}>
               {nameSuggestions.map((c) => (
                 <button
                   key={c.id}
