@@ -18,7 +18,9 @@ import {
   XCircle,
   Plus,
 } from 'lucide-react';
-import SelfWorkoutSession from './SelfWorkoutSession';
+import WorkoutSession from '../trainer/Workouts/WorkoutSession';
+import type { Trainee } from '../../types';
+import { classifyWorkout, WORKOUT_SOURCE_FILTER_OPTIONS, WORKOUT_SOURCE_LABELS } from '../../utils/workoutClassification';
 import { LoadingSpinner, Skeleton, SkeletonWorkoutCard } from '../ui';
 import { EmptyState } from '../common/EmptyState';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -27,6 +29,7 @@ interface WorkoutHistoryProps {
   traineeId: string | null;
   traineeName?: string;
   trainerId?: string;
+  trainee?: Trainee | null;
 }
 
 interface WorkoutExercise {
@@ -76,7 +79,10 @@ interface Workout {
   workout_date: string;
   is_completed: boolean;
   notes: string | null;
+  is_self_recorded?: boolean | null;
   workout_exercises: WorkoutExercise[];
+  /** Computed: studio | program | self */
+  workout_source?: 'studio' | 'program' | 'self';
 }
 
 interface MuscleGroup {
@@ -84,7 +90,7 @@ interface MuscleGroup {
   name: string;
 }
 
-const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, trainerId }: WorkoutHistoryProps) {
+const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, trainerId, trainee }: WorkoutHistoryProps) {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [muscleGroups, setMuscleGroups] = useState<MuscleGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,6 +101,7 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
   const [previousExerciseData, setPreviousExerciseData] = useState<Map<string, { weight: number; reps: number }>>(new Map());
   const [showSelfWorkout, setShowSelfWorkout] = useState(false);
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [workoutSourceFilter, setWorkoutSourceFilter] = useState<'all' | 'studio' | 'program' | 'self'>('all');
 
   useEffect(() => {
     if (traineeId) {
@@ -107,52 +114,88 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
     if (!traineeId) return;
     setLoading(true);
 
-    const { data } = await supabase
-      .from('workout_trainees')
-      .select(`
-        workouts!inner (
-          id,
-          workout_date,
-          is_completed,
-          notes,
-          workout_exercises (
+    const [wtResult, planData, calendarResult] = await Promise.all([
+      supabase
+        .from('workout_trainees')
+        .select(`
+          workouts!inner (
             id,
-            exercise_id,
-            order_index,
-            exercises (
+            workout_date,
+            is_completed,
+            notes,
+            is_self_recorded,
+            workout_exercises (
               id,
-              name,
-              muscle_group_id,
-              muscle_groups (name)
-            ),
-            exercise_sets (
-              id,
-              set_number,
-              weight,
-              reps,
-              rpe,
-              failure,
-              set_type,
-              equipment_id,
-              superset_weight,
-              superset_reps,
-              superset_equipment_id,
-              superset_rpe,
-              dropset_weight,
-              dropset_reps,
-              equipment:equipment_id(id, name, emoji),
-              superset_equipment:superset_equipment_id(id, name, emoji)
+              exercise_id,
+              order_index,
+              exercises (
+                id,
+                name,
+                muscle_group_id,
+                muscle_groups (name)
+              ),
+              exercise_sets (
+                id,
+                set_number,
+                weight,
+                reps,
+                rpe,
+                failure,
+                set_type,
+                equipment_id,
+                superset_weight,
+                superset_reps,
+                superset_equipment_id,
+                superset_rpe,
+                dropset_weight,
+                dropset_reps,
+                equipment:equipment_id(id, name, emoji),
+                superset_equipment:superset_equipment_id(id, name, emoji)
+              )
             )
           )
-        )
-      `)
-      .eq('trainee_id', traineeId)
-      .order('workouts(workout_date)', { ascending: false });
+        `)
+        .eq('trainee_id', traineeId)
+        .order('workouts(workout_date)', { ascending: false }),
+      (async () => {
+        const { data: plans } = await supabase
+          .from('trainee_workout_plans')
+          .select('id')
+          .eq('trainee_id', traineeId);
+        const planIds = (plans || []).map((p: { id: string }) => p.id);
+        if (planIds.length === 0) return [];
+        const { data: execs } = await supabase
+          .from('workout_plan_weekly_executions')
+          .select('workout_id')
+          .in('plan_id', planIds)
+          .not('workout_id', 'is', null);
+        return execs || [];
+      })(),
+      supabase
+        .from('google_calendar_sync')
+        .select('workout_id')
+        .eq('trainee_id', traineeId)
+        .not('workout_id', 'is', null),
+    ]);
 
-    if (data) {
-      const formattedWorkouts = data
+    const wtData = (wtResult as { data?: unknown[] })?.data;
+    const calendarData = (calendarResult as { data?: { workout_id: string }[] })?.data || [];
+    const planWorkoutIds = new Set((Array.isArray(planData) ? planData : []).map((r: { workout_id: string }) => r.workout_id));
+    const calendarWorkoutIds = new Set(calendarData.map((r: { workout_id: string }) => r.workout_id));
+
+    if (wtData) {
+      const formattedWorkouts: Workout[] = wtData
         .map((w: any) => w.workouts)
-        .filter((w: Workout) => w !== null);
+        .filter((w: Workout) => w !== null)
+        .map((w: Workout) => {
+          const source = classifyWorkout({
+            id: w.id,
+            is_self_recorded: w.is_self_recorded,
+            in_workout_plan: planWorkoutIds.has(w.id),
+            in_google_calendar: calendarWorkoutIds.has(w.id),
+          });
+          return { ...w, workout_source: source };
+        });
       setWorkouts(formattedWorkouts);
       buildPreviousExerciseData(formattedWorkouts);
     }
@@ -243,9 +286,13 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
         if (!hasMuscleGroup) return false;
       }
 
+      if (workoutSourceFilter !== 'all' && w.workout_source !== workoutSourceFilter) {
+        return false;
+      }
+
       return true;
     });
-  }, [workouts, selectedMonth, selectedMuscleGroup]);
+  }, [workouts, selectedMonth, selectedMuscleGroup, workoutSourceFilter]);
 
   const calculateWorkoutVolume = useCallback((workout: Workout) => {
     let totalVolume = 0;
@@ -371,6 +418,7 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
       // רק עבר והיום, לא עתיד
       if (date.getTime() > now.getTime()) return;
       if (date.getFullYear() !== year || date.getMonth() !== monthIndex) return;
+      if (workoutSourceFilter !== 'all' && w.workout_source !== workoutSourceFilter) return;
       const day = date.getDate();
       if (!days[day]) {
         days[day] = [];
@@ -394,7 +442,7 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
   const stats = getMonthlyStats;
   const latestPR = useMemo(() => getLatestPR(), [workouts, previousExerciseData]);
   const filteredWorkoutsMemo = getFilteredWorkouts;
-  const calendarData = useMemo(() => getMonthCalendarData(), [workouts, selectedMonth]);
+  const calendarData = useMemo(() => getMonthCalendarData(), [workouts, selectedMonth, workoutSourceFilter]);
   const plannedWorkouts = useMemo(() => getPlannedWorkouts(), [workouts]);
 
   if (loading) {
@@ -416,22 +464,21 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
   }
 
   if (showSelfWorkout) {
-    if (!trainerId) {
+    if (!trainerId || !trainee) {
       toast.error('לא ניתן לבצע אימון עצמאי ללא מאמן');
       setShowSelfWorkout(false);
       return null;
     }
 
     return (
-      <SelfWorkoutSession
-        traineeId={traineeId!}
-        traineeName={traineeName || ''}
-        trainerId={trainerId}
+      <WorkoutSession
+        trainee={trainee}
         onBack={() => setShowSelfWorkout(false)}
         onSave={() => {
           setShowSelfWorkout(false);
           loadWorkouts();
         }}
+        isSelfWorkout
       />
     );
   }
@@ -451,7 +498,8 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
     <div className="space-y-4 pb-4">
       <button
         onClick={() => setShowSelfWorkout(true)}
-        className="w-full btn-primary py-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all shadow-lg"
+        disabled={!trainee || !trainerId}
+        className="w-full btn-primary py-4 rounded-xl flex items-center justify-center space-x-3 rtl:space-x-reverse transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Plus className="w-6 h-6" />
         <span className="font-bold text-lg">אימון עצמאי</span>
@@ -568,6 +616,21 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">סוג אימון</label>
+              <select
+                value={workoutSourceFilter}
+                onChange={(e) => setWorkoutSourceFilter(e.target.value as typeof workoutSourceFilter)}
+                className="glass-input w-full p-2"
+              >
+                {WORKOUT_SOURCE_FILTER_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">קבוצת שריר</label>
               <select
                 value={selectedMuscleGroup}
@@ -672,11 +735,19 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
                         const hasWorkout = dayWorkouts.length > 0;
                         const workout = hasWorkout ? dayWorkouts[0] : null;
 
+                        const sourceColor =
+                          hasWorkout && workout?.workout_source === 'self'
+                            ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
+                            : hasWorkout && workout?.workout_source === 'program'
+                            ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+                            : hasWorkout
+                            ? 'bg-primary-500/10 border-primary-500/40 text-primary-400'
+                            : '';
                         const cellContent = (
                           <div
                             className={`w-full h-12 rounded-xl border flex flex-col items-center justify-center text-xs ${
                               hasWorkout
-                                ? 'bg-primary-500/10 border-primary-500/40 text-primary-400'
+                                ? `text-primary-400 ${sourceColor}`
                                 : 'bg-[var(--color-bg-surface)] border-[var(--color-border)] text-[var(--color-text-muted)]'
                             }`}
                           >
@@ -760,9 +831,22 @@ const WorkoutHistory = memo(function WorkoutHistory({ traineeId, traineeName, tr
                         month: 'long',
                       })}
                     </p>
-                    <div className="flex items-center gap-3 text-sm text-[var(--color-text-muted)]">
+                    <div className="flex items-center gap-3 text-sm text-[var(--color-text-muted)] flex-wrap">
                       <span>{workout.workout_exercises?.length || 0} תרגילים</span>
                       <span>{calculateWorkoutVolume(workout).toLocaleString()} ק״ג נפח</span>
+                      {workout.workout_source && (
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-lg ${
+                            workout.workout_source === 'self'
+                              ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                              : workout.workout_source === 'program'
+                              ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
+                              : 'bg-primary-500/15 text-primary-400 border border-primary-500/30'
+                          }`}
+                        >
+                          {WORKOUT_SOURCE_LABELS[workout.workout_source]}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -840,9 +924,16 @@ function WorkoutDetail({
                 year: 'numeric',
               })}
             </p>
-            <p className="text-sm text-primary-100 mt-1">
-              {workout.workout_exercises?.length || 0} תרגילים
-            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-sm text-primary-100">
+                {workout.workout_exercises?.length || 0} תרגילים
+              </p>
+              {workout.workout_source && (
+                <span className="text-xs px-2 py-0.5 rounded-lg bg-white/20 border border-white/30">
+                  {WORKOUT_SOURCE_LABELS[workout.workout_source]}
+                </span>
+              )}
+            </div>
           </div>
           {workout.is_completed ? (
             <div className="bg-white/20 px-3 py-1 rounded-full text-sm">הושלם</div>

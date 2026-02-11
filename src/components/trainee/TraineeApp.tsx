@@ -14,7 +14,7 @@ const WorkoutHistory = lazy(() => import('./WorkoutHistory'));
 const MyMealPlan = lazy(() => import('./MyMealPlan'));
 const MyMentalTools = lazy(() => import('./MyMentalTools'));
 const FoodDiary = lazy(() => import('./FoodDiary'));
-const SelfWorkoutSession = lazy(() => import('./SelfWorkoutSession'));
+const WorkoutSession = lazy(() => import('../trainer/Workouts/WorkoutSession'));
 const MyCardio = lazy(() => import('./MyCardio'));
 const MyWorkoutPlan = lazyWithRetry(() => import('./MyWorkoutPlan'), 3);
 
@@ -209,19 +209,18 @@ export default function TraineeApp() {
         <Suspense fallback={<LoadingSpinner size="lg" text="טוען..." />}>
         {activeTab === 'dashboard' && <TraineeDashboard traineeId={traineeId} traineeName={trainee?.full_name || ''} />}
         {activeTab === 'workout-plan' && <MyWorkoutPlan traineeId={traineeId} />}
-        {activeTab === 'workouts' && <WorkoutHistory traineeId={traineeId} traineeName={trainee?.full_name} trainerId={trainee?.trainer_id} />}
+        {activeTab === 'workouts' && <WorkoutHistory traineeId={traineeId} traineeName={trainee?.full_name} trainerId={trainee?.trainer_id} trainee={trainee} />}
         {activeTab === 'measurements' && <MyMeasurements traineeId={traineeId} trainerId={trainee?.trainer_id} traineeName={trainee?.full_name} />}
         {activeTab === 'menu' && <MyMealPlan traineeId={traineeId} />}
         {activeTab === 'mental' && <MyMentalTools traineeId={traineeId} />}
         {activeTab === 'diary' && <FoodDiary traineeId={traineeId} />}
         {activeTab === 'cardio' && <MyCardio traineeId={traineeId} />}
         {activeTab === 'self-workout' && trainee && (
-          <SelfWorkoutSession
-            traineeId={trainee.id}
-            trainerId={trainee.trainer_id}
-            traineeName={trainee.full_name}
+          <WorkoutSession
+            trainee={trainee}
             onBack={() => setActiveTab('dashboard')}
             onSave={() => setActiveTab('workouts')}
+            isSelfWorkout
           />
         )}
         </Suspense>

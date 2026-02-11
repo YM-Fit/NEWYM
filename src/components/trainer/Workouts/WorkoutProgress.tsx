@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabase';
 import { logger } from '../../../utils/logger';
 import toast from 'react-hot-toast';
 import { themeColors } from '@/utils/themeColors';
+import { classifyWorkout, WORKOUT_SOURCE_FILTER_OPTIONS } from '../../../utils/workoutClassification';
 
 interface WorkoutProgressProps {
   trainee: any;
@@ -21,6 +22,8 @@ interface ExerciseData {
     totalReps: number;
     totalSets: number;
     totalVolume: number;
+    workoutId?: string;
+    workoutSource?: 'studio' | 'program' | 'self';
   }>;
 }
 
@@ -32,6 +35,7 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
   const [metricType, setMetricType] = useState<'weight' | 'reps' | 'volume'>('weight');
   const [selectedMember, setSelectedMember] = useState<'member_1' | 'member_2' | 'all'>('all');
   const [viewMode, setViewMode] = useState<'chart' | 'list' | 'table'>('chart');
+  const [workoutSourceFilter, setWorkoutSourceFilter] = useState<'all' | 'studio' | 'program' | 'self'>('all');
 
   const loadProgressData = useCallback(async () => {
     setLoading(true);
@@ -59,13 +63,15 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
 
       const workoutIds = workoutTrainees.map((wt) => wt.workout_id);
 
-      const { data: workouts, error: workoutsError } = await supabase
-        .from('workouts')
-        .select(`
-          id,
-          workout_date,
-          is_completed,
-          workout_exercises (
+      const [workoutsResult, planData, calendarResult] = await Promise.all([
+        supabase
+          .from('workouts')
+          .select(`
+            id,
+            workout_date,
+            is_completed,
+            is_self_recorded,
+            workout_exercises (
             id,
             exercise_id,
             pair_member,
@@ -85,9 +91,35 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
             )
           )
         `)
-        .in('id', workoutIds)
-        .eq('is_completed', true)
-        .order('workout_date', { ascending: true });
+          .in('id', workoutIds)
+          .eq('is_completed', true)
+          .order('workout_date', { ascending: true }),
+        (async () => {
+          const { data: plans } = await supabase
+            .from('trainee_workout_plans')
+            .select('id')
+            .eq('trainee_id', trainee.id);
+          const planIds = (plans || []).map((p: { id: string }) => p.id);
+          if (planIds.length === 0) return [];
+          const { data: execs } = await supabase
+            .from('workout_plan_weekly_executions')
+            .select('workout_id')
+            .in('plan_id', planIds)
+            .not('workout_id', 'is', null);
+          return execs || [];
+        })(),
+        supabase
+          .from('google_calendar_sync')
+          .select('workout_id')
+          .eq('trainee_id', trainee.id)
+          .not('workout_id', 'is', null),
+      ]);
+
+      const workouts = (workoutsResult as { data?: unknown[] })?.data;
+      const workoutsError = (workoutsResult as { error?: unknown })?.error;
+      const calendarData = (calendarResult as { data?: { workout_id: string }[] })?.data || [];
+      const planWorkoutIds = new Set((Array.isArray(planData) ? planData : []).map((r: { workout_id: string }) => r.workout_id));
+      const calendarWorkoutIds = new Set(calendarData.map((r: { workout_id: string }) => r.workout_id));
 
       if (workoutsError) {
         logger.error('Error loading workouts', workoutsError, 'WorkoutProgress');
@@ -106,6 +138,12 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
     const exerciseMap = new Map<string, ExerciseData>();
 
     workouts.forEach((workout) => {
+      const workoutSource = classifyWorkout({
+        id: workout.id,
+        is_self_recorded: workout.is_self_recorded,
+        in_workout_plan: planWorkoutIds.has(workout.id),
+        in_google_calendar: calendarWorkoutIds.has(workout.id),
+      });
       workout.workout_exercises?.forEach((we: any) => {
         if (trainee.is_pair) {
           if (selectedMember === 'all') {
@@ -144,6 +182,8 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
           totalReps,
           totalSets,
           totalVolume,
+          workoutId: workout.id,
+          workoutSource,
         });
       });
     });
@@ -171,8 +211,15 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
   }, [loadProgressData]);
 
   const selectedExerciseData = useMemo(() => {
-    return exercises.find((ex) => ex.id === selectedExercise);
-  }, [exercises, selectedExercise]);
+    const ex = exercises.find((e) => e.id === selectedExercise);
+    if (!ex) return null;
+    const filteredProgress =
+      workoutSourceFilter === 'all'
+        ? ex.progressData
+        : ex.progressData.filter((p) => p.workoutSource === workoutSourceFilter);
+    if (filteredProgress.length === 0) return null;
+    return { ...ex, progressData: filteredProgress };
+  }, [exercises, selectedExercise, workoutSourceFilter]);
 
   const getMetricValue = useCallback((data: ExerciseData['progressData'][0]) => {
     switch (metricType) {
@@ -461,20 +508,37 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
       </div>
 
       <div className="premium-card-static p-6 space-y-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex-1">
-            <select
-              value={selectedExercise || ''}
-              onChange={(e) => setSelectedExercise(e.target.value)}
-              className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-foreground focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-            >
-              {exercises.map((ex) => (
-                <option key={ex.id} value={ex.id}>
-                  {ex.name} ({ex.progressData.length} אימונים)
-                </option>
-              ))}
-            </select>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex-1 min-w-[200px]">
+              <select
+                value={selectedExercise || ''}
+                onChange={(e) => setSelectedExercise(e.target.value)}
+                className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-foreground focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              >
+                {exercises.map((ex) => (
+                  <option key={ex.id} value={ex.id}>
+                    {ex.name} ({ex.progressData.length} אימונים)
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="min-w-[140px]">
+              <select
+                value={workoutSourceFilter}
+                onChange={(e) => setWorkoutSourceFilter(e.target.value as typeof workoutSourceFilter)}
+                className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-foreground focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              >
+                {WORKOUT_SOURCE_FILTER_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1" />
           <div className="flex gap-1 bg-surface p-1 rounded-xl border border-border">
             <button
               onClick={() => handleViewModeChange('chart')}
@@ -508,8 +572,9 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
             </button>
           </div>
         </div>
+        </div>
 
-        {selectedExerciseData && (
+        {selectedExerciseData ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-surface/30 rounded-xl p-3 border border-border">
               <div className="flex items-center gap-2 mb-1">
@@ -554,9 +619,15 @@ export default function WorkoutProgress({ trainee, onBack }: WorkoutProgressProp
               </p>
             </div>
           </div>
+        ) : (
+          <div className="text-center py-8 text-muted">
+            {workoutSourceFilter !== 'all'
+              ? 'אין נתונים עבור סוג האימון שנבחר'
+              : 'בחר תרגיל להצגת התקדמות'}
+          </div>
         )}
 
-        {viewMode === 'chart' && (
+        {viewMode === 'chart' && selectedExerciseData && (
           <div className="h-64 sm:h-72 lg:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={getChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>

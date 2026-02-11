@@ -27,6 +27,7 @@ interface WorkoutHeaderProps {
   onDateChange: (date: Date) => void;
   onWorkoutTypeChange: (type: 'personal' | 'pair') => void;
   isTablet?: boolean;
+  isSelfWorkout?: boolean;
 }
 
 export const WorkoutHeader = memo(({
@@ -47,6 +48,7 @@ export const WorkoutHeader = memo(({
   onDateChange,
   onWorkoutTypeChange,
   isTablet,
+  isSelfWorkout = false,
 }: WorkoutHeaderProps) => {
   const handlePersonalClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -81,7 +83,7 @@ export const WorkoutHeader = memo(({
             </div>
             <div>
               <h1 className="text-base lg:text-lg font-bold text-foreground">
-                {workoutId ? 'עריכת אימון' : 'אימון חדש'}
+                {isSelfWorkout ? 'אימון עצמאי' : workoutId ? 'עריכת אימון' : 'אימון חדש'}
               </h1>
               <p className="text-xs lg:text-sm text-muted">{trainee.full_name}</p>
               {trainee.is_pair && selectedMember && workoutType === 'personal' && (

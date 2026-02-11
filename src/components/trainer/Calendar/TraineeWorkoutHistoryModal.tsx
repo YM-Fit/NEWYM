@@ -33,6 +33,7 @@ import { logger } from '../../../utils/logger';
 import { generateGoogleCalendarEventTitle } from '../../../utils/traineeSessionUtils';
 import { syncTraineeEventsToCalendar } from '../../../services/traineeCalendarSyncService';
 import { findBestMatches } from '../../../utils/nameMatching';
+import { classifyWorkout, WORKOUT_SOURCE_FILTER_OPTIONS, WORKOUT_SOURCE_LABELS } from '../../../utils/workoutClassification';
 
 interface TraineeWorkoutHistoryModalProps {
   isOpen: boolean;
@@ -50,6 +51,7 @@ interface WorkoutEvent {
   startTime: string;
   endTime: string;
   workoutNumber: number;
+  workoutSource?: 'studio' | 'program' | 'self';
 }
 
 type ActionMode = 'view' | 'reschedule' | 'replace';
@@ -68,6 +70,7 @@ export default function TraineeWorkoutHistoryModal({
 
   const [workouts, setWorkouts] = useState<WorkoutEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [workoutSourceFilter, setWorkoutSourceFilter] = useState<'all' | 'studio' | 'program' | 'self'>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedWorkout, setSelectedWorkout] = useState<WorkoutEvent | null>(null);
   const [actionMode, setActionMode] = useState<ActionMode>('view');
@@ -164,11 +167,11 @@ export default function TraineeWorkoutHistoryModal({
       const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0, 23, 59, 59);
 
       // Get all workouts for this month AND all historical workouts for numbering
-      const [monthWorkoutsResult, allWorkoutsResult] = await Promise.all([
+      const [monthWorkoutsResult, allWorkoutsResult, planResult, calendarResult] = await Promise.all([
         // Workouts for this month
         supabase
           .from('workouts')
-          .select('id, workout_date, google_event_id')
+          .select('id, workout_date, google_event_id, is_self_recorded')
           .eq('trainer_id', user.id)
           .gte('workout_date', startOfMonth.toISOString())
           .lte('workout_date', endOfMonth.toISOString())
@@ -179,8 +182,31 @@ export default function TraineeWorkoutHistoryModal({
           .select('id, workout_date')
           .eq('trainer_id', user.id)
           .lte('workout_date', endOfMonth.toISOString())
-          .order('workout_date', { ascending: true })
+          .order('workout_date', { ascending: true }),
+        (async () => {
+          const { data: plans } = await supabase
+            .from('trainee_workout_plans')
+            .select('id')
+            .eq('trainee_id', resolvedTraineeId);
+          const planIds = (plans || []).map((p: { id: string }) => p.id);
+          if (planIds.length === 0) return [];
+          const { data: execs } = await supabase
+            .from('workout_plan_weekly_executions')
+            .select('workout_id')
+            .in('plan_id', planIds)
+            .not('workout_id', 'is', null);
+          return execs || [];
+        })(),
+        supabase
+          .from('google_calendar_sync')
+          .select('workout_id')
+          .eq('trainee_id', resolvedTraineeId)
+          .not('workout_id', 'is', null),
       ]);
+
+      const planWorkoutIds = new Set((Array.isArray(planResult) ? planResult : []).map((r: { workout_id: string }) => r.workout_id));
+      const calendarData = (calendarResult as { data?: { workout_id: string }[] })?.data || [];
+      const calendarWorkoutIds = new Set(calendarData.map((r: { workout_id: string }) => r.workout_id));
 
       if (monthWorkoutsResult.error) {
         logger.error('Error loading workouts', monthWorkoutsResult.error, 'TraineeWorkoutHistoryModal');
@@ -235,6 +261,12 @@ export default function TraineeWorkoutHistoryModal({
         .map((w) => {
           const date = new Date(w.workout_date);
           const workoutNumber = traineeWorkoutsSorted.findIndex(x => x.id === w.id) + 1;
+          const workoutSource = classifyWorkout({
+            id: w.id,
+            is_self_recorded: (w as { is_self_recorded?: boolean }).is_self_recorded,
+            in_workout_plan: planWorkoutIds.has(w.id),
+            in_google_calendar: calendarWorkoutIds.has(w.id),
+          });
           return {
             id: w.id,
             googleEventId: w.google_event_id || '',
@@ -242,6 +274,7 @@ export default function TraineeWorkoutHistoryModal({
             startTime: date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
             endTime: new Date(date.getTime() + 60 * 60 * 1000).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
             workoutNumber: workoutNumber > 0 ? workoutNumber : traineeWorkoutsSorted.length,
+            workoutSource,
           };
         });
 
@@ -544,6 +577,10 @@ export default function TraineeWorkoutHistoryModal({
     return date.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
   };
 
+  const filteredWorkouts = workoutSourceFilter === 'all'
+    ? workouts
+    : workouts.filter(w => w.workoutSource === workoutSourceFilter);
+
   if (!isOpen) return null;
 
   return (
@@ -615,7 +652,25 @@ export default function TraineeWorkoutHistoryModal({
             </div>
           ) : actionMode === 'view' ? (
             <div className="space-y-3">
-              {workouts.map((workout) => (
+              <div className="mb-3 flex items-center gap-3">
+                <select
+                  value={workoutSourceFilter}
+                  onChange={(e) => setWorkoutSourceFilter(e.target.value as typeof workoutSourceFilter)}
+                  className="bg-surface border border-border rounded-xl px-4 py-2 text-foreground text-sm"
+                >
+                  {WORKOUT_SOURCE_FILTER_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {filteredWorkouts.length === 0 ? (
+                <div className="text-center py-8 text-muted text-muted">
+                  אין אימונים מסוג זה בחודש
+                </div>
+              ) : (
+              filteredWorkouts.map((workout) => (
                 <div
                   key={workout.id}
                   className="flex items-center justify-between p-4 bg-white bg-elevated rounded-xl border border-border border-border30 hover:bg-surface50 transition-all duration-300 shadow-sm"
@@ -632,9 +687,24 @@ export default function TraineeWorkoutHistoryModal({
                           month: 'long'
                         })}
                       </div>
-                      <div className="flex items-center gap-1 text-sm text-muted text-muted">
-                        <Clock className="h-3.5 w-3.5" />
-                        {workout.startTime} - {workout.endTime}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="flex items-center gap-1 text-sm text-muted text-muted">
+                          <Clock className="h-3.5 w-3.5" />
+                          {workout.startTime} - {workout.endTime}
+                        </span>
+                        {workout.workoutSource && (
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-lg ${
+                              workout.workoutSource === 'self'
+                                ? 'bg-amber-500/15 text-amber-600 border border-amber-500/30'
+                                : workout.workoutSource === 'program'
+                                ? 'bg-blue-500/15 text-blue-600 border border-blue-500/30'
+                                : 'bg-primary-500/15 text-primary-600 border border-primary-500/30'
+                            }`}
+                          >
+                            {WORKOUT_SOURCE_LABELS[workout.workoutSource]}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -669,7 +739,8 @@ export default function TraineeWorkoutHistoryModal({
                     </button>
                   </div>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           ) : actionMode === 'reschedule' && selectedWorkout ? (
             <div className="space-y-4">

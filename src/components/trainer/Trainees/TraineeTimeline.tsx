@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Calendar, Dumbbell, Scale, FileText, Trophy, TrendingDown, TrendingUp, ChevronDown, ChevronUp, Activity, Droplets, List, Table2 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
+import { classifyWorkout, WORKOUT_SOURCE_LABELS } from '../../../utils/workoutClassification';
 
 interface TimelineItem {
   id: string;
@@ -32,25 +33,49 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
     setLoading(true);
     const timelineItems: TimelineItem[] = [];
 
-    const { data: workoutTrainees } = await supabase
-      .from('workout_trainees')
-      .select(`
-        workouts!inner (
-          id,
-          workout_date,
-          workout_type,
-          notes,
-          is_self_recorded,
-          workout_exercises(
-            exercises(name),
-            exercise_sets(weight, reps)
+    const [{ data: workoutTrainees }, planResult, { data: calendarData }] = await Promise.all([
+      supabase
+        .from('workout_trainees')
+        .select(`
+          workouts!inner (
+            id,
+            workout_date,
+            workout_type,
+            notes,
+            is_self_recorded,
+            workout_exercises(
+              exercises(name),
+              exercise_sets(weight, reps)
+            )
           )
-        )
-      `)
-      .eq('trainee_id', traineeId)
-      .eq('workouts.is_completed', true)
-      .order('workouts(workout_date)', { ascending: false })
-      .limit(50);
+        `)
+        .eq('trainee_id', traineeId)
+        .eq('workouts.is_completed', true)
+        .order('workouts(workout_date)', { ascending: false })
+        .limit(50),
+      (async () => {
+        const { data: plans } = await supabase
+          .from('trainee_workout_plans')
+          .select('id')
+          .eq('trainee_id', traineeId);
+        const planIds = (plans || []).map((p: { id: string }) => p.id);
+        if (planIds.length === 0) return [];
+        const { data: execs } = await supabase
+          .from('workout_plan_weekly_executions')
+          .select('workout_id')
+          .in('plan_id', planIds)
+          .not('workout_id', 'is', null);
+        return execs || [];
+      })(),
+      supabase
+        .from('google_calendar_sync')
+        .select('workout_id')
+        .eq('trainee_id', traineeId)
+        .not('workout_id', 'is', null),
+    ]);
+
+    const planWorkoutIds = new Set((Array.isArray(planResult) ? planResult : []).map((r: { workout_id: string }) => r.workout_id));
+    const calendarWorkoutIds = new Set((calendarData || []).map((r: { workout_id: string }) => r.workout_id));
 
     const workouts = workoutTrainees?.map((wt: any) => wt.workouts).filter(Boolean) || [];
 
@@ -63,11 +88,19 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
         });
       });
 
+      const source = classifyWorkout({
+        id: w.id,
+        is_self_recorded: w.is_self_recorded,
+        in_workout_plan: planWorkoutIds.has(w.id),
+        in_google_calendar: calendarWorkoutIds.has(w.id),
+      });
+      const title = WORKOUT_SOURCE_LABELS[source];
+
       timelineItems.push({
         id: `workout-${w.id}`,
         type: 'workout',
         date: w.workout_date,
-        title: w.is_self_recorded ? 'אימון עצמאי' : `אימון ${w.workout_type === 'pair' ? 'זוגי' : 'אישי'}`,
+        title,
         description: `${exerciseCount} תרגילים`,
         metadata: {
           workoutId: w.id,
@@ -75,6 +108,7 @@ export default function TraineeTimeline({ traineeId, traineeName, onClose }: Tra
           exerciseCount,
           totalVolume,
           isSelfRecorded: w.is_self_recorded,
+          workoutSource: source,
           exercises: w.workout_exercises?.slice(0, 3).map((we: any) => we.exercises?.name).filter(Boolean)
         },
       });

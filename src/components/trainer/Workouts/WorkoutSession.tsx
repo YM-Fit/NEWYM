@@ -78,6 +78,8 @@ interface WorkoutSessionProps {
   initialSelectedMember?: 'member_1' | 'member_2' | null;
   isTablet?: boolean;
   isPrepared?: boolean;
+  /** When true, trainee is doing self-workout - same UI as trainer flow but saves via create_trainee_workout. */
+  isSelfWorkout?: boolean;
 }
 
 export default function WorkoutSession({
@@ -89,6 +91,7 @@ export default function WorkoutSession({
   initialSelectedMember,
   isTablet,
   isPrepared = false,
+  isSelfWorkout = false,
 }: WorkoutSessionProps) {
   const { user } = useAuth();
   const { handleError } = useErrorHandler();
@@ -908,8 +911,8 @@ export default function WorkoutSession({
     logger.debug('Adding exercise:', { exerciseId: exercise.id, exerciseName: exercise.name, loadPreviousData }, 'WorkoutSession');
 
     try {
-      // Create workout if this is the first exercise
-      if (exercises.length === 0 && !workoutId && user) {
+      // Create workout if this is the first exercise (skip for self-workout - created on save)
+      if (exercises.length === 0 && !workoutId && user && !isSelfWorkout) {
         const newWorkoutId = await createInitialWorkout();
         if (!newWorkoutId) {
           logger.error('Failed to create workout, cannot add exercise', {}, 'WorkoutSession');
@@ -933,8 +936,8 @@ export default function WorkoutSession({
         
         // Continue with the workoutId we have
         // Note: We use currentWorkoutId instead of workoutId state to avoid race conditions
-      } else if (!workoutId) {
-        // No workout ID and we didn't just create one - this shouldn't happen
+      } else if (!workoutId && !isSelfWorkout) {
+        // No workout ID and we didn't just create one - this shouldn't happen (except for self-workout)
         logger.error('Cannot add exercise: no workout ID', {}, 'WorkoutSession');
         toast.error('שגיאה: אין מזהה אימון. נסה שוב.');
         setLoadingExercise(null);
@@ -1404,8 +1407,9 @@ export default function WorkoutSession({
       }
 
       // Otherwise, load from database
-      // First get all workouts for this trainer and trainee
-      const { data: workouts, error: workoutsError } = await supabase
+      // For self-workout, only load is_self_recorded workouts
+      const trainerIdToUse = isSelfWorkout ? trainee.trainer_id : user.id;
+      let query = supabase
         .from('workouts')
         .select(`
           id,
@@ -1442,10 +1446,15 @@ export default function WorkoutSession({
             )
           )
         `)
-        .eq('trainer_id', user.id)
+        .eq('trainer_id', trainerIdToUse)
         .eq('workout_trainees.trainee_id', trainee.id)
         .order('workout_date', { ascending: false })
         .limit(10);
+
+      if (isSelfWorkout) {
+        query = query.eq('is_self_recorded', true);
+      }
+      const { data: workouts, error: workoutsError } = await query;
 
       if (workoutsError) {
         logger.error('Error loading previous workout:', workoutsError, 'WorkoutSession');
@@ -1556,6 +1565,129 @@ export default function WorkoutSession({
 
       if (!session) {
         toast.error('נדרשת התחברות מחדש');
+        setSaving(false);
+        return;
+      }
+
+      // Self-workout: save via create_trainee_workout RPC (categorized as independent)
+      if (isSelfWorkout) {
+        if (!trainee.trainer_id) {
+          toast.error('לא ניתן לשמור אימון ללא מאמן');
+          setSaving(false);
+          return;
+        }
+
+        const { data: workoutIdResult, error: workoutError } = await supabase
+          .rpc('create_trainee_workout', {
+            p_trainer_id: trainee.trainer_id,
+            p_workout_type: 'personal',
+            p_notes: notes || '',
+            p_workout_date: workoutDate.toISOString().split('T')[0],
+            p_is_completed: true,
+            p_is_self_recorded: true,
+          });
+
+        if (workoutError || !workoutIdResult) {
+          logger.error('Self-workout save error:', workoutError, 'WorkoutSession');
+          toast.error('שגיאה בשמירת האימון');
+          setSaving(false);
+          return;
+        }
+
+        const newWorkoutId = workoutIdResult as string;
+
+        const { error: traineeError } = await supabase
+          .from('workout_trainees')
+          .insert({ workout_id: newWorkoutId, trainee_id: trainee.id });
+
+        if (traineeError) {
+          logger.error('Trainee link error:', traineeError, 'WorkoutSession');
+          toast.error('שגיאה בקישור המתאמן לאימון');
+          setSaving(false);
+          return;
+        }
+
+        for (let i = 0; i < exercises.length; i++) {
+          const exercise = exercises[i];
+          const { data: workoutExercise, error: exerciseError } = await supabase
+            .from('workout_exercises')
+            .insert({
+              workout_id: newWorkoutId,
+              trainee_id: trainee.id,
+              exercise_id: exercise.exercise.id,
+              order_index: i,
+              pair_member: null,
+            })
+            .select()
+            .single();
+
+          if (exerciseError || !workoutExercise) {
+            logger.error('Exercise insert error:', exerciseError, 'WorkoutSession');
+            toast.error('שגיאה בשמירת התרגיל');
+            setSaving(false);
+            return;
+          }
+
+          const weId = (workoutExercise as { id: string }).id;
+          const setsToInsert = exercise.sets.map((set) => ({
+            workout_exercise_id: weId,
+            set_number: set.set_number,
+            weight: set.weight,
+            reps: set.reps,
+            rpe: set.rpe && set.rpe >= 1 && set.rpe <= 10 ? set.rpe : null,
+            set_type: set.set_type,
+            failure: set.failure || false,
+            superset_exercise_id: set.superset_exercise_id || null,
+            superset_weight: set.superset_weight ?? null,
+            superset_reps: set.superset_reps ?? null,
+            superset_rpe: set.superset_rpe && set.superset_rpe >= 1 && set.superset_rpe <= 10 ? set.superset_rpe : null,
+            superset_equipment_id: set.superset_equipment_id ?? null,
+            superset_dropset_weight: set.superset_dropset_weight ?? null,
+            superset_dropset_reps: set.superset_dropset_reps ?? null,
+            dropset_weight: set.dropset_weight ?? null,
+            dropset_reps: set.dropset_reps ?? null,
+            equipment_id: set.equipment_id ?? null,
+          }));
+
+          const { error: setsError } = await supabase.from('exercise_sets').insert(setsToInsert);
+          if (setsError) {
+            logger.error('Sets insert error:', setsError, 'WorkoutSession');
+            toast.error('שגיאה בשמירת הסטים');
+            setSaving(false);
+            return;
+          }
+        }
+
+        if (trainee.trainer_id) {
+          await supabase.from('trainer_notifications').insert({
+            trainer_id: trainee.trainer_id,
+            trainee_id: trainee.id,
+            notification_type: 'self_workout',
+            title: 'אימון עצמאי חדש',
+            message: `${trainee.full_name} סיים אימון עצמאי`,
+            is_read: false,
+          });
+        }
+
+        clearSaved();
+        const savedWorkoutData: Workout = {
+          id: newWorkoutId,
+          traineeId: trainee.id,
+          date: workoutDate.toISOString(),
+          type: 'personal',
+          exercises: exercises.map((ex) => ({
+            exerciseId: ex.exercise.id,
+            exerciseName: ex.exercise.name,
+            sets: ex.sets.map((s) => ({ weight: s.weight, reps: s.reps, rpe: s.rpe || 0 })),
+          })),
+          totalVolume: calculateTotalVolume(),
+          averageRpe: 0,
+          duration: 0,
+          notes: notes || undefined,
+          isSelfRecorded: true,
+        };
+        setSavedWorkout(savedWorkoutData);
+        setShowSummary(true);
         setSaving(false);
         return;
       }
@@ -1860,6 +1992,7 @@ export default function WorkoutSession({
         onDateChange={setWorkoutDate}
         onWorkoutTypeChange={setWorkoutType}
         isTablet={isTablet}
+        isSelfWorkout={isSelfWorkout}
       />
 
       {/* Workout Progress Bar - Only show when workout has exercises */}
