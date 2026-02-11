@@ -387,25 +387,35 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
       // Map ALL workout dates for historical numbering (with workout_id for stable sort)
       const allWorkoutDateMap = new Map(allWorkoutsData?.map(w => [w.id, w.workout_date]) || []);
       
-      // Build historical (date, workout_id) per trainee for stable numbering
+      // Build historical (date, workout_id) per trainee for stable numbering (dedupe by workout_id)
       const traineeHistoricalItems = new Map<string, { date: string; workout_id: string }[]>();
+      const seenHistoricalByTrainee = new Map<string, Set<string>>();
       (allLinksResult.data || []).forEach(link => {
         if (!traineeHistoricalItems.has(link.trainee_id)) {
           traineeHistoricalItems.set(link.trainee_id, []);
+          seenHistoricalByTrainee.set(link.trainee_id, new Set());
         }
+        const seen = seenHistoricalByTrainee.get(link.trainee_id)!;
+        if (seen.has(link.workout_id)) return;
+        seen.add(link.workout_id);
         const date = allWorkoutDateMap.get(link.workout_id);
         if (date) {
           traineeHistoricalItems.get(link.trainee_id)!.push({ date, workout_id: link.workout_id });
         }
       });
 
-      // Group workouts by trainee for this month (keep one entry per workout for correct numbering)
+      // Group workouts by trainee for this month (dedupe by workout_id to handle edge-case duplicate workout_trainees)
       const traineeWorkouts = new Map<string, { items: { date: string; workout_id: string }[]; numbers: Map<string, number> }>();
+      const seenWorkoutByTrainee = new Map<string, Set<string>>();
       
       for (const workout of workoutData) {
         if (!traineeWorkouts.has(workout.trainee_id)) {
           traineeWorkouts.set(workout.trainee_id, { items: [], numbers: new Map() });
+          seenWorkoutByTrainee.set(workout.trainee_id, new Set());
         }
+        const seen = seenWorkoutByTrainee.get(workout.trainee_id)!;
+        if (seen.has(workout.workout_id)) continue;
+        seen.add(workout.workout_id);
         traineeWorkouts.get(workout.trainee_id)!.items.push({
           date: workout.workout_date,
           workout_id: workout.workout_id,
@@ -1150,6 +1160,11 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
                   setMonthlyReport(updatedReport);
                   // Save immediately
                   const reportMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+                  const serializableReport = reportData.map(row => ({
+                    ...row,
+                    workout_numbers: Object.fromEntries(row.workout_numbers),
+                    workout_items: row.workout_items,
+                  }));
                   const reportDataToSave = {
                     trainer_id: user?.id,
                     report_month: reportMonth.toISOString().split('T')[0],
@@ -1157,7 +1172,7 @@ export default function SmartReportView({ initialMonth, onBackToCalendar }: Smar
                     total_workouts: updatedReport.total_workouts,
                     income_goal: incomeGoal,
                     payment_distribution: updatedReport.payment_distribution,
-                    report_data: reportData,
+                    report_data: serializableReport,
                     is_auto_saved: false,
                     updated_at: new Date().toISOString(),
                   };

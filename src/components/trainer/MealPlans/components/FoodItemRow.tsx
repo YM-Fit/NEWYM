@@ -116,7 +116,7 @@ export function FoodItemRow({
           <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">כמות</label>
           <input
             type="number"
-            step="1"
+            step={item.unit === 'g' || item.unit === 'unit' ? 1 : 0.1}
             value={item.quantity}
             onChange={(e) => {
               handleQuantityChange(item, parseFloat(e.target.value) || 0, displayIndex, itemIndex);

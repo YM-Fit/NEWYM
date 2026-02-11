@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
-import { useTraineeForMacros, calculatePlanMacros } from '../../hooks/useTraineeForMacros';
+import { useTraineeForMacros, calculatePlanMacros } from '../hooks/useTraineeForMacros';
 
 interface CreatePlanModalProps {
   data: any;
@@ -18,8 +18,8 @@ export function CreatePlanModal({ data, saving, traineeId, onChange, onSave, onC
   useEffect(() => {
     if (!traineeId || !traineeData || appliedTdeeRef.current) return;
     const isEmpty =
-      (data.daily_calories === '' || data.daily_calories === undefined) &&
-      (data.protein_grams === '' || data.protein_grams === undefined);
+      (data.daily_calories === '' || data.daily_calories == null) &&
+      (data.protein_grams === '' || data.protein_grams == null);
     if (!isEmpty) return;
 
     const calculated = calculatePlanMacros(traineeData);

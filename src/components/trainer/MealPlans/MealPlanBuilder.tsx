@@ -407,7 +407,19 @@ export default function MealPlanBuilder({
           traineeId={traineeId}
           onChange={setNewPlanData}
           onSave={handleCreatePlan}
-          onClose={() => setShowCreateForm(false)}
+          onClose={() => {
+            setShowCreateForm(false);
+            setNewPlanData({
+              name: '',
+              description: '',
+              daily_calories: '',
+              daily_water_ml: '',
+              protein_grams: '',
+              carbs_grams: '',
+              fat_grams: '',
+              notes: '',
+            });
+          }}
         />
       )}
 

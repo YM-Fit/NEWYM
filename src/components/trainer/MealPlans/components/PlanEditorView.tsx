@@ -275,11 +275,11 @@ export function PlanEditorView({
     displayIndex: number,
     itemIndex: number
   ) => {
-    const quantity = item.unit === 'g' ? item.quantity : 100;
-    const nutrition = calculateNutrition(catalogItem, quantity);
+    const gramsEquivalent = quantityToGrams(item.quantity, item.unit);
+    const nutrition = calculateNutrition(catalogItem, gramsEquivalent);
     debouncedUpdateFoodItem(item.id, {
       food_name: catalogItem.name,
-      quantity,
+      quantity: gramsEquivalent,
       unit: 'g',
       calories: nutrition.calories,
       protein: nutrition.protein,
