@@ -159,16 +159,16 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
             <button
               type="button"
               onClick={onBack}
-              className="p-2 md:p-2.5 hover:bg-white/20 rounded-lg transition-all text-white flex-shrink-0"
+              className="p-2 md:p-2.5 hover:bg-white/20 rounded-lg transition-all text-foreground flex-shrink-0"
               aria-label="חזור"
             >
               <ArrowRight className="h-5 w-5 md:h-6 md:w-6" />
             </button>
-            <div className="text-white flex-1 min-w-0">
+            <div className="text-foreground flex-1 min-w-0">
               <h1 className="text-lg md:text-xl font-bold truncate">אימון עצמאי</h1>
               <p className="text-xs md:text-sm text-emerald-100 truncate">{traineeName}</p>
               {exercises.length > 0 && (
-                <p className="text-xs text-white/90 font-semibold mt-1 bg-white/15 px-2 py-0.5 rounded-md inline-block">
+                <p className="text-xs text-foreground/90 font-semibold mt-1 bg-white/15 px-2 py-0.5 rounded-md inline-block">
                   נפח: {calculateTotalVolume().toLocaleString()} ק"ג
                 </p>
               )}
@@ -188,8 +188,8 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
         </div>
 
         <div className="flex items-center justify-center bg-white/15 backdrop-blur-sm rounded-lg md:rounded-xl p-2.5 md:p-3">
-          <Clock className="h-4 w-4 md:h-5 md:w-5 text-white ml-1.5 md:ml-2" />
-          <span className="text-lg md:text-xl font-bold text-white">{formatTime(elapsedTime)}</span>
+          <Clock className="h-4 w-4 md:h-5 md:w-5 text-foreground ml-1.5 md:ml-2" />
+          <span className="text-lg md:text-xl font-bold text-foreground">{formatTime(elapsedTime)}</span>
         </div>
 
         <div className="mt-3 flex items-center justify-between gap-2">
@@ -255,7 +255,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
       {exercises.length === 0 && (
         <div className="premium-card-static p-8 text-center">
           <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow">
-            <Dumbbell className="h-10 w-10 text-white" />
+            <Dumbbell className="h-10 w-10 text-foreground" />
           </div>
           <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">התחל אימון עצמאי</h3>
           <p className="text-[var(--color-text-muted)] mb-4">הוסף תרגילים ורשום את הסטים שלך</p>
@@ -265,7 +265,7 @@ export default function SelfWorkoutSession({ traineeId, traineeName, trainerId, 
       <button
         type="button"
         onClick={() => setShowExerciseSelector(true)}
-        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 md:py-4 rounded-lg md:rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all shadow-md hover:shadow-lg text-sm md:text-base font-semibold md:font-bold"
+        className="w-full bg-emerald-500 hover:bg-emerald-600 text-foreground py-3 md:py-4 rounded-lg md:rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all shadow-md hover:shadow-lg text-sm md:text-base font-semibold md:font-bold"
       >
         <Plus className="h-5 w-5 md:h-6 md:w-6" />
         <span>{exercises.length === 0 ? 'התחל אימון' : 'הוסף תרגיל'}</span>

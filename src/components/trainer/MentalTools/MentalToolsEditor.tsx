@@ -276,14 +276,14 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
               onClick={onBack}
               className="p-2 bg-white/20 hover:bg-white/30 rounded-xl transition-all duration-300 hover:scale-105"
             >
-              <ArrowRight className="h-5 w-5 text-white" />
+              <ArrowRight className="h-5 w-5 text-foreground" />
             </button>
             <div className="flex items-center gap-3">
               <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                <Brain className="h-7 w-7 text-white" />
+                <Brain className="h-7 w-7 text-foreground" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">כלים מנטליים</h1>
+                <h1 className="text-2xl font-bold text-foreground">כלים מנטליים</h1>
                 <p className="text-emerald-100">{traineeName}</p>
               </div>
             </div>
@@ -307,8 +307,8 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
           onClick={() => setFilterCategory('all')}
           className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
             filterCategory === 'all'
-              ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg'
-              : 'bg-white text-gray-700 hover:bg-gray-50 shadow-md hover:shadow-lg border border-gray-200'
+              ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-foreground shadow-lg'
+              : 'bg-white text-muted700 hover:bg-surface50 shadow-md hover:shadow-lg border border-border200'
           }`}
         >
           הכל ({tools.length})
@@ -323,8 +323,8 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
               onClick={() => setFilterCategory(cat.value)}
               className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2 ${
                 filterCategory === cat.value
-                  ? `bg-gradient-to-r ${style.gradient} text-white shadow-lg`
-                  : 'bg-white text-gray-700 hover:bg-gray-50 shadow-md hover:shadow-lg border border-gray-200'
+                  ? `bg-gradient-to-r ${style.gradient} text-foreground shadow-lg`
+                  : 'bg-white text-muted700 hover:bg-surface50 shadow-md hover:shadow-lg border border-border200'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -336,13 +336,13 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
 
       {/* Add/Edit Form */}
       {showAddForm && (
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xl transition-all duration-300">
+        <div className="bg-white rounded-2xl border border-border200 p-6 shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
+                <Sparkles className="w-5 h-5 text-foreground" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900">
+              <h3 className="text-lg font-bold text-muted900">
                 {editingTool ? 'עריכת כלי מנטלי' : 'הוספת כלי מנטלי חדש'}
               </h3>
             </div>
@@ -351,42 +351,42 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
                 setShowAddForm(false);
                 resetForm();
               }}
-              className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-300"
+              className="p-2 hover:bg-surface100 rounded-xl transition-all duration-300"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-5 h-5 text-muted500" />
             </button>
           </div>
 
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">כותרת *</label>
+              <label className="block text-sm font-semibold text-muted700 mb-2">כותרת *</label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="לדוגמה: לשתות 8 כוסות מים ביום"
-                className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-gray-900 placeholder-gray-400"
+                className="w-full p-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-muted900 placeholder-gray-400"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">תיאור</label>
+              <label className="block text-sm font-semibold text-muted700 mb-2">תיאור</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="הסבר מפורט מה המתאמן צריך לעשות..."
                 rows={3}
-                className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-gray-900 placeholder-gray-400"
+                className="w-full p-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-muted900 placeholder-gray-400"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">קטגוריה</label>
+                <label className="block text-sm font-semibold text-muted700 mb-2">קטגוריה</label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value as MentalTool['category'] })}
-                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-gray-900 bg-white"
+                  className="w-full p-4 border-2 border-border200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 text-muted900 bg-white"
                 >
                   {categories.map(cat => (
                     <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -395,7 +395,7 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">עדיפות (1-5)</label>
+                <label className="block text-sm font-semibold text-muted700 mb-2">עדיפות (1-5)</label>
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map(num => (
                     <button
@@ -405,10 +405,10 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
                       className={`flex-1 p-3 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
                         formData.priority === num
                           ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          : 'border-border200 hover:border-border300 hover:bg-surface50'
                       }`}
                     >
-                      <Star className={`w-5 h-5 mx-auto ${formData.priority >= num ? 'fill-current text-amber-500' : 'text-gray-300'}`} />
+                      <Star className={`w-5 h-5 mx-auto ${formData.priority >= num ? 'fill-current text-amber-500' : 'text-muted300'}`} />
                     </button>
                   ))}
                 </div>
@@ -421,13 +421,13 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
                   setShowAddForm(false);
                   resetForm();
                 }}
-                className="px-5 py-2.5 text-gray-700 hover:bg-gray-100 rounded-xl transition-all duration-300 font-medium"
+                className="px-5 py-2.5 text-muted700 hover:bg-surface100 rounded-xl transition-all duration-300 font-medium"
               >
                 ביטול
               </button>
               <button
                 onClick={handleSave}
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105"
+                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-foreground px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105"
               >
                 <Check className="w-5 h-5" />
                 {editingTool ? 'עדכן' : 'הוסף'}
@@ -438,27 +438,27 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
       )}
 
       {/* Templates Section */}
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xl transition-all duration-300 hover:shadow-2xl">
+      <div className="bg-white rounded-2xl border border-border200 overflow-hidden shadow-xl transition-all duration-300 hover:shadow-2xl">
         <button
           onClick={() => setShowTemplates(!showTemplates)}
-          className="w-full p-5 flex items-center justify-between hover:bg-gray-50 transition-all duration-300"
+          className="w-full p-5 flex items-center justify-between hover:bg-surface50 transition-all duration-300"
         >
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-              <Sparkles className="w-6 h-6 text-white" />
+              <Sparkles className="w-6 h-6 text-foreground" />
             </div>
             <div className="text-right">
-              <h3 className="font-bold text-gray-900 text-lg">תבניות מוכנות</h3>
-              <p className="text-sm text-gray-500">לחץ להוספה מהירה מרשימת תבניות</p>
+              <h3 className="font-bold text-muted900 text-lg">תבניות מוכנות</h3>
+              <p className="text-sm text-muted500">לחץ להוספה מהירה מרשימת תבניות</p>
             </div>
           </div>
-          <div className={`p-2 rounded-lg bg-gray-100 transition-transform duration-300 ${showTemplates ? 'rotate-180' : ''}`}>
-            <ChevronDown className="w-5 h-5 text-gray-600" />
+          <div className={`p-2 rounded-lg bg-surface100 transition-transform duration-300 ${showTemplates ? 'rotate-180' : ''}`}>
+            <ChevronDown className="w-5 h-5 text-muted600" />
           </div>
         </button>
 
         {showTemplates && (
-          <div className="border-t border-gray-200 p-5 bg-gradient-to-br from-gray-50 to-white">
+          <div className="border-t border-border200 p-5 bg-gradient-to-br from-gray-50 to-white">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {templates.map((template, index) => {
                 const style = getCategoryStyle(template.category);
@@ -470,7 +470,7 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
                     disabled={isAdded}
                     className={`p-4 rounded-xl text-right flex items-center justify-between transition-all duration-300 ${
                       isAdded
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        ? 'bg-surface100 text-muted400 cursor-not-allowed'
                         : `${style.bg} ${style.border} border-2 hover:shadow-lg hover:scale-[1.02]`
                     }`}
                   >
@@ -491,7 +491,7 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
       {/* Active Tools */}
       {activeTools.length > 0 && (
         <div className="space-y-4">
-          <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+          <h3 className="font-bold text-muted900 text-lg flex items-center gap-2">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
             כלים פעילים ({activeTools.length})
           </h3>
@@ -512,8 +512,8 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
       {/* Completed Tools */}
       {completedTools.length > 0 && (
         <div className="space-y-4">
-          <h3 className="font-bold text-gray-500 text-lg flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-gray-400" />
+          <h3 className="font-bold text-muted500 text-lg flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-muted400" />
             הושלמו ({completedTools.length})
           </h3>
           {completedTools.map(tool => (
@@ -532,12 +532,12 @@ export default function MentalToolsEditor({ traineeId, traineeName, onBack }: Me
 
       {/* Empty State */}
       {tools.length === 0 && (
-        <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-200 shadow-lg">
+        <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-border200 shadow-lg">
           <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Brain className="w-10 h-10 text-gray-400" />
+            <Brain className="w-10 h-10 text-muted400" />
           </div>
-          <h3 className="text-xl font-bold text-gray-700 mb-2">אין כלים מנטליים</h3>
-          <p className="text-gray-500 mb-6">הוסף כלים מנטליים כדי לעזור למתאמן להתמקד ביעדים</p>
+          <h3 className="text-xl font-bold text-muted700 mb-2">אין כלים מנטליים</h3>
+          <p className="text-muted500 mb-6">הוסף כלים מנטליים כדי לעזור למתאמן להתמקד ביעדים</p>
           <button
             onClick={() => setShowTemplates(true)}
             className="text-emerald-600 hover:text-emerald-700 font-semibold transition-all duration-300 hover:underline"
@@ -567,7 +567,7 @@ function ToolCard({ tool, openMenuId, setOpenMenuId, onEdit, onDelete, onToggleC
     <div
       className={`rounded-2xl border-2 p-5 transition-all duration-300 hover:shadow-xl ${
         tool.is_completed
-          ? 'bg-gray-50 border-gray-200 opacity-70'
+          ? 'bg-surface50 border-border200 opacity-70'
           : `${style.bg} ${style.border} shadow-lg hover:scale-[1.01]`
       }`}
     >
@@ -576,8 +576,8 @@ function ToolCard({ tool, openMenuId, setOpenMenuId, onEdit, onDelete, onToggleC
           onClick={() => onToggleComplete(tool)}
           className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 ${
             tool.is_completed
-              ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg'
-              : 'bg-white border-2 border-gray-300 hover:border-emerald-500 hover:shadow-md'
+              ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground shadow-lg'
+              : 'bg-white border-2 border-border300 hover:border-emerald-500 hover:shadow-md'
           }`}
         >
           {tool.is_completed && <Check className="w-5 h-5" />}
@@ -586,11 +586,11 @@ function ToolCard({ tool, openMenuId, setOpenMenuId, onEdit, onDelete, onToggleC
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
-              <h4 className={`font-bold text-lg ${tool.is_completed ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+              <h4 className={`font-bold text-lg ${tool.is_completed ? 'text-muted500 line-through' : 'text-muted900'}`}>
                 {tool.title}
               </h4>
               {tool.description && (
-                <p className={`text-sm mt-1 ${tool.is_completed ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className={`text-sm mt-1 ${tool.is_completed ? 'text-muted400' : 'text-muted600'}`}>
                   {tool.description}
                 </p>
               )}
@@ -601,16 +601,16 @@ function ToolCard({ tool, openMenuId, setOpenMenuId, onEdit, onDelete, onToggleC
                 onClick={() => setOpenMenuId(openMenuId === tool.id ? null : tool.id)}
                 className="p-2 hover:bg-white/70 rounded-xl transition-all duration-300"
               >
-                <MoreVertical className="w-5 h-5 text-gray-500" />
+                <MoreVertical className="w-5 h-5 text-muted500" />
               </button>
 
               {openMenuId === tool.id && (
-                <div className="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-10 py-2 min-w-[150px] overflow-hidden">
+                <div className="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-border200 z-10 py-2 min-w-[150px] overflow-hidden">
                   <button
                     onClick={() => onEdit(tool)}
-                    className="w-full px-4 py-3 text-right flex items-center gap-3 hover:bg-gray-50 transition-all duration-300"
+                    className="w-full px-4 py-3 text-right flex items-center gap-3 hover:bg-surface50 transition-all duration-300"
                   >
-                    <Edit2 className="w-4 h-4 text-gray-500" />
+                    <Edit2 className="w-4 h-4 text-muted500" />
                     <span className="font-medium">עריכה</span>
                   </button>
                   <button
@@ -638,14 +638,14 @@ function ToolCard({ tool, openMenuId, setOpenMenuId, onEdit, onDelete, onToggleC
                   className={`w-4 h-4 transition-all duration-300 ${
                     num <= tool.priority
                       ? 'text-amber-500 fill-current'
-                      : 'text-gray-300'
+                      : 'text-muted300'
                   }`}
                 />
               ))}
             </div>
 
             {tool.is_completed && tool.completed_at && (
-              <span className="text-xs text-gray-400 flex items-center gap-1">
+              <span className="text-xs text-muted400 flex items-center gap-1">
                 <CheckCircle className="w-3.5 h-3.5" />
                 הושלם: {new Date(tool.completed_at).toLocaleDateString('he-IL')}
               </span>

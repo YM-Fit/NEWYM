@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import { logger } from '../../utils/logger';
+import { useWorkoutPlanWeeklyExecutions } from '../../hooks/useWorkoutPlanWeeklyExecutions';
+import { getRequiredFrequency, getWeekStartDate } from '../../utils/workoutPlanUtils';
 import {
   Calendar,
   Clock,
@@ -27,6 +29,10 @@ import {
   BookOpen,
 } from 'lucide-react';
 import ExerciseInstructionsModal from '../common/ExerciseInstructionsModal';
+import WorkoutPlanTable from './WorkoutPlanTable';
+import EditExerciseModal from './EditExerciseModal';
+import WorkoutPlanProgress from './WorkoutPlanProgress';
+import WorkoutPlanHistory from './WorkoutPlanHistory';
 
 interface MyWorkoutPlanProps {
   traineeId: string | null;
@@ -40,6 +46,7 @@ interface WorkoutPlan {
   is_active: boolean;
   updated_at: string | null;
   last_modified_by: string | null;
+  trainer_id: string;
 }
 
 interface WorkoutDay {
@@ -50,6 +57,7 @@ interface WorkoutDay {
   focus: string | null;
   notes: string | null;
   order_index: number;
+  times_per_week?: number | null; // Number of times per week this day should be executed
 }
 
 interface DayExercise {
@@ -139,8 +147,9 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   const [days, setDays] = useState<WorkoutDay[]>([]);
   const [dayExercises, setDayExercises] = useState<Record<string, DayExercise[]>>({});
   const [loading, setLoading] = useState(true);
-  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
-  const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set()); // Kept for legacy code
+  // Removed completedExercises - now using weekly executions per day
+  const [dayCompletions, setDayCompletions] = useState<Record<string, { count: number; required: number }>>({});
   const [editingExercise, setEditingExercise] = useState<string | null>(null);
   const [editData, setEditData] = useState<{ trainee_notes: string; trainee_target_weight: number | null }>({
     trainee_notes: '',
@@ -154,6 +163,12 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     name: string;
     instructions: string | null | undefined;
   } | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedExerciseForEdit, setSelectedExerciseForEdit] = useState<DayExercise | null>(null);
+  const [selectedDayIdForAdd, setSelectedDayIdForAdd] = useState<string | null>(null);
+  const [isAddingNewExercise, setIsAddingNewExercise] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
+  const [showExecutionHistory, setShowExecutionHistory] = useState(false);
 
   useEffect(() => {
     if (traineeId) {
@@ -193,6 +208,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     setPlan(planData as WorkoutPlan);
     await loadPlanDays((planData as WorkoutPlan).id);
     await loadHistory((planData as WorkoutPlan).id);
+    // Load day completions will be called automatically by useEffect when plan and days are set
 
     setLoading(false);
   };
@@ -283,6 +299,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   };
 
   const toggleDay = (dayId: string) => {
+    // Legacy function - kept for compatibility
     setExpandedDays(prev => {
       const newSet = new Set(prev);
       if (newSet.has(dayId)) {
@@ -295,11 +312,16 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
   };
 
   const startEditing = (exercise: DayExercise) => {
-    setEditingExercise(exercise.id);
-    setEditData({
-      trainee_notes: exercise.trainee_notes || '',
-      trainee_target_weight: exercise.trainee_target_weight,
-    });
+    setSelectedExerciseForEdit(exercise);
+    setIsAddingNewExercise(false);
+    setShowEditModal(true);
+  };
+
+  const handleAddExercise = (dayId: string) => {
+    setSelectedDayIdForAdd(dayId);
+    setSelectedExerciseForEdit(null);
+    setIsAddingNewExercise(true);
+    setShowEditModal(true);
   };
 
   const cancelEditing = () => {
@@ -362,21 +384,192 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     setSaving(false);
   };
 
-  const toggleExerciseComplete = (exerciseId: string) => {
-    setCompletedExercises((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(exerciseId)) {
-        newSet.delete(exerciseId);
+  // Create hooks for each day to track weekly executions
+  const dayExecutionHooks = useMemo(() => {
+    const hooks: Record<string, ReturnType<typeof useWorkoutPlanWeeklyExecutions>> = {};
+    if (plan) {
+      days.forEach(day => {
+        // We'll create hooks dynamically, but for now we'll use a simpler approach
+        // with a single state that tracks all days
+      });
+    }
+    return hooks;
+  }, [plan, days]);
+
+  // Toggle day complete - marks the entire day as completed
+  const toggleDayComplete = async (dayId: string) => {
+    if (!plan) return;
+    
+    const day = days.find(d => d.id === dayId);
+    if (!day) return;
+
+    try {
+      const weekStart = getWeekStartDate(new Date());
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+
+      // Check if already completed this week
+      const { data: existingExecutions } = await supabase
+        .from('workout_plan_weekly_executions')
+        .select('id')
+        .eq('plan_id', plan.id)
+        .eq('day_id', dayId)
+        .eq('week_start_date', weekStartStr);
+
+      if (existingExecutions && existingExecutions.length > 0) {
+        // Unmark - delete the execution
+        const { error } = await supabase
+          .from('workout_plan_weekly_executions')
+          .delete()
+          .eq('plan_id', plan.id)
+          .eq('day_id', dayId)
+          .eq('week_start_date', weekStartStr);
+
+        if (error) {
+          logger.error('Error unmarking day complete', error, 'MyWorkoutPlan');
+          toast.error('שגיאה בביטול ביצוע');
+          return;
+        }
+        toast.success('ביצוע בוטל');
       } else {
-        newSet.add(exerciseId);
+        // Mark as complete
+        const executionDate = new Date().toISOString().split('T')[0];
+        const { error } = await supabase
+          .from('workout_plan_weekly_executions')
+          .insert({
+            plan_id: plan.id,
+            day_id: dayId,
+            week_start_date: weekStartStr,
+            execution_date: executionDate,
+            completed_at: new Date().toISOString(),
+          } as any);
+
+        if (error) {
+          if (error.code === '42P01' || error.code === 'PGRST116' || 
+              error.message?.includes('does not exist') || 
+              error.message?.includes('relation') ||
+              error.message?.includes('Could not find')) {
+            logger.warn('workout_plan_weekly_executions table does not exist yet', error, 'MyWorkoutPlan');
+            toast.error('טבלת ביצועים שבועיים עדיין לא קיימת. אנא הפעל את המיגרציות: supabase/migrations/20260203000006_create_workout_plan_weekly_executions.sql', { duration: 6000 });
+            return;
+          }
+          logger.error('Error marking day complete', error, 'MyWorkoutPlan');
+          toast.error(`שגיאה בשמירת ביצוע: ${error.message || 'שגיאה לא ידועה'}`);
+          return;
+        }
+        toast.success('יום סומן כהושלם!');
       }
-      return newSet;
-    });
+
+      // Reload completions
+      await loadDayCompletions();
+    } catch (error) {
+      logger.error('Error toggling day complete', error, 'MyWorkoutPlan');
+      toast.error('שגיאה בעדכון ביצוע');
+    }
   };
 
+  // Load day completions for current week
+  const loadDayCompletions = async () => {
+    if (!plan) return;
+
+    try {
+      const weekStart = currentWeekStart || getWeekStartDate(new Date());
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+
+      const completions: Record<string, { count: number; required: number }> = {};
+
+      for (const day of days) {
+        const required = getRequiredFrequency(
+          { times_per_week: day.times_per_week },
+          plan.days_per_week,
+          days.length
+        );
+
+        const { data: executions, error: execError } = await supabase
+          .from('workout_plan_weekly_executions')
+          .select('id')
+          .eq('plan_id', plan.id)
+          .eq('day_id', day.id)
+          .eq('week_start_date', weekStartStr);
+
+        // If table doesn't exist (404, 42P01, or PGRST116), set count to 0
+        if (execError) {
+          if (execError.code === '42P01' || execError.code === 'PGRST116' || 
+              execError.message?.includes('does not exist') || 
+              execError.message?.includes('relation') ||
+              execError.message?.includes('Could not find')) {
+            // Table doesn't exist - migrations not run yet
+            logger.warn('workout_plan_weekly_executions table does not exist', { dayId: day.id, error: execError }, 'MyWorkoutPlan');
+            completions[day.id] = {
+              count: 0,
+              required,
+            };
+            continue;
+          }
+          // Other error - log but continue
+          logger.warn('Error loading executions for day', { dayId: day.id, error: execError }, 'MyWorkoutPlan');
+        }
+
+        completions[day.id] = {
+          count: executions?.length || 0,
+          required,
+        };
+      }
+
+      setDayCompletions(completions);
+    } catch (error) {
+      logger.error('Error loading day completions', error, 'MyWorkoutPlan');
+    }
+  };
+
+  // Track current week to detect week changes
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date | null>(null);
+
+  // Check for week change and reset if needed
+  useEffect(() => {
+    if (!plan || days.length === 0) return;
+
+    const now = new Date();
+    const weekStart = getWeekStartDate(now);
+
+    // Initialize current week or check if week has changed
+    if (!currentWeekStart) {
+      setCurrentWeekStart(weekStart);
+      loadDayCompletions();
+    } else if (weekStart.getTime() !== currentWeekStart.getTime()) {
+      // Week has changed - reset completions for new week
+      logger.info('Week changed, resetting completions', { oldWeek: currentWeekStart, newWeek: weekStart }, 'MyWorkoutPlan');
+      setCurrentWeekStart(weekStart);
+      // Reload completions for the new week
+      loadDayCompletions();
+    } else {
+      // Same week - just reload to get latest data
+      loadDayCompletions();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan, days]);
+
+  // Also check periodically (every hour) for week changes
+  useEffect(() => {
+    if (!plan || days.length === 0 || !currentWeekStart) return;
+
+    const checkInterval = setInterval(() => {
+      const now = new Date();
+      const weekStart = getWeekStartDate(now);
+
+      if (weekStart.getTime() !== currentWeekStart.getTime()) {
+        // Week has changed
+        logger.info('Week changed (periodic check), resetting completions', { oldWeek: currentWeekStart, newWeek: weekStart }, 'MyWorkoutPlan');
+        setCurrentWeekStart(weekStart);
+        loadDayCompletions();
+      }
+    }, 60 * 60 * 1000); // Check every hour
+
+    return () => clearInterval(checkInterval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan, days, currentWeekStart]);
+
   const getCompletedCount = (dayId: string) => {
-    const exercises = dayExercises[dayId] || [];
-    return exercises.filter((ex) => completedExercises.has(ex.id)).length;
+    return dayCompletions[dayId]?.count || 0;
   };
 
   const calculateDayVolume = (dayId: string) => {
@@ -448,7 +641,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
-          <Dumbbell className="w-8 h-8 text-white" />
+          <Dumbbell className="w-8 h-8 text-foreground" />
         </div>
       </div>
     );
@@ -480,7 +673,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-[0_0_25px_rgba(16,185,129,0.4)]">
-                  <ClipboardList className="w-6 h-6 md:w-7 md:h-7 text-white" />
+                  <ClipboardList className="w-6 h-6 md:w-7 md:h-7 text-foreground" />
                 </div>
                 <div>
                   <p className="text-xs md:text-sm font-semibold text-emerald-400 uppercase tracking-wider mb-1">תוכנית אימון</p>
@@ -511,6 +704,22 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                 </span>
               </div>
             )}
+
+            <button
+              onClick={() => setShowProgress(!showProgress)}
+              className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-4 py-2 rounded-xl backdrop-blur-sm hover:bg-blue-500/20 transition-all"
+            >
+              <TrendingUp className="w-4 h-4 text-blue-400" />
+              <span className="font-semibold text-sm text-blue-400">התקדמות</span>
+            </button>
+
+            <button
+              onClick={() => setShowExecutionHistory(true)}
+              className="flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 px-4 py-2 rounded-xl backdrop-blur-sm hover:bg-purple-500/20 transition-all"
+            >
+              <History className="w-4 h-4 text-purple-400" />
+              <span className="font-semibold text-sm text-purple-400">היסטוריית ביצועים</span>
+            </button>
           </div>
         </div>
       </div>
@@ -557,7 +766,37 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
         </div>
       )}
 
-      {/* Workout Days Grid - Accordion Pattern */}
+      {/* Progress Tracking */}
+      {showProgress && (
+        <WorkoutPlanProgress
+          days={days}
+          dayExercises={dayExercises}
+          dayCompletions={dayCompletions}
+          getCompletedCount={getCompletedCount}
+          calculateDayVolume={calculateDayVolume}
+        />
+      )}
+
+      {/* Workout Plan Table */}
+      <WorkoutPlanTable
+        days={days}
+        dayExercises={dayExercises}
+        dayCompletions={dayCompletions}
+        editingExercise={editingExercise}
+        onToggleDayComplete={toggleDayComplete}
+        onStartEditing={startEditing}
+        onAddExercise={handleAddExercise}
+        onShowInstructions={(name, instructions) => setInstructionsExercise({ name, instructions })}
+        instructionsExercise={instructionsExercise}
+        onSetInstructionsExercise={setInstructionsExercise}
+        calculateDayVolume={calculateDayVolume}
+        getCompletedCount={getCompletedCount}
+        formatRestTime={formatRestTime}
+        plan={plan}
+      />
+
+      {/* Legacy Accordion View - Hidden but kept for reference */}
+      {false && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
         {days.map((day, dayIndex) => {
           const gradient = dayGradients[dayIndex % dayGradients.length];
@@ -578,7 +817,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
               {/* Accordion Header - Always Visible */}
               <div
                 onClick={() => toggleDay(day.id)}
-                className={`relative bg-gradient-to-br ${gradient} p-5 md:p-6 lg:p-7 text-white cursor-pointer transition-all duration-300 hover:shadow-xl overflow-hidden`}
+                className={`relative bg-gradient-to-br ${gradient} p-5 md:p-6 lg:p-7 text-foreground cursor-pointer transition-all duration-300 hover:shadow-xl overflow-hidden`}
               >
                 {/* Subtle Pattern Overlay */}
                 <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,.1)_50%,transparent_75%,transparent_100%)] bg-[length:20px_20px]" />
@@ -591,7 +830,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                           <Icon className="w-5 h-5 md:w-6 md:h-6" />
                         </div>
                         {completedCount === exercises.length && exercises.length > 0 && (
-                          <span className="bg-white/30 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold backdrop-blur-md shadow-lg animate-scale-in border border-white/20">
+                          <span className="bg-white/30 text-foreground text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold backdrop-blur-md shadow-lg animate-scale-in border border-white/20">
                             <Check className="w-3.5 h-3.5" />
                             הושלם
                           </span>
@@ -609,7 +848,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                       )}
                     </div>
 
-                    <button className="text-white/90 hover:text-white transition-all duration-300 hover:scale-110 bg-white/10 hover:bg-white/20 rounded-xl p-2 backdrop-blur-sm">
+                    <button className="text-foreground/90 hover:text-foreground transition-all duration-300 hover:scale-110 bg-white/10 hover:bg-white/20 rounded-xl p-2 backdrop-blur-sm">
                       {isExpanded ? (
                         <ChevronUp className="w-5 h-5 md:w-6 md:h-6" />
                       ) : (
@@ -645,7 +884,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                       {muscleGroups.map((group, idx) => (
                         <span
                           key={idx}
-                          className="bg-white/25 text-white text-xs px-3 py-1 rounded-full font-bold backdrop-blur-md shadow-md border border-white/20"
+                          className="bg-white/25 text-foreground text-xs px-3 py-1 rounded-full font-bold backdrop-blur-md shadow-md border border-white/20"
                         >
                           {group}
                         </span>
@@ -700,7 +939,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
                               onClick={() => toggleExerciseComplete(exercise.id)}
                               className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg ${
                                 isCompleted
-                                  ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white scale-105'
+                                  ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-foreground scale-105'
                                   : 'bg-[var(--color-bg-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border)]'
                               }`}
                             >
@@ -926,7 +1165,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
 
                   {/* Completion Message */}
                   {exercises.length > 0 && completedCount === exercises.length && (
-                    <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl p-6 text-white text-center shadow-[0_8px_30px_rgba(16,185,129,0.3)] animate-scale-in overflow-hidden">
+                    <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl p-6 text-foreground text-center shadow-[0_8px_30px_rgba(16,185,129,0.3)] animate-scale-in overflow-hidden">
                       <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,.1)_50%,transparent_75%,transparent_100%)] bg-[length:30px_30px] opacity-20" />
                       <div className="relative">
                         <div className="w-16 h-16 bg-white/25 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-[0_0_25px_rgba(255,255,255,0.3)] backdrop-blur-md border border-white/20">
@@ -943,6 +1182,7 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           );
         })}
       </div>
+      )}
 
       {/* Empty State */}
       {days.length === 0 && (
@@ -955,6 +1195,27 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
         </div>
       )}
 
+      {/* Edit Exercise Modal */}
+      {plan && traineeId && (
+        <EditExerciseModal
+          isOpen={showEditModal}
+          exercise={selectedExerciseForEdit}
+          dayId={selectedDayIdForAdd || selectedExerciseForEdit?.day_id || ''}
+          traineeId={traineeId}
+          planId={plan.id}
+          trainerId={plan.trainer_id}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedExerciseForEdit(null);
+            setSelectedDayIdForAdd(null);
+          }}
+          onSave={() => {
+            loadActivePlan();
+          }}
+          isAddingNew={isAddingNewExercise}
+        />
+      )}
+
       {/* Exercise Instructions Modal */}
       {instructionsExercise && (
         <ExerciseInstructionsModal
@@ -962,6 +1223,14 @@ export default function MyWorkoutPlan({ traineeId }: MyWorkoutPlanProps) {
           onClose={() => setInstructionsExercise(null)}
           exerciseName={instructionsExercise.name}
           instructions={instructionsExercise.instructions}
+        />
+      )}
+
+      {/* Execution History Modal */}
+      {plan && showExecutionHistory && (
+        <WorkoutPlanHistory
+          planId={plan.id}
+          onClose={() => setShowExecutionHistory(false)}
         />
       )}
     </div>

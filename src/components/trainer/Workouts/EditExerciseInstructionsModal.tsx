@@ -67,7 +67,7 @@ export default function EditExerciseInstructionsModal({
           <div className="flex-1">
             <label
               htmlFor="instructions-textarea"
-              className="block text-sm font-medium text-zinc-300 mb-2"
+              className="block text-sm font-medium text-foreground mb-2"
             >
               הוראות ביצוע
             </label>
@@ -75,12 +75,12 @@ export default function EditExerciseInstructionsModal({
               id="instructions-textarea"
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
-              className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
+              className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
               placeholder="הזן הוראות ביצוע מפורטות לתרגיל..."
               rows={8}
               disabled={saving}
             />
-            <p className="mt-2 text-xs text-zinc-500">
+            <p className="mt-2 text-xs text-muted">
               הזן הסבר מפורט ומדויק כיצד לבצע את התרגיל
             </p>
           </div>
@@ -92,18 +92,18 @@ export default function EditExerciseInstructionsModal({
           </div>
         )}
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
           <button
             onClick={handleCancel}
             disabled={saving}
-            className="px-6 py-2 bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-surface hover:bg-surface text-foreground rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             ביטול
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {saving ? (
               <>

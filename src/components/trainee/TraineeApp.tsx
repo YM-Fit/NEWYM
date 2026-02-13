@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { supabase } from '../../lib/supabase';
@@ -8,13 +8,38 @@ import TraineeDashboard from './TraineeDashboard';
 import MyMeasurements from './MyMeasurements';
 import WorkoutHistory from './WorkoutHistory';
 import MyMealPlan from './MyMealPlan';
-import MyWorkoutPlan from './MyWorkoutPlan';
 import MyMentalTools from './MyMentalTools';
 import FoodDiary from './FoodDiary';
 import SelfWorkoutSession from './SelfWorkoutSession';
 import MyCardio from './MyCardio';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
+import Logo from '../common/Logo';
+import { lazyWithRetry } from '../../utils/lazyWithRetry';
+
+// Lazy load MyWorkoutPlan with retry to handle module loading issues
+// Using a more robust import with error handling
+const MyWorkoutPlan = lazyWithRetry(
+  () => import('./MyWorkoutPlan').catch((error) => {
+    console.error('[TraineeApp] Failed to load MyWorkoutPlan:', error);
+    // Return a fallback component if import fails
+    return {
+      default: ({ traineeId }: { traineeId: string | null }) => (
+        <div className="p-6 text-center">
+          <p className="text-red-400 mb-4">שגיאה בטעינת תוכנית האימון</p>
+          <p className="text-sm text-gray-400 mb-4">אנא נסה לרענן את הדף</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+          >
+            רענן דף
+          </button>
+        </div>
+      )
+    };
+  }),
+  3
+);
 
 interface Trainee {
   id: string;
@@ -83,11 +108,11 @@ export default function TraineeApp() {
       >
         <div className="mx-auto max-w-5xl flex justify-between items-center gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-400 to-teal-500 flex items-center justify-center shadow-glow animate-scale-bounce">
-              <span className="text-white font-bold text-lg md:text-xl">
-                {trainee?.full_name?.charAt(0) || 'U'}
-              </span>
-            </div>
+            <Logo 
+              size="md" 
+              className="drop-shadow-[0_2px_8px_rgba(74,107,42,0.2)]"
+              animated={true}
+            />
             <div>
               <h1 className="text-base md:text-lg font-semibold text-[var(--color-text-primary)]">
                 שלום, {getFirstName(trainee?.full_name || '')}
@@ -193,7 +218,7 @@ export default function TraineeApp() {
                   aria-label="התחל אימון חדש"
                   title="אימון חדש"
                 >
-                  <Plus className="w-7 h-7 text-white" aria-hidden="true" />
+                  <Plus className="w-7 h-7 text-foreground" aria-hidden="true" />
                 </button>
               </div>
 
@@ -236,7 +261,13 @@ export default function TraineeApp() {
       >
         <div className="mx-auto max-w-5xl space-y-4 md:space-y-6">
         {activeTab === 'dashboard' && <TraineeDashboard traineeId={traineeId} traineeName={trainee?.full_name || ''} />}
-        {activeTab === 'workout-plan' && <MyWorkoutPlan traineeId={traineeId} />}
+        {activeTab === 'workout-plan' && (
+          <Suspense 
+            fallback={<LoadingSpinner size="lg" text="טוען תוכנית אימון..." />}
+          >
+            <MyWorkoutPlan traineeId={traineeId} />
+          </Suspense>
+        )}
         {activeTab === 'workouts' && <WorkoutHistory traineeId={traineeId} traineeName={trainee?.full_name} trainerId={trainee?.trainer_id} />}
         {activeTab === 'measurements' && <MyMeasurements traineeId={traineeId} trainerId={trainee?.trainer_id} traineeName={trainee?.full_name} />}
         {activeTab === 'menu' && <MyMealPlan traineeId={traineeId} />}

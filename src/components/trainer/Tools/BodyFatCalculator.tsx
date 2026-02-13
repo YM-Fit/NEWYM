@@ -62,14 +62,14 @@ export default function BodyFatCalculator({
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-rose-500 p-6 rounded-t-2xl flex items-center justify-between">
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
             <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <Percent className="h-7 w-7 text-white" />
+              <Percent className="h-7 w-7 text-foreground" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">מחשבון אחוז שומן</h2>
+              <h2 className="text-2xl font-bold text-foreground">מחשבון אחוז שומן</h2>
               <p className="text-sm text-rose-100">חישוב לפי שיטת Navy</p>
             </div>
           </div>
@@ -77,28 +77,28 @@ export default function BodyFatCalculator({
             onClick={onClose}
             className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all"
           >
-            <X className="h-6 w-6 text-white" />
+            <X className="h-6 w-6 text-foreground" />
           </button>
         </div>
 
         <div className="p-6 space-y-6">
-          <div className="bg-zinc-800/50 rounded-2xl p-6 border border-zinc-700/50">
+          <div className="bg-surface rounded-2xl p-6 border border-border">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 bg-rose-500 rounded-xl flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
+                <User className="w-5 h-5 text-foreground" />
               </div>
-              <h3 className="text-lg font-bold text-white">הזן מדידות</h3>
+              <h3 className="text-lg font-bold text-foreground">הזן מדידות</h3>
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-zinc-300 mb-2">מין</label>
+              <label className="block text-sm font-semibold text-foreground mb-2">מין</label>
               <div className="flex gap-3">
                 <button
                   onClick={() => setGender('male')}
                   className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
                     gender === 'male'
-                      ? 'bg-rose-500 text-white'
-                      : 'bg-zinc-800 border border-zinc-700/50 text-zinc-300 hover:bg-zinc-700'
+                      ? 'bg-rose-500 text-foreground'
+                      : 'bg-surface border border-border text-foreground hover:bg-elevated'
                   }`}
                 >
                   גבר
@@ -107,8 +107,8 @@ export default function BodyFatCalculator({
                   onClick={() => setGender('female')}
                   className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
                     gender === 'female'
-                      ? 'bg-rose-500 text-white'
-                      : 'bg-zinc-800 border border-zinc-700/50 text-zinc-300 hover:bg-zinc-700'
+                      ? 'bg-rose-500 text-foreground'
+                      : 'bg-surface border border-border text-foreground hover:bg-elevated'
                   }`}
                 >
                   אישה
@@ -118,35 +118,35 @@ export default function BodyFatCalculator({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-zinc-300 mb-2">גובה (ס"מ)</label>
+                <label className="block text-sm font-semibold text-foreground mb-2">גובה (ס"מ)</label>
                 <input
                   type="number"
                   value={height}
                   onChange={(e) => setHeight(Number(e.target.value))}
-                  className="w-full px-4 py-3 text-lg font-bold text-center border border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-zinc-800/50 text-white"
+                  className="w-full px-4 py-3 text-lg font-bold text-center border border-border rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-surface text-foreground"
                   min="100"
                   max="250"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-zinc-300 mb-2">היקף צוואר (ס"מ)</label>
+                <label className="block text-sm font-semibold text-foreground mb-2">היקף צוואר (ס"מ)</label>
                 <input
                   type="number"
                   value={neck}
                   onChange={(e) => setNeck(Number(e.target.value))}
-                  className="w-full px-4 py-3 text-lg font-bold text-center border border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-zinc-800/50 text-white"
+                  className="w-full px-4 py-3 text-lg font-bold text-center border border-border rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-surface text-foreground"
                   min="20"
                   max="60"
                   step="0.5"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-zinc-300 mb-2">היקף מותן (ס"מ)</label>
+                <label className="block text-sm font-semibold text-foreground mb-2">היקף מותן (ס"מ)</label>
                 <input
                   type="number"
                   value={waist}
                   onChange={(e) => setWaist(Number(e.target.value))}
-                  className="w-full px-4 py-3 text-lg font-bold text-center border border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-zinc-800/50 text-white"
+                  className="w-full px-4 py-3 text-lg font-bold text-center border border-border rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-surface text-foreground"
                   min="50"
                   max="200"
                   step="0.5"
@@ -154,12 +154,12 @@ export default function BodyFatCalculator({
               </div>
               {gender === 'female' && (
                 <div>
-                  <label className="block text-sm font-semibold text-zinc-300 mb-2">היקף ירכיים (ס"מ)</label>
+                  <label className="block text-sm font-semibold text-foreground mb-2">היקף ירכיים (ס"מ)</label>
                   <input
                     type="number"
                     value={hips}
                     onChange={(e) => setHips(Number(e.target.value))}
-                    className="w-full px-4 py-3 text-lg font-bold text-center border border-zinc-700/50 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-zinc-800/50 text-white"
+                    className="w-full px-4 py-3 text-lg font-bold text-center border border-border rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-surface text-foreground"
                     min="50"
                     max="200"
                     step="0.5"
@@ -172,37 +172,37 @@ export default function BodyFatCalculator({
           <div className="bg-rose-500 rounded-2xl p-8 text-center">
             <div className="flex items-center justify-center gap-2 mb-3">
               <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                <Percent className="w-4 h-4 text-white" />
+                <Percent className="w-4 h-4 text-foreground" />
               </div>
-              <p className="text-sm font-bold text-white/90">אחוז שומן משוער</p>
+              <p className="text-sm font-bold text-foreground/90">אחוז שומן משוער</p>
             </div>
-            <p className="text-6xl font-bold text-white">{bodyFat.toFixed(1)}%</p>
-            <div className={`mt-4 inline-block px-4 py-2 rounded-xl ${category.bg} border border-zinc-700/30`}>
+            <p className="text-6xl font-bold text-foreground">{bodyFat.toFixed(1)}%</p>
+            <div className={`mt-4 inline-block px-4 py-2 rounded-xl ${category.bg} border border-border/30`}>
               <span className={`font-bold ${category.color}`}>{category.label}</span>
             </div>
           </div>
 
           <div>
-            <h3 className="text-lg font-bold text-white mb-4">טווחי אחוזי שומן</h3>
-            <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl overflow-hidden">
+            <h3 className="text-lg font-bold text-foreground mb-4">טווחי אחוזי שומן</h3>
+            <div className="bg-surface border border-border rounded-2xl overflow-hidden">
               <table className="w-full">
-                <thead className="bg-zinc-800">
+                <thead className="bg-surface">
                   <tr>
-                    <th className="px-5 py-4 text-right text-sm font-bold text-zinc-300">קטגוריה</th>
-                    <th className="px-5 py-4 text-left text-sm font-bold text-zinc-300">טווח</th>
+                    <th className="px-5 py-4 text-right text-sm font-bold text-foreground">קטגוריה</th>
+                    <th className="px-5 py-4 text-left text-sm font-bold text-foreground">טווח</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-700/50">
                   {categories.map((cat) => (
-                    <tr key={cat.label} className="hover:bg-zinc-800/50 transition-all">
+                    <tr key={cat.label} className="hover:bg-surface transition-all">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className={`w-3 h-3 rounded-full ${cat.color}`} />
-                          <span className="font-semibold text-white">{cat.label}</span>
+                          <span className="font-semibold text-foreground">{cat.label}</span>
                         </div>
                       </td>
                       <td className="px-5 py-4 text-left">
-                        <span className="font-bold text-zinc-400 bg-zinc-800 px-3 py-1 rounded-lg">{cat.range}</span>
+                        <span className="font-bold text-muted bg-surface px-3 py-1 rounded-lg">{cat.range}</span>
                       </td>
                     </tr>
                   ))}
@@ -214,11 +214,11 @@ export default function BodyFatCalculator({
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Info className="w-5 h-5 text-white" />
+                <Info className="w-5 h-5 text-foreground" />
               </div>
               <div>
                 <p className="font-bold text-amber-400 mb-1">הוראות מדידה</p>
-                <ul className="text-sm text-zinc-400 leading-relaxed space-y-1">
+                <ul className="text-sm text-muted leading-relaxed space-y-1">
                   <li>צוואר: מדוד בנקודה הצרה ביותר, מתחת לגרון</li>
                   <li>מותן: מדוד בגובה הטבור, ללא לחץ</li>
                   {gender === 'female' && <li>ירכיים: מדוד בנקודה הרחבה ביותר</li>}
@@ -228,10 +228,10 @@ export default function BodyFatCalculator({
           </div>
         </div>
 
-        <div className="sticky bottom-0 bg-zinc-900 border-t border-zinc-800 p-6 rounded-b-2xl">
+        <div className="sticky bottom-0 bg-card border-t border-border p-6 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="w-full bg-rose-500 hover:bg-rose-600 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all"
+            className="w-full bg-rose-500 hover:bg-rose-600 text-foreground px-6 py-4 rounded-xl font-bold text-lg transition-all"
           >
             סגור
           </button>

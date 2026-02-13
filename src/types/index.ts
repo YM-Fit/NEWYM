@@ -31,6 +31,14 @@ export interface Trainee {
   contract_value?: number;
   payment_status?: 'paid' | 'pending' | 'overdue' | 'free';
   tags?: string[];
+  // Payment management fields
+  // שיטת תשלום - איך משלמים
+  payment_method?: 'standing_order' | 'credit' | 'cash' | 'paybox' | 'bit' | null;
+  // שיטת ספירה - איך סופרים אימונים
+  counting_method?: 'card_ticket' | 'subscription' | 'monthly_count' | null;
+  monthly_price?: number;
+  card_sessions_total?: number;
+  card_sessions_used?: number;
 }
 
 export interface Exercise {
@@ -63,6 +71,10 @@ export interface Workout {
   averageRpe: number;
   duration: number;
   notes?: string;
+  // Calendar sync fields
+  syncedFromGoogle?: boolean;
+  googleEventSummary?: string | null;
+  isSelfRecorded?: boolean;
 }
 
 export interface WorkoutTemplateExercise {
@@ -117,4 +129,19 @@ export interface DashboardStats {
   totalWorkoutsThisMonth: number;
   avgWeightLossPercentage: number;
   avgMuscleMassIncrease: number;
+}
+
+export interface TodayTrainee {
+  trainee: Trainee;
+  workout: {
+    id: string;
+    workout_date: string;
+    workout_type: string;
+    is_completed: boolean;
+    workout_time?: string;
+    notes?: string;
+  };
+  daysSinceLastWorkout?: number | null;
+  unseenWeightsCount?: number;
+  status: 'scheduled' | 'completed' | 'upcoming';
 }

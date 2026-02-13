@@ -467,6 +467,7 @@ export async function getGoogleCalendarEvents(
     const forceRefresh = options?.forceRefresh === true;
 
     // First, try to get events from cached sync table (much faster)
+    // Skip cache entirely if forceRefresh is true to ensure fresh data
     if (useCache && !forceRefresh) {
       try {
         // Query for events that might overlap with the date range
@@ -515,31 +516,282 @@ export async function getGoogleCalendarEvents(
           });
 
           if (filteredEvents.length > 0) {
-            // Convert cached events to GoogleCalendarEvent format
-            const events: GoogleCalendarEvent[] = filteredEvents.map((cached) => {
-              const trainee = Array.isArray(cached.trainees) ? cached.trainees[0] : cached.trainees;
-              const startTime = new Date(cached.event_start_time);
-              const endTime = cached.event_end_time ? new Date(cached.event_end_time) : new Date(startTime.getTime() + 60 * 60 * 1000); // Default 1 hour if no end time
-              
-              return {
-                id: cached.google_event_id,
-                summary: cached.event_summary || `אימון${trainee ? ` - ${trainee.full_name}` : ''}`,
-                description: cached.event_description || undefined,
-                start: {
-                  dateTime: startTime.toISOString(),
-                  timeZone: 'Asia/Jerusalem',
-                },
-                end: {
-                  dateTime: endTime.toISOString(),
-                  timeZone: 'Asia/Jerusalem',
-                },
-                attendees: trainee?.email ? [{
-                  email: trainee.email,
-                  displayName: trainee.full_name || undefined,
-                }] : undefined,
-              };
+            // Validate events exist in Google Calendar and filter out deleted ones
+            // We check a sample and if we find deleted events, we fetch from Google to get accurate list
+            const validateAndFilterEvents = async (): Promise<GoogleCalendarEvent[]> => {
+              try {
+                const { OAuthTokenService } = await import('../services/oauthTokenService');
+                const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
+                
+                if (!tokenResult.success || !tokenResult.data) {
+                  // Can't validate without token - return cached events
+                  return filteredEvents.map((cached) => {
+                    const trainee = Array.isArray(cached.trainees) ? cached.trainees[0] : cached.trainees;
+                    const startTime = new Date(cached.event_start_time);
+                    const endTime = cached.event_end_time ? new Date(cached.event_end_time) : new Date(startTime.getTime() + 60 * 60 * 1000);
+                    
+                    return {
+                      id: cached.google_event_id,
+                      summary: cached.event_summary || `אימון${trainee ? ` - ${trainee.full_name}` : ''}`,
+                      description: cached.event_description || undefined,
+                      start: {
+                        dateTime: startTime.toISOString(),
+                        timeZone: 'Asia/Jerusalem',
+                      },
+                      end: {
+                        dateTime: endTime.toISOString(),
+                        timeZone: 'Asia/Jerusalem',
+                      },
+                      attendees: trainee?.email ? [{
+                        email: trainee.email,
+                        displayName: trainee.full_name || undefined,
+                      }] : undefined,
+                    };
+                  });
+                }
+                
+                const { data: credentials } = await supabase
+                  .from('trainer_google_credentials')
+                  .select('default_calendar_id')
+                  .eq('trainer_id', trainerId)
+                  .maybeSingle() as { data: Pick<GoogleCredentialsRow, 'default_calendar_id'> | null; error: unknown };
+                
+                if (!credentials) {
+                  // No credentials - return cached events
+                  return filteredEvents.map((cached) => {
+                    const trainee = Array.isArray(cached.trainees) ? cached.trainees[0] : cached.trainees;
+                    const startTime = new Date(cached.event_start_time);
+                    const endTime = cached.event_end_time ? new Date(cached.event_end_time) : new Date(startTime.getTime() + 60 * 60 * 1000);
+                    
+                    return {
+                      id: cached.google_event_id,
+                      summary: cached.event_summary || `אימון${trainee ? ` - ${trainee.full_name}` : ''}`,
+                      description: cached.event_description || undefined,
+                      start: {
+                        dateTime: startTime.toISOString(),
+                        timeZone: 'Asia/Jerusalem',
+                      },
+                      end: {
+                        dateTime: endTime.toISOString(),
+                        timeZone: 'Asia/Jerusalem',
+                      },
+                      attendees: trainee?.email ? [{
+                        email: trainee.email,
+                        displayName: trainee.full_name || undefined,
+                      }] : undefined,
+                    };
+                  });
+                }
+                
+                const calendarId = credentials.default_calendar_id || 'primary';
+                const accessToken = tokenResult.data;
+                
+                // Check a sample of events (first 10) to see if they exist
+                // If we find deleted ones, we'll clean up all of them
+                const sampleSize = Math.min(10, filteredEvents.length);
+                const eventsToCheck = filteredEvents.slice(0, sampleSize);
+                
+                const deletedEventIds = new Set<string>();
+                
+                for (const cached of eventsToCheck) {
+                  try {
+                    const checkResponse = await fetch(
+                      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${cached.google_event_id}`,
+                      {
+                        headers: {
+                          'Authorization': `Bearer ${accessToken}`,
+                        },
+                      }
+                    );
+                    
+                    if (checkResponse.status === 404 || checkResponse.status === 410) {
+                      deletedEventIds.add(cached.google_event_id);
+                    }
+                  } catch (err) {
+                    // Skip validation errors - don't block
+                  }
+                }
+                
+                // If we found deleted events in the sample, fetch from Google Calendar
+                // to get accurate list and clean up sync records
+                if (deletedEventIds.size > 0) {
+                  const { logger } = await import('../utils/logger');
+                  logger.info('Found deleted events in cache, fetching from Google Calendar', 
+                    { deletedCount: deletedEventIds.size }, 'getGoogleCalendarEvents');
+                  
+                  // Fetch actual events from Google Calendar
+                  const googleEventsResponse = await fetch(
+                    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?` +
+                    `timeMin=${dateRange.start.toISOString()}&` +
+                    `timeMax=${dateRange.end.toISOString()}&` +
+                    `singleEvents=true&` +
+                    `orderBy=startTime&` +
+                    `maxResults=2500`,
+                    {
+                      headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                      },
+                    }
+                  );
+                  
+                  if (googleEventsResponse.ok) {
+                    const googleData = await googleEventsResponse.json();
+                    const googleEvents = googleData.items || [];
+                    const existingEventIds = new Set(googleEvents.map((e: any) => e.id));
+                    
+                    // Clean up sync records for events that don't exist in Google Calendar
+                    const { data: allSyncRecords } = await supabase
+                      .from('google_calendar_sync')
+                      .select('id, google_event_id, workout_id, sync_direction')
+                      .eq('trainer_id', trainerId)
+                      .eq('sync_status', 'synced')
+                      .gte('event_start_time', dateRange.start.toISOString())
+                      .lte('event_start_time', dateRange.end.toISOString());
+                    
+                    if (allSyncRecords) {
+                      for (const syncRecord of allSyncRecords) {
+                        if (!existingEventIds.has(syncRecord.google_event_id)) {
+                          // Delete workout if exists and sync direction allows it
+                          if (syncRecord.workout_id && syncRecord.sync_direction !== 'to_google') {
+                            await supabase
+                              .from('workouts')
+                              .delete()
+                              .eq('id', syncRecord.workout_id)
+                              .eq('trainer_id', trainerId);
+                          }
+                          
+                          // Delete sync record
+                          await supabase
+                            .from('google_calendar_sync')
+                            .delete()
+                            .eq('id', syncRecord.id);
+                        }
+                      }
+                    }
+                    
+                    // Return Google Calendar events instead of cached ones
+                    // Convert to our format
+                    const validEvents: GoogleCalendarEvent[] = googleEvents
+                      .filter((e: any) => e.status !== 'cancelled')
+                      .map((e: any) => {
+                        const startTime = e.start.dateTime || e.start.date;
+                        const endTime = e.end.dateTime || e.end.date;
+                        
+                        return {
+                          id: e.id,
+                          summary: e.summary || '',
+                          description: e.description,
+                          start: {
+                            dateTime: e.start.dateTime,
+                            date: e.start.date,
+                            timeZone: e.start.timeZone,
+                          },
+                          end: {
+                            dateTime: e.end.dateTime,
+                            date: e.end.date,
+                            timeZone: e.end.timeZone,
+                          },
+                          attendees: e.attendees?.map((a: any) => ({
+                            email: a.email,
+                            displayName: a.displayName,
+                          })),
+                          location: e.location,
+                        };
+                      });
+                    
+                    return validEvents;
+                  }
+                }
+                
+                // No deleted events found, return cached events
+                return filteredEvents.map((cached) => {
+                  const trainee = Array.isArray(cached.trainees) ? cached.trainees[0] : cached.trainees;
+                  const startTime = new Date(cached.event_start_time);
+                  const endTime = cached.event_end_time ? new Date(cached.event_end_time) : new Date(startTime.getTime() + 60 * 60 * 1000);
+                  
+                  return {
+                    id: cached.google_event_id,
+                    summary: cached.event_summary || `אימון${trainee ? ` - ${trainee.full_name}` : ''}`,
+                    description: cached.event_description || undefined,
+                    start: {
+                      dateTime: startTime.toISOString(),
+                      timeZone: 'Asia/Jerusalem',
+                    },
+                    end: {
+                      dateTime: endTime.toISOString(),
+                      timeZone: 'Asia/Jerusalem',
+                    },
+                    attendees: trainee?.email ? [{
+                      email: trainee.email,
+                      displayName: trainee.full_name || undefined,
+                    }] : undefined,
+                  };
+                });
+              } catch (err) {
+                // On error, return cached events (fallback)
+                const { logger } = await import('../utils/logger');
+                logger.debug('Error validating cached events', err, 'getGoogleCalendarEvents');
+                
+                return filteredEvents.map((cached) => {
+                  const trainee = Array.isArray(cached.trainees) ? cached.trainees[0] : cached.trainees;
+                  const startTime = new Date(cached.event_start_time);
+                  const endTime = cached.event_end_time ? new Date(cached.event_end_time) : new Date(startTime.getTime() + 60 * 60 * 1000);
+                  
+                  return {
+                    id: cached.google_event_id,
+                    summary: cached.event_summary || `אימון${trainee ? ` - ${trainee.full_name}` : ''}`,
+                    description: cached.event_description || undefined,
+                    start: {
+                      dateTime: startTime.toISOString(),
+                      timeZone: 'Asia/Jerusalem',
+                    },
+                    end: {
+                      dateTime: endTime.toISOString(),
+                      timeZone: 'Asia/Jerusalem',
+                    },
+                    attendees: trainee?.email ? [{
+                      email: trainee.email,
+                      displayName: trainee.full_name || undefined,
+                    }] : undefined,
+                  };
+                });
+              }
+            };
+            
+            // Try to validate and get accurate events (with timeout)
+            // If validation takes too long, fall back to cached events
+            const validationPromise = validateAndFilterEvents();
+            const timeoutPromise = new Promise<GoogleCalendarEvent[]>((resolve) => {
+              setTimeout(() => {
+                // Timeout - return cached events
+                resolve(filteredEvents.map((cached) => {
+                  const trainee = Array.isArray(cached.trainees) ? cached.trainees[0] : cached.trainees;
+                  const startTime = new Date(cached.event_start_time);
+                  const endTime = cached.event_end_time ? new Date(cached.event_end_time) : new Date(startTime.getTime() + 60 * 60 * 1000);
+                  
+                  return {
+                    id: cached.google_event_id,
+                    summary: cached.event_summary || `אימון${trainee ? ` - ${trainee.full_name}` : ''}`,
+                    description: cached.event_description || undefined,
+                    start: {
+                      dateTime: startTime.toISOString(),
+                      timeZone: 'Asia/Jerusalem',
+                    },
+                    end: {
+                      dateTime: endTime.toISOString(),
+                      timeZone: 'Asia/Jerusalem',
+                    },
+                    attendees: trainee?.email ? [{
+                      email: trainee.email,
+                      displayName: trainee.full_name || undefined,
+                    }] : undefined,
+                  };
+                }));
+              }, 2000); // 2 second timeout
             });
-
+            
+            const events = await Promise.race([validationPromise, timeoutPromise]);
+            
             return { data: events, success: true };
           }
         }
@@ -606,10 +858,7 @@ export async function getGoogleCalendarEvents(
       if (response.status === 401) {
         // Try to refresh token and retry once
         const { OAuthTokenService } = await import('../services/oauthTokenService');
-        const refreshResult = await OAuthTokenService.refreshAccessToken(
-          trainerId, 
-          credentials.refresh_token
-        );
+        const refreshResult = await OAuthTokenService.refreshAccessToken(trainerId);
         
         if (refreshResult.success && refreshResult.data?.access_token) {
           // Retry with new token
@@ -637,7 +886,9 @@ export async function getGoogleCalendarEvents(
     }
 
     const data = await response.json();
-    return { data: data.items || [], success: true };
+    // Filter out cancelled events to ensure deleted events don't appear
+    const validEvents = (data.items || []).filter((e: any) => e.status !== 'cancelled');
+    return { data: validEvents, success: true };
   } catch (err: unknown) {
     const errorMessage = handleApiError(err, {
       defaultMessage: 'שגיאה בטעינת אירועים מ-Google Calendar',
@@ -653,8 +904,7 @@ export async function getGoogleCalendarEvents(
  */
 export async function createGoogleCalendarEvent(
   trainerId: string,
-  eventData: CreateEventData,
-  accessToken: string
+  eventData: CreateEventData
 ): Promise<ApiResponse<string>> {
   // Rate limiting: 50 create requests per minute per trainer
   const rateLimitKey = `createGoogleCalendarEvent:${trainerId}`;
@@ -675,7 +925,8 @@ export async function createGoogleCalendarEvent(
       return { error: 'Google Calendar לא מחובר' };
     }
 
-    // Get valid access token (refresh if needed)
+    // Get valid Google OAuth access token (refresh if needed)
+    // IMPORTANT: Always use the token from OAuthTokenService, not the passed Supabase token
     const { OAuthTokenService } = await import('../services/oauthTokenService');
     const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
     
@@ -683,7 +934,8 @@ export async function createGoogleCalendarEvent(
       return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
     }
     
-    const accessTokenToUse = accessToken || tokenResult.data;
+    // Always use the Google OAuth token from the service
+    const accessTokenToUse = tokenResult.data;
 
     const calendarId = credentials.default_calendar_id || 'primary';
     
@@ -754,8 +1006,7 @@ export async function createGoogleCalendarEvent(
 export async function updateGoogleCalendarEvent(
   trainerId: string,
   eventId: string,
-  updates: Partial<CreateEventData>,
-  _accessToken?: string // Not used - we always get fresh token from service
+  updates: Partial<CreateEventData>
 ): Promise<ApiResponse> {
   // Rate limiting: 50 update requests per minute per trainer
   const rateLimitKey = `updateGoogleCalendarEvent:${trainerId}`;
@@ -804,7 +1055,9 @@ export async function updateGoogleCalendarEvent(
           return { success: false, needsRetry: true };
         }
         if (getResponse.status === 404 || getResponse.status === 410) {
-          return { success: false, error: 'האירוע לא נמצא ב-Google Calendar' };
+          // Event was deleted from Google Calendar
+          // Return special error code to indicate deletion
+          return { success: false, error: 'האירוע לא נמצא ב-Google Calendar (נמחק)', eventDeleted: true };
         }
         return { success: false, error: 'שגיאה בטעינת אירוע מ-Google Calendar' };
       }
@@ -896,8 +1149,7 @@ export async function updateGoogleCalendarEvent(
  */
 export async function deleteGoogleCalendarEvent(
   trainerId: string,
-  eventId: string,
-  accessToken: string
+  eventId: string
 ): Promise<ApiResponse> {
   // Rate limiting: 30 delete requests per minute per trainer
   const rateLimitKey = `deleteGoogleCalendarEvent:${trainerId}`;
@@ -919,7 +1171,8 @@ export async function deleteGoogleCalendarEvent(
 
     const calendarId = credentials.default_calendar_id || 'primary';
     
-    // Get valid access token (refresh if needed)
+    // Get valid Google OAuth access token (refresh if needed)
+    // IMPORTANT: Always use the token from OAuthTokenService, not the passed Supabase token
     const { OAuthTokenService } = await import('../services/oauthTokenService');
     const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
     
@@ -927,7 +1180,8 @@ export async function deleteGoogleCalendarEvent(
       return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
     }
     
-    const accessTokenToUse = accessToken || tokenResult.data;
+    // Always use the Google OAuth token from the service
+    const accessTokenToUse = tokenResult.data;
 
     const response = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`,
@@ -950,10 +1204,7 @@ export async function deleteGoogleCalendarEvent(
           .single() as { data: { refresh_token: string } | null; error: unknown };
         
         if (fullCreds?.refresh_token) {
-          const refreshResult = await OAuthTokenService.refreshAccessToken(
-            trainerId, 
-            fullCreds.refresh_token
-          );
+          const refreshResult = await OAuthTokenService.refreshAccessToken(trainerId);
           
           if (refreshResult.success && refreshResult.data?.access_token) {
             // Retry with new token
@@ -1101,7 +1352,8 @@ export async function updateCalendarEventBidirectional(
       const workoutUpdates: { workout_date?: string; notes?: string | null } = {};
       
       if (updates.startTime) {
-        workoutUpdates.workout_date = updates.startTime.toISOString().split('T')[0];
+        // IMPORTANT: workout_date is TIMESTAMPTZ, so we need to preserve the full timestamp including time
+        workoutUpdates.workout_date = updates.startTime.toISOString();
       }
       if (updates.description !== undefined) {
         workoutUpdates.notes = updates.description || null;
@@ -1185,13 +1437,13 @@ export async function deleteCalendarEventBidirectional(
     // Find sync record to check if we need to delete workout
     const { data: syncRecord } = await supabase
       .from('google_calendar_sync')
-      .select('workout_id, sync_direction')
+      .select('workout_id, sync_direction, trainee_id')
       .eq('trainer_id', trainerId)
       .eq('google_event_id', eventId)
-      .maybeSingle() as { data: Pick<GoogleCalendarSyncRow, 'workout_id' | 'sync_direction'> | null; error: { message: string } | null };
+      .maybeSingle() as { data: Pick<GoogleCalendarSyncRow, 'workout_id' | 'sync_direction' | 'trainee_id'> | null; error: { message: string } | null };
 
     // Delete from Google Calendar
-    const deleteResult = await deleteGoogleCalendarEvent(trainerId, eventId, accessToken);
+    const deleteResult = await deleteGoogleCalendarEvent(trainerId, eventId);
     if (deleteResult.error) {
       return deleteResult;
     }
@@ -1211,12 +1463,37 @@ export async function deleteCalendarEventBidirectional(
       }
     }
 
+    // Get trainee_id before deleting sync record (for numbering update)
+    const traineeId = syncRecord?.trainee_id || null;
+    
     // Delete sync record
     await supabase
       .from('google_calendar_sync')
       .delete()
       .eq('trainer_id', trainerId)
       .eq('google_event_id', eventId);
+
+    // Sync remaining events for this trainee to update numbering
+    // This ensures that when an workout is deleted, all remaining workouts get renumbered correctly
+    if (traineeId && trainerId) {
+      // Do this in the background (non-blocking)
+      import('../services/traineeCalendarSyncService').then(({ syncTraineeEventsToCalendar }) => {
+        return import('../utils/logger').then(({ logger }) => {
+          return syncTraineeEventsToCalendar(traineeId, trainerId, 'current_month_and_future')
+            .then(result => {
+              if (result.data && result.data.updated > 0) {
+                logger.info(`Calendar sync after delete: updated ${result.data.updated} events`, {}, 'deleteCalendarEventBidirectional');
+              }
+            })
+            .catch(err => {
+              logger.error('Calendar sync after delete failed', err, 'deleteCalendarEventBidirectional');
+            });
+        });
+      }).catch(err => {
+        // Log error if import fails
+        console.error('Failed to load calendar sync service', err);
+      });
+    }
 
     return { success: true };
   } catch (err: unknown) {
@@ -1254,6 +1531,160 @@ export async function getSyncRecordForEvent(
       defaultMessage: 'שגיאה בטעינת רשומת סנכרון',
       context: 'getSyncRecordForEvent',
       additionalInfo: { trainerId, eventId },
+    });
+    return { error: errorMessage };
+  }
+}
+
+/**
+ * Bulk update Google Calendar events for a trainee
+ * Used when trainee name or session numbers need to be updated across multiple events
+ */
+export async function bulkUpdateCalendarEvents(
+  traineeId: string,
+  trainerId: string,
+  updates: {
+    summary?: string;
+    dateRange?: { start: Date; end: Date };
+  }
+): Promise<ApiResponse<{ updated: number; failed: number; errors: string[] }>> {
+  // Rate limiting: 5 bulk update requests per minute per trainer (expensive operation)
+  const rateLimitKey = `bulkUpdateCalendarEvents:${trainerId}`;
+  const rateLimitResult = rateLimiter.check(rateLimitKey, 5, 60000);
+  if (!rateLimitResult.allowed) {
+    return { error: 'יותר מדי בקשות. נסה שוב מאוחר יותר.' };
+  }
+
+  try {
+    // Get all synced events for this trainee
+    let query = supabase
+      .from('google_calendar_sync')
+      .select('id, google_event_id, google_calendar_id, event_start_time, event_end_time, workout_id')
+      .eq('trainer_id', trainerId)
+      .eq('trainee_id', traineeId)
+      .eq('sync_status', 'synced');
+
+    // Apply date range filter if provided
+    if (updates.dateRange) {
+      query = query
+        .gte('event_start_time', updates.dateRange.start.toISOString())
+        .lte('event_start_time', updates.dateRange.end.toISOString());
+    }
+
+    const { data: syncRecords, error: syncError } = await query;
+
+    if (syncError) {
+      return { error: syncError.message };
+    }
+
+    if (!syncRecords || syncRecords.length === 0) {
+      return { data: { updated: 0, failed: 0, errors: [] }, success: true };
+    }
+
+    // Get trainer credentials
+    const { data: credentials, error: credError } = await supabase
+      .from('trainer_google_credentials')
+      .select('access_token, default_calendar_id')
+      .eq('trainer_id', trainerId)
+      .single() as { data: Pick<GoogleCredentialsRow, 'access_token' | 'default_calendar_id'> | null; error: { message: string } | null };
+
+    if (credError || !credentials) {
+      return { error: 'Google Calendar לא מחובר' };
+    }
+
+    // Get valid access token (refresh if needed)
+    const { OAuthTokenService } = await import('../services/oauthTokenService');
+    const tokenResult = await OAuthTokenService.getValidAccessToken(trainerId);
+    
+    if (!tokenResult.success || !tokenResult.data) {
+      return { error: tokenResult.error || 'נדרש אימות מחדש ל-Google Calendar' };
+    }
+    
+    const accessToken = tokenResult.data;
+
+    let updated = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    // Update each event (with rate limiting delay between calls)
+    for (const record of syncRecords) {
+      try {
+        // Small delay to respect rate limits (100ms between calls)
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        const updateResult = await updateGoogleCalendarEvent(
+          trainerId,
+          (record as any).google_event_id,
+          { summary: updates.summary }
+        );
+
+        if (updateResult.error) {
+          // Check if event was deleted (404/410) - if so, delete sync record
+          if (updateResult.error.includes('לא נמצא') || updateResult.error.includes('נמחק')) {
+            // Get sync record info before deleting (to check sync_direction)
+            const { data: syncRecord } = await supabase
+              .from('google_calendar_sync')
+              .select('workout_id, sync_direction')
+              .eq('id', (record as any).id)
+              .maybeSingle();
+            
+            // Delete workout if exists and sync direction allows it
+            if (syncRecord?.workout_id && syncRecord.sync_direction !== 'to_google') {
+              await supabase
+                .from('workouts')
+                .delete()
+                .eq('id', syncRecord.workout_id)
+                .eq('trainer_id', trainerId);
+            }
+            
+            // Delete sync record
+            await supabase
+              .from('google_calendar_sync')
+              .delete()
+              .eq('id', (record as any).id);
+            
+            logger.info('Deleted sync record for event that no longer exists in Google Calendar', 
+              { eventId: (record as any).google_event_id }, 'bulkUpdateCalendarEvents');
+          } else {
+            failed++;
+            errors.push(`Event ${(record as any).google_event_id}: ${updateResult.error}`);
+            
+            // Update sync status to failed
+            await supabase
+              .from('google_calendar_sync')
+              .update({ sync_status: 'failed' } as any)
+              .eq('id', (record as any).id);
+          }
+        } else {
+          updated++;
+          
+          // Update sync record with new summary
+          await supabase
+            .from('google_calendar_sync')
+            .update({
+              event_summary: updates.summary,
+              last_synced_at: new Date().toISOString(),
+              sync_status: 'synced'
+            } as any)
+            .eq('id', (record as any).id);
+        }
+      } catch (err: unknown) {
+        failed++;
+        const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+        errors.push(`Event ${(record as any).google_event_id}: ${errorMsg}`);
+        logger.error('Error updating calendar event in bulk', err, 'bulkUpdateCalendarEvents');
+      }
+    }
+
+    return {
+      data: { updated, failed, errors },
+      success: true
+    };
+  } catch (err: unknown) {
+    const errorMessage = handleApiError(err, {
+      defaultMessage: 'שגיאה בעדכון אירועי יומן',
+      context: 'bulkUpdateCalendarEvents',
+      additionalInfo: { trainerId, traineeId },
     });
     return { error: errorMessage };
   }

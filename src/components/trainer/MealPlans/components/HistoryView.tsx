@@ -16,7 +16,7 @@ export function HistoryView({ history, onRestore }: HistoryViewProps) {
           <div className="p-12 text-center text-[var(--color-text-muted)]">אין היסטוריה</div>
         ) : (
           history.map((entry) => (
-            <div key={entry.id} className="p-5 flex items-center justify-between hover:bg-[var(--color-accent-bg)] transition-all duration-300">
+            <div key={entry.id} className="p-5 flex items-center justify-between hover:bg-[var(--color-bg-surface)] transition-all duration-300">
               <div>
                 <p className="font-semibold text-[var(--color-text-primary)]">{entry.change_description}</p>
                 <p className="text-sm text-[var(--color-text-muted)]">

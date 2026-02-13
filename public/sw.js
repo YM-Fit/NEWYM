@@ -3,8 +3,11 @@
  * Implements stale-while-revalidate caching strategy
  */
 
-const CACHE_NAME = 'app-cache-v1';
-const API_CACHE_NAME = 'app-api-cache-v1';
+const CACHE_VERSION = 'v2';
+const CACHE_NAME = `app-cache-${CACHE_VERSION}`;
+const API_CACHE_NAME = `app-api-cache-${CACHE_VERSION}`;
+const MAX_CACHE_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
+const API_CACHE_TTL = 5 * 60 * 1000; // 5 minutes for API responses
 
 // Assets to cache on install
 const STATIC_ASSETS = [
@@ -27,15 +30,40 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
+      return Promise.all([
+        // Delete old caches
+        ...cacheNames
           .filter((name) => name !== CACHE_NAME && name !== API_CACHE_NAME)
-          .map((name) => caches.delete(name))
-      );
+          .map((name) => caches.delete(name)),
+        // Clean up expired entries in current caches
+        Promise.all([
+          caches.open(CACHE_NAME).then(cleanExpiredEntries),
+          caches.open(API_CACHE_NAME).then(cleanExpiredEntries),
+        ]),
+      ]);
     })
   );
   return self.clients.claim(); // Take control immediately
 });
+
+// Clean up expired cache entries
+async function cleanExpiredEntries(cache) {
+  const requests = await cache.keys();
+  const now = Date.now();
+  
+  for (const request of requests) {
+    const response = await cache.match(request);
+    if (response) {
+      const cacheDate = response.headers.get('sw-cache-date');
+      if (cacheDate) {
+        const age = now - parseInt(cacheDate, 10);
+        if (age > MAX_CACHE_AGE) {
+          await cache.delete(request);
+        }
+      }
+    }
+  }
+}
 
 // Fetch event - implement caching strategies
 self.addEventListener('fetch', (event) => {
@@ -52,22 +80,50 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.open(API_CACHE_NAME).then((cache) => {
         return cache.match(request).then((cachedResponse) => {
-          // Return cached response immediately (stale)
+          // Check if cached response is still valid
+          let cachedAge = Infinity;
+          if (cachedResponse) {
+            const cacheDate = cachedResponse.headers.get('sw-cache-date');
+            if (cacheDate) {
+              cachedAge = Date.now() - parseInt(cacheDate, 10);
+            }
+          }
+
+          // Fetch fresh data in background
           const fetchPromise = fetch(request)
             .then((networkResponse) => {
-              // Update cache with fresh response
-              if (networkResponse.ok) {
-                cache.put(request, networkResponse.clone());
+              // Update cache with fresh response (only for GET requests)
+              if (networkResponse.ok && request.method === 'GET') {
+                const responseClone = networkResponse.clone();
+                // Add cache timestamp header
+                const headers = new Headers(responseClone.headers);
+                headers.set('sw-cache-date', Date.now().toString());
+                const cachedResponse = new Response(responseClone.body, {
+                  status: responseClone.status,
+                  statusText: responseClone.statusText,
+                  headers: headers,
+                });
+                cache.put(request, cachedResponse);
               }
               return networkResponse;
             })
             .catch(() => {
-              // Network failed, return cached if available
-              return cachedResponse || new Response('Offline', { status: 503 });
+              // Network failed, return cached if available and not too old
+              if (cachedResponse && cachedAge < API_CACHE_TTL * 2) {
+                return cachedResponse;
+              }
+              return new Response('Offline', { status: 503 });
             });
 
-          // Return cached response immediately, update in background
-          return cachedResponse || fetchPromise;
+          // Return cached response immediately if available and fresh, otherwise wait for network
+          if (cachedResponse && cachedAge < API_CACHE_TTL) {
+            // Return stale cache immediately, update in background
+            fetchPromise.catch(() => {}); // Don't wait for background update
+            return cachedResponse;
+          }
+
+          // Wait for network if cache is stale or missing
+          return fetchPromise;
         });
       })
     );
@@ -78,12 +134,24 @@ self.addEventListener('fetch', (event) => {
   if (url.origin === self.location.origin) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
-        return cachedResponse || fetch(request).then((response) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        
+        return fetch(request).then((response) => {
           // Cache successful responses
-          if (response.ok) {
+          if (response.ok && request.method === 'GET') {
             const responseClone = response.clone();
+            // Add cache timestamp header
+            const headers = new Headers(responseClone.headers);
+            headers.set('sw-cache-date', Date.now().toString());
+            const cachedResponse = new Response(responseClone.body, {
+              status: responseClone.status,
+              statusText: responseClone.statusText,
+              headers: headers,
+            });
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone);
+              cache.put(request, cachedResponse);
             });
           }
           return response;

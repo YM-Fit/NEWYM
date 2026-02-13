@@ -123,7 +123,7 @@ export default function MyMentalTools({ traineeId }: MyMentalToolsProps) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
-          <Brain className="w-8 h-8 text-white" />
+          <Brain className="w-8 h-8 text-foreground" />
         </div>
       </div>
     );
@@ -146,9 +146,9 @@ export default function MyMentalTools({ traineeId }: MyMentalToolsProps) {
       <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 shadow-xl">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center shadow-lg">
-            <Sparkles className="w-7 h-7 text-white" />
+            <Sparkles className="w-7 h-7 text-foreground" />
           </div>
-          <div className="text-white">
+          <div className="text-foreground">
             <h2 className="text-2xl font-bold">כלים מנטליים</h2>
             <p className="text-emerald-100">המשימות שלי להצלחה</p>
           </div>
@@ -217,7 +217,7 @@ function ToolCard({ tool }: ToolCardProps) {
           {tool.is_completed ? (
             <CheckCircle className="w-7 h-7 text-[var(--color-text-muted)]" />
           ) : (
-            <Icon className="w-7 h-7 text-white" />
+            <Icon className="w-7 h-7 text-foreground" />
           )}
         </div>
 

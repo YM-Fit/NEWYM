@@ -277,7 +277,7 @@ export default function MealPlanBuilder({
               onClick={() => setView('list')}
               className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
                 view === 'list'
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-foreground shadow-lg shadow-emerald-500/25'
                   : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
               }`}
             >
@@ -289,7 +289,7 @@ export default function MealPlanBuilder({
                   onClick={() => setView('editor')}
                   className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
                     view === 'editor'
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-foreground shadow-lg shadow-emerald-500/25'
                       : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
                   }`}
                 >
@@ -302,7 +302,7 @@ export default function MealPlanBuilder({
                   }}
                   className={`p-2.5 rounded-xl font-semibold transition-all duration-300 ${
                     view === 'history'
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-foreground shadow-lg shadow-emerald-500/25'
                       : 'bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
                   }`}
                 >

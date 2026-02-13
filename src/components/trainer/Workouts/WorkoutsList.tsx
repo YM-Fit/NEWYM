@@ -1,5 +1,5 @@
 import { ArrowRight, Dumbbell, Copy, Edit2, Trash2, Calendar, User, Sparkles, List, Table2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
 
 interface Workout {
@@ -22,6 +22,7 @@ interface WorkoutsListProps {
   onEditWorkout: (workout: Workout) => void;
   onDuplicateWorkout: (workout: Workout) => void;
   onWorkoutsUpdated: () => void;
+  onRefresh?: () => void;
 }
 
 export default function WorkoutsList({
@@ -31,9 +32,15 @@ export default function WorkoutsList({
   onViewWorkout,
   onEditWorkout,
   onDuplicateWorkout,
-  onWorkoutsUpdated
+  onWorkoutsUpdated,
+  onRefresh
 }: WorkoutsListProps) {
   const [viewMode, setViewMode] = useState<'list' | 'table'>('list');
+
+  // Refresh data on mount to ensure we have the latest workouts
+  useEffect(() => {
+    onRefresh?.();
+  }, [onRefresh]);
 
   const handleDeleteWorkout = async (workoutId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -62,7 +69,7 @@ export default function WorkoutsList({
           <div className="flex items-center gap-4">
             <button
               onClick={onBack}
-              className="p-3 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
+              className="p-3 rounded-xl bg-surface text-muted hover:text-foreground hover:bg-elevated transition-all"
             >
               <ArrowRight className="h-5 w-5" />
             </button>
@@ -71,16 +78,16 @@ export default function WorkoutsList({
                 <Sparkles className="w-4 h-4 text-emerald-400" />
                 <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">אימונים</span>
               </div>
-              <h1 className="text-2xl font-bold text-white">{trainee.name}</h1>
-              <p className="text-zinc-500">{workouts.length} אימונים כולל</p>
+              <h1 className="text-2xl font-bold text-foreground">{trainee.name}</h1>
+              <p className="text-muted">{workouts.length} אימונים כולל</p>
             </div>
           </div>
           {workouts.length > 0 && (
-            <div className="flex gap-1 bg-zinc-800/50 p-1 rounded-xl border border-zinc-700/50">
+            <div className="flex gap-1 bg-surface p-1 rounded-xl border border-border">
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded-lg transition-all ${
-                  viewMode === 'list' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+                  viewMode === 'list' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
                 }`}
                 title="תצוגת רשימה"
               >
@@ -89,7 +96,7 @@ export default function WorkoutsList({
               <button
                 onClick={() => setViewMode('table')}
                 className={`p-2 rounded-lg transition-all ${
-                  viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+                  viewMode === 'table' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
                 }`}
                 title="תצוגת טבלה"
               >
@@ -106,7 +113,7 @@ export default function WorkoutsList({
             {workouts.map((workout) => (
               <div
                 key={workout.id}
-                className="premium-card-static p-5 hover:border-zinc-600/50 transition-all cursor-pointer group"
+                className="premium-card-static p-5 hover:border-border-hover transition-all cursor-pointer group"
                 onClick={() => onViewWorkout(workout)}
               >
                 <div className="flex items-start justify-between">
@@ -121,7 +128,7 @@ export default function WorkoutsList({
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-white">
+                          <h3 className="font-semibold text-foreground">
                             {new Date(workout.date).toLocaleDateString('he-IL', {
                               weekday: 'long',
                               year: 'numeric',
@@ -135,7 +142,7 @@ export default function WorkoutsList({
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-zinc-500">
+                        <p className="text-sm text-muted">
                           {workout.exercises.length} תרגילים
                         </p>
                       </div>
@@ -143,7 +150,7 @@ export default function WorkoutsList({
 
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-zinc-500">נפח כולל:</span>
+                        <span className="text-muted">נפח כולל:</span>
                         <span className="font-semibold text-emerald-400">
                           {workout.totalVolume.toLocaleString()} ק״ג
                         </span>
@@ -153,13 +160,13 @@ export default function WorkoutsList({
                         {workout.exercises.slice(0, 3).map((ex, idx) => (
                           <span
                             key={idx}
-                            className="text-xs bg-zinc-800/50 text-zinc-300 px-2 py-1 rounded-lg border border-zinc-700/50"
+                            className="text-xs bg-surface text-foreground px-2 py-1 rounded-lg border border-border"
                           >
                             {ex.name}
                           </span>
                         ))}
                         {workout.exercises.length > 3 && (
-                          <span className="text-xs bg-zinc-800/50 text-zinc-400 px-2 py-1 rounded-lg border border-zinc-700/50">
+                          <span className="text-xs bg-surface text-muted px-2 py-1 rounded-lg border border-border">
                             +{workout.exercises.length - 3} עוד
                           </span>
                         )}
@@ -183,7 +190,7 @@ export default function WorkoutsList({
                         e.stopPropagation();
                         onEditWorkout(workout);
                       }}
-                      className="p-2 text-zinc-400 hover:bg-zinc-700/50 hover:text-white rounded-lg transition-all"
+                      className="p-2 text-muted hover:bg-elevated hover:text-foreground rounded-lg transition-all"
                       title="ערוך אימון"
                     >
                       <Edit2 className="h-4 w-4" />
@@ -205,13 +212,13 @@ export default function WorkoutsList({
             <div className="overflow-x-auto">
               <table className="w-full min-w-[700px]">
                 <thead>
-                  <tr className="border-b border-zinc-700/50">
-                    <th className="text-right py-4 px-4 text-sm font-semibold text-zinc-400">תאריך</th>
-                    <th className="text-center py-4 px-4 text-sm font-semibold text-zinc-400">סוג</th>
-                    <th className="text-center py-4 px-4 text-sm font-semibold text-zinc-400">תרגילים</th>
-                    <th className="text-center py-4 px-4 text-sm font-semibold text-zinc-400">נפח כולל</th>
-                    <th className="text-right py-4 px-4 text-sm font-semibold text-zinc-400">תרגילים עיקריים</th>
-                    <th className="text-center py-4 px-4 text-sm font-semibold text-zinc-400">פעולות</th>
+                  <tr className="border-b border-border">
+                    <th className="text-right py-4 px-4 text-sm font-semibold text-muted">תאריך</th>
+                    <th className="text-center py-4 px-4 text-sm font-semibold text-muted">סוג</th>
+                    <th className="text-center py-4 px-4 text-sm font-semibold text-muted">תרגילים</th>
+                    <th className="text-center py-4 px-4 text-sm font-semibold text-muted">נפח כולל</th>
+                    <th className="text-right py-4 px-4 text-sm font-semibold text-muted">תרגילים עיקריים</th>
+                    <th className="text-center py-4 px-4 text-sm font-semibold text-muted">פעולות</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -221,7 +228,7 @@ export default function WorkoutsList({
                     return (
                       <tr
                         key={workout.id}
-                        className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-all cursor-pointer"
+                        className="border-b border-border/50 hover:bg-surface/30 transition-all cursor-pointer"
                         onClick={() => onViewWorkout(workout)}
                       >
                         <td className="py-4 px-4">
@@ -234,10 +241,10 @@ export default function WorkoutsList({
                               )}
                             </div>
                             <div>
-                              <span className="font-medium text-white block">
+                              <span className="font-medium text-foreground block">
                                 {new Date(workout.date).toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })}
                               </span>
-                              <span className="text-xs text-zinc-500">
+                              <span className="text-xs text-muted">
                                 {new Date(workout.date).toLocaleDateString('he-IL', { year: 'numeric' })}
                               </span>
                             </div>
@@ -253,7 +260,7 @@ export default function WorkoutsList({
                           </span>
                         </td>
                         <td className="py-4 px-4 text-center">
-                          <span className="font-semibold text-white bg-zinc-800/50 px-3 py-1 rounded-lg">
+                          <span className="font-semibold text-foreground bg-surface px-3 py-1 rounded-lg">
                             {workout.exercises.length}
                           </span>
                         </td>
@@ -274,13 +281,13 @@ export default function WorkoutsList({
                             {workout.exercises.slice(0, 2).map((ex, idx) => (
                               <span
                                 key={idx}
-                                className="text-xs bg-zinc-800/50 text-zinc-300 px-2 py-0.5 rounded"
+                                className="text-xs bg-surface text-foreground px-2 py-0.5 rounded"
                               >
                                 {ex.name}
                               </span>
                             ))}
                             {workout.exercises.length > 2 && (
-                              <span className="text-xs text-zinc-500">
+                              <span className="text-xs text-muted">
                                 +{workout.exercises.length - 2}
                               </span>
                             )}
@@ -303,7 +310,7 @@ export default function WorkoutsList({
                                 e.stopPropagation();
                                 onEditWorkout(workout);
                               }}
-                              className="p-1.5 text-zinc-400 hover:bg-zinc-700/50 hover:text-white rounded-lg transition-all"
+                              className="p-1.5 text-muted hover:bg-elevated hover:text-foreground rounded-lg transition-all"
                               title="ערוך"
                             >
                               <Edit2 className="h-4 w-4" />
@@ -327,11 +334,11 @@ export default function WorkoutsList({
         )
       ) : (
         <div className="text-center py-12 premium-card-static">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-zinc-800/50 flex items-center justify-center">
-            <Calendar className="h-8 w-8 text-zinc-500" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-surface flex items-center justify-center">
+            <Calendar className="h-8 w-8 text-muted" />
           </div>
-          <h3 className="text-lg font-medium text-white mb-2">אין אימונים עדיין</h3>
-          <p className="text-zinc-500 mb-6">התחל לעקוב אחר האימונים של {trainee.name}</p>
+          <h3 className="text-lg font-medium text-foreground mb-2">אין אימונים עדיין</h3>
+          <p className="text-muted mb-6">התחל לעקוב אחר האימונים של {trainee.name}</p>
           <button
             onClick={onBack}
             className="btn-primary px-6 py-3 rounded-xl font-medium"

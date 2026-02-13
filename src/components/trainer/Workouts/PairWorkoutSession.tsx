@@ -52,12 +52,14 @@ interface PairWorkoutSessionProps {
   trainee: any;
   onBack: () => void;
   onComplete: (workoutData: any) => void;
+  isTablet?: boolean;
 }
 
 export default function PairWorkoutSession({
   trainee,
   onBack,
-  onComplete
+  onComplete,
+  isTablet
 }: PairWorkoutSessionProps) {
   const { user } = useAuth();
   const [member1Exercises, setMember1Exercises] = useState<WorkoutExercise[]>([]);
@@ -374,7 +376,8 @@ export default function PairWorkoutSession({
         .insert([
           {
             trainer_id: user.id,
-            workout_date: new Date().toISOString().split('T')[0],
+            // Use full timestamp for TIMESTAMPTZ field
+            workout_date: new Date().toISOString(),
             workout_type: 'pair',
             is_completed: true,
           },
@@ -455,17 +458,17 @@ export default function PairWorkoutSession({
     const collapsedSets = member === 'member_1' ? collapsedSets1 : collapsedSets2;
     
     return (
-    <div className={`bg-zinc-900 rounded-2xl border ${isBlue ? 'border-cyan-500/30' : 'border-emerald-500/30'} overflow-hidden`}>
+    <div className={`bg-card rounded-2xl border ${isBlue ? 'border-cyan-500/30' : 'border-emerald-500/30'} overflow-hidden`}>
       <div className={`${isBlue ? 'bg-cyan-500' : 'bg-emerald-500'} p-5`}>
-        <h2 className="text-xl font-bold text-white text-center tracking-wide">
+        <h2 className="text-xl font-bold text-foreground text-center tracking-wide">
           {name}
         </h2>
         <div className="flex items-center justify-center gap-4 mt-2">
-          <p className="text-center text-white/80 text-sm">
+          <p className="text-center text-foreground/80 text-sm">
             {exercises.length} {exercises.length === 1 ? 'תרגיל' : 'תרגילים'}
           </p>
           {totalVolume > 0 && (
-            <p className="text-center text-white/90 text-sm font-semibold">
+            <p className="text-center text-foreground/90 text-sm font-semibold">
               {totalVolume.toLocaleString()} ק״ג
             </p>
           )}
@@ -473,15 +476,15 @@ export default function PairWorkoutSession({
       </div>
       <div className="p-5 space-y-4">
         {exercises.length === 0 ? (
-          <div className="text-center text-zinc-500 py-12 bg-zinc-800/50 rounded-xl border-2 border-dashed border-zinc-700">
+          <div className="text-center text-muted py-12 bg-surface rounded-xl border-2 border-dashed border-border">
             <p className="text-base mb-2 font-medium">עדיין לא נוספו תרגילים</p>
-            <p className="text-sm text-zinc-500">לחץ על הכפתור למטה להוספה</p>
+            <p className="text-sm text-muted">לחץ על הכפתור למטה להוספה</p>
           </div>
         ) : (
           exercises.map((exercise, exIdx) => (
-            <div key={exercise.tempId} className="bg-zinc-800/50 rounded-2xl p-5 border border-zinc-700/50">
+            <div key={exercise.tempId} className="bg-surface rounded-2xl p-5 border border-border">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-white text-lg">{exercise.exercise.name}</h3>
+                <h3 className="font-bold text-foreground text-lg">{exercise.exercise.name}</h3>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => copyExerciseToOtherMember(exIdx, member)}
@@ -510,16 +513,16 @@ export default function PairWorkoutSession({
                       <div
                         key={setId}
                         onClick={() => toggleCollapseSet(setId, member)}
-                        className="bg-zinc-800/30 rounded-xl p-3 border border-zinc-700/30 cursor-pointer hover:border-emerald-500/30 hover:bg-zinc-800/50 transition-all"
+                        className="bg-surface/30 rounded-xl p-3 border border-border/30 cursor-pointer hover:border-emerald-500/30 hover:bg-surface transition-all"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <span className={`font-bold text-sm ${isBlue ? 'text-cyan-400 bg-cyan-500/10' : 'text-emerald-400 bg-emerald-500/10'} px-3 py-1.5 rounded-lg`}>
                               סט #{setIdx + 1}
                             </span>
-                            <span className="text-zinc-300 font-medium">{set.weight} ק״ג</span>
-                            <span className="text-zinc-500">x</span>
-                            <span className="text-zinc-300 font-medium">{set.reps} חזרות</span>
+                            <span className="text-foreground font-medium">{set.weight} ק״ג</span>
+                            <span className="text-muted">x</span>
+                            <span className="text-foreground font-medium">{set.reps} חזרות</span>
                             {set.rpe && <span className="text-amber-400 text-sm">RPE {set.rpe}</span>}
                             {set.set_type !== 'regular' && (
                               <span className={`text-xs px-2 py-0.5 rounded-full ${
@@ -536,7 +539,7 @@ export default function PairWorkoutSession({
                   }
                   
                   return (
-                  <div key={setId} className="bg-zinc-900/50 rounded-xl p-4 border border-zinc-700/30 space-y-3">
+                  <div key={setId} className="bg-card/50 rounded-xl p-4 border border-border/30 space-y-3">
                     <div className="flex items-center justify-between">
                       <span 
                         onClick={() => toggleCollapseSet(setId, member)}
@@ -573,7 +576,7 @@ export default function PairWorkoutSession({
                         >
                           {set.weight || '0'}
                         </button>
-                        <span className="text-xs text-zinc-500 block text-center mt-1">ק״ג</span>
+                        <span className="text-xs text-muted block text-center mt-1">ק״ג</span>
                       </div>
 
                       <div>
@@ -584,7 +587,7 @@ export default function PairWorkoutSession({
                         >
                           {set.reps || '0'}
                         </button>
-                        <span className="text-xs text-zinc-500 block text-center mt-1">חזרות</span>
+                        <span className="text-xs text-muted block text-center mt-1">חזרות</span>
                       </div>
 
                       <div>
@@ -595,7 +598,7 @@ export default function PairWorkoutSession({
                         >
                           {set.rpe || '-'}
                         </button>
-                        <span className="text-xs text-zinc-500 block text-center mt-1">RPE</span>
+                        <span className="text-xs text-muted block text-center mt-1">RPE</span>
                       </div>
                     </div>
 
@@ -606,7 +609,7 @@ export default function PairWorkoutSession({
                         className={`py-2 px-3 rounded-xl border text-sm transition-all ${
                           set.equipment
                             ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400'
-                            : 'border-zinc-700/50 hover:border-cyan-500/30 bg-zinc-800/30 hover:bg-cyan-500/10 text-zinc-400'
+                            : 'border-border hover:border-cyan-500/30 bg-surface/30 hover:bg-cyan-500/10 text-muted'
                         }`}
                       >
                         {set.equipment?.emoji || '🎒'} {set.equipment?.name || 'ציוד'}
@@ -618,7 +621,7 @@ export default function PairWorkoutSession({
                         className={`py-2 px-3 rounded-xl border text-sm transition-all ${
                           set.failure
                             ? 'border-red-500/50 bg-red-500/10 text-red-400'
-                            : 'border-zinc-700/50 hover:border-red-500/30 bg-zinc-800/30 hover:bg-red-500/10 text-zinc-400'
+                            : 'border-border hover:border-red-500/30 bg-surface/30 hover:bg-red-500/10 text-muted'
                         }`}
                       >
                         {set.failure ? '✓ כשל' : 'כשל'}
@@ -640,7 +643,7 @@ export default function PairWorkoutSession({
                         className={`py-2 px-3 rounded-xl border text-sm transition-all ${
                           set.set_type === 'superset'
                             ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400'
-                            : 'border-zinc-700/50 hover:border-cyan-500/30 bg-zinc-800/30 hover:bg-cyan-500/10 text-zinc-400'
+                            : 'border-border hover:border-cyan-500/30 bg-surface/30 hover:bg-cyan-500/10 text-muted'
                         }`}
                       >
                         {set.set_type === 'superset' ? `✓ סופר-סט${set.superset_exercise_name ? `: ${set.superset_exercise_name}` : ''}` : 'סופר-סט'}
@@ -660,7 +663,7 @@ export default function PairWorkoutSession({
                         className={`py-2 px-3 rounded-xl border text-sm transition-all ${
                           set.set_type === 'dropset'
                             ? 'border-amber-500/50 bg-amber-500/10 text-amber-400'
-                            : 'border-zinc-700/50 hover:border-amber-500/30 bg-zinc-800/30 hover:bg-amber-500/10 text-zinc-400'
+                            : 'border-border hover:border-amber-500/30 bg-surface/30 hover:bg-amber-500/10 text-muted'
                         }`}
                       >
                         {set.set_type === 'dropset' ? '✓ דרופ-סט' : 'דרופ-סט'}
@@ -679,7 +682,7 @@ export default function PairWorkoutSession({
                             >
                               {set.superset_weight || '0'}
                             </button>
-                            <span className="text-xs text-zinc-500 block text-center mt-1">ק״ג</span>
+                            <span className="text-xs text-muted block text-center mt-1">ק״ג</span>
                           </div>
                           <div>
                             <button
@@ -689,7 +692,7 @@ export default function PairWorkoutSession({
                             >
                               {set.superset_reps || '0'}
                             </button>
-                            <span className="text-xs text-zinc-500 block text-center mt-1">חזרות</span>
+                            <span className="text-xs text-muted block text-center mt-1">חזרות</span>
                           </div>
                           <div>
                             <button
@@ -699,7 +702,7 @@ export default function PairWorkoutSession({
                             >
                               {set.superset_rpe || '-'}
                             </button>
-                            <span className="text-xs text-zinc-500 block text-center mt-1">RPE</span>
+                            <span className="text-xs text-muted block text-center mt-1">RPE</span>
                           </div>
                         </div>
                         <button
@@ -708,7 +711,7 @@ export default function PairWorkoutSession({
                           className={`w-full py-2 px-3 rounded-lg border text-sm transition-all ${
                             set.superset_equipment
                               ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400'
-                              : 'border-zinc-700/50 hover:border-cyan-500/30 bg-zinc-800/30 hover:bg-cyan-500/10 text-zinc-400'
+                              : 'border-border hover:border-cyan-500/30 bg-surface/30 hover:bg-cyan-500/10 text-muted'
                           }`}
                         >
                           {set.superset_equipment?.emoji || '🎒'} {set.superset_equipment?.name || 'ציוד סופר-סט'}
@@ -737,7 +740,7 @@ export default function PairWorkoutSession({
                                 >
                                   {set.superset_dropset_weight || '0'}
                                 </button>
-                                <span className="text-xs text-zinc-500 block text-center mt-1">ק״ג</span>
+                                <span className="text-xs text-muted block text-center mt-1">ק״ג</span>
                               </div>
                               <div>
                                 <button
@@ -747,7 +750,7 @@ export default function PairWorkoutSession({
                                 >
                                   {set.superset_dropset_reps || '0'}
                                 </button>
-                                <span className="text-xs text-zinc-500 block text-center mt-1">חזרות</span>
+                                <span className="text-xs text-muted block text-center mt-1">חזרות</span>
                               </div>
                             </div>
                           </div>
@@ -790,7 +793,7 @@ export default function PairWorkoutSession({
                             >
                               {set.dropset_weight || '0'}
                             </button>
-                            <span className="text-xs text-zinc-500 block text-center mt-1">ק״ג</span>
+                            <span className="text-xs text-muted block text-center mt-1">ק״ג</span>
                           </div>
                           <div>
                             <button
@@ -800,7 +803,7 @@ export default function PairWorkoutSession({
                             >
                               {set.dropset_reps || '0'}
                             </button>
-                            <span className="text-xs text-zinc-500 block text-center mt-1">חזרות</span>
+                            <span className="text-xs text-muted block text-center mt-1">חזרות</span>
                           </div>
                         </div>
                       </div>
@@ -822,7 +825,7 @@ export default function PairWorkoutSession({
 
         <button
           onClick={() => setShowExerciseSelector(member)}
-          className={`w-full ${isBlue ? 'bg-cyan-500 hover:bg-cyan-600' : 'bg-emerald-500 hover:bg-emerald-600'} text-white py-4 px-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold`}
+          className={`w-full ${isBlue ? 'bg-cyan-500 hover:bg-cyan-600' : 'bg-emerald-500 hover:bg-emerald-600'} text-foreground py-4 px-4 rounded-xl flex items-center justify-center space-x-2 rtl:space-x-reverse transition-all font-semibold`}
         >
           <Plus className="h-5 w-5" />
           <span>הוסף תרגיל</span>
@@ -834,13 +837,13 @@ export default function PairWorkoutSession({
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-base)] transition-colors duration-300">
-      <div className="sticky top-0 z-10 bg-zinc-900 border-b border-zinc-800">
+      <div className="sticky top-0 z-10 bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 rtl:space-x-reverse">
               <button
                 onClick={onBack}
-                className="p-3 hover:bg-zinc-800 rounded-xl transition-all text-zinc-400 hover:text-white"
+                className="p-3 hover:bg-surface rounded-xl transition-all text-muted hover:text-foreground"
               >
                 <ArrowRight className="h-6 w-6" />
               </button>
@@ -849,8 +852,8 @@ export default function PairWorkoutSession({
                   <Users className="h-6 w-6 text-emerald-400" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-white">אימון זוגי</h1>
-                  <p className="text-sm text-zinc-400">{trainee.pairName1 || ''} (1) ו{trainee.pairName2 || ''} (2)</p>
+                  <h1 className="text-xl font-bold text-foreground">אימון זוגי</h1>
+                  <p className="text-sm text-muted">{trainee.pairName1 || ''} (1) ו{trainee.pairName2 || ''} (2)</p>
                 </div>
               </div>
             </div>
@@ -858,7 +861,7 @@ export default function PairWorkoutSession({
             <div className="flex space-x-3 rtl:space-x-reverse">
               <button
                 onClick={onBack}
-                className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-5 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all font-medium border border-zinc-700"
+                className="bg-surface hover:bg-elevated text-foreground px-5 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all font-medium border border-border"
               >
                 <X className="h-5 w-5" />
                 <span>ביטול</span>
@@ -866,7 +869,7 @@ export default function PairWorkoutSession({
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all disabled:opacity-50 font-bold"
+                className="bg-emerald-500 hover:bg-emerald-600 text-foreground px-6 py-3 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all disabled:opacity-50 font-bold"
               >
                 <Check className="h-5 w-5" />
                 <span>{saving ? 'שומר...' : 'סיים אימון'}</span>
@@ -900,6 +903,7 @@ export default function PairWorkoutSession({
           minValue={numericPad.field === 'rpe' ? 1 : undefined}
           maxValue={numericPad.field === 'rpe' ? 10 : undefined}
           compact={true}
+          isTablet={isTablet}
         />
       )}
 
@@ -931,6 +935,7 @@ export default function PairWorkoutSession({
           minValue={supersetNumericPad.field === 'superset_rpe' ? 1 : undefined}
           maxValue={supersetNumericPad.field === 'superset_rpe' ? 10 : undefined}
           compact={true}
+          isTablet={isTablet}
         />
       )}
 
@@ -953,6 +958,7 @@ export default function PairWorkoutSession({
           onClose={() => setDropsetNumericPad(null)}
           allowDecimal={dropsetNumericPad.field === 'dropset_weight'}
           compact={true}
+          isTablet={isTablet}
         />
       )}
 
@@ -964,6 +970,7 @@ export default function PairWorkoutSession({
           onClose={() => setSupersetDropsetNumericPad(null)}
           allowDecimal={supersetDropsetNumericPad.field === 'superset_dropset_weight'}
           compact={true}
+          isTablet={isTablet}
         />
       )}
     </div>

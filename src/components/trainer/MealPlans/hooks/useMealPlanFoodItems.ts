@@ -33,7 +33,7 @@ export function useMealPlanFoodItems(
       clearTimeout(existingTimer);
     }
 
-    // Set new timer to save to database after 500ms of inactivity
+    // Set new timer to save to database after 800ms of inactivity (optimized for better UX)
     const timer = setTimeout(async () => {
       try {
         const updated = await updateFoodItem(foodItemId, updates);
@@ -45,7 +45,7 @@ export function useMealPlanFoodItems(
         toast.error('שגיאה בעדכון פריט מזון');
       }
       updateTimersRef.current.delete(foodItemId);
-    }, 500);
+    }, 800);
 
     updateTimersRef.current.set(foodItemId, timer);
   }, [setMeals]);

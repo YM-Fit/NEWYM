@@ -13,13 +13,31 @@ interface UseSupabaseQueryOptions {
   enabled?: boolean;
   refetchOnMount?: boolean;
   cacheTime?: number; // Cache time in milliseconds
+  tableNames?: string[]; // Table names for cache invalidation
 }
 
 // Simple cache for query results
-const queryCache = new Map<string, { data: any; timestamp: number; cacheTime: number }>();
+const queryCache = new Map<string, { data: any; timestamp: number; cacheTime: number; tableNames?: string[] }>();
+
+// Cache invalidation by table name
+export function invalidateCacheByTable(tableName: string): void {
+  for (const [key, cached] of queryCache.entries()) {
+    if (cached.tableNames && cached.tableNames.includes(tableName)) {
+      queryCache.delete(key);
+    }
+  }
+}
+
+// Invalidate cache for multiple tables
+export function invalidateCacheByTables(tableNames: string[]): void {
+  tableNames.forEach(tableName => invalidateCacheByTable(tableName));
+}
 
 function getCacheKey(queryFn: () => Promise<any>, deps: React.DependencyList): string {
-  return JSON.stringify({ deps });
+  // Create a hash of the queryFn to prevent cache collisions
+  // Use function name if available, otherwise use string representation
+  const fnHash = queryFn.name || queryFn.toString().slice(0, 100);
+  return JSON.stringify({ fnHash, deps });
 }
 
 export function useSupabaseQuery<T>(
@@ -27,7 +45,7 @@ export function useSupabaseQuery<T>(
   deps: React.DependencyList = [],
   options: UseSupabaseQueryOptions = {}
 ) {
-  const { enabled = true, refetchOnMount = true, cacheTime = 0 } = options;
+  const { enabled = true, refetchOnMount = true, cacheTime = 300000, tableNames } = options; // Default 5 minutes
   const queryFnRef = useRef(queryFn);
   const depsRef = useRef(deps);
   const cacheKeyRef = useRef<string | null>(null);
@@ -121,6 +139,7 @@ export function useSupabaseQuery<T>(
           data,
           timestamp: Date.now(),
           cacheTime,
+          tableNames,
         });
       }
       
@@ -157,9 +176,17 @@ export function useSupabaseQuery<T>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refetchOnMount, enabled, ...deps]);
 
+  // Force refetch by invalidating cache first
+  const refetch = useCallback(async () => {
+    const cacheKey = cacheKeyRef.current || getCacheKey(queryFnRef.current, depsRef.current);
+    // Invalidate cache before refetching
+    queryCache.delete(cacheKey);
+    await execute();
+  }, [execute]);
+
   return {
     ...state,
-    refetch: execute,
+    refetch,
   };
 }
 
@@ -172,10 +199,11 @@ export function useTrainees(trainerId: string | null) {
         .from('trainees')
         .select('*')
         .eq('trainer_id', trainerId)
+        .neq('status', 'deleted') // Filter out deleted trainees
         .order('full_name');
     },
     [trainerId],
-    { enabled: !!trainerId, cacheTime: 60000 } // Cache for 1 minute
+    { enabled: !!trainerId, cacheTime: 300000, tableNames: ['trainees'] } // Cache for 5 minutes
   );
 }
 
@@ -191,7 +219,7 @@ export function useTrainee(traineeId: string | null) {
         .single();
     },
     [traineeId],
-    { enabled: !!traineeId, cacheTime: 60000 } // Cache for 1 minute
+    { enabled: !!traineeId, cacheTime: 300000, tableNames: ['trainees'] } // Cache for 5 minutes
   );
 }
 
@@ -207,7 +235,7 @@ export function useMuscleGroups(trainerId: string | null) {
         .order('name');
     },
     [trainerId],
-    { enabled: !!trainerId, cacheTime: 300000 } // Cache for 5 minutes (rarely changes)
+    { enabled: !!trainerId, cacheTime: 300000, tableNames: ['muscle_groups', 'exercises'] } // Cache for 5 minutes (rarely changes)
   );
 }
 
@@ -229,7 +257,7 @@ export function useMeasurements(traineeId: string | null, limit?: number) {
       return query;
     },
     [traineeId, limit],
-    { enabled: !!traineeId, cacheTime: 30000 } // Cache for 30 seconds
+    { enabled: !!traineeId, cacheTime: 60000, tableNames: ['measurements'] } // Cache for 1 minute
   );
 }
 
@@ -257,6 +285,7 @@ export function useWorkouts(traineeId: string | null, limit?: number) {
           )
         `)
         .eq('trainee_id', traineeId)
+        .eq('workouts.is_completed', true)
         .order('workout_id', { ascending: false });
 
       if (limit) {
@@ -266,6 +295,6 @@ export function useWorkouts(traineeId: string | null, limit?: number) {
       return query;
     },
     [traineeId, limit],
-    { enabled: !!traineeId, cacheTime: 30000 } // Cache for 30 seconds
+    { enabled: !!traineeId, cacheTime: 60000, tableNames: ['workout_trainees', 'workouts', 'workout_exercises', 'exercise_sets'] } // Cache for 1 minute
   );
 }

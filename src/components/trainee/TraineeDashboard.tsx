@@ -93,7 +93,8 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
     try {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const startOfMonthStr = startOfMonth.toISOString().split('T')[0];
+      // Use ISO timestamp for TIMESTAMPTZ field comparison
+      const startOfMonthStr = startOfMonth.toISOString();
 
       const { count: workoutsCount } = await supabase
         .from('workout_trainees')
@@ -155,14 +156,20 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
   const loadTodayStatuses = async (traineeId: string) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString().split('T')[0];
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // Use ISO timestamps for TIMESTAMPTZ field comparison
+    const todayStr = today.toISOString();
+    const tomorrowStr = tomorrow.toISOString();
 
-    // Workout today
+    // Workout today - workout_date is TIMESTAMPTZ, so use gte/lt for date range
     const { data: todayWorkouts } = await supabase
       .from('workout_trainees')
       .select('workouts!inner(id, workout_date, is_completed)')
       .eq('trainee_id', traineeId)
-      .eq('workouts.workout_date', todayStr);
+      .gte('workouts.workout_date', todayStr)
+      .lt('workouts.workout_date', tomorrowStr);
 
     if (todayWorkouts && todayWorkouts.length > 0) {
       const anyCompleted = todayWorkouts.some((w: any) => w.workouts.is_completed);
@@ -172,11 +179,13 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
     }
 
     // Food diary today (simple: any entries for today)
+    // meal_date is DATE (not TIMESTAMPTZ), so use date string (YYYY-MM-DD)
+    const todayDateStr = today.toISOString().split('T')[0];
     const { data: todayMeals } = await supabase
       .from('meals')
       .select('id, meal_type')
       .eq('trainee_id', traineeId)
-      .eq('meal_date', todayStr);
+      .eq('meal_date', todayDateStr);
 
     if (todayMeals && todayMeals.length > 0) {
       const mealTypes = new Set(todayMeals.map((e: any) => e.meal_type));
@@ -277,10 +286,12 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
       });
     }
 
-    const startStr = startOfWeek.toISOString().split('T')[0];
+    // Use ISO timestamps for TIMESTAMPTZ field comparison
+    const startStr = startOfWeek.toISOString();
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
-    const endStr = endOfWeek.toISOString().split('T')[0];
+    endOfWeek.setHours(23, 59, 59, 999); // End of day
+    const endStr = endOfWeek.toISOString();
 
     const { data: workouts } = await supabase
       .from('workout_trainees')
@@ -291,12 +302,16 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
       .lte('workouts.workout_date', endStr);
 
     if (workouts) {
+      // Create a set of date strings (YYYY-MM-DD) for comparison
       const workoutDates = new Set(
-        workouts.map((w: any) => w.workouts.workout_date)
+        workouts.map((w: any) => {
+          const workoutDate = new Date(w.workouts.workout_date);
+          return `${workoutDate.getFullYear()}-${String(workoutDate.getMonth() + 1).padStart(2, '0')}-${String(workoutDate.getDate()).padStart(2, '0')}`;
+        })
       );
 
       weekDates.forEach((day) => {
-        const dateStr = day.date.toISOString().split('T')[0];
+        const dateStr = `${day.date.getFullYear()}-${String(day.date.getMonth() + 1).padStart(2, '0')}-${String(day.date.getDate()).padStart(2, '0')}`;
         day.hasWorkout = workoutDates.has(dateStr);
       });
     }
@@ -327,7 +342,7 @@ export default function TraineeDashboard({ traineeId, traineeName }: TraineeDash
     return (
       <div className="flex justify-center items-center py-12">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-700 flex items-center justify-center shadow-glow animate-float border border-white/10">
-          <Dumbbell className="w-8 h-8 text-white" />
+          <Dumbbell className="w-8 h-8 text-foreground" />
         </div>
       </div>
     );

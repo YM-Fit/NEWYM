@@ -143,10 +143,44 @@ async function syncTrainerCalendar(
 
   const eventsData = await eventsResponse.json();
   const events = eventsData.items || [];
+  
+  // Track which event IDs exist in Google Calendar (for cleanup later)
+  const existingEventIds = new Set<string>();
 
   // Process each event
   for (const event of events) {
-    if (event.status === "cancelled") continue;
+    // Handle cancelled events - delete their sync records
+    if (event.status === "cancelled") {
+      const { data: cancelledSync } = await supabase
+        .from("google_calendar_sync")
+        .select("id, workout_id, sync_direction")
+        .eq("google_event_id", event.id)
+        .eq("google_calendar_id", calendarId)
+        .maybeSingle();
+      
+      if (cancelledSync) {
+        // Delete workout if exists and sync direction allows it
+        if (cancelledSync.workout_id && cancelledSync.sync_direction !== 'to_google') {
+          await supabase
+            .from("workouts")
+            .delete()
+            .eq("id", cancelledSync.workout_id)
+            .eq("trainer_id", trainerId);
+        }
+        
+        // Delete sync record
+        await supabase
+          .from("google_calendar_sync")
+          .delete()
+          .eq("id", cancelledSync.id);
+        
+        console.log(`Deleted sync record for cancelled event: ${event.id}`);
+      }
+      continue;
+    }
+    
+    // Track this event as existing
+    existingEventIds.add(event.id);
 
     const startTime = new Date(event.start.dateTime || event.start.date);
     const endTime = new Date(event.end.dateTime || event.end.date);
@@ -154,7 +188,7 @@ async function syncTrainerCalendar(
     // Check if already synced
     const { data: existingSync } = await supabase
       .from("google_calendar_sync")
-      .select("workout_id, trainee_id")
+      .select("id, workout_id, trainee_id")
       .eq("google_event_id", event.id)
       .eq("google_calendar_id", calendarId)
       .maybeSingle();
@@ -236,22 +270,26 @@ async function syncTrainerCalendar(
 
       // Update workout if exists
       if (existingSync.workout_id) {
+        // IMPORTANT: workout_date is timestamptz, so we need to preserve the full timestamp
+        // Use the exact startTime from Google Calendar event to maintain consistency
         await supabase
           .from("workouts")
           .update({
-            workout_date: startTime.toISOString().split("T")[0],
+            workout_date: startTime.toISOString(), // Full timestamp, not just date
             notes: event.description || null,
           })
           .eq("id", existingSync.workout_id);
       }
     } else {
       // Create new workout and sync record
+      // IMPORTANT: workout_date is timestamptz, so we need to preserve the full timestamp
+      // Use the exact startTime from Google Calendar event to maintain consistency
       const { data: newWorkout } = await supabase
         .from("workouts")
         .insert({
           trainer_id: trainerId,
           workout_type: "personal",
-          workout_date: startTime.toISOString().split("T")[0],
+          workout_date: startTime.toISOString(), // Full timestamp, not just date
           notes: event.description || null,
           is_completed: false,
         })
@@ -290,6 +328,40 @@ async function syncTrainerCalendar(
 
         // Update calendar client stats
         await updateCalendarClientStats(trainerId, trainee.id, event, supabase);
+      }
+    }
+  }
+
+  // Cleanup: Delete sync records for events that no longer exist in Google Calendar
+  // (within the time window we're syncing)
+  const { data: allSyncRecords } = await supabase
+    .from("google_calendar_sync")
+    .select("id, google_event_id, workout_id, sync_direction")
+    .eq("trainer_id", trainerId)
+    .eq("google_calendar_id", calendarId)
+    .gte("event_start_time", timeMin.toISOString())
+    .lte("event_start_time", timeMax.toISOString());
+
+  if (allSyncRecords) {
+    for (const syncRecord of allSyncRecords) {
+      // If this sync record's event doesn't exist in Google Calendar, delete it
+      if (!existingEventIds.has(syncRecord.google_event_id)) {
+        console.log(`Deleting sync record for event that no longer exists: ${syncRecord.google_event_id}`);
+        
+        // Delete workout if exists and sync direction allows it
+        if (syncRecord.workout_id && syncRecord.sync_direction !== 'to_google') {
+          await supabase
+            .from("workouts")
+            .delete()
+            .eq("id", syncRecord.workout_id)
+            .eq("trainer_id", trainerId);
+        }
+        
+        // Delete sync record
+        await supabase
+          .from("google_calendar_sync")
+          .delete()
+          .eq("id", syncRecord.id);
       }
     }
   }

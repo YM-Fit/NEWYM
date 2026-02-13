@@ -26,15 +26,15 @@ export function LoadingSpinner({
         return (
           <div className={`flex items-center gap-2 ${className}`}>
             <div 
-              className={`${sizeStyles[size].dots} bg-emerald-500 rounded-full animate-bounce`} 
+              className={`${sizeStyles[size].dots} bg-primary rounded-full animate-bounce`} 
               style={{ animationDelay: '0ms', animationDuration: '1.4s' }} 
             />
             <div 
-              className={`${sizeStyles[size].dots} bg-emerald-500 rounded-full animate-bounce`} 
+              className={`${sizeStyles[size].dots} bg-primary rounded-full animate-bounce`} 
               style={{ animationDelay: '200ms', animationDuration: '1.4s' }} 
             />
             <div 
-              className={`${sizeStyles[size].dots} bg-emerald-500 rounded-full animate-bounce`} 
+              className={`${sizeStyles[size].dots} bg-primary rounded-full animate-bounce`} 
               style={{ animationDelay: '400ms', animationDuration: '1.4s' }} 
             />
           </div>
@@ -42,14 +42,14 @@ export function LoadingSpinner({
       
       case 'pulse':
         return (
-          <div className={`${sizeStyles[size].spinner} bg-emerald-500 rounded-full animate-pulse ${className}`} />
+          <div className={`${sizeStyles[size].spinner} bg-primary rounded-full animate-pulse ${className}`} />
         );
 
       case 'ring':
         return (
           <div className={`relative ${sizeStyles[size].ring} ${className}`}>
-            <div className={`absolute inset-0 border-4 border-emerald-500/20 rounded-full`} />
-            <div className={`absolute inset-0 border-4 border-t-emerald-500 rounded-full animate-spin`} />
+            <div className={`absolute inset-0 border-4 border-primary/20 rounded-full`} />
+            <div className={`absolute inset-0 border-4 border-t-primary rounded-full animate-spin`} />
           </div>
         );
 
@@ -57,19 +57,19 @@ export function LoadingSpinner({
         return (
           <div className={`flex items-end gap-1 ${className}`}>
             <div 
-              className={`${sizeStyles[size].bars} bg-emerald-500 rounded-full animate-pulse`}
+              className={`${sizeStyles[size].bars} bg-primary rounded-full animate-pulse`}
               style={{ animationDelay: '0ms', animationDuration: '1s' }}
             />
             <div 
-              className={`${sizeStyles[size].bars} bg-emerald-500 rounded-full animate-pulse`}
+              className={`${sizeStyles[size].bars} bg-primary rounded-full animate-pulse`}
               style={{ animationDelay: '150ms', animationDuration: '1s' }}
             />
             <div 
-              className={`${sizeStyles[size].bars} bg-emerald-500 rounded-full animate-pulse`}
+              className={`${sizeStyles[size].bars} bg-primary rounded-full animate-pulse`}
               style={{ animationDelay: '300ms', animationDuration: '1s' }}
             />
             <div 
-              className={`${sizeStyles[size].bars} bg-emerald-500 rounded-full animate-pulse`}
+              className={`${sizeStyles[size].bars} bg-primary rounded-full animate-pulse`}
               style={{ animationDelay: '450ms', animationDuration: '1s' }}
             />
           </div>
@@ -81,7 +81,7 @@ export function LoadingSpinner({
             <div
               className={`
                 ${sizeStyles[size].spinner}
-                border-emerald-500 border-t-transparent
+                border-primary border-t-transparent
                 rounded-full animate-spin
                 ${className}
               `}
@@ -90,7 +90,7 @@ export function LoadingSpinner({
               className={`
                 absolute inset-0
                 ${sizeStyles[size].spinner}
-                border-emerald-500/20 border-t-transparent
+                border-primary/20 border-t-transparent
                 rounded-full animate-spin
                 ${className}
               `}
@@ -107,12 +107,12 @@ export function LoadingSpinner({
         {renderLoader()}
         {variant === 'spinner' && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-1/2 h-1/2 bg-emerald-500/20 rounded-full animate-pulse" />
+            <div className="w-1/2 h-1/2 bg-primary/20 rounded-full animate-pulse" />
           </div>
         )}
       </div>
       {text && (
-        <p className="text-zinc-400 text-sm font-medium animate-fade-in-up">
+        <p className="text-muted text-sm font-medium animate-fade-in-up">
           {text}
         </p>
       )}
@@ -122,7 +122,7 @@ export function LoadingSpinner({
   if (fullScreen) {
     return (
       <div 
-        className="fixed inset-0 flex items-center justify-center bg-zinc-950/90 backdrop-blur-md z-50 animate-fade-in" 
+        className="fixed inset-0 flex items-center justify-center bg-base/90 backdrop-blur-md z-50 animate-fade-in" 
         dir="rtl"
       >
         {spinner}

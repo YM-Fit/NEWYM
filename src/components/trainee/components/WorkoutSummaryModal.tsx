@@ -75,7 +75,7 @@ export default function WorkoutSummaryModal({
             toast.success('האימון נשמר בהצלחה!');
             onSave();
           }}
-          className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition-all"
+          className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-foreground font-semibold transition-all"
         >
           סיום וחזרה למסך אימונים
         </button>

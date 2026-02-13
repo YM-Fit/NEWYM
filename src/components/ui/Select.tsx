@@ -24,9 +24,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className={fullWidth ? 'w-full' : ''} dir="rtl">
         {label && (
-          <label htmlFor={selectId} className="block text-sm font-medium text-zinc-400 mb-2">
+          <label htmlFor={selectId} className="block text-sm font-medium text-muted mb-2">
             {label}
-            {required && <span className="text-red-400 ml-1" aria-label="שדה חובה">*</span>}
+            {required && <span className="text-danger ml-1" aria-label="שדה חובה">*</span>}
           </label>
         )}
         <div className="relative">
@@ -39,12 +39,12 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             required={required}
             className={`
               w-full px-4 py-3 pr-10
-              bg-zinc-800/50 border rounded-xl
-              text-white placeholder-zinc-500
-              focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50
+              bg-input/70 border rounded-xl
+              text-foreground placeholder-muted
+              focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50
               transition-all
               appearance-none cursor-pointer
-              ${error ? 'border-red-500/50 focus:ring-red-500/50' : 'border-zinc-700/50'}
+              ${error ? 'border-danger/50 focus:ring-danger/50' : 'border-border/15'}
               ${className}
             `}
             {...props}
@@ -65,11 +65,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             ))}
           </select>
           <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true">
-            <ChevronDown className="w-5 h-5 text-zinc-500" />
+            <ChevronDown className="w-5 h-5 text-muted" />
           </div>
         </div>
         {error && (
-          <p id={errorId} className="mt-1 text-sm text-red-400" role="alert">
+          <p id={errorId} className="mt-1 text-sm text-danger" role="alert">
             {error}
           </p>
         )}

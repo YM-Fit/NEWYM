@@ -17,6 +17,14 @@ export class RequestCache {
   }
 
   /**
+   * Generate a better cache key from request details
+   */
+  private generateKey(method: string, url: string, body?: any): string {
+    const bodyHash = body ? JSON.stringify(body).slice(0, 100) : '';
+    return `${method}:${url}:${bodyHash}`;
+  }
+
+  /**
    * Get cached data or execute request function
    */
   async get<T>(

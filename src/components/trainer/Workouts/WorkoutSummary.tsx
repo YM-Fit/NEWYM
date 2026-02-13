@@ -45,15 +45,15 @@ interface WorkoutSummaryProps {
 }
 
 const MUSCLE_GROUP_COLORS: Record<string, string> = {
-  'chest': '#ef4444',
-  'back': '#3b82f6',
-  'shoulders': '#f59e0b',
-  'biceps': '#10b981',
-  'triceps': '#8b5cf6',
-  'legs': '#ec4899',
-  'glutes': '#f97316',
-  'core': '#06b6d4',
-  'default': '#6b7280',
+  'chest': '#ef4444',      // red-500
+  'back': '#06b6d4',       // cyan-500 (מותאם לפלטת המערכת)
+  'shoulders': '#f59e0b',  // amber-500 (מותאם לפלטת המערכת)
+  'biceps': '#10b981',     // emerald-500 (צבע ראשי במערכת)
+  'triceps': '#8b5cf6',    // violet-500
+  'legs': '#ec4899',       // pink-500
+  'glutes': '#f97316',     // orange-500
+  'core': '#14b8a6',       // teal-500 (מותאם לפלטת המערכת)
+  'default': '#71717a',    // zinc-500 (מותאם לפלטת המערכת)
 };
 
 export default function WorkoutSummary({
@@ -175,7 +175,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
               <div
                 className="w-3 h-3 rounded-sm"
                 style={{
-                  backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'][Math.floor(Math.random() * 5)],
+                  backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#06b6d4', '#8b5cf6'][Math.floor(Math.random() * 5)],
                   transform: `rotate(${Math.random() * 360}deg)`,
                 }}
               />
@@ -184,15 +184,15 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
         </div>
       )}
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-4">
+      <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-4">
         <div className="sticky top-0 bg-emerald-500 p-6 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 rtl:space-x-reverse">
               <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                <CheckCircle className="h-7 w-7 text-white" />
+                <CheckCircle className="h-7 w-7 text-foreground" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">אימון הושלם!</h2>
+                <h2 className="text-2xl font-bold text-foreground">אימון הושלם!</h2>
                 <p className="text-sm text-emerald-100">{traineeName}</p>
               </div>
             </div>
@@ -201,13 +201,13 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 onClick={handleShare}
                 className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all"
               >
-                <Share2 className="h-5 w-5 text-white" />
+                <Share2 className="h-5 w-5 text-foreground" />
               </button>
               <button
                 onClick={onClose}
                 className="p-2.5 bg-white/20 hover:bg-white/30 rounded-xl transition-all"
               >
-                <X className="h-6 w-6 text-white" />
+                <X className="h-6 w-6 text-foreground" />
               </button>
             </div>
           </div>
@@ -218,7 +218,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 animate-pulse-slow">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center">
-                  <Trophy className="w-6 h-6 text-white" />
+                  <Trophy className="w-6 h-6 text-foreground" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-amber-400">שיאים חדשים!</h3>
@@ -230,15 +230,15 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 {personalRecords.map((pr, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/30"
+                    className="flex items-center justify-between bg-surface rounded-xl p-3 border border-border"
                   >
                     <div className="flex items-center gap-3">
                       <Star className="w-5 h-5 text-amber-500" />
-                      <span className="font-semibold text-white">{pr.exerciseName}</span>
+                      <span className="font-semibold text-foreground">{pr.exerciseName}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-zinc-500 line-through">{pr.oldValue}</span>
-                      <TrendingUp className="w-4 h-4 text-emerald-500" />
+                      <span className="text-sm text-muted line-through">{pr.oldValue}</span>
+                      <TrendingUp className="w-4 h-4 text-emerald-400" />
                       <span className="font-bold text-emerald-400">
                         {pr.newValue} {pr.type === 'weight' ? 'ק"ג' : pr.type === 'reps' ? 'חזרות' : 'ק"ג'}
                       </span>
@@ -255,7 +255,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 <Dumbbell className="w-5 h-5 text-emerald-400" />
                 <span className="text-sm font-semibold text-emerald-400">נפח כולל</span>
               </div>
-              <p className="text-2xl font-bold text-white">{totalVolume.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-foreground">{totalVolume.toLocaleString()}</p>
               <p className="text-xs text-emerald-400/70">ק"ג</p>
               {volumeChange !== null && (
                 <div className={`flex items-center gap-1 mt-2 text-xs ${volumeChange >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -270,7 +270,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 <Target className="w-5 h-5 text-cyan-400" />
                 <span className="text-sm font-semibold text-cyan-400">תרגילים</span>
               </div>
-              <p className="text-2xl font-bold text-white">{exercises.length}</p>
+              <p className="text-2xl font-bold text-foreground">{exercises.length}</p>
               <p className="text-xs text-cyan-400/70">{totalSets} סטים</p>
             </div>
 
@@ -279,7 +279,7 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 <Clock className="w-5 h-5 text-amber-400" />
                 <span className="text-sm font-semibold text-amber-400">משך</span>
               </div>
-              <p className="text-2xl font-bold text-white">{formatDuration(duration)}</p>
+              <p className="text-2xl font-bold text-foreground">{formatDuration(duration)}</p>
             </div>
 
             <div className={`bg-red-500/10 border border-red-500/30 rounded-xl p-4 transition-all duration-500 delay-300 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -287,29 +287,57 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 <Flame className="w-5 h-5 text-red-400" />
                 <span className="text-sm font-semibold text-red-400">מאמץ</span>
               </div>
-              <p className="text-2xl font-bold text-white">{effortScore}</p>
+              <p className="text-2xl font-bold text-foreground">{effortScore}</p>
               <p className="text-xs text-red-400/70">{getEffortLabel(effortScore)}</p>
             </div>
           </div>
 
           {chartData.length > 0 && (
-            <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-2xl p-6">
+            <div className="bg-surface/30 border border-border rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 bg-emerald-500/20 border border-emerald-500/30 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-emerald-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white">נפח לפי קבוצת שריר</h3>
+                <h3 className="text-lg font-bold text-foreground">נפח לפי קבוצת שריר</h3>
               </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 80, bottom: 5 }}>
-                    <XAxis type="number" tickFormatter={(v) => `${(v / 1000).toFixed(1)}K`} stroke="#71717a" />
-                    <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 12, fill: '#a1a1aa' }} stroke="#71717a" />
+                    <XAxis 
+                      type="number" 
+                      tickFormatter={(v) => `${(v / 1000).toFixed(1)}K`} 
+                      stroke="#71717a"
+                      tick={{ fill: '#a1a1aa' }}
+                      tickLine={false}
+                      axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
+                    />
+                    <YAxis 
+                      type="category" 
+                      dataKey="name" 
+                      width={70} 
+                      tick={{ fontSize: 12, fill: '#a1a1aa' }} 
+                      stroke="#71717a"
+                      tickLine={false}
+                      axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
+                    />
                     <Tooltip
                       formatter={(value: number) => [`${value.toLocaleString()} ק"ג`, 'נפח']}
-                      contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: '#27272a', color: '#fff' }}
+                      contentStyle={{ 
+                        borderRadius: '12px', 
+                        border: '1px solid rgba(63, 63, 70, 0.5)', 
+                        backgroundColor: 'rgba(24, 24, 27, 0.95)', 
+                        backdropFilter: 'blur(8px)',
+                        color: '#fff',
+                        padding: '12px'
+                      }}
+                      cursor={{ fill: 'rgba(16, 185, 129, 0.1)' }}
                     />
-                    <Bar dataKey="volume" radius={[0, 8, 8, 0]}>
+                    <Bar 
+                      dataKey="volume" 
+                      radius={[0, 8, 8, 0]}
+                      animationDuration={1000}
+                      animationEasing="ease-in-out"
+                    >
                       {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
@@ -320,8 +348,8 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
             </div>
           )}
 
-          <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-2xl p-6">
-            <h3 className="font-bold text-white mb-4">סיכום תרגילים</h3>
+          <div className="bg-surface/30 border border-border rounded-2xl p-6">
+            <h3 className="font-bold text-foreground mb-4">סיכום תרגילים</h3>
             <div className="space-y-2">
               {exercises.map((ex, index) => {
                 const exVolume = ex.sets.reduce((t, s) => t + (s.weight * s.reps), 0);
@@ -329,15 +357,15 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
                 return (
                   <div
                     key={index}
-                    className="flex items-center justify-between bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/30"
+                    className="flex items-center justify-between bg-surface rounded-xl p-3 border border-border"
                   >
                     <div>
-                      <p className="font-semibold text-white">{ex.exercise.name}</p>
-                      <p className="text-xs text-zinc-500">{ex.sets.length} סטים</p>
+                      <p className="font-semibold text-foreground">{ex.exercise.name}</p>
+                      <p className="text-xs text-muted">{ex.sets.length} סטים</p>
                     </div>
                     <div className="text-left">
                       <p className="font-bold text-emerald-400">{exVolume.toLocaleString()} ק"ג</p>
-                      <p className="text-xs text-zinc-500">מקס: {maxWeight} ק"ג</p>
+                      <p className="text-xs text-muted">מקס: {maxWeight} ק"ג</p>
                     </div>
                   </div>
                 );
@@ -346,10 +374,10 @@ ${personalRecords.length > 0 ? `\nשיאים חדשים: ${personalRecords.lengt
           </div>
         </div>
 
-        <div className="sticky bottom-0 bg-zinc-800/50 border-t border-zinc-700/30 p-6 rounded-b-2xl">
+        <div className="sticky bottom-0 bg-surface border-t border-border p-6 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all"
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-foreground px-6 py-4 rounded-xl font-bold text-lg transition-all"
           >
             סגור
           </button>

@@ -22,7 +22,7 @@ interface TraineeNotesProps {
 }
 
 const CATEGORIES = {
-  general: { label: 'כללי', bg: 'bg-zinc-500/15', text: 'text-zinc-400', border: 'border-zinc-500/30' },
+  general: { label: 'כללי', bg: 'bg-muted/15', text: 'text-muted', border: 'border-border/30' },
   health: { label: 'בריאות', bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30' },
   nutrition: { label: 'תזונה', bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' },
   training: { label: 'אימון', bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/30' },
@@ -146,32 +146,32 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
   const filteredNotes = filter === 'all' ? notes : notes.filter(n => n.category === filter);
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 backdrop-blur-sm bg-overlay/70 flex items-center justify-center z-50 p-4">
       <div className="premium-card-static max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="p-6 border-b border-zinc-800/50 flex items-center justify-between">
+        <div className="p-6 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-amber-500/15">
               <FileText className="h-6 w-6 text-amber-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">הערות פנימיות</h2>
-              <p className="text-sm text-zinc-500">{traineeName} (רק המאמן רואה)</p>
+              <h2 className="text-xl font-bold text-foreground">הערות פנימיות</h2>
+              <p className="text-sm text-muted500">{traineeName} (רק המאמן רואה)</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all"
+            className="p-2.5 rounded-xl bg-surface800/50 text-muted400 hover:text-foreground hover:bg-surface700/50 transition-all"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="p-4 border-b border-zinc-800/50 flex items-center justify-between flex-wrap gap-3">
+        <div className="p-4 border-b border-border flex items-center justify-between flex-wrap gap-3">
           <div className="flex gap-2 overflow-x-auto no-scrollbar">
             <button
               onClick={() => setFilter('all')}
               className={`px-3 py-2 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
-                filter === 'all' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/30'
+                filter === 'all' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-surface800/50 text-muted400 border border-border700/30'
               }`}
             >
               הכל
@@ -181,7 +181,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                 key={key}
                 onClick={() => setFilter(key as Note['category'])}
                 className={`px-3 py-2 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
-                  filter === key ? `${bg} ${text} border ${border}` : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/30'
+                  filter === key ? `${bg} ${text} border ${border}` : 'bg-surface800/50 text-muted400 border border-border700/30'
                 }`}
               >
                 {label}
@@ -204,10 +204,10 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
             </div>
           ) : filteredNotes.length === 0 ? (
             <div className="text-center py-12">
-              <div className="w-14 h-14 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-7 h-7 text-zinc-600" />
+              <div className="w-14 h-14 rounded-xl bg-surface800/50 flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-7 h-7 text-muted600" />
               </div>
-              <p className="text-zinc-500">אין הערות להצגה</p>
+              <p className="text-muted500">אין הערות להצגה</p>
               <button
                 onClick={() => setShowAddForm(true)}
                 className="mt-4 text-emerald-400 font-medium hover:text-emerald-300 transition-colors"
@@ -221,8 +221,8 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
               return (
                 <div
                   key={note.id}
-                  className={`bg-zinc-800/30 rounded-xl border p-5 transition-all ${
-                    note.is_pinned ? 'border-amber-500/30 bg-amber-500/5' : 'border-zinc-700/30 hover:border-zinc-600/50'
+                  className={`bg-surface800/30 rounded-xl border p-5 transition-all ${
+                    note.is_pinned ? 'border-amber-500/30 bg-amber-500/5' : 'border-border700/30 hover:border-border600/50'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -233,7 +233,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                       <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${catStyle.bg} ${catStyle.text} border ${catStyle.border}`}>
                         {catStyle.label}
                       </span>
-                      <span className="text-xs text-zinc-600">
+                      <span className="text-xs text-muted600">
                         {new Date(note.created_at).toLocaleDateString('he-IL')}
                       </span>
                     </div>
@@ -241,7 +241,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                       <button
                         onClick={() => handleTogglePin(note)}
                         className={`p-2 rounded-lg transition-all ${
-                          note.is_pinned ? 'text-amber-400 hover:bg-amber-500/10' : 'text-zinc-500 hover:bg-zinc-700/50'
+                          note.is_pinned ? 'text-amber-400 hover:bg-amber-500/10' : 'text-muted500 hover:bg-surface700/50'
                         }`}
                         title={note.is_pinned ? 'בטל הצמדה' : 'הצמד'}
                       >
@@ -261,7 +261,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                       </button>
                     </div>
                   </div>
-                  <p className="text-zinc-300 whitespace-pre-wrap leading-relaxed">{note.note_text}</p>
+                  <p className="text-muted300 whitespace-pre-wrap leading-relaxed">{note.note_text}</p>
                 </div>
               );
             })
@@ -269,14 +269,14 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
         </div>
 
         {showAddForm && (
-          <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-[60] p-4">
+          <div className="fixed inset-0 backdrop-blur-sm bg-overlay/60 flex items-center justify-center z-[60] p-4">
             <div className="premium-card-static max-w-md w-full p-6">
-              <h3 className="text-xl font-bold text-white mb-4">
+              <h3 className="text-xl font-bold text-foreground mb-4">
                 {editingNote ? 'עריכת הערה' : 'הערה חדשה'}
               </h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">קטגוריה</label>
+                  <label className="block text-sm font-medium text-muted400 mb-2">קטגוריה</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value as Note['category'] })}
@@ -289,7 +289,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">תוכן ההערה *</label>
+                  <label className="block text-sm font-medium text-muted400 mb-2">תוכן ההערה *</label>
                   <textarea
                     value={formData.note_text}
                     onChange={(e) => setFormData({ ...formData, note_text: e.target.value })}
@@ -305,9 +305,9 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
                     type="checkbox"
                     checked={formData.is_pinned}
                     onChange={(e) => setFormData({ ...formData, is_pinned: e.target.checked })}
-                    className="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                    className="w-5 h-5 rounded border-border600 bg-surface800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
                   />
-                  <span className="text-sm font-medium text-zinc-300">הצמד הערה</span>
+                  <span className="text-sm font-medium text-muted300">הצמד הערה</span>
                 </label>
 
                 <div className="flex gap-3 pt-4">
@@ -330,7 +330,7 @@ export default function TraineeNotes({ traineeId, traineeName, onClose }: Traine
           </div>
         )}
 
-        <div className="p-6 border-t border-zinc-800/50">
+        <div className="p-6 border-t border-border">
           <button
             onClick={onClose}
             className="w-full btn-primary px-6 py-4 text-lg font-bold"

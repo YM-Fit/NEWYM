@@ -1,7 +1,7 @@
-import { useState, Suspense, lazy, useEffect } from 'react';
+import { useState, Suspense, lazy, useEffect, useRef } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ComponentErrorBoundary from './components/common/ComponentErrorBoundary';
 import LoginForm from './components/auth/LoginForm';
@@ -19,8 +19,150 @@ import './utils/supabaseDebug';
 const TrainerApp = lazy(() => import('./components/trainer/TrainerApp'));
 const TraineeApp = lazy(() => import('./components/trainee/TraineeApp'));
 
+// Simple TV Test Page - shows browser info and tests basic rendering
+// This is a pure functional component without hooks to ensure maximum compatibility
+function TvTestPage() {
+  // Get current time (static - will show load time)
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('he-IL');
+  
+  const browserInfo = {
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
+    screen: typeof window !== 'undefined' ? `${window.innerWidth} x ${window.innerHeight}` : 'N/A',
+    language: typeof navigator !== 'undefined' ? navigator.language : 'N/A',
+    cookiesEnabled: typeof navigator !== 'undefined' ? navigator.cookieEnabled : false,
+    localStorage: typeof localStorage !== 'undefined',
+  };
+  
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: '#1a1a2e',
+      color: '#ffffff',
+      fontFamily: 'Arial, sans-serif',
+      padding: '40px',
+      overflow: 'auto',
+      direction: 'rtl',
+    }}>
+      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <h1 style={{ 
+          fontSize: '48px', 
+          marginBottom: '20px', 
+          color: '#10b981',
+          textAlign: 'center',
+        }}>
+          ✅ הדפדפן עובד!
+        </h1>
+        
+        <div style={{
+          backgroundColor: '#2a2a3e',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+          border: '2px solid #10b981',
+        }}>
+          <h2 style={{ fontSize: '32px', marginBottom: '16px', color: '#10b981' }}>
+            🕐 שעת טעינה
+          </h2>
+          <p style={{ fontSize: '64px', fontWeight: 'bold', textAlign: 'center' }}>
+            {timeStr}
+          </p>
+        </div>
+        
+        <div style={{
+          backgroundColor: '#2a2a3e',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+        }}>
+          <h2 style={{ fontSize: '24px', marginBottom: '16px', color: '#10b981' }}>
+            📺 מידע על הדפדפן
+          </h2>
+          <div style={{ fontSize: '18px', lineHeight: '2' }}>
+            <p><strong>גודל מסך:</strong> {browserInfo.screen}</p>
+            <p><strong>שפה:</strong> {browserInfo.language}</p>
+            <p><strong>Cookies:</strong> {browserInfo.cookiesEnabled ? 'פעיל' : 'כבוי'}</p>
+            <p><strong>LocalStorage:</strong> {browserInfo.localStorage ? 'זמין' : 'לא זמין'}</p>
+          </div>
+        </div>
+        
+        <div style={{
+          backgroundColor: '#2a2a3e',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+        }}>
+          <h2 style={{ fontSize: '24px', marginBottom: '16px', color: '#f59e0b' }}>
+            🔧 User Agent
+          </h2>
+          <p style={{ 
+            fontSize: '14px', 
+            wordBreak: 'break-all',
+            backgroundColor: '#1a1a2e',
+            padding: '12px',
+            borderRadius: '8px',
+            direction: 'ltr',
+            textAlign: 'left',
+          }}>
+            {browserInfo.userAgent}
+          </p>
+        </div>
+        
+        <div style={{ textAlign: 'center', marginTop: '32px' }}>
+          <p style={{ fontSize: '20px', color: '#a3a3a3', marginBottom: '16px' }}>
+            אם אתה רואה את הדף הזה, הדפדפן של הטלוויזיה עובד!
+          </p>
+          <button
+            onClick={() => { window.location.href = '/'; }}
+            style={{
+              backgroundColor: '#10b981',
+              color: '#ffffff',
+              border: 'none',
+              padding: '16px 32px',
+              fontSize: '20px',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+            }}
+          >
+            חזור לאפליקציה
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AppContent() {
   const { user, loading, userType } = useAuth();
+  const { isDark } = useTheme();
+  const [forceShowLogin, setForceShowLogin] = useState(false);
+
+  // Debug logging - use ref to avoid unnecessary re-renders
+  const debugLogRef = useRef(false);
+  useEffect(() => {
+    if (import.meta.env.DEV && !debugLogRef.current) {
+      console.log('[AppContent] State:', { user: !!user, loading, userType, forceShowLogin });
+      debugLogRef.current = true;
+    }
+  }, [user, loading, userType, forceShowLogin]);
+
+  // Force show login after 3 seconds if still loading
+  useEffect(() => {
+    if (loading) {
+      const timeout = setTimeout(() => {
+        console.warn('[AppContent] Loading timeout - forcing login screen');
+        setForceShowLogin(true);
+      }, 3000);
+      return () => clearTimeout(timeout);
+    } else {
+      setForceShowLogin(false);
+    }
+  }, [loading]);
 
   // Track Web Vitals and performance metrics
   useEffect(() => {
@@ -34,7 +176,13 @@ function AppContent() {
     // Register Service Worker for caching
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch((error) => {
-        console.warn('[Service Worker] Failed to register:', error);
+        // Only log service worker errors in development, and only if not on StackBlitz/WebContainer
+        const isStackBlitz = error?.message?.includes('StackBlitz') || 
+                            window.location.hostname.includes('stackblitz') ||
+                            window.location.hostname.includes('webcontainer');
+        if (import.meta.env.DEV && !isStackBlitz) {
+          console.warn('[Service Worker] Failed to register:', error);
+        }
       });
     }
 
@@ -64,21 +212,99 @@ function AppContent() {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const isTablet = useIsTablet();
 
-  if (loading) {
+  // Show login immediately if forced or if loading for too long
+  if (loading && !forceShowLogin) {
+    const bgGradient = isDark 
+      ? 'linear-gradient(to bottom right, #09090b, #18181b)'
+      : 'linear-gradient(to bottom right, #f0f5ed, #ffffff, #e8f0e0)';
+    const textColor = isDark ? '#ffffff' : '#1a2e16';
+    const spinnerBorderColor = isDark ? 'rgba(16, 185, 129, 0.3)' : 'rgba(74, 107, 42, 0.3)';
+    const spinnerTopColor = isDark ? '#10b981' : '#4a6b2a';
+    const glowColor = isDark ? 'rgba(16, 185, 129, 0.2)' : 'rgba(74, 107, 42, 0.2)';
+    
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-100 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center">
-        <div className="text-center animate-fade-in">
-          <div className="relative inline-block">
-            <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl animate-pulse-soft" />
-            <div className="relative inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-500/30 border-t-emerald-600"></div>
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          minHeight: '100vh',
+          background: bgGradient,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <div 
+          className="text-center animate-fade-in max-w-md px-4"
+          style={{
+            textAlign: 'center',
+            maxWidth: '28rem',
+            padding: '0 1rem',
+          }}
+        >
+          <div 
+            className="relative inline-block"
+            style={{ position: 'relative', display: 'inline-block' }}
+          >
+            <div 
+              className="absolute inset-0 rounded-full blur-xl animate-pulse-soft"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundColor: glowColor,
+                borderRadius: '50%',
+                filter: 'blur(20px)',
+              }}
+            />
+            <div 
+              className="relative inline-block animate-spin rounded-full h-12 w-12 border-4 border-t"
+              style={{
+                position: 'relative',
+                display: 'inline-block',
+                width: '3rem',
+                height: '3rem',
+                border: `4px solid ${spinnerBorderColor}`,
+                borderTopColor: spinnerTopColor,
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+              }}
+            />
           </div>
-          <p className="mt-6 text-gray-600 dark:text-zinc-400 font-medium animate-fade-in-up" style={{ animationDelay: '0.2s' }}>טוען...</p>
+          <p 
+            className="mt-6 font-medium animate-fade-in-up" 
+            style={{ 
+              animationDelay: '0.2s',
+              marginTop: '1.5rem',
+              color: textColor,
+              fontSize: '1.125rem',
+              fontWeight: 500,
+            }}
+          >
+            טוען...
+          </p>
+          <p 
+            className="mt-4 text-sm animate-fade-in-up" 
+            style={{ 
+              animationDelay: '0.4s',
+              marginTop: '1rem',
+              color: textColor,
+              opacity: 0.5,
+              fontSize: '0.875rem',
+            }}
+          >
+            אם המסך לא נטען תוך 10 שניות, יוצג מסך התחברות
+          </p>
+          <style>{`
+            @keyframes spin {
+              to { transform: rotate(360deg); }
+            }
+          `}</style>
         </div>
       </div>
     );
   }
 
   if (!user) {
+    console.log('[AppContent] Rendering login form, authMode:', authMode);
     return authMode === 'login' ? (
       <LoginForm onToggleMode={() => setAuthMode('register')} />
     ) : (
@@ -91,7 +317,7 @@ function AppContent() {
       <ComponentErrorBoundary componentName="אפליקציית מתאמן">
         <Suspense
           fallback={
-            <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-100 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center">
               <LoadingSpinner size="lg" variant="ring" text="טוען אפליקציה..." />
             </div>
           }
@@ -106,7 +332,7 @@ function AppContent() {
     <ComponentErrorBoundary componentName="אפליקציית מאמן">
       <Suspense
         fallback={
-          <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-100 flex items-center justify-center">
+          <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-zinc-950 dark:to-zinc-900 flex items-center justify-center">
             <LoadingSpinner size="lg" />
           </div>
         }
@@ -118,6 +344,15 @@ function AppContent() {
 }
 
 export default function App() {
+  // Check for TV test mode via URL parameter (?tv=test)
+  const tvParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tv') : null;
+  const isTvTest = tvParam === 'test';
+  
+  // Show simple TV test page to verify browser works
+  if (isTvTest) {
+    return <TvTestPage />;
+  }
+
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">

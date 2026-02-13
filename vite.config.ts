@@ -1,18 +1,43 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import legacy from '@vitejs/plugin-legacy';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  optimizeDeps: {
-    exclude: ['lucide-react'],
-    include: ['react', 'react-dom', '@supabase/supabase-js'],
-  },
+  plugins: [
+    react(),
+    // Legacy plugin for older browsers (LG WebOS, Samsung Tizen Smart TVs)
+    legacy({
+      targets: ['chrome >= 53', 'safari >= 10', 'ios >= 10'],
+      additionalLegacyPolyfills: ['regenerator-runtime/runtime'],
+      renderLegacyChunks: true,
+      modernPolyfills: true,
+    }),
+  ],
   build: {
-    target: 'esnext',
-    minify: 'esbuild',
+    // Use ES2015 for maximum TV browser compatibility (LG webOS, Samsung Tizen, etc.)
+    // Older WebOS versions use Chrome 53-68 which don't support ES2020 features
+    target: 'es2015',
+    minify: 'esbuild', // Faster than terser
+    cssMinify: true,
+    chunkSizeWarningLimit: 300, // Stricter limit to ensure smaller bundles
+    sourcemap: false, // Disable sourcemaps in production for smaller bundle
+    // Report bundle sizes
+    reportCompressedSize: true,
+    // Enable tree shaking
+    treeshake: {
+      moduleSideEffects: false,
+      propertyReadSideEffects: false,
+      tryCatchDeoptimization: false,
+    },
     rollupOptions: {
       output: {
+        // Generate manifest for preload hints
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+        // Only preload critical chunks to reduce browser warnings
+        // Vite will still generate modulepreload hints, but we can control which chunks are preloaded
         manualChunks: (id) => {
           // Vendor chunks - split more aggressively
           if (id.includes('node_modules')) {
@@ -46,52 +71,24 @@ export default defineConfig({
             if (id.includes('xlsx') || id.includes('papaparse')) {
               return 'export-vendor';
             }
-            // Zod validation
-            if (id.includes('zod')) {
-              return 'validation-vendor';
-            }
-            // Sentry (if used)
-            if (id.includes('@sentry')) {
-              return 'monitoring-vendor';
+            // DnD Kit libraries
+            if (id.includes('@dnd-kit')) {
+              return 'dnd-vendor';
             }
             // Other vendor libraries - split by size
             return 'vendor';
           }
-          // Split services by domain
-          if (id.includes('/services/')) {
-            if (id.includes('analytics')) {
-              return 'services-analytics';
-            }
-            return 'services-other';
-          }
-          // Split hooks
-          if (id.includes('/hooks/')) {
-            return 'hooks-other';
-          }
-          // Utils chunk
-          if (id.includes('/utils/')) {
-            return 'utils';
-          }
+          // Don't split source code into separate chunks to avoid circular dependencies
+          // Let Vite handle code splitting automatically for source files
+          return null;
         },
       },
-    },
-    chunkSizeWarningLimit: 300, // Stricter limit to ensure smaller bundles
-    sourcemap: false, // Disable sourcemaps in production for smaller bundle
-    // Compress output files
-    minify: 'esbuild', // Faster than terser
-    cssMinify: true,
-    // Report bundle sizes
-    reportCompressedSize: true,
-    // Enable tree shaking
-    treeshake: {
-      moduleSideEffects: false,
-      propertyReadSideEffects: false,
-      tryCatchDeoptimization: false,
     },
   },
   esbuild: {
     treeShaking: true,
-    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+    // Keep console.log for debugging on TV - only drop debugger
+    drop: process.env.NODE_ENV === 'production' ? ['debugger'] : [],
     legalComments: 'none', // Remove all comments for smaller bundle
     // Optimize for smaller bundle
     minifyIdentifiers: true,
@@ -106,10 +103,13 @@ export default defineConfig({
       'react-dom',
       '@supabase/supabase-js',
       'react-hot-toast',
+      '@dnd-kit/core',
+      '@dnd-kit/sortable',
+      '@dnd-kit/utilities',
     ],
-    // Pre-bundle heavy dependencies
+    // Pre-bundle heavy dependencies - use ES2015 for TV compatibility
     esbuildOptions: {
-      target: 'esnext',
+      target: 'es2015',
     },
   },
 });

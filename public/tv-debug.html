@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TV Debug - YM Coach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 40px;
+            direction: rtl;
+        }
+        h1 {
+            font-size: 48px;
+            color: #10b981;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .card {
+            background: #2a2a3e;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            font-size: 24px;
+            color: #10b981;
+            margin-bottom: 16px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #3a3a4e;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            color: #a3a3a3;
+        }
+        .value {
+            color: #ffffff;
+            font-weight: bold;
+        }
+        .status-ok {
+            color: #10b981;
+        }
+        .status-error {
+            color: #ef4444;
+        }
+        .status-warning {
+            color: #f59e0b;
+        }
+        .btn {
+            display: inline-block;
+            padding: 16px 32px;
+            background: #10b981;
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 10px;
+            text-decoration: none;
+        }
+        .btn:hover {
+            background: #059669;
+        }
+        .btn-secondary {
+            background: #4a6b2a;
+        }
+        .center {
+            text-align: center;
+            margin-top: 30px;
+        }
+        #test-results {
+            font-family: monospace;
+            font-size: 14px;
+            background: #1a1a2e;
+            padding: 16px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow: auto;
+        }
+        .clock {
+            font-size: 64px;
+            font-weight: bold;
+            text-align: center;
+            color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 בדיקת תאימות טלוויזיה</h1>
+    
+    <div class="card">
+        <h2>⏰ שעון (בדיקת JavaScript)</h2>
+        <div class="clock" id="clock">--:--:--</div>
+        <p style="text-align: center; color: #a3a3a3; margin-top: 10px;">אם השעון עובד - JavaScript פועל</p>
+    </div>
+    
+    <div class="card">
+        <h2>📺 מידע על הדפדפן</h2>
+        <div id="browser-info">טוען...</div>
+    </div>
+    
+    <div class="card">
+        <h2>✅ בדיקות תאימות</h2>
+        <div id="compatibility-tests">בודק...</div>
+    </div>
+    
+    <div class="card">
+        <h2>🌐 בדיקת רשת</h2>
+        <div id="network-test">טוען...</div>
+    </div>
+    
+    <div class="card">
+        <h2>📋 תוצאות מפורטות</h2>
+        <div id="test-results">מריץ בדיקות...</div>
+    </div>
+    
+    <div class="center">
+        <a href="/" class="btn">חזור לאפליקציה</a>
+        <button class="btn btn-secondary" onclick="runAllTests()">הרץ בדיקות שוב</button>
+    </div>
+    
+    <script>
+        var results = [];
+        
+        function log(msg) {
+            results.push('[' + new Date().toLocaleTimeString() + '] ' + msg);
+            document.getElementById('test-results').textContent = results.join('\n');
+        }
+        
+        function updateClock() {
+            var now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString('he-IL');
+        }
+        
+        function getBrowserInfo() {
+            var html = '';
+            var info = [
+                { label: 'User Agent', value: navigator.userAgent },
+                { label: 'גודל מסך', value: window.innerWidth + ' x ' + window.innerHeight },
+                { label: 'שפה', value: navigator.language },
+                { label: 'פלטפורמה', value: navigator.platform },
+                { label: 'Cookies', value: navigator.cookieEnabled ? 'פעיל' : 'כבוי' }
+            ];
+            
+            info.forEach(function(item) {
+                html += '<div class="info-row">' +
+                    '<span class="label">' + item.label + '</span>' +
+                    '<span class="value">' + item.value + '</span>' +
+                    '</div>';
+            });
+            
+            document.getElementById('browser-info').innerHTML = html;
+            log('User Agent: ' + navigator.userAgent);
+            log('Screen: ' + window.innerWidth + 'x' + window.innerHeight);
+        }
+        
+        function runCompatibilityTests() {
+            var tests = [];
+            
+            // Test ES Modules
+            var supportsModules = 'noModule' in HTMLScriptElement.prototype;
+            tests.push({
+                name: 'ES Modules',
+                passed: supportsModules,
+                critical: true
+            });
+            log('ES Modules: ' + (supportsModules ? 'OK' : 'NOT SUPPORTED'));
+            
+            // Test Promises
+            var supportsPromises = typeof Promise !== 'undefined';
+            tests.push({
+                name: 'Promises',
+                passed: supportsPromises,
+                critical: true
+            });
+            log('Promises: ' + (supportsPromises ? 'OK' : 'NOT SUPPORTED'));
+            
+            // Test Fetch
+            var supportsFetch = typeof fetch !== 'undefined';
+            tests.push({
+                name: 'Fetch API',
+                passed: supportsFetch,
+                critical: true
+            });
+            log('Fetch: ' + (supportsFetch ? 'OK' : 'NOT SUPPORTED'));
+            
+            // Test LocalStorage
+            var supportsLocalStorage = false;
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                supportsLocalStorage = true;
+            } catch (e) {}
+            tests.push({
+                name: 'LocalStorage',
+                passed: supportsLocalStorage,
+                critical: true
+            });
+            log('LocalStorage: ' + (supportsLocalStorage ? 'OK' : 'NOT SUPPORTED'));
+            
+            // Test Arrow Functions
+            var supportsArrow = false;
+            try {
+                eval('() => {}');
+                supportsArrow = true;
+            } catch (e) {}
+            tests.push({
+                name: 'Arrow Functions',
+                passed: supportsArrow,
+                critical: true
+            });
+            log('Arrow Functions: ' + (supportsArrow ? 'OK' : 'NOT SUPPORTED'));
+            
+            // Test async/await
+            var supportsAsync = false;
+            try {
+                eval('async function test() {}');
+                supportsAsync = true;
+            } catch (e) {}
+            tests.push({
+                name: 'Async/Await',
+                passed: supportsAsync,
+                critical: true
+            });
+            log('Async/Await: ' + (supportsAsync ? 'OK' : 'NOT SUPPORTED'));
+            
+            // Test Classes
+            var supportsClasses = false;
+            try {
+                eval('class Test {}');
+                supportsClasses = true;
+            } catch (e) {}
+            tests.push({
+                name: 'ES6 Classes',
+                passed: supportsClasses,
+                critical: false
+            });
+            log('ES6 Classes: ' + (supportsClasses ? 'OK' : 'NOT SUPPORTED'));
+            
+            // Test Template Literals
+            var supportsTemplateLiterals = false;
+            try {
+                eval('`test`');
+                supportsTemplateLiterals = true;
+            } catch (e) {}
+            tests.push({
+                name: 'Template Literals',
+                passed: supportsTemplateLiterals,
+                critical: false
+            });
+            log('Template Literals: ' + (supportsTemplateLiterals ? 'OK' : 'NOT SUPPORTED'));
+            
+            // Test Spread Operator
+            var supportsSpread = false;
+            try {
+                eval('[...[]]; ({...{}})');
+                supportsSpread = true;
+            } catch (e) {}
+            tests.push({
+                name: 'Spread Operator',
+                passed: supportsSpread,
+                critical: false
+            });
+            log('Spread Operator: ' + (supportsSpread ? 'OK' : 'NOT SUPPORTED'));
+            
+            // Render results
+            var html = '';
+            var criticalFailed = false;
+            tests.forEach(function(test) {
+                var statusClass = test.passed ? 'status-ok' : (test.critical ? 'status-error' : 'status-warning');
+                var statusText = test.passed ? '✓ תקין' : (test.critical ? '✗ חסר (קריטי!)' : '⚠ חסר');
+                if (!test.passed && test.critical) criticalFailed = true;
+                
+                html += '<div class="info-row">' +
+                    '<span class="label">' + test.name + '</span>' +
+                    '<span class="value ' + statusClass + '">' + statusText + '</span>' +
+                    '</div>';
+            });
+            
+            if (criticalFailed) {
+                html += '<div style="background: #ef4444; color: white; padding: 16px; border-radius: 8px; margin-top: 16px; text-align: center;">' +
+                    '<strong>⚠️ הדפדפן חסר תכונות קריטיות!</strong><br>' +
+                    'האפליקציה לא תעבוד. נסה לעדכן את דפדפן הטלוויזיה.' +
+                    '</div>';
+            } else {
+                html += '<div style="background: #10b981; color: white; padding: 16px; border-radius: 8px; margin-top: 16px; text-align: center;">' +
+                    '<strong>✓ כל הבדיקות הקריטיות עברו!</strong><br>' +
+                    'הדפדפן אמור לתמוך באפליקציה.' +
+                    '</div>';
+            }
+            
+            document.getElementById('compatibility-tests').innerHTML = html;
+        }
+        
+        function runNetworkTest() {
+            var html = '<div class="info-row"><span class="label">מצב</span><span class="value">בודק...</span></div>';
+            document.getElementById('network-test').innerHTML = html;
+            
+            log('Testing network connection...');
+            
+            // Test if we can reach Supabase
+            var testUrl = 'https://vqvczpxmvrwfkecpwovc.supabase.co/rest/v1/';
+            
+            if (typeof fetch !== 'undefined') {
+                fetch(testUrl, { method: 'HEAD', mode: 'no-cors' })
+                    .then(function() {
+                        html = '<div class="info-row">' +
+                            '<span class="label">חיבור לשרת</span>' +
+                            '<span class="value status-ok">✓ תקין</span>' +
+                            '</div>';
+                        document.getElementById('network-test').innerHTML = html;
+                        log('Network test: OK');
+                    })
+                    .catch(function(err) {
+                        html = '<div class="info-row">' +
+                            '<span class="label">חיבור לשרת</span>' +
+                            '<span class="value status-error">✗ שגיאה: ' + err.message + '</span>' +
+                            '</div>';
+                        document.getElementById('network-test').innerHTML = html;
+                        log('Network test FAILED: ' + err.message);
+                    });
+            } else {
+                html = '<div class="info-row">' +
+                    '<span class="label">חיבור לשרת</span>' +
+                    '<span class="value status-warning">⚠ Fetch לא נתמך</span>' +
+                    '</div>';
+                document.getElementById('network-test').innerHTML = html;
+                log('Network test: Fetch not supported');
+            }
+        }
+        
+        function runAllTests() {
+            results = [];
+            log('Starting tests...');
+            getBrowserInfo();
+            runCompatibilityTests();
+            runNetworkTest();
+        }
+        
+        // Run tests on load
+        runAllTests();
+        
+        // Update clock every second
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>

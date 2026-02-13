@@ -39,6 +39,7 @@ export interface SetData {
 
 export interface PlanExercise {
   tempId: string;
+  exerciseId?: string; // Database ID if exercise exists in DB
   exercise: Exercise;
   sets: SetData[];
   rest_seconds: number;
@@ -47,11 +48,13 @@ export interface PlanExercise {
 
 export interface WorkoutDay {
   tempId: string;
+  dayId?: string; // Database ID if day exists in DB (UUID format)
   day_number: number;
   day_name: string;
   focus: string;
   notes: string;
   exercises: PlanExercise[];
+  times_per_week?: number; // Number of times per week this day should be executed (0-7, default 1)
 }
 
 export interface WorkoutPlanTemplate {
@@ -135,6 +138,7 @@ export function createEmptyDay(dayNumber: number): WorkoutDay {
     focus: '',
     notes: '',
     exercises: [],
+    times_per_week: 1, // Default: once per week
   };
 }
 

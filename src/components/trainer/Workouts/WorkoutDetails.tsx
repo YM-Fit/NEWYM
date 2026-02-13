@@ -204,7 +204,7 @@ export default function WorkoutDetails({
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading workout...</p>
+          <p className="text-muted600">Loading workout...</p>
         </div>
       </div>
     );
@@ -213,7 +213,7 @@ export default function WorkoutDetails({
   if (!workout) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">Workout not found</p>
+        <p className="text-muted600">Workout not found</p>
         <button onClick={onBack} className="mt-4 text-emerald-600 hover:text-emerald-700 font-medium">
           Go back
         </button>
@@ -231,10 +231,10 @@ export default function WorkoutDetails({
               onClick={onBack}
               className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300"
             >
-              <ArrowRight className="h-5 w-5 text-white" />
+              <ArrowRight className="h-5 w-5 text-foreground" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-2xl font-bold text-foreground">
                 Workout from {new Date(workout.workout_date).toLocaleDateString('he-IL')}
               </h1>
               <p className="text-emerald-100">{trainee.name}</p>
@@ -244,21 +244,21 @@ export default function WorkoutDetails({
           <div className="flex space-x-2 rtl:space-x-reverse">
             <button
               onClick={onDuplicate}
-              className="bg-blue-500/20 hover:bg-blue-500/30 text-white px-4 py-2 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 backdrop-blur-sm"
+              className="bg-blue-500/20 hover:bg-blue-500/30 text-foreground px-4 py-2 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 backdrop-blur-sm"
             >
               <Copy className="h-4 w-4" />
               <span>Duplicate</span>
             </button>
             <button
               onClick={onEdit}
-              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 backdrop-blur-sm"
+              className="bg-white/20 hover:bg-white/30 text-foreground px-4 py-2 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 backdrop-blur-sm"
             >
               <Edit2 className="h-4 w-4" />
               <span>Edit</span>
             </button>
             <button
               onClick={onDelete}
-              className="bg-red-500/20 hover:bg-red-500/30 text-white px-4 py-2 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 backdrop-blur-sm"
+              className="bg-red-500/20 hover:bg-red-500/30 text-foreground px-4 py-2 rounded-xl flex items-center space-x-2 rtl:space-x-reverse transition-all duration-300 backdrop-blur-sm"
             >
               <Trash2 className="h-4 w-4" />
               <span>Delete</span>
@@ -269,39 +269,39 @@ export default function WorkoutDetails({
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-xl hover:shadow-2xl transition-all duration-300">
+        <div className="bg-white rounded-2xl border border-border100 p-6 text-center shadow-xl hover:shadow-2xl transition-all duration-300">
           <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-xl flex items-center justify-center mx-auto mb-3">
             <Dumbbell className="h-6 w-6 text-emerald-600" />
           </div>
           <p className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{exercises.length}</p>
-          <p className="text-sm text-gray-600 font-medium">Exercises</p>
+          <p className="text-sm text-muted600 font-medium">Exercises</p>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-xl hover:shadow-2xl transition-all duration-300">
+        <div className="bg-white rounded-2xl border border-border100 p-6 text-center shadow-xl hover:shadow-2xl transition-all duration-300">
           <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mx-auto mb-3">
             <Target className="h-6 w-6 text-blue-600" />
           </div>
           <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">{getTotalSets()}</p>
-          <p className="text-sm text-gray-600 font-medium">Sets</p>
+          <p className="text-sm text-muted600 font-medium">Sets</p>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-xl hover:shadow-2xl transition-all duration-300">
+        <div className="bg-white rounded-2xl border border-border100 p-6 text-center shadow-xl hover:shadow-2xl transition-all duration-300">
           <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center mx-auto mb-3">
             <TrendingUp className="h-6 w-6 text-amber-600" />
           </div>
           <p className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-amber-700 bg-clip-text text-transparent">{getTotalVolume().toLocaleString()}</p>
-          <p className="text-sm text-gray-600 font-medium">kg Total Volume</p>
+          <p className="text-sm text-muted600 font-medium">kg Total Volume</p>
         </div>
       </div>
 
       {/* Exercise Cards */}
       <div className="space-y-4">
         {exercises.map((exercise, idx) => (
-          <div key={exercise.id} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <div key={exercise.id} className="bg-white rounded-2xl border border-border100 p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3 rtl:space-x-reverse">
                 <div className="bg-gradient-to-br from-emerald-500 to-teal-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-sm">{idx + 1}</span>
+                  <span className="text-foreground font-bold text-sm">{idx + 1}</span>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900">{exercise.name}</h3>
+                <h3 className="text-lg font-bold text-muted900">{exercise.name}</h3>
               </div>
               <button
                 onClick={() => setInstructionsExercise({
@@ -317,7 +317,7 @@ export default function WorkoutDetails({
             </div>
 
             <div className="space-y-2">
-              <div className="grid grid-cols-5 gap-2 text-sm font-semibold text-gray-500 pb-2 border-b border-gray-100">
+              <div className="grid grid-cols-5 gap-2 text-sm font-semibold text-muted500 pb-2 border-b border-border100">
                 <div>Set</div>
                 <div>Weight</div>
                 <div>Reps</div>
@@ -328,7 +328,7 @@ export default function WorkoutDetails({
               {exercise.sets.map((set) => (
                 <div key={set.set_number} className="py-2">
                   <div className="grid grid-cols-5 gap-2 text-sm hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 rounded-xl py-3 px-2 transition-all duration-300">
-                    <div className="font-semibold text-gray-900 flex items-center gap-1 flex-wrap">
+                    <div className="font-semibold text-muted900 flex items-center gap-1 flex-wrap">
                       #{set.set_number}
                       {set.set_type === 'superset' && (
                         <span className="text-xs bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 px-2 py-0.5 rounded-lg font-medium">Super</span>
@@ -340,17 +340,17 @@ export default function WorkoutDetails({
                         <span className="text-xs bg-gradient-to-r from-red-100 to-red-200 text-red-700 px-2 py-0.5 rounded-lg font-medium">Failure</span>
                       )}
                     </div>
-                    <div className="text-gray-900 font-medium">{set.weight} kg</div>
-                    <div className="text-gray-900 font-medium">{set.reps} reps</div>
-                    <div className="text-gray-700">{set.rpe || '-'}</div>
+                    <div className="text-muted900 font-medium">{set.weight} kg</div>
+                    <div className="text-muted900 font-medium">{set.reps} reps</div>
+                    <div className="text-muted700">{set.rpe || '-'}</div>
                     <div className="flex items-center space-x-1 rtl:space-x-reverse">
                       {set.equipment ? (
                         <>
                           <span>{set.equipment.emoji}</span>
-                          <span className="text-gray-700">{set.equipment.name}</span>
+                          <span className="text-muted700">{set.equipment.name}</span>
                         </>
                       ) : (
-                        <span className="text-gray-400">-</span>
+                        <span className="text-muted400">-</span>
                       )}
                     </div>
                   </div>
@@ -400,9 +400,9 @@ export default function WorkoutDetails({
                 </div>
               ))}
 
-              <div className="pt-3 border-t border-gray-100 mt-3">
+              <div className="pt-3 border-t border-border100 mt-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Exercise Volume:</span>
+                  <span className="text-muted600">Exercise Volume:</span>
                   <span className="font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
                     {exercise.sets.reduce((sum, set) => {
                       let setVolume = set.weight * set.reps;

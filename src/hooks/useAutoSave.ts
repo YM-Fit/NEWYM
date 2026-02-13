@@ -12,11 +12,13 @@ export function useAutoSave<T>({
   data,
   localStorageKey,
   enabled = true,
-  interval = 10000
+  interval = 5000 // Reduced from 10s to 5s for better responsiveness
 }: UseAutoSaveOptions<T>) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const initialDataRef = useRef<string>(JSON.stringify(data));
+  const dataRef = useRef(data);
+  dataRef.current = data;
 
   useEffect(() => {
     const currentData = JSON.stringify(data);
@@ -24,22 +26,21 @@ export function useAutoSave<T>({
   }, [data]);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !isDirty) return;
 
-    const autoSaveInterval = setInterval(() => {
-      if (isDirty) {
-        try {
-          localStorage.setItem(localStorageKey, JSON.stringify(data));
-          setLastSaved(new Date());
-          setIsDirty(false);
-          initialDataRef.current = JSON.stringify(data);
-        } catch (error) {
-          logger.error('Auto-save failed:', error, 'useAutoSave');
-        }
+    // Debounce auto-save to avoid excessive writes
+    const timeoutId = setTimeout(() => {
+      try {
+        localStorage.setItem(localStorageKey, JSON.stringify(dataRef.current));
+        setLastSaved(new Date());
+        setIsDirty(false);
+        initialDataRef.current = JSON.stringify(dataRef.current);
+      } catch (error) {
+        logger.error('Auto-save failed:', error, 'useAutoSave');
       }
     }, interval);
 
-    return () => clearInterval(autoSaveInterval);
+    return () => clearTimeout(timeoutId);
   }, [data, isDirty, enabled, interval, localStorageKey]);
 
   const clearSaved = () => {

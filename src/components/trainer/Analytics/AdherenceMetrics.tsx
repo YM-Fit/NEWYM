@@ -62,20 +62,20 @@ export default function AdherenceMetricsComponent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <TrendingUp className="w-6 h-6 text-emerald-400" />
             מדדי Adherence
           </h2>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-muted400 mt-1">
             מעקב אחר התמדה והשתתפות של מתאמנים
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-400">מתאמנים רדומים (ימים):</label>
+          <label className="text-sm text-muted400">מתאמנים רדומים (ימים):</label>
           <select
             value={inactiveThreshold}
             onChange={(e) => setInactiveThreshold(parseInt(e.target.value))}
-            className="px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm"
+            className="px-3 py-1.5 rounded-lg bg-surface border border-border text-foreground text-sm"
           >
             <option value="3">3+</option>
             <option value="7">7+</option>
@@ -89,18 +89,18 @@ export default function AdherenceMetricsComponent() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-400">סה״כ מתאמנים</span>
-            <Users className="w-4 h-4 text-gray-400" />
+            <span className="text-sm text-muted400">סה״כ מתאמנים</span>
+            <Users className="w-4 h-4 text-muted400" />
           </div>
-          <p className="text-2xl font-bold text-white">{metrics.length}</p>
+          <p className="text-2xl font-bold text-foreground">{metrics.length}</p>
         </Card>
 
         <Card className="p-5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-400">Adherence ממוצע</span>
-            <TrendingUp className="w-4 h-4 text-gray-400" />
+            <span className="text-sm text-muted400">Adherence ממוצע</span>
+            <TrendingUp className="w-4 h-4 text-muted400" />
           </div>
-          <p className="text-2xl font-bold text-white">
+          <p className="text-2xl font-bold text-foreground">
             {metrics.length > 0
               ? Math.round(
                   metrics.reduce((sum, m) => sum + m.adherence_percentage, 0) / metrics.length
@@ -112,7 +112,7 @@ export default function AdherenceMetricsComponent() {
 
         <Card className="p-5 border-red-500/30 bg-red-500/10">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-400">מתאמנים רדומים</span>
+            <span className="text-sm text-muted400">מתאמנים רדומים</span>
             <AlertTriangle className="w-4 h-4 text-red-400" />
           </div>
           <p className="text-2xl font-bold text-red-400">{inactiveTrainees.length}</p>
@@ -125,21 +125,21 @@ export default function AdherenceMetricsComponent() {
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5" />
             <div className="flex-1">
-              <h3 className="font-semibold text-white mb-2">מתאמנים שדורשים תשומת לב</h3>
+              <h3 className="font-semibold text-foreground mb-2">מתאמנים שדורשים תשומת לב</h3>
               <div className="space-y-2">
                 {inactiveTrainees.slice(0, 5).map((trainee) => (
                   <div
                     key={trainee.trainee_id}
                     className="flex items-center justify-between text-sm"
                   >
-                    <span className="text-gray-300">{trainee.trainee_name}</span>
+                    <span className="text-muted300">{trainee.trainee_name}</span>
                     <span className="text-red-400">
                       {trainee.days_since_last_workout} ימים ללא אימון
                     </span>
                   </div>
                 ))}
                 {inactiveTrainees.length > 5 && (
-                  <p className="text-xs text-gray-400 mt-2">
+                  <p className="text-xs text-muted400 mt-2">
                     ועוד {inactiveTrainees.length - 5} מתאמנים...
                   </p>
                 )}
@@ -151,10 +151,10 @@ export default function AdherenceMetricsComponent() {
 
       {/* Trainees List */}
       <div className="space-y-3">
-        <h3 className="font-semibold text-white">פירוט לפי מתאמן</h3>
+        <h3 className="font-semibold text-foreground">פירוט לפי מתאמן</h3>
         {metrics.length === 0 ? (
           <Card className="p-8 text-center">
-            <p className="text-gray-400">אין נתונים להצגה</p>
+            <p className="text-muted400">אין נתונים להצגה</p>
           </Card>
         ) : (
           metrics.map((trainee) => (
@@ -165,7 +165,7 @@ export default function AdherenceMetricsComponent() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h4 className="font-semibold text-white">{trainee.trainee_name}</h4>
+                    <h4 className="font-semibold text-foreground">{trainee.trainee_name}</h4>
                     <span
                       className={`text-xs px-2 py-1 rounded-lg font-semibold ${getAdherenceColor(
                         trainee.adherence_percentage
@@ -176,29 +176,29 @@ export default function AdherenceMetricsComponent() {
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-400">אימונים השבוע:</span>
-                      <p className="text-white font-semibold">
+                      <span className="text-muted400">אימונים השבוע:</span>
+                      <p className="text-foreground font-semibold">
                         {trainee.workouts_completed} / {trainee.workouts_planned}
                       </p>
                     </div>
                     <div>
-                      <span className="text-gray-400">רצף ימים:</span>
-                      <p className="text-white font-semibold">{trainee.streak_days}</p>
+                      <span className="text-muted400">רצף ימים:</span>
+                      <p className="text-foreground font-semibold">{trainee.streak_days}</p>
                     </div>
                     <div>
-                      <span className="text-gray-400">אימון אחרון:</span>
-                      <p className="text-white font-semibold">
+                      <span className="text-muted400">אימון אחרון:</span>
+                      <p className="text-foreground font-semibold">
                         {trainee.last_workout_date
                           ? new Date(trainee.last_workout_date).toLocaleDateString('he-IL')
                           : 'לא היה'}
                       </p>
                     </div>
                     <div>
-                      <span className="text-gray-400">ימים מאז:</span>
+                      <span className="text-muted400">ימים מאז:</span>
                       <p className={`font-semibold ${
                         trainee.days_since_last_workout !== null && trainee.days_since_last_workout >= 7
                           ? 'text-red-400'
-                          : 'text-white'
+                          : 'text-foreground'
                       }`}>
                         {trainee.days_since_last_workout !== null
                           ? `${trainee.days_since_last_workout} ימים`

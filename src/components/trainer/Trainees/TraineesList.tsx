@@ -1,5 +1,5 @@
 import { Plus, Users, Search, Sparkles, Filter, Grid3x3, List, TrendingUp, Calendar, Scale, X, User } from 'lucide-react';
-import { useState, useMemo, memo } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import TraineeCard from './TraineeCard';
 import { usePagination } from '../../../hooks/usePagination';
 import { Pagination, SkeletonTraineeCard } from '../../ui';
@@ -11,13 +11,14 @@ interface TraineesListProps {
   trainees: Trainee[];
   onTraineeClick: (trainee: Trainee) => void;
   onAddTrainee: () => void;
+  onQuickEdit?: (traineeId: string) => void;
   unseenWeightsCounts?: Map<string, number>;
 }
 
 type SortOption = 'name' | 'lastWorkout' | 'recent';
 type FilterOption = 'all' | 'male' | 'female' | 'pair' | 'active' | 'inactive';
 
-function TraineesList({ trainees, onTraineeClick, onAddTrainee, unseenWeightsCounts }: TraineesListProps) {
+function TraineesList({ trainees, onTraineeClick, onAddTrainee, onQuickEdit, unseenWeightsCounts }: TraineesListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('name');
   const [filterBy, setFilterBy] = useState<FilterOption>('all');
@@ -110,22 +111,22 @@ function TraineesList({ trainees, onTraineeClick, onAddTrainee, unseenWeightsCou
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="premium-card-static p-6 md:p-8 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+        <div className="absolute top-0 left-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
         <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">ניהול</span>
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-xs font-semibold text-primary uppercase tracking-wider">ניהול</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">מתאמנים</h1>
-            <p className="text-zinc-400">נהל את כל המתאמנים שלך במקום אחד</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2 tracking-tight">מתאמנים</h1>
+            <p className="text-secondary">נהל את כל המתאמנים שלך במקום אחד</p>
           </div>
 
           <button
             onClick={onAddTrainee}
-            className="btn-primary px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 font-semibold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all"
+            className="btn-primary px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-250"
           >
             <Plus className="h-5 w-5" />
             <span>הוסף מתאמן</span>
@@ -135,94 +136,94 @@ function TraineesList({ trainees, onTraineeClick, onAddTrainee, unseenWeightsCou
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        <div className="premium-card-static p-4 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/20">
+        <div className="premium-card-static p-4 bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
           <div className="flex items-center justify-between mb-2">
-            <Users className="h-5 w-5 text-emerald-400" />
-            <span className="text-2xl font-bold text-emerald-400">{stats.total}</span>
+            <Users className="h-5 w-5 text-primary" />
+            <span className="text-2xl font-bold text-primary">{stats.total}</span>
           </div>
-          <p className="text-xs text-zinc-400">סה״כ מתאמנים</p>
+          <p className="text-xs text-secondary">סה״כ מתאמנים</p>
         </div>
 
-        <div className="premium-card-static p-4 bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20">
+        <div className="premium-card-static p-4 bg-gradient-to-br from-info/20 to-info/5 border border-info/20">
           <div className="flex items-center justify-between mb-2">
-            <TrendingUp className="h-5 w-5 text-cyan-400" />
-            <span className="text-2xl font-bold text-cyan-400">{stats.active}</span>
+            <TrendingUp className="h-5 w-5 text-info" />
+            <span className="text-2xl font-bold text-info">{stats.active}</span>
           </div>
-          <p className="text-xs text-zinc-400">פעילים (7 ימים)</p>
+          <p className="text-xs text-secondary">פעילים (7 ימים)</p>
         </div>
 
-        <div className="premium-card-static p-4 bg-gradient-to-br from-amber-500/20 to-amber-500/5 border border-amber-500/20">
+        <div className="premium-card-static p-4 bg-gradient-to-br from-warning/20 to-warning/5 border border-warning/20">
           <div className="flex items-center justify-between mb-2">
-            <Users className="h-5 w-5 text-amber-400" />
-            <span className="text-2xl font-bold text-amber-400">{stats.pairs}</span>
+            <Users className="h-5 w-5 text-warning" />
+            <span className="text-2xl font-bold text-warning">{stats.pairs}</span>
           </div>
-          <p className="text-xs text-zinc-400">זוגות</p>
+          <p className="text-xs text-secondary">זוגות</p>
         </div>
 
-        <div className="premium-card-static p-4 bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20">
+        <div className="premium-card-static p-4 bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
           <div className="flex items-center justify-between mb-2">
-            <User className="h-5 w-5 text-purple-400" />
-            <span className="text-2xl font-bold text-purple-400">{stats.individuals}</span>
+            <User className="h-5 w-5 text-primary" />
+            <span className="text-2xl font-bold text-primary">{stats.individuals}</span>
           </div>
-          <p className="text-xs text-zinc-400">יחידים</p>
+          <p className="text-xs text-secondary">יחידים</p>
         </div>
 
-        <div className="premium-card-static p-4 bg-gradient-to-br from-rose-500/20 to-rose-500/5 border border-rose-500/20">
+        <div className="premium-card-static p-4 bg-gradient-to-br from-danger/20 to-danger/5 border border-danger/20">
           <div className="flex items-center justify-between mb-2">
-            <Scale className="h-5 w-5 text-rose-400" />
-            <span className="text-2xl font-bold text-rose-400">{stats.withUnseenWeights}</span>
+            <Scale className="h-5 w-5 text-danger" />
+            <span className="text-2xl font-bold text-danger">{stats.withUnseenWeights}</span>
           </div>
-          <p className="text-xs text-zinc-400">שקילות חדשות</p>
+          <p className="text-xs text-secondary">שקילות חדשות</p>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="premium-card-static p-4">
+      <div className="premium-card-static p-5">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500" />
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted" />
             <input
               type="text"
               placeholder="חיפוש מתאמן לפי שם, טלפון או אימייל..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pr-12 pl-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+              className="w-full pr-12 pl-4 py-2.5 bg-surface/50 border border-border/10 rounded-xl text-foreground placeholder-muted focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-250"
             />
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-3 rounded-xl flex items-center gap-2 font-medium transition-all ${
+              className={`px-4 py-2.5 rounded-xl flex items-center gap-2 font-medium transition-all duration-250 ${
                 showFilters || filterBy !== 'all' || sortBy !== 'name'
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:bg-zinc-700/50'
+                  ? 'bg-primary/20 text-primary border border-primary/30'
+                  : 'bg-surface/50 text-secondary border border-border/10 hover:bg-surface'
               }`}
             >
               <Filter className="h-4 w-4" />
               <span>סינון</span>
               {(filterBy !== 'all' || sortBy !== 'name') && (
-                <span className="w-2 h-2 bg-emerald-400 rounded-full"></span>
+                <span className="w-2 h-2 bg-primary rounded-full"></span>
               )}
             </button>
 
-            <div className="flex items-center gap-1 bg-zinc-800/50 rounded-xl p-1 border border-zinc-700/50">
+            <div className="flex items-center gap-1 bg-surface/50 rounded-xl p-1 border border-border/10">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg transition-all ${
+                className={`p-2 rounded-lg transition-all duration-250 ${
                   viewMode === 'grid'
-                    ? 'bg-emerald-500/20 text-emerald-400'
-                    : 'text-zinc-400 hover:text-white'
+                    ? 'bg-primary/20 text-primary'
+                    : 'text-secondary hover:text-foreground'
                 }`}
               >
                 <Grid3x3 className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg transition-all ${
+                className={`p-2 rounded-lg transition-all duration-250 ${
                   viewMode === 'list'
-                    ? 'bg-emerald-500/20 text-emerald-400'
-                    : 'text-zinc-400 hover:text-white'
+                    ? 'bg-primary/20 text-primary'
+                    : 'text-secondary hover:text-foreground'
                 }`}
               >
                 <List className="h-4 w-4" />
@@ -233,14 +234,14 @@ function TraineesList({ trainees, onTraineeClick, onAddTrainee, unseenWeightsCou
 
         {/* Expanded Filters */}
         {showFilters && (
-          <div className="mt-4 pt-4 border-t border-zinc-800/50 animate-fade-in">
+          <div className="mt-4 pt-4 border-t border-border/10 animate-fade-in">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-zinc-400">סינון:</span>
+                <span className="text-sm text-secondary">סינון:</span>
                 <select
                   value={filterBy}
                   onChange={(e) => setFilterBy(e.target.value as FilterOption)}
-                  className="px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-lg text-white text-sm focus:outline-none focus:border-emerald-500/50"
+                  className="px-3 py-2 bg-surface/50 border border-border/10 rounded-lg text-foreground text-sm focus:outline-none focus:border-primary/50 transition-all duration-250"
                 >
                   <option value="all">הכל</option>
                   <option value="active">פעילים</option>
@@ -252,11 +253,11 @@ function TraineesList({ trainees, onTraineeClick, onAddTrainee, unseenWeightsCou
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-sm text-zinc-400">מיון:</span>
+                <span className="text-sm text-secondary">מיון:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-lg text-white text-sm focus:outline-none focus:border-emerald-500/50"
+                  className="px-3 py-2 bg-surface/50 border border-border/10 rounded-lg text-foreground text-sm focus:outline-none focus:border-primary/50 transition-all duration-250"
                 >
                   <option value="name">לפי שם</option>
                   <option value="lastWorkout">לפי אימון אחרון</option>
@@ -270,7 +271,7 @@ function TraineesList({ trainees, onTraineeClick, onAddTrainee, unseenWeightsCou
                     setFilterBy('all');
                     setSortBy('name');
                   }}
-                  className="px-3 py-2 text-sm text-zinc-400 hover:text-white flex items-center gap-1 transition-colors"
+                  className="px-3 py-2 text-sm text-secondary hover:text-foreground flex items-center gap-1 transition-colors duration-250"
                 >
                   <X className="h-4 w-4" />
                   <span>נקה סינון</span>
@@ -293,6 +294,7 @@ function TraineesList({ trainees, onTraineeClick, onAddTrainee, unseenWeightsCou
                 <TraineeCard
                   trainee={trainee}
                   onClick={() => onTraineeClick(trainee)}
+                  onQuickEdit={onQuickEdit}
                   unseenWeightsCount={unseenWeightsCounts?.get(trainee.id) || 0}
                   viewMode={viewMode}
                 />

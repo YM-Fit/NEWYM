@@ -114,6 +114,7 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
             )
           `)
           .eq('trainee_id', traineeId)
+          .eq('workouts.is_completed', true)
           .gte('workouts.workout_date', startDate.toISOString())
           .lte('workouts.workout_date', endDate.toISOString())
           .order('workouts(workout_date)', { ascending: true });
@@ -176,13 +177,20 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3 shadow-xl">
-          <p className="text-white font-semibold mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} style={{ color: entry.color }} className="text-sm">
-              {entry.name}: {chartType === 'weight' ? `${entry.value?.toFixed(1)} ק"ג` : `${entry.value?.toLocaleString()} ק"ג`}
-            </p>
-          ))}
+        <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl p-4 shadow-2xl">
+          <p className="text-muted text-xs mb-3 font-medium">{label}</p>
+          <div className="space-y-2">
+            {payload.map((entry: any, index: number) => (
+              <div key={index} className="flex items-baseline gap-2">
+                <div className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5" style={{ backgroundColor: entry.color }} />
+                <p className="text-xs text-muted flex-1">{entry.name}:</p>
+                <p className="font-bold text-base" style={{ color: entry.color }}>
+                  {chartType === 'weight' ? entry.value?.toFixed(1) : entry.value?.toLocaleString()}
+                </p>
+                <p className="text-xs text-muted">ק"ג</p>
+              </div>
+            ))}
+          </div>
         </div>
       );
     }
@@ -201,21 +209,21 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
 
   return (
     <div className="premium-card-static overflow-hidden">
-      <div className="p-5 border-b border-zinc-800/50">
+      <div className="p-5 border-b border-border/50">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30">
               <TrendingUp className="w-5 h-5 text-cyan-400" />
             </div>
-            <h2 className="text-xl font-bold text-white">התקדמות מתאמנים</h2>
+            <h2 className="text-xl font-bold text-foreground">התקדמות מתאמנים</h2>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex gap-1 bg-zinc-800/50 p-1 rounded-xl border border-zinc-700/50">
+            <div className="flex gap-1 bg-surface p-1 rounded-xl border border-border">
               <button
                 onClick={() => setChartType('weight')}
                 className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-1.5 ${
-                  chartType === 'weight' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+                  chartType === 'weight' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
                 }`}
               >
                 <Scale className="w-4 h-4" />
@@ -224,7 +232,7 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
               <button
                 onClick={() => setChartType('volume')}
                 className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-1.5 ${
-                  chartType === 'volume' ? 'bg-emerald-500/15 text-emerald-400' : 'text-zinc-400 hover:text-white'
+                  chartType === 'volume' ? 'bg-emerald-500/15 text-emerald-400' : 'text-muted hover:text-foreground'
                 }`}
               >
                 <TrendingUp className="w-4 h-4" />
@@ -235,7 +243,7 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
             <div className="relative">
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
-                className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl font-semibold text-sm transition-all border border-zinc-700/50 text-zinc-300"
+                className="flex items-center gap-2 px-4 py-2 bg-surface hover:bg-elevated/50 rounded-xl font-semibold text-sm transition-all border border-border text-foreground"
               >
                 <Filter className="w-4 h-4" />
                 בחר מתאמנים ({selectedTrainees.length})
@@ -244,23 +252,23 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
 
               {showDropdown && (
                 <div className="absolute left-0 top-full mt-2 w-64 premium-card-static z-20 max-h-80 overflow-y-auto">
-                  <div className="p-3 border-b border-zinc-800/50">
-                    <p className="text-sm text-zinc-500">בחר עד 10 מתאמנים</p>
+                  <div className="p-3 border-b border-border/50">
+                    <p className="text-sm text-muted">בחר עד 10 מתאמנים</p>
                   </div>
                   <div className="p-2">
                     {trainees.map(trainee => (
                       <label
                         key={trainee.id}
-                        className="flex items-center gap-3 px-3 py-2 hover:bg-zinc-800/50 rounded-lg cursor-pointer"
+                        className="flex items-center gap-3 px-3 py-2 hover:bg-surface rounded-lg cursor-pointer"
                       >
                         <input
                           type="checkbox"
                           checked={selectedTrainees.includes(trainee.id)}
                           onChange={() => toggleTrainee(trainee.id)}
-                          className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                          className="w-4 h-4 rounded border-border bg-surface text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
                           disabled={!selectedTrainees.includes(trainee.id) && selectedTrainees.length >= 10}
                         />
-                        <span className="text-sm font-medium text-zinc-300">{trainee.name}</span>
+                        <span className="text-sm font-medium text-foreground">{trainee.name}</span>
                       </label>
                     ))}
                   </div>
@@ -274,34 +282,50 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
       <div className="p-5">
         {selectedTrainees.length === 0 ? (
           <div className="text-center py-12">
-            <div className="w-14 h-14 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
-              <Users className="w-7 h-7 text-zinc-600" />
+            <div className="w-14 h-14 rounded-xl bg-surface flex items-center justify-center mx-auto mb-4">
+              <Users className="w-7 h-7 text-muted" />
             </div>
-            <p className="text-zinc-500">בחר מתאמנים להצגת ההתקדמות</p>
+            <p className="text-muted">בחר מתאמנים להצגת ההתקדמות</p>
           </div>
         ) : chartData.length === 0 ? (
           <div className="text-center py-12">
-            <div className="w-14 h-14 rounded-xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="w-7 h-7 text-zinc-600" />
+            <div className="w-14 h-14 rounded-xl bg-surface flex items-center justify-center mx-auto mb-4">
+              <TrendingUp className="w-7 h-7 text-muted" />
             </div>
-            <p className="text-zinc-500">אין נתונים להצגה בתקופה זו</p>
+            <p className="text-muted">אין נתונים להצגה בתקופה זו</p>
           </div>
         ) : (
           <>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#a1a1aa' }} axisLine={{ stroke: '#3f3f46' }} />
+                <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                  <CartesianGrid 
+                    strokeDasharray="3 3" 
+                    stroke="#3f3f46" 
+                    strokeOpacity={0.3}
+                    vertical={false}
+                  />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 11, fill: '#a1a1aa' }} 
+                    axisLine={{ stroke: '#3f3f46', strokeOpacity: 0.5 }}
+                    tickLine={false}
+                  />
                   <YAxis
                     tick={{ fontSize: 11, fill: '#a1a1aa' }}
-                    axisLine={{ stroke: '#3f3f46' }}
+                    axisLine={false}
+                    tickLine={false}
                     tickFormatter={(value) => chartType === 'volume' ? `${(value / 1000).toFixed(0)}K` : value}
+                    width={45}
                   />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip 
+                    content={<CustomTooltip />}
+                    cursor={{ stroke: '#10b981', strokeWidth: 1, strokeDasharray: '5 5', strokeOpacity: 0.3 }}
+                  />
                   <Legend
                     wrapperStyle={{ paddingTop: '20px' }}
-                    formatter={(value) => <span className="text-zinc-300 text-sm">{value}</span>}
+                    formatter={(value) => <span className="text-foreground text-sm">{value}</span>}
+                    iconType="circle"
                   />
                   {progressData.map(trainee => (
                     <Line
@@ -309,10 +333,22 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
                       type="monotone"
                       dataKey={trainee.name}
                       stroke={trainee.color}
-                      strokeWidth={2}
-                      dot={{ r: 4, fill: trainee.color }}
-                      activeDot={{ r: 6 }}
+                      strokeWidth={3}
+                      dot={{ 
+                        r: 4, 
+                        fill: trainee.color,
+                        strokeWidth: 2,
+                        stroke: '#09090b'
+                      }}
+                      activeDot={{ 
+                        r: 7,
+                        fill: '#09090b',
+                        stroke: trainee.color,
+                        strokeWidth: 3
+                      }}
                       connectNulls
+                      animationDuration={1000}
+                      animationEasing="ease-in-out"
                     />
                   ))}
                 </LineChart>
@@ -328,18 +364,18 @@ export default function TraineesProgressChart({ selectedMonth }: TraineesProgres
                 return (
                   <div
                     key={trainee.id}
-                    className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 rounded-lg border border-zinc-700/50"
+                    className="flex items-center gap-2 px-3 py-2 bg-surface rounded-lg border border-border"
                   >
                     <div
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: trainee.color }}
                     />
-                    <span className="text-sm font-medium text-zinc-300">{trainee.name}</span>
+                    <span className="text-sm font-medium text-foreground">{trainee.name}</span>
                     {change !== null && (
                       <span className={`text-xs font-semibold ${
                         chartType === 'weight'
-                          ? (change < 0 ? 'text-emerald-400' : change > 0 ? 'text-red-400' : 'text-zinc-500')
-                          : (change > 0 ? 'text-emerald-400' : change < 0 ? 'text-red-400' : 'text-zinc-500')
+                          ? (change < 0 ? 'text-emerald-400' : change > 0 ? 'text-red-400' : 'text-muted')
+                          : (change > 0 ? 'text-emerald-400' : change < 0 ? 'text-red-400' : 'text-muted')
                       }`}>
                         {change > 0 ? '+' : ''}{chartType === 'weight' ? change.toFixed(1) : (change / 1000).toFixed(1)}
                         {chartType === 'weight' ? ' ק"ג' : 'K'}

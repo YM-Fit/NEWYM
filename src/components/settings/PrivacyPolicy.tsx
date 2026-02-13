@@ -95,7 +95,16 @@ export default function PrivacyPolicy() {
         a.download = `user-data-export-${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
+        // Safely remove the element if it's still in the DOM
+        setTimeout(() => {
+          try {
+            if (a.parentNode) {
+              a.parentNode.removeChild(a);
+            }
+          } catch (e) {
+            // Element may have already been removed, ignore
+          }
+        }, 0);
         URL.revokeObjectURL(url);
         toast.success('הנתונים יוצאו בהצלחה');
       } else {
@@ -166,16 +175,16 @@ export default function PrivacyPolicy() {
         <div className="flex items-center gap-3 mb-4">
           <Shield className="h-8 w-8 text-emerald-400" />
           <div>
-            <h1 className="text-2xl font-bold text-white">מדיניות פרטיות וזכויות GDPR</h1>
-            <p className="text-sm text-zinc-400">גרסת מדיניות: {POLICY_VERSION}</p>
+            <h1 className="text-2xl font-bold text-foreground">מדיניות פרטיות וזכויות GDPR</h1>
+            <p className="text-sm text-muted">גרסת מדיניות: {POLICY_VERSION}</p>
           </div>
         </div>
       </div>
 
       {/* Consent Management */}
       <div className="premium-card p-6">
-        <h2 className="text-xl font-bold text-white mb-4">ניהול הסכמות</h2>
-        <p className="text-sm text-zinc-400 mb-6">
+        <h2 className="text-xl font-bold text-foreground mb-4">ניהול הסכמות</h2>
+        <p className="text-sm text-muted mb-6">
           אנו מכבדים את פרטיותך. אנא בחר את ההסכמות שלך:
         </p>
 
@@ -223,20 +232,20 @@ export default function PrivacyPolicy() {
 
       {/* GDPR Rights */}
       <div className="premium-card p-6">
-        <h2 className="text-xl font-bold text-white mb-4">זכויותיך לפי GDPR</h2>
+        <h2 className="text-xl font-bold text-foreground mb-4">זכויותיך לפי GDPR</h2>
         <div className="space-y-4">
           {/* Right to Data Portability */}
-          <div className="flex items-start gap-4 p-4 bg-zinc-800/50 rounded-lg">
+          <div className="flex items-start gap-4 p-4 bg-surface rounded-lg">
             <Download className="h-6 w-6 text-emerald-400 flex-shrink-0 mt-1" />
             <div className="flex-1">
-              <h3 className="font-semibold text-white mb-1">זכות לניידות נתונים</h3>
-              <p className="text-sm text-zinc-400 mb-3">
+              <h3 className="font-semibold text-foreground mb-1">זכות לניידות נתונים</h3>
+              <p className="text-sm text-muted mb-3">
                 אתה יכול לייצא את כל הנתונים שלך בפורמט JSON
               </p>
               <button
                 onClick={handleExportData}
                 disabled={exporting}
-                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {exporting ? 'מייצא...' : 'ייצא נתונים'}
               </button>
@@ -244,16 +253,16 @@ export default function PrivacyPolicy() {
           </div>
 
           {/* Right to Erasure */}
-          <div className="flex items-start gap-4 p-4 bg-zinc-800/50 rounded-lg">
+          <div className="flex items-start gap-4 p-4 bg-surface rounded-lg">
             <Trash2 className="h-6 w-6 text-red-400 flex-shrink-0 mt-1" />
             <div className="flex-1">
-              <h3 className="font-semibold text-white mb-1">זכות למחיקה</h3>
-              <p className="text-sm text-zinc-400 mb-3">
+              <h3 className="font-semibold text-foreground mb-1">זכות למחיקה</h3>
+              <p className="text-sm text-muted mb-3">
                 אתה יכול למחוק את כל הנתונים שלך לצמיתות. פעולה זו אינה הפיכה.
               </p>
               <button
                 onClick={() => setShowDeleteDialog(true)}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all"
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-foreground rounded-lg transition-all"
               >
                 מחק את כל הנתונים
               </button>
@@ -261,16 +270,16 @@ export default function PrivacyPolicy() {
           </div>
 
           {/* Right to be Forgotten */}
-          <div className="flex items-start gap-4 p-4 bg-zinc-800/50 rounded-lg">
+          <div className="flex items-start gap-4 p-4 bg-surface rounded-lg">
             <EyeOff className="h-6 w-6 text-yellow-400 flex-shrink-0 mt-1" />
             <div className="flex-1">
-              <h3 className="font-semibold text-white mb-1">זכות להישכחות</h3>
-              <p className="text-sm text-zinc-400 mb-3">
+              <h3 className="font-semibold text-foreground mb-1">זכות להישכחות</h3>
+              <p className="text-sm text-muted mb-3">
                 אתה יכול לבצע אנונימיזציה של הנתונים שלך - המידע המזהה יוחלף בערכים אנונימיים
               </p>
               <button
                 onClick={() => setShowAnonymizeDialog(true)}
-                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-all"
+                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-foreground rounded-lg transition-all"
               >
                 בצע אנונימיזציה
               </button>
@@ -281,21 +290,21 @@ export default function PrivacyPolicy() {
 
       {/* Privacy Policy Text */}
       <div className="premium-card p-6">
-        <h2 className="text-xl font-bold text-white mb-4">מדיניות פרטיות</h2>
-        <div className="prose prose-invert max-w-none text-zinc-300">
+        <h2 className="text-xl font-bold text-foreground mb-4">מדיניות פרטיות</h2>
+        <div className="prose prose-invert max-w-none text-foreground">
           <p>
             אנו מחויבים להגנה על פרטיותך. מדיניות הפרטיות שלנו מסבירה כיצד אנו אוספים,
             משתמשים, מגנים ומחשיפים את המידע האישי שלך.
           </p>
-          <h3 className="text-lg font-semibold text-white mt-6 mb-3">איסוף מידע</h3>
+          <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">איסוף מידע</h3>
           <p>
             אנו אוספים מידע שאתה מספק לנו ישירות, כגון שם, אימייל, טלפון ומידע על האימונים שלך.
           </p>
-          <h3 className="text-lg font-semibold text-white mt-6 mb-3">שימוש במידע</h3>
+          <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">שימוש במידע</h3>
           <p>
             אנו משתמשים במידע שלך כדי לספק לך שירותים, לשפר את השירות, ולתקשר איתך.
           </p>
-          <h3 className="text-lg font-semibold text-white mt-6 mb-3">הגנה על מידע</h3>
+          <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">הגנה על מידע</h3>
           <p>
             אנו משתמשים באמצעי אבטחה מתקדמים כדי להגן על המידע שלך מפני גישה לא מורשית,
             שינוי, חשיפה או הרס.
@@ -347,24 +356,24 @@ function ConsentToggle({
   required,
 }: ConsentToggleProps) {
   return (
-    <div className="flex items-start gap-3 p-4 bg-zinc-800/30 rounded-lg border border-zinc-700/50">
+    <div className="flex items-start gap-3 p-4 bg-surface/30 rounded-lg border border-border">
       <input
         type="checkbox"
         id={`consent-${label}`}
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         disabled={disabled || required}
-        className="mt-1 h-5 w-5 rounded border-zinc-600 bg-zinc-800 text-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:opacity-50"
+        className="mt-1 h-5 w-5 rounded border-border bg-surface text-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:opacity-50"
       />
       <label
         htmlFor={`consent-${label}`}
         className="flex-1 cursor-pointer"
       >
-        <div className="font-semibold text-white">
+        <div className="font-semibold text-foreground">
           {label}
           {required && <span className="text-red-400 ml-1">*</span>}
         </div>
-        <div className="text-sm text-zinc-400 mt-1">{description}</div>
+        <div className="text-sm text-muted mt-1">{description}</div>
       </label>
     </div>
   );

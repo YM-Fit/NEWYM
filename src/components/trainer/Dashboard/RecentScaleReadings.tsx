@@ -40,6 +40,7 @@ export default function RecentScaleReadings({
   const [loadingNotes, setLoadingNotes] = useState(false);
   
   // Advanced filtering and bulk operations
+  const [hiddenReadings, setHiddenReadings] = useState<Set<string>>(new Set());
   const [selectedReadings, setSelectedReadings] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [filterSource, setFilterSource] = useState<'all' | 'identified' | 'unidentified'>('all');
@@ -54,9 +55,19 @@ export default function RecentScaleReadings({
     }
   }, [activeTab]);
 
+  const getReadingKey = (readingId: number, traineeId: string) => `${readingId}-${traineeId}`;
+
   // Filtered and sorted readings
   const filteredReadings = useMemo(() => {
-    let filtered = [...readings];
+    let filtered = readings
+      // הסתרת שקילות שכבר נשמרו כמדידה – אין צורך להציג אותן בדשבורד
+      .filter(r => {
+        if (!r.bestMatch) {
+          return true;
+        }
+        const key = getReadingKey(r.reading.id, r.bestMatch.traineeId);
+        return !hiddenReadings.has(key);
+      });
 
     // Filter by source
     if (filterSource === 'identified') {
@@ -137,9 +148,17 @@ export default function RecentScaleReadings({
     for (const item of readingsToSave) {
       if (item.bestMatch) {
         const readingDate = new Date(item.reading.created_at).toISOString().split('T')[0];
-        await onSaveMeasurement(item.bestMatch.traineeId, item.bestMatch.traineeName, item.reading, readingDate);
+        const success = await onSaveMeasurement(
+          item.bestMatch.traineeId,
+          item.bestMatch.traineeName,
+          item.reading,
+          readingDate
+        );
         const key = `${item.reading.id}-${item.bestMatch.traineeId}`;
-        setSavedReadings(prev => new Set(prev).add(key));
+        if (success) {
+          setSavedReadings(prev => new Set(prev).add(key));
+          setHiddenReadings(prev => new Set(prev).add(key));
+        }
       }
     }
 
@@ -257,9 +276,9 @@ export default function RecentScaleReadings({
       next.delete(readingKey);
       return next;
     });
-
     if (success) {
       setSavedReadings(prev => new Set(prev).add(readingKey));
+      setHiddenReadings(prev => new Set(prev).add(readingKey));
       if (activeTab === 'notes') {
         fetchSavedNotes();
       }
@@ -271,8 +290,6 @@ export default function RecentScaleReadings({
     setSelectedDate('');
     setNotesInput('');
   };
-
-  const getReadingKey = (readingId: number, traineeId: string) => `${readingId}-${traineeId}`;
 
   const renderSaveButton = (reading: ScaleReading, match: TraineeMatch) => {
     const readingKey = getReadingKey(reading.id, match.traineeId);
@@ -329,7 +346,7 @@ export default function RecentScaleReadings({
     if (score >= 90) return 'text-emerald-400 bg-gradient-to-r from-emerald-500/20 to-teal-500/20';
     if (score >= 70) return 'text-teal-400 bg-gradient-to-r from-teal-500/20 to-cyan-500/20';
     if (score >= 50) return 'text-amber-400 bg-gradient-to-r from-amber-500/20 to-orange-500/20';
-    return 'text-gray-400 bg-gray-500/20';
+    return 'text-muted bg-surface';
   };
 
   const getConfidenceIcon = (score: number) => {
@@ -340,41 +357,41 @@ export default function RecentScaleReadings({
 
   if (readings.length === 0) {
     return (
-      <div className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 rounded-2xl p-6 shadow-xl border border-white/10 backdrop-blur-sm">
+      <div className="bg-gradient-to-br from-card/90 to-surface/90 rounded-2xl p-6 shadow-xl border border-border backdrop-blur-sm">
         <div className="flex items-center gap-4 mb-6">
           <div className="p-3 bg-gradient-to-br from-teal-500/30 to-emerald-500/30 rounded-2xl shadow-lg">
             <Scale className="h-6 w-6 text-teal-400" />
           </div>
           <div>
-            <h3 className="font-bold text-lg text-white">שקילויות אחרונות</h3>
+            <h3 className="font-bold text-lg text-[var(--color-text-primary)]">שקילויות אחרונות</h3>
             <div className="flex items-center gap-2 text-sm mt-1">
-              <span className={`inline-flex items-center gap-1.5 ${isListening ? 'text-emerald-400' : 'text-gray-500'}`}>
-                <span className={`h-2.5 w-2.5 rounded-full ${isListening ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50' : 'bg-gray-500'}`}></span>
+              <span className={`inline-flex items-center gap-1.5 ${isListening ? 'text-emerald-400' : 'text-muted'}`}>
+                <span className={`h-2.5 w-2.5 rounded-full ${isListening ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50' : 'bg-muted'}`}></span>
                 {isListening ? 'מוקשר' : 'לא מחובר'}
               </span>
             </div>
           </div>
         </div>
         <div className="text-center py-12">
-          <div className="p-4 bg-gray-800/50 rounded-2xl inline-block mb-4">
-            <Scale className="h-14 w-14 mx-auto text-gray-600" />
+          <div className="p-4 bg-surface/50 rounded-2xl inline-block mb-4">
+            <Scale className="h-14 w-14 mx-auto text-muted opacity-20" />
           </div>
-          <p className="text-gray-400 font-medium">אין קריאות אחרונות</p>
-          <p className="text-sm text-gray-500 mt-2">קריאות חדשות יופיעו כאן באופן אוטומטי</p>
+          <p className="text-muted font-medium">אין קריאות אחרונות</p>
+          <p className="text-sm text-muted opacity-60 mt-2">קריאות חדשות יופיעו כאן באופן אוטומטי</p>
         </div>
       </div>
     );
   }
 
   const dateEditorModal = editingDateReadingId !== null && (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 max-w-sm mx-4 shadow-2xl border border-white/10 animate-fade-in">
+    <div className="fixed inset-0 backdrop-blur-sm bg-overlay/60 flex items-center justify-center z-50">
+      <div className="bg-gradient-to-br from-card to-surface rounded-2xl p-8 max-w-sm mx-4 shadow-2xl border border-border animate-fade-in">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-2xl bg-gradient-to-br from-teal-500/30 to-emerald-500/30 shadow-lg">
               <Calendar className="h-6 w-6 text-teal-400" />
             </div>
-            <h3 className="text-xl font-bold text-white">בחר תאריך</h3>
+            <h3 className="text-xl font-bold text-foreground">בחר תאריך</h3>
           </div>
           <button
             onClick={() => {
@@ -384,34 +401,34 @@ export default function RecentScaleReadings({
               setSelectedDate('');
               setNotesInput('');
             }}
-            className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
+            className="p-2 text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all duration-300"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {editingDateTraineeName && (
-          <p className="text-sm text-gray-400 mb-6">שמירה עבור מתאמן: <span className="font-semibold text-white">{editingDateTraineeName}</span></p>
+          <p className="text-sm text-muted mb-6">שמירה עבור מתאמן: <span className="font-semibold text-foreground">{editingDateTraineeName}</span></p>
         )}
 
         <div className="mb-8">
-          <label className="block text-sm font-semibold text-gray-300 mb-3">תאריך המדידה</label>
+          <label className="block text-sm font-semibold text-secondary mb-3">תאריך המדידה</label>
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-gray-800/80 border border-white/10 text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 transition-all duration-300"
+            className="w-full px-4 py-3 rounded-xl bg-input border border-border text-foreground focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 transition-all duration-300"
           />
         </div>
 
         <div className="mb-8">
-          <label className="block text-sm font-semibold text-gray-300 mb-3">הערות (אופציונלי)</label>
+          <label className="block text-sm font-semibold text-secondary mb-3">הערות (אופציונלי)</label>
           <textarea
             value={notesInput}
             onChange={(e) => setNotesInput(e.target.value)}
             placeholder="הוסף הערות על השקילה..."
             rows={3}
-            className="w-full px-4 py-3 rounded-xl bg-gray-800/80 border border-white/10 text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 transition-all duration-300 resize-none"
+            className="w-full px-4 py-3 rounded-xl bg-input border border-border text-foreground placeholder-muted focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 transition-all duration-300 resize-none"
           />
         </div>
 
@@ -424,14 +441,14 @@ export default function RecentScaleReadings({
               setSelectedDate('');
               setNotesInput('');
             }}
-            className="flex-1 px-4 py-3 rounded-xl font-semibold bg-gray-700/50 hover:bg-gray-700 text-gray-300 transition-all duration-300"
+            className="flex-1 px-4 py-3 rounded-xl font-semibold bg-surface hover:bg-elevated text-secondary transition-all duration-300"
           >
             ביטול
           </button>
           <button
             onClick={handleConfirmSave}
             disabled={savingReadings.has(`${editingDateReadingId}-${editingDateTraineeId}`)}
-            className="flex-1 px-4 py-3 rounded-xl font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02]"
+            className="flex-1 px-4 py-3 rounded-xl font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-inverse shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02]"
           >
             {savingReadings.has(`${editingDateReadingId}-${editingDateTraineeId}`) ? (
               <>
@@ -453,34 +470,34 @@ export default function RecentScaleReadings({
   return (
     <>
       {dateEditorModal}
-      <div className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 rounded-2xl p-6 shadow-xl border border-white/10 backdrop-blur-sm">
+      <div className="bg-gradient-to-br from-card/90 to-surface/90 rounded-2xl p-6 shadow-xl border border-border backdrop-blur-sm">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-gradient-to-br from-teal-500/30 to-emerald-500/30 rounded-2xl shadow-lg">
               <Scale className="h-6 w-6 text-teal-400" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-white">שקילויות והערות</h3>
+              <h3 className="font-bold text-lg text-foreground">שקילויות והערות</h3>
               <div className="flex items-center gap-2 text-sm mt-1">
-                <span className={`inline-flex items-center gap-1.5 ${isListening ? 'text-emerald-400' : 'text-gray-500'}`}>
-                  <span className={`h-2.5 w-2.5 rounded-full ${isListening ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50' : 'bg-gray-500'}`}></span>
+                <span className={`inline-flex items-center gap-1.5 ${isListening ? 'text-emerald-400' : 'text-muted'}`}>
+                  <span className={`h-2.5 w-2.5 rounded-full ${isListening ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50' : 'bg-muted'}`}></span>
                   {isListening ? 'מוקשר' : 'לא מחובר'}
                 </span>
               </div>
             </div>
           </div>
-          <span className="text-sm text-gray-500 bg-gray-800/50 px-3 py-1.5 rounded-xl font-medium">
+          <span className="text-sm text-muted bg-surface px-3 py-1.5 rounded-xl font-medium">
             {activeTab === 'readings' ? `${readings.length} קריאות` : `${savedNotes.length} הערות`}
           </span>
         </div>
 
-        <div className="flex gap-2 mb-6 bg-gray-800/50 p-1.5 rounded-xl">
+        <div className="flex gap-2 mb-6 bg-surface p-1.5 rounded-xl">
           <button
             onClick={() => setActiveTab('readings')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
               activeTab === 'readings'
-                ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg'
-                : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-inverse shadow-lg'
+                : 'text-muted hover:text-foreground hover:bg-elevated'
             }`}
           >
             <Scale className="h-4 w-4" />
@@ -490,8 +507,8 @@ export default function RecentScaleReadings({
             onClick={() => setActiveTab('notes')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
               activeTab === 'notes'
-                ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg'
-                : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-inverse shadow-lg'
+                : 'text-muted hover:text-foreground hover:bg-elevated'
             }`}
           >
             <FileText className="h-4 w-4" />
@@ -505,13 +522,13 @@ export default function RecentScaleReadings({
             <div className="flex flex-wrap gap-3">
               <div className="flex-1 min-w-[200px]">
                 <div className="relative">
-                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted" />
                   <input
                     type="text"
                     placeholder="חיפוש לפי שם, משקל או הערות..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-4 pr-10 py-2 rounded-xl bg-gray-800/80 border border-white/10 text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 transition-all"
+                    className="w-full pl-4 pr-10 py-2 rounded-xl bg-input border border-border text-foreground placeholder-muted focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 transition-all"
                   />
                 </div>
               </div>
@@ -521,7 +538,7 @@ export default function RecentScaleReadings({
                 className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
                   showFilters
                     ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
-                    : 'bg-gray-800/50 text-gray-400 border border-gray-700/50 hover:bg-gray-700/50'
+                    : 'bg-surface text-muted border border-border hover:bg-elevated'
                 }`}
               >
                 <Filter className="h-4 w-4" />
@@ -550,14 +567,14 @@ export default function RecentScaleReadings({
 
             {/* Advanced Filters */}
             {showFilters && (
-              <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50 space-y-4">
+              <div className="p-4 bg-surface rounded-xl border border-border space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">מקור</label>
+                    <label className="block text-sm font-semibold text-foreground mb-2">מקור</label>
                     <select
                       value={filterSource}
                       onChange={(e) => setFilterSource(e.target.value as any)}
-                      className="w-full px-4 py-2 rounded-xl bg-gray-800/80 border border-white/10 text-white focus:ring-2 focus:ring-teal-500/50"
+                      className="w-full px-4 py-2 rounded-xl bg-input border border-border text-foreground focus:ring-2 focus:ring-teal-500/50"
                     >
                       <option value="all">הכל</option>
                       <option value="identified">זוהו</option>
@@ -566,11 +583,11 @@ export default function RecentScaleReadings({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">מיון לפי</label>
+                    <label className="block text-sm font-semibold text-foreground mb-2">מיון לפי</label>
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as any)}
-                      className="w-full px-4 py-2 rounded-xl bg-gray-800/80 border border-white/10 text-white focus:ring-2 focus:ring-teal-500/50"
+                      className="w-full px-4 py-2 rounded-xl bg-input border border-border text-foreground focus:ring-2 focus:ring-teal-500/50"
                     >
                       <option value="date">תאריך</option>
                       <option value="weight">משקל</option>
@@ -579,10 +596,10 @@ export default function RecentScaleReadings({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">סדר</label>
+                    <label className="block text-sm font-semibold text-foreground mb-2">סדר</label>
                     <button
                       onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                      className="w-full px-4 py-2 rounded-xl bg-gray-800/80 border border-white/10 text-white hover:bg-gray-700/50 transition-all flex items-center justify-center gap-2"
+                      className="w-full px-4 py-2 rounded-xl bg-input border border-border text-foreground hover:bg-elevated transition-all flex items-center justify-center gap-2"
                     >
                       {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
                       {sortOrder === 'asc' ? 'עולה' : 'יורד'}
@@ -592,21 +609,21 @@ export default function RecentScaleReadings({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">תאריך התחלה</label>
+                    <label className="block text-sm font-semibold text-foreground mb-2">תאריך התחלה</label>
                     <input
                       type="date"
                       value={dateRange.start}
                       onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                      className="w-full px-4 py-2 rounded-xl bg-gray-800/80 border border-white/10 text-white focus:ring-2 focus:ring-teal-500/50"
+                      className="w-full px-4 py-2 rounded-xl bg-input border border-border text-foreground focus:ring-2 focus:ring-teal-500/50"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">תאריך סיום</label>
+                    <label className="block text-sm font-semibold text-foreground mb-2">תאריך סיום</label>
                     <input
                       type="date"
                       value={dateRange.end}
                       onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                      className="w-full px-4 py-2 rounded-xl bg-gray-800/80 border border-white/10 text-white focus:ring-2 focus:ring-teal-500/50"
+                      className="w-full px-4 py-2 rounded-xl bg-input border border-border text-foreground focus:ring-2 focus:ring-teal-500/50"
                     />
                   </div>
                 </div>
@@ -618,10 +635,10 @@ export default function RecentScaleReadings({
         {activeTab === 'readings' ? (
           <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
             {filteredReadings.length > 0 && (
-              <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <div className="flex items-center justify-between pb-2 border-b border-border">
                 <button
                   onClick={handleSelectAll}
-                  className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+                  className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
                 >
                   {selectedReadings.size === filteredReadings.length ? (
                     <CheckSquare className="h-4 w-4 text-teal-400" />
@@ -630,7 +647,7 @@ export default function RecentScaleReadings({
                   )}
                   בחר הכל ({filteredReadings.length})
                 </button>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-muted">
                   מוצג {filteredReadings.length} מתוך {readings.length}
                 </span>
               </div>
@@ -646,7 +663,7 @@ export default function RecentScaleReadings({
                   ? 'border-teal-500/50 bg-gradient-to-br from-teal-500/10 to-emerald-500/10'
                   : item.bestMatch
                   ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 hover:from-emerald-500/10 hover:to-teal-500/10 hover:border-emerald-500/50'
-                  : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'
+                  : 'border-border bg-surface/50 hover:bg-surface hover:border-border-hover'
               } ${item.bestMatch && onTraineeClick ? 'cursor-pointer hover:scale-[1.01]' : ''}`}
               onClick={() => item.bestMatch && onTraineeClick?.(item.bestMatch.traineeId)}
             >
@@ -658,29 +675,29 @@ export default function RecentScaleReadings({
                   }}
                   className="mr-2"
                 >
-                  {isSelected ? (
+                    {isSelected ? (
                     <CheckSquare className="h-5 w-5 text-teal-400" />
                   ) : (
-                    <Square className="h-5 w-5 text-gray-500" />
+                    <Square className="h-5 w-5 text-muted" />
                   )}
                 </button>
                 <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-2xl shadow-lg ${item.bestMatch ? 'bg-gradient-to-br from-emerald-500/30 to-teal-500/30' : 'bg-gray-700/50'}`}>
+                  <div className={`p-3 rounded-2xl shadow-lg ${item.bestMatch ? 'bg-gradient-to-br from-emerald-500/30 to-teal-500/30' : 'bg-surface'}`}>
                     {item.bestMatch ? (
                       <User className="h-5 w-5 text-emerald-400" />
                     ) : (
-                      <HelpCircle className="h-5 w-5 text-gray-500" />
+                      <HelpCircle className="h-5 w-5 text-muted" />
                     )}
                   </div>
                   <div>
                     {item.bestMatch ? (
                       <>
-                        <p className="font-semibold text-white text-lg">{item.bestMatch.traineeName}</p>
-                        <div className="flex items-center gap-3 text-sm text-gray-400 mt-1">
+                        <p className="font-semibold text-foreground text-lg">{item.bestMatch.traineeName}</p>
+                        <div className="flex items-center gap-3 text-sm text-muted mt-1">
                           <span className="font-medium">{item.reading.weight_kg?.toFixed(1)} ק״ג</span>
                           {item.reading.body_fat_percent && (
                             <>
-                              <span className="text-gray-600">|</span>
+                              <span className="text-muted opacity-30">|</span>
                               <span>{item.reading.body_fat_percent?.toFixed(1)}% שומן</span>
                             </>
                           )}
@@ -688,12 +705,12 @@ export default function RecentScaleReadings({
                       </>
                     ) : (
                       <>
-                        <p className="font-semibold text-gray-300">לא זוהה</p>
-                        <div className="flex items-center gap-3 text-sm text-gray-400 mt-1">
+                        <p className="font-semibold text-secondary">לא זוהה</p>
+                        <div className="flex items-center gap-3 text-sm text-muted mt-1">
                           <span className="font-medium">{item.reading.weight_kg?.toFixed(1)} ק״ג</span>
                           {item.reading.body_fat_percent && (
                             <>
-                              <span className="text-gray-600">|</span>
+                              <span className="text-muted opacity-30">|</span>
                               <span>{item.reading.body_fat_percent?.toFixed(1)}% שומן</span>
                             </>
                           )}
@@ -705,8 +722,8 @@ export default function RecentScaleReadings({
 
                 <div className="flex items-center gap-3">
                   <div className="text-left">
-                    <p className="text-sm text-gray-400 font-medium">{formatDate(item.timestamp)}</p>
-                    <p className="text-xs text-gray-500">{formatTime(item.timestamp)}</p>
+                    <p className="text-sm text-muted font-medium">{formatDate(item.timestamp)}</p>
+                    <p className="text-xs text-muted opacity-60">{formatTime(item.timestamp)}</p>
                   </div>
                   {item.bestMatch && (
                     <>
@@ -716,7 +733,7 @@ export default function RecentScaleReadings({
                       </span>
                       {onSaveMeasurement && renderSaveButton(item.reading, item.bestMatch)}
                       {onTraineeClick && (
-                        <ChevronLeft className="h-5 w-5 text-gray-500" />
+                        <ChevronLeft className="h-5 w-5 text-muted" />
                       )}
                     </>
                   )}
@@ -724,8 +741,8 @@ export default function RecentScaleReadings({
               </div>
 
               {item.matches.length > 1 && (
-                <div className="mt-4 pt-4 border-t border-white/10">
-                  <p className="text-xs text-gray-500 mb-3 font-medium">התאמות נוספות:</p>
+                <div className="mt-4 pt-4 border-t border-border">
+                  <p className="text-xs text-muted mb-3 font-medium">התאמות נוספות:</p>
                   <div className="flex flex-wrap gap-2">
                     {item.matches.slice(1, 4).map((match) => (
                       <div key={match.traineeId} className="inline-flex items-center gap-2">
@@ -735,10 +752,10 @@ export default function RecentScaleReadings({
                             e.stopPropagation();
                             onTraineeClick?.(match.traineeId);
                           }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800/50 hover:bg-gray-700/50 rounded-xl text-xs transition-all duration-300 hover:scale-105"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface hover:bg-elevated rounded-xl text-xs transition-all duration-300 hover:scale-105"
                         >
-                          <span className="text-gray-300 font-medium">{match.traineeName}</span>
-                          <span className="text-gray-500">({match.confidenceScore}%)</span>
+                          <span className="text-secondary font-medium">{match.traineeName}</span>
+                          <span className="text-muted opacity-60">({match.confidenceScore}%)</span>
                         </button>
                         {onSaveMeasurement && renderSaveButton(item.reading, match)}
                       </div>
@@ -751,15 +768,15 @@ export default function RecentScaleReadings({
             })}
             {filteredReadings.length === 0 && readings.length > 0 && (
               <div className="text-center py-12">
-                <Filter className="h-12 w-12 mx-auto text-gray-600 mb-4" />
-                <p className="text-gray-400 font-medium">אין תוצאות לפי הסינון שנבחר</p>
+                <Filter className="h-12 w-12 mx-auto text-muted opacity-20 mb-4" />
+                <p className="text-muted font-medium">אין תוצאות לפי הסינון שנבחר</p>
                 <button
                   onClick={() => {
                     setSearchQuery('');
                     setFilterSource('all');
                     setDateRange({ start: '', end: '' });
                   }}
-                  className="mt-4 px-4 py-2 rounded-xl bg-gray-800/50 text-gray-400 hover:text-white transition-colors text-sm"
+                  className="mt-4 px-4 py-2 rounded-xl bg-surface text-secondary hover:text-foreground transition-colors text-sm"
                 >
                   נקה סינון
                 </button>
@@ -771,21 +788,21 @@ export default function RecentScaleReadings({
             {loadingNotes ? (
               <div className="text-center py-12">
                 <Loader2 className="h-12 w-12 mx-auto text-teal-400 animate-spin mb-4" />
-                <p className="text-gray-400 font-medium">טוען הערות...</p>
+                <p className="text-muted font-medium">טוען הערות...</p>
               </div>
             ) : savedNotes.length === 0 ? (
               <div className="text-center py-12">
-                <div className="p-4 bg-gray-800/50 rounded-2xl inline-block mb-4">
-                  <FileText className="h-14 w-14 mx-auto text-gray-600" />
+                <div className="p-4 bg-surface rounded-2xl inline-block mb-4">
+                  <FileText className="h-14 w-14 mx-auto text-muted opacity-20" />
                 </div>
-                <p className="text-gray-400 font-medium">אין הערות שמורות</p>
-                <p className="text-sm text-gray-500 mt-2">הערות ששמרת על שקילות יופיעו כאן</p>
+                <p className="text-muted font-medium">אין הערות שמורות</p>
+                <p className="text-sm text-muted opacity-60 mt-2">הערות ששמרת על שקילות יופיעו כאן</p>
               </div>
             ) : (
               savedNotes.map((note) => (
                 <div
                   key={note.id}
-                  className="p-5 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer hover:scale-[1.01] hover:shadow-xl"
+                  className="p-5 rounded-2xl border border-border bg-surface/50 hover:bg-surface hover:border-border-hover transition-all duration-300 cursor-pointer hover:scale-[1.01] hover:shadow-xl"
                   onClick={() => onTraineeClick?.(note.trainee_id)}
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -794,12 +811,12 @@ export default function RecentScaleReadings({
                         <User className="h-5 w-5 text-emerald-400" />
                       </div>
                       <div>
-                        <p className="font-semibold text-white text-lg">{note.trainee_name}</p>
-                        <div className="flex items-center gap-3 text-sm text-gray-400 mt-1">
+                        <p className="font-semibold text-foreground text-lg">{note.trainee_name}</p>
+                        <div className="flex items-center gap-3 text-sm text-muted mt-1">
                           <span className="font-medium">{note.weight_kg?.toFixed(1)} ק״ג</span>
                           {note.body_fat_percent && (
                             <>
-                              <span className="text-gray-600">|</span>
+                              <span className="text-muted opacity-30">|</span>
                               <span>{note.body_fat_percent?.toFixed(1)}% שומן</span>
                             </>
                           )}
@@ -807,7 +824,7 @@ export default function RecentScaleReadings({
                       </div>
                     </div>
                     <div className="text-left">
-                      <p className="text-sm text-gray-400 font-medium">
+                      <p className="text-sm text-muted font-medium">
                         {new Date(note.date).toLocaleDateString('he-IL', {
                           day: 'numeric',
                           month: 'short',
@@ -816,10 +833,10 @@ export default function RecentScaleReadings({
                       </p>
                     </div>
                   </div>
-                  <div className="mt-3 pt-3 border-t border-white/10">
+                  <div className="mt-3 pt-3 border-t border-border">
                     <div className="flex items-start gap-2">
                       <FileText className="h-4 w-4 text-teal-400 mt-1 flex-shrink-0" />
-                      <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{note.notes}</p>
+                      <p className="text-secondary text-sm leading-relaxed whitespace-pre-wrap">{note.notes}</p>
                     </div>
                   </div>
                 </div>

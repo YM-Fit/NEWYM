@@ -61,8 +61,8 @@ export default class ErrorBoundary extends Component<Props, State> {
         <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-base)] p-4 transition-colors duration-300" dir="rtl">
           <div className="max-w-md w-full">
             <div className="glass-card p-8 text-center">
-              <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-red-500/20 flex items-center justify-center">
-                <AlertTriangle className="w-8 h-8 text-red-400" />
+              <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-danger/20 flex items-center justify-center">
+                <AlertTriangle className="w-8 h-8 text-danger" />
               </div>
 
               <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-3">
@@ -74,8 +74,8 @@ export default class ErrorBoundary extends Component<Props, State> {
               </p>
 
               {process.env.NODE_ENV === 'development' && this.state.error && (
-                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-right">
-                  <p className="text-sm font-mono text-red-400 break-all">
+                <div className="mb-6 p-4 bg-danger/10 border border-danger/30 rounded-xl text-right">
+                  <p className="text-sm font-mono text-danger break-all">
                     {this.state.error.toString()}
                   </p>
                   {this.state.errorInfo && (

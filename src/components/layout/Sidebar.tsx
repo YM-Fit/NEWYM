@@ -1,11 +1,13 @@
-import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3, Search, LucideIcon, Calendar, Briefcase, TrendingUp, MessageSquare, FileText, DollarSign, Filter, FolderOpen, Activity, Settings } from 'lucide-react';
+import { Home, Users, ChevronRight, ChevronLeft, Calculator, Sparkles, BarChart3, Search, LucideIcon, Calendar, Activity, Settings, FileSpreadsheet, Monitor } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { getFromStorage, setToStorage, STORAGE_KEYS } from '../../utils/storage';
+import Logo from '../common/Logo';
 
 interface SidebarProps {
   activeView: string;
   onViewChange: (view: string) => void;
   collapsed?: boolean;
+  isTablet?: boolean;
 }
 
 interface MenuItem {
@@ -17,7 +19,7 @@ interface MenuItem {
   badge?: string | number;
 }
 
-export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
+export default function Sidebar({ activeView, onViewChange, isTablet }: SidebarProps) {
   const [isMinimized, setIsMinimized] = useState(() => {
     return getFromStorage(STORAGE_KEYS.SIDEBAR_MINIMIZED, false);
   });
@@ -28,21 +30,24 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
     setToStorage(STORAGE_KEYS.SIDEBAR_MINIMIZED, isMinimized);
   }, [isMinimized]);
 
-  const menuItems: MenuItem[] = useMemo(() => [
-    // Main Navigation
-    { id: 'dashboard', label: 'דף הבית', icon: Home, description: 'סקירה כללית', category: 'main' },
-    { id: 'trainees', label: 'מתאמנים', icon: Users, description: 'ניהול מתאמנים', category: 'main' },
-    { id: 'calendar', label: 'יומן', icon: Calendar, description: 'Google Calendar', category: 'main' },
-    
-    // Tools & Analytics
-    { id: 'tools', label: 'כלים', icon: Calculator, description: 'מחשבונים וכלים', category: 'tools' },
-    { id: 'reports', label: 'דוחות', icon: BarChart3, description: 'סטטיסטיקות ונתונים', category: 'tools' },
-    
-    // Settings & Management
-    { id: 'health-check', label: 'בדיקת בריאות', icon: Activity, description: 'מצב המערכת', category: 'settings' },
-    { id: 'scheduled-exports', label: 'ייצואים מתוזמנים', icon: Calendar, description: 'ניהול ייצואים', category: 'settings' },
-    { id: 'data-import', label: 'ייבוא נתונים', icon: FileText, description: 'ייבוא CSV/JSON', category: 'settings' },
-  ], []);
+  const menuItems: MenuItem[] = useMemo(
+    () => [
+      // Main Navigation
+      { id: 'dashboard', label: 'דף הבית', icon: Home, description: 'סקירה כללית', category: 'main' },
+      { id: 'trainees', label: 'מתאמנים', icon: Users, description: 'ניהול מתאמנים', category: 'main' },
+      { id: 'calendar', label: 'יומן', icon: Calendar, description: 'Google Calendar', category: 'main' },
+      { id: 'studio-tv', label: 'מצב טלוויזיה', icon: Monitor, description: 'תצוגת אימון למסך הגדול', category: 'main' },
+
+      // Tools & Analytics
+      { id: 'tools', label: 'כלים', icon: Calculator, description: 'מחשבונים וכלים', category: 'tools' },
+      { id: 'reports', label: 'דוחות', icon: BarChart3, description: 'סטטיסטיקות ונתונים', category: 'tools' },
+      { id: 'smart-report', label: 'דוח חכם', icon: FileSpreadsheet, description: 'ניהול תשלומים חודשי', category: 'tools' },
+
+      // Settings & Management
+      { id: 'health-check', label: 'בדיקת בריאות', icon: Activity, description: 'מצב המערכת', category: 'settings' },
+    ],
+    []
+  );
 
   const categories = useMemo(() => [
     { id: 'main', label: 'ניווט ראשי', icon: Home },
@@ -96,39 +101,57 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
       aria-label="תפריט ניווט צדדי"
     >
       <div className="flex-1 py-6 overflow-y-auto overflow-x-hidden">
-        <div className={`flex items-center justify-between mb-4 ${isMinimized ? 'px-4' : 'px-5'}`}>
-          {!isMinimized && (
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-emerald-400" />
-              <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">תפריט</span>
-            </div>
+        {/* Logo Section */}
+        <div className={`flex items-center ${isMinimized ? 'justify-center' : 'justify-between'} mb-6 ${isMinimized ? 'px-4' : 'px-5'}`}>
+          {isMinimized ? (
+            // Minimized: Show logo only
+            <Logo 
+              size="md" 
+              className="drop-shadow-[0_2px_8px_rgba(74,107,42,0.2)]"
+              animated={true}
+            />
+          ) : (
+            // Expanded: Show logo with text
+            <>
+              <div className="flex items-center gap-3">
+                <Logo 
+                  size="md" 
+                  className="drop-shadow-[0_2px_8px_rgba(74,107,42,0.2)]"
+                  animated={true}
+                />
+                <div className="flex flex-col items-start">
+                  <span className="text-xs font-semibold text-muted uppercase tracking-wider">
+                    תפריט
+                  </span>
+                  <span className="mt-0.5 inline-flex items-center rounded-full border border-emerald-700/30 bg-emerald-700/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600">
+                    מצב עבודה: {isTablet ? 'טאבלט / מגע' : 'מחשב'}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsMinimized(!isMinimized)}
+                className="p-2 rounded-xl text-muted hover:text-emerald-600 hover:bg-emerald-700/10 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-700/50"
+                title="מזער"
+                aria-label="מזער תפריט"
+                aria-expanded={!isMinimized}
+                aria-controls="main-navigation"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </>
           )}
-          <button
-            onClick={() => setIsMinimized(!isMinimized)}
-            className="p-2 rounded-xl text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-            title={isMinimized ? 'הרחב' : 'מזער'}
-            aria-label={isMinimized ? 'הרחב תפריט' : 'מזער תפריט'}
-            aria-expanded={!isMinimized}
-            aria-controls="main-navigation"
-          >
-            {isMinimized ? (
-              <ChevronLeft className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </button>
         </div>
 
         {!isMinimized && (
           <div className="px-4 mb-4">
             <div className="relative">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
               <input
                 type="text"
                 placeholder="חפש בתפריט..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-10 pl-4 py-2.5 text-sm bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                className="w-full pr-10 pl-4 py-2.5 text-sm bg-surface border border-border rounded-xl text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-emerald-700/50 focus:border-emerald-700/50 transition-all"
                 aria-label="חפש בתפריט"
                 aria-controls="main-navigation"
               />
@@ -145,20 +168,20 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                 <button
                   key={id}
                   onClick={() => handleItemClick(id)}
-                  className="w-full flex items-center justify-center p-3 rounded-xl transition-all duration-300 group relative hover:bg-zinc-800/30 active:scale-95"
+                  className="w-full flex items-center justify-center p-3 rounded-xl transition-all duration-300 group relative hover:bg-surface active:scale-95"
                   title={label}
                   aria-label={label}
                 >
                   {isActive && (
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-l-full shadow-glow-sm" />
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-600 to-emerald-800 rounded-l-full shadow-glow-sm" />
                   )}
                   <Icon className={`h-5 w-5 transition-all duration-300 ${
                     isActive 
-                      ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)] scale-110' 
-                      : 'text-zinc-400 group-hover:text-white group-hover:scale-110'
+                      ? 'text-emerald-600 drop-shadow-[0_0_8px_rgba(74,107,42,0.4)] scale-110' 
+                      : 'text-muted group-hover:text-foreground group-hover:scale-110'
                   }`} />
                   {isActive && (
-                    <div className="absolute inset-0 bg-emerald-500/10 rounded-xl blur-sm" />
+                    <div className="absolute inset-0 bg-emerald-700/10 rounded-xl blur-sm" />
                   )}
                 </button>
               );
@@ -177,7 +200,7 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                   {category.id !== 'main' && (
                     <button
                       onClick={() => toggleCategory(category.id)}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-zinc-500 uppercase tracking-wider hover:text-zinc-400 hover:bg-zinc-800/30 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-muted uppercase tracking-wider hover:text-foreground hover:bg-surface transition-all focus:outline-none focus:ring-2 focus:ring-emerald-700/50"
                       aria-expanded={isExpanded}
                       aria-controls={`sidebar-category-${category.id}`}
                       aria-label={`${category.label}, ${isExpanded ? 'מוקפל' : 'מורחב'}`}
@@ -202,10 +225,10 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                           <button
                             key={id}
                             onClick={() => handleItemClick(id)}
-                            className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
+                            className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-700/50 ${
                               isActive
-                                ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-500/10 text-emerald-400 shadow-lg shadow-emerald-500/10'
-                                : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                                ? 'bg-gradient-to-r from-emerald-700/20 to-emerald-700/10 text-emerald-600 shadow-lg shadow-emerald-700/10'
+                                : 'text-muted hover:bg-surface hover:text-foreground'
                             }`}
                             aria-current={isActive ? 'page' : undefined}
                             aria-label={`${label}, ${description}`}
@@ -213,35 +236,35 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                             
                             {isActive && (
-                              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-l-full shadow-glow-sm" />
+                              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-600 to-emerald-800 rounded-l-full shadow-glow-sm" />
                             )}
 
                             <div className="relative ml-3 z-10">
                               <Icon className={`h-5 w-5 transition-all duration-300 ${
                                 isActive 
-                                  ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)] scale-110' 
+                                  ? 'text-emerald-600 drop-shadow-[0_0_8px_rgba(74,107,42,0.4)] scale-110' 
                                   : 'group-hover:scale-110'
                               }`} />
                               {isActive && (
-                                <div className="absolute inset-0 bg-emerald-400/30 blur-xl rounded-full animate-pulse-soft" />
+                                <div className="absolute inset-0 bg-emerald-600/30 blur-xl rounded-full animate-pulse-soft" />
                               )}
                             </div>
 
                             <div className="flex-1 text-right mr-3 z-10">
                               <div className="flex items-center justify-end gap-2">
                                 <span className={`block text-sm font-semibold transition-colors ${
-                                  isActive ? 'text-white' : 'group-hover:text-white'
+                                  isActive ? 'text-foreground' : 'group-hover:text-foreground'
                                 }`}>
                                   {label}
                                 </span>
                                 {badge && (
-                                  <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-500/20 text-emerald-400 rounded-full animate-scale-in shadow-sm">
+                                  <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-700/20 text-emerald-600 rounded-full animate-scale-in shadow-sm">
                                     {badge}
                                   </span>
                                 )}
                               </div>
                               <span className={`block text-xs mt-0.5 transition-colors ${
-                                isActive ? 'text-zinc-500' : 'text-zinc-600 group-hover:text-zinc-500'
+                                isActive ? 'text-muted' : 'text-muted group-hover:text-muted'
                               }`}>
                                 {description}
                               </span>
@@ -259,15 +282,15 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
       </div>
 
       {!isMinimized && (
-        <div className="p-4 border-t border-zinc-800/50">
-          <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
+        <div className="p-4 border-t border-border">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-700/10 to-emerald-800/5 border border-emerald-700/20">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                <Sparkles className="h-4 w-4 text-emerald-400" />
+              <div className="w-8 h-8 rounded-lg bg-emerald-700/20 flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-emerald-600" />
               </div>
-              <span className="text-sm font-semibold text-white">YM Coach Pro</span>
+              <span className="text-sm font-semibold text-foreground">YM Coach Pro</span>
             </div>
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               מערכת ניהול מתאמנים מתקדמת לאימונים מקצועיים
             </p>
           </div>

@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, Search, Package, Check } from 'lucide-react';
+import { Search, Package, Check } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
+import { Modal } from '../../ui/Modal';
+import { Input } from '../../ui/Input';
+import { Button } from '../../ui/Button';
 
 interface Equipment {
   id: string;
@@ -30,16 +33,6 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
   useEffect(() => {
     loadEquipment();
   }, []);
-
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
 
   const loadEquipment = async () => {
     if (!user) return;
@@ -103,173 +96,170 @@ export default function EquipmentSelector({ onSelect, onClose, currentEquipmentI
   };
 
   return (
-    <div
-      className="fixed inset-0 backdrop-blur-sm bg-black/70 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title="בחירת ציוד"
+      size="full"
     >
-      <div
-        className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-fade-in"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="p-6 lg:p-8 border-b border-zinc-800 bg-zinc-900">
-          <div className="flex items-center justify-between mb-6" dir="rtl">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-emerald-500/30 to-teal-500/30 rounded-2xl shadow-lg">
-                <Package className="h-6 w-6 text-emerald-400" />
-              </div>
-              <h2 className="text-2xl lg:text-3xl font-bold text-white">בחירת ציוד</h2>
+      <div className="space-y-6" dir="rtl">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
+              <Package className="h-6 w-6 text-emerald-400" />
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-3 hover:bg-zinc-800 rounded-xl transition-all duration-300 text-zinc-400 hover:text-white"
-            >
-              <X className="h-6 w-6" />
-            </button>
+            <div>
+              <p className="text-sm text-muted">בחר ציוד לכל סט</p>
+              <p className="text-xs text-muted">החיפוש והפילטרים מעודכנים לפי רשימת הציוד שלך</p>
+            </div>
           </div>
-
-          {/* Search Input */}
-          <div className="relative mb-6" dir="rtl">
-            <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-500" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="חיפוש ציוד..."
-              className="w-full pr-12 pl-4 py-4 bg-zinc-800/80 border-2 border-zinc-700/50 rounded-2xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300"
-            />
-          </div>
-
-          {/* Category Pills */}
-          <div className="flex gap-2 overflow-x-auto pb-2" dir="rtl">
-            {categories.map(cat => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setFilter(cat.id)}
-                className={`px-4 py-2.5 rounded-xl whitespace-nowrap text-sm font-semibold transition-all duration-300 flex items-center space-x-2 rtl:space-x-reverse ${
-                  filter === cat.id
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
-                    : 'bg-zinc-800/60 text-zinc-400 hover:bg-zinc-700/60 hover:text-white'
-                }`}
-              >
-                <span>{cat.label}</span>
-              </button>
-            ))}
+          <div className="hidden md:flex items-center gap-2 text-xs text-muted">
+            <span className="w-2 h-2 rounded-full bg-emerald-500/80" />
+            <span>לחיצה על כרטיס תבחר את הציוד</span>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 lg:p-8" dir="rtl">
-          {/* No Equipment Option */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleSelect(null);
-            }}
-            className={`w-full mb-6 p-5 rounded-2xl border-2 transition-all duration-300 text-right group ${
-              !currentEquipmentId
-                ? 'border-emerald-500/50 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 shadow-lg shadow-emerald-500/10'
-                : 'border-zinc-700/50 hover:border-emerald-500/30 bg-zinc-800/30 hover:bg-gradient-to-br hover:from-emerald-500/5 hover:to-teal-500/5'
-            } hover:scale-[1.01]`}
-          >
-            <div className="flex items-center space-x-4 rtl:space-x-reverse">
-              <div className={`p-3 rounded-2xl ${!currentEquipmentId ? 'bg-gradient-to-br from-emerald-500/30 to-teal-500/30' : 'bg-zinc-700/50 group-hover:bg-emerald-500/20'} transition-all duration-300`}>
-                <X className={`h-6 w-6 ${!currentEquipmentId ? 'text-emerald-400' : 'text-zinc-400 group-hover:text-emerald-400'} transition-colors duration-300`} />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg text-white">ללא ציוד</h3>
-                <p className="text-sm text-zinc-400">סט רגיל ללא ציוד נוסף</p>
-              </div>
-              {!currentEquipmentId && (
-                <div className="ml-auto">
-                  <Check className="h-6 w-6 text-emerald-400" />
-                </div>
-              )}
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 md:gap-6 items-start">
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="חיפוש ציוד..."
+                className="pr-9"
+              />
             </div>
-          </button>
 
-          {loading ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="text-center">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
-                <p className="mt-4 text-zinc-400 font-medium">טוען ציוד...</p>
-              </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {categories.map((cat) => (
+                <Button
+                  key={cat.id}
+                  type="button"
+                  variant={filter === cat.id ? 'primary' : 'ghost'}
+                  size="sm"
+                  className={`whitespace-nowrap ${
+                    filter === cat.id
+                      ? 'bg-emerald-500 text-foreground'
+                      : 'text-muted hover:text-foreground hover:bg-surface/60'
+                  }`}
+                  onClick={() => setFilter(cat.id)}
+                >
+                  {cat.label}
+                </Button>
+              ))}
             </div>
-          ) : (
-            <div className="space-y-8">
-              {Object.entries(groupedEquipment).map(([category, items]) => (
-                <div key={category}>
-                  <h3 className="text-lg font-bold text-zinc-300 mb-4 px-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500"></span>
-                    {getCategoryLabel(category)}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {items.map(item => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleSelect(item);
-                        }}
-                        className={`group p-5 rounded-2xl border-2 transition-all duration-300 text-right ${
-                          currentEquipmentId === item.id
-                            ? 'border-emerald-500/50 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 shadow-lg shadow-emerald-500/10'
-                            : 'border-zinc-700/50 hover:border-emerald-500/30 bg-zinc-800/30 hover:bg-gradient-to-br hover:from-emerald-500/5 hover:to-teal-500/5'
-                        } hover:scale-[1.02] hover:shadow-xl`}
-                      >
-                        <div className="flex items-center space-x-4 rtl:space-x-reverse">
-                          <span className="text-4xl lg:text-5xl filter drop-shadow-lg group-hover:scale-110 transition-transform duration-300">{item.emoji}</span>
+
+            <Button
+              type="button"
+              variant={!currentEquipmentId ? 'primary' : 'secondary'}
+              size="md"
+              className="w-full justify-between"
+              onClick={() => handleSelect(null)}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`p-2 rounded-xl ${
+                    !currentEquipmentId
+                      ? 'bg-emerald-500/20 text-emerald-300'
+                      : 'bg-surface text-foreground'
+                  }`}
+                >
+                  <span className="text-sm font-semibold">ללא</span>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold">
+                    ללא ציוד
+                  </p>
+                  <p className="text-xs text-muted">
+                    סט רגיל ללא ציוד נוסף
+                  </p>
+                </div>
+              </div>
+              {!currentEquipmentId && <Check className="h-5 w-5 text-emerald-400" />}
+            </Button>
+          </div>
+
+          <div className="min-h-[220px]">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+                  <p className="text-sm text-muted">טוען ציוד...</p>
+                </div>
+              </div>
+            ) : filteredEquipment.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center rounded-2xl border border-dashed border-border/70 bg-card/40">
+                <div className="p-4 rounded-2xl bg-surface/60 mb-3">
+                  <Package className="h-10 w-10 text-muted" />
+                </div>
+                <p className="text-sm font-medium text-foreground mb-1">
+                  לא נמצא ציוד תואם
+                </p>
+                <p className="text-xs text-muted">
+                  נסה לשנות את החיפוש או הפילטרים
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6 max-h-[52vh] overflow-y-auto pr-1">
+                {Object.entries(groupedEquipment).map(([category, items]) => (
+                  <div key={category}>
+                    <div className="flex items-center gap-2 mb-3 px-1">
+                      <span className="w-1.5 h-6 rounded-full bg-gradient-to-b from-emerald-500 to-teal-500" />
+                      <h3 className="text-sm font-semibold text-foreground">
+                        {getCategoryLabel(category)}
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {items.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => handleSelect(item)}
+                          className={`group flex items-center gap-3 p-3 rounded-2xl border text-right transition-all ${
+                            currentEquipmentId === item.id
+                              ? 'border-emerald-500/50 bg-emerald-500/10 shadow-lg shadow-emerald-500/10'
+                              : 'border-border bg-card/40 hover:border-emerald-500/40 hover:bg-emerald-500/5'
+                          }`}
+                        >
+                          <span className="text-3xl filter drop-shadow-md group-hover:scale-110 transition-transform duration-200">
+                            {item.emoji}
+                          </span>
                           <div className="flex-1">
-                            <h3 className="font-bold text-base lg:text-lg text-white group-hover:text-emerald-300 transition-colors duration-300">
+                            <p className="text-sm font-semibold text-foreground group-hover:text-emerald-300">
                               {item.name}
-                            </h3>
-                            <div className="flex flex-wrap gap-2 mt-2">
+                            </p>
+                            <div className="flex flex-wrap gap-1.5 mt-1.5">
                               {item.weight_kg && (
-                                <span className="text-xs lg:text-sm text-zinc-400 bg-zinc-700/50 px-2.5 py-1 rounded-lg font-medium">
-                                  {item.weight_kg} ק"ג
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-surface/80 text-[11px] text-foreground">
+                                  {item.weight_kg} ק&quot;ג
                                 </span>
                               )}
                               {item.resistance_level && (
-                                <span className="text-xs lg:text-sm text-zinc-400 bg-zinc-700/50 px-2.5 py-1 rounded-lg font-medium">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-surface/80 text-[11px] text-foreground">
                                   רמה {item.resistance_level}/5
                                 </span>
                               )}
                               {item.is_bodyweight && (
-                                <span className="text-xs lg:text-sm text-emerald-400 bg-emerald-500/20 px-2.5 py-1 rounded-lg font-medium">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-500/20 text-[11px] text-emerald-300">
                                   משקל גוף
                                 </span>
                               )}
                             </div>
                           </div>
                           {currentEquipmentId === item.id && (
-                            <Check className="h-6 w-6 text-emerald-400" />
+                            <Check className="h-5 w-5 text-emerald-400" />
                           )}
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {!loading && filteredEquipment.length === 0 && (
-            <div className="text-center py-16">
-              <div className="p-4 bg-zinc-800/50 rounded-2xl inline-block mb-4">
-                <Package className="h-12 w-12 text-zinc-600" />
+                ))}
               </div>
-              <p className="text-zinc-400 text-lg font-medium">לא נמצא ציוד תואם</p>
-              <p className="text-zinc-500 text-sm mt-2">נסה לשנות את החיפוש או הפילטרים</p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
